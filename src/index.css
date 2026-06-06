@@ -1,0 +1,253 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  html.portal-shell-active,
+  body.portal-shell-active {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  :root {
+    --brand-deep-blue: 218 64% 29%;
+    --brand-mid-blue: 212 64% 40%;
+    --brand-sk-gold: 49 92% 48%;
+    --brand-sk-red: 354 73% 46%;
+
+    --admin-page-bg: 244 100% 98%;
+    --admin-surface: 0 0% 100%;
+    --admin-border: 247 46% 89%;
+    --admin-nav-dark: 218 64% 23%;
+    --admin-heading: 225 61% 27%;
+    --admin-link: 212 64% 40%;
+    --admin-body: 180 12% 21%;
+    --admin-meta: 240 13% 48%;
+    --admin-on-dark: 0 0% 100%;
+    --admin-active-on-dark: 49 92% 48%;
+
+    --user-page-bg: 244 100% 98%;
+    --user-surface: 0 0% 100%;
+    --user-border: 247 46% 89%;
+    --user-nav-dark: 218 64% 23%;
+    --user-heading: 225 61% 27%;
+    --user-link: 212 64% 40%;
+    --user-body: 180 12% 21%;
+    --user-meta: 240 13% 48%;
+    --user-on-dark: 0 0% 100%;
+    --user-active-on-dark: 49 92% 48%;
+
+    --semantic-success: 146 40% 30%;
+    --semantic-warning: 47 100% 24%;
+    --semantic-danger: 354 73% 46%;
+    --semantic-info-admin: 225 61% 27%;
+    --semantic-info-user: 225 61% 27%;
+    --semantic-disabled: 0 0% 73%;
+    --semantic-placeholder: 0 0% 67%;
+
+    --background: var(--admin-page-bg);
+    --foreground: var(--admin-body);
+
+    --card: var(--admin-surface);
+    --card-foreground: var(--admin-body);
+
+    --popover: var(--admin-surface);
+    --popover-foreground: var(--admin-body);
+
+    --primary: var(--brand-mid-blue);
+    --primary-foreground: var(--admin-on-dark);
+
+    --secondary: var(--brand-deep-blue);
+    --secondary-foreground: var(--admin-on-dark);
+
+    --muted: 244 62% 96%;
+    --muted-foreground: var(--admin-meta);
+
+    --accent: var(--admin-link);
+    --accent-foreground: var(--admin-on-dark);
+
+    --destructive: var(--semantic-danger);
+    --destructive-foreground: var(--admin-on-dark);
+
+    --border: var(--admin-border);
+    --input: var(--admin-border);
+    --ring: var(--brand-mid-blue);
+
+    --radius: 0.625rem;
+
+    --success: var(--semantic-success);
+    --success-foreground: 0 0% 100%;
+    --warning: var(--semantic-warning);
+    --warning-foreground: 0 0% 100%;
+    --info: var(--semantic-info-admin);
+    --info-foreground: 0 0% 100%;
+
+    --sidebar-background: var(--admin-nav-dark);
+    --sidebar-foreground: var(--admin-on-dark);
+    --sidebar-primary: var(--admin-link);
+    --sidebar-primary-foreground: var(--admin-on-dark);
+    --sidebar-accent: 218 56% 24%;
+    --sidebar-accent-foreground: var(--admin-on-dark);
+    --sidebar-border: 218 44% 34%;
+    --sidebar-ring: var(--admin-active-on-dark);
+
+    /* Custom tokens */
+    --hero-gradient: linear-gradient(135deg, hsl(var(--admin-nav-dark)), hsl(var(--brand-deep-blue)), hsl(var(--brand-mid-blue)));
+    --stats-gradient: linear-gradient(135deg, hsl(var(--brand-deep-blue)), hsl(var(--admin-heading)), hsl(var(--brand-mid-blue)));
+    --card-shadow: 0 1px 2px hsl(225 45% 16% / 0.06), 0 10px 24px hsl(225 45% 16% / 0.08);
+    --card-shadow-hover: 0 4px 14px hsl(225 45% 16% / 0.1), 0 16px 34px hsl(225 45% 16% / 0.1);
+    --glow-primary: 0 0 20px hsl(var(--brand-mid-blue) / 0.24);
+  }
+
+  body.public-shell {
+    --background: var(--user-page-bg);
+    --foreground: var(--user-body);
+    --card: var(--user-surface);
+    --card-foreground: var(--user-body);
+    --popover: var(--user-surface);
+    --popover-foreground: var(--user-body);
+    --primary: var(--brand-mid-blue);
+    --primary-foreground: var(--user-on-dark);
+    --secondary: var(--brand-deep-blue);
+    --secondary-foreground: var(--user-on-dark);
+    --muted: 244 62% 96%;
+    --muted-foreground: var(--user-meta);
+    --accent: var(--user-link);
+    --accent-foreground: var(--user-on-dark);
+    --destructive: var(--semantic-danger);
+    --destructive-foreground: var(--user-on-dark);
+    --border: var(--user-border);
+    --input: var(--user-border);
+    --ring: var(--brand-mid-blue);
+    --success: var(--semantic-success);
+    --success-foreground: var(--user-on-dark);
+    --warning: var(--semantic-warning);
+    --warning-foreground: var(--user-on-dark);
+    --info: var(--semantic-info-user);
+    --info-foreground: var(--user-on-dark);
+    --hero-gradient: linear-gradient(135deg, hsl(var(--user-nav-dark)), hsl(var(--brand-deep-blue)), hsl(var(--brand-mid-blue)));
+    --stats-gradient: linear-gradient(135deg, hsl(var(--brand-deep-blue)), hsl(var(--user-heading)), hsl(var(--brand-mid-blue)));
+    --card-shadow: 0 1px 2px hsl(225 45% 16% / 0.06), 0 10px 24px hsl(225 45% 16% / 0.08);
+    --card-shadow-hover: 0 4px 14px hsl(225 45% 16% / 0.1), 0 16px 34px hsl(225 45% 16% / 0.1);
+    --glow-primary: 0 0 20px hsl(var(--brand-mid-blue) / 0.24);
+  }
+
+  .dark {
+    --background: 210 50% 6%;
+    --foreground: 210 20% 94%;
+    --card: 210 50% 10%;
+    --card-foreground: 210 20% 94%;
+    --popover: 210 50% 10%;
+    --popover-foreground: 210 20% 94%;
+    --primary: 204 62% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 22%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 210 40% 15%;
+    --muted-foreground: 210 15% 55%;
+    --accent: 145 63% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 40% 18%;
+    --input: 210 40% 18%;
+    --ring: 204 62% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+  body input::placeholder,
+  body textarea::placeholder {
+    color: hsl(var(--semantic-placeholder));
+  }
+  body.public-shell input::placeholder,
+  body.public-shell textarea::placeholder {
+    color: hsl(var(--semantic-placeholder));
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer utilities {
+  .hero-gradient {
+    background: var(--hero-gradient);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--brand-sk-gold)), hsl(var(--brand-mid-blue)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stats-gradient {
+    background: var(--stats-gradient);
+  }
+  .card-shadow {
+    box-shadow: var(--card-shadow);
+  }
+  .card-shadow-hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-fade-up {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .admin-kicker {
+    color: hsl(var(--admin-meta));
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}
+
+@layer components {
+  .admin-shell h1,
+  .admin-shell h2,
+  .admin-shell h3 {
+    color: hsl(var(--admin-heading));
+  }
+
+  .admin-shell label {
+    color: hsl(var(--admin-meta));
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .admin-shell .text-xs.font-semibold.uppercase.tracking-wider {
+    color: hsl(var(--admin-meta));
+  }
+
+  .admin-shell thead th {
+    color: hsl(var(--admin-meta));
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
