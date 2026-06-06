@@ -3277,264 +3277,6 @@ export default function AdminPortal({ section }: { section: string }) {
                 </div>
               </DialogContent>
             </Dialog>
-            <Dialog open={liquidationDetailsOpen} onOpenChange={(open) => { if (!open) closeLiquidationDetails(); }}>
-              <DialogContent className="h-[100dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-[92dvh] sm:w-[min(96vw,96rem)] sm:max-w-none sm:rounded-2xl sm:border">
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="border-b border-border/70 px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
-                    <DialogHeader className="text-left sm:text-left">
-                      <DialogTitle className="text-xl leading-tight sm:text-2xl">
-                        {selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation Details"}
-                      </DialogTitle>
-                      <DialogDescription className="max-w-2xl text-sm sm:text-base">
-                        Review the liquidation record, attached files, and linked budget request before updating its status.
-                      </DialogDescription>
-                    </DialogHeader>
-                  </div>
-
-                  <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 sm:px-6 sm:py-6">
-                    {selectedLiquidationReport ? (
-                      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-                        <div className="space-y-3">
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Organization Details</p>
-                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                              {renderRegistrationDetailCard({
-                                title: "Organization Name",
-                                value: selectedLiquidationOrganization?.organizationName ?? "N/A",
-                                className: "sm:col-span-2",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Organization Email",
-                                value: selectedLiquidationOrganization?.organizationEmail ?? "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Contact Number",
-                                value: selectedLiquidationOrganization?.contactNumber ?? "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Barangay",
-                                value: selectedLiquidationOrganization?.barangay ?? "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "District",
-                                value: selectedLiquidationOrganization?.district || "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Submitted By",
-                                value: selectedLiquidationReport.submittedBy,
-                                wrap: true,
-                                className: "sm:col-span-2",
-                              })}
-                            </div>
-                          </div>
-
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Liquidation Details</p>
-                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                              {renderRegistrationDetailCard({
-                                title: "Linked Budget Request",
-                                value: selectedLiquidationBudgetRequest?.activityTitle ?? "N/A",
-                                wrap: true,
-                                className: "sm:col-span-2",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Go Signal",
-                                value: selectedLiquidationReport.goSignalAt || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Deadline",
-                                value: selectedLiquidationReport.deadlineAt || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Hard Copy Submitted",
-                                value: selectedLiquidationReport.hardCopySubmittedAt || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Completed At",
-                                value: selectedLiquidationReport.completedAt || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Remarks",
-                                value: selectedLiquidationReport.remarks || "None",
-                                wrap: true,
-                                className: "sm:col-span-2",
-                              })}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Status Controls</p>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                              <span>Current status:</span>
-                              <PortalStatusBadge status={selectedLiquidationReport.status} />
-                            </div>
-                            <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "liquidation",
-                                    action: "approve",
-                                    liquidationReportId: selectedLiquidationReport.id,
-                                    budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                    organizationId: selectedLiquidationReport.organizationId,
-                                    organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                                  })
-                                }
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "liquidation",
-                                    action: "needs_revision",
-                                    liquidationReportId: selectedLiquidationReport.id,
-                                    budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                    organizationId: selectedLiquidationReport.organizationId,
-                                    organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                                  })
-                                }
-                              >
-                                Needs Revision
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "liquidation",
-                                    action: "overdue",
-                                    liquidationReportId: selectedLiquidationReport.id,
-                                    budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                    organizationId: selectedLiquidationReport.organizationId,
-                                    organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                                  })
-                                }
-                              >
-                                Mark Overdue
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                              <div className="min-w-0">
-                                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Attached Files</p>
-                                <p className="mt-1.5 text-sm text-muted-foreground">
-                                  {selectedLiquidationReportFiles.length
-                                    ? `${selectedLiquidationReportFiles.length} file${selectedLiquidationReportFiles.length === 1 ? "" : "s"} uploaded.`
-                                    : "No attached files were uploaded for this liquidation report."}
-                                </p>
-                              </div>
-                              <div className="self-start">
-                                <PortalStatusBadge status={selectedLiquidationReport.status} />
-                              </div>
-                            </div>
-
-                            {selectedLiquidationReportFiles.length ? (
-                              <div className="mt-3 space-y-3">
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedLiquidationReportFiles.map((file) => (
-                                    <Button
-                                      key={file.id}
-                                      type="button"
-                                      size="sm"
-                                      variant={selectedLiquidationReportFile?.id === file.id ? "default" : "outline"}
-                                      className="max-w-full"
-                                      onClick={() => setSelectedLiquidationFileId(file.id)}
-                                    >
-                                      <span className="max-w-[12rem] truncate">{file.fileName}</span>
-                                    </Button>
-                                  ))}
-                                </div>
-
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full justify-between"
-                                  onClick={() => setLiquidationPreviewExpanded((value) => !value)}
-                                >
-                                  <span className="inline-flex items-center gap-2">
-                                    <Eye className="h-4 w-4" />
-                                    {liquidationPreviewExpanded ? "Hide Preview" : "Show Preview"}
-                                  </span>
-                                  {liquidationPreviewExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </Button>
-
-                                {liquidationPreviewExpanded ? (
-                                  <div className="rounded-xl border border-border/70 bg-background p-2.5">
-                                    {liquidationPreviewLoading ? (
-                                      <p className="p-2 text-sm text-muted-foreground">Loading preview...</p>
-                                    ) : liquidationPreviewUrl && liquidationPreviewCanInline ? (
-                                      isImagePreviewFile(liquidationPreviewTitle) || isImagePreviewFile(liquidationPreviewUrl) ? (
-                                        <div className="flex max-h-[18rem] min-h-[12rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
-                                          <img
-                                            src={liquidationPreviewUrl}
-                                            alt={liquidationPreviewTitle || "Liquidation file preview"}
-                                            className="max-h-[18rem] w-full object-contain sm:max-h-[32rem]"
-                                          />
-                                        </div>
-                                      ) : (
-                                        <iframe
-                                          title={liquidationPreviewTitle || "Liquidation Preview"}
-                                          src={liquidationPreviewUrl}
-                                          className="h-[18rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
-                                          loading="eager"
-                                        />
-                                      )
-                                    ) : liquidationPreviewUrl ? (
-                                      <div className="space-y-3 p-2.5 text-sm text-muted-foreground">
-                                        <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
-                                        <Button type="button" variant="outline" onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}>
-                                          <Eye className="mr-2 h-4 w-4" />
-                                          Open File
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <div className="grid min-h-[12rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-4 text-center text-sm text-muted-foreground">
-                                        {liquidationPreviewEmptyMessage || "No liquidation file was uploaded."}
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-                                    Preview hidden on mobile. Open it to review the uploaded file before acting.
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="mt-3 rounded-xl border border-dashed border-border/70 bg-muted/10 p-4 text-sm text-muted-foreground">
-                                No attached liquidation files were submitted.
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="border-t border-border/70 px-4 py-3 sm:px-6 sm:py-4">
-                    <DialogFooter>
-                      <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeLiquidationDetails}>
-                        Close
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
             <Dialog
               open={selectedBudgetAllocation !== null}
               onOpenChange={(open) => {
@@ -4618,6 +4360,264 @@ export default function AdminPortal({ section }: { section: string }) {
       >
         {activeContent}
       </PortalShell>
+      <Dialog open={liquidationDetailsOpen} onOpenChange={(open) => { if (!open) closeLiquidationDetails(); }}>
+        <DialogContent className="h-[100dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-[92dvh] sm:w-[min(96vw,96rem)] sm:max-w-none sm:rounded-2xl sm:border">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="border-b border-border/70 px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
+              <DialogHeader className="text-left sm:text-left">
+                <DialogTitle className="text-xl leading-tight sm:text-2xl">
+                  {selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation Details"}
+                </DialogTitle>
+                <DialogDescription className="max-w-2xl text-sm sm:text-base">
+                  Review the liquidation record, attached files, and linked budget request before updating its status.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 sm:px-6 sm:py-6">
+              {selectedLiquidationReport ? (
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Organization Details</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {renderRegistrationDetailCard({
+                          title: "Organization Name",
+                          value: selectedLiquidationOrganization?.organizationName ?? "N/A",
+                          className: "sm:col-span-2",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Organization Email",
+                          value: selectedLiquidationOrganization?.organizationEmail ?? "N/A",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Contact Number",
+                          value: selectedLiquidationOrganization?.contactNumber ?? "N/A",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Barangay",
+                          value: selectedLiquidationOrganization?.barangay ?? "N/A",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "District",
+                          value: selectedLiquidationOrganization?.district || "N/A",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Submitted By",
+                          value: selectedLiquidationReport.submittedBy,
+                          wrap: true,
+                          className: "sm:col-span-2",
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Liquidation Details</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {renderRegistrationDetailCard({
+                          title: "Linked Budget Request",
+                          value: selectedLiquidationBudgetRequest?.activityTitle ?? "N/A",
+                          wrap: true,
+                          className: "sm:col-span-2",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Go Signal",
+                          value: selectedLiquidationReport.goSignalAt || "Pending",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Deadline",
+                          value: selectedLiquidationReport.deadlineAt || "Pending",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Hard Copy Submitted",
+                          value: selectedLiquidationReport.hardCopySubmittedAt || "Pending",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Completed At",
+                          value: selectedLiquidationReport.completedAt || "Pending",
+                        })}
+                        {renderRegistrationDetailCard({
+                          title: "Remarks",
+                          value: selectedLiquidationReport.remarks || "None",
+                          wrap: true,
+                          className: "sm:col-span-2",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Status Controls</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <span>Current status:</span>
+                        <PortalStatusBadge status={selectedLiquidationReport.status} />
+                      </div>
+                      <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() =>
+                            openAdminConfirmation({
+                              kind: "liquidation",
+                              action: "approve",
+                              liquidationReportId: selectedLiquidationReport.id,
+                              budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                              organizationId: selectedLiquidationReport.organizationId,
+                              organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                              activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            })
+                          }
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() =>
+                            openAdminConfirmation({
+                              kind: "liquidation",
+                              action: "needs_revision",
+                              liquidationReportId: selectedLiquidationReport.id,
+                              budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                              organizationId: selectedLiquidationReport.organizationId,
+                              organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                              activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            })
+                          }
+                        >
+                          Needs Revision
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() =>
+                            openAdminConfirmation({
+                              kind: "liquidation",
+                              action: "overdue",
+                              liquidationReportId: selectedLiquidationReport.id,
+                              budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                              organizationId: selectedLiquidationReport.organizationId,
+                              organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                              activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            })
+                          }
+                        >
+                          Mark Overdue
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Attached Files</p>
+                          <p className="mt-1.5 text-sm text-muted-foreground">
+                            {selectedLiquidationReportFiles.length
+                              ? `${selectedLiquidationReportFiles.length} file${selectedLiquidationReportFiles.length === 1 ? "" : "s"} uploaded.`
+                              : "No attached files were uploaded for this liquidation report."}
+                          </p>
+                        </div>
+                        <div className="self-start">
+                          <PortalStatusBadge status={selectedLiquidationReport.status} />
+                        </div>
+                      </div>
+
+                      {selectedLiquidationReportFiles.length ? (
+                        <div className="mt-3 space-y-3">
+                          <div className="flex flex-wrap gap-2">
+                            {selectedLiquidationReportFiles.map((file) => (
+                              <Button
+                                key={file.id}
+                                type="button"
+                                size="sm"
+                                variant={selectedLiquidationReportFile?.id === file.id ? "default" : "outline"}
+                                className="max-w-full"
+                                onClick={() => setSelectedLiquidationFileId(file.id)}
+                              >
+                                <span className="max-w-[12rem] truncate">{file.fileName}</span>
+                              </Button>
+                            ))}
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-between"
+                            onClick={() => setLiquidationPreviewExpanded((value) => !value)}
+                          >
+                            <span className="inline-flex items-center gap-2">
+                              <Eye className="h-4 w-4" />
+                              {liquidationPreviewExpanded ? "Hide Preview" : "Show Preview"}
+                            </span>
+                            {liquidationPreviewExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+
+                          {liquidationPreviewExpanded ? (
+                            <div className="rounded-xl border border-border/70 bg-background p-2.5">
+                              {liquidationPreviewLoading ? (
+                                <p className="p-2 text-sm text-muted-foreground">Loading preview...</p>
+                              ) : liquidationPreviewUrl && liquidationPreviewCanInline ? (
+                                isImagePreviewFile(liquidationPreviewTitle) || isImagePreviewFile(liquidationPreviewUrl) ? (
+                                  <div className="flex max-h-[18rem] min-h-[12rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
+                                    <img
+                                      src={liquidationPreviewUrl}
+                                      alt={liquidationPreviewTitle || "Liquidation file preview"}
+                                      className="max-h-[18rem] w-full object-contain sm:max-h-[32rem]"
+                                    />
+                                  </div>
+                                ) : (
+                                  <iframe
+                                    title={liquidationPreviewTitle || "Liquidation Preview"}
+                                    src={liquidationPreviewUrl}
+                                    className="h-[18rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
+                                    loading="eager"
+                                  />
+                                )
+                              ) : liquidationPreviewUrl ? (
+                                <div className="space-y-3 p-2.5 text-sm text-muted-foreground">
+                                  <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
+                                  <Button type="button" variant="outline" onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Open File
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="grid min-h-[12rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-4 text-center text-sm text-muted-foreground">
+                                  {liquidationPreviewEmptyMessage || "No liquidation file was uploaded."}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+                              Preview hidden on mobile. Open it to review the uploaded file before acting.
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-3 rounded-xl border border-dashed border-border/70 bg-muted/10 p-4 text-sm text-muted-foreground">
+                          No attached liquidation files were submitted.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="border-t border-border/70 px-4 py-3 sm:px-6 sm:py-4">
+              <DialogFooter>
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeLiquidationDetails}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
