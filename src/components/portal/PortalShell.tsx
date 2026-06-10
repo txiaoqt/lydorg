@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, LogOut, X } from "lucide-react";
+import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ type PortalShellProps = {
   onNavigate: (id: string) => void;
   onSignOut: () => void;
   children: React.ReactNode;
+  userProfile?: { name: string; role: string };
 };
 
 export const PortalShell = ({
@@ -34,8 +35,10 @@ export const PortalShell = ({
   onNavigate,
   onSignOut,
   children,
+  userProfile,
 }: PortalShellProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add("portal-shell-active");
@@ -48,7 +51,8 @@ export const PortalShell = ({
   }, []);
 
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full w-[18rem] min-w-[18rem] flex-col">
+      {/* Sidebar header: logo + collapse/close button */}
       <div className="flex items-center justify-between gap-3 border-b border-border/70 p-4">
         <BrandLogo showText imgClassName="h-10 w-10" textClassName="min-w-0" className="min-w-0" />
         {mobile ? (
@@ -60,19 +64,28 @@ export const PortalShell = ({
           >
             <X size={16} />
           </button>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(true)}
+            className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose size={16} />
+          </button>
+        )}
       </div>
 
+      {/* Nav items */}
       <div className="flex-1 overflow-y-auto p-3">
-        <p className="px-3 pb-3 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/75">
-          {subtitle}
-        </p>
         <nav className="space-y-4">
           {groups.map((group, groupIndex) => (
             <div key={group.id} className={cn(groupIndex > 0 && "pt-2")}>
-              <p className="px-3 pb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/75">
-                {group.label}
-              </p>
+              {group.label ? (
+                <p className="px-3 pb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/75">
+                  {group.label}
+                </p>
+              ) : null}
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -103,7 +116,19 @@ export const PortalShell = ({
         </nav>
       </div>
 
-      <div className="border-t border-border/70 p-3">
+      {/* Sidebar footer: user profile + sign out */}
+      <div className="border-t border-border/70 p-3 space-y-1">
+        {userProfile ? (
+          <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground leading-none">{userProfile.name}</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{userProfile.role}</p>
+            </div>
+          </div>
+        ) : null}
         <Button
           type="button"
           variant="ghost"
@@ -120,10 +145,17 @@ export const PortalShell = ({
   return (
     <div className="h-dvh overflow-hidden bg-background text-foreground">
       <div className="flex h-full">
-        <aside className="sticky top-0 hidden h-dvh w-[18rem] shrink-0 border-r border-border/80 bg-background md:block">
+        {/* Desktop sidebar — animated width collapse */}
+        <aside
+          className={cn(
+            "sticky top-0 hidden h-dvh shrink-0 border-r border-border/80 bg-background overflow-hidden transition-[width] duration-200 md:block",
+            sidebarCollapsed ? "w-0 border-r-0" : "w-[18rem]",
+          )}
+        >
           <SidebarContent />
         </aside>
 
+        {/* Mobile overlay backdrop */}
         {mobileOpen ? (
           <button
             type="button"
@@ -133,6 +165,7 @@ export const PortalShell = ({
           />
         ) : null}
 
+        {/* Mobile drawer */}
         <aside
           className={cn(
             "fixed inset-y-0 left-0 z-50 w-[min(18rem,85vw)] border-r border-border/80 bg-background shadow-2xl transition-transform duration-200 md:hidden",
@@ -142,35 +175,42 @@ export const PortalShell = ({
           <SidebarContent mobile />
         </aside>
 
+        {/* Main content */}
         <main className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
                 <div className="flex min-w-0 items-center gap-3">
+                  {/* Mobile: opens drawer */}
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
                     className="md:hidden shrink-0"
-                    onClick={() => setMobileOpen((value) => !value)}
+                    onClick={() => setMobileOpen((v) => !v)}
                     aria-label="Toggle navigation"
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
+                  {/* Desktop: expand sidebar when collapsed */}
+                  {sidebarCollapsed ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setSidebarCollapsed(false)}
+                        aria-label="Expand sidebar"
+                        className="hidden md:inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      >
+                        <PanelLeftOpen className="h-[1.1rem] w-[1.1rem]" />
+                      </button>
+                      <span className="hidden md:block h-5 w-px shrink-0 bg-border/60" />
+                    </>
+                  ) : null}
                   <div className="min-w-0">
                     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/70">{subtitle}</p>
                     <h1 className="truncate text-lg font-semibold sm:text-xl">{title}</h1>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="hidden md:inline-flex"
-                  onClick={() => setMobileOpen((value) => !value)}
-                >
-                  <Menu className="h-4 w-4" />
-                </Button>
               </div>
             </header>
             <div className="p-4 sm:p-6 lg:p-8">{children}</div>

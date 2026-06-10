@@ -937,7 +937,7 @@ export const Barangays = () => {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Barangay</AlertDialogTitle>
             <AlertDialogDescription>
@@ -953,7 +953,7 @@ export const Barangays = () => {
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete Barangay"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,155 +1,258 @@
-import { ArrowRight, Bell, FileCheck2, FileText, Shield, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardList, FileText, Users, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FeatureCard from "@/components/FeatureCard";
 import heroImage from "@/assets/hero-image.png";
 import { useAuth } from "@/hooks/use-auth";
 
-const complianceFeatures = [
+const howItWorksSteps = [
   {
+    step: "01",
     icon: Users,
-    title: "Organization Profile Setup",
-    description: "Complete your organization details before submitting documents or budget requests.",
-    href: "/organization-profile",
+    title: "Register your organization",
+    description: "Fill in your organization profile — name, location, classification, officers, and adviser.",
   },
   {
+    step: "02",
     icon: FileText,
-    title: "Document Submission",
-    description: "Upload the required registration and compliance documents in one place.",
-    href: "/document-submission",
+    title: "Submit required documents",
+    description: "Upload the 6 compliance documents. Our OCR assistant pre-checks each file before admin review.",
   },
   {
-    icon: FileCheck2,
-    title: "OCR Review",
-    description: "Check the OCR preview inside document submission before you confirm the upload.",
-    href: "/document-submission",
+    step: "03",
+    icon: Wallet,
+    title: "Request activity budget",
+    description: "Submit a budget request for your planned activity and track its approval status in real time.",
   },
   {
-    icon: Shield,
-    title: "Compliance Status",
-    description: "Track your current standing, remarks, and next action needed.",
-    href: "/compliance-status",
+    step: "04",
+    icon: CheckCircle2,
+    title: "Submit liquidation report",
+    description: "After your activity, submit a liquidation report to close out the budget and complete compliance.",
   },
 ];
 
-const systemFeatures = [
-  {
-    icon: Bell,
-    title: "Notifications",
-    description: "See admin remarks, approvals, revision requests, and overdue reminders.",
-  },
-  {
-    icon: Shield,
-    title: "Budget and Liquidation",
-    description: "Manage soft-copy pre-checks, face-to-face submission, and liquidation deadlines.",
-  },
-  {
-    icon: FileText,
-    title: "News and Transparency",
-    description: "View news releases and simplified public transparency posts in a single flow.",
-  },
-  {
-    icon: FileCheck2,
-    title: "OCR-Assisted Review",
-    description: "Use OCR as a helper, while LYDO/PCYDO personnel make the final decision.",
-  },
+const trustBadges = [
+  "RA 10742 Compliant",
+  "Pasig City LYDO",
+  "NYC YORP 2026",
 ];
 
 const Index = () => {
   const { isAuthenticated, role } = useAuth();
+  const portalHref = isAuthenticated ? (role === "admin" ? "/admin" : "/dashboard") : "/signin";
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="hero-gradient relative overflow-x-clip pt-16">
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary blur-3xl" />
           <div className="absolute bottom-10 right-20 h-96 w-96 rounded-full bg-primary blur-3xl" />
         </div>
-        <div className="container mx-auto relative z-10 px-4 py-8 sm:py-10 md:py-16 lg:py-20">
-          <div className="grid items-center gap-6 md:grid-cols-2 lg:gap-12">
+
+        <div className="container mx-auto relative z-10 max-w-7xl px-6 py-10 sm:px-8 sm:py-14 md:py-20 lg:px-10 lg:py-24">
+          <div className="grid items-center gap-8 md:grid-cols-2 lg:gap-14">
             <div className="animate-fade-up">
-              <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full border border-secondary-foreground/20 bg-secondary-foreground/10 px-3 py-1.5 sm:mb-5">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-brand-skGold" />
-                <span className="truncate text-[11px] font-medium text-secondary-foreground/80 sm:text-xs">
-                  LYDO Connect Organization Compliance Portal
+              {/* Kicker badge */}
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary-foreground/20 bg-secondary-foreground/10 px-3 py-1.5">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-brand-skGold shrink-0" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-secondary-foreground/80">
+                  LYDO Connect — Organization Compliance Portal
                 </span>
               </div>
-              <h1 className="mb-3 text-[1.9rem] font-heading font-extrabold leading-tight text-secondary-foreground sm:mb-5 sm:text-4xl md:text-5xl lg:text-[3.5rem]">
-                Manage organization compliance, submissions, and reporting in one place.
+
+              <h1 className="mb-4 text-[2rem] font-heading font-extrabold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl lg:text-[3.4rem]">
+                Your youth organization's compliance,{" "}
+                <span className="text-gradient">simplified.</span>
               </h1>
-              <p className="mb-4 max-w-xl text-[15px] leading-relaxed text-secondary-foreground/75 sm:mb-7 sm:text-lg">
-                Register your organization, upload compliance documents, review OCR output, request budget support,
-                and track liquidation deadlines with LYDO/PCYDO.
+
+              <p className="mb-6 max-w-lg text-base leading-relaxed text-secondary-foreground/75 sm:text-lg">
+                Register, submit compliance documents, request activity budgets, and track liquidation deadlines — all in one place with LYDO/PCYDO.
               </p>
-              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
+
+              {/* CTAs */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
-                  <Link to={isAuthenticated ? (role === "admin" ? "/admin" : "/dashboard") : "/signin"}>
-                    {isAuthenticated ? "Open Portal" : "Sign In"} <ArrowRight className="ml-1 h-4 w-4" />
+                  <Link to={portalHref}>
+                    {isAuthenticated ? "Open Portal" : "Sign In"}{" "}
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button variant="heroOutline" size="lg" className="w-full sm:w-auto" asChild>
-                  <Link to="/signup">Create Account</Link>
-                </Button>
+                {!isAuthenticated && (
+                  <Button variant="heroOutline" size="lg" className="w-full sm:w-auto" asChild>
+                    <Link to="/signup">Create Account</Link>
+                  </Button>
+                )}
+              </div>
+
+              {/* Trust strip */}
+              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                {trustBadges.map((badge, i) => (
+                  <span key={badge} className="flex items-center gap-1.5 text-xs text-secondary-foreground/60">
+                    {i > 0 && <span className="hidden sm:inline text-secondary-foreground/30">·</span>}
+                    <CheckCircle2 className="h-3.5 w-3.5 text-brand-skGold shrink-0" />
+                    {badge}
+                  </span>
+                ))}
               </div>
             </div>
+
             <div className="animate-float order-last md:order-none">
               <img
                 src={heroImage}
                 alt="Youth organization members coordinating documents and compliance tasks"
-                className="mx-auto h-auto w-full max-w-full rounded-2xl object-contain shadow-2xl md:max-w-[560px]"
+                className="mx-auto h-auto w-full max-w-full rounded-2xl object-contain shadow-2xl md:max-w-[520px]"
               />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-background py-12 sm:py-14 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 max-w-2xl text-center sm:mb-12 mx-auto">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">Core Workflow</span>
-            <h2 className="mb-3 text-[1.55rem] font-heading font-bold text-foreground sm:text-3xl md:text-4xl">
-              Built for organization setup, compliance, and review
+      {/* ── How It Works ─────────────────────────────────────────────────── */}
+      <section className="bg-background py-14 sm:py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+          <div className="mb-10 text-center max-w-2xl mx-auto sm:mb-14">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
+              How It Works
+            </span>
+            <h2 className="mb-3 text-[1.6rem] font-heading font-bold text-foreground sm:text-3xl md:text-4xl">
+              Four steps from registration to compliance
             </h2>
             <p className="text-sm text-muted-foreground sm:text-base">
-              The site centers on registration, document submission, budget requests, liquidation, and public transparency.
+              Every organization follows the same workflow — profile, documents, budget, liquidation.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
-            {complianceFeatures.map((feature) => (
-              <Link key={feature.title} to={feature.href} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <FeatureCard icon={feature.icon} title={feature.title} description={feature.description} />
-              </Link>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {howItWorksSteps.map(({ step, icon: Icon, title, description }) => (
+              <div
+                key={step}
+                className="relative rounded-xl border border-border bg-card p-5 card-shadow flex flex-col gap-4"
+              >
+                {/* Step connector line (desktop only, not last) */}
+                <div className="flex items-start justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="font-heading text-3xl font-extrabold text-muted-foreground/20 leading-none">
+                    {step}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="mb-1.5 font-heading text-base font-bold leading-snug text-foreground">
+                    {title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-muted/50 py-12 sm:py-14 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="mb-7 flex flex-col items-start justify-between gap-3 md:mb-12 md:flex-row md:items-center">
-            <div>
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">Platform Highlights</span>
-              <h2 className="text-[1.55rem] font-heading font-bold text-foreground sm:text-3xl md:text-4xl">
-                What the portal supports
-              </h2>
-            </div>
-            <Button variant="outline" asChild>
-              <Link to={isAuthenticated ? (role === "admin" ? "/admin" : "/dashboard") : "/signin"}>
-                Go to Portal <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
+      {/* ── Compliance Features ───────────────────────────────────────────── */}
+      <section className="bg-muted/40 py-14 sm:py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+          <div className="mb-10 text-center max-w-2xl mx-auto sm:mb-14">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
+              What's Inside
+            </span>
+            <h2 className="mb-3 text-[1.6rem] font-heading font-bold text-foreground sm:text-3xl md:text-4xl">
+              Everything your organization needs
+            </h2>
+            <p className="text-sm text-muted-foreground sm:text-base">
+              Each section of the portal is built around a specific compliance need.
+            </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {systemFeatures.map((feature) => (
-              <div key={feature.title} className="rounded-lg border bg-card p-4 sm:p-5">
-                <p className="font-semibold text-sm sm:text-base">{feature.title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:text-sm">{feature.description}</p>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                icon: Users,
+                title: "Organization Profile",
+                description: "Keep your organization details, officers, and adviser info up to date for admin verification.",
+              },
+              {
+                icon: FileText,
+                title: "Document Submission",
+                description: "Upload the 6 required registration documents. OCR assistance checks your files before review.",
+              },
+              {
+                icon: ClipboardList,
+                title: "Budget Requests",
+                description: "Submit activity budget requests, track approval status, and receive go-signals from LYDO.",
+              },
+              {
+                icon: CheckCircle2,
+                title: "Liquidation & Reporting",
+                description: "Submit liquidation reports after activities with automatic deadline tracking.",
+              },
+              {
+                icon: Wallet,
+                title: "Transparency Board",
+                description: "View public financial disclosures and news releases from the LYDO office.",
+              },
+              {
+                icon: ArrowRight,
+                title: "Compliance Status",
+                description: "Get a clear summary of your current standing, open remarks, and what to do next.",
+              },
+            ].map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="rounded-xl border border-border bg-card p-5 card-shadow transition-all duration-200 hover:border-primary/30 hover:card-shadow-hover"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="mb-1.5 font-heading text-base font-bold leading-snug text-foreground">
+                  {title}
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Band ─────────────────────────────────────────────────────── */}
+      <section className="hero-gradient relative overflow-hidden py-16 sm:py-20 md:py-28">
+        {/* Decorative glow blobs */}
+        <div className="absolute inset-0 pointer-events-none opacity-20">
+          <div className="absolute -top-16 -left-16 h-64 w-64 rounded-full bg-primary blur-3xl" />
+          <div className="absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-brand-skGold blur-3xl" />
+        </div>
+
+        <div className="container mx-auto relative z-10 max-w-2xl px-6 sm:px-8 text-center">
+          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-widest text-secondary-foreground/50">
+            Get Started
+          </span>
+          <h2 className="mb-4 text-3xl font-heading font-extrabold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl">
+            Ready to register your organization?
+          </h2>
+          <p className="mb-8 text-base text-secondary-foreground/70 sm:text-lg">
+            Create an account, complete your profile, and start the compliance process — all in one place.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
+              <Link to={portalHref}>
+                {isAuthenticated ? "Open Portal" : "Sign In"}{" "}
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+            {!isAuthenticated && (
+              <Button
+                size="lg"
+                className="w-full sm:w-auto border border-white/30 bg-white/10 text-secondary-foreground hover:bg-white/20"
+                asChild
+              >
+                <Link to="/signup">Create Account</Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>

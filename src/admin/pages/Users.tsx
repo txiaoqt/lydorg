@@ -648,13 +648,13 @@ export const UsersPage = () => {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
               {deletingUser
-                ? `Are you sure you want to delete ${deletingUser.email}? This removes profile data, role mappings, and (with SQL 16) auth.users.`
-                : "Are you sure you want to delete this user?"}
+                ? `Are you sure you want to delete ${deletingUser.email}? This action cannot be undone.`
+                : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -664,7 +664,7 @@ export const UsersPage = () => {
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete User"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

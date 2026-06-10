@@ -19,6 +19,10 @@ import {
   type SubmissionFile,
   type TemplateRecord,
   type TransparencyPost,
+  type YPOPCityActivity,
+  type YPOPEntry,
+  type YPOPFile,
+  type YPOPPeriod,
   legacyRemovedTemplateNames,
   seedState,
 } from "./lydo-connect-data";
@@ -27,6 +31,7 @@ import { supabase } from "./supabase";
 
 const STORAGE_KEY = "lydo-connect-state-v1";
 const legacySeedIds = new Set([
+  // old prototype IDs
   "org-lydo-001",
   "docsub-001",
   "budget-001",
@@ -38,6 +43,16 @@ const legacySeedIds = new Set([
   "remark-001",
   "notif-001",
   "log-001",
+  // current demo seed IDs — must never appear for real authenticated users
+  "org-demo-001", "org-demo-002", "org-demo-003",
+  "docsub-demo-001", "docsub-demo-002",
+  "budget-demo-001", "budget-demo-002", "budget-demo-003", "budget-demo-004", "budget-demo-005",
+  "liq-demo-001",
+  "ypop-demo-001", "ypop-demo-002",
+  "ypop-period-001", "ypop-period-002",
+  "ypop-act-001", "ypop-act-002", "ypop-act-003", "ypop-act-004",
+  "ypop-act-005", "ypop-act-006", "ypop-act-007", "ypop-act-008",
+  "ypop-file-001", "ypop-file-002", "ypop-file-003",
 ]);
 
 type LydoConnectState = LydoSeedState;
@@ -93,7 +108,19 @@ type LydoConnectContextValue = {
   createNotification: (notification: NotificationRecord) => void;
   createActivityLog: (activity: ActivityLog) => void;
   markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
   setDocumentSubmissionStatus: (id: string, status: DocumentSubmissionStatus, remarks?: string) => void;
+  createYPOPEntry: (entry: YPOPEntry) => void;
+  updateYPOPEntry: (id: string, patch: UpdatePatch<YPOPEntry>) => void;
+  deleteYPOPEntry: (id: string) => void;
+  createYPOPFile: (file: YPOPFile) => void;
+  deleteYPOPFile: (id: string) => void;
+  createYPOPCityActivity: (activity: YPOPCityActivity) => void;
+  updateYPOPCityActivity: (id: string, patch: UpdatePatch<YPOPCityActivity>) => void;
+  deleteYPOPCityActivity: (id: string) => void;
+  createYPOPPeriod: (period: YPOPPeriod) => void;
+  updateYPOPPeriod: (id: string, patch: UpdatePatch<YPOPPeriod>) => void;
+  deleteYPOPPeriod: (id: string) => void;
 };
 
 const LydoConnectContext = createContext<LydoConnectContextValue | undefined>(undefined);
@@ -110,22 +137,52 @@ const readState = (): LydoConnectState => {
       ...parsed,
       organizationProfiles: ((parsed.organizationProfiles ?? seedState.organizationProfiles) as OrganizationProfile[])
         .filter((item) => !legacySeedIds.has(item.id))
-        .map(normalizeOrganizationProfile),
+        .map((item) => {
+          if (import.meta.env.DEV) {
+            const seed = seedState.organizationProfiles.find((s) => s.id === item.id);
+            if (seed) return normalizeOrganizationProfile({ ...seed });
+          }
+          return normalizeOrganizationProfile(item);
+        }),
       documentSubmissions: ((parsed.documentSubmissions ?? seedState.documentSubmissions) as DocumentSubmission[]).filter(
         (item) => !legacySeedIds.has(item.id),
       ),
-      documentSubmissionFiles: ((parsed.documentSubmissionFiles ?? seedState.documentSubmissionFiles) as SubmissionFile[]).filter(
-        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.submissionId),
-      ),
-      budgetRequests: ((parsed.budgetRequests ?? seedState.budgetRequests) as BudgetRequest[]).filter(
-        (item) => !legacySeedIds.has(item.id),
-      ),
+      documentSubmissionFiles: (() => {
+        const stored = ((parsed.documentSubmissionFiles ?? []) as SubmissionFile[])
+          .filter(item => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.submissionId));
+        const storedIds = new Set(stored.map(f => f.id));
+        return [...stored, ...seedState.documentSubmissionFiles.filter(f => !storedIds.has(f.id) && !legacySeedIds.has(f.id))];
+      })(),
+      budgetRequests: (() => {
+        const stored = ((parsed.budgetRequests ?? []) as BudgetRequest[])
+          .filter(item => !legacySeedIds.has(item.id));
+        const storedIds = new Set(stored.map(r => r.id));
+        const merged = stored.map(r => {
+          const seedEntry = seedState.budgetRequests.find(s => s.id === r.id);
+          if (!seedEntry) return r;
+          return {
+            ...r,
+            revisionHistory: r.revisionHistory?.length ? r.revisionHistory : seedEntry.revisionHistory,
+            userNote: r.userNote !== undefined ? r.userNote : seedEntry.userNote,
+          };
+        });
+        return [...merged, ...seedState.budgetRequests.filter(s => !storedIds.has(s.id) && !legacySeedIds.has(s.id))];
+      })(),
       budgetRequestFiles: ((parsed.budgetRequestFiles ?? seedState.budgetRequestFiles) as BudgetRequestFile[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.budgetRequestId),
       ),
-      liquidationReports: ((parsed.liquidationReports ?? seedState.liquidationReports) as LiquidationReport[]).filter(
-        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.budgetRequestId),
-      ),
+      liquidationReports: (() => {
+        const stored = ((parsed.liquidationReports ?? []) as LiquidationReport[]).filter(
+          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.budgetRequestId),
+        );
+        const storedIds = new Set(stored.map((r) => r.id));
+        const merged = stored.map((r) => {
+          const seedEntry = seedState.liquidationReports.find((s) => s.id === r.id);
+          if (!seedEntry) return r;
+          return { ...r, revisionHistory: r.revisionHistory?.length ? r.revisionHistory : seedEntry.revisionHistory };
+        });
+        return [...merged, ...seedState.liquidationReports.filter((s) => !storedIds.has(s.id) && !legacySeedIds.has(s.id))];
+      })(),
       liquidationReportFiles: ((parsed.liquidationReportFiles ?? seedState.liquidationReportFiles) as LiquidationReportFile[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.liquidationReportId),
       ),
@@ -138,13 +195,37 @@ const readState = (): LydoConnectState => {
       complianceRemarks: ((parsed.complianceRemarks ?? seedState.complianceRemarks) as ComplianceRemark[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
       ),
-      notifications: ((parsed.notifications ?? seedState.notifications) as NotificationRecord[]).filter(
-        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
-      ),
-      activityLogs: ((parsed.activityLogs ?? seedState.activityLogs) as ActivityLog[]).filter(
-        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
-      ),
+      notifications: (() => {
+        const stored = ((parsed.notifications ?? []) as NotificationRecord[]).filter(
+          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
+        );
+        const storedIds = new Set(stored.map((n) => n.id));
+        return [...stored, ...seedState.notifications.filter((n) => !storedIds.has(n.id))];
+      })(),
+      activityLogs: (() => {
+        const stored = ((parsed.activityLogs ?? []) as ActivityLog[]).filter(
+          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
+        );
+        const storedIds = new Set(stored.map((l) => l.id));
+        return [...stored, ...seedState.activityLogs.filter((l) => !storedIds.has(l.id))];
+      })(),
       templates: (parsed.templates ?? seedState.templates).filter((template) => !legacyRemovedTemplateNames.has(template.name)),
+      ypopEntries: (() => {
+        const stored = ((parsed.ypopEntries ?? []) as YPOPEntry[]).filter((e) => !legacySeedIds.has(e.id));
+        const storedIds = new Set(stored.map((e) => e.id));
+        return [...stored, ...seedState.ypopEntries.filter((e) => !storedIds.has(e.id) && !legacySeedIds.has(e.id))];
+      })(),
+      ypopFiles: ((parsed.ypopFiles ?? seedState.ypopFiles) as YPOPFile[]).filter((f) => !legacySeedIds.has(f.id)),
+      ypopCityActivities: (() => {
+        const stored = ((parsed.ypopCityActivities ?? []) as YPOPCityActivity[]).filter((a) => !legacySeedIds.has(a.id));
+        const storedIds = new Set(stored.map((a) => a.id));
+        return [...stored, ...seedState.ypopCityActivities.filter((a) => !storedIds.has(a.id) && !legacySeedIds.has(a.id))];
+      })(),
+      ypopPeriods: (() => {
+        const stored = ((parsed.ypopPeriods ?? []) as YPOPPeriod[]).filter((p) => !legacySeedIds.has(p.id));
+        const storedIds = new Set(stored.map((p) => p.id));
+        return [...stored, ...seedState.ypopPeriods.filter((p) => !storedIds.has(p.id) && !legacySeedIds.has(p.id))];
+      })(),
     };
   } catch {
     return seedState;
@@ -498,6 +579,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             notification.id === id ? { ...notification, isRead: true } : notification,
           ),
         })),
+      markAllNotificationsRead: () =>
+        setState((current) => ({
+          ...current,
+          notifications: current.notifications.map((n) => ({ ...n, isRead: true })),
+        })),
       setDocumentSubmissionStatus: (id, status, remarks) =>
         setState((current) => ({
           ...current,
@@ -512,6 +598,74 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
               : submission,
           ),
         })),
+      createYPOPEntry: (entry) =>
+        setState((current) => ({
+          ...current,
+          ypopEntries: [entry, ...current.ypopEntries],
+        })),
+      updateYPOPEntry: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          ypopEntries: applyPatch(current.ypopEntries, id, patch).map((entry) => ({
+            ...entry,
+            updatedAt: entry.id === id ? new Date().toISOString() : entry.updatedAt,
+          })),
+        })),
+      deleteYPOPEntry: (id) =>
+        setState((current) => ({
+          ...current,
+          ypopEntries: removeById(current.ypopEntries, id),
+          ypopFiles: current.ypopFiles.filter((f) => f.ypopEntryId !== id),
+        })),
+      createYPOPFile: (file) =>
+        setState((current) => ({
+          ...current,
+          ypopFiles: [file, ...current.ypopFiles],
+        })),
+      deleteYPOPFile: (id) =>
+        setState((current) => ({
+          ...current,
+          ypopFiles: removeById(current.ypopFiles, id),
+        })),
+      createYPOPCityActivity: (activity) =>
+        setState((current) => ({
+          ...current,
+          ypopCityActivities: [...current.ypopCityActivities, activity],
+        })),
+      updateYPOPCityActivity: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          ypopCityActivities: applyPatch(current.ypopCityActivities, id, patch),
+        })),
+      deleteYPOPCityActivity: (id) =>
+        setState((current) => ({
+          ...current,
+          ypopCityActivities: removeById(current.ypopCityActivities, id),
+        })),
+      createYPOPPeriod: (period) =>
+        setState((current) => ({
+          ...current,
+          ypopPeriods: [...current.ypopPeriods, period],
+        })),
+      updateYPOPPeriod: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          ypopPeriods: applyPatch(current.ypopPeriods, id, patch).map((p) => ({
+            ...p,
+            updatedAt: p.id === id ? new Date().toISOString() : p.updatedAt,
+          })),
+        })),
+      deleteYPOPPeriod: (id) =>
+        setState((current) => {
+          const period = current.ypopPeriods.find((p) => p.id === id);
+          return {
+            ...current,
+            ypopPeriods: removeById(current.ypopPeriods, id),
+            ypopCityActivities: period
+              ? current.ypopCityActivities.filter((a) => a.semesterKey !== period.semesterKey)
+              : current.ypopCityActivities,
+          };
+        }),
     }),
     [state],
   );

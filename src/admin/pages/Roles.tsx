@@ -346,12 +346,12 @@ export const Roles = () => {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Role</AlertDialogTitle>
             <AlertDialogDescription>
               {deletingRole
-                ? `Are you sure you want to delete "${deletingRole.label}" (${deletingRole.code})?`
+                ? `Are you sure you want to delete "${deletingRole.label}"? This action cannot be undone.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -362,7 +362,7 @@ export const Roles = () => {
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete Role"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

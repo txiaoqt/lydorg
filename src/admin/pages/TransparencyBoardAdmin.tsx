@@ -498,11 +498,41 @@ export const TransparencyBoardAdmin = () => {
       </Dialog>
 
       <AlertDialog open={Boolean(deletingBoard)} onOpenChange={(open) => { if (!open) setDeletingBoard(null); }}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Board Row</AlertDialogTitle><AlertDialogDescription>{deletingBoard ? `Delete ${deletingBoard.barangay_name} (${deletingBoard.quarter} FY ${deletingBoard.fiscal_year})?` : "This cannot be undone."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={isDeletingBoard}>Cancel</AlertDialogCancel><AlertDialogAction onClick={deleteBoard} disabled={isDeletingBoard} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{isDeletingBoard ? "Deleting..." : "Delete"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Board Row</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingBoard
+                ? `Are you sure you want to delete ${deletingBoard.barangay_name} (${deletingBoard.quarter} FY ${deletingBoard.fiscal_year})? This action cannot be undone.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingBoard}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteBoard} disabled={isDeletingBoard} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={Boolean(deletingMonthly)} onOpenChange={(open) => { if (!open) setDeletingMonthly(null); }}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Monthly Row</AlertDialogTitle><AlertDialogDescription>{deletingMonthly ? `Delete ${deletingMonthly.barangay_name} month ${deletingMonthly.month_no}, FY ${deletingMonthly.fiscal_year}?` : "This cannot be undone."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={isDeletingMonthly}>Cancel</AlertDialogCancel><AlertDialogAction onClick={deleteMonthly} disabled={isDeletingMonthly} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{isDeletingMonthly ? "Deleting..." : "Delete"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Monthly Row</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingMonthly
+                ? `Are you sure you want to delete ${deletingMonthly.barangay_name} month ${deletingMonthly.month_no}, FY ${deletingMonthly.fiscal_year}? This action cannot be undone.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingMonthly}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteMonthly} disabled={isDeletingMonthly} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
     </div>
   );

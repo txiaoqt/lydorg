@@ -1,18 +1,29 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
+  Bell,
+  BellOff,
+  X,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
   ChevronUp,
+  ClipboardList,
   Download,
   Eye,
+  FileText,
   FileUp,
   Loader2,
-  MessageCircle,
-  Sparkles,
+  Medal,
+  Plus,
+  Receipt,
   Trash2,
+  Trophy,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,8 +61,13 @@ import {
   type LiquidationReport,
   type LiquidationReportFile,
   type LiquidationStatus,
+  type NotificationRecord,
   type SubmissionFile,
+  type YPOPEntry,
+  type YPOPFile,
+  type YPOPPeriod,
   statusLabelMap,
+  statusToneMap,
   formatSubClassificationLabel,
   subClassificationOptions,
   type OrganizationProfile,
@@ -69,6 +85,12 @@ import {
   upsertOrganizationProfileInSupabase,
   removeOrganizationDocumentFromSupabase,
   submitOrganizationDocumentToSupabase,
+  updateLiquidationReportInSupabase,
+  createYpopEntryInSupabase,
+  updateYpopEntryInSupabase,
+  deleteYpopEntryFromSupabase,
+  uploadYpopFileToSupabase,
+  deleteYpopFileFromSupabase,
 } from "@/lib/lydo-connect-supabase";
 import {
   buildStructuredOcrData,
@@ -175,6 +197,8 @@ const createBlankOrganizationProfile = (
   profileStatus: "incomplete",
   verifiedAt: "",
   internalNotes: "",
+  yorpRegisteredYear: null,
+  yorpRenewedYear: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });
@@ -242,22 +266,40 @@ export default function UserPortal({ section }: { section: string }) {
     upsertOrganizationProfile,
     updateDocumentFile,
     updateDocumentSubmission,
+    updateBudgetRequest,
     createNotification,
     markNotificationRead,
+    markAllNotificationsRead,
+    updateYPOPEntry,
+    createYPOPEntry,
+    deleteYPOPEntry,
+    createYPOPFile,
+    deleteYPOPFile,
   } = useLydoConnect();
   const [scanningDocumentId, setScanningDocumentId] = useState<string | null>(null);
   const [submittingDocumentId, setSubmittingDocumentId] = useState<string | null>(null);
+  const [userRemarkDraftsByFileId, setUserRemarkDraftsByFileId] = useState<Record<string, string>>({});
+  const [budgetUserNoteDrafts, setBudgetUserNoteDrafts] = useState<Record<string, string>>({});
+  const [liquidationNotesByReportId, setLiquidationNotesByReportId] = useState<Record<string, string>>({});
+  const [submittingLiquidationId, setSubmittingLiquidationId] = useState<string | null>(null);
+  const [ypopNotesByEntryId, setYpopNotesByEntryId] = useState<Record<string, string>>({});
+  const [submittingYpopId, setSubmittingYpopId] = useState<string | null>(null);
+  const [ypopUploadingId, setYpopUploadingId] = useState<string | null>(null);
+  const [ypopHistoryOpenById, setYpopHistoryOpenById] = useState<Record<string, boolean>>({});
+  const [ypopOrgView, setYpopOrgView] = useState<"list" | "entry-detail">("list");
+  const [activeYpopEntryId, setActiveYpopEntryId] = useState<string | null>(null);
+  const [ypopPreviewFileId, setYpopPreviewFileId] = useState<string | null>(null);
+  const [ypopPreviewUrl, setYpopPreviewUrl] = useState("");
+  const [ypopPreviewTitle, setYpopPreviewTitle] = useState("");
+  const [ypopPreviewCanInline, setYpopPreviewCanInline] = useState(false);
+  const [confirmDeleteYpopEntryId, setConfirmDeleteYpopEntryId] = useState<string | null>(null);
+  const ypopFileInputRef = useRef<HTMLInputElement>(null);
+  const [searchParams] = useSearchParams();
   const [savingProfile, setSavingProfile] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [ocrPreviewOpen, setOcrPreviewOpen] = useState(false);
-  const [documentReviewNote, setDocumentReviewNote] = useState<{ title: string; note: string; status: "needs_revision" | "rejected_red" } | null>(null);
   const [budgetReviewNote, setBudgetReviewNote] = useState<{ title: string; note: string; status: BudgetRequestStatus } | null>(null);
-  const [liquidationReviewNote, setLiquidationReviewNote] = useState<{
-    title: string;
-    note: string;
-    status: LiquidationStatus;
-  } | null>(null);
-  const [budgetRequestLockedModalOpen, setBudgetRequestLockedModalOpen] = useState(false);
+
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [submissionSuccessOpen, setSubmissionSuccessOpen] = useState(false);
   const [profileRequiredModalOpen, setProfileRequiredModalOpen] = useState(false);
@@ -273,6 +315,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [attachedDocumentReplacementFile, setAttachedDocumentReplacementFile] = useState<File | null>(null);
   const [attachedDocumentMarkedForRemoval, setAttachedDocumentMarkedForRemoval] = useState(false);
   const [savingAttachedDocument, setSavingAttachedDocument] = useState(false);
+  const [documentDetailMode, setDocumentDetailMode] = useState(false);
   const [pendingDocumentRemoval, setPendingDocumentRemoval] = useState<{
     fileId: string;
     fileName: string;
@@ -281,7 +324,9 @@ export default function UserPortal({ section }: { section: string }) {
   const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [savingBudgetRequest, setSavingBudgetRequest] = useState(false);
   const [budgetFileDraft, setBudgetFileDraft] = useState<File | null>(null);
-  const [budgetFormMobileOpen, setBudgetFormMobileOpen] = useState(false);
+  const [showBudgetForm, setShowBudgetForm] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<"all" | "unread" | "read">("all");
+  const [verifiedBannerDismissed, setVerifiedBannerDismissed] = useState(false);
   const [pendingBudgetDelete, setPendingBudgetDelete] = useState<BudgetRequest | null>(null);
   const [budgetForm, setBudgetForm] = useState<BudgetRequest>(() =>
     createBlankBudgetRequest(user?.id ?? "", user?.id ?? ""),
@@ -307,14 +352,33 @@ export default function UserPortal({ section }: { section: string }) {
 
   useEffect(() => {
     if (section === "budget-request") {
-      setBudgetFormMobileOpen(false);
+      const ypopEntryId = searchParams.get("ypopEntryId");
+      if (ypopEntryId) {
+        const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
+        setBudgetForm({ ...blank, budgetRequestType: "ypop_incentive", ypopEntryId });
+        setBudgetFileDraft(null);
+        setShowBudgetForm(true);
+      } else {
+        setShowBudgetForm(false);
+      }
     }
-  }, [section]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, searchParams]);
 
   useEffect(() => {
-    const isBudgetRequestLocked = section === "budget-request" && currentProfile?.profileStatus !== "verified";
-    setBudgetRequestLockedModalOpen(isBudgetRequestLocked);
-  }, [currentProfile?.profileStatus, section]);
+    if (user?.id) {
+      setVerifiedBannerDismissed(
+        localStorage.getItem(`lydo_verified_dismissed_${user.id}`) === "true"
+      );
+    }
+  }, [user?.id]);
+
+  const dismissVerifiedBanner = () => {
+    if (user?.id) {
+      localStorage.setItem(`lydo_verified_dismissed_${user.id}`, "true");
+    }
+    setVerifiedBannerDismissed(true);
+  };
 
   const handleBudgetFileDraftChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -406,7 +470,7 @@ export default function UserPortal({ section }: { section: string }) {
     isExistingOrganization: user?.profileHints?.isExistingOrganization ?? false,
     organizationIdentifierNumber: user?.profileHints?.organizationIdentifierNumber ?? "",
   });
-  const submission = state.documentSubmissions[0] ?? null;
+  const submission = state.documentSubmissions.find((s) => s.organizationId === (currentProfile?.id ?? "___")) ?? null;
   const userNotifications = useMemo(
     () => state.notifications.filter((notification) => notification.userId === user?.id),
     [state.notifications, user?.id],
@@ -602,6 +666,7 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const closeAttachedDocumentEditor = () => {
+    setDocumentDetailMode(false);
     setAttachedDocumentEditorOpen(false);
     setAttachedDocumentEditor(null);
     setAttachedDocumentPreviewUrl("");
@@ -1224,6 +1289,7 @@ export default function UserPortal({ section }: { section: string }) {
         mergeRemoteState(remoteSnapshot);
       }
       resetBudgetForm();
+      setShowBudgetForm(false);
       toast({
         title: isExisting ? "Budget request updated" : "Budget request saved",
         description:
@@ -1322,127 +1388,259 @@ export default function UserPortal({ section }: { section: string }) {
     }
   };
 
+  const handleSubmitLiquidation = async (report: LiquidationReport) => {
+    setSubmittingLiquidationId(report.id);
+    try {
+      const updated = await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
+      updateLiquidationReport(report.id, { status: "submitted", updatedAt: updated.updatedAt });
+      setLiquidationNotesByReportId((prev) => { const next = { ...prev }; delete next[report.id]; return next; });
+      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      if (remoteSnapshot) mergeRemoteState(remoteSnapshot);
+      toast({ title: "Liquidation submitted", description: "Your documents have been submitted. The admin will review them shortly." });
+    } catch (error) {
+      toast({ title: "Submit failed", description: error instanceof Error ? error.message : "Something went wrong.", variant: "destructive" });
+    } finally {
+      setSubmittingLiquidationId(null);
+    }
+  };
+
   const activeContent = useMemo(() => {
     switch (section) {
-      case "dashboard":
+      case "dashboard": {
+        const isVerified = profile.profileStatus === "verified";
+        const isProfileSaved = profile.profileStatus !== "incomplete";
+        const hasSubmittedDocuments = submission !== null && submission.status !== "draft";
+        const stepsCompleted = (isProfileSaved ? 1 : 0) + (hasSubmittedDocuments ? 1 : 0);
+        const latestAnnouncements = state.newsReleases
+          .filter((n) => n.visibilityStatus === "published")
+          .sort((a, b) => b.datePosted.localeCompare(a.datePosted))
+          .slice(0, 2);
         return (
           <div className="space-y-6">
+            {!isVerified ? null : !verifiedBannerDismissed ? (
+              <Card className="border-green-500/20 bg-green-500/5">
+                <CardContent className="flex items-start justify-between gap-4 p-5 sm:p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-full bg-green-500/10 p-2 text-green-600">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">Organization verified</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {currentProfile?.verifiedAt
+                          ? `Verified on ${new Date(currentProfile.verifiedAt).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}.`
+                          : "Your organization has been verified by the admin."}
+                        {" "}Budget requests, liquidation reports, and YPOP Incentive are now unlocked.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={dismissVerifiedBanner}
+                    className="shrink-0 rounded-md p-1 text-muted-foreground/60 transition-colors hover:text-foreground"
+                    aria-label="Dismiss"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </CardContent>
+              </Card>
+            ) : null}
+            {!isVerified && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Getting Started</CardTitle>
+                  <p className="text-sm text-muted-foreground">Complete these steps to unlock the full compliance workflow.</p>
+                </CardHeader>
+                <CardContent className="space-y-4 pb-5 sm:pb-6">
+                  <div className="flex items-start gap-3">
+                    {isProfileSaved ? (
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    ) : (
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-border text-[10px] font-bold text-muted-foreground">1</div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium ${isProfileSaved ? "text-muted-foreground" : "text-foreground"}`}>Complete Your Profile</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Fill in your organization's details and save your profile.</p>
+                      {!isProfileSaved && (
+                        <button type="button" className="mt-1 text-xs text-primary hover:underline" onClick={() => navigate(userRouteMap["organization-profile"])}>Go now →</button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    {hasSubmittedDocuments ? (
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    ) : (
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-border text-[10px] font-bold text-muted-foreground">2</div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium ${hasSubmittedDocuments ? "text-muted-foreground" : "text-foreground"}`}>Submit Required Documents</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Upload the documents required for admin review.</p>
+                      {!hasSubmittedDocuments && (
+                        <button type="button" className="mt-1 text-xs text-primary hover:underline" onClick={() => navigate(userRouteMap["document-submission"])}>Go now →</button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-border text-[10px] font-bold text-muted-foreground">3</div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">Await Admin Verification</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">The admin will review your submission and verify your organization.</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 border-t border-primary/10 pt-4">
+                    <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{stepsCompleted} of 3 steps completed</span>
+                      <span>{Math.round((stepsCompleted / 3) * 100)}%</span>
+                    </div>
+                    <Progress value={(stepsCompleted / 3) * 100} className="h-1.5 bg-primary/20" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <PortalMetricCard label="Profile" value={`${profilePercent}%`} helper={formatStatusLabel(profile.profileStatus)} />
-              <PortalMetricCard label="Documents" value={`${documentsPercent}%`} helper={`${completedDocs}/${templateDocuments.length} checked`} />
-              <PortalMetricCard label="Budget" value={`${budgetPercent}%`} helper={formatStatusLabel(latestBudget?.status ?? "draft")} />
+              <PortalMetricCard
+                label="Profile"
+                value={`${profilePercent}%`}
+                helper={formatStatusLabel(profile.profileStatus)}
+                icon={User}
+                onClick={() => navigate(userRouteMap["organization-profile"])}
+              />
+              <PortalMetricCard
+                label="Documents"
+                value={`${documentsPercent}%`}
+                helper={`${completedDocs}/${templateDocuments.length} checked`}
+                icon={FileText}
+                onClick={() => navigate(userRouteMap["document-submission"])}
+              />
+              <PortalMetricCard
+                label="Budget"
+                value={`${budgetPercent}%`}
+                helper={formatStatusLabel(latestBudget?.status ?? "draft")}
+                icon={ClipboardList}
+                onClick={() => navigate(userRouteMap["budget-request"])}
+              />
               <PortalMetricCard
                 label="Liquidation"
                 value={`${liquidationPercent}%`}
                 helper={formatStatusLabel(latestLiquidation?.status ?? "pending_activity_completion")}
+                icon={CalendarDays}
+                onClick={() => navigate(userRouteMap["liquidation-reporting"])}
               />
             </div>
 
-            <PortalSection
-              title="Quick Actions"
-              description="Move through the organization compliance workflow."
-              action={<Sparkles className="h-5 w-5 text-primary" />}
-            >
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {[
-                  ["document-submission", "Submit Documents"],
-                  ["budget-request", "Request Budget"],
-                  ["liquidation-reporting", "Submit Liquidation"],
-                  ["compliance-status", "View Compliance"],
-                  ["news-releases", "View News"],
-                ].map(([id, label]) => (
-                  <Button key={id} type="button" variant="outline" className="w-full justify-between" onClick={() => navigate(userRouteMap[id])}>
-                    <span>{label}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+            <Card className="bg-muted/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Status Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-0 pb-5">
+                {(
+                  [
+                    { label: "Profile",     badge: <PortalStatusBadge status={profile.profileStatus} /> },
+                    { label: "Documents",   badge: submission ? <PortalStatusBadge status={submission.status} /> : <span className="text-xs text-muted-foreground">No submission yet</span> },
+                    { label: "Budget",      badge: latestBudget ? <PortalStatusBadge status={latestBudget.status} /> : <span className="text-xs text-muted-foreground">No request yet</span> },
+                    { label: "Liquidation", badge: latestLiquidation ? <PortalStatusBadge status={latestLiquidation.status} /> : <span className="text-xs text-muted-foreground">Locked</span> },
+                  ] as { label: string; badge: React.ReactNode }[]
+                ).map(({ label, badge }, i, arr) => (
+                  <div
+                    key={label}
+                    className={`flex items-center justify-between gap-3 py-2.5 text-sm${i < arr.length - 1 ? " border-b border-border/40" : ""}`}
+                  >
+                    <span className="text-muted-foreground">{label}</span>
+                    {badge}
+                  </div>
                 ))}
-              </div>
-            </PortalSection>
-
-            <PortalSection title="Compliance Summary" description="A quick look at the organization standing.">
-              <div className="grid gap-3 md:grid-cols-2">
-                <Card className="bg-muted/20">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Next Action Needed</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm text-muted-foreground">
-                      <p>{submission?.status === "under_admin_review" ? "Wait for admin review remarks." : "Complete the remaining required documents."}</p>
-                    <p>
-                      {latestBudget?.status === "budget_released"
-                        ? "Your budget has been released. You can now submit liquidation."
+                <div className="mt-3 rounded-lg border border-border/40 bg-background/60 px-3 py-2.5">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground/60">Next Step</p>
+                  <p className="mt-1 text-sm text-foreground">
+                    {submission?.status === "under_admin_review"
+                      ? "Your documents are under admin review. Check back for remarks."
+                      : latestBudget?.status === "budget_released"
+                        ? "Your budget has been released. You can now submit a liquidation report."
                         : latestBudget?.status === "hard_copy_submitted"
                           ? "Hard copy received. Wait for cash release before liquidation unlocks."
                           : latestBudget?.status === "approved_for_ftf_green"
                             ? "Prepare hard copies for face-to-face submission."
                             : latestBudget
-                              ? "Budget request is ready for administrative review."
-                              : "Create your first budget request to start the review flow."}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-muted/20">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Recent Status</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span>Profile</span>
-                      <PortalStatusBadge status={profile.profileStatus} />
-                    </div>
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span>Documents</span>
-                      {submission ? <PortalStatusBadge status={submission.status} /> : <span className="text-muted-foreground">No submission yet</span>}
-                    </div>
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span>Budget</span>
-                      {latestBudget ? <PortalStatusBadge status={latestBudget.status} /> : <span className="text-muted-foreground">No request yet</span>}
-                    </div>
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span>Liquidation</span>
-                      {latestLiquidation ? <PortalStatusBadge status={latestLiquidation.status} /> : <span className="text-muted-foreground">Locked</span>}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </PortalSection>
+                              ? "Budget request is under administrative review."
+                              : !isProfileSaved
+                                ? "Complete your profile to begin the compliance workflow."
+                                : "Submit your required documents to continue."}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-            <PortalSection title="Pending Notifications" description="Important admin messages and workflow updates.">
-              {unreadNotifications.length ? (
-                <div className="space-y-3">
-                  {unreadNotifications.slice(0, 3).map((notification) => (
-                    <button
-                      key={notification.id}
-                      type="button"
-                      className="w-full rounded-xl border border-border/70 bg-background p-4 text-left transition-colors hover:bg-muted/40"
-                      onClick={() => markNotificationRead(notification.id)}
+            {docFiles.some((file) => file.validationStatus !== "correct") && (
+              <PortalSection
+                title="Action Items"
+                description="These documents need your attention before you can move forward."
+              >
+                <ul className="space-y-2">
+                  {docFiles
+                    .filter((file) => file.validationStatus !== "correct")
+                    .map((file) => (
+                      <li key={file.id}>
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between gap-3 rounded-xl border border-border/70 p-3 text-sm text-left transition-colors hover:bg-muted/40"
+                          onClick={() => navigate(userRouteMap["document-submission"])}
+                        >
+                          <span className="font-medium">{templatesById[file.documentTypeId]?.name ?? file.documentTypeId}</span>
+                          <PortalStatusBadge status="needs_revision" />
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              </PortalSection>
+            )}
+
+            <PortalSection
+              title="Latest Announcements"
+              description="Recent updates from LYDO."
+              action={
+                <Button variant="ghost" size="sm" onClick={() => navigate(userRouteMap["news-releases"])}>
+                  View all
+                </Button>
+              }
+            >
+              {latestAnnouncements.length === 0 ? (
+                <PortalEmptyState title="No announcements yet" description="Check back soon for updates from LYDO." />
+              ) : (
+                <div className="space-y-2">
+                  {latestAnnouncements.map((news) => (
+                    <a
+                      key={news.id}
+                      href={news.facebookPostUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex gap-3 rounded-xl border border-border/70 bg-background p-4 transition-all hover:-translate-y-0.5 hover:bg-muted/30 hover:shadow-sm"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">{notification.title}</p>
-                        <PortalStatusBadge status={notification.type === "overdue" ? "overdue" : "under_review"} />
+                      <div className="flex h-12 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <p className="text-[9px] font-semibold uppercase leading-none">
+                          {new Date(news.datePosted).toLocaleDateString("en-PH", { month: "short" })}
+                        </p>
+                        <p className="text-lg font-bold leading-none">
+                          {new Date(news.datePosted).getDate()}
+                        </p>
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
-                    </button>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">{news.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{news.description}</p>
+                      </div>
+                    </a>
                   ))}
                 </div>
-              ) : (
-                <PortalEmptyState
-                  title="No unread notifications"
-                  description="You are all caught up."
-                  action={
-                    <Button variant="outline" onClick={() => navigate(userRouteMap.notifications)}>
-                      View all notifications
-                    </Button>
-                  }
-                />
               )}
             </PortalSection>
           </div>
         );
+      }
       case "organization-profile":
         return (
           <PortalSection
-            title="Organization Profile Setup"
-            description="Review the organization profile linked to your account. Core registration details are pulled from signup and locked in."
+            title="My Profile"
+            description="Complete your organization's profile to unlock the compliance workflow. Core registration details from sign-up are locked in."
             action={<PortalStatusBadge status={profileDraft.profileStatus} />}
           >
             <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -1670,14 +1868,310 @@ export default function UserPortal({ section }: { section: string }) {
             </div>
           </PortalSection>
         );
-      case "document-submission":
+      case "document-submission": {
+        const submissionLogs = state.activityLogs
+          .filter((log) => log.organizationId === currentProfile?.id && log.relatedType === "document_submission")
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+        // Detail sub-view values
+        const detailDocumentType = attachedDocumentEditor
+          ? templateDocuments.find((dt) => dt.id === attachedDocumentEditor.file.documentTypeId)
+          : null;
+        const detailFile = attachedDocumentEditor?.file ?? null;
+        const detailHasAdminFeedback =
+          detailFile?.adminStatus === "needs_revision" || detailFile?.adminStatus === "rejected_red";
+        const detailFileBadgeStatus = detailFile
+          ? detailFile.adminStatus && detailFile.adminStatus !== "draft"
+            ? detailFile.adminStatus
+            : detailFile.validationStatus === "correct"
+              ? "ready_for_review"
+              : "needs_revision"
+          : null;
+        type FileTimelineEntry = { date: string; message: string };
+        const detailFileTimeline: FileTimelineEntry[] = detailFile
+          ? [
+              ...(detailFile.uploadedAt
+                ? [{ date: detailFile.uploadedAt, message: "Document uploaded for review." }]
+                : []),
+              ...(detailFile.reviewedAt
+                ? (() => {
+                    const s = detailFile.adminStatus;
+                    if (s === "approved_green" || s === "approved")
+                      return [{ date: detailFile.reviewedAt, message: "Document approved by admin." }];
+                    if (s === "needs_revision" || s === "rejected_red") {
+                      const remark = detailFile.adminRemarks?.trim();
+                      return [{
+                        date: detailFile.reviewedAt,
+                        message: remark ? `Admin requested revision: "${remark}"` : "Admin requested revision.",
+                      }];
+                    }
+                    if (s === "submitted" || s === "ready_for_review")
+                      return [{ date: detailFile.reviewedAt, message: "Document received and queued for review." }];
+                    return [];
+                  })()
+                : []),
+            ].sort((a, b) => a.date.localeCompare(b.date))
+          : [];
+
+        // Document detail sub-view
+        if (documentDetailMode && attachedDocumentEditor && detailDocumentType && detailFile) {
+          return (
+            <div className="space-y-4">
+              {/* Back button */}
+              <button
+                type="button"
+                onClick={closeAttachedDocumentEditor}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Documents
+              </button>
+
+              {/* Page header */}
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold">{detailDocumentType.name}</h2>
+                  {detailFileBadgeStatus && <PortalStatusBadge status={detailFileBadgeStatus} />}
+                </div>
+                <p className="mt-0.5 text-sm text-muted-foreground">{detailDocumentType.description}</p>
+              </div>
+
+              {/* Two-column layout */}
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:items-start">
+                {/* Left: file preview */}
+                <div className="min-w-0 rounded-xl border border-border/70 bg-muted/20 p-3 sm:p-4">
+                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Attached file preview</p>
+                      <p className="break-all text-sm font-medium text-foreground sm:truncate">
+                        {attachedDocumentPreviewTitle || detailFile.fileName}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={() => void openFile(detailFile.fileUrl, detailFile.fileName)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Open File
+                    </Button>
+                  </div>
+                  <div className="h-[min(52vh,28rem)] overflow-auto rounded-lg border border-border/70 bg-background sm:h-[min(60vh,34rem)]">
+                    {attachedDocumentPreviewUrl && attachedDocumentPreviewCanInline ? (
+                      isImagePreviewFile(attachedDocumentPreviewTitle) || isImagePreviewFile(detailFile.fileUrl) ? (
+                        <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
+                          <img
+                            src={attachedDocumentPreviewUrl}
+                            alt={attachedDocumentPreviewTitle || "Attached file preview"}
+                            className="max-h-[calc(52vh-1.5rem)] w-full rounded-md object-contain sm:max-h-[calc(34rem-2rem)]"
+                          />
+                        </div>
+                      ) : (
+                        <iframe
+                          src={attachedDocumentPreviewUrl}
+                          title={attachedDocumentPreviewTitle || "Attached file preview"}
+                          className="h-[min(52vh,28rem)] w-full border-0 sm:h-[min(60vh,34rem)]"
+                        />
+                      )
+                    ) : attachedDocumentPreviewUrl ? (
+                      <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center sm:p-6">
+                        <div className="space-y-2">
+                          <p className="text-base font-medium text-foreground">Preview not available in the browser</p>
+                          <p className="max-w-md text-sm text-muted-foreground">
+                            This file type cannot be displayed inline. Use the Open File button to view it.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center sm:p-6">
+                        <p className="text-sm font-medium text-foreground">No preview available</p>
+                        <p className="max-w-md text-sm text-muted-foreground">
+                          {attachedDocumentPreviewEmptyMessage || "The uploaded file could not be previewed."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: actions sidebar */}
+                <div className="space-y-4 rounded-xl border border-border/70 bg-card p-4 sm:p-5">
+                  {/* File info */}
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Current file</p>
+                    <p className="mt-1 break-all text-sm font-medium text-foreground">{detailFile.fileName}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {detailFile.uploadedAt
+                        ? `Uploaded ${new Date(detailFile.uploadedAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}`
+                        : "Uploaded recently"}
+                    </p>
+                  </div>
+
+                  <div className="h-px bg-border/40" />
+
+                  {/* Admin feedback + resubmission note */}
+                  {detailHasAdminFeedback && (
+                    <>
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                          <div className="mb-1 flex items-center gap-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Feedback</p>
+                          </div>
+                          <p className="text-sm text-amber-800">
+                            {detailFile.adminRemarks?.trim() || "No comment was provided."}
+                          </p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-medium text-foreground/70">
+                            Message with resubmission{" "}
+                            <span className="font-normal text-muted-foreground">(optional)</span>
+                          </p>
+                          <Textarea
+                            placeholder="Briefly describe what you changed or clarify anything for the admin."
+                            value={userRemarkDraftsByFileId[detailFile.id] ?? detailFile.userRemarks ?? ""}
+                            onChange={(e) => {
+                              setUserRemarkDraftsByFileId((prev) => ({ ...prev, [detailFile.id]: e.target.value }));
+                              updateDocumentFile(detailFile.id, { userRemarks: e.target.value });
+                            }}
+                            className="min-h-[4.5rem] resize-none text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="h-px bg-border/40" />
+                    </>
+                  )}
+
+                  {/* File actions */}
+                  <div className="space-y-2">
+                    <input
+                      ref={attachedDocumentInputRef}
+                      type="file"
+                      accept={getDocumentUploadAcceptValue(attachedDocumentEditor.file.documentTypeId)}
+                      className="hidden"
+                      onChange={(event) => {
+                        const nextFile = event.target.files?.[0] ?? null;
+                        setAttachedDocumentReplacementFile(nextFile);
+                        setAttachedDocumentMarkedForRemoval(false);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => attachedDocumentInputRef.current?.click()}
+                      disabled={Boolean(savingAttachedDocument)}
+                    >
+                      <FileUp className="mr-2 h-4 w-4" />
+                      Change File
+                    </Button>
+                    {attachedDocumentReplacementFile && (
+                      <p className="text-xs text-muted-foreground">
+                        Replacement: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
+                      </p>
+                    )}
+                    <Button
+                      type="button"
+                      variant={attachedDocumentMarkedForRemoval ? "secondary" : "destructive"}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setAttachedDocumentMarkedForRemoval((current) => !current);
+                        setAttachedDocumentReplacementFile(null);
+                        if (attachedDocumentInputRef.current) {
+                          attachedDocumentInputRef.current.value = "";
+                        }
+                      }}
+                      disabled={Boolean(savingAttachedDocument)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {attachedDocumentMarkedForRemoval ? "Undo Remove" : "Remove Document"}
+                    </Button>
+                    {attachedDocumentMarkedForRemoval && (
+                      <p className="text-xs text-destructive">This file will be removed when you save.</p>
+                    )}
+                  </div>
+
+                  {/* Per-file review log */}
+                  <div className="h-px bg-border/40" />
+                  <div>
+                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Activity</p>
+                    {detailFileTimeline.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No activity yet.</p>
+                    ) : (
+                      <div>
+                        {detailFileTimeline.map((entry, i) => (
+                          <div key={i} className="flex gap-2.5">
+                            <div className="flex flex-col items-center pt-0.5">
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                              {i < detailFileTimeline.length - 1 && (
+                                <span className="mt-0.5 w-px flex-1 bg-border/50" style={{ minHeight: "1rem" }} />
+                              )}
+                            </div>
+                            <div className="min-w-0 pb-3">
+                              <p className="text-xs leading-snug text-foreground">{entry.message}</p>
+                              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                {new Date(entry.date).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Save / Cancel */}
+                  <div className="h-px bg-border/40" />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      className="flex-1"
+                      onClick={() => void saveAttachedDocumentChanges()}
+                      disabled={Boolean(savingAttachedDocument)}
+                    >
+                      {savingAttachedDocument ? "Saving..." : "Save Changes"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={closeAttachedDocumentEditor}
+                      disabled={Boolean(savingAttachedDocument)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="space-y-6">
             <PortalSection
-              title="Document Submission"
-              description="Upload each required file, review the extracted details, and submit only after the required fields are checked."
+              title="Document Submissions"
+              description="Upload each required file and submit for admin review. You will be notified when documents are approved or require changes."
             >
-              <div className="grid gap-4">
+              {/* Progress banner */}
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {completedDocs} of {templateDocuments.length} documents approved
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <Progress value={documentsPercent} className="h-1.5 w-32" />
+                    <span className="text-xs text-muted-foreground">{documentsPercent}%</span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {submission
+                    ? <PortalStatusBadge status={submission.status} />
+                    : <span className="text-xs text-muted-foreground">No submission yet</span>}
+                </div>
+              </div>
+
+              <div className="grid gap-3">
                 {templateDocuments.map((documentType) => {
                   const file = docFiles.find((entry) => entry.documentTypeId === documentType.id);
                   const template = templatesById[documentType.id];
@@ -1689,69 +2183,59 @@ export default function UserPortal({ section }: { section: string }) {
                           ? "ready_for_review"
                           : "needs_revision"
                         : null;
-                  const hasAdminReviewNote = file?.adminStatus === "needs_revision" || file?.adminStatus === "rejected_red";
+                  const isApproved = fileBadgeStatus === "approved" || fileBadgeStatus === "approved_green";
                   return (
-                    <Card key={documentType.id} className="border-border/70">
-                      <CardContent className="grid gap-4 p-4 sm:p-5 md:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] md:items-start">
-                        <div className="min-w-0 space-y-2">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                            <p className="min-w-0 break-words font-medium leading-snug">{documentType.name}</p>
-                            {fileBadgeStatus ? (
-                              <div className="flex flex-wrap items-center gap-2">
-                                <PortalStatusBadge status={fileBadgeStatus} />
-                                {hasAdminReviewNote ? (
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-8 px-2 text-xs text-primary hover:text-primary"
-                                    onClick={() =>
-                                      setDocumentReviewNote({
-                                        title: documentType.name,
-                                        note: file?.adminRemarks?.trim() || "No comment was provided.",
-                                        status: fileBadgeStatus,
-                                      })
-                                    }
-                                  >
-                                    <MessageCircle className="mr-1.5 h-4 w-4" />
-                                    Comment
-                                  </Button>
-                                ) : null}
-                              </div>
-                            ) : file ? null : (
-                              <span className="text-xs text-muted-foreground">No file uploaded yet</span>
+                    <Card key={documentType.id} className="overflow-hidden border-border/70">
+                      <CardContent className="p-0">
+                        {/* Header: icon + name + status badge */}
+                        <div className="flex items-start gap-3 p-4 sm:p-5">
+                          <div className="mt-0.5 shrink-0 rounded-lg border border-border/50 bg-muted/40 p-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium leading-snug">{documentType.name}</p>
+                              {fileBadgeStatus
+                                ? <PortalStatusBadge status={fileBadgeStatus} />
+                                : <span className="text-xs text-muted-foreground">No file uploaded yet</span>
+                              }
+                            </div>
+                            <p className="mt-1 text-sm text-muted-foreground">{documentType.description}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground/60">
+                              Format: {getDocumentPrimaryFileTypeLabel(documentType.id)}
+                            </p>
+                            {file && (file.adminStatus === "needs_revision" || file.adminStatus === "rejected_red") && file.adminRemarks?.trim() && (
+                              <p className="mt-1 text-xs italic text-amber-700">
+                                Admin: {file.adminRemarks.trim()}
+                              </p>
+                            )}
+                            {isApproved && (
+                              <p className="mt-1.5 flex items-center gap-1 text-xs text-green-600">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                This document has been approved.
+                              </p>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{documentType.description}</p>
-                          <p className="text-xs text-muted-foreground">Primary file type: {getDocumentPrimaryFileTypeLabel(documentType.id)}</p>
-                          {!file ? (
-                            <p className="rounded-xl border border-dashed border-border/70 bg-muted/10 p-4 text-sm text-muted-foreground">
-                              {getDocumentUploadHelpText(documentType.id)}
-                            </p>
-                          ) : null}
                         </div>
 
-                        <div className="flex min-w-0 flex-col gap-3 md:items-end">
-                          <div className="flex flex-wrap gap-2 md:justify-end">
+                        {/* Action footer */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 bg-muted/20 px-4 py-3 sm:px-5">
+                          <div>
                             {hasUploadedTemplateFile(template?.templateFileUrl, template?.templateFileName) ? (
-                              <>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full sm:w-auto"
-                                  onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || documentType.name)}
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Template
-                                </Button>
-                              </>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || documentType.name)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Template
+                              </Button>
                             ) : (
                               <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="w-full sm:w-auto"
                                 onClick={() => void openPreview(template?.templateFileUrl ?? "", template?.templateFileName || documentType.name)}
                               >
                                 <Eye className="mr-2 h-4 w-4" />
@@ -1759,9 +2243,7 @@ export default function UserPortal({ section }: { section: string }) {
                               </Button>
                             )}
                           </div>
-
                           <label
-                            className="w-full md:w-auto"
                             onClick={(event) => {
                               if (ensureCompletedOrganizationProfile()) return;
                               event.preventDefault();
@@ -1778,15 +2260,17 @@ export default function UserPortal({ section }: { section: string }) {
                             />
                             <Button
                               type="button"
-                              variant="secondary"
+                              variant={file ? "outline" : "secondary"}
                               size="sm"
                               asChild
                               disabled={scanningDocumentId === documentType.id || submittingDocumentId === documentType.id}
-                              className="w-full sm:w-auto"
+                              className="cursor-pointer"
                               onClick={(event) => {
                                 if (file) {
                                   event.preventDefault();
                                   event.stopPropagation();
+                                  setDocumentDetailMode(true);
+                                  window.scrollTo({ top: 0, behavior: "smooth" });
                                   void openAttachedDocumentEditor(file, documentType.name);
                                 }
                               }}
@@ -1814,41 +2298,47 @@ export default function UserPortal({ section }: { section: string }) {
               </div>
             </PortalSection>
 
-            <PortalSection
-              title="Submission Flow"
-              description="After you upload a file, a confirmation modal will ask if you want to submit it. Choose Yes to send it to LYDO."
-            >
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-muted/20">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">What happens next</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-sm text-muted-foreground">
-                    Upload the required file, confirm the submission, and send the document for admin review.
-                  </CardContent>
-                </Card>
-                <Card className="bg-muted/20">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Current state</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-sm text-muted-foreground">
-                    {submission ? (
-                      <p>{formatStatusLabel(submission.status)}</p>
-                    ) : (
-                      <p>No submission has been created yet. It will appear automatically after the first confirmed file upload.</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+            {/* Submission Review Log */}
+            <PortalSection title="Recent Activity" description="Admin review actions on your document submission.">
+              {submissionLogs.length === 0 ? (
+                <PortalEmptyState
+                  title="No activity yet"
+                  description="Review activity will appear here once your submission has been processed."
+                />
+              ) : (
+                <div>
+                  {submissionLogs.map((log, i) => (
+                    <div key={log.id} className="flex gap-3">
+                      <div className="flex flex-col items-center pt-1">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-primary/70" />
+                        {i < submissionLogs.length - 1 && (
+                          <span className="mt-1 w-px flex-1 bg-border/50" style={{ minHeight: "1.5rem" }} />
+                        )}
+                      </div>
+                      <div className="min-w-0 pb-5">
+                        <p className="text-sm leading-snug text-foreground">{log.description}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {new Date(log.createdAt).toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </PortalSection>
           </div>
         );
+      }
       case "budget-request":
         if (isBudgetRequestLocked) {
           return (
             <div className="space-y-6">
               <PortalSection
-                title="Budget Request"
+                title="Budget Requests"
                 description="This section becomes available after your organization registration is approved."
               >
                 <Card className="border-border/70">
@@ -1864,14 +2354,453 @@ export default function UserPortal({ section }: { section: string }) {
                         </p>
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
-                      Please wait for the admin to approve your registration before creating or submitting any budget requests.
-                      Once your profile is verified, this page will become available automatically.
+                  </CardContent>
+                </Card>
+              </PortalSection>
+            </div>
+          );
+        }
+        {
+          const budgetActionLabels: Record<string, string> = {
+            needs_revision: "Revision requested",
+            approved_for_ftf_green: "Approved for FTF submission",
+            hard_copy_submitted: "Hard copy submitted",
+            budget_released: "Budget released",
+            completed: "Completed",
+            submitted: "Submitted for review",
+            rejected_red: "Rejected",
+            draft: "Saved as draft",
+          };
+          return (
+            <div className="space-y-6">
+              <PortalSection
+                title="Budget Requests"
+                description="Create, edit, and submit allocation requests for your organization's activities."
+                action={!showBudgetForm ? (
+                  <Button type="button" size="sm" onClick={() => { resetBudgetForm(); setShowBudgetForm(true); }}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Budget Request
+                  </Button>
+                ) : undefined}
+              >
+                {showBudgetForm ? (
+                  <div className="space-y-4">
+                    {/* Back button */}
+                    <button
+                      type="button"
+                      onClick={() => { setShowBudgetForm(false); resetBudgetForm(); }}
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back to Budget Requests
+                    </button>
+                    <div>
+                      <h2 className="text-lg font-semibold">
+                        {budgetRequests.some((r) => r.id === budgetForm.id) ? "Edit Budget Request" : "New Budget Request"}
+                      </h2>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {budgetRequests.find((r) => r.id === budgetForm.id)?.status === "needs_revision"
+                          ? "Review the admin's feedback below, make your changes, and resubmit."
+                          : "Fill in the details below and save as draft or submit for admin review."}
+                      </p>
                     </div>
-                    <Button type="button" onClick={() => navigate(userRouteMap["document-submission"])}>
-                      <ArrowRight className="mr-2 h-4 w-4" />
-                      Return to Document Submission
-                    </Button>
+                    <Card className="border-border/70">
+                      <CardContent className="space-y-4 p-5 sm:p-6">
+                        {budgetForm.budgetRequestType === "ypop_incentive" && (() => {
+                          const linked = state.ypopEntries.find((e) => e.id === budgetForm.ypopEntryId);
+                          return (
+                            <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                              <div className="mb-1 flex items-center gap-1.5">
+                                <Trophy className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                                <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">YPOP Incentive Grant</p>
+                              </div>
+                              <p className="text-sm text-amber-800">
+                                This budget request is linked to your{linked ? ` ${linked.semesterLabel}` : ""} YPOP qualification. It will be reviewed as a Project Grant (PPA).
+                              </p>
+                            </div>
+                          );
+                        })()}
+                        {budgetRequests.find((r) => r.id === budgetForm.id)?.status === "needs_revision" && (
+                          <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                            <div className="mb-1 flex items-center gap-1.5">
+                              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                              <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Feedback</p>
+                            </div>
+                            <p className="text-sm text-amber-800">
+                              {budgetRequests.find((r) => r.id === budgetForm.id)?.remarks?.trim() || "No comment was provided."}
+                            </p>
+                          </div>
+                        )}
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="budget-title">
+                              Activity Title <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="budget-title"
+                              value={budgetForm.activityTitle}
+                              onChange={(event) => setBudgetForm((current) => ({ ...current, activityTitle: event.target.value }))}
+                              placeholder="Youth leadership training"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="budget-description">
+                              Description <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                              id="budget-description"
+                              value={budgetForm.activityDescription}
+                              onChange={(event) => setBudgetForm((current) => ({ ...current, activityDescription: event.target.value }))}
+                              placeholder="Explain the activity, expected participants, and goals."
+                              rows={4}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="budget-date">
+                              Proposed Date <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="budget-date"
+                              type="date"
+                              value={budgetForm.activityDate}
+                              onChange={(event) => setBudgetForm((current) => ({ ...current, activityDate: event.target.value }))}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="budget-venue">
+                              Venue <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="budget-venue"
+                              value={budgetForm.venue}
+                              onChange={(event) => setBudgetForm((current) => ({ ...current, venue: event.target.value }))}
+                              placeholder="LYDO Hall"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="budget-amount">
+                              Requested Amount <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="budget-amount"
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              value={budgetForm.requestedAmount || ""}
+                              onChange={(event) =>
+                                setBudgetForm((current) => ({
+                                  ...current,
+                                  requestedAmount: Number(event.target.value || 0),
+                                }))
+                              }
+                              placeholder="15000"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="budget-category">
+                              Purpose and Category <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="budget-category"
+                              value={budgetForm.purposeCategory}
+                              onChange={(event) => setBudgetForm((current) => ({ ...current, purposeCategory: event.target.value }))}
+                              placeholder="Capacity building / training"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="budget-remarks">
+                              Remarks <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                              id="budget-remarks"
+                              value={budgetForm.remarks}
+                              onChange={(event) => setBudgetForm((current) => ({ ...current, remarks: event.target.value }))}
+                              placeholder="Notes for the reviewer."
+                              rows={3}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="budget-file">
+                              Detailed Document <span className="ml-1 text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="budget-file"
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              onChange={handleBudgetFileDraftChange}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              PDF only. Upload the budget document with full breakdown and supporting details.
+                            </p>
+                            {budgetFileDraft ? (
+                              <p className="text-xs text-foreground">Selected: {budgetFileDraft.name}</p>
+                            ) : null}
+                            {!budgetFileDraft && budgetRequestFilesByBudgetId.get(budgetForm.id) ? (
+                              <p className="text-xs text-foreground">
+                                Current file: {budgetRequestFilesByBudgetId.get(budgetForm.id)?.fileName}
+                              </p>
+                            ) : null}
+                          </div>
+                          {budgetRequests.find((r) => r.id === budgetForm.id)?.status === "needs_revision" && (
+                            <div className="space-y-2 md:col-span-2">
+                              <Label htmlFor="budget-user-note">
+                                Message with resubmission{" "}
+                                <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                              </Label>
+                              <Textarea
+                                id="budget-user-note"
+                                value={budgetForm.userNote ?? ""}
+                                onChange={(e) => setBudgetForm((current) => ({ ...current, userNote: e.target.value }))}
+                                placeholder="Briefly explain what you changed or clarify anything for the admin."
+                                rows={3}
+                                className="resize-none text-sm"
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 border-t border-border/40 pt-4">
+                          <Button
+                            type="button"
+                            disabled={savingBudgetRequest}
+                            onClick={() => void saveBudgetRequest("draft")}
+                          >
+                            {savingBudgetRequest ? "Saving..." : "Save Draft"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={savingBudgetRequest}
+                            onClick={() => void saveBudgetRequest("submitted")}
+                          >
+                            Submit for Review
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={savingBudgetRequest}
+                            onClick={() => { setShowBudgetForm(false); resetBudgetForm(); }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Summary metric cards */}
+                    {(() => {
+                      const totalRequests = budgetRequests.length;
+                      const pendingReviewCount = budgetRequests.filter((r) => r.status === "submitted" || r.status === "under_review").length;
+                      const needsRevisionCount = budgetRequests.filter((r) => r.status === "needs_revision").length;
+                      const approvedCount = budgetRequests.filter((r) =>
+                        r.status === "approved_for_ftf_green" ||
+                        r.status === "hard_copy_submitted" ||
+                        r.status === "budget_released" ||
+                        r.status === "completed"
+                      ).length;
+                      return (
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          <PortalMetricCard label="Total" value={totalRequests} helper="all requests" icon={ClipboardList} />
+                          <PortalMetricCard label="Under Review" value={pendingReviewCount} helper="awaiting admin" icon={Eye} />
+                          <PortalMetricCard label="Needs Revision" value={needsRevisionCount} helper="action required" icon={AlertTriangle} />
+                          <PortalMetricCard label="Approved" value={approvedCount} helper="approved or released" icon={CheckCircle2} />
+                        </div>
+                      );
+                    })()}
+
+                    {budgetRequests.length ? (
+                      budgetRequests.map((request) => {
+                        const attachedFile = budgetRequestFilesByBudgetId.get(request.id);
+                        const isApproved = approvedBudgetStatuses.has(request.status);
+                        return (
+                          <Card key={request.id} className="overflow-hidden border-border/70">
+                            <CardContent className="p-0">
+                              {/* Card header */}
+                              <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <p className="font-semibold leading-snug">{request.activityTitle || "Untitled request"}</p>
+                                    {request.budgetRequestType === "ypop_incentive" && (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                        <Trophy className="h-2.5 w-2.5" />
+                                        YPOP Incentive
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="mt-0.5 text-xs text-muted-foreground">{request.purposeCategory || "No category"}</p>
+                                </div>
+                                <PortalStatusBadge status={request.status} />
+                              </div>
+
+                              {/* Card body */}
+                              <div className="space-y-4 px-4 pb-5 sm:px-5">
+                                {/* Description */}
+                                <p className="text-sm text-muted-foreground">{request.activityDescription || "No description provided."}</p>
+
+                                {/* Details grid */}
+                                <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                                  <div>
+                                    <p className="text-xs uppercase tracking-wide text-muted-foreground/60">Proposed Date</p>
+                                    <p className="mt-0.5 font-medium">
+                                      {request.activityDate
+                                        ? new Date(request.activityDate).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
+                                        : "Not set"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs uppercase tracking-wide text-muted-foreground/60">Venue</p>
+                                    <p className="mt-0.5 font-medium">{request.venue || "Not set"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs uppercase tracking-wide text-muted-foreground/60">Requested Amount</p>
+                                    <p className="mt-0.5 font-medium">{formatCurrency(request.requestedAmount || 0)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs uppercase tracking-wide text-muted-foreground/60">Approved Amount</p>
+                                    <p className="mt-0.5 font-medium">{request.approvedAmount ? formatCurrency(request.approvedAmount) : "—"}</p>
+                                  </div>
+                                </div>
+
+                                {/* Admin feedback (needs_revision only) */}
+                                {request.status === "needs_revision" && (
+                                  <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                                    <div className="mb-1 flex items-center gap-1.5">
+                                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Feedback</p>
+                                    </div>
+                                    <p className="text-sm text-amber-800">{request.remarks?.trim() || "No comment was provided."}</p>
+                                  </div>
+                                )}
+
+                                {/* Attached document */}
+                                {attachedFile ? (
+                                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 text-sm">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                      <span className="truncate font-medium text-foreground">{attachedFile.fileName}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}
+                                    >
+                                      <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                      Open File
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs italic text-muted-foreground/60">No supporting document attached yet.</p>
+                                )}
+
+                                {/* Revision history timeline */}
+                                {request.revisionHistory?.length ? (
+                                  <div>
+                                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Activity</p>
+                                    <div>
+                                      {request.revisionHistory.map((entry, i) => (
+                                        <div key={i} className="flex gap-2.5">
+                                          <div className="flex flex-col items-center pt-0.5">
+                                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                                            {i < (request.revisionHistory?.length ?? 0) - 1 && (
+                                              <span className="mt-0.5 w-px flex-1 bg-border/50" style={{ minHeight: "1rem" }} />
+                                            )}
+                                          </div>
+                                          <div className="min-w-0 pb-3">
+                                            <p className="text-xs leading-snug text-foreground">
+                                              {budgetActionLabels[entry.action] ?? entry.action}
+                                              {entry.adminRemarks ? `: "${entry.adminRemarks}"` : ""}
+                                            </p>
+                                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                              {new Date(entry.changedAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : null}
+
+                                {/* Footer actions (hidden for approved requests) */}
+                                {!isApproved && (
+                                  <div className="flex gap-2 border-t border-border/40 pt-3">
+                                    {request.status === "needs_revision" ? (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}
+                                        disabled={savingBudgetRequest}
+                                      >
+                                        Edit &amp; Resubmit
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}
+                                        disabled={savingBudgetRequest}
+                                      >
+                                        Edit
+                                      </Button>
+                                    )}
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDeleteBudgetRequest(request)}
+                                      disabled={savingBudgetRequest}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })
+                    ) : (
+                      <PortalEmptyState
+                        title="No budget requests yet"
+                        description="Click 'New Budget Request' to create your first allocation request. Once budget is released, the liquidation page will unlock automatically."
+                      />
+                    )}
+                  </div>
+                )}
+              </PortalSection>
+            </div>
+          );
+        }
+      case "liquidation-reporting": {
+        const isLiquidationLocked = currentProfile?.profileStatus !== "verified";
+        if (isLiquidationLocked) {
+          return (
+            <div className="space-y-6">
+              <PortalSection
+                title="Liquidation Reports"
+                description="This section becomes available after your organization registration is approved."
+              >
+                <Card className="border-border/70">
+                  <CardContent className="flex flex-col items-start gap-4 p-6 sm:p-8">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-amber-500/10 p-2 text-amber-600">
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-semibold">Waiting for Admin Approval</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Your liquidation reports page is locked until the admin verifies your organization registration.
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </PortalSection>
@@ -1879,469 +2808,1402 @@ export default function UserPortal({ section }: { section: string }) {
           );
         }
         return (
-          <div className="space-y-6">
-            <PortalSection
-              title="Budget Request"
-              description="Create, edit, delete, and submit allocation requests from one page."
-              action={<PortalStatusBadge status={latestBudget?.status ?? "draft"} />}
-            >
-              <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-                <Card className="border-border/70">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <CardTitle className="text-lg">
-                        {budgetRequests.some((request) => request.id === budgetForm.id) ? "Edit Budget Request" : "New Budget Request"}
-                      </CardTitle>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="md:hidden"
-                        onClick={() => setBudgetFormMobileOpen((current) => !current)}
-                      >
-                        {budgetFormMobileOpen ? (
-                          <>
-                            <ChevronUp className="mr-2 h-4 w-4" />
-                            Hide Fields
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="mr-2 h-4 w-4" />
-                            Show Fields
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className={`${budgetFormMobileOpen ? "block" : "hidden"} space-y-4 md:block`}>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="budget-title">
-                          Activity Title <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="budget-title"
-                          value={budgetForm.activityTitle}
-                          onChange={(event) => setBudgetForm((current) => ({ ...current, activityTitle: event.target.value }))}
-                          placeholder="Youth leadership training"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="budget-description">
-                          Description <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Textarea
-                          id="budget-description"
-                          value={budgetForm.activityDescription}
-                          onChange={(event) => setBudgetForm((current) => ({ ...current, activityDescription: event.target.value }))}
-                          placeholder="Explain the activity, expected participants, and goals."
-                          rows={4}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="budget-date">
-                          Proposed Date <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="budget-date"
-                          type="date"
-                          value={budgetForm.activityDate}
-                          onChange={(event) => setBudgetForm((current) => ({ ...current, activityDate: event.target.value }))}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="budget-venue">
-                          Venue <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="budget-venue"
-                          value={budgetForm.venue}
-                          onChange={(event) => setBudgetForm((current) => ({ ...current, venue: event.target.value }))}
-                          placeholder="LYDO Hall"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="budget-amount">
-                          Requested Amount <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="budget-amount"
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={budgetForm.requestedAmount || ""}
-                          onChange={(event) =>
-                            setBudgetForm((current) => ({
-                              ...current,
-                              requestedAmount: Number(event.target.value || 0),
-                            }))
-                          }
-                          placeholder="15000"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="budget-category">
-                          Purpose and Category <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="budget-category"
-                          value={budgetForm.purposeCategory}
-                          onChange={(event) => setBudgetForm((current) => ({ ...current, purposeCategory: event.target.value }))}
-                          placeholder="Capacity building / training"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="budget-remarks">
-                          Remarks <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Textarea
-                          id="budget-remarks"
-                          value={budgetForm.remarks}
-                          onChange={(event) => setBudgetForm((current) => ({ ...current, remarks: event.target.value }))}
-                          placeholder="Notes for the reviewer."
-                          rows={3}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="budget-file">
-                          Detailed Document <span className="ml-1 text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="budget-file"
-                          type="file"
-                          accept=".pdf,application/pdf"
-                          onChange={handleBudgetFileDraftChange}
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          PDF only. Upload the required budget document that contains the full breakdown and supporting details.
+          <PortalSection
+            title="Liquidation Reports"
+            description="Upload post-activity documents for each approved budget. The admin will review and mark your liquidation complete."
+          >
+            {liquidationReports.length ? (
+              <div className="space-y-4">
+                {(() => {
+                  const liquidationActionLabels: Record<string, string> = {
+                    submitted: "Submitted for review",
+                    needs_revision: "Revision requested",
+                    approved_for_ftf_green: "Approved",
+                    hard_copy_submitted: "Hard copy submitted",
+                    completed_liquidated: "Liquidation completed",
+                    overdue: "Marked as overdue",
+                    rejected_red: "Rejected",
+                  };
+                  const liquidationSubmittableStatuses = new Set<LiquidationStatus>([
+                    "pending_activity_completion",
+                    "not_started",
+                    "draft",
+                    "needs_revision",
+                    "overdue",
+                  ]);
+                  return liquidationReports.map((report) => {
+                    const relatedBudget = budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
+                    const attachedFiles = liquidationFilesByReportId.get(report.id) ?? [];
+                    const isDeadlineUrgent =
+                      report.status === "overdue" ||
+                      (report.deadlineAt ? new Date(report.deadlineAt) < new Date() : false);
+                    const hasAdminNote =
+                      report.remarks?.trim().length > 0 &&
+                      (report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red");
+                    const isSubmittable = liquidationSubmittableStatuses.has(report.status);
+                    const isSubmitting = submittingLiquidationId === report.id;
+                    const noteValue = liquidationNotesByReportId[report.id] ?? "";
+                    return (
+                      <Card key={report.id} className="overflow-hidden border-border/70">
+                        <CardContent className="p-0">
+                          {/* Card header */}
+                          <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
+                            <div className="min-w-0">
+                              <p className="font-semibold leading-snug">{relatedBudget?.activityTitle || "Approved budget"}</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {relatedBudget?.purposeCategory || "No category"}
+                                {relatedBudget ? ` · ${formatCurrency(relatedBudget.releasedAmount || relatedBudget.approvedAmount || 0)} released` : ""}
+                              </p>
+                            </div>
+                            <PortalStatusBadge status={report.status} />
+                          </div>
+
+                          {/* Card body */}
+                          <div className="space-y-4 px-4 pb-5 sm:px-5">
+                            {/* Dates */}
+                            <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                              <div>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground/60">Go Signal Date</p>
+                                <p className="mt-0.5 font-medium">
+                                  {report.goSignalAt
+                                    ? new Date(report.goSignalAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
+                                    : "Pending"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground/60">Deadline</p>
+                                <p className={`mt-0.5 font-medium ${isDeadlineUrgent ? "text-destructive" : ""}`}>
+                                  {report.deadlineAt
+                                    ? new Date(report.deadlineAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
+                                    : "Pending"}
+                                  {isDeadlineUrgent && " · Overdue"}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Admin note (inline) */}
+                            {hasAdminNote && (
+                              <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                                <div className="mb-1 flex items-center gap-1.5">
+                                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Note</p>
+                                </div>
+                                <p className="text-sm text-amber-800">{report.remarks.trim()}</p>
+                              </div>
+                            )}
+
+                            {/* Revision history timeline */}
+                            {report.revisionHistory?.length ? (
+                              <div>
+                                <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Activity</p>
+                                <div>
+                                  {report.revisionHistory.map((entry, i) => (
+                                    <div key={i} className="flex gap-2.5">
+                                      <div className="flex flex-col items-center pt-0.5">
+                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                                        {i < (report.revisionHistory?.length ?? 0) - 1 && (
+                                          <span className="mt-0.5 w-px flex-1 bg-border/50" style={{ minHeight: "1rem" }} />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 pb-3">
+                                        <p className="text-xs leading-snug text-foreground">
+                                          {liquidationActionLabels[entry.action] ?? entry.action}
+                                          {entry.adminRemarks ? `: "${entry.adminRemarks}"` : ""}
+                                        </p>
+                                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                          {new Date(entry.changedAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {/* Post-activity documents */}
+                            <div className="space-y-3 border-t border-border/40 pt-4">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Post-Activity Documents</p>
+                              <div className="space-y-2">
+                                <label className="block">
+                                  <input
+                                    type="file"
+                                    multiple
+                                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                                    className="sr-only"
+                                    onChange={async (event) => {
+                                      await handleLiquidationFileUpload(report, event.target.files);
+                                      event.currentTarget.value = "";
+                                    }}
+                                  />
+                                  <Button type="button" variant="outline" size="sm" asChild className="cursor-pointer">
+                                    <span>
+                                      <FileUp className="mr-2 h-4 w-4" />
+                                      Upload Documents
+                                    </span>
+                                  </Button>
+                                </label>
+                                <p className="text-xs text-muted-foreground">
+                                  Attendance sheets, photos, narrative reports, expense receipts, etc. PDF/image/Word accepted.
+                                </p>
+                              </div>
+                              {attachedFiles.length ? (
+                                <div className="space-y-2">
+                                  {attachedFiles.map((file) => (
+                                    <div key={file.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 text-sm">
+                                      <div className="flex min-w-0 items-center gap-2">
+                                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <span className="truncate font-medium text-foreground">{file.fileName}</span>
+                                      </div>
+                                      <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
+                                        <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                        Open File
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs italic text-muted-foreground/60">No documents uploaded yet.</p>
+                              )}
+                            </div>
+
+                            {/* Submit / Resubmit */}
+                            {isSubmittable && (
+                              <div className="space-y-3 border-t border-border/40 pt-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`liq-note-${report.id}`}>
+                                    {report.status === "needs_revision" ? "Message with resubmission" : "Message with submission"}
+                                    <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                                  </Label>
+                                  <Textarea
+                                    id={`liq-note-${report.id}`}
+                                    value={noteValue}
+                                    onChange={(e) =>
+                                      setLiquidationNotesByReportId((prev) => ({ ...prev, [report.id]: e.target.value }))
+                                    }
+                                    placeholder={
+                                      report.status === "needs_revision"
+                                        ? "Briefly explain what you changed or clarify anything for the admin."
+                                        : "Add any notes for the admin about your submission."
+                                    }
+                                    rows={3}
+                                    className="resize-none text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => void handleSubmitLiquidation(report)}
+                                  disabled={isSubmitting}
+                                >
+                                  {isSubmitting ? (
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
+                                  ) : report.status === "needs_revision" ? (
+                                    "Resubmit for Review"
+                                  ) : (
+                                    "Submit for Review"
+                                  )}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  });
+                })()}
+              </div>
+            ) : (
+              <PortalEmptyState
+                title="No liquidation reports yet"
+                description="Liquidation reports appear here once a budget has been released. Upload your post-activity documents after your event."
+              />
+            )}
+          </PortalSection>
+        );
+      }
+      case "news-releases": {
+        const publishedReleases = state.newsReleases.filter((n) => n.visibilityStatus === "published");
+        const isRecentRelease = (datePosted: string) => {
+          const diffDays = (Date.now() - new Date(datePosted).getTime()) / (1000 * 60 * 60 * 24);
+          return diffDays <= 30;
+        };
+        return (
+          <PortalSection
+            title="News Releases"
+            description="Official announcements and updates from LYDO. Click any card to preview the source Facebook post."
+          >
+            {publishedReleases.length ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {publishedReleases.map((news) => (
+                  <Link
+                    key={news.id}
+                    to={`/news-releases/${news.id}`}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition-shadow hover:shadow-md"
+                  >
+                    <div className="flex flex-1 flex-col p-5 sm:p-6">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {new Date(news.datePosted).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
                         </p>
-                        {budgetFileDraft ? <p className="text-xs text-foreground">Selected file: {budgetFileDraft.name}</p> : null}
-                        {!budgetFileDraft && budgetRequestFilesByBudgetId.get(budgetForm.id) ? (
-                          <p className="text-xs text-foreground">
-                            Current file: {budgetRequestFilesByBudgetId.get(budgetForm.id)?.fileName}
-                          </p>
-                        ) : null}
+                        {isRecentRelease(news.datePosted) && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            New
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2.5 line-clamp-2 text-base font-semibold leading-snug group-hover:text-primary">
+                        {news.title}
+                      </p>
+                      <p className="mt-2 flex-1 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                        {news.description}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
+                        <span className="text-sm font-medium text-primary">View Announcement</span>
+                        <ArrowRight className="h-4 w-4 text-primary/60 transition-transform group-hover:translate-x-0.5" />
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Button
-                        type="button"
-                        className="sm:w-auto"
-                        disabled={savingBudgetRequest}
-                        onClick={() => void saveBudgetRequest("draft")}
-                      >
-                        {savingBudgetRequest ? "Saving..." : "Save Draft"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="sm:w-auto"
-                        disabled={savingBudgetRequest}
-                        onClick={() => void saveBudgetRequest("submitted")}
-                      >
-                        Submit for Review
-                      </Button>
-                      <Button type="button" variant="ghost" className="sm:w-auto" onClick={resetBudgetForm}>
-                        Reset
-                      </Button>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <PortalEmptyState
+                title="No announcements yet"
+                description="LYDO hasn't published any announcements yet. Check back soon for updates."
+              />
+            )}
+          </PortalSection>
+        );
+      }
+      case "notifications": {
+        const hasUnread = userNotifications.some((n) => !n.isRead);
+        const unreadCount = userNotifications.filter((n) => !n.isRead).length;
+        const sorted = [...userNotifications].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        const filtered =
+          notifFilter === "unread"
+            ? sorted.filter((n) => !n.isRead)
+            : notifFilter === "read"
+              ? sorted.filter((n) => n.isRead)
+              : sorted;
+
+        const formatNotifDate = (iso: string) => {
+          const d = new Date(iso);
+          const isToday = d.toDateString() === new Date().toDateString();
+          return isToday
+            ? "Today"
+            : d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+        };
+
+        type IconConfig = { icon: React.ElementType; bg: string; text: string };
+        const relatedTypeIconMap: Record<string, IconConfig> = {
+          document_submission:  { icon: FileText,      bg: "bg-blue-100",   text: "text-blue-600" },
+          budget_request:       { icon: ClipboardList, bg: "bg-emerald-100", text: "text-emerald-600" },
+          liquidation_report:   { icon: Receipt,       bg: "bg-violet-100",  text: "text-violet-600" },
+          organization_profile: { icon: User,          bg: "bg-slate-100",   text: "text-slate-500" },
+        };
+        const getIconConfig = (n: NotificationRecord): IconConfig =>
+          n.type === "warning"
+            ? { icon: AlertTriangle, bg: "bg-amber-100", text: "text-amber-600" }
+            : (relatedTypeIconMap[n.relatedType] ?? { icon: Bell, bg: "bg-muted", text: "text-muted-foreground" });
+
+        const filterLabel = (f: "all" | "unread" | "read") => {
+          if (f === "all")    return `All${userNotifications.length ? ` · ${userNotifications.length}` : ""}`;
+          if (f === "unread") return `Unread${unreadCount ? ` · ${unreadCount}` : ""}`;
+          return "Read";
+        };
+
+        return (
+          <PortalSection
+            title="Notifications"
+            description="Admin remarks, go signals, revisions, and status updates."
+          >
+            {userNotifications.length === 0 ? (
+              <PortalEmptyState
+                title="No notifications yet"
+                description="You will be notified here when the admin sends remarks, go signals, or updates."
+              />
+            ) : (
+              <div className="space-y-4">
+                {/* Filter chips + mark all read */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-2">
+                  {(["all", "unread", "read"] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setNotifFilter(f)}
+                      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                        notifFilter === f
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      }`}
+                    >
+                      {filterLabel(f)}
+                    </button>
+                  ))}
+                  </div>
+                  {hasUnread && (
+                    <Button variant="ghost" size="sm" onClick={markAllNotificationsRead} className="shrink-0 text-xs">
+                      Mark all as read
+                    </Button>
+                  )}
+                </div>
+
+                {/* List */}
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 py-10 text-center">
+                    <BellOff className="h-8 w-8 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">
+                      {notifFilter === "unread"
+                        ? "You're all caught up! No unread notifications."
+                        : "No read notifications yet."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filtered.map((notification) => {
+                      const { icon: Icon, bg, text } = getIconConfig(notification);
+                      return (
+                        <button
+                          key={notification.id}
+                          type="button"
+                          className={`w-full rounded-xl border p-4 text-left transition-colors hover:bg-muted/40 ${
+                            notification.isRead
+                              ? "border-border/40 bg-muted/20"
+                              : "border-border/70 bg-background"
+                          }`}
+                          onClick={() => markNotificationRead(notification.id)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${bg}`}>
+                              <Icon className={`h-4 w-4 ${text}`} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  {!notification.isRead && (
+                                    <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                                  )}
+                                  <p className={`text-sm leading-snug ${notification.isRead ? "font-normal text-foreground/70" : "font-semibold text-foreground"}`}>
+                                    {notification.title}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-xs text-muted-foreground/70">
+                                  {formatNotifDate(notification.createdAt)}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </PortalSection>
+        );
+      }
+      case "ypop": {
+        const isYpopLocked = currentProfile?.profileStatus !== "verified";
+        if (isYpopLocked) {
+          return (
+            <div className="space-y-6">
+              <PortalSection
+                title="YPOP Incentive"
+                description="This section becomes available after your organization registration is approved."
+              >
+                <Card className="border-border/70">
+                  <CardContent className="flex flex-col items-start gap-4 p-6 sm:p-8">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-amber-500/10 p-2 text-amber-600">
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-semibold">Waiting for Admin Approval</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Your YPOP Incentive page is locked until the admin verifies your organization registration.
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+              </PortalSection>
+            </div>
+          );
+        }
+        const orgYpopEntries = state.ypopEntries
+          .filter((e) => e.organizationId === (currentProfile?.id ?? ""))
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        const ypopFilesByEntryId = new Map(
+          orgYpopEntries.map((e) => [
+            e.id,
+            state.ypopFiles.filter((f) => f.ypopEntryId === e.id),
+          ]),
+        );
 
-                <div className="space-y-4">
-                  {budgetRequests.length ? (
-                    budgetRequests.map((request) => {
-                      const attachedFile = budgetRequestFilesByBudgetId.get(request.id);
-                      return (
-                        <Card key={request.id} className="border-border/70">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <CardTitle className="text-base">{request.activityTitle || "Untitled request"}</CardTitle>
-                                <p className="mt-1 text-sm text-muted-foreground">{request.purposeCategory || "No category yet"}</p>
+        const handleSubmitYpop = async (entry: YPOPEntry) => {
+          setSubmittingYpopId(entry.id);
+          try {
+            const note = ypopNotesByEntryId[entry.id] ?? "";
+            const patch = { status: "submitted" as const, submissionNote: note, submittedAt: new Date().toISOString() };
+            try {
+              const saved = await updateYpopEntryInSupabase(entry.id, patch);
+              updateYPOPEntry(saved.id, saved);
+            } catch {
+              updateYPOPEntry(entry.id, patch);
+            }
+            setYpopNotesByEntryId((prev) => { const next = { ...prev }; delete next[entry.id]; return next; });
+            toast({ title: "YPOP submitted", description: "Your participation records have been submitted for admin validation." });
+          } catch (err) {
+            toast({ title: "Submission failed", description: err instanceof Error ? err.message : "An error occurred.", variant: "destructive" });
+          } finally {
+            setSubmittingYpopId(null);
+          }
+        };
+
+        const handleYpopFileUpload = async (entryId: string, file: File) => {
+          setYpopUploadingId(entryId);
+          try {
+            const orgId = currentProfile?.id ?? "";
+            try {
+              const saved = await uploadYpopFileToSupabase({ entryId, organizationId: orgId, file });
+              createYPOPFile(saved);
+            } catch {
+              const now = new Date().toISOString();
+              createYPOPFile({
+                id: `ypop-file-${Date.now()}`,
+                ypopEntryId: entryId,
+                organizationId: orgId,
+                fileName: file.name,
+                fileUrl: "",
+                fileType: file.type,
+                uploadedAt: now,
+              });
+            }
+            toast({ title: "File attached", description: `${file.name} has been attached to your YPOP submission.` });
+          } catch (err) {
+            toast({ title: "Upload failed", description: err instanceof Error ? err.message : "An error occurred.", variant: "destructive" });
+          } finally {
+            setYpopUploadingId(null);
+          }
+        };
+
+        const handleDeleteYpopFile = (fileId: string) => {
+          const fileUrl = state.ypopFiles.find((f) => f.id === fileId)?.fileUrl ?? "";
+          void deleteYpopFileFromSupabase(fileId, fileUrl).catch(() => {});
+          deleteYPOPFile(fileId);
+        };
+
+        const handleStartYpopSubmission = async (period: YPOPPeriod) => {
+          const now = new Date().toISOString();
+          const entryData = {
+            organizationId: currentProfile?.id ?? "",
+            submittedBy: user?.id ?? "",
+            semester: period.semesterKey,
+            semesterLabel: period.semesterLabel,
+            pointsEarned: 0,
+            pointsRequired: 70,
+            totalPoints: 100,
+            status: "draft" as const,
+            adminRemarks: "",
+            submissionNote: "",
+            validationDeadline: period.validationDeadline,
+            submittedAt: "",
+            validatedAt: "",
+            revisionHistory: [],
+            orgLedProjectCount: 0,
+            cityLedAttendance: [],
+          };
+          let savedId: string;
+          try {
+            const saved = await createYpopEntryInSupabase(entryData);
+            createYPOPEntry({ ...saved });
+            savedId = saved.id;
+          } catch {
+            const localId = `ypop-${Date.now()}`;
+            createYPOPEntry({ id: localId, ...entryData, createdAt: now, updatedAt: now });
+            savedId = localId;
+          }
+          setActiveYpopEntryId(savedId);
+          setYpopPreviewFileId(null);
+          setYpopOrgView("entry-detail");
+        };
+
+        const openPeriods = state.ypopPeriods.filter((p) => p.status === "open");
+        const openSemesterKeys = new Set(openPeriods.map((p) => p.semesterKey));
+        const activeEntries = orgYpopEntries.filter((e) => openSemesterKeys.has(e.semester));
+        const historyEntries = orgYpopEntries.filter((e) => !openSemesterKeys.has(e.semester));
+
+        const renderEntryCard = (entry: YPOPEntry) => {
+          const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const isSubmitting = submittingYpopId === entry.id;
+          const isUploading = ypopUploadingId === entry.id;
+          const isDraft = entry.status === "draft";
+          const isNeedsRevision = entry.status === "needs_revision";
+          const isSubmitted = entry.status === "submitted" || entry.status === "under_review";
+          const isQualified = entry.status === "qualified";
+          const isNotQualified = entry.status === "not_qualified";
+          const pctEarned = entry.totalPoints > 0 ? Math.round((entry.pointsEarned / entry.totalPoints) * 100) : 0;
+          const thresholdPct = entry.totalPoints > 0 ? Math.round((entry.pointsRequired / entry.totalPoints) * 100) : 70;
+          const deadline = entry.validationDeadline ? new Date(entry.validationDeadline) : null;
+          const isDeadlinePast = deadline ? deadline < new Date() : false;
+          const hasLinkedBudgetRequest = budgetRequests.some(
+            (r) => r.ypopEntryId === entry.id && r.budgetRequestType === "ypop_incentive"
+          );
+          const historyOpen = ypopHistoryOpenById[entry.id] ?? false;
+          const revHistory = entry.revisionHistory ?? [];
+
+          const fileListReadOnly = (
+            <ul className="space-y-1.5">
+              {files.map((f: YPOPFile) => (
+                <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate text-sm">{f.fileName}</span>
+                  </div>
+                  {f.fileUrl && (
+                    <Button type="button" size="sm" variant="ghost" asChild>
+                      <a href={f.fileUrl} target="_blank" rel="noreferrer">Open</a>
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          );
+
+          return (
+            <Card key={entry.id} className={`overflow-hidden border-border/70 ${isQualified ? "border-green-500/30 bg-green-500/[0.02]" : ""}`}>
+              <CardContent className="space-y-4 p-5 sm:p-6">
+
+                {/* Shared header */}
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`rounded-full p-1.5 ${isQualified ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                      <Medal className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-semibold leading-snug">{entry.semesterLabel}</p>
+                      {deadline && (
+                        <p className={`text-xs ${isDeadlinePast ? "text-destructive" : "text-muted-foreground"}`}>
+                          Validation {isDeadlinePast ? "closed" : "closes"} {deadline.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <PortalStatusBadge status={entry.status} />
+                </div>
+
+                {/* Draft / Needs Revision — step flow */}
+                {(isDraft || isNeedsRevision) && (
+                  <>
+                    {isNeedsRevision && entry.adminRemarks.trim() && (
+                      <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Revision Required</p>
+                        <p className="text-sm text-amber-800">{entry.adminRemarks}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      {/* Step 1 — Attach files */}
+                      <div className="flex gap-3">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
+                        <div className="flex-1 space-y-2">
+                          <p className="pt-0.5 text-sm font-medium leading-none">Attach proof documents</p>
+                          <input
+                            ref={ypopFileInputRef}
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) void handleYpopFileUpload(entry.id, file);
+                              e.target.value = "";
+                            }}
+                          />
+                          {files.length === 0 ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={isUploading}
+                              onClick={() => ypopFileInputRef.current?.click()}
+                            >
+                              {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+                              <span className="ml-1.5">Attach File</span>
+                            </Button>
+                          ) : (
+                            <div className="space-y-1.5">
+                              <ul className="space-y-1.5">
+                                {files.map((f: YPOPFile) => (
+                                  <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                      <span className="truncate text-sm">{f.fileName}</span>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1">
+                                      {f.fileUrl && (
+                                        <Button type="button" size="sm" variant="ghost" asChild>
+                                          <a href={f.fileUrl} target="_blank" rel="noreferrer">Open</a>
+                                        </Button>
+                                      )}
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="text-destructive hover:text-destructive"
+                                        onClick={() => handleDeleteYpopFile(f.id)}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={isUploading}
+                                onClick={() => ypopFileInputRef.current?.click()}
+                              >
+                                {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+                                <span className="ml-1.5">Add another file</span>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Step 2 — Add message */}
+                      <div className="flex gap-3">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">2</div>
+                        <div className="flex-1 space-y-2">
+                          <p className="pt-0.5 text-sm font-medium leading-none">
+                            Add a message
+                            <span className="ml-1.5 text-xs font-normal text-muted-foreground">(optional)</span>
+                          </p>
+                          <Textarea
+                            id={`ypop-note-${entry.id}`}
+                            value={ypopNotesByEntryId[entry.id] ?? ""}
+                            onChange={(e) => setYpopNotesByEntryId((prev) => ({ ...prev, [entry.id]: e.target.value }))}
+                            placeholder="Any notes for the admin reviewing your participation records…"
+                            rows={2}
+                            className="resize-none text-sm"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Step 3 — Submit */}
+                      <div className="flex gap-3">
+                        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${files.length > 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3</div>
+                        <div className="flex-1 space-y-1.5">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void handleSubmitYpop(entry)}
+                            disabled={isSubmitting || files.length === 0}
+                          >
+                            {isSubmitting ? (
+                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
+                            ) : "Submit for Validation"}
+                          </Button>
+                          {files.length === 0 && (
+                            <p className="text-xs text-muted-foreground">Attach at least one file before submitting.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Collapsible revision history */}
+                    {revHistory.length > 0 && (
+                      <div className="border-t border-border/30 pt-3">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                          onClick={() => setYpopHistoryOpenById((prev) => ({ ...prev, [entry.id]: !historyOpen }))}
+                        >
+                          {historyOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          {historyOpen ? "Hide" : "View"} history ({revHistory.length})
+                        </button>
+                        {historyOpen && (
+                          <ul className="mt-2 space-y-1.5 pl-5">
+                            {revHistory.map((rev, i) => (
+                              <li key={i} className="flex items-start gap-2 text-xs">
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full border-2 border-border bg-background" />
+                                <span>
+                                  <span className="font-medium capitalize">{rev.action.replace(/_/g, " ")}</span>
+                                  {rev.adminRemarks && <span className="ml-1 text-muted-foreground">— {rev.adminRemarks}</span>}
+                                  <span className="ml-1 text-muted-foreground/60">· {new Date(rev.changedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Submitted / Under Review — quiet state */}
+                {isSubmitted && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
+                      Submitted — awaiting admin review.
+                    </div>
+                    {files.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground">Attached files ({files.length})</p>
+                        {fileListReadOnly}
+                      </div>
+                    )}
+                    {entry.submissionNote.trim() && (
+                      <div className="rounded-lg border border-border/50 bg-muted/20 p-3">
+                        <p className="mb-1 text-xs font-medium text-muted-foreground">Note sent</p>
+                        <p className="text-sm">{entry.submissionNote}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Qualified — score + PPA action */}
+                {isQualified && (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Participation score</span>
+                        <span className="font-semibold text-green-700">{entry.pointsEarned} / {entry.totalPoints} pts</span>
+                      </div>
+                      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${Math.min(pctEarned, 100)}%` }} />
+                        <div className="absolute top-0 h-full w-0.5 bg-foreground/30" style={{ left: `${thresholdPct}%` }} />
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-full bg-green-100 p-1.5 text-green-600">
+                          <Trophy className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div>
+                            <p className="text-sm font-semibold text-green-800">You're qualified for a Project Grant!</p>
+                            <p className="text-sm text-green-700">
+                              Your {entry.semesterLabel} YPOP score qualifies you for a budget incentive. Submit your Plans, Programs &amp; Activities (PPA) to claim it.
+                            </p>
+                          </div>
+                          {hasLinkedBudgetRequest ? (
+                            <div className="inline-flex items-center gap-1.5 rounded-full border border-green-500/40 bg-green-100/60 px-3 py-1 text-xs font-medium text-green-700">
+                              <Trophy className="h-3.5 w-3.5" />
+                              Budget request already submitted ✓
+                            </div>
+                          ) : (
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="bg-green-600 text-white hover:bg-green-700"
+                              onClick={() => navigate(`${userRouteMap["budget-request"]}?ypopEntryId=${entry.id}&semesterLabel=${encodeURIComponent(entry.semesterLabel)}`)}
+                            >
+                              <Trophy className="mr-2 h-4 w-4" />
+                              Submit a Budget Request (PPA)
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {entry.adminRemarks.trim() && (
+                      <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Remarks</p>
+                        <p className="text-sm text-amber-800">{entry.adminRemarks}</p>
+                      </div>
+                    )}
+                    {files.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground">Attached files ({files.length})</p>
+                        {fileListReadOnly}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Not Qualified — result + context */}
+                {isNotQualified && (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Participation score</span>
+                        <span className="font-semibold text-destructive">{entry.pointsEarned} / {entry.totalPoints} pts</span>
+                      </div>
+                      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-destructive transition-all" style={{ width: `${Math.min(pctEarned, 100)}%` }} />
+                        <div className="absolute top-0 h-full w-0.5 bg-foreground/30" style={{ left: `${thresholdPct}%` }} />
+                      </div>
+                    </div>
+                    {entry.adminRemarks.trim() && (
+                      <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Remarks</p>
+                        <p className="text-sm text-amber-800">{entry.adminRemarks}</p>
+                      </div>
+                    )}
+                    {files.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground">Attached files ({files.length})</p>
+                        {fileListReadOnly}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </CardContent>
+            </Card>
+          );
+        };
+
+        const isImagePreviewFile = (name: string) => /\.(jpe?g|png|gif|webp)$/i.test(name);
+
+        const renderHistoryRow = (entry: YPOPEntry) => {
+          const isQualified = entry.status === "qualified";
+          const showScore = entry.status === "qualified" || entry.status === "not_qualified";
+          const pctEarned = entry.totalPoints > 0 ? Math.round((entry.pointsEarned / entry.totalPoints) * 100) : 0;
+          const hasLinkedBudgetRequest = budgetRequests.some(
+            (r) => r.ypopEntryId === entry.id && r.budgetRequestType === "ypop_incentive"
+          );
+          const validatedDate = entry.validatedAt
+            ? new Date(entry.validatedAt).toLocaleDateString("en-PH", { month: "short", year: "numeric" })
+            : null;
+
+          return (
+            <Card
+              key={entry.id}
+              className="cursor-pointer border-border/60 transition-colors hover:border-border hover:bg-muted/30"
+              onClick={() => {
+                setActiveYpopEntryId(entry.id);
+                setYpopPreviewFileId(null);
+                setYpopOrgView("entry-detail");
+              }}
+            >
+              <CardContent className="px-5 py-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <Medal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium leading-snug">{entry.semesterLabel}</p>
+                      {validatedDate && (
+                        <p className="text-xs text-muted-foreground">Validated {validatedDate}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {showScore && (
+                      <span className={`text-xs font-medium tabular-nums ${isQualified ? "text-green-700" : "text-destructive"}`}>
+                        {pctEarned}%
+                      </span>
+                    )}
+                    <PortalStatusBadge status={entry.status} />
+                    {isQualified && (
+                      hasLinkedBudgetRequest ? (
+                        <div className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-100/60 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                          <Trophy className="h-3 w-3" />
+                          PPA filed ✓
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-7 bg-green-600 px-2.5 text-xs text-white hover:bg-green-700"
+                          onClick={(e) => { e.stopPropagation(); navigate(`${userRouteMap["budget-request"]}?ypopEntryId=${entry.id}&semesterLabel=${encodeURIComponent(entry.semesterLabel)}`); }}
+                        >
+                          <Trophy className="mr-1 h-3 w-3" />
+                          File PPA
+                        </Button>
+                      )
+                    )}
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        };
+
+        // Entry detail view
+        if (ypopOrgView === "entry-detail") {
+          const activeEntry = state.ypopEntries.find((e) => e.id === activeYpopEntryId);
+
+          if (!activeEntry) {
+            return (
+              <PortalSection title="YPOP Incentive" description="Submit proof of participation for admin validation.">
+                <PortalEmptyState title="Submission not found" description="This submission may have been deleted." />
+              </PortalSection>
+            );
+          }
+
+          const detailFiles = ypopFilesByEntryId.get(activeEntry.id) ?? [];
+          const isSubmitting = submittingYpopId === activeEntry.id;
+          const isUploading = ypopUploadingId === activeEntry.id;
+          const isDraftOrRevision = activeEntry.status === "draft" || activeEntry.status === "needs_revision";
+          const isSubmittedOrReview = activeEntry.status === "submitted" || activeEntry.status === "under_review";
+          const isQualified = activeEntry.status === "qualified";
+          const isNotQualified = activeEntry.status === "not_qualified";
+          const pctEarned = activeEntry.totalPoints > 0 ? Math.round((activeEntry.pointsEarned / activeEntry.totalPoints) * 100) : 0;
+          const thresholdPct = activeEntry.totalPoints > 0 ? Math.round((activeEntry.pointsRequired / activeEntry.totalPoints) * 100) : 70;
+          const deadline = activeEntry.validationDeadline ? new Date(activeEntry.validationDeadline) : null;
+          const isDeadlinePast = deadline ? deadline < new Date() : false;
+          const hasLinkedBudgetRequest = budgetRequests.some(
+            (r) => r.ypopEntryId === activeEntry.id && r.budgetRequestType === "ypop_incentive"
+          );
+          const revHistory = activeEntry.revisionHistory ?? [];
+
+          const revHistoryForLog = revHistory.filter(
+            (r) => !(r.action === "submitted" && activeEntry.submittedAt)
+          );
+          const activityLog: Array<{ label: string; date: string; note?: string }> = [
+            { label: "Submission started", date: activeEntry.createdAt },
+            ...(activeEntry.submittedAt ? [{ label: "Submitted for validation", date: activeEntry.submittedAt }] : []),
+            ...revHistoryForLog.map((r) => ({
+              label:
+                r.action === "needs_revision" ? "Revision requested"
+                : r.action === "qualified" ? "Qualified"
+                : r.action === "not_qualified" ? "Not qualified"
+                : r.action === "under_review" ? "Moved to under review"
+                : r.action.replace(/_/g, " "),
+              date: r.changedAt,
+              note: r.adminRemarks || undefined,
+            })),
+            ...(activeEntry.validatedAt ? [{ label: "Validated", date: activeEntry.validatedAt }] : []),
+          ];
+
+          const handleBackToList = () => {
+            setYpopOrgView("list");
+            setActiveYpopEntryId(null);
+            setYpopPreviewFileId(null);
+          };
+
+          return (
+            <PortalSection title="YPOP Incentive">
+              <div className="space-y-5">
+
+                {/* Back nav + page header */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleBackToList}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </button>
+                  <div className="mt-3 flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <h2 className="text-xl font-semibold">{activeEntry.semesterLabel}</h2>
+                      {deadline && (
+                        <p className={`mt-0.5 text-sm ${isDeadlinePast ? "text-destructive" : "text-muted-foreground"}`}>
+                          Validation {isDeadlinePast ? "closed" : "closes"} {deadline.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                    <PortalStatusBadge status={activeEntry.status} />
+                  </div>
+                </div>
+
+                {/* Two-column body */}
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+
+                  {/* LEFT — metadata + actions */}
+                  <div className="space-y-5">
+
+                    {/* Admin Remarks — needs_revision */}
+                    {activeEntry.status === "needs_revision" && activeEntry.adminRemarks.trim() && (
+                      <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-4">
+                        <p className="mb-1 text-sm font-semibold text-amber-700">Revision Required</p>
+                        <p className="text-sm text-amber-800">{activeEntry.adminRemarks}</p>
+                      </div>
+                    )}
+
+                    {/* Quiet state — submitted / under review */}
+                    {isSubmittedOrReview && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
+                        Submitted — awaiting admin review.
+                      </div>
+                    )}
+
+                    {/* Message / Note */}
+                    {isDraftOrRevision && (
+                      <div className="space-y-2">
+                        <p className="font-medium">
+                          Message for admin
+                          <span className="ml-1.5 text-sm font-normal text-muted-foreground">(optional)</span>
+                        </p>
+                        <Textarea
+                          value={ypopNotesByEntryId[activeEntry.id] ?? ""}
+                          onChange={(e) => setYpopNotesByEntryId((prev) => ({ ...prev, [activeEntry.id]: e.target.value }))}
+                          placeholder="Any notes for the admin reviewing your participation records…"
+                          rows={3}
+                          className="resize-none text-sm"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    )}
+                    {!isDraftOrRevision && activeEntry.submissionNote.trim() && (
+                      <div className="rounded-lg border border-border/50 bg-muted/20 p-3">
+                        <p className="mb-1 text-xs font-medium text-muted-foreground">Message sent with submission</p>
+                        <p className="text-sm">{activeEntry.submissionNote}</p>
+                      </div>
+                    )}
+
+                    {/* Validation result (qualified / not_qualified) */}
+                    {(isQualified || isNotQualified) && (
+                      <div className="space-y-3">
+                        <p className="font-medium">Validation Result</p>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Participation score</span>
+                            <span className={`font-semibold ${isQualified ? "text-green-700" : "text-destructive"}`}>
+                              {activeEntry.pointsEarned} / {activeEntry.totalPoints} pts
+                            </span>
+                          </div>
+                          <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className={`h-full rounded-full transition-all ${isQualified ? "bg-green-500" : "bg-destructive"}`}
+                              style={{ width: `${Math.min(pctEarned, 100)}%` }}
+                            />
+                            <div className="absolute top-0 h-full w-0.5 bg-foreground/30" style={{ left: `${thresholdPct}%` }} />
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">
+                            {thresholdPct}% threshold ({activeEntry.pointsRequired}/{activeEntry.totalPoints} pts) required to qualify
+                          </p>
+                        </div>
+                        {isQualified && (
+                          <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="rounded-full bg-green-100 p-1.5 text-green-600">
+                                <Trophy className="h-4 w-4" />
                               </div>
-                              <div className="flex items-center gap-2">
-                                {request.remarks?.trim() ? (
+                              <div className="flex-1 space-y-2">
+                                <div>
+                                  <p className="text-sm font-semibold text-green-800">You're qualified for a Project Grant!</p>
+                                  <p className="text-sm text-green-700">
+                                    Your {activeEntry.semesterLabel} YPOP score qualifies you for a budget incentive. Submit your Plans, Programs &amp; Activities (PPA) to claim it.
+                                  </p>
+                                </div>
+                                {hasLinkedBudgetRequest ? (
+                                  <div className="inline-flex items-center gap-1.5 rounded-full border border-green-500/40 bg-green-100/60 px-3 py-1 text-xs font-medium text-green-700">
+                                    <Trophy className="h-3.5 w-3.5" />
+                                    Budget request already submitted ✓
+                                  </div>
+                                ) : (
                                   <Button
                                     type="button"
                                     size="sm"
-                                    variant="ghost"
-                                    className="h-8 px-2 text-xs text-primary hover:text-primary"
-                                    onClick={() =>
-                                      setBudgetReviewNote({
-                                        title: request.activityTitle || "Budget Comment",
-                                        note: request.remarks.trim(),
-                                        status: request.status,
-                                      })
-                                    }
+                                    className="bg-green-600 text-white hover:bg-green-700"
+                                    onClick={() => navigate(`${userRouteMap["budget-request"]}?ypopEntryId=${activeEntry.id}&semesterLabel=${encodeURIComponent(activeEntry.semesterLabel)}`)}
                                   >
-                                    <MessageCircle className="mr-1.5 h-4 w-4" />
-                                    Comment
+                                    <Trophy className="mr-2 h-4 w-4" />
+                                    Submit a Budget Request (PPA)
                                   </Button>
-                                ) : null}
-                                <PortalStatusBadge status={request.status} />
+                                )}
                               </div>
                             </div>
-                          </CardHeader>
-                          <CardContent className="space-y-3 text-sm text-muted-foreground">
-                            <p>{request.activityDescription || "No description provided yet."}</p>
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <p>Proposed Date: {request.activityDate || "Pending"}</p>
-                              <p>Venue: {request.venue || "Pending"}</p>
-                              <p>Requested Amount: {formatCurrency(request.requestedAmount || 0)}</p>
-                              <p>Approved Amount: {formatCurrency(request.approvedAmount || 0)}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-xs">
-                              {attachedFile ? (
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <span>{attachedFile.fileName}</span>
-                                  <Button type="button" size="sm" variant="outline" onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
-                                    Open File
+                          </div>
+                        )}
+                        {activeEntry.adminRemarks.trim() && (
+                          <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
+                            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Remarks</p>
+                            <p className="text-sm text-amber-800">{activeEntry.adminRemarks}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Activity Log */}
+                    <div className="space-y-2.5">
+                      <p className="font-medium">Recent Activity</p>
+                      <ul className="space-y-2 pl-1">
+                        {activityLog.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2.5 text-sm">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                            <span className="flex-1">
+                              <span className="font-medium capitalize">{item.label}</span>
+                              {item.note && <span className="ml-1 text-muted-foreground">— {item.note}</span>}
+                              <span className="ml-1.5 text-xs text-muted-foreground/70">
+                                {new Date(item.date).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Footer actions */}
+                    {isDraftOrRevision && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-destructive/50 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                          onClick={() => setConfirmDeleteYpopEntryId(activeEntry.id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Submission
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => void handleSubmitYpop(activeEntry)}
+                          disabled={isSubmitting || detailFiles.length === 0}
+                        >
+                          {isSubmitting ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
+                          ) : activeEntry.status === "needs_revision" ? "Resubmit for Validation" : "Submit for Validation"}
+                        </Button>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* RIGHT — proof documents + tall preview */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium">Proof Documents</p>
+                      {isDraftOrRevision && (
+                        <>
+                          <input
+                            ref={ypopFileInputRef}
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) void handleYpopFileUpload(activeEntry.id, file);
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={isUploading}
+                            onClick={() => ypopFileInputRef.current?.click()}
+                          >
+                            {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+                            <span className="ml-1.5">Attach File</span>
+                          </Button>
+                        </>
+                      )}
+                    </div>
+
+                    {detailFiles.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {detailFiles.map((f: YPOPFile) => (
+                          <div key={f.id} className="flex items-center gap-0.5">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={ypopPreviewFileId === f.id ? "default" : "outline"}
+                              className="max-w-[14rem]"
+                              onClick={() => {
+                                if (ypopPreviewFileId === f.id) {
+                                  setYpopPreviewFileId(null);
+                                } else {
+                                  setYpopPreviewFileId(f.id);
+                                  setYpopPreviewUrl(f.fileUrl);
+                                  setYpopPreviewTitle(f.fileName);
+                                  setYpopPreviewCanInline(!!f.fileUrl);
+                                }
+                              }}
+                            >
+                              <FileText className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{f.fileName}</span>
+                            </Button>
+                            {isDraftOrRevision && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  handleDeleteYpopFile(f.id);
+                                  if (ypopPreviewFileId === f.id) setYpopPreviewFileId(null);
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        {isDraftOrRevision && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={isUploading}
+                            onClick={() => ypopFileInputRef.current?.click()}
+                          >
+                            {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+                            <span className="ml-1.5">Add another</span>
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Preview area — always tall */}
+                    <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/10">
+                      {detailFiles.length === 0 ? (
+                        <div className="flex min-h-[32rem] items-center justify-center p-6 text-sm text-muted-foreground">
+                          {isDraftOrRevision ? "Attach proof documents to preview them here." : "No files attached."}
+                        </div>
+                      ) : ypopPreviewFileId === null ? (
+                        <div className="flex min-h-[32rem] items-center justify-center p-4 text-sm text-muted-foreground">
+                          Select a file above to preview it here.
+                        </div>
+                      ) : ypopPreviewUrl && ypopPreviewCanInline ? (
+                        isImagePreviewFile(ypopPreviewTitle) || isImagePreviewFile(ypopPreviewUrl) ? (
+                          <div className="flex max-h-[52rem] items-center justify-center overflow-hidden bg-background sm:max-h-[60rem]">
+                            <img src={ypopPreviewUrl} alt={ypopPreviewTitle} className="max-h-[52rem] w-full object-contain sm:max-h-[60rem]" />
+                          </div>
+                        ) : (
+                          <iframe
+                            title={ypopPreviewTitle || "YPOP Proof Preview"}
+                            src={ypopPreviewUrl}
+                            className="h-[52rem] w-full border-0 bg-background sm:h-[60rem]"
+                            loading="eager"
+                          />
+                        )
+                      ) : ypopPreviewUrl ? (
+                        <div className="flex min-h-[6rem] flex-col items-start gap-3 p-4 text-sm text-muted-foreground">
+                          <p>This file cannot be previewed inline.</p>
+                          <Button type="button" variant="outline" size="sm" onClick={() => window.open(ypopPreviewUrl, "_blank", "noopener,noreferrer")}>
+                            <Eye className="mr-2 h-4 w-4" />Open File
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex min-h-[6rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                          No preview available — file URL not set in this demo.
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </PortalSection>
+          );
+        }
+
+        // List view
+        return (
+          <PortalSection
+            title="YPOP Incentive"
+            description="Submit proof of participation for admin validation. Qualifying organizations (70% of activities) unlock a Project Grant (PPA) budget request."
+          >
+            <div className="space-y-8">
+              {/* Section A: Open Semesters */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-foreground">Open Semesters</p>
+                {openPeriods.length === 0 ? (
+                  <PortalEmptyState
+                    title="No open semesters right now"
+                    description="Check back when the next YPOP registration period opens."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {openPeriods.map((period) => {
+                      const existing = activeEntries.find((e) => e.semester === period.semesterKey);
+                      const deadlineDate = period.validationDeadline ? new Date(period.validationDeadline) : null;
+                      if (existing) {
+                        const existingFiles = ypopFilesByEntryId.get(existing.id) ?? [];
+                        return (
+                          <Card key={period.id} className="border-border/70">
+                            <CardContent className="p-5 sm:p-6">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="rounded-full bg-muted p-1.5 text-muted-foreground">
+                                    <Medal className="h-4 w-4" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold leading-snug">{period.semesterLabel}</p>
+                                    {deadlineDate && (
+                                      <p className="text-xs text-muted-foreground">
+                                        Validation closes {deadlineDate.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                                      </p>
+                                    )}
+                                    <p className="mt-0.5 text-xs text-muted-foreground">
+                                      {existingFiles.length} {existingFiles.length === 1 ? "file" : "files"} attached
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <PortalStatusBadge status={existing.status} />
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setActiveYpopEntryId(existing.id);
+                                      setYpopPreviewFileId(null);
+                                      setYpopOrgView("entry-detail");
+                                    }}
+                                  >
+                                    View Submission
+                                    <ChevronRight className="ml-1 h-3.5 w-3.5" />
                                   </Button>
                                 </div>
-                              ) : (
-                                <p>No detailed document uploaded yet.</p>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      }
+                      return (
+                        <Card key={period.id} className="border-border/70">
+                          <CardContent className="p-5 sm:p-6">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <div className="rounded-full bg-muted p-1.5 text-muted-foreground">
+                                  <Medal className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold leading-snug">{period.semesterLabel}</p>
+                                  <p className="text-xs text-muted-foreground">YPOP Participation Validation</p>
+                                  {deadlineDate && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Validation closes {deadlineDate.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="outline"
-                                onClick={() => startEditingBudgetRequest(request)}
-                                disabled={savingBudgetRequest || approvedBudgetStatuses.has(request.status)}
+                                onClick={() => void handleStartYpopSubmission(period)}
                               >
-                                Edit
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteBudgetRequest(request)}
-                                disabled={savingBudgetRequest || approvedBudgetStatuses.has(request.status)}
-                              >
-                                Delete
+                                Register
+                                <ChevronRight className="ml-1.5 h-4 w-4" />
                               </Button>
                             </div>
                           </CardContent>
                         </Card>
                       );
-                    })
-                  ) : (
-                    <PortalEmptyState
-                      title="No budget requests yet"
-                      description="Create the first request using the form on the left. Once cash is released, the liquidation page will unlock automatically."
-                    />
-                  )}
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Section B: Recent Activity */}
+              {historyEntries.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-semibold text-foreground">Recent Activity</p>
+                  <div className="space-y-2">
+                    {historyEntries.map((entry) => renderHistoryRow(entry))}
+                  </div>
                 </div>
-              </div>
-            </PortalSection>
-          </div>
-        );
-      case "liquidation-reporting":
-        return (
-          <PortalSection
-            title="Liquidation and Reporting"
-            description="Post-activity documents appear only after cash has been released for the linked budget."
-            action={<PortalStatusBadge status={latestLiquidation?.status ?? "pending_activity_completion"} />}
-          >
-            {liquidationReports.length ? (
-              <div className="space-y-4">
-                {liquidationReports.map((report) => {
-                  const relatedBudget = budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
-                  const attachedFiles = liquidationFilesByReportId.get(report.id) ?? [];
-                  const hasLiquidationReviewNote =
-                    (report.status === "needs_revision" || report.status === "rejected_red") && report.remarks.trim().length > 0;
-                  return (
-                    <Card key={report.id} className="border-border/70">
-                      <CardHeader>
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <CardTitle className="text-base">{relatedBudget?.activityTitle || "Approved budget"}</CardTitle>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {relatedBudget?.purposeCategory || "No category"} | {relatedBudget ? formatCurrency(relatedBudget.approvedAmount || relatedBudget.requestedAmount || 0) : "PHP 0"}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {hasLiquidationReviewNote ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 px-2 text-xs text-primary hover:text-primary"
-                                onClick={() =>
-                                  setLiquidationReviewNote({
-                                    title: relatedBudget?.activityTitle || "Liquidation Comment",
-                                    note: report.remarks.trim(),
-                                    status: report.status,
-                                  })
-                                }
-                              >
-                                <MessageCircle className="mr-1.5 h-4 w-4" />
-                                Comment
-                              </Button>
-                            ) : null}
-                            <PortalStatusBadge status={report.status} />
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4 text-sm">
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <Card className="bg-muted/20">
-                            <CardContent className="p-4">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Go Signal Date</p>
-                              <p className="mt-2 text-sm">{report.goSignalAt || "Pending"}</p>
-                            </CardContent>
-                          </Card>
-                          <Card className="bg-muted/20">
-                            <CardContent className="p-4">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Deadline</p>
-                              <p className="mt-2 text-sm">{report.deadlineAt || "Pending"}</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                        <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                          <Label htmlFor={`liquidation-upload-${report.id}`} className="text-sm font-medium text-foreground">
-                            Upload post-activity documents
-                          </Label>
-                          <Input
-                            id={`liquidation-upload-${report.id}`}
-                            type="file"
-                            multiple
-                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                            className="mt-2"
-                            onChange={async (event) => {
-                              await handleLiquidationFileUpload(report, event.target.files);
-                              event.currentTarget.value = "";
-                            }}
-                          />
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Upload attendance sheets, photos, narrative reports, and other post-activity proof.
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="font-medium text-foreground">Uploaded files</p>
-                          {attachedFiles.length ? (
-                            <div className="space-y-2">
-                              {attachedFiles.map((file) => (
-                                <div key={file.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 p-3">
-                                  <div>
-                                    <p className="font-medium text-foreground">{file.fileName}</p>
-                                    <p className="text-xs text-muted-foreground">{file.fileType}</p>
-                                  </div>
-                                  <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
-                                    Open File
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground">No post-activity files uploaded yet.</p>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            ) : (
-              <PortalEmptyState
-                title="No approved budget yet"
-                description="Once the admin approves a budget request, its liquidation record will appear here for post-activity uploads."
-              />
-            )}
-          </PortalSection>
-        );
-      case "news-releases":
-        return (
-          <PortalSection title="News Releases" description="Announcements and Facebook post previews.">
-            <div className="grid gap-4 md:grid-cols-2">
-              {state.newsReleases.map((news) => (
-                <Link
-                  key={news.id}
-                  to={`/news-releases/${news.id}`}
-                  className="group block rounded-2xl border border-border/70 bg-card p-5 transition-transform hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold group-hover:text-primary">{news.title}</p>
-                      <p className="mt-2 text-sm text-muted-foreground">{news.description}</p>
-                    </div>
-                    <PortalStatusBadge status={news.visibilityStatus} />
-                  </div>
-                  <p className="mt-4 text-xs uppercase tracking-[0.16em] text-muted-foreground/70">{news.datePosted}</p>
-                  <p className="mt-2 text-sm font-medium text-primary">Click to preview the source post</p>
-                </Link>
-              ))}
+              )}
             </div>
           </PortalSection>
         );
-      case "compliance-status":
-        return (
-          <div className="space-y-6">
-            <PortalSection title="Compliance Status" description="Your organization standing across all modules.">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <PortalMetricCard label="Profile" value={`${profilePercent}%`} />
-                <PortalMetricCard label="Documents" value={`${documentsPercent}%`} />
-                <PortalMetricCard label="Budget" value={formatStatusLabel(latestBudget?.status ?? "draft")} />
-                <PortalMetricCard
-                  label="Liquidation"
-                  value={formatStatusLabel(latestLiquidation?.status ?? "pending_activity_completion")}
-                />
-              </div>
-            </PortalSection>
-            <PortalSection title="Missing Requirements" description="Items that need attention before you can move forward.">
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                {docFiles.filter((file) => file.validationStatus !== "correct").map((file) => (
-                  <li key={file.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 p-3">
-                    <span>{templatesById[file.documentTypeId]?.name ?? file.documentTypeId}</span>
-                    <PortalStatusBadge status="needs_revision" />
-                  </li>
-                ))}
-                {!docFiles.some((file) => file.validationStatus !== "correct") ? (
-                  <li>
-                    <PortalEmptyState title="All required documents are in good standing." description="No missing requirements detected." />
-                  </li>
-                ) : null}
-              </ul>
-            </PortalSection>
-          </div>
-        );
-      case "notifications":
-        return (
-          <PortalSection title="Notifications" description="Admin remarks, go signals, revisions, and deadlines.">
-            <div className="space-y-3">
-              {userNotifications.map((notification) => (
-                <button
-                  key={notification.id}
-                  type="button"
-                  className="w-full rounded-xl border border-border/70 bg-background p-4 text-left transition-colors hover:bg-muted/40"
-                  onClick={() => markNotificationRead(notification.id)}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      {!notification.isRead ? (
-                        <span
-                          aria-hidden="true"
-                          className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.14)]"
-                        />
-                      ) : null}
-                      <p className="font-medium">{notification.title}</p>
-                    </div>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
-                </button>
-              ))}
-            </div>
-          </PortalSection>
-        );
+      }
       default:
         return (
           <PortalEmptyState
@@ -2349,11 +4211,10 @@ export default function UserPortal({ section }: { section: string }) {
             description="This portal section has not been configured yet."
             action={
               <Button variant="outline" onClick={() => navigate(userRouteMap.dashboard)}>
-                Go to dashboard
+                Go to Dashboard
               </Button>
-                          }
-                          required
-                        />
+            }
+          />
         );
     }
   }, [
@@ -2373,6 +4234,7 @@ export default function UserPortal({ section }: { section: string }) {
     liquidationFilesByReportId,
     liquidationPercent,
     liquidationReports,
+    markAllNotificationsRead,
     markNotificationRead,
     majorClassificationOptions,
     mergeRemoteState,
@@ -2417,13 +4279,41 @@ export default function UserPortal({ section }: { section: string }) {
     user,
     validDocumentTypeIds,
     advocacyOptions,
+    notifFilter,
+    setNotifFilter,
+    verifiedBannerDismissed,
+    dismissVerifiedBanner,
+    state.ypopEntries,
+    state.ypopFiles,
+    ypopNotesByEntryId,
+    setYpopNotesByEntryId,
+    submittingYpopId,
+    ypopUploadingId,
+    ypopFileInputRef,
+    updateYPOPEntry,
+    createYPOPEntry,
+    createYPOPFile,
+    deleteYPOPFile,
+    deleteYPOPEntry,
+    searchParams,
+    state.ypopPeriods,
+    state.ypopFiles,
+    createYpopEntryInSupabase,
+    updateYpopEntryInSupabase,
+    uploadYpopFileToSupabase,
+    deleteYpopFileFromSupabase,
+    deleteYpopEntryFromSupabase,
   ]);
 
   return (
     <>
       <UserPortalShell
-        title="Organization Portal"
+        title={user?.displayName ?? "Organization Portal"}
         subtitle="Organization User"
+        userDisplayName={user?.displayName}
+        userEmail={user?.email}
+        notifications={userNotifications}
+        onMarkAllRead={markAllNotificationsRead}
         groups={userNavigationGroups}
         activeId={section}
         onNavigate={(id) => navigate(userRouteMap[id] ?? userRouteMap.dashboard)}
@@ -2490,29 +4380,6 @@ export default function UserPortal({ section }: { section: string }) {
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={Boolean(documentReviewNote)}
-        onOpenChange={(open) => {
-          if (!open) setDocumentReviewNote(null);
-        }}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{documentReviewNote?.title || "Admin Comment"}</DialogTitle>
-            <DialogDescription>
-              {documentReviewNote?.status === "needs_revision" ? "The admin requested changes for this submission." : "The admin rejected this submission."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-foreground">
-            {documentReviewNote?.note || "No comment was provided."}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setDocumentReviewNote(null)}>
-              Close
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog
@@ -3106,7 +4973,7 @@ export default function UserPortal({ section }: { section: string }) {
         </DialogContent>
       </Dialog>
       <Dialog
-        open={attachedDocumentEditorOpen}
+        open={attachedDocumentEditorOpen && !documentDetailMode}
         onOpenChange={(open) => {
           if (!open && !savingAttachedDocument) {
             closeAttachedDocumentEditor();
@@ -3179,21 +5046,19 @@ export default function UserPortal({ section }: { section: string }) {
               </div>
             </div>
             <div className="space-y-4 rounded-xl border border-border/70 bg-card p-4 sm:p-5">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-foreground">Actions</p>
-                <p className="text-sm text-muted-foreground">
-                  Choose a replacement file or remove the current upload, then save your changes.
+              {/* File info */}
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Current file</p>
+                <p className="mt-1 break-all text-sm font-medium text-foreground">
+                  {attachedDocumentEditor?.file.fileName || "Uploaded file"}
                 </p>
-              </div>
-              <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-sm">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Current file</p>
-                <p className="break-all font-medium text-foreground">{attachedDocumentEditor?.file.fileName || "No file selected"}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {attachedDocumentEditor?.file.uploadedAt
-                    ? `Uploaded ${new Date(attachedDocumentEditor.file.uploadedAt).toLocaleString()}`
+                    ? `Uploaded ${new Date(attachedDocumentEditor.file.uploadedAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}`
                     : "Uploaded recently"}
                 </p>
               </div>
+              <div className="h-px bg-border/40" />
               <input
                 ref={attachedDocumentInputRef}
                 type="file"
@@ -3222,35 +5087,33 @@ export default function UserPortal({ section }: { section: string }) {
                 </Button>
                 {attachedDocumentReplacementFile ? (
                   <p className="text-xs text-muted-foreground">
-                    Replacement selected: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
+                    Replacement: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
                   </p>
                 ) : null}
-              </div>
-              <Button
-                type="button"
-                variant={attachedDocumentMarkedForRemoval ? "secondary" : "destructive"}
-                className="w-full justify-start"
-                onClick={() => {
-                  setAttachedDocumentMarkedForRemoval((current) => !current);
-                  setAttachedDocumentReplacementFile(null);
-                  if (attachedDocumentInputRef.current) {
-                    attachedDocumentInputRef.current.value = "";
-                  }
-                }}
-                disabled={Boolean(savingAttachedDocument)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {attachedDocumentMarkedForRemoval ? "Undo Remove" : "Remove Uploaded Document"}
-              </Button>
-              {attachedDocumentMarkedForRemoval ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  This file will be removed when you save changes.
-                </div>
-              ) : null}
-              <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                 <Button
                   type="button"
-                  className="w-full sm:flex-1"
+                  variant={attachedDocumentMarkedForRemoval ? "secondary" : "destructive"}
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setAttachedDocumentMarkedForRemoval((current) => !current);
+                    setAttachedDocumentReplacementFile(null);
+                    if (attachedDocumentInputRef.current) {
+                      attachedDocumentInputRef.current.value = "";
+                    }
+                  }}
+                  disabled={Boolean(savingAttachedDocument)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {attachedDocumentMarkedForRemoval ? "Undo Remove" : "Remove Document"}
+                </Button>
+                {attachedDocumentMarkedForRemoval ? (
+                  <p className="text-xs text-destructive">This file will be removed when you save.</p>
+                ) : null}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button
+                  type="button"
+                  className="flex-1"
                   onClick={() => void saveAttachedDocumentChanges()}
                   disabled={Boolean(savingAttachedDocument)}
                 >
@@ -3259,7 +5122,7 @@ export default function UserPortal({ section }: { section: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full sm:flex-1"
+                  className="flex-1"
                   onClick={closeAttachedDocumentEditor}
                   disabled={Boolean(savingAttachedDocument)}
                 >
@@ -3361,78 +5224,18 @@ export default function UserPortal({ section }: { section: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={Boolean(liquidationReviewNote)}
-        onOpenChange={(open) => {
-          if (!open) setLiquidationReviewNote(null);
-        }}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{liquidationReviewNote?.title || "Liquidation Comment"}</DialogTitle>
-            <DialogDescription>
-              {liquidationReviewNote?.status === "needs_revision"
-                ? "The admin requested changes for this liquidation report."
-                : liquidationReviewNote?.status === "rejected_red"
-                  ? "The admin rejected this liquidation report."
-                  : "Admin remarks for this liquidation report."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-foreground">
-            {liquidationReviewNote?.note || "No comment was provided."}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setLiquidationReviewNote(null)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={budgetRequestLockedModalOpen}
-        onOpenChange={(open) => {
-          setBudgetRequestLockedModalOpen(open);
-          if (!open && isBudgetRequestLocked) {
-            navigate(userRouteMap["document-submission"]);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Waiting for Admin Approval</DialogTitle>
-            <DialogDescription>
-              Your organization needs to be approved before the budget request page can be used.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
-            Please wait for the admin to approve your registration. Once approved, you can return here to create and submit
-            budget requests.
-          </div>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button
-              type="button"
-              onClick={() => {
-                setBudgetRequestLockedModalOpen(false);
-                navigate(userRouteMap["document-submission"]);
-              }}
-            >
-              Return to Document Submission
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <AlertDialog
         open={Boolean(pendingBudgetDelete)}
         onOpenChange={(open) => {
           if (!open) setPendingBudgetDelete(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Budget Request</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingBudgetDelete
-                ? `Delete budget request "${pendingBudgetDelete.activityTitle}"? This action cannot be undone.`
+                ? `Are you sure you want to delete "${pendingBudgetDelete.activityTitle}"? This action cannot be undone.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -3442,6 +5245,40 @@ export default function UserPortal({ section }: { section: string }) {
               onClick={() => void confirmDeleteBudgetRequest()}
               disabled={savingBudgetRequest || !pendingBudgetDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* YPOP entry delete confirmation */}
+      <AlertDialog
+        open={Boolean(confirmDeleteYpopEntryId)}
+        onOpenChange={(open) => { if (!open) setConfirmDeleteYpopEntryId(null); }}
+      >
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this draft submission? All attached files will also be removed. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDeleteYpopEntryId) {
+                  const idToDelete = confirmDeleteYpopEntryId;
+                  void deleteYpopEntryFromSupabase(idToDelete).catch(() => {});
+                  deleteYPOPEntry(idToDelete);
+                  setConfirmDeleteYpopEntryId(null);
+                  setYpopOrgView("list");
+                  setActiveYpopEntryId(null);
+                  setYpopPreviewFileId(null);
+                }
+              }}
             >
               Delete
             </AlertDialogAction>

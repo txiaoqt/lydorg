@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LYDO Connect logo">
+  <title>LYDO Connect logo</title>
+  <defs>
+    <linearGradient id="lydoRed" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff1f33" />
+      <stop offset="100%" stop-color="#e8081f" />
+    </linearGradient>
+    <linearGradient id="lydoBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1452b8" />
+      <stop offset="100%" stop-color="#0c43a3" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="186" cy="130" r="27" fill="url(#lydoRed)" />
+  <path
+    d="M55 90c61 8 123 71 154 128v108c0 61 47 113 108 129H271C181 443 145 390 145 329V223C130 170 99 129 55 90z"
+    fill="url(#lydoRed)"
+  />
+  <path
+    d="M303 439c-84 0-152-67-152-150 0-83 68-150 152-150 60 0 112 34 136 84l-44 5c-19-32-54-52-92-52-60 0-108 50-108 113s48 113 108 113c54 0 98-40 106-91l42-26c-2 85-68 154-148 154z"
+    fill="url(#lydoBlue)"
+  />
+</svg>

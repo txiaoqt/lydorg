@@ -1060,7 +1060,22 @@ export const FinancialDss = () => {
       </Dialog>
 
       <AlertDialog open={Boolean(deletingFinancial)} onOpenChange={(open) => { if (!open) setDeletingFinancial(null); }}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Financial Row</AlertDialogTitle><AlertDialogDescription>{deletingFinancial ? `Delete ${deletingFinancial.barangay_name} FY ${deletingFinancial.fiscal_year} month ${deletingFinancial.month_no}?` : "This cannot be undone."}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={isDeletingFinancial}>Cancel</AlertDialogCancel><AlertDialogAction onClick={deleteFinancial} disabled={isDeletingFinancial} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{isDeletingFinancial ? "Deleting..." : "Delete"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Financial Row</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingFinancial
+                ? `Are you sure you want to delete ${deletingFinancial.barangay_name} FY ${deletingFinancial.fiscal_year} month ${deletingFinancial.month_no}? This action cannot be undone.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingFinancial}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteFinancial} disabled={isDeletingFinancial} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
     </div>
   );

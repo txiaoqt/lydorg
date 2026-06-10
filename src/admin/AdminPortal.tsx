@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Download, Eye, FileText, Pencil, Plus, Save, Trash2 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { YorpRegistryPage } from "./pages/YorpRegistry";
+import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, Bell, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Download, Eye, FileText, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, Trophy, Users, Wallet, X } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +24,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +39,7 @@ import { PortalEmptyState, PortalMetricCard, PortalSection, PortalStatusBadge } 
 import { PortalShell } from "@/components/portal/PortalShell";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
-import { adminNavigationGroups as baseAdminNavigationGroups, type NewsRelease, type TransparencyPost } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, computeYpopScore, DEFAULT_ORG_LED_TIERS, type NewsRelease, type TransparencyPost, type YPOPCityActivity, type YPOPEntry, type YPOPFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
@@ -52,12 +61,18 @@ import {
   updateOrganizationProfileReviewInSupabase,
   updateTemplateRecordInSupabase,
   uploadTemplateDocumentToSupabase,
+  adminCreateYpopPeriodInSupabase,
+  adminUpdateYpopPeriodInSupabase,
+  adminDeleteYpopPeriodFromSupabase,
+  adminCreateYpopCityActivityInSupabase,
+  adminUpdateYpopCityActivityInSupabase,
+  adminDeleteYpopCityActivityFromSupabase,
+  adminUpdateYpopEntryInSupabase,
 } from "@/lib/lydo-connect-supabase";
 
 const routeMap: Record<string, string> = {
   overview: "/admin",
   registrations: "/admin/registrations",
-  users: "/admin/users",
   "budget-utilization": "/admin/budget-utilization",
   "liquidation-monitoring": "/admin/liquidation-monitoring",
   "news-releases": "/admin/news-releases",
@@ -65,6 +80,8 @@ const routeMap: Record<string, string> = {
   templates: "/admin/templates",
   notifications: "/admin/notifications",
   "activity-logs": "/admin/activity-logs",
+  "ypop-validation": "/admin/ypop-validation",
+  "yorp-registry": "/admin/yorp-registry",
 };
 
 const adminId = "admin-demo";
@@ -201,6 +218,12 @@ type PendingDeleteConfirmation =
       kind: "transparency_post";
       id: string;
       title: string;
+    }
+  | {
+      kind: "ypop_period";
+      id: string;
+      title: string;
+      activityCount: number;
     };
 
 type BudgetMonitoringEntry = {
@@ -270,7 +293,7 @@ type BarangayAllocationOrganizationDetail = {
 export default function AdminPortal({ section }: { section: string }) {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { state, mergeRemoteState, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead } =
+  const { state, mergeRemoteState, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateYPOPEntry, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
   const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
@@ -290,6 +313,10 @@ export default function AdminPortal({ section }: { section: string }) {
   const [newsTitleDraft, setNewsTitleDraft] = useState("");
   const [newsDescriptionDraft, setNewsDescriptionDraft] = useState("");
   const [newsFacebookPostUrlDraft, setNewsFacebookPostUrlDraft] = useState("");
+  const [activityLogFilter, setActivityLogFilter] = useState<string>("all");
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [activityDateFilter, setActivityDateFilter] = useState<"all" | "7d" | "30d" | "90d">("all");
+  const [activityPage, setActivityPage] = useState(0);
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
   const [savingNewsRelease, setSavingNewsRelease] = useState(false);
@@ -308,7 +335,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const [statusChangeRemarkDraft, setStatusChangeRemarkDraft] = useState("");
   const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
   const [expandedRegistrationIds, setExpandedRegistrationIds] = useState<string[]>([]);
-  const [expandedUserIds, setExpandedUserIds] = useState<string[]>([]);
   const [expandedDocumentFileIds, setExpandedDocumentFileIds] = useState<string[]>([]);
   const [documentReviewRemarksByFileId, setDocumentReviewRemarksByFileId] = useState<Record<string, string>>({});
   const [selectedBudgetRequestId, setSelectedBudgetRequestId] = useState<string | null>(null);
@@ -334,6 +360,30 @@ export default function AdminPortal({ section }: { section: string }) {
   const [budgetAllocationBarangayFilter, setBudgetAllocationBarangayFilter] = useState("all");
   const [documentPreviewUrls, setDocumentPreviewUrls] = useState<Record<string, string>>({});
   const documentPreviewSourceRef = useRef<Record<string, string>>({});
+  const [selectedYpopId, setSelectedYpopId] = useState<string | null>(null);
+  const [ypopValidationForm, setYpopValidationForm] = useState<{
+    cityLedAttendance: Array<{ activityId: string; attended: boolean }>;
+    orgLedProjectCount: number;
+    status: YPOPStatus;
+    adminRemarks: string;
+  } | null>(null);
+  const [savingYpopValidation, setSavingYpopValidation] = useState(false);
+  const [ypopAdminView, setYpopAdminView] = useState<"periods" | "create-period" | "period-detail" | "entry-review">("periods");
+  const [selectedYpopPeriodId, setSelectedYpopPeriodId] = useState<string | null>(null);
+  const [createPeriodForm, setCreatePeriodForm] = useState<{ semesterLabel: string; validationDeadline: string; status: YPOPPeriodStatus }>({ semesterLabel: "", validationDeadline: "", status: "draft" });
+  const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
+  const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; date: string; venue: string; points: string }>>([]);
+  const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; date: string; venue: string; points: string } | null>(null);
+  const [createPeriodOrgLedTiers, setCreatePeriodOrgLedTiers] = useState<YPOPOrgLedTier[]>(DEFAULT_ORG_LED_TIERS);
+  const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | YPOPStatus>("all");
+  const [newActivityForm, setNewActivityForm] = useState<{ name: string; date: string; venue: string; points: string } | null>(null);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [editingActivityData, setEditingActivityData] = useState<{ name: string; date: string; venue: string; points: string } | null>(null);
+  const [ypopPreviewFileId, setYpopPreviewFileId] = useState<string | null>(null);
+  const [ypopPreviewUrl, setYpopPreviewUrl] = useState("");
+  const [ypopPreviewTitle, setYpopPreviewTitle] = useState("");
+  const [ypopPreviewCanInline, setYpopPreviewCanInline] = useState(false);
+  const [ypopPreviewLoading, setYpopPreviewLoading] = useState(false);
 
   const profile = state.organizationProfiles[0] ?? null;
   const adminNotifications = state.notifications.filter((item) => item.userId === adminId);
@@ -438,7 +488,7 @@ export default function AdminPortal({ section }: { section: string }) {
         const deadlineDate = liquidation?.deadlineAt ? new Date(liquidation.deadlineAt) : null;
         const completedAtDate = liquidation?.completedAt ? new Date(liquidation.completedAt) : null;
         const requestAgeInDays = Math.max(Math.ceil((now.getTime() - new Date(request.updatedAt || request.createdAt).getTime()) / 86400000), 0);
-        const goSignalAt = liquidation?.goSignalAt || request.goSignalAt || "Pending";
+        const goSignalAt = liquidation?.goSignalAt || request.goSignalAt || "";
         const liquidationStatus = liquidation?.status ?? "pending_activity_completion";
         let riskLabel: BudgetMonitoringEntry["riskLabel"] = "Needs Attention";
 
@@ -482,9 +532,9 @@ export default function AdminPortal({ section }: { section: string }) {
           budgetStatus: request.status,
           liquidationStatus,
           goSignalAt,
-          deadlineAt: liquidation?.deadlineAt || "Pending",
-          hardCopySubmittedAt: liquidation?.hardCopySubmittedAt || "Pending",
-          completedAt: liquidation?.completedAt || "Pending",
+          deadlineAt: liquidation?.deadlineAt || "",
+          hardCopySubmittedAt: liquidation?.hardCopySubmittedAt || "",
+          completedAt: liquidation?.completedAt || "",
           remarks: liquidation?.remarks || "None",
           ageInDays: liquidation?.deadlineAt ? Math.max(Math.ceil((now.getTime() - new Date(liquidation.deadlineAt).getTime()) / 86400000), 0) : 0,
           riskLabel,
@@ -975,6 +1025,49 @@ export default function AdminPortal({ section }: { section: string }) {
     selectedLiquidationReportFile?.fileUrl,
   ]);
 
+  useEffect(() => {
+    let isActive = true;
+    const ypopFile = ypopPreviewFileId
+      ? state.ypopFiles.find((f) => f.id === ypopPreviewFileId) ?? null
+      : null;
+
+    if (!ypopFile) {
+      setYpopPreviewUrl("");
+      setYpopPreviewCanInline(false);
+      setYpopPreviewLoading(false);
+      return;
+    }
+
+    setYpopPreviewTitle(ypopFile.fileName);
+
+    if (!ypopFile.fileUrl.trim()) {
+      setYpopPreviewUrl("");
+      setYpopPreviewCanInline(false);
+      setYpopPreviewLoading(false);
+      return;
+    }
+
+    setYpopPreviewLoading(true);
+
+    void (async () => {
+      try {
+        const resolvedUrl = await resolveSupabaseFileUrl(ypopFile.fileUrl);
+        if (!isActive) return;
+        const finalUrl = resolvedUrl ?? "";
+        setYpopPreviewUrl(finalUrl);
+        setYpopPreviewCanInline(canInlinePreviewFile(ypopFile.fileName) || canInlinePreviewFile(finalUrl));
+      } catch {
+        if (!isActive) return;
+        setYpopPreviewUrl("");
+        setYpopPreviewCanInline(false);
+      } finally {
+        if (isActive) setYpopPreviewLoading(false);
+      }
+    })();
+
+    return () => { isActive = false; };
+  }, [ypopPreviewFileId, state.ypopFiles]);
+
   const refreshAdminState = async () => {
     const remoteSnapshot = (await loadAdminPortalSupabaseState()) ?? (await loadLydoConnectSupabaseState());
     if (remoteSnapshot) {
@@ -1042,13 +1135,6 @@ export default function AdminPortal({ section }: { section: string }) {
     );
   };
 
-  const toggleUserCard = (organizationId: string) => {
-    setExpandedUserIds((current) =>
-      current.includes(organizationId)
-        ? current.filter((id) => id !== organizationId)
-        : [...current, organizationId],
-    );
-  };
 
   const toggleDocumentCard = (fileId: string) => {
     setExpandedDocumentFileIds((current) =>
@@ -1418,16 +1504,25 @@ export default function AdminPortal({ section }: { section: string }) {
           return;
         }
 
+        const budgetHistoryNow = new Date().toISOString();
+        const existingHistory = (state.budgetRequests.find((r) => r.id === pendingAdminConfirmation.budgetRequestId)?.revisionHistory ?? []);
+
         if (pendingAdminConfirmation.action === "approve") {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "approved_for_ftf_green",
             approvedAmount,
-            goSignalAt: new Date().toISOString(),
+            goSignalAt: budgetHistoryNow,
+          });
+          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            revisionHistory: [...existingHistory, { action: "approved_for_ftf_green", adminRemarks: "", changedAt: budgetHistoryNow }],
           });
         } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "hard_copy_submitted",
-            hardCopySubmittedAt: new Date().toISOString(),
+            hardCopySubmittedAt: budgetHistoryNow,
+          });
+          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            revisionHistory: [...existingHistory, { action: "hard_copy_submitted", adminRemarks: "", changedAt: budgetHistoryNow }],
           });
         } else if (pendingAdminConfirmation.action === "cash_released") {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
@@ -1435,15 +1530,24 @@ export default function AdminPortal({ section }: { section: string }) {
             releasedAmount: approvedAmount,
             releaseDate: getManilaDateIso(),
           });
+          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            revisionHistory: [...existingHistory, { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow }],
+          });
         } else if (pendingAdminConfirmation.action === "needs_revision") {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "needs_revision",
             remarks: adminRemarks,
           });
+          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            revisionHistory: [...existingHistory, { action: "needs_revision", adminRemarks, changedAt: budgetHistoryNow }],
+          });
         } else {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "rejected_red",
             remarks: adminRemarks,
+          });
+          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            revisionHistory: [...existingHistory, { action: "rejected_red", adminRemarks, changedAt: budgetHistoryNow }],
           });
         }
 
@@ -1554,6 +1658,9 @@ export default function AdminPortal({ section }: { section: string }) {
               ? "needs_revision"
               : "overdue";
         const adminRemarks = statusChangeRemarkDraft.trim();
+        const liqHistoryNow = new Date().toISOString();
+        const existingLiqHistory =
+          state.liquidationReports.find((r) => r.id === pendingAdminConfirmation.liquidationReportId)?.revisionHistory ?? [];
 
         if (pendingAdminConfirmation.action !== "approve" && pendingAdminConfirmation.action !== "overdue" && !adminRemarks) {
           toast({
@@ -1570,6 +1677,9 @@ export default function AdminPortal({ section }: { section: string }) {
           goSignalAt: pendingAdminConfirmation.action === "approve" ? new Date().toISOString() : undefined,
         });
         await refreshAdminState();
+        updateLiquidationReport(pendingAdminConfirmation.liquidationReportId, {
+          revisionHistory: [...existingLiqHistory, { action: status, adminRemarks, changedAt: liqHistoryNow }],
+        });
 
         if (pendingAdminConfirmation.action === "approve") {
           await appendAuditLog(
@@ -1971,6 +2081,13 @@ export default function AdminPortal({ section }: { section: string }) {
         return;
       }
 
+      if (pending.kind === "ypop_period") {
+        try { await adminDeleteYpopPeriodFromSupabase(pending.id); } catch { /* local-only fallback */ }
+        deleteYPOPPeriod(pending.id);
+        toast({ title: "Semester deleted", description: `"${pending.title}" and its activities have been removed.` });
+        return;
+      }
+
       const post = transparencyPosts.find((entry) => entry.id === pending.id);
       if (!post) return;
       await deleteTransparencyPostInSupabase(pending.id);
@@ -2324,108 +2441,140 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const activeContent = useMemo(() => {
     switch (section) {
-      case "overview":
+      case "overview": {
+        const formatActionName = (action: string) =>
+          action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+        const taskItems = [
+          { count: overviewStats.pendingProfiles,    label: "org profile(s) pending review",         route: routeMap.registrations,             critical: false },
+          { count: overviewStats.pendingDocuments,   label: "document set(s) awaiting validation",   route: routeMap.registrations,             critical: false },
+          { count: overviewStats.revisions,          label: "document revision(s) need re-review",   route: routeMap.registrations,             critical: false },
+          { count: overviewStats.overdueLiquidation, label: "liquidation report(s) overdue",         route: routeMap["liquidation-monitoring"], critical: true  },
+          { count: overviewStats.pendingLiquidation, label: "liquidation report(s) awaiting review", route: routeMap["liquidation-monitoring"], critical: false },
+          { count: overviewStats.nonCompliant,       label: "organization(s) with compliance issues", route: routeMap.users,                    critical: true  },
+        ].filter((item) => item.count > 0);
+
         return (
-          <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <PortalMetricCard
-                label="Registered Organizations"
-                value={overviewStats.organizations}
-                helper="Open the registrations list."
-                onClick={() => navigate(routeMap.registrations)}
-              />
-              <PortalMetricCard
-                label="Pending Profiles"
-                value={overviewStats.pendingProfiles}
-                helper="Review incomplete and pending registrations."
-                onClick={() => navigate(routeMap.registrations)}
-              />
-              <PortalMetricCard
-                label="Pending Documents"
-                value={overviewStats.pendingDocuments}
-                helper="Jump to document validation."
-                onClick={() => navigate(routeMap.registrations)}
-              />
-              <PortalMetricCard
-                label="Overdue Liquidations"
-                value={overviewStats.overdueLiquidation}
-                helper="Open liquidation monitoring."
-                onClick={() => navigate(routeMap["liquidation-monitoring"])}
-              />
-            </div>
-            <PortalSection title="Operational Summary" description="Everything the admin side needs to monitor at a glance.">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-5">
+            {/* Summary stats */}
+            <PortalSection title="Summary" description="Current compliance and budget status across all organizations.">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <PortalMetricCard
-                  label="Document Revisions"
-                  value={overviewStats.revisions}
-                  helper="Review corrected submissions."
+                  label="Registered Organizations"
+                  value={overviewStats.organizations}
+                  helper="Total organizations on the portal."
+                  icon={Users}
                   onClick={() => navigate(routeMap.registrations)}
                 />
                 <PortalMetricCard
                   label="Approved Documents"
                   value={overviewStats.approvedDocs}
-                  helper="See verified document sets."
+                  helper="Fully validated document sets."
+                  icon={CheckCircle2}
                   onClick={() => navigate(routeMap.registrations)}
                 />
                 <PortalMetricCard
                   label="Budget Go Signals"
                   value={overviewStats.approvedBudget}
-                  helper="Open budget utilization."
+                  helper="Budget requests approved for release."
+                  icon={Wallet}
                   onClick={() => navigate(routeMap["budget-utilization"])}
                 />
                 <PortalMetricCard
                   label="Budget Released"
                   value={overviewStats.releasedBudget}
-                  helper="Track released budget activity."
+                  helper="Funds confirmed released to organizations."
+                  icon={Banknote}
                   onClick={() => navigate(routeMap["budget-utilization"])}
-                />
-                <PortalMetricCard
-                  label="Pending Liquidation"
-                  value={overviewStats.pendingLiquidation}
-                  helper="Inspect liquidation status."
-                  onClick={() => navigate(routeMap["liquidation-monitoring"])}
-                />
-                <PortalMetricCard
-                  label="Non-compliant Orgs"
-                  value={overviewStats.nonCompliant}
-                  helper="Review inactive organizations."
-                  onClick={() => navigate(routeMap.users)}
                 />
               </div>
             </PortalSection>
-            <PortalSection title="Recent Activity" description="Latest activity log entries and unread notifications.">
-              <div className="grid gap-4 xl:grid-cols-2">
-                <div className="space-y-3">
-                  {state.activityLogs.slice(0, 4).map((log) => (
-                    <div key={log.id} className="rounded-xl border border-border/70 bg-background p-4 text-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium">{log.action}</p>
-                        <PortalStatusBadge status="under_review" />
-                      </div>
-                      <p className="mt-1 text-muted-foreground">{log.description}</p>
-                    </div>
-                  ))}
+
+            {/* Tasks */}
+            <PortalSection
+              title="Tasks"
+              action={
+                taskItems.length > 0 ? (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                    {taskItems.length} pending
+                  </span>
+                ) : null
+              }
+            >
+              {taskItems.length === 0 ? (
+                <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  All clear — no pending tasks right now.
                 </div>
-                <div className="space-y-3">
-                  {state.notifications.slice(0, 4).map((notification) => (
+              ) : (
+                <div className="divide-y divide-border/60">
+                  {taskItems.map((item, i) => (
                     <button
-                      key={notification.id}
+                      key={i}
                       type="button"
-                      className="w-full rounded-xl border border-border/70 bg-background p-4 text-left text-sm transition-colors hover:bg-muted/40"
-                      onClick={() => markNotificationRead(notification.id)}
+                      onClick={() => navigate(item.route)}
+                      className="flex w-full items-center gap-3 py-3 text-left text-sm transition-colors hover:bg-muted/40 first:pt-0 last:pb-0 px-1 rounded-lg"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium">{notification.title}</p>
-                        <PortalStatusBadge status={notification.isRead ? "verified" : "pending_review"} />
-                      </div>
-                      <p className="mt-1 text-muted-foreground">{notification.message}</p>
+                      <AlertTriangle className={`h-4 w-4 shrink-0 ${item.critical ? "text-destructive" : "text-amber-500"}`} />
+                      <span className={`inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md px-1.5 text-xs font-semibold tabular-nums ${
+                        item.critical
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                      }`}>
+                        {item.count}
+                      </span>
+                      <span className="flex-1 text-foreground">{item.label}</span>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                     </button>
                   ))}
                 </div>
-              </div>
+              )}
             </PortalSection>
+
+            {/* Recent Activity — two separate cards */}
+            <div className="grid gap-5 xl:grid-cols-2">
+              <PortalSection title="Notifications">
+                <div className="space-y-2">
+                  {state.notifications.slice(0, 4).length > 0 ? state.notifications.slice(0, 4).map((notification) => (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      className="w-full rounded-xl border border-border/70 bg-background p-3.5 text-left text-sm transition-colors hover:bg-muted/40"
+                      onClick={() => markNotificationRead(notification.id)}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        {!notification.isRead && (
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className={`font-medium leading-snug ${!notification.isRead ? "text-foreground" : "text-muted-foreground"}`}>
+                            {notification.title}
+                          </p>
+                          <p className="mt-1 text-muted-foreground text-xs">{notification.message}</p>
+                        </div>
+                      </div>
+                    </button>
+                  )) : (
+                    <p className="text-sm text-muted-foreground">No notifications.</p>
+                  )}
+                </div>
+              </PortalSection>
+              <PortalSection title="Recent Activity">
+                <div className="space-y-2">
+                  {state.activityLogs.slice(0, 4).length > 0 ? state.activityLogs.slice(0, 4).map((log) => (
+                    <div key={log.id} className="rounded-xl border border-border/70 bg-background p-3.5 text-sm">
+                      <p className="font-medium leading-snug">{formatActionName(log.action)}</p>
+                      <p className="mt-1 text-muted-foreground">{log.description}</p>
+                    </div>
+                  )) : (
+                    <p className="text-sm text-muted-foreground">No recent activity.</p>
+                  )}
+                </div>
+              </PortalSection>
+            </div>
           </div>
         );
+      }
       case "registrations": {
         const selectedOrg =
           state.organizationProfiles.find((org) => org.id === selectedRegistrationId) ?? null;
@@ -2445,45 +2594,32 @@ export default function AdminPortal({ section }: { section: string }) {
         if (selectedOrg) {
           return (
             <div className="space-y-6">
-              <PortalSection
-                title={selectedOrg.organizationName}
-                description="Registration details and submitted documents for validation."
-                action={<PortalStatusBadge status={selectedOrg.profileStatus} />}
-              >
-                <div className="mb-6 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                      <Button size="sm" variant="outline" onClick={() => setSelectedRegistrationId(null)} className="w-full sm:w-auto">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to registrations
-                      </Button>
-                      {selectedOrg.profileStatus === "verified" && selectedOrg.verifiedAt ? (
-                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
-                          <CheckCircle2 className="h-4 w-4" />
-                          VERIFIED ON {formatVerifiedDateLabel(selectedOrg.verifiedAt)}
-                        </div>
-                      ) : selectedOrg.profileStatus === "needs_update" ? (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700">
-                          Needs update
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border border-dashed border-border/80 bg-background px-4 py-2 text-sm text-muted-foreground">
-                          Pending verification
-                        </div>
-                      )}
+              {/* Action bar */}
+              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Button size="sm" variant="ghost" className="-ml-1.5 shrink-0" onClick={() => setSelectedRegistrationId(null)}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <span className="h-5 w-px shrink-0 bg-border/60" />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">{selectedOrg.organizationName}</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {selectedOrg.profileStatus === "verified" && selectedOrg.verifiedAt
+                          ? `Verified on ${new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(selectedOrg.verifiedAt))}`
+                          : selectedOrg.profileStatus === "needs_update"
+                          ? "Needs update"
+                          : "Pending verification"}
+                      </p>
                     </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                      <div className="inline-flex items-center rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground">
-                        {selectedOrg.isExistingOrganization ? "Existing org" : "New org"}
-                        {selectedOrg.isExistingOrganization ? ` · ${selectedOrg.organizationIdentifierNumber || "No ID"}` : ""}
-                      </div>
-                      <div className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
-                        {approvedDocumentCount}/{templateDocuments.length} approved
-                      </div>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <PortalStatusBadge status={selectedOrg.profileStatus} />
+                    {selectedOrg.profileStatus !== "verified" ? (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="w-full sm:w-auto"
                         disabled={!allRequiredDocumentsApproved && !canVerifyWithoutDocuments}
                         onClick={() =>
                           openAdminConfirmation({
@@ -2494,247 +2630,301 @@ export default function AdminPortal({ section }: { section: string }) {
                             userId: selectedOrg.userId,
                           })
                         }
-                        >
+                      >
                         Mark Verified
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        onClick={() =>
-                          openAdminConfirmation({
-                            kind: "profile",
-                            action: "needs_update",
-                            organizationId: selectedOrg.id,
-                            organizationName: selectedOrg.organizationName,
-                            userId: selectedOrg.userId,
-                          })
-                        }
-                        >
-                        Needs Update
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {canVerifyWithoutDocuments
-                      ? "This organization is marked as existing, so verification can proceed after the identifier number is validated."
-                      : `Verification is available only after all ${templateDocuments.length} submitted documents are marked approved.`}
-                  </p>
-                </div>
-
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
-                  <div className="space-y-4">
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Organization Contact</p>
-                      <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        {renderRegistrationDetailCard({ title: "Email", value: selectedOrg.organizationEmail })}
-                        {renderRegistrationDetailCard({ title: "Contact Number", value: selectedOrg.contactNumber })}
-                        {renderRegistrationDetailCard({ title: "Barangay", value: selectedOrg.barangay })}
-                        {renderRegistrationDetailCard({
-                          title: "Facebook Page",
-                          value: selectedOrg.facebookPageUrl || "N/A",
-                          wrap: true,
-                          linkHref: selectedOrg.facebookPageUrl || undefined,
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Address",
-                          value: selectedOrg.address || "N/A",
-                          className: "md:col-span-2",
-                          wrap: true,
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Classification</p>
-                      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {renderRegistrationDetailCard({ title: "Major Classification", value: selectedOrg.majorClassification || "N/A" })}
-                        {renderRegistrationDetailCard({ title: "Sub Classification", value: selectedOrg.subClassification || "N/A" })}
-                        {renderRegistrationDetailCard({
-                          title: "Date of Creation",
-                          value: selectedOrg.verifiedAt ? formatVerifiedDateLabel(selectedOrg.verifiedAt) : "Pending verification",
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Leadership</p>
-                      <div className="mt-4 grid gap-4">
-                        {renderRegistrationDetailCard({ title: "Representative", value: selectedOrg.representativeName || "N/A" })}
-                        {renderRegistrationDetailCard({ title: "Adviser", value: selectedOrg.adviserName || "N/A" })}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Advocacies</p>
-                      <div className="mt-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm">
-                        {renderAdvocacyChips(selectedOrg.advocacies)}
-                      </div>
-                    </div>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "profile",
+                          action: "needs_update",
+                          organizationId: selectedOrg.id,
+                          organizationName: selectedOrg.organizationName,
+                          userId: selectedOrg.userId,
+                        })
+                      }
+                    >
+                      Needs Update
+                    </Button>
                   </div>
                 </div>
-              </PortalSection>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${selectedOrg.isExistingOrganization ? "border-sky-200 bg-sky-50 text-sky-700" : "border-violet-200 bg-violet-50 text-violet-700"}`}>
+                    {selectedOrg.isExistingOrganization ? "Existing organization" : "New organization"}
+                  </span>
+                  {selectedOrg.isExistingOrganization && selectedOrg.organizationIdentifierNumber ? (
+                    <>
+                      <span className="h-3 w-px bg-border" />
+                      <span>{selectedOrg.organizationIdentifierNumber}</span>
+                    </>
+                  ) : null}
+                  <span className="h-3 w-px bg-border" />
+                  <span>{approvedDocumentCount}/{templateDocuments.length} documents approved</span>
+                </div>
+              </div>
 
+              {/* Profile detail */}
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
+                <div className="space-y-5">
+                  <PortalSection title="Organization Contact">
+                    <div className="divide-y divide-border/50">
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Email</p>
+                        <p className="break-all text-sm font-medium">{selectedOrg.organizationEmail}</p>
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Contact</p>
+                        <p className="text-sm font-medium">{selectedOrg.contactNumber || "N/A"}</p>
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Barangay</p>
+                        <p className="text-sm font-medium">{selectedOrg.barangay || "N/A"}</p>
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Facebook</p>
+                        {selectedOrg.facebookPageUrl ? (
+                          <a href={selectedOrg.facebookPageUrl} target="_blank" rel="noreferrer" className="break-all text-sm font-medium text-primary underline-offset-4 hover:underline">
+                            {selectedOrg.facebookPageUrl}
+                          </a>
+                        ) : (
+                          <p className="text-sm font-medium text-muted-foreground">N/A</p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Address</p>
+                        <p className="break-words text-sm font-medium">{selectedOrg.address || "N/A"}</p>
+                      </div>
+                    </div>
+                  </PortalSection>
+
+                  <PortalSection title="Classification">
+                    <div className="divide-y divide-border/50">
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Major</p>
+                        <p className="text-sm font-medium">{selectedOrg.majorClassification || "N/A"}</p>
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Sub</p>
+                        <p className="text-sm font-medium">{selectedOrg.subClassification || "N/A"}</p>
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Date Created</p>
+                        <p className="text-sm font-medium">
+                          {selectedOrg.verifiedAt ? formatVerifiedDateLabel(selectedOrg.verifiedAt) : "Pending verification"}
+                        </p>
+                      </div>
+                    </div>
+                  </PortalSection>
+                </div>
+
+                <div className="space-y-5">
+                  <PortalSection title="Leadership">
+                    <div className="divide-y divide-border/50">
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Representative</p>
+                        <p className="text-sm font-medium">{selectedOrg.representativeName || "N/A"}</p>
+                      </div>
+                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                        <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Adviser</p>
+                        <p className="text-sm font-medium">{selectedOrg.adviserName || "N/A"}</p>
+                      </div>
+                    </div>
+                  </PortalSection>
+
+                  <PortalSection title="Advocacies">
+                    {renderAdvocacyChips(selectedOrg.advocacies)}
+                  </PortalSection>
+                </div>
+              </div>
+
+              {/* Documents */}
               <PortalSection
                 title="Submitted Documents"
                 description={`${selectedFiles.length}/${templateDocuments.length} files submitted from the organization user side.`}
               >
                 {selectedSubmission ? (
-                  <div className="space-y-3">
+                  <div className="divide-y divide-border/50">
                     {templateDocuments.map((documentType) => {
                       const file = selectedFiles.find((entry) => entry.documentTypeId === documentType.id);
                       const previewUrl = file ? documentPreviewUrls[file.id] ?? "" : "";
                       const isExpanded = file ? expandedDocumentFileIds.includes(file.id) : false;
                       return (
-                        <Card key={documentType.id} className="border-border/70">
-                          <CardHeader className="pb-3">
-                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                              <div className="space-y-2">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <FileText className="h-4 w-4 text-muted-foreground" />
-                                  <CardTitle className="text-base">{documentType.name}</CardTitle>
-                                </div>
-                                <p className="text-sm text-muted-foreground">{file?.fileName ?? "No file submitted yet."}</p>
-                                {file ? (
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <PortalStatusBadge status={file.adminStatus ?? "submitted"} />
-                                  </div>
-                                ) : null}
+                        <div key={documentType.id} className="py-4 first:pt-0 last:pb-0">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <p className="text-sm font-medium">{documentType.name}</p>
+                                {file ? <PortalStatusBadge status={file.adminStatus ?? "submitted"} /> : null}
                               </div>
-                              <div className="flex flex-col gap-2 sm:flex-row">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-full sm:w-auto"
-                                  disabled={!file}
-                                  onClick={() => file && toggleDocumentCard(file.id)}
-                                >
-                                  {isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
-                                  {isExpanded ? "Hide details" : "Show details"}
-                                </Button>
+                              <p className="pl-6 text-sm text-muted-foreground">{file?.fileName ?? "No file submitted yet."}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="w-full shrink-0 sm:w-auto lg:w-auto"
+                              disabled={!file}
+                              onClick={() => file && toggleDocumentCard(file.id)}
+                            >
+                              {isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
+                              {isExpanded ? "Hide" : "Review"}
+                            </Button>
+                          </div>
+                          {isExpanded && file ? (
+                            <div className="mt-4 space-y-4">
+                              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
+                                <div className="space-y-3">
+                                  <div className="overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm">
+                                    {previewUrl ? (
+                                      <iframe
+                                        src={previewUrl}
+                                        title={file.fileName}
+                                        className="h-[24rem] w-full sm:h-[28rem] xl:h-[32rem]"
+                                      />
+                                    ) : (
+                                      <div className="grid h-[24rem] place-items-center p-6 text-center text-sm text-muted-foreground sm:h-[28rem] xl:h-[32rem]">
+                                        Preview unavailable. Use the buttons below to open the uploaded file.
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="space-y-3">
+                                  {/* Recent Activity */}
+                                  <div className="rounded-xl border border-border/70 bg-background p-4">
+                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Recent Activity</p>
+                                    <div className="mt-3 space-y-3">
+                                      <div className="flex items-start gap-3">
+                                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
+                                        <div>
+                                          <p className="text-sm font-medium">Submitted</p>
+                                          {file.uploadedAt ? (
+                                            <p className="text-xs text-muted-foreground">
+                                              {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(file.uploadedAt))}
+                                            </p>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                      {file.adminStatus !== "submitted" ? (
+                                        <div className="flex items-start gap-3">
+                                          <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${file.adminStatus === "approved_green" ? "bg-emerald-500" : file.adminStatus === "needs_revision" ? "bg-amber-400" : file.adminStatus === "rejected_red" ? "bg-destructive" : "bg-muted-foreground/40"}`} />
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-medium">{statusLabelMap[file.adminStatus] ?? file.adminStatus.replaceAll("_", " ")}</p>
+                                            {file.reviewedAt ? (
+                                              <p className="text-xs text-muted-foreground">
+                                                {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(file.reviewedAt))}
+                                              </p>
+                                            ) : null}
+                                            {file.adminRemarks ? (
+                                              <p className="mt-1 break-words text-sm text-muted-foreground">"{file.adminRemarks}"</p>
+                                            ) : null}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-start gap-3">
+                                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/20" />
+                                          <p className="text-sm text-muted-foreground">Not yet reviewed.</p>
+                                        </div>
+                                      )}
+                                      {file.userRemarks ? (
+                                        <div className="flex items-start gap-3">
+                                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary/60" />
+                                          <div className="min-w-0">
+                                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">Note from org</p>
+                                            <p className="mt-0.5 break-words text-sm text-muted-foreground">"{file.userRemarks}"</p>
+                                          </div>
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  </div>
+
+                                  {/* Admin Review Action */}
+                                  <div className="rounded-xl border border-border/70 bg-background p-4">
+                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Admin review action</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                      Leave a note when the submission needs revision or is rejected.
+                                    </p>
+                                    <Textarea
+                                      id={`document-admin-comment-${file.id}`}
+                                      name={`documentAdminComment-${file.id}`}
+                                      value={getDocumentReviewCommentDraft(file)}
+                                      onChange={(event) =>
+                                        setDocumentReviewRemarksByFileId((current) => ({
+                                          ...current,
+                                          [file.id]: event.target.value,
+                                        }))
+                                      }
+                                      placeholder="Explain what should be changed, or why the file was rejected."
+                                      className="mt-3 min-h-24"
+                                    />
+                                    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full sm:w-auto"
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "document",
+                                            action: "approve",
+                                            fileId: file.id,
+                                            submissionId: selectedSubmission.id,
+                                            organizationId: selectedOrg.id,
+                                            organizationName: selectedOrg.organizationName,
+                                            fileName: file.fileName,
+                                            currentAdminRemarks: getDocumentReviewCommentDraft(file),
+                                          })
+                                        }
+                                      >
+                                        Approve
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full sm:w-auto"
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "document",
+                                            action: "needs_revision",
+                                            fileId: file.id,
+                                            submissionId: selectedSubmission.id,
+                                            organizationId: selectedOrg.id,
+                                            organizationName: selectedOrg.organizationName,
+                                            fileName: file.fileName,
+                                            currentAdminRemarks: getDocumentReviewCommentDraft(file),
+                                          })
+                                        }
+                                      >
+                                        Needs Revision
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full sm:w-auto"
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "document",
+                                            action: "reject",
+                                            fileId: file.id,
+                                            submissionId: selectedSubmission.id,
+                                            organizationId: selectedOrg.id,
+                                            organizationName: selectedOrg.organizationName,
+                                            fileName: file.fileName,
+                                            currentAdminRemarks: getDocumentReviewCommentDraft(file),
+                                          })
+                                        }
+                                      >
+                                        Reject
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </CardHeader>
-                          {isExpanded ? (
-                            <CardContent className="space-y-4 border-t border-border/70 pt-4">
-                              {file ? (
-                                <>
-                                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
-                                    <div className="space-y-3">
-                                      <div className="overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm">
-                                        {previewUrl ? (
-                                          <iframe
-                                            src={previewUrl}
-                                            title={file.fileName}
-                                            className="h-[24rem] w-full sm:h-[28rem] xl:h-[32rem]"
-                                          />
-                                        ) : (
-                                          <div className="grid h-[24rem] place-items-center p-6 text-center text-sm text-muted-foreground sm:h-[28rem] xl:h-[32rem]">
-                                            Preview unavailable. Use the buttons below to open the uploaded file.
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                      <div className="rounded-xl border border-border/70 bg-background p-4">
-                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                          <div className="min-w-0">
-                                            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Admin Comment</p>
-                                            <p className="mt-1 text-sm text-muted-foreground">
-                                              Add a note only when the submission needs revision or is rejected.
-                                            </p>
-                                          </div>
-                                          <span className="inline-flex w-fit max-w-full items-center rounded-lg border border-border/70 bg-muted/40 px-3 py-1.5 text-xs leading-tight text-muted-foreground sm:ml-auto sm:text-right">
-                                            Comment required for revision or rejection
-                                          </span>
-                                        </div>
-                                        <Textarea
-                                          id={`document-admin-comment-${file.id}`}
-                                          name={`documentAdminComment-${file.id}`}
-                                          value={getDocumentReviewCommentDraft(file)}
-                                          onChange={(event) =>
-                                            setDocumentReviewRemarksByFileId((current) => ({
-                                              ...current,
-                                              [file.id]: event.target.value,
-                                            }))
-                                          }
-                                          placeholder="Explain what should be changed, or why the file was rejected."
-                                          className="mt-3 min-h-32"
-                                        />
-                                        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="w-full sm:w-auto"
-                                            onClick={() =>
-                                              openAdminConfirmation({
-                                                kind: "document",
-                                                action: "approve",
-                                                fileId: file.id,
-                                                submissionId: selectedSubmission.id,
-                                                organizationId: selectedOrg.id,
-                                                organizationName: selectedOrg.organizationName,
-                                                fileName: file.fileName,
-                                                currentAdminRemarks: getDocumentReviewCommentDraft(file),
-                                              })
-                                            }
-                                          >
-                                            Approve
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="w-full sm:w-auto"
-                                            onClick={() =>
-                                              openAdminConfirmation({
-                                                kind: "document",
-                                                action: "needs_revision",
-                                                fileId: file.id,
-                                                submissionId: selectedSubmission.id,
-                                                organizationId: selectedOrg.id,
-                                                organizationName: selectedOrg.organizationName,
-                                                fileName: file.fileName,
-                                                currentAdminRemarks: getDocumentReviewCommentDraft(file),
-                                              })
-                                            }
-                                          >
-                                            Needs Revision
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="w-full sm:w-auto"
-                                            onClick={() =>
-                                              openAdminConfirmation({
-                                                kind: "document",
-                                                action: "reject",
-                                                fileId: file.id,
-                                                submissionId: selectedSubmission.id,
-                                                organizationId: selectedOrg.id,
-                                                organizationName: selectedOrg.organizationName,
-                                                fileName: file.fileName,
-                                                currentAdminRemarks: getDocumentReviewCommentDraft(file),
-                                              })
-                                            }
-                                          >
-                                            Reject
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="grid min-h-[12rem] place-items-center rounded-xl border border-dashed border-border/70 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-                                  No uploaded file submitted yet for this requirement.
-                                </div>
-                              )}
-                            </CardContent>
                           ) : null}
-                        </Card>
+                        </div>
                       );
                     })}
                   </div>
@@ -2751,9 +2941,8 @@ export default function AdminPortal({ section }: { section: string }) {
 
         return (
           <PortalSection
-            title="Registrations"
-            description="Use the dropdown to inspect card details, then open the full review page when needed."
-            action={state.organizationProfiles.length ? <PortalStatusBadge status="pending_review" /> : null}
+            title="Registration Review"
+            description="Review pending organization profiles and their submitted documents. Open an organization to validate files and verify their registration."
           >
             {state.organizationProfiles.length ? (
               <div className="grid gap-4 md:grid-cols-2">
@@ -2764,87 +2953,51 @@ export default function AdminPortal({ section }: { section: string }) {
                         (file) => file.submissionId === orgSubmission.id && validDocumentTypeIds.has(file.documentTypeId),
                       ).length
                     : 0;
-                  const isExpanded = expandedRegistrationIds.includes(org.id);
+                  const statusDotColor =
+                    org.profileStatus === "verified"
+                      ? "bg-emerald-500"
+                      : org.profileStatus === "needs_update" || org.profileStatus === "pending_review"
+                      ? "bg-amber-400"
+                      : "bg-muted-foreground/40";
                   return (
                     <Card key={org.id} className="border-border/70 shadow-sm">
-                      <CardHeader className="pb-3">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="space-y-1">
-                            <CardTitle className="text-base">{org.organizationName}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{org.organizationEmail}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Documents submitted: {submittedCount}/{templateDocuments.length}
-                            </p>
-                          </div>
-                          <div className="flex flex-col gap-2 sm:items-end">
-                            <PortalStatusBadge status={org.profileStatus} />
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() => toggleRegistrationCard(org.id)}
-                              >
-                                {isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
-                                {isExpanded ? "Hide details" : "Show details"}
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                className="w-full sm:w-auto"
-                                onClick={() => setSelectedRegistrationId(org.id)}
-                              >
-                                Review
-                              </Button>
+                      <CardContent className="p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-start gap-2.5">
+                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-foreground">{org.organizationName}</p>
+                              <p className="mt-0.5 truncate text-sm text-muted-foreground">{org.organizationEmail}</p>
+                              {org.barangay ? (
+                                <p className="text-sm text-muted-foreground">{org.barangay}</p>
+                              ) : null}
                             </div>
+                          </div>
+                          <PortalStatusBadge status={org.profileStatus} />
+                        </div>
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Documents submitted</span>
+                            <span className="font-medium">{submittedCount}/{templateDocuments.length}</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-primary/60 transition-[width]"
+                              style={{ width: templateDocuments.length ? `${(submittedCount / templateDocuments.length) * 100}%` : "0%" }}
+                            />
                           </div>
                         </div>
-                      </CardHeader>
-                      {isExpanded ? (
-                        <CardContent className="space-y-4 border-t border-border/70 pt-4 text-sm text-muted-foreground">
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Contact Number</p>
-                              <p className="mt-1 font-medium text-foreground">{org.contactNumber}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Barangay</p>
-                              <p className="mt-1 font-medium text-foreground">{org.barangay}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Major Classification</p>
-                              <p className="mt-1 font-medium text-foreground">{org.majorClassification || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Sub Classification</p>
-                              <p className="mt-1 font-medium text-foreground">{org.subClassification || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Representative</p>
-                              <p className="mt-1 font-medium text-foreground">{org.representativeName || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Adviser</p>
-                              <p className="mt-1 font-medium text-foreground">{org.adviserName || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 sm:col-span-2">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Facebook</p>
-                              <p className="mt-1 break-all font-medium text-foreground">{org.facebookPageUrl || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 sm:col-span-2">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Date of Creation</p>
-                              <p className="mt-1 font-medium text-foreground">
-                                {org.verifiedAt ? formatVerifiedDateLabel(org.verifiedAt) : "Pending verification"}
-                              </p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Advocacies</p>
-                            <div className="mt-2">{renderAdvocacyChips(org.advocacies)}</div>
-                          </div>
-                        </CardContent>
-                      ) : null}
+                        <div className="mt-4 flex justify-end">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setSelectedRegistrationId(org.id)}
+                          >
+                            Review
+                            <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </CardContent>
                     </Card>
                   );
                 })}
@@ -2858,123 +3011,333 @@ export default function AdminPortal({ section }: { section: string }) {
           </PortalSection>
         );
       }
-      case "users":
-        return (
-          <PortalSection title="Users" description="Linked accounts and access levels.">
-            {state.organizationProfiles.length ? (
-              <div className="space-y-3">
-                {state.organizationProfiles.map((organization) => {
-                  const isExpanded = expandedUserIds.includes(organization.id);
-                  return (
-                    <Card key={organization.id} className="border-border/70 shadow-sm">
-                      <CardHeader className="pb-3">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Name / Email</p>
-                            <CardTitle className="text-base">{organization.organizationName}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{organization.organizationEmail}</p>
-                          </div>
-                          <div className="flex flex-col gap-2 sm:items-end">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Role</p>
-                              <p className="mt-1 font-medium text-foreground">Organization User</p>
-                            </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="w-full sm:w-auto"
-                              onClick={() => toggleUserCard(organization.id)}
-                            >
-                              {isExpanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
-                              {isExpanded ? "Hide details" : "Show details"}
-                            </Button>
+      case "budget-utilization":
+        if (selectedBudgetRequest) {
+          return (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Button size="sm" variant="ghost" className="-ml-1.5 shrink-0" onClick={closeBudgetRequestDetails}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />Back
+                    </Button>
+                    <span className="h-5 w-px shrink-0 bg-border/60" />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">{selectedBudgetRequest.activityTitle}</p>
+                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                        {selectedBudgetOrganization?.organizationName ?? "Unknown organization"} · PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <PortalStatusBadge status={selectedBudgetRequest.status} />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "budget",
+                          action: "approve",
+                          budgetRequestId: selectedBudgetRequest.id,
+                          organizationId: selectedBudgetRequest.organizationId,
+                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedBudgetRequest.activityTitle,
+                          requestedAmount: selectedBudgetRequest.requestedAmount,
+                        })
+                      }
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={selectedBudgetRequest.status !== "approved_for_ftf_green"}
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "budget",
+                          action: "submitted_hardcopy",
+                          budgetRequestId: selectedBudgetRequest.id,
+                          organizationId: selectedBudgetRequest.organizationId,
+                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedBudgetRequest.activityTitle,
+                          requestedAmount: selectedBudgetRequest.requestedAmount,
+                        })
+                      }
+                    >
+                      Submitted hardcopy
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={selectedBudgetRequest.status !== "hard_copy_submitted"}
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "budget",
+                          action: "cash_released",
+                          budgetRequestId: selectedBudgetRequest.id,
+                          organizationId: selectedBudgetRequest.organizationId,
+                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedBudgetRequest.activityTitle,
+                          requestedAmount: selectedBudgetRequest.requestedAmount,
+                        })
+                      }
+                    >
+                      Cash released
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "budget",
+                          action: "needs_revision",
+                          budgetRequestId: selectedBudgetRequest.id,
+                          organizationId: selectedBudgetRequest.organizationId,
+                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedBudgetRequest.activityTitle,
+                          requestedAmount: selectedBudgetRequest.requestedAmount,
+                        })
+                      }
+                    >
+                      Needs Revision
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "budget",
+                          action: "reject",
+                          budgetRequestId: selectedBudgetRequest.id,
+                          organizationId: selectedBudgetRequest.organizationId,
+                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedBudgetRequest.activityTitle,
+                          requestedAmount: selectedBudgetRequest.requestedAmount,
+                        })
+                      }
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+                <PortalSection title="Request Details">
+                  {selectedBudgetOrganization && (
+                    <div className="mb-4 border-b border-border/40 pb-4">
+                      <p className="font-semibold text-foreground">{selectedBudgetOrganization.organizationName}</p>
+                      <p className="text-sm text-muted-foreground">{selectedBudgetOrganization.organizationEmail}</p>
+                      {selectedBudgetOrganization.barangay ? <p className="text-sm text-muted-foreground">{selectedBudgetOrganization.barangay}</p> : null}
+                    </div>
+                  )}
+                  <div className="divide-y divide-border/40">
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Requested Amount</p>
+                      <p className="text-sm font-medium">PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved Amount</p>
+                      <p className="text-sm font-medium">PHP {selectedBudgetRequest.approvedAmount.toLocaleString()}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released Amount</p>
+                      <p className="text-sm font-medium">PHP {selectedBudgetRequest.releasedAmount.toLocaleString()}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Activity Date</p>
+                      <p className="text-sm font-medium">{selectedBudgetRequest.activityDate || "N/A"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Venue</p>
+                      <p className="break-words text-sm font-medium">{selectedBudgetRequest.venue || "N/A"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Purpose Category</p>
+                      <p className="text-sm font-medium">{selectedBudgetRequest.purposeCategory || "N/A"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                      <p className="text-sm font-medium">{selectedBudgetRequest.goSignalAt || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy Submitted</p>
+                      <p className="text-sm font-medium">{selectedBudgetRequest.hardCopySubmittedAt || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Release Date</p>
+                      <p className="text-sm font-medium">{selectedBudgetRequest.releaseDate || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remarks</p>
+                      <p className="break-words text-sm font-medium">{selectedBudgetRequest.remarks || "None"}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-border/70 bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Recent Activity</p>
+                    {(selectedBudgetRequest.revisionHistory?.length || selectedBudgetRequest.userNote) ? (
+                      <div className="mt-3 space-y-3">
+                        <div className="flex items-start gap-2.5">
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium">Submitted</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(selectedBudgetRequest.createdAt))}
+                            </p>
                           </div>
                         </div>
-                      </CardHeader>
-                      {isExpanded ? (
-                        <CardContent className="space-y-4 border-t border-border/70 pt-4 text-sm text-muted-foreground">
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Contact Number</p>
-                              <p className="mt-1 font-medium text-foreground">{organization.contactNumber}</p>
+                        {(selectedBudgetRequest.revisionHistory ?? []).map((entry, idx) => {
+                          const dotColor =
+                            entry.action === "needs_revision" || entry.action === "rejected_red"
+                              ? "bg-rose-500"
+                              : entry.action === "approved_for_ftf_green" || entry.action === "hard_copy_submitted" || entry.action === "budget_released" || entry.action === "completed"
+                              ? "bg-emerald-500"
+                              : "bg-amber-400";
+                          const actionLabel =
+                            entry.action === "needs_revision" ? "Revision Requested"
+                            : entry.action === "rejected_red" ? "Rejected"
+                            : entry.action === "approved_for_ftf_green" ? "Approved"
+                            : entry.action === "hard_copy_submitted" ? "Hard Copy Submitted"
+                            : entry.action === "budget_released" ? "Budget Released"
+                            : entry.action === "completed" ? "Completed"
+                            : entry.action.replaceAll("_", " ");
+                          return (
+                            <div key={idx} className="flex items-start gap-2.5">
+                              <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium">{actionLabel}</p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                  {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.changedAt))}
+                                </p>
+                                {entry.adminRemarks ? (
+                                  <p className="mt-1 text-xs text-muted-foreground italic">"{entry.adminRemarks}"</p>
+                                ) : null}
+                              </div>
                             </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Barangay</p>
-                              <p className="mt-1 font-medium text-foreground">{organization.barangay}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Representative</p>
-                              <p className="mt-1 font-medium text-foreground">{organization.representativeName || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Adviser</p>
-                              <p className="mt-1 font-medium text-foreground">{organization.adviserName || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 sm:col-span-2">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Address</p>
-                              <p className="mt-1 font-medium text-foreground">{organization.address || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 sm:col-span-2">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Facebook</p>
-                              <p className="mt-1 break-all font-medium text-foreground">{organization.facebookPageUrl || "N/A"}</p>
-                            </div>
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 sm:col-span-2">
-                              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Date of Creation</p>
-                              <p className="mt-1 font-medium text-foreground">
-                                {organization.verifiedAt ? formatVerifiedDateLabel(organization.verifiedAt) : "Pending verification"}
-                              </p>
+                          );
+                        })}
+                        {selectedBudgetRequest.userNote ? (
+                          <div className="flex items-start gap-2.5">
+                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-sky-700">Note from org</p>
+                              <p className="mt-1 text-xs text-muted-foreground italic">"{selectedBudgetRequest.userNote}"</p>
                             </div>
                           </div>
-                        </CardContent>
-                      ) : null}
-                    </Card>
-                  );
-                })}
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-muted-foreground">No review activity yet.</p>
+                    )}
+                  </div>
+                </PortalSection>
+
+                <PortalSection title="Attached Files">
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      {selectedBudgetRequestFiles.length
+                        ? `${selectedBudgetRequestFiles.length} file${selectedBudgetRequestFiles.length === 1 ? "" : "s"} uploaded.`
+                        : "No attached files were uploaded for this request."}
+                    </p>
+                    {selectedBudgetRequestFiles.length ? (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {selectedBudgetRequestFiles.map((file) => (
+                            <Button
+                              key={file.id}
+                              type="button"
+                              size="sm"
+                              variant={selectedBudgetRequestFile?.id === file.id ? "default" : "outline"}
+                              className="max-w-full"
+                              onClick={() => setSelectedBudgetFileId(file.id)}
+                            >
+                              <span className="max-w-[12rem] truncate">{file.fileName}</span>
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="rounded-xl border border-border/70 bg-background p-3">
+                          {budgetPreviewLoading ? (
+                            <p className="p-3 text-sm text-muted-foreground">Loading preview...</p>
+                          ) : budgetPreviewUrl && budgetPreviewCanInline ? (
+                            isImagePreviewFile(budgetPreviewTitle) || isImagePreviewFile(budgetPreviewUrl) ? (
+                              <div className="flex max-h-[24rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
+                                <img
+                                  src={budgetPreviewUrl}
+                                  alt={budgetPreviewTitle || "Budget request preview"}
+                                  className="max-h-[24rem] w-full object-contain sm:max-h-[32rem]"
+                                />
+                              </div>
+                            ) : (
+                              <iframe
+                                title={budgetPreviewTitle || "Budget Request Preview"}
+                                src={budgetPreviewUrl}
+                                className="h-[24rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
+                                loading="eager"
+                              />
+                            )
+                          ) : budgetPreviewUrl ? (
+                            <div className="space-y-3 p-3 text-sm text-muted-foreground">
+                              <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
+                              <Button type="button" variant="outline" onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Open File
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="grid min-h-[16rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-6 text-center text-sm text-muted-foreground">
+                              {budgetPreviewEmptyMessage || "No budget request file was uploaded."}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 p-6 text-sm text-muted-foreground">
+                        No attached budget request files were submitted.
+                      </div>
+                    )}
+                  </div>
+                </PortalSection>
               </div>
-            ) : (
-              <PortalEmptyState
-                title="No users yet"
-                description="Linked organization accounts will appear here after users register and save their organization profiles."
-              />
-            )}
-          </PortalSection>
-        );
-      case "budget-utilization":
+            </div>
+          );
+        }
         return (
-          <>
-            <PortalSection title="Budget Utilization" description="Budget request review and go-signal control.">
-              <div className="grid gap-4">
+            <PortalSection title="Budget Requests" description="Review budget requests submitted by organizations. Approve requests to issue a go-signal, request revisions, or reject.">
+              <div className="space-y-3">
                 {state.budgetRequests.length ? (
                   state.budgetRequests.map((request) => {
                     const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
-                    const requestFiles = state.budgetRequestFiles
-                      .filter((file) => file.budgetRequestId === request.id)
-                      .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
-
+                    const statusDotColor =
+                      request.status === "budget_released" || request.status === "completed"
+                        ? "bg-emerald-500"
+                        : request.status === "rejected_red" || request.status === "draft"
+                        ? "bg-muted-foreground/40"
+                        : "bg-amber-400";
                     return (
-                      <Card key={request.id} className="border-border/70">
-                        <CardContent className="grid gap-4 p-4 md:grid-cols-[1.6fr_0.9fr]">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="font-medium">{request.activityTitle}</p>
-                                <p className="text-sm text-muted-foreground">{request.activityDescription || "No description provided."}</p>
+                      <Card key={request.id} className="border-border/70 shadow-sm">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-start gap-2.5">
+                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <p className="font-semibold text-foreground">{request.activityTitle}</p>
+                                  {request.budgetRequestType === "ypop_incentive" && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                      <Trophy className="h-2.5 w-2.5" />
+                                      YPOP Incentive
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="mt-0.5 truncate text-sm text-foreground/70"><span className="text-muted-foreground">Organization:</span> {requestOrganization?.organizationName ?? "Unknown organization"}</p>
+                                <p className="mt-0.5 text-sm text-muted-foreground"><span>Amount:</span> PHP {request.requestedAmount.toLocaleString()} · <span>Venue:</span> {request.venue || "No venue"}</p>
                               </div>
-                              <PortalStatusBadge status={request.status} />
                             </div>
-                            <div className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                              <p>Organization: {requestOrganization?.organizationName ?? "Unknown organization"}</p>
-                              <p>Requested: PHP {request.requestedAmount.toLocaleString()}</p>
-                              <p>Venue: {request.venue}</p>
-                              <p>Attached files: {requestFiles.length}</p>
-                            </div>
-                            <p className="text-sm text-muted-foreground">Remarks: {request.remarks || "None"}</p>
+                            <PortalStatusBadge status={request.status} />
                           </div>
-                          <div className="flex items-start justify-end">
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => openBudgetRequestDetails(request.id)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
+                          <div className="mt-3 flex justify-end">
+                            <Button type="button" size="sm" onClick={() => openBudgetRequestDetails(request.id)}>
+                              Review<ArrowRight className="ml-2 h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </CardContent>
@@ -2986,459 +3349,298 @@ export default function AdminPortal({ section }: { section: string }) {
                 )}
               </div>
             </PortalSection>
+        );
+      case "liquidation-monitoring":
+        if (liquidationDetailsOpen && selectedLiquidationReport) {
+          return (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Button size="sm" variant="ghost" className="-ml-1.5 shrink-0" onClick={closeLiquidationDetails}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />Back
+                    </Button>
+                    <span className="h-5 w-px shrink-0 bg-border/60" />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">{selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation Report"}</p>
+                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                        {selectedLiquidationOrganization?.organizationName ?? "Unknown organization"}
+                        {selectedLiquidationReport.deadlineAt ? ` · Deadline: ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(selectedLiquidationReport.deadlineAt))}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <PortalStatusBadge status={selectedLiquidationReport.status} />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "liquidation",
+                          action: "approve",
+                          liquidationReportId: selectedLiquidationReport.id,
+                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                          organizationId: selectedLiquidationReport.organizationId,
+                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                        })
+                      }
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "liquidation",
+                          action: "needs_revision",
+                          liquidationReportId: selectedLiquidationReport.id,
+                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                          organizationId: selectedLiquidationReport.organizationId,
+                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                        })
+                      }
+                    >
+                      Needs Revision
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "liquidation",
+                          action: "overdue",
+                          liquidationReportId: selectedLiquidationReport.id,
+                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                          organizationId: selectedLiquidationReport.organizationId,
+                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                        })
+                      }
+                    >
+                      Mark Overdue
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
-            <Dialog open={selectedBudgetRequest !== null} onOpenChange={(open) => { if (!open) closeBudgetRequestDetails(); }}>
-              <DialogContent className="h-[100dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-[92dvh] sm:w-[min(96vw,96rem)] sm:max-w-none sm:rounded-2xl sm:border">
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="border-b border-border/70 px-4 pb-2 pt-4 sm:px-6 sm:pb-4 sm:pt-6">
-                    <DialogHeader className="text-left sm:text-left">
-                      <DialogTitle className="text-lg leading-tight sm:text-2xl">
-                        {selectedBudgetRequest?.activityTitle ?? "Budget Request Details"}
-                      </DialogTitle>
-                      <DialogDescription className="max-w-2xl text-sm sm:text-base">
-                        Review organization details and attached files before updating the request status.
-                      </DialogDescription>
-                    </DialogHeader>
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+                <PortalSection title="Liquidation Details">
+                  {selectedLiquidationOrganization && (
+                    <div className="mb-4 border-b border-border/40 pb-4">
+                      <p className="font-semibold text-foreground">{selectedLiquidationOrganization.organizationName}</p>
+                      <p className="text-sm text-muted-foreground">{selectedLiquidationOrganization.organizationEmail}</p>
+                      {selectedLiquidationOrganization.barangay ? <p className="text-sm text-muted-foreground">{selectedLiquidationOrganization.barangay}</p> : null}
+                    </div>
+                  )}
+                  <div className="divide-y divide-border/40">
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Linked Budget</p>
+                      <p className="break-words text-sm font-medium">{selectedLiquidationBudgetRequest?.activityTitle ?? "N/A"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                      <p className="text-sm font-medium">{selectedLiquidationReport.goSignalAt || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Deadline</p>
+                      <p className="text-sm font-medium">{selectedLiquidationReport.deadlineAt || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy Submitted</p>
+                      <p className="text-sm font-medium">{selectedLiquidationReport.hardCopySubmittedAt || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Completed At</p>
+                      <p className="text-sm font-medium">{selectedLiquidationReport.completedAt || "Pending"}</p>
+                    </div>
+                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remarks</p>
+                      <p className="break-words text-sm font-medium">{selectedLiquidationReport.remarks || "None"}</p>
+                    </div>
                   </div>
 
-                  <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-                    {selectedBudgetRequest ? (
-                      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-                        <div className="space-y-4">
-                          <div className="hidden rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Organization Details</p>
-                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                              {renderRegistrationDetailCard({
-                                title: "Organization Name",
-                                value: selectedBudgetOrganization?.organizationName ?? "N/A",
-                                className: "sm:col-span-2",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Organization Email",
-                                value: selectedBudgetOrganization?.organizationEmail ?? "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Contact Number",
-                                value: selectedBudgetOrganization?.contactNumber ?? "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Barangay",
-                                value: selectedBudgetOrganization?.barangay ?? "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "District",
-                                value: selectedBudgetOrganization?.district || "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Submitted By",
-                                value: selectedBudgetRequest.submittedBy,
-                                wrap: true,
-                                className: "sm:col-span-2",
-                              })}
-                            </div>
-                          </div>
-
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Request Details</p>
-                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                              {renderRegistrationDetailCard({ title: "Requested Amount", value: `PHP ${selectedBudgetRequest.requestedAmount.toLocaleString()}` })}
-                              {renderRegistrationDetailCard({
-                                title: "Approved Amount",
-                                value: `PHP ${selectedBudgetRequest.approvedAmount.toLocaleString()}`,
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Released Amount",
-                                value: `PHP ${selectedBudgetRequest.releasedAmount.toLocaleString()}`,
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Activity Date",
-                                value: selectedBudgetRequest.activityDate || "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Venue",
-                                value: selectedBudgetRequest.venue,
-                                wrap: true,
-                                className: "sm:col-span-2",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Purpose Category",
-                                value: selectedBudgetRequest.purposeCategory || "N/A",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Go Signal",
-                                value: selectedBudgetRequest.goSignalAt || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Hard Copy Submitted",
-                                value: selectedBudgetRequest.hardCopySubmittedAt || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Release Date",
-                                value: selectedBudgetRequest.releaseDate || "Pending",
-                              })}
-                              {renderRegistrationDetailCard({
-                                title: "Remarks",
-                                value: selectedBudgetRequest.remarks || "None",
-                                wrap: true,
-                                className: "sm:col-span-2",
-                              })}
-                            </div>
+                  <div className="mt-4 rounded-xl border border-border/70 bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Recent Activity</p>
+                    {selectedLiquidationReport.revisionHistory?.length ? (
+                      <div className="mt-3 space-y-3">
+                        <div className="flex items-start gap-2.5">
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium">Report Created</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(selectedLiquidationReport.createdAt))}
+                            </p>
                           </div>
                         </div>
-
-                        <div className="space-y-4">
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        {selectedLiquidationReport.revisionHistory.map((entry, idx) => {
+                          const liqDotColor =
+                            entry.action === "overdue" || entry.action === "rejected_red"
+                              ? "bg-rose-500"
+                              : entry.action === "approved_for_ftf_green" || entry.action === "completed_liquidated" || entry.action === "hard_copy_submitted"
+                              ? "bg-emerald-500"
+                              : entry.action === "submitted"
+                              ? "bg-muted-foreground/40"
+                              : "bg-amber-400";
+                          const liqActionLabel =
+                            entry.action === "overdue" ? "Marked Overdue"
+                            : entry.action === "needs_revision" ? "Revision Requested"
+                            : entry.action === "approved_for_ftf_green" ? "Approved (Go Signal)"
+                            : entry.action === "submitted" ? "Submitted"
+                            : entry.action === "hard_copy_submitted" ? "Hard Copy Submitted"
+                            : entry.action === "completed_liquidated" ? "Completed"
+                            : entry.action;
+                          return (
+                            <div key={idx} className="flex items-start gap-2.5">
+                              <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${liqDotColor}`} />
                               <div className="min-w-0">
-                                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Attached Files</p>
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                  {selectedBudgetRequestFiles.length
-                                    ? `${selectedBudgetRequestFiles.length} file${selectedBudgetRequestFiles.length === 1 ? "" : "s"} uploaded.`
-                                    : "No attached files were uploaded for this request."}
+                                <p className="text-sm font-medium">{liqActionLabel}</p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                  {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.changedAt))}
                                 </p>
-                              </div>
-                              <div className="self-start">
-                                <PortalStatusBadge status={selectedBudgetRequest.status} />
+                                {entry.adminRemarks ? <p className="mt-1 text-xs italic text-muted-foreground">"{entry.adminRemarks}"</p> : null}
                               </div>
                             </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-muted-foreground">No review activity yet.</p>
+                    )}
+                  </div>
+                </PortalSection>
 
-                            {selectedBudgetRequestFiles.length ? (
-                              <div className="mt-4 space-y-3">
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedBudgetRequestFiles.map((file) => (
-                                    <Button
-                                      key={file.id}
-                                      type="button"
-                                      size="sm"
-                                      variant={selectedBudgetRequestFile?.id === file.id ? "default" : "outline"}
-                                      className="max-w-full"
-                                      onClick={() => setSelectedBudgetFileId(file.id)}
-                                    >
-                                      <span className="max-w-[12rem] truncate">{file.fileName}</span>
-                                    </Button>
-                                  ))}
+                <PortalSection title="Attached Files">
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      {selectedLiquidationReportFiles.length
+                        ? `${selectedLiquidationReportFiles.length} file${selectedLiquidationReportFiles.length === 1 ? "" : "s"} uploaded.`
+                        : "No attached files were uploaded for this liquidation report."}
+                    </p>
+                    {selectedLiquidationReportFiles.length ? (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {selectedLiquidationReportFiles.map((file) => (
+                            <Button
+                              key={file.id}
+                              type="button"
+                              size="sm"
+                              variant={selectedLiquidationReportFile?.id === file.id ? "default" : "outline"}
+                              className="max-w-full"
+                              onClick={() => setSelectedLiquidationFileId(file.id)}
+                            >
+                              <span className="max-w-[12rem] truncate">{file.fileName}</span>
+                            </Button>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-between"
+                          onClick={() => setLiquidationPreviewExpanded((value) => !value)}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <Eye className="h-4 w-4" />
+                            {liquidationPreviewExpanded ? "Hide Preview" : "Show Preview"}
+                          </span>
+                          {liquidationPreviewExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                        {liquidationPreviewExpanded ? (
+                          <div className="rounded-xl border border-border/70 bg-background p-2.5">
+                            {liquidationPreviewLoading ? (
+                              <p className="p-2 text-sm text-muted-foreground">Loading preview...</p>
+                            ) : liquidationPreviewUrl && liquidationPreviewCanInline ? (
+                              isImagePreviewFile(liquidationPreviewTitle) || isImagePreviewFile(liquidationPreviewUrl) ? (
+                                <div className="flex max-h-[18rem] min-h-[12rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
+                                  <img
+                                    src={liquidationPreviewUrl}
+                                    alt={liquidationPreviewTitle || "Liquidation file preview"}
+                                    className="max-h-[18rem] w-full object-contain sm:max-h-[32rem]"
+                                  />
                                 </div>
-
-                                <div className="rounded-xl border border-border/70 bg-background p-3">
-                                  {budgetPreviewLoading ? (
-                                    <p className="p-3 text-sm text-muted-foreground">Loading preview...</p>
-                                  ) : budgetPreviewUrl && budgetPreviewCanInline ? (
-                                    isImagePreviewFile(budgetPreviewTitle) || isImagePreviewFile(budgetPreviewUrl) ? (
-                                      <div className="flex max-h-[24rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
-                                        <img
-                                          src={budgetPreviewUrl}
-                                          alt={budgetPreviewTitle || "Budget request preview"}
-                                          className="max-h-[24rem] w-full object-contain sm:max-h-[32rem]"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <iframe
-                                        title={budgetPreviewTitle || "Budget Request Preview"}
-                                        src={budgetPreviewUrl}
-                                        className="h-[24rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
-                                        loading="eager"
-                                      />
-                                    )
-                                  ) : budgetPreviewUrl ? (
-                                    <div className="space-y-3 p-3 text-sm text-muted-foreground">
-                                      <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
-                                      <Button type="button" variant="outline" onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}>
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        Open File
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="grid min-h-[16rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-6 text-center text-sm text-muted-foreground">
-                                      {budgetPreviewEmptyMessage || "No budget request file was uploaded."}
-                                    </div>
-                                  )}
-                                </div>
+                              ) : (
+                                <iframe
+                                  title={liquidationPreviewTitle || "Liquidation Preview"}
+                                  src={liquidationPreviewUrl}
+                                  className="h-[18rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
+                                  loading="eager"
+                                />
+                              )
+                            ) : liquidationPreviewUrl ? (
+                              <div className="space-y-3 p-2.5 text-sm text-muted-foreground">
+                                <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
+                                <Button type="button" variant="outline" onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Open File
+                                </Button>
                               </div>
                             ) : (
-                              <div className="mt-4 rounded-xl border border-dashed border-border/70 bg-muted/10 p-6 text-sm text-muted-foreground">
-                                No attached budget request files were submitted.
+                              <div className="grid min-h-[12rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-4 text-center text-sm text-muted-foreground">
+                                {liquidationPreviewEmptyMessage || "No liquidation file was uploaded."}
                               </div>
                             )}
                           </div>
-
-                          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Status Controls</p>
-                            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                              <span>Current status:</span>
-                              <PortalStatusBadge status={selectedBudgetRequest.status} />
-                            </div>
-                            <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "budget",
-                                    action: "approve",
-                                    budgetRequestId: selectedBudgetRequest.id,
-                                    organizationId: selectedBudgetRequest.organizationId,
-                                    organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedBudgetRequest.activityTitle,
-                                    requestedAmount: selectedBudgetRequest.requestedAmount,
-                                  })
-                                }
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                disabled={selectedBudgetRequest.status !== "approved_for_ftf_green"}
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "budget",
-                                    action: "submitted_hardcopy",
-                                    budgetRequestId: selectedBudgetRequest.id,
-                                    organizationId: selectedBudgetRequest.organizationId,
-                                    organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedBudgetRequest.activityTitle,
-                                    requestedAmount: selectedBudgetRequest.requestedAmount,
-                                  })
-                                }
-                              >
-                                Submitted hardcopy
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                disabled={selectedBudgetRequest.status !== "hard_copy_submitted"}
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "budget",
-                                    action: "cash_released",
-                                    budgetRequestId: selectedBudgetRequest.id,
-                                    organizationId: selectedBudgetRequest.organizationId,
-                                    organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedBudgetRequest.activityTitle,
-                                    requestedAmount: selectedBudgetRequest.requestedAmount,
-                                  })
-                                }
-                              >
-                                Cash released
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "budget",
-                                    action: "needs_revision",
-                                    budgetRequestId: selectedBudgetRequest.id,
-                                    organizationId: selectedBudgetRequest.organizationId,
-                                    organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedBudgetRequest.activityTitle,
-                                    requestedAmount: selectedBudgetRequest.requestedAmount,
-                                  })
-                                }
-                              >
-                                Needs Revision
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "budget",
-                                    action: "reject",
-                                    budgetRequestId: selectedBudgetRequest.id,
-                                    organizationId: selectedBudgetRequest.organizationId,
-                                    organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                                    activityTitle: selectedBudgetRequest.activityTitle,
-                                    requestedAmount: selectedBudgetRequest.requestedAmount,
-                                  })
-                                }
-                              >
-                                Reject
-                              </Button>
-                            </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+                            Preview hidden. Click "Show Preview" to review the uploaded file before acting.
                           </div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="border-t border-border/70 px-4 py-4 sm:px-6">
-                    <DialogFooter>
-                      <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeBudgetRequestDetails}>
-                        Close
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Dialog
-              open={selectedBudgetAllocation !== null}
-              onOpenChange={(open) => {
-                if (!open) setSelectedBudgetAllocation(null);
-              }}
-            >
-              <DialogContent className="h-[100dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-[92dvh] sm:w-[min(96vw,96rem)] sm:max-w-none sm:rounded-2xl sm:border">
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="border-b border-border/70 px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
-                    <DialogHeader className="text-left sm:text-left">
-                      <DialogTitle className="text-xl leading-tight sm:text-2xl">
-                        {selectedBudgetAllocation?.barangay ?? "Barangay Allocation Details"}
-                      </DialogTitle>
-                      <DialogDescription className="max-w-2xl text-sm sm:text-base">
-                        Allocation breakdown for {selectedBudgetAllocation?.district ?? "the selected district"}.
-                      </DialogDescription>
-                    </DialogHeader>
-                    {selectedBudgetAllocation ? (
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <PortalMetricCard
-                          label="Organizations"
-                          value={selectedBudgetAllocation.organizationCount.toLocaleString()}
-                          helper="Organizations with released budgets in this barangay."
-                        />
-                        <PortalMetricCard
-                          label="Approved Allocation"
-                          value={`PHP ${selectedBudgetAllocation.approvedAmount.toLocaleString()}`}
-                          helper="Total approved amount across all released requests."
-                        />
-                        <PortalMetricCard
-                          label="Released Allocation"
-                          value={`PHP ${selectedBudgetAllocation.releasedAmount.toLocaleString()}`}
-                          helper="Cash already released to organizations."
-                        />
-                        <PortalMetricCard
-                          label="Utilization Rate"
-                          value={`${selectedBudgetAllocation.utilizationRate}%`}
-                          helper="Released versus approved amount."
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
-                    {selectedBudgetAllocationOrganizationDetails.length ? (
-                      <div className="space-y-4">
-                        {selectedBudgetAllocationOrganizationDetails.map((detail) => (
-                          <Card key={detail.organizationId} className="border-border/70">
-                            <CardContent className="space-y-4 p-4 sm:p-5">
-                              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">{detail.district}</p>
-                                  <h3 className="mt-1 text-lg font-semibold text-foreground">{detail.organizationName}</h3>
-                                  <p className="text-sm text-muted-foreground">{detail.barangay}</p>
-                                </div>
-                                <div className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-xs font-medium text-primary">
-                                  {detail.releasedBudgetCount} released budget{detail.releasedBudgetCount === 1 ? "" : "s"}
-                                </div>
-                              </div>
-
-                              <div className="grid gap-3 md:grid-cols-4">
-                                <div className="rounded-xl border border-border/70 bg-muted/10 p-3">
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Approved</p>
-                                  <p className="mt-1 font-semibold text-foreground">PHP {detail.approvedAmount.toLocaleString()}</p>
-                                </div>
-                                <div className="rounded-xl border border-border/70 bg-muted/10 p-3">
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Released</p>
-                                  <p className="mt-1 font-semibold text-foreground">PHP {detail.releasedAmount.toLocaleString()}</p>
-                                </div>
-                                <div className="rounded-xl border border-border/70 bg-muted/10 p-3">
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Remaining</p>
-                                  <p className="mt-1 font-semibold text-foreground">PHP {detail.remainingAmount.toLocaleString()}</p>
-                                </div>
-                                <div className="rounded-xl border border-border/70 bg-muted/10 p-3">
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Utilization</p>
-                                  <p className="mt-1 font-semibold text-foreground">{detail.utilizationRate}%</p>
-                                </div>
-                              </div>
-
-                              <div className="space-y-3">
-                                <p className="text-sm font-medium text-foreground">Released Requests</p>
-                                <div className="space-y-3">
-                                  {detail.requests.map((request) => (
-                                    <div key={request.id} className="rounded-2xl border border-border/70 bg-background p-4">
-                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                                        <div>
-                                          <p className="text-sm font-semibold text-foreground">{request.activityTitle}</p>
-                                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">
-                                            {request.activityDate || "No activity date"} · Released {request.releaseDate || "Pending"}
-                                          </p>
-                                        </div>
-                                        <PortalStatusBadge status={request.status} />
-                                      </div>
-                                      <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-4">
-                                        <p>Approved: PHP {request.approvedAmount.toLocaleString()}</p>
-                                        <p>Released: PHP {request.releasedAmount.toLocaleString()}</p>
-                                        <p>Remaining: PHP {request.remainingAmount.toLocaleString()}</p>
-                                        <p>Go signal: {request.goSignalAt || "Pending"}</p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                        )}
                       </div>
                     ) : (
-                      <PortalEmptyState
-                        title="No released organization details"
-                        description="This barangay currently has no released budget requests to display."
-                      />
+                      <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 p-6 text-sm text-muted-foreground">
+                        No attached liquidation files were submitted.
+                      </div>
                     )}
                   </div>
-
-                  <div className="border-t border-border/70 px-4 py-3 sm:px-6 sm:py-4">
-                    <DialogFooter>
-                      <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setSelectedBudgetAllocation(null)}>
-                        Close
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </>
-        );
-      case "liquidation-monitoring":
+                </PortalSection>
+              </div>
+            </div>
+          );
+        }
         return (
-          <PortalSection title="Liquidation Monitoring" description="Track deadlines and go-signal dates.">
-            <div className="grid gap-4">
+          <PortalSection title="Liquidation Reports" description="Review liquidation reports submitted after funded activities. Approve completed reports, request revisions, or flag overdue ones.">
+            <div className="space-y-3">
               {visibleLiquidationReports.length ? (
-                visibleLiquidationReports.map((record) => (
-                  <Card key={record.id} className="border-border/70">
-                    <CardContent className="grid gap-4 p-4 md:grid-cols-[1.6fr_0.9fr]">
-                      <div className="space-y-3">
+                visibleLiquidationReports.map((record) => {
+                  const linkedBudget = state.budgetRequests.find((item) => item.id === record.budgetRequestId) ?? null;
+                  const liquidationOrg = state.organizationProfiles.find((item) => item.id === record.organizationId) ?? null;
+                  const statusDotColor =
+                    record.status === "approved_for_ftf_green" || record.status === "hard_copy_submitted" || record.status === "completed_liquidated"
+                      ? "bg-emerald-500"
+                      : record.status === "overdue" || record.status === "rejected_red"
+                      ? "bg-rose-500"
+                      : record.status === "pending_activity_completion" || record.status === "not_started" || record.status === "draft"
+                      ? "bg-muted-foreground/40"
+                      : "bg-amber-400";
+                  return (
+                    <Card key={record.id} className="border-border/70 shadow-sm">
+                      <CardContent className="p-3 sm:p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-medium">
-                              {state.budgetRequests.find((item) => item.id === record.budgetRequestId)?.activityTitle ?? "Liquidation item"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">Go signal: {record.goSignalAt || "Pending"}</p>
+                          <div className="flex min-w-0 items-start gap-2.5">
+                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
+                            <div className="min-w-0">
+                              <p className="font-semibold text-foreground">{linkedBudget?.activityTitle ?? "Liquidation item"}</p>
+                              <p className="mt-0.5 truncate text-sm text-foreground/70"><span className="text-muted-foreground">Organization:</span> {liquidationOrg?.organizationName ?? "Unknown organization"}</p>
+                              {record.deadlineAt ? (
+                                <p className="mt-0.5 text-sm text-muted-foreground">
+                                  Deadline: {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(record.deadlineAt))}
+                                </p>
+                              ) : null}
+                            </div>
                           </div>
                           <PortalStatusBadge status={record.status} />
                         </div>
-                        <div className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                          <p>Organization: {state.organizationProfiles.find((item) => item.id === record.organizationId)?.organizationName ?? "Unknown organization"}</p>
-                          <p>Attached files: {state.liquidationReportFiles.filter((file) => file.liquidationReportId === record.id).length}</p>
-                          <p>Deadline: {record.deadlineAt || "Pending"}</p>
-                          <p>Hard copy submitted: {record.hardCopySubmittedAt || "Pending"}</p>
+                        <div className="mt-3 flex justify-end">
+                          <Button type="button" size="sm" onClick={() => openLiquidationDetails(record)}>
+                            Review<ArrowRight className="ml-2 h-3.5 w-3.5" />
+                          </Button>
                         </div>
-                        <p className="text-sm text-muted-foreground">Remarks: {record.remarks || "None"}</p>
-                      </div>
-                      <div className="flex items-start justify-end">
-                        <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => openLiquidationDetails(record)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <PortalEmptyState title="No liquidation records yet" description="Cash-released budgets create liquidation records automatically." />
               )}
@@ -3450,7 +3652,7 @@ export default function AdminPortal({ section }: { section: string }) {
           <>
             <PortalSection
               title="News Releases"
-              description="Admin-created news and Facebook post links."
+              description="Create and publish announcements visible to all organizations on the portal's news feed."
               action={
                 <Button
                   type="button"
@@ -3471,63 +3673,84 @@ export default function AdminPortal({ section }: { section: string }) {
             >
               {newsReleases.length ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {newsReleases.map((news) => (
-                  <Card key={news.id} className="border-border/70">
-                    <CardContent className="space-y-3 p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium">{news.title}</p>
-                        <PortalStatusBadge status={news.visibilityStatus} />
-                      </div>
-                      <p className="text-sm text-muted-foreground">{news.description}</p>
-                      <div className="rounded-md border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
-                        <p className="font-medium text-foreground">Posted {news.datePosted}</p>
-                        <p className="mt-1 break-all">{news.facebookPostUrl}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Preview
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            openAdminConfirmation({
-                              kind: "news_release",
-                              action: "publish",
-                              id: news.id,
-                              title: news.title,
-                            })
-                          }
-                        >
-                          Publish
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            openAdminConfirmation({
-                              kind: "news_release",
-                              action: "hide",
-                              id: news.id,
-                              title: news.title,
-                            })
-                          }
-                        >
-                          Hide
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => startEditingNewsRelease(news.id)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => void handleDeleteNewsRelease(news.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  ))}
+                  {newsReleases.map((news) => {
+                    const dotColor =
+                      news.visibilityStatus === "published"
+                        ? "bg-emerald-500"
+                        : news.visibilityStatus === "hidden"
+                        ? "bg-rose-500"
+                        : "bg-amber-400";
+                    const formattedDate = news.datePosted
+                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(news.datePosted))
+                      : "—";
+                    return (
+                      <Card key={news.id} className="flex flex-col border-border/70 shadow-sm">
+                        <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-start gap-2">
+                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
+                              <p className="font-semibold leading-snug text-foreground">{news.title}</p>
+                            </div>
+                            <PortalStatusBadge status={news.visibilityStatus} />
+                          </div>
+                          <p className="line-clamp-2 pl-4 text-sm text-muted-foreground">{news.description}</p>
+                          <div className="space-y-0.5 pl-4">
+                            <p className="text-xs text-muted-foreground">Posted {formattedDate}</p>
+                            {news.facebookPostUrl && (
+                              <p className="max-w-full truncate text-xs text-muted-foreground/70">{news.facebookPostUrl}</p>
+                            )}
+                          </div>
+                          <div className="mt-auto flex items-center justify-between pt-1">
+                            <Button size="sm" variant="outline" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
+                              <Eye className="mr-1.5 h-3.5 w-3.5" />
+                              Preview
+                            </Button>
+                            <div className="flex items-center gap-1.5">
+                              {news.visibilityStatus === "published" ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openAdminConfirmation({ kind: "news_release", action: "hide", id: news.id, title: news.title })}
+                                >
+                                  Hide
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openAdminConfirmation({ kind: "news_release", action: "publish", id: news.id, title: news.title })}
+                                >
+                                  Publish
+                                </Button>
+                              )}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">More actions</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-36">
+                                  <DropdownMenuItem onClick={() => startEditingNewsRelease(news.id)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => void handleDeleteNewsRelease(news.id)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <PortalEmptyState
@@ -3621,7 +3844,7 @@ export default function AdminPortal({ section }: { section: string }) {
           >
             <TabsList className="grid w-full max-w-xl grid-cols-2">
               <TabsTrigger value="overview">Monitoring Overview</TabsTrigger>
-              <TabsTrigger value="barangay-allocation">Barangay Allocation</TabsTrigger>
+              <TabsTrigger value="barangay-allocation">Allocation by Barangay</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-0">
@@ -3642,348 +3865,506 @@ export default function AdminPortal({ section }: { section: string }) {
                 }
               >
                 <div className="grid gap-4">
-              <Card className="border-border/70">
-                <CardContent className="space-y-4 p-4 sm:p-5">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Risk Distribution</p>
-                      <h3 className="mt-2 text-lg font-semibold text-foreground">Budget Monitoring Overview</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {budgetMonitoringEntries.length} cash-released budget{budgetMonitoringEntries.length === 1 ? "" : "s"} under monitoring.
-                    </p>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <PortalMetricCard
+                      label="Released Budgets"
+                      value={budgetMonitoringEntries.length.toLocaleString()}
+                      helper="Budget requests that have already been released."
+                    />
+                    <PortalMetricCard
+                      label="Released Amount"
+                      value={`PHP ${budgetMonitoringAnalysis.totalReleased.toLocaleString()}`}
+                      helper="Total amount already released to organizations."
+                    />
+                    <PortalMetricCard
+                      label="Remaining Amount"
+                      value={`PHP ${budgetMonitoringAnalysis.totalRemaining.toLocaleString()}`}
+                      helper="Approved amount still not released."
+                    />
+                    <PortalMetricCard
+                      label="Utilization Rate"
+                      value={`${budgetMonitoringAnalysis.utilizationRate}%`}
+                      helper="Released amount as a share of approved funds."
+                    />
                   </div>
-                  <div className="h-72">
-                    {budgetMonitoringChartData.some((entry) => entry.count > 0) ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={budgetMonitoringChartData} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" allowDecimals={false} />
-                          <YAxis type="category" dataKey="riskLabel" width={110} />
-                          <Tooltip formatter={(value: number) => [String(value), "Count"]} />
-                          <Legend />
-                          <Bar dataKey="count" name="Count" fill="#2460A7" radius={[0, 6, 6, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
+
+                  <Card className="border-border/70">
+                    <CardContent className="space-y-4 p-4 sm:p-5">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Budget Health Snapshot</p>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          {budgetMonitoringEntries.length} cash-released budget{budgetMonitoringEntries.length === 1 ? "" : "s"} under monitoring.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <div className="rounded-xl border border-border/70 bg-card p-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">On Track</p>
+                          </div>
+                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.onTrackCount}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/70 bg-card p-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />
+                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Needs Attention</p>
+                          </div>
+                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.needsAttentionCount}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/70 bg-card p-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
+                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Overdue</p>
+                          </div>
+                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.overdueCount}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/70 bg-card p-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Completed</p>
+                          </div>
+                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.completedCount}</p>
+                        </div>
+                      </div>
+
+                      <div className="h-52">
+                        {budgetMonitoringChartData.some((d) => d.count > 0) ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={budgetMonitoringChartData} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                              <YAxis type="category" dataKey="riskLabel" width={120} tick={{ fontSize: 11 }} />
+                              <Tooltip formatter={(value: number) => [String(value), "Count"]} />
+                              <Bar dataKey="count" name="Count" fill="#2460A7" radius={[0, 6, 6, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="grid h-full place-items-center rounded-xl border border-dashed border-border/70 bg-muted/10 text-sm text-muted-foreground">
+                            No cash-released budgets yet.
+                          </div>
+                        )}
+                      </div>
+
+                    </CardContent>
+                  </Card>
+
+                  {budgetMonitoringAnalysis.insights.length ? (
+                    <PortalSection title="Analysis Notes">
+                      <ul className="space-y-2">
+                        {budgetMonitoringAnalysis.insights.map((insight) => (
+                          <li key={insight} className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/10 px-4 py-3 text-sm text-foreground">
+                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary/60" />
+                            {insight}
+                          </li>
+                        ))}
+                      </ul>
+                    </PortalSection>
+                  ) : null}
+
+                  {budgetMonitoringEntries.length ? (
+                    <div className="space-y-3">
+                      {budgetMonitoringEntries.map((entry) => {
+                        const entryDotColor =
+                          entry.riskLabel === "Overdue"
+                            ? "bg-rose-500"
+                            : entry.riskLabel === "Completed"
+                            ? "bg-emerald-500"
+                            : entry.riskLabel === "On Track"
+                            ? "bg-primary"
+                            : "bg-amber-400";
+                        return (
+                          <Card key={entry.budgetRequestId} className="border-border/70 shadow-sm">
+                            <CardContent className="p-4 sm:p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-start gap-2.5">
+                                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${entryDotColor}`} />
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-foreground">{entry.title}</p>
+                                    <p className="mt-0.5 truncate text-sm text-muted-foreground">{entry.organizationName}</p>
+                                  </div>
+                                </div>
+                                <div className="flex shrink-0 flex-wrap items-start justify-end gap-1.5">
+                                  <span
+                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                      entry.riskLabel === "Overdue"
+                                        ? "bg-destructive/15 text-destructive"
+                                        : entry.riskLabel === "Completed"
+                                        ? "bg-emerald-500/15 text-emerald-700"
+                                        : entry.riskLabel === "On Track"
+                                        ? "bg-primary/15 text-primary"
+                                        : "bg-amber-400/15 text-amber-700"
+                                    }`}
+                                  >
+                                    {entry.riskLabel}
+                                  </span>
+                                  <PortalStatusBadge status={entry.budgetStatus} />
+                                </div>
+                              </div>
+
+                              <div className="mt-4 divide-y divide-border/40 border-t border-border/40 pt-4">
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved Amount</p>
+                                  <p className="text-sm font-medium">PHP {entry.approvedAmount.toLocaleString()}</p>
+                                </div>
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released Amount</p>
+                                  <p className="text-sm font-medium">PHP {entry.releasedAmount.toLocaleString()}</p>
+                                </div>
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remaining</p>
+                                  <p className="text-sm font-medium">PHP {entry.remainingAmount.toLocaleString()}</p>
+                                </div>
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                                  <p className="text-sm font-medium">
+                                    {entry.goSignalAt
+                                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.goSignalAt))
+                                      : "Pending"}
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Deadline</p>
+                                  <p className="text-sm font-medium">
+                                    {entry.deadlineAt
+                                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.deadlineAt))
+                                      : "Pending"}
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy</p>
+                                  <p className="text-sm font-medium">
+                                    {entry.hardCopySubmittedAt
+                                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.hardCopySubmittedAt))
+                                      : "Pending"}
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 last:pb-0">
+                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Liquidation</p>
+                                  <p className="text-sm font-medium">{formatStatusLabel(entry.liquidationStatus)}</p>
+                                </div>
+                              </div>
+
+                              <div className="mt-4">
+                                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground/75">
+                                  <span className="uppercase tracking-[0.14em]">Release Progress</span>
+                                  <span>{entry.utilizationRate}%</span>
+                                </div>
+                                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
+                                  <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
+                                </div>
+                              </div>
+
+                              <div className="mt-4 flex justify-end">
+                                <Button type="button" size="sm" variant="outline" onClick={() => navigate("/admin/budget-utilization")}>
+                                  Open Budget Review<ArrowRight className="ml-2 h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <PortalEmptyState
+                      title="No approved budgets yet"
+                      description="Approved budget requests automatically appear here once the budget review marks them green."
+                    />
+                  )}
+                </div>
+              </PortalSection>
+            </TabsContent>
+
+            <TabsContent value="barangay-allocation" className="mt-0">
+              {selectedBudgetAllocation ? (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedBudgetAllocation(null)}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Barangay Allocation
+                    </Button>
+                    <Button type="button" variant="outline" onClick={exportBudgetAllocationReport}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Report
+                    </Button>
+                  </div>
+
+                  <PortalSection
+                    title={selectedBudgetAllocation.barangay}
+                    description={`${selectedBudgetAllocation.district} · ${selectedBudgetAllocation.organizationCount} organization${selectedBudgetAllocation.organizationCount === 1 ? "" : "s"} · ${selectedBudgetAllocation.releasedBudgetCount} released budget${selectedBudgetAllocation.releasedBudgetCount === 1 ? "" : "s"}`}
+                  >
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      <PortalMetricCard
+                        label="Organizations"
+                        value={selectedBudgetAllocation.organizationCount.toLocaleString()}
+                        helper="Organizations with released budgets in this barangay."
+                      />
+                      <PortalMetricCard
+                        label="Approved"
+                        value={`PHP ${selectedBudgetAllocation.approvedAmount.toLocaleString()}`}
+                        helper="Total approved amount across all released requests."
+                      />
+                      <PortalMetricCard
+                        label="Released"
+                        value={`PHP ${selectedBudgetAllocation.releasedAmount.toLocaleString()}`}
+                        helper="Total cash already released to organizations."
+                      />
+                      <PortalMetricCard
+                        label="Utilization"
+                        value={`${selectedBudgetAllocation.utilizationRate}%`}
+                        helper="Released versus approved amount."
+                      />
+                    </div>
+                  </PortalSection>
+
+                  {selectedBudgetAllocationOrganizationDetails.length ? (
+                    <div className="space-y-3">
+                      {selectedBudgetAllocationOrganizationDetails.map((detail) => (
+                        <Card key={detail.organizationId} className="border-border/70 shadow-sm">
+                          <CardContent className="p-4 sm:p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">{detail.district}</p>
+                                <p className="mt-0.5 font-semibold text-foreground">{detail.organizationName}</p>
+                                <p className="mt-0.5 text-sm text-muted-foreground">{detail.barangay}</p>
+                              </div>
+                              <span className="shrink-0 rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-xs font-medium text-primary">
+                                {detail.releasedBudgetCount} released budget{detail.releasedBudgetCount === 1 ? "" : "s"}
+                              </span>
+                            </div>
+
+                            <div className="mt-4 divide-y divide-border/40 border-t border-border/40 pt-4">
+                              <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0">
+                                <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved</p>
+                                <p className="text-sm font-medium">PHP {detail.approvedAmount.toLocaleString()}</p>
+                              </div>
+                              <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
+                                <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released</p>
+                                <p className="text-sm font-medium">PHP {detail.releasedAmount.toLocaleString()}</p>
+                              </div>
+                              <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 last:pb-0">
+                                <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remaining</p>
+                                <p className="text-sm font-medium">PHP {detail.remainingAmount.toLocaleString()}</p>
+                              </div>
+                            </div>
+
+                            <div className="mt-4">
+                              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground/75">
+                                <span className="uppercase tracking-[0.14em]">Utilization Rate</span>
+                                <span>{detail.utilizationRate}%</span>
+                              </div>
+                              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
+                                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(detail.utilizationRate, 100)}%` }} />
+                              </div>
+                            </div>
+
+                            {detail.requests.length ? (
+                              <div className="mt-4">
+                                <p className="mb-2 text-sm font-medium text-foreground">Released Requests</p>
+                                <div className="space-y-2">
+                                  {detail.requests.map((request) => (
+                                    <div key={request.id} className="rounded-xl border border-border/70 bg-muted/10 p-4">
+                                      <div className="flex items-start justify-between gap-3">
+                                        <p className="text-sm font-semibold text-foreground">{request.activityTitle}</p>
+                                        <PortalStatusBadge status={request.status} />
+                                      </div>
+                                      <div className="mt-3 divide-y divide-border/40 border-t border-border/40 pt-3">
+                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2 first:pt-0">
+                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved</p>
+                                          <p className="text-sm">PHP {request.approvedAmount.toLocaleString()}</p>
+                                        </div>
+                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2">
+                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released</p>
+                                          <p className="text-sm">PHP {request.releasedAmount.toLocaleString()}</p>
+                                        </div>
+                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2">
+                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                                          <p className="text-sm">
+                                            {request.goSignalAt
+                                              ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(request.goSignalAt))
+                                              : "Pending"}
+                                          </p>
+                                        </div>
+                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2 last:pb-0">
+                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy</p>
+                                          <p className="text-sm">
+                                            {request.hardCopySubmittedAt
+                                              ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(request.hardCopySubmittedAt))
+                                              : "Pending"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <PortalEmptyState
+                      title="No released organization details"
+                      description="This barangay currently has no released budget requests to display."
+                    />
+                  )}
+                </div>
+              ) : (
+                <PortalSection
+                  title="Allocation by Barangay"
+                  description="Released budgets broken down by the organizations' registered barangay."
+                  action={
+                    <Button type="button" variant="outline" onClick={exportBudgetAllocationReport}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Filtered Report
+                    </Button>
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">District</p>
+                      <Select
+                        value={budgetAllocationDistrictFilter}
+                        onValueChange={(value) => {
+                          setBudgetAllocationDistrictFilter(value);
+                          setBudgetAllocationBarangayFilter("all");
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="All districts" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Districts</SelectItem>
+                          {budgetAllocationDistrictOptions.map((district) => (
+                            <SelectItem key={district} value={district}>
+                              {district}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Barangay</p>
+                      <Select value={budgetAllocationBarangayFilter} onValueChange={setBudgetAllocationBarangayFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All barangays" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Barangays</SelectItem>
+                          {budgetAllocationBarangayOptions.map((barangay) => (
+                            <SelectItem key={barangay} value={barangay}>
+                              {barangay}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Active Barangays</p>
+                      <p className="mt-1.5 text-xl font-bold text-foreground">{budgetAllocationSummary.barangayCount.toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Barangays with released budgets</p>
+                    </div>
+                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Released</p>
+                      <p className="mt-1.5 text-xl font-bold text-foreground">PHP {budgetAllocationSummary.totalReleased.toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Total cash released</p>
+                    </div>
+                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Approved</p>
+                      <p className="mt-1.5 text-xl font-bold text-foreground">PHP {budgetAllocationSummary.totalApproved.toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Budget ceiling before release</p>
+                    </div>
+                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Remaining</p>
+                      <p className="mt-1.5 text-xl font-bold text-foreground">PHP {budgetAllocationSummary.totalRemaining.toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Not yet released</p>
+                    </div>
+                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3 sm:col-span-3 lg:col-span-1">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Utilization Rate</p>
+                      <p className="mt-1.5 text-xl font-bold text-foreground">{budgetAllocationSummary.utilizationRate}%</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Released vs. approved</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-border/70 bg-background">
+                    {filteredBudgetAllocationRows.length ? (
+                      <>
+                        <div className="hidden border-b border-border/70 bg-muted/30 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70 lg:grid lg:grid-cols-[1.8fr_1fr_1fr_1fr_1.2fr_auto] lg:items-center lg:gap-6">
+                          <span>Barangay</span>
+                          <span className="text-right">Approved</span>
+                          <span className="text-right">Released</span>
+                          <span className="text-right">Remaining</span>
+                          <span className="text-right">Utilization</span>
+                          <span className="text-right">Action</span>
+                        </div>
+                        <div className="divide-y divide-border/70">
+                          {filteredBudgetAllocationRows.map((entry) => (
+                            <button
+                              key={`${entry.district}-${entry.barangay}`}
+                              type="button"
+                              onClick={() => setSelectedBudgetAllocation(entry)}
+                              className="grid w-full gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:outline-none lg:grid-cols-[1.8fr_1fr_1fr_1fr_1.2fr_auto] lg:items-center lg:gap-6"
+                            >
+                              <div>
+                                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground/70">{entry.district}</p>
+                                <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                                  <p className="font-semibold text-foreground">{entry.barangay}</p>
+                                  <span className="rounded-full border border-primary/20 bg-primary/8 px-2.5 py-0.5 text-xs font-medium text-primary">
+                                    {entry.organizationCount} org{entry.organizationCount === 1 ? "" : "s"}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between lg:block lg:text-right">
+                                <p className="text-xs text-muted-foreground lg:hidden">Approved</p>
+                                <p className="text-sm font-medium text-foreground">PHP {entry.approvedAmount.toLocaleString()}</p>
+                              </div>
+                              <div className="flex items-center justify-between lg:block lg:text-right">
+                                <p className="text-xs text-muted-foreground lg:hidden">Released</p>
+                                <p className="text-sm font-medium text-foreground">PHP {entry.releasedAmount.toLocaleString()}</p>
+                              </div>
+                              <div className="flex items-center justify-between lg:block lg:text-right">
+                                <p className="text-xs text-muted-foreground lg:hidden">Remaining</p>
+                                <p className="text-sm font-medium text-foreground">PHP {entry.remainingAmount.toLocaleString()}</p>
+                              </div>
+                              <div className="flex items-center justify-between gap-4 lg:block lg:text-right">
+                                <p className="text-xs text-muted-foreground lg:hidden">Utilization</p>
+                                <div className="min-w-0 flex-1 lg:flex-none">
+                                  <p className="text-sm font-semibold text-foreground">{entry.utilizationRate}%</p>
+                                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                                    <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-end border-t border-border/60 pt-3 lg:border-t-0 lg:pt-0">
+                                <Eye className="h-4 w-4 text-primary" />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </>
                     ) : (
-                      <div className="grid h-full place-items-center rounded-xl border border-dashed border-border/70 bg-muted/10 text-sm text-muted-foreground">
-                        No cash-released budgets yet.
+                      <div className="p-6">
+                        <PortalEmptyState
+                          title="No barangay allocations found"
+                          description="Try another district or barangay filter. Only released budgets are included in this allocation view."
+                        />
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <PortalMetricCard
-                  label="Released Budgets"
-                  value={budgetMonitoringEntries.length.toLocaleString()}
-                  helper="Budget requests that have already been released."
-                />
-                <PortalMetricCard
-                  label="Released Amount"
-                  value={`PHP ${budgetMonitoringAnalysis.totalReleased.toLocaleString()}`}
-                  helper="Total amount already released to organizations."
-                />
-                <PortalMetricCard
-                  label="Remaining Amount"
-                  value={`PHP ${budgetMonitoringAnalysis.totalRemaining.toLocaleString()}`}
-                  helper="Approved amount still not released."
-                />
-                <PortalMetricCard
-                  label="Utilization Rate"
-                  value={`${budgetMonitoringAnalysis.utilizationRate}%`}
-                  helper="Released amount as a share of approved funds."
-                />
-              </div>
-
-              <Card className="border-border/70">
-                <CardContent className="space-y-4 p-4 sm:p-5">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Financial DSS Analysis</p>
-                      <h3 className="mt-2 text-lg font-semibold text-foreground">Budget Health Snapshot</h3>
-                    </div>
-                    <PortalStatusBadge status={budgetMonitoringAnalysis.overdueCount > 0 ? "overdue" : "completed_liquidated"} />
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">On Track</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{budgetMonitoringAnalysis.onTrackCount}</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Needs Attention</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{budgetMonitoringAnalysis.needsAttentionCount}</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Overdue</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{budgetMonitoringAnalysis.overdueCount}</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Completed</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{budgetMonitoringAnalysis.completedCount}</p>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-background p-4">
-                    <p className="text-sm font-medium text-foreground">Analysis Notes</p>
-                    <ul className="mt-3 grid gap-2 text-sm text-muted-foreground">
-                      {budgetMonitoringAnalysis.insights.map((insight) => (
-                        <li key={insight} className="rounded-lg border border-border/60 bg-muted/10 px-3 py-2">
-                          {insight}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {budgetMonitoringEntries.length ? (
-                <div className="grid gap-4">
-                  {budgetMonitoringEntries.map((entry) => (
-                    <Card key={entry.budgetRequestId} className="border-border/70">
-                      <CardContent className="grid gap-4 p-4 md:grid-cols-[1.5fr_1fr]">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="font-medium">{entry.title}</p>
-                              <p className="text-sm text-muted-foreground">{entry.organizationName}</p>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <PortalStatusBadge status={entry.budgetStatus} />
-                              <span
-                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                  entry.riskLabel === "Overdue"
-                                    ? "bg-destructive/15 text-destructive"
-                                    : entry.riskLabel === "Completed"
-                                      ? "bg-emerald-500/15 text-emerald-700"
-                                      : entry.riskLabel === "On Track"
-                                        ? "bg-primary/15 text-primary"
-                                        : "bg-warning/15 text-warning"
-                                }`}
-                              >
-                                {entry.riskLabel}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                            <p>Approved Amount: PHP {entry.approvedAmount.toLocaleString()}</p>
-                            <p>Released Amount: PHP {entry.releasedAmount.toLocaleString()}</p>
-                            <p>Remaining Amount: PHP {entry.remainingAmount.toLocaleString()}</p>
-                            <p>Utilization: {entry.utilizationRate}%</p>
-                            <p>Go Signal: {entry.goSignalAt || "Pending"}</p>
-                            <p>Deadline: {entry.deadlineAt || "Pending"}</p>
-                            <p>Hard Copy Submitted: {entry.hardCopySubmittedAt || "Pending"}</p>
-                              <p>Liquidation Status: {formatStatusLabel(entry.liquidationStatus)}</p>
-                          </div>
-                          <div className="rounded-xl border border-border/70 bg-muted/10 p-3 text-sm text-muted-foreground">
-                            <p className="font-medium text-foreground">Monitoring Analysis</p>
-                            <p className="mt-1">
-                              {entry.riskLabel === "Overdue"
-                                ? "This approved budget is past its expected timeline and should be escalated."
-                                : entry.riskLabel === "Needs Attention"
-                                  ? "The budget is approved, but liquidation tracking is still incomplete or awaiting a stronger signal."
-                                  : entry.riskLabel === "Completed"
-                                    ? "The budget has been fully liquidated and is considered closed."
-                                    : "The budget is progressing normally and remains within monitoring targets."}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="space-y-3 rounded-xl border border-border/70 bg-muted/15 p-4 text-sm">
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Risk Metrics</p>
-                            <p className="mt-2 font-medium text-foreground">
-                              Monitoring age: {entry.ageInDays} day{entry.ageInDays === 1 ? "" : "s"}
-                            </p>
-                            <p className="mt-1 text-muted-foreground">
-                              Approved budgets appear here automatically once the budget request is approved.
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-border/70 bg-background p-3">
-                            <div className="flex items-center justify-between text-xs uppercase tracking-[0.14em] text-muted-foreground/75">
-                              <span>Release Progress</span>
-                              <span>{entry.utilizationRate}%</span>
-                            </div>
-                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
-                            </div>
-                          </div>
-                          <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/admin/budget-utilization")}>
-                            Open Budget Review
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <PortalEmptyState
-                  title="No approved budgets yet"
-                  description="Approved budget requests automatically appear here once the budget review marks them green."
-                />
+                </PortalSection>
               )}
-            </div>
-          </PortalSection>
-        </TabsContent>
-
-        <TabsContent value="barangay-allocation" className="mt-0">
-          <PortalSection
-            title="Barangay Allocation"
-            description="See how released budgets are distributed by barangay and district, then filter the list to focus on one area at a time."
-            action={
-              <Button type="button" variant="outline" onClick={exportBudgetAllocationReport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export Filtered Report
-              </Button>
-            }
-          >
-            <div className="grid gap-4 lg:grid-cols-4">
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">District</p>
-                <Select
-                  value={budgetAllocationDistrictFilter}
-                  onValueChange={(value) => {
-                    setBudgetAllocationDistrictFilter(value);
-                    setBudgetAllocationBarangayFilter("all");
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All districts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Districts</SelectItem>
-                    {budgetAllocationDistrictOptions.map((district) => (
-                      <SelectItem key={district} value={district}>
-                        {district}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Barangay</p>
-                <Select value={budgetAllocationBarangayFilter} onValueChange={setBudgetAllocationBarangayFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All barangays" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Barangays</SelectItem>
-                    {budgetAllocationBarangayOptions.map((barangay) => (
-                      <SelectItem key={barangay} value={barangay}>
-                        {barangay}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <PortalMetricCard
-                label="Barangays with Allocation"
-                value={budgetAllocationSummary.barangayCount.toLocaleString()}
-                helper="Unique barangays that currently have released budgets in view."
-              />
-              <PortalMetricCard
-                label="Released Allocation"
-                value={`PHP ${budgetAllocationSummary.totalReleased.toLocaleString()}`}
-                helper="Total released cash for the selected district or barangay."
-              />
-            </div>
-
-            <div className="rounded-2xl border border-border/70 bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-              These summary cards show the filtered barangay allocation totals based on the district and barangay selection above.
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <PortalMetricCard
-                label="Approved Allocation"
-                value={`PHP ${budgetAllocationSummary.totalApproved.toLocaleString()}`}
-                helper="Approved budget amount before release."
-              />
-              <PortalMetricCard
-                label="Remaining Allocation"
-                value={`PHP ${budgetAllocationSummary.totalRemaining.toLocaleString()}`}
-                helper="Amount not yet released from the approved budget."
-              />
-              <PortalMetricCard
-                label="Utilization Rate"
-                value={`${budgetAllocationSummary.utilizationRate}%`}
-                helper="Released amount compared with approved amount."
-              />
-            </div>
-
-            <div className="mt-4">
-              {filteredBudgetAllocationRows.length ? (
-                <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
-                  <div className="hidden border-b border-border/70 bg-muted/20 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/75 lg:grid lg:grid-cols-[1.4fr_0.9fr_0.9fr_0.9fr_0.8fr_0.45fr] lg:gap-4">
-                    <span>District / Barangay</span>
-                    <span>Organizations</span>
-                    <span>Approved</span>
-                    <span>Released</span>
-                    <span>Remaining</span>
-                    <span>Utilization</span>
-                  </div>
-                  <div className="divide-y divide-border/70">
-                    {filteredBudgetAllocationRows.map((entry) => (
-                      <button
-                        key={`${entry.district}-${entry.barangay}`}
-                        type="button"
-                        onClick={() => setSelectedBudgetAllocation(entry)}
-                        className="grid w-full gap-4 px-4 py-4 text-left transition hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:outline-none lg:grid-cols-[1.4fr_0.9fr_0.9fr_0.9fr_0.8fr_0.45fr] lg:items-center"
-                      >
-                        <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">{entry.district}</p>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-semibold text-foreground">{entry.barangay}</h3>
-                            <span className="rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-xs font-medium text-primary">
-                              {entry.organizationCount} organization{entry.organizationCount === 1 ? "" : "s"}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {entry.releasedBudgetCount} released budget{entry.releasedBudgetCount === 1 ? "" : "s"} under monitoring
-                          </p>
-                        </div>
-                        <div className="space-y-1 lg:text-right">
-                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/75 lg:hidden">Approved</p>
-                          <p className="text-sm font-medium text-foreground">PHP {entry.approvedAmount.toLocaleString()}</p>
-                        </div>
-                        <div className="space-y-1 lg:text-right">
-                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/75 lg:hidden">Released</p>
-                          <p className="text-sm font-medium text-foreground">PHP {entry.releasedAmount.toLocaleString()}</p>
-                        </div>
-                        <div className="space-y-1 lg:text-right">
-                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/75 lg:hidden">Remaining</p>
-                          <p className="text-sm font-medium text-foreground">PHP {entry.remainingAmount.toLocaleString()}</p>
-                        </div>
-                        <div className="space-y-1 lg:text-right">
-                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/75 lg:hidden">Utilization</p>
-                          <p className="text-sm font-semibold text-foreground">{entry.utilizationRate}%</p>
-                          <div className="h-2 overflow-hidden rounded-full bg-muted lg:ml-auto lg:w-32">
-                            <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-3 text-sm text-muted-foreground lg:justify-end lg:border-t-0 lg:pt-0">
-                          <span className="lg:hidden">Tap to view allocation details</span>
-                          <span className="hidden lg:inline">View details</span>
-                          <ChevronDown className="h-4 w-4 shrink-0 text-primary lg:rotate-[-90deg]" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <PortalEmptyState
-                  title="No barangay allocations found"
-                  description="Try another district or barangay filter. Only released budgets are included in this allocation view."
-                />
-              )}
-            </div>
-          </PortalSection>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
         );
       case "templates":
         return (
           <PortalSection
             title="Template Management"
-            description="Create, edit, upload, and remove document templates. The active list here is the same list used on the user side."
+            description="Manage downloadable document templates that organizations use during registration and compliance submissions."
             action={
               <Button
                 type="button"
@@ -4000,65 +4381,82 @@ export default function AdminPortal({ section }: { section: string }) {
               </Button>
             }
           >
-            <div className="grid gap-4 md:grid-cols-2">
-              {templateDocuments.map((template) => (
-                <Card key={template.id} className="border-border/70">
-                  <CardContent className="space-y-3 p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium">{template.name}</p>
-                      <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">
-                        {template.templateFileName ? "Uploaded" : "No file yet"}
-                      </span>
-                    </div>
-                    <div className="rounded-md border border-border/70 bg-muted/20 p-3 text-sm">
-                      <p className="font-medium text-foreground">
-                        {template.templateFileName || "No template uploaded yet."}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {template.templateUploadedAt
-                          ? `Uploaded ${new Date(template.templateUploadedAt).toLocaleString()}`
-                          : "Upload a file so organization users can view and download it."}
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{template.description}</p>
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <Button type="button" variant="outline" size="sm" onClick={() => startEditingTemplate(template.id)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      {template.templateFileUrl ? (
+            {templateDocuments.length === 0 ? (
+              <PortalEmptyState
+                title="No templates yet"
+                description="Upload a document template for organizations to download."
+              />
+            ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {templateDocuments.map((template) => {
+                const hasFile = Boolean(template.templateFileName);
+                const dotColor = hasFile ? "bg-emerald-500" : "bg-amber-400";
+                const uploadedDate = template.templateUploadedAt
+                  ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))
+                  : null;
+                return (
+                  <Card key={template.id} className="flex flex-col border-border/70 shadow-sm">
+                    <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
+                        <p className="font-semibold leading-snug text-foreground">{template.name}</p>
+                      </div>
+                      <p className="line-clamp-2 pl-4 text-sm text-muted-foreground">{template.description}</p>
+                      <div className="space-y-0.5 pl-4">
+                        {hasFile ? (
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                              <p className="truncate text-xs text-muted-foreground">{template.templateFileName}</p>
+                            </div>
+                            {uploadedDate && (
+                              <p className="text-xs text-muted-foreground/70">Uploaded {uploadedDate}</p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-xs text-muted-foreground/70">No file uploaded yet</p>
+                        )}
+                      </div>
+                      <div className="mt-auto flex items-center justify-between pt-1">
                         <Button
                           type="button"
-                          variant="outline"
                           size="sm"
+                          variant="outline"
+                          disabled={!template.templateFileUrl}
                           onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
                         >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          Preview
                         </Button>
-                      ) : (
-                        <Button type="button" variant="outline" size="sm" disabled>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </Button>
-                      )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingTemplateId(template.id);
-                          setTemplateModalMode("delete");
-                        }}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">More actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            <DropdownMenuItem onClick={() => startEditingTemplate(template.id)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => { setEditingTemplateId(template.id); setTemplateModalMode("delete"); }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
+            )}
             <Dialog open={templateModalMode === "create" || templateModalMode === "edit"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
@@ -4220,41 +4618,1185 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       case "notifications":
         return (
-          <PortalSection title="Notifications" description="User-side changes that need admin attention." action={<BadgePanel count={unread} />}>
-            <div className="space-y-3">
-              {adminNotifications.map((notification) => (
-                <button
-                  key={notification.id}
-                  type="button"
-                  className="w-full rounded-xl border border-border/70 bg-background p-4 text-left text-sm transition-colors hover:bg-muted/40"
-                  onClick={() => markNotificationRead(notification.id)}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{notification.title}</p>
-                    <PortalStatusBadge status={notification.isRead ? "verified" : "pending_review"} />
-                  </div>
-                  <p className="mt-1 text-muted-foreground">{notification.message}</p>
-                </button>
-              ))}
-            </div>
+          <PortalSection
+            title="Notifications"
+            description="Recent activity and updates."
+            action={
+              <div className="flex items-center gap-2">
+                {unread > 0 && (
+                  <Button size="sm" variant="ghost" onClick={() => markAllNotificationsRead()}>
+                    Mark all as read
+                  </Button>
+                )}
+                <BadgePanel count={unread} />
+              </div>
+            }
+          >
+            {adminNotifications.length ? (
+              <div className="space-y-2">
+                {adminNotifications.map((notification) => (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    className={`w-full rounded-xl border p-4 text-left text-sm transition-colors hover:bg-muted/40 ${notification.isRead ? "border-border/50 bg-background" : "border-border/70 bg-background"}`}
+                    onClick={() => markNotificationRead(notification.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.isRead ? "bg-muted-foreground/30" : "bg-primary"}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`leading-snug ${notification.isRead ? "font-normal text-muted-foreground" : "font-medium text-foreground"}`}>
+                            {notification.title}
+                          </p>
+                          <span className="shrink-0 text-xs text-muted-foreground/60">
+                            {new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(notification.createdAt))}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-muted-foreground">{notification.message}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <PortalEmptyState title="No notifications" description="You're all caught up." />
+            )}
           </PortalSection>
         );
-      case "activity-logs":
+      case "activity-logs": {
+        const activityMeta: Record<string, { label: string; iconColor: string; bgColor: string }> = {
+          verify_organization_profile: { label: "Organization Verified",  iconColor: "text-emerald-600", bgColor: "bg-emerald-500/10" },
+          release_budget:              { label: "Budget Released",         iconColor: "text-blue-600",    bgColor: "bg-blue-500/10"    },
+          approve_document_submission: { label: "Document Approved",       iconColor: "text-violet-600",  bgColor: "bg-violet-500/10"  },
+          create_news_release:         { label: "News Release Published",  iconColor: "text-amber-600",   bgColor: "bg-amber-500/10"   },
+          reject_budget_request:       { label: "Budget Request Rejected", iconColor: "text-rose-600",    bgColor: "bg-rose-500/10"    },
+          review_liquidation_report:   { label: "Liquidation Reviewed",    iconColor: "text-slate-500",   bgColor: "bg-slate-500/10"   },
+        };
+        const activityIconMap: Record<string, typeof CheckCircle2> = {
+          verify_organization_profile: CheckCircle2,
+          release_budget:              Banknote,
+          approve_document_submission: FileText,
+          create_news_release:         Pencil,
+          reject_budget_request:       AlertTriangle,
+          review_liquidation_report:   ClipboardList,
+        };
+        const relatedTypeLabel: Record<string, string> = {
+          organization_profile: "Organization",
+          budget_request:       "Budget",
+          document_submission:  "Document",
+          news_release:         "News Release",
+          liquidation_report:   "Liquidation",
+        };
+        const filterTypes = ["all", "organization_profile", "budget_request", "document_submission", "news_release", "liquidation_report"];
+        const now = Date.now();
+        const dateFilterDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
+        const filteredLogs = state.activityLogs
+          .filter((l) => activityLogFilter === "all" || l.relatedType === activityLogFilter)
+          .filter((l) => {
+            if (activityDateFilter === "all") return true;
+            const days = dateFilterDays[activityDateFilter] ?? 0;
+            return new Date(l.createdAt).getTime() >= now - days * 24 * 60 * 60 * 1000;
+          });
+        const ACTIVITY_PAGE_SIZE = 20;
+        const totalActivityPages = Math.max(1, Math.ceil(filteredLogs.length / ACTIVITY_PAGE_SIZE));
+        const pagedLogs = filteredLogs.slice(activityPage * ACTIVITY_PAGE_SIZE, (activityPage + 1) * ACTIVITY_PAGE_SIZE);
         return (
-          <PortalSection title="Activity Logs" description="Audit trail of admin-side edits and review actions.">
-            <div className="space-y-3">
-              {state.activityLogs.map((activity) => (
-                <div key={activity.id} className="rounded-xl border border-border/70 bg-background p-4 text-sm">
-                  <p className="font-medium">{activity.action}</p>
-                  <p className="mt-1 text-muted-foreground">{activity.description}</p>
-                  <p className="mt-2 text-xs uppercase tracking-[0.16em] text-muted-foreground/75">
-                    {new Date(activity.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+          <PortalSection title="Recent Activity" description="Audit trail of admin-side edits and review actions.">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                {filterTypes.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => { setActivityLogFilter(type); setActivityPage(0); }}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      activityLogFilter === type
+                        ? "bg-foreground text-background"
+                        : "border border-border/60 bg-muted/60 text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {type === "all" ? "All" : (relatedTypeLabel[type] ?? type)}
+                  </button>
+                ))}
+              </div>
+              <select
+                value={activityDateFilter}
+                onChange={(e) => { setActivityDateFilter(e.target.value as "all" | "7d" | "30d" | "90d"); setActivityPage(0); }}
+                className="rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground focus:outline-none"
+              >
+                <option value="all">All time</option>
+                <option value="90d">Last 90 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="7d">Last 7 days</option>
+              </select>
             </div>
+            {filteredLogs.length ? (
+              <div className="overflow-hidden rounded-xl border border-border/70">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="w-44 text-xs">Date & Time</TableHead>
+                      <TableHead className="w-56 text-xs">Action</TableHead>
+                      <TableHead className="text-xs">Description</TableHead>
+                      <TableHead className="w-36 text-xs">Category</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pagedLogs.map((activity) => {
+                      const meta = activityMeta[activity.action] ?? { label: activity.action, iconColor: "text-muted-foreground", bgColor: "bg-muted/60" };
+                      const Icon = activityIconMap[activity.action] ?? ClipboardList;
+                      const formattedDate = new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(activity.createdAt));
+                      return (
+                        <TableRow key={activity.id}>
+                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formattedDate}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${meta.bgColor}`}>
+                                <Icon className={`h-3 w-3 ${meta.iconColor}`} />
+                              </div>
+                              <span className="text-sm font-medium text-foreground">{meta.label}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            <p className="line-clamp-2">{activity.description}</p>
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground">
+                              {relatedTypeLabel[activity.relatedType] ?? activity.relatedType}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <PortalEmptyState title="No activity found" description="No logs match the selected filter." />
+            )}
+            {filteredLogs.length > ACTIVITY_PAGE_SIZE && (
+              <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  Showing {activityPage * ACTIVITY_PAGE_SIZE + 1}–{Math.min((activityPage + 1) * ACTIVITY_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
+                </span>
+                <div className="flex gap-1">
+                  <Button variant="outline" size="sm" disabled={activityPage === 0} onClick={() => setActivityPage((p) => p - 1)}>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={activityPage >= totalActivityPages - 1} onClick={() => setActivityPage((p) => p + 1)}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </PortalSection>
         );
+      }
+      case "ypop-validation": {
+        // ── VIEW 4: entry-review (two-column layout) ──────────────────────────
+        if (ypopAdminView === "entry-review" && selectedYpopId) {
+          const entry = state.ypopEntries.find((e) => e.id === selectedYpopId);
+          if (!entry) {
+            setSelectedYpopId(null);
+            setYpopAdminView("period-detail");
+            return null;
+          }
+          const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
+          const entryFiles = state.ypopFiles.filter((f) => f.ypopEntryId === entry.id);
+          const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
+          const entryPeriod = state.ypopPeriods.find((p) => p.semesterKey === entry.semester);
+          const periodTiers = entryPeriod?.orgLedTiers?.length ? entryPeriod.orgLedTiers : DEFAULT_ORG_LED_TIERS;
+          const isTerminal = entry.status === "qualified" || entry.status === "not_qualified";
+          const form = ypopValidationForm ?? {
+            cityLedAttendance: entry.cityLedAttendance?.length
+              ? entry.cityLedAttendance
+              : semesterActivities.map((a) => ({ activityId: a.id, attended: false })),
+            orgLedProjectCount: entry.orgLedProjectCount ?? 0,
+            status: (entry.status === "draft" || entry.status === "submitted") ? "under_review" as YPOPStatus : entry.status,
+            adminRemarks: entry.adminRemarks ?? "",
+          };
+          const { cityLedEarned, cityLedMax, orgLedBonus, totalScore } = computeYpopScore(
+            form.cityLedAttendance, semesterActivities, form.orgLedProjectCount, periodTiers
+          );
+          const _sortedTiers = [...periodTiers].sort((a, b) => b.minProjects - a.minProjects);
+          const _matchedTier = _sortedTiers.find((t) => form.orgLedProjectCount >= t.minProjects);
+          const orgLedTierLabel = _matchedTier
+            ? `≥ ${_matchedTier.minProjects} projects → +${_matchedTier.bonus} pts`
+            : "0 projects → +0 pts";
+          const qualifies = totalScore >= (entry.pointsRequired ?? 70);
+
+          return (
+            <div className="space-y-5">
+              {/* Header bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedYpopId(null); setYpopValidationForm(null); setYpopPreviewFileId(null); setYpopAdminView("period-detail"); }}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Period
+                </button>
+                <div className="flex items-center gap-2">
+                  <PortalStatusBadge status={entry.status} />
+                  {isTerminal && (
+                    <span className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                      Finalized — locked
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-lg font-semibold">{entryOrg?.organizationName ?? "Unknown org"}</h2>
+                <p className="text-sm text-muted-foreground">{entry.semesterLabel}</p>
+              </div>
+
+              {/* Two-column layout */}
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+                {/* LEFT: Validation */}
+                <div className="space-y-4">
+                  {entry.submissionNote.trim() && (
+                    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Org's Submission Note</p>
+                      <p className="text-sm">{entry.submissionNote}</p>
+                    </div>
+                  )}
+
+                  <Card className="border-border/70">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-semibold">Validation</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-5 pt-0">
+                      {/* City-Led Activities checklist */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">City-Led Activities</p>
+                          {semesterActivities.length > 0 && (
+                            <span className="text-xs text-muted-foreground">{cityLedEarned} / {cityLedMax} pts</span>
+                          )}
+                        </div>
+                        {semesterActivities.length === 0 ? (
+                          <p className="rounded-md border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
+                            No city-led activities configured. Edit the semester to add activities.
+                          </p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {semesterActivities.map((act: YPOPCityActivity) => {
+                              const checked = form.cityLedAttendance.find((a) => a.activityId === act.id)?.attended ?? false;
+                              return (
+                                <label
+                                  key={act.id}
+                                  className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+                                    isTerminal ? "cursor-default opacity-70" : "hover:bg-muted/20"
+                                  } ${checked ? "border-primary/30 bg-primary/5" : "border-border/50 bg-background"}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={isTerminal || savingYpopValidation}
+                                    onChange={(e) => {
+                                      const updated = form.cityLedAttendance.some((a) => a.activityId === act.id)
+                                        ? form.cityLedAttendance.map((a) => a.activityId === act.id ? { ...a, attended: e.target.checked } : a)
+                                        : [...form.cityLedAttendance, { activityId: act.id, attended: e.target.checked }];
+                                      const newScore = computeYpopScore(updated, semesterActivities, form.orgLedProjectCount, periodTiers);
+                                      setYpopValidationForm({
+                                        ...form,
+                                        cityLedAttendance: updated,
+                                        status: newScore.totalScore >= (entry.pointsRequired ?? 70) ? "qualified" : "not_qualified",
+                                      });
+                                    }}
+                                    className="mt-0.5 shrink-0 accent-primary"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium leading-snug">{act.name}</p>
+                                    <p className="mt-0.5 text-xs text-muted-foreground">{act.date} · {act.venue}</p>
+                                  </div>
+                                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                                    {act.points} pts
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Org-Led */}
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Organization-Led Activities</p>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground" htmlFor="ypop-org-led-count">Number of org-led projects</label>
+                            <Input
+                              id="ypop-org-led-count"
+                              type="number"
+                              min={0}
+                              value={form.orgLedProjectCount}
+                              onChange={(e) => {
+                                const count = Math.max(0, Number(e.target.value || 0));
+                                const newScore = computeYpopScore(form.cityLedAttendance, semesterActivities, count, periodTiers);
+                                setYpopValidationForm({
+                                  ...form,
+                                  orgLedProjectCount: count,
+                                  status: isTerminal ? form.status : (newScore.totalScore >= (entry.pointsRequired ?? 70) ? "qualified" : "not_qualified"),
+                                });
+                              }}
+                              disabled={isTerminal || savingYpopValidation}
+                              className="h-8 w-24 text-sm"
+                            />
+                          </div>
+                          <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                            {orgLedTierLabel}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Score */}
+                      <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold">Computed Score</p>
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${qualifies ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                            {qualifies ? "Qualifies ✓" : "Does Not Qualify"}
+                          </span>
+                        </div>
+                        <div className="flex items-end gap-1">
+                          <span className="text-2xl font-bold tabular-nums">{totalScore}</span>
+                          <span className="mb-0.5 text-sm text-muted-foreground">/ 100</span>
+                        </div>
+                        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+                          <div className={`h-full rounded-full transition-all ${totalScore >= 70 ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${Math.min(totalScore, 100)}%` }} />
+                          <div className="absolute top-0 h-full w-px bg-foreground/30" style={{ left: "70%" }} />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>0</span><span className="font-medium">70 (threshold)</span><span>100</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                          <div className="rounded-md border border-border/50 bg-background py-1.5">
+                            <p className="font-semibold">{cityLedEarned}/{cityLedMax}</p>
+                            <p className="text-muted-foreground">City-Led pts</p>
+                          </div>
+                          <div className="rounded-md border border-border/50 bg-background py-1.5">
+                            <p className="font-semibold">+{orgLedBonus}</p>
+                            <p className="text-muted-foreground">Org-Led bonus</p>
+                          </div>
+                          <div className="rounded-md border border-border/50 bg-background py-1.5">
+                            <p className="font-semibold">{totalScore}/100</p>
+                            <p className="text-muted-foreground">Total</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Outcome + Remarks */}
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium" htmlFor="ypop-status">Outcome</label>
+                          <Select value={form.status} onValueChange={(v) => setYpopValidationForm({ ...form, status: v as YPOPStatus })} disabled={isTerminal || savingYpopValidation}>
+                            <SelectTrigger id="ypop-status"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="under_review">Under Review</SelectItem>
+                              <SelectItem value="needs_revision">Needs Revision</SelectItem>
+                              <SelectItem value="qualified">Qualified ✓</SelectItem>
+                              <SelectItem value="not_qualified">Not Qualified</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {!isTerminal && <p className="text-xs text-muted-foreground">Auto-suggested based on computed score.</p>}
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium" htmlFor="ypop-remarks">Admin Remarks <span className="font-normal text-muted-foreground">(optional)</span></label>
+                          <Textarea
+                            id="ypop-remarks"
+                            value={form.adminRemarks}
+                            onChange={(e) => setYpopValidationForm({ ...form, adminRemarks: e.target.value })}
+                            placeholder="Feedback for the organization…"
+                            rows={3}
+                            className="resize-none text-sm"
+                            disabled={isTerminal || savingYpopValidation}
+                          />
+                        </div>
+                      </div>
+
+                      {!isTerminal && (
+                        <Button
+                          type="button"
+                          className="w-full"
+                          disabled={savingYpopValidation}
+                          onClick={async () => {
+                            setSavingYpopValidation(true);
+                            try {
+                              const now = new Date().toISOString();
+                              const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
+                              const { totalScore: computedScore } = computeYpopScore(form.cityLedAttendance, semActs, form.orgLedProjectCount, periodTiers);
+                              const patch = {
+                                pointsEarned: computedScore,
+                                status: form.status,
+                                adminRemarks: form.adminRemarks,
+                                orgLedProjectCount: form.orgLedProjectCount,
+                                cityLedAttendance: form.cityLedAttendance,
+                                validatedAt: now,
+                                updatedAt: now,
+                                revisionHistory: [
+                                  ...(entry.revisionHistory ?? []),
+                                  { action: form.status, adminRemarks: form.adminRemarks, changedAt: now },
+                                ],
+                              };
+                              try {
+                                const saved = await adminUpdateYpopEntryInSupabase(entry.id, patch);
+                                updateYPOPEntry(saved.id, saved);
+                              } catch {
+                                updateYPOPEntry(entry.id, patch);
+                              }
+                              toast({ title: "Validation saved", description: `${entryOrg?.organizationName ?? "Org"}'s YPOP entry updated to ${statusLabelMap[form.status] ?? form.status}.` });
+                              setSelectedYpopId(null);
+                              setYpopValidationForm(null);
+                              setYpopPreviewFileId(null);
+                              setYpopAdminView("period-detail");
+                            } finally {
+                              setSavingYpopValidation(false);
+                            }
+                          }}
+                        >
+                          {savingYpopValidation ? "Saving…" : "Save Validation"}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                </div>
+
+                {/* RIGHT: Proof Documents + History */}
+                <div className="space-y-3">
+                  <Card className="border-border/70">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-semibold">Proof Documents ({entryFiles.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-0">
+                      {entryFiles.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No files attached to this submission.</p>
+                      ) : (
+                        <>
+                          <div className="flex flex-wrap gap-2">
+                            {entryFiles.map((f: YPOPFile) => (
+                              <Button
+                                key={f.id}
+                                type="button"
+                                size="sm"
+                                variant={ypopPreviewFileId === f.id ? "default" : "outline"}
+                                className="max-w-full"
+                                onClick={() => setYpopPreviewFileId(ypopPreviewFileId === f.id ? null : f.id)}
+                              >
+                                <FileText className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                                <span className="max-w-[12rem] truncate">{f.fileName}</span>
+                              </Button>
+                            ))}
+                          </div>
+
+                          <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/10">
+                            {ypopPreviewFileId === null ? (
+                              <div className="flex min-h-[32rem] items-center justify-center p-4 text-sm text-muted-foreground">
+                                Select a file above to preview it here.
+                              </div>
+                            ) : ypopPreviewLoading ? (
+                              <div className="flex min-h-[6rem] items-center justify-center p-4 text-sm text-muted-foreground">
+                                Loading preview…
+                              </div>
+                            ) : ypopPreviewUrl && ypopPreviewCanInline ? (
+                              isImagePreviewFile(ypopPreviewTitle) || isImagePreviewFile(ypopPreviewUrl) ? (
+                                <div className="flex max-h-[52rem] items-center justify-center overflow-hidden bg-background sm:max-h-[60rem]">
+                                  <img src={ypopPreviewUrl} alt={ypopPreviewTitle || "YPOP proof"} className="max-h-[52rem] w-full object-contain sm:max-h-[60rem]" />
+                                </div>
+                              ) : (
+                                <iframe
+                                  title={ypopPreviewTitle || "YPOP Proof Preview"}
+                                  src={ypopPreviewUrl}
+                                  className="h-[52rem] w-full border-0 bg-background sm:h-[60rem]"
+                                  loading="eager"
+                                />
+                              )
+                            ) : ypopPreviewUrl ? (
+                              <div className="flex flex-col items-start gap-3 p-4 text-sm text-muted-foreground">
+                                <p>This file cannot be previewed inline.</p>
+                                <Button type="button" variant="outline" size="sm" onClick={() => window.open(ypopPreviewUrl, "_blank", "noopener,noreferrer")}>
+                                  <Eye className="mr-2 h-4 w-4" />Open File
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex min-h-[6rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                                No preview available — file URL not set in this demo.
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {(entry.revisionHistory?.length ?? 0) > 0 && (
+                    <Card className="border-border/70">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Review Activity</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 pt-0">
+                        {entry.revisionHistory!.map((rev, i) => {
+                          const dotColor =
+                            rev.action === "qualified" ? "bg-emerald-500"
+                            : rev.action === "not_qualified" ? "bg-rose-500"
+                            : rev.action === "needs_revision" ? "bg-amber-400"
+                            : "bg-muted-foreground/40";
+                          return (
+                            <div key={i} className="flex items-start gap-3 text-sm">
+                              <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotColor}`} />
+                              <div>
+                                <p className="font-medium capitalize">{rev.action.replace(/_/g, " ")}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(rev.changedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+                                </p>
+                                {rev.adminRemarks && (
+                                  <p className="mt-0.5 text-xs italic text-muted-foreground/80">"{rev.adminRemarks}"</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // ── VIEW 3: period-detail (submissions only) ──────────────────────────
+        if (ypopAdminView === "period-detail" && selectedYpopPeriodId) {
+          const period = state.ypopPeriods.find((p) => p.id === selectedYpopPeriodId) as YPOPPeriod | undefined;
+          if (!period) {
+            setSelectedYpopPeriodId(null);
+            setYpopAdminView("periods");
+            return null;
+          }
+          const periodActivities = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey);
+          const totalCityLedPts = periodActivities.reduce((s, a) => s + a.points, 0);
+          const periodEntries = [...state.ypopEntries]
+            .filter((e) => e.semester === period.semesterKey)
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          const filteredPeriodEntries =
+            ypopSubmissionFilter === "all"
+              ? periodEntries
+              : periodEntries.filter((e) => e.status === ypopSubmissionFilter);
+          const statusBadgeClass =
+            period.status === "open" ? "bg-emerald-100 text-emerald-700"
+            : period.status === "draft" ? "bg-muted text-muted-foreground"
+            : "bg-secondary text-secondary-foreground";
+
+          return (
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => { setSelectedYpopPeriodId(null); setYpopAdminView("periods"); }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to YPOP Semesters
+              </button>
+
+              <PortalSection
+                title={period.semesterLabel}
+                description={`Deadline: ${new Date(period.validationDeadline).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" })} · ${periodActivities.length} activit${periodActivities.length !== 1 ? "ies" : "y"} · ${totalCityLedPts} pts total`}
+                action={
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass}`}>
+                    {period.status === "open" ? "Open" : period.status === "draft" ? "Draft" : "Closed"}
+                  </span>
+                }
+              >
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">Organization Submissions <span className="font-normal text-muted-foreground">({periodEntries.length})</span></p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {(["all", "submitted", "under_review", "needs_revision", "qualified", "not_qualified"] as const).map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setYpopSubmissionFilter(f)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          ypopSubmissionFilter === f
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground"
+                        }`}
+                      >
+                        {f === "all" ? "All" : (statusLabelMap[f] ?? f)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {filteredPeriodEntries.length === 0 ? (
+                    <PortalEmptyState
+                      title="No submissions"
+                      description={ypopSubmissionFilter === "all" ? "No organizations have submitted entries for this semester." : "No submissions match this filter."}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredPeriodEntries.map((entry) => {
+                        const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
+                        const entryFiles = state.ypopFiles.filter((f) => f.ypopEntryId === entry.id);
+                        const isTerminal = entry.status === "qualified" || entry.status === "not_qualified";
+                        const statusDotColor =
+                          entry.status === "qualified" ? "bg-emerald-500"
+                          : entry.status === "not_qualified" ? "bg-rose-500"
+                          : entry.status === "submitted" || entry.status === "under_review" ? "bg-amber-400"
+                          : "bg-muted-foreground/40";
+                        return (
+                          <Card key={entry.id} className="border-border/70 shadow-sm">
+                            <CardContent className="p-4 sm:p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-start gap-2.5">
+                                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <Medal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                      <p className="font-semibold text-foreground">{entryOrg?.organizationName ?? "Unknown organization"}</p>
+                                    </div>
+                                    <p className="mt-0.5 text-xs text-muted-foreground/80">
+                                      {isTerminal ? `${entry.pointsEarned}/${entry.totalPoints} pts` : "Awaiting validation"}
+                                      {" · "}{entryFiles.length} file{entryFiles.length !== 1 ? "s" : ""}
+                                    </p>
+                                  </div>
+                                </div>
+                                <PortalStatusBadge status={entry.status} />
+                              </div>
+                              <div className="mt-4 flex justify-end">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={isTerminal ? "outline" : "default"}
+                                  onClick={() => {
+                                    const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
+                                    setSelectedYpopId(entry.id);
+                                    setYpopPreviewFileId(null);
+                                    setYpopValidationForm({
+                                      cityLedAttendance: entry.cityLedAttendance?.length
+                                        ? entry.cityLedAttendance
+                                        : semActs.map((a) => ({ activityId: a.id, attended: false })),
+                                      orgLedProjectCount: entry.orgLedProjectCount ?? 0,
+                                      status: (entry.status === "draft" || entry.status === "submitted") ? "under_review" : entry.status,
+                                      adminRemarks: entry.adminRemarks ?? "",
+                                    });
+                                    setYpopAdminView("entry-review");
+                                  }}
+                                >
+                                  {isTerminal ? "View" : "Review"}
+                                  <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </PortalSection>
+            </div>
+          );
+        }
+
+        // ── VIEW 2: create / edit semester ────────────────────────────────────
+        if (ypopAdminView === "create-period") {
+          const isEditMode = Boolean(editingPeriodId);
+          const editPeriod = isEditMode ? (state.ypopPeriods.find((p) => p.id === editingPeriodId) as YPOPPeriod | undefined) : undefined;
+          const editActivities = isEditMode && editPeriod
+            ? state.ypopCityActivities.filter((a) => a.semesterKey === editPeriod.semesterKey)
+            : [];
+
+          const derivedSemesterKey = createPeriodForm.semesterLabel
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          const canSubmit = createPeriodForm.semesterLabel.trim().length > 0 && createPeriodForm.validationDeadline.length > 0;
+
+          const resetForm = () => {
+            setCreatePeriodForm({ semesterLabel: "", validationDeadline: "", status: "draft" });
+            setCreatePeriodActivities([]);
+            setCreateFormNewActivity(null);
+            setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
+            setEditingActivityId(null);
+            setEditingActivityData(null);
+            setEditingPeriodId(null);
+          };
+
+          return (
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => { resetForm(); setYpopAdminView("periods"); }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to YPOP Semesters
+              </button>
+
+              <PortalSection
+                title={isEditMode ? "Edit YPOP Semester" : "New YPOP Semester"}
+                description={isEditMode ? "Update the semester details and configure city-led activities." : "Set up a new semester period including activities before opening it to organizations."}
+              >
+                <div className="space-y-6">
+                  {/* Metadata fields */}
+                  <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+                    <div className="space-y-2 sm:col-span-2">
+                      <label className="text-sm font-medium" htmlFor="cp-label">Semester Label <span className="text-destructive">*</span></label>
+                      <Input
+                        id="cp-label"
+                        placeholder="e.g. 2026 Second Semester"
+                        value={createPeriodForm.semesterLabel}
+                        onChange={(e) => setCreatePeriodForm({ ...createPeriodForm, semesterLabel: e.target.value })}
+                      />
+                    </div>
+
+                    {!isEditMode && (
+                      <div className="space-y-2 sm:col-span-2">
+                        <label className="text-sm font-medium" htmlFor="cp-key">Semester Key <span className="font-normal text-muted-foreground">(auto-derived, read-only)</span></label>
+                        <Input id="cp-key" value={derivedSemesterKey || "—"} readOnly className="bg-muted/40 font-mono text-sm text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Used to link submissions and activities to this semester.</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="cp-deadline">Validation Deadline <span className="text-destructive">*</span></label>
+                      <Input
+                        id="cp-deadline"
+                        type="date"
+                        value={createPeriodForm.validationDeadline}
+                        onChange={(e) => setCreatePeriodForm({ ...createPeriodForm, validationDeadline: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="cp-status">Status</label>
+                      <Select
+                        value={createPeriodForm.status}
+                        onValueChange={(v) => setCreatePeriodForm({ ...createPeriodForm, status: v as YPOPPeriodStatus })}
+                      >
+                        <SelectTrigger id="cp-status"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft">Draft — not yet visible</SelectItem>
+                          <SelectItem value="open">Open — organizations can submit</SelectItem>
+                          <SelectItem value="closed">Closed — no new submissions</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* City-Led Activities section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold">City-Led Activities</p>
+                        <p className="text-xs text-muted-foreground">Add activities with their point values. These are used to calculate the YPOP score.</p>
+                      </div>
+                      {!createFormNewActivity && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() => setCreateFormNewActivity({ name: "", date: "", venue: "", points: "0" })}
+                        >
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />Add Activity
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-3">
+                      {/* Activities list */}
+                      {(isEditMode ? editActivities : createPeriodActivities).length === 0 && !createFormNewActivity ? (
+                        <p className="py-3 text-center text-xs text-muted-foreground">No activities added yet. Use "+ Add Activity" to start.</p>
+                      ) : isEditMode ? (
+                        editActivities.map((act: YPOPCityActivity) =>
+                          editingActivityId === act.id && editingActivityData ? (
+                            <div key={act.id} className="flex flex-wrap items-end gap-2.5 rounded-lg border border-primary/30 bg-background p-2.5">
+                              <div className="flex-1 min-w-[10rem] space-y-1">
+                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Activity Name</label>
+                                <Input className="h-7 w-full text-xs" placeholder="e.g. Youth Leadership Summit" value={editingActivityData.name} onChange={(e) => setEditingActivityData({ ...editingActivityData, name: e.target.value })} />
+                              </div>
+                              <div className="flex-1 min-w-[8rem] space-y-1">
+                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Venue</label>
+                                <Input className="h-7 w-full text-xs" placeholder="e.g. City Hall" value={editingActivityData.venue} onChange={(e) => setEditingActivityData({ ...editingActivityData, venue: e.target.value })} />
+                              </div>
+                              <div className="w-36 shrink-0 space-y-1">
+                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Date</label>
+                                <Input className="h-7 w-full text-xs" type="date" value={editingActivityData.date} onChange={(e) => setEditingActivityData({ ...editingActivityData, date: e.target.value })} />
+                              </div>
+                              <div className="w-20 shrink-0 space-y-1">
+                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Points</label>
+                                <Input className="h-7 w-full text-xs" type="number" min={0} value={editingActivityData.points} onChange={(e) => setEditingActivityData({ ...editingActivityData, points: e.target.value })} />
+                              </div>
+                              <div className="flex shrink-0 items-end gap-1 pb-0.5">
+                                <Button type="button" size="sm" className="h-7 px-2 text-xs" disabled={!editingActivityData.name.trim()} onClick={async () => { const patch = { name: editingActivityData.name.trim(), date: editingActivityData.date.trim(), venue: editingActivityData.venue.trim(), points: Math.max(0, Number(editingActivityData.points) || 0) }; try { const saved = await adminUpdateYpopCityActivityInSupabase(act.id, patch); updateYPOPCityActivity(saved.id, saved); } catch { updateYPOPCityActivity(act.id, patch); } setEditingActivityId(null); setEditingActivityData(null); }}>
+                                  <Save className="h-3 w-3" />
+                                </Button>
+                                <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setEditingActivityId(null); setEditingActivityData(null); }}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div key={act.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium">{act.name}</p>
+                                <p className="text-xs text-muted-foreground">{act.date} · {act.venue}</p>
+                              </div>
+                              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{act.points} pts</span>
+                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0" onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, date: act.date, venue: act.venue, points: String(act.points) }); }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive" onClick={() => { void adminDeleteYpopCityActivityFromSupabase(act.id).catch(() => {}); deleteYPOPCityActivity(act.id); }}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )
+                        )
+                      ) : (
+                        createPeriodActivities.map((act, idx) => (
+                          <div key={act.tempId} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium">{act.name}</p>
+                              <p className="text-xs text-muted-foreground">{act.date}{act.venue ? ` · ${act.venue}` : ""}</p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{act.points} pts</span>
+                            <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive" onClick={() => setCreatePeriodActivities((prev) => prev.filter((_, i) => i !== idx))}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
+
+                      {/* Add activity inline form */}
+                      {createFormNewActivity && (
+                        <div className="flex flex-wrap items-end gap-2.5 rounded-lg border border-primary/30 bg-background p-2.5">
+                          <div className="flex-1 min-w-[10rem] space-y-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Activity Name *</label>
+                            <Input className="h-7 w-full text-xs" placeholder="e.g. Youth Leadership Summit" value={createFormNewActivity.name} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, name: e.target.value })} />
+                          </div>
+                          <div className="flex-1 min-w-[8rem] space-y-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Venue</label>
+                            <Input className="h-7 w-full text-xs" placeholder="e.g. City Hall" value={createFormNewActivity.venue} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, venue: e.target.value })} />
+                          </div>
+                          <div className="w-36 shrink-0 space-y-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Date</label>
+                            <Input className="h-7 w-full text-xs" type="date" value={createFormNewActivity.date} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, date: e.target.value })} />
+                          </div>
+                          <div className="w-20 shrink-0 space-y-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Points</label>
+                            <Input className="h-7 w-full text-xs" type="number" min={0} value={createFormNewActivity.points} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, points: e.target.value })} />
+                          </div>
+                          <div className="flex shrink-0 items-end gap-1 pb-0.5">
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              disabled={!createFormNewActivity.name.trim()}
+                              onClick={async () => {
+                                if (isEditMode && editPeriod) {
+                                  const actData = { semesterKey: editPeriod.semesterKey, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), points: Math.max(0, Number(createFormNewActivity.points) || 0) };
+                                  try {
+                                    const saved = await adminCreateYpopCityActivityInSupabase(actData);
+                                    createYPOPCityActivity({ ...saved });
+                                  } catch {
+                                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}`, ...actData, createdAt: new Date().toISOString() });
+                                  }
+                                } else {
+                                  setCreatePeriodActivities((prev) => [...prev, { tempId: `tmp-${Date.now()}`, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), points: createFormNewActivity.points }]);
+                                }
+                                setCreateFormNewActivity(null);
+                              }}
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setCreateFormNewActivity(null)}>Cancel</Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Total pts footer */}
+                      {(() => {
+                        const totalPts = isEditMode
+                          ? editActivities.reduce((s, a) => s + a.points, 0)
+                          : createPeriodActivities.reduce((s, a) => s + Math.max(0, Number(a.points) || 0), 0);
+                        return totalPts > 0 ? (
+                          <p className="pt-1 text-right text-xs font-medium text-muted-foreground">
+                            Total: <span className="text-foreground">{totalPts} pts</span>
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Org-Led Scoring Tiers */}
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold">Organization-Led Scoring</p>
+                        <p className="text-xs text-muted-foreground">Configure how org-led project counts map to bonus points.</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS)}
+                      >
+                        Reset to defaults
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-3">
+                      {[...createPeriodOrgLedTiers]
+                        .sort((a, b) => b.minProjects - a.minProjects)
+                        .map((tier, displayIdx) => {
+                          const actualIdx = createPeriodOrgLedTiers.indexOf(tier);
+                          return (
+                            <div key={displayIdx} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
+                              <span className="shrink-0 text-sm text-muted-foreground">≥</span>
+                              <Input
+                                className="h-7 w-16 text-xs"
+                                type="number"
+                                min={0}
+                                value={tier.minProjects}
+                                onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
+                                  prev.map((t, i) => i === actualIdx ? { ...t, minProjects: Math.max(0, Number(e.target.value) || 0) } : t)
+                                )}
+                              />
+                              <span className="shrink-0 text-sm text-muted-foreground">projects → +</span>
+                              <Input
+                                className="h-7 w-16 text-xs"
+                                type="number"
+                                min={0}
+                                value={tier.bonus}
+                                onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
+                                  prev.map((t, i) => i === actualIdx ? { ...t, bonus: Math.max(0, Number(e.target.value) || 0) } : t)
+                                )}
+                              />
+                              <span className="shrink-0 text-sm text-muted-foreground">pts</span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="ml-auto h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => setCreatePeriodOrgLedTiers((prev) => prev.filter((_, i) => i !== actualIdx))}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+
+                      {createPeriodOrgLedTiers.length === 0 && (
+                        <p className="py-3 text-center text-xs text-muted-foreground">No tiers configured. Org-led activities will contribute 0 bonus points.</p>
+                      )}
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-1 h-7 w-full text-xs"
+                        onClick={() => setCreatePeriodOrgLedTiers((prev) => [...prev, { minProjects: 0, bonus: 0 }])}
+                      >
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />Add Tier
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Submit */}
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      disabled={!canSubmit}
+                      onClick={async () => {
+                        if (isEditMode && editingPeriodId) {
+                          const deadline = createPeriodForm.validationDeadline.includes("T")
+                            ? createPeriodForm.validationDeadline
+                            : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+                          const patch = {
+                            semesterLabel: createPeriodForm.semesterLabel.trim(),
+                            validationDeadline: deadline,
+                            status: createPeriodForm.status,
+                            orgLedTiers: createPeriodOrgLedTiers,
+                          };
+                          try {
+                            const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                            updateYPOPPeriod(saved.id, saved);
+                          } catch {
+                            updateYPOPPeriod(editingPeriodId, patch);
+                          }
+                          toast({ title: "Semester updated", description: `${createPeriodForm.semesterLabel.trim()} has been saved.` });
+                          resetForm();
+                          setYpopAdminView("periods");
+                        } else {
+                          const now = new Date().toISOString();
+                          const deadline = createPeriodForm.validationDeadline.includes("T")
+                            ? createPeriodForm.validationDeadline
+                            : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+                          const periodData = { semesterKey: derivedSemesterKey, semesterLabel: createPeriodForm.semesterLabel.trim(), validationDeadline: deadline, status: createPeriodForm.status, orgLedTiers: createPeriodOrgLedTiers };
+                          let savedPeriodId: string;
+                          try {
+                            const saved = await adminCreateYpopPeriodInSupabase(periodData);
+                            createYPOPPeriod({ ...saved });
+                            savedPeriodId = saved.id;
+                            for (let i = 0; i < createPeriodActivities.length; i++) {
+                              const act = createPeriodActivities[i];
+                              try {
+                                const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, points: Math.max(0, Number(act.points) || 0) });
+                                createYPOPCityActivity({ ...savedAct });
+                              } catch {
+                                createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, points: Math.max(0, Number(act.points) || 0), createdAt: now });
+                              }
+                            }
+                          } catch {
+                            const newId = `ypop-period-${Date.now()}`;
+                            createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
+                            createPeriodActivities.forEach((act, i) => {
+                              createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: derivedSemesterKey, name: act.name, date: act.date, venue: act.venue, points: Math.max(0, Number(act.points) || 0), createdAt: now });
+                            });
+                            savedPeriodId = newId;
+                          }
+                          toast({ title: "Semester created", description: `${createPeriodForm.semesterLabel.trim()} is ready.` });
+                          setSelectedYpopPeriodId(savedPeriodId);
+                          setYpopSubmissionFilter("all");
+                          resetForm();
+                          setYpopAdminView("period-detail");
+                        }
+                      }}
+                    >
+                      {isEditMode ? "Save Changes" : "Create Semester"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => { resetForm(); setYpopAdminView("periods"); }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </PortalSection>
+            </div>
+          );
+        }
+
+        // ── VIEW 1: YPOP Semesters list ───────────────────────────────────────
+        const sortedPeriods = [...state.ypopPeriods].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+        return (
+          <PortalSection
+            title="YPOP Semesters"
+            description="Manage YPOP semester registrations and review organization submissions."
+            action={
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setCreatePeriodForm({ semesterLabel: "", validationDeadline: "", status: "draft" });
+                  setCreatePeriodActivities([]);
+                  setCreateFormNewActivity(null);
+                  setEditingPeriodId(null);
+                  setYpopAdminView("create-period");
+                }}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                New Semester
+              </Button>
+            }
+          >
+            {sortedPeriods.length === 0 ? (
+              <PortalEmptyState
+                title="No semesters yet"
+                description="Create a new YPOP semester to open a registration period for organizations."
+              />
+            ) : (
+              <div className="space-y-3">
+                {sortedPeriods.map((period) => {
+                  const submissionCount = state.ypopEntries.filter((e) => e.semester === period.semesterKey).length;
+                  const activityCount = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey).length;
+                  const statusBadgeClass =
+                    period.status === "open" ? "bg-emerald-100 text-emerald-700"
+                    : period.status === "draft" ? "bg-muted text-muted-foreground"
+                    : "bg-secondary text-secondary-foreground";
+                  return (
+                    <Card key={period.id} className="border-border/70 shadow-sm">
+                      <CardContent className="p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-foreground">{period.semesterLabel}</p>
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadgeClass}`}>
+                                {period.status === "open" ? "Open" : period.status === "draft" ? "Draft" : "Closed"}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Deadline: {new Date(period.validationDeadline).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {activityCount} activit{activityCount !== 1 ? "ies" : "y"} · {submissionCount} submission{submissionCount !== 1 ? "s" : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center justify-end gap-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            title="Delete semester"
+                            onClick={() => {
+                              setPendingDeleteConfirmation({ kind: "ypop_period", id: period.id, title: period.semesterLabel, activityCount });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                            title="Edit semester"
+                            onClick={() => {
+                              const deadlineDate = period.validationDeadline.includes("T")
+                                ? period.validationDeadline.split("T")[0]
+                                : period.validationDeadline;
+                              setCreatePeriodForm({ semesterLabel: period.semesterLabel, validationDeadline: deadlineDate, status: period.status });
+                              setCreatePeriodActivities([]);
+                              setCreateFormNewActivity(null);
+                              setCreatePeriodOrgLedTiers(period.orgLedTiers?.length ? period.orgLedTiers : DEFAULT_ORG_LED_TIERS);
+                              setEditingActivityId(null);
+                              setEditingActivityData(null);
+                              setEditingPeriodId(period.id);
+                              setYpopAdminView("create-period");
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <div className="mx-1 h-5 w-px bg-border/60" />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedYpopPeriodId(period.id);
+                              setYpopSubmissionFilter("all");
+                              setYpopAdminView("period-detail");
+                            }}
+                          >
+                            Submissions
+                            <ArrowRight className="ml-1.5 h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </PortalSection>
+        );
+      }
+      case "yorp-registry":
+        return <YorpRegistryPage />;
       default:
         return (
           <PortalEmptyState
@@ -4269,6 +5811,8 @@ export default function AdminPortal({ section }: { section: string }) {
         );
     }
   }, [
+    activityLogFilter,
+    activityDateFilter,
     createNotification,
     selectedBudgetRequestId,
     selectedLiquidationReportSnapshot,
@@ -4288,6 +5832,7 @@ export default function AdminPortal({ section }: { section: string }) {
     handleSaveTransparencyPost,
     mergeRemoteState,
     markNotificationRead,
+    markAllNotificationsRead,
     navigate,
     openFile,
     openPreview,
@@ -4344,6 +5889,57 @@ export default function AdminPortal({ section }: { section: string }) {
     validDocumentTypeIds,
     savingTemplate,
     uploadingTemplateId,
+    selectedYpopId,
+    setSelectedYpopId,
+    ypopValidationForm,
+    setYpopValidationForm,
+    savingYpopValidation,
+    ypopAdminView,
+    setYpopAdminView,
+    selectedYpopPeriodId,
+    setSelectedYpopPeriodId,
+    createPeriodForm,
+    setCreatePeriodForm,
+    ypopSubmissionFilter,
+    setYpopSubmissionFilter,
+    newActivityForm,
+    setNewActivityForm,
+    editingActivityId,
+    setEditingActivityId,
+    editingActivityData,
+    setEditingActivityData,
+    ypopPreviewFileId,
+    setYpopPreviewFileId,
+    ypopPreviewUrl,
+    ypopPreviewTitle,
+    ypopPreviewCanInline,
+    ypopPreviewLoading,
+    state.ypopEntries,
+    state.ypopFiles,
+    state.ypopCityActivities,
+    state.ypopPeriods,
+    updateYPOPEntry,
+    createYPOPCityActivity,
+    updateYPOPCityActivity,
+    deleteYPOPCityActivity,
+    editingPeriodId,
+    setEditingPeriodId,
+    createPeriodActivities,
+    setCreatePeriodActivities,
+    createFormNewActivity,
+    setCreateFormNewActivity,
+    createPeriodOrgLedTiers,
+    setCreatePeriodOrgLedTiers,
+    createYPOPPeriod,
+    updateYPOPPeriod,
+    deleteYPOPPeriod,
+    adminCreateYpopPeriodInSupabase,
+    adminUpdateYpopPeriodInSupabase,
+    adminDeleteYpopPeriodFromSupabase,
+    adminCreateYpopCityActivityInSupabase,
+    adminUpdateYpopCityActivityInSupabase,
+    adminDeleteYpopCityActivityFromSupabase,
+    adminUpdateYpopEntryInSupabase,
   ]);
 
   const adminConfirmationCopy = getAdminConfirmationCopy();
@@ -4356,268 +5952,11 @@ export default function AdminPortal({ section }: { section: string }) {
         groups={splitNotificationsGroup}
         activeId={section}
         onNavigate={(id) => navigate(routeMap[id] ?? routeMap.overview)}
-        onSignOut={() => void signOut()}
+        onSignOut={() => setSignOutConfirmOpen(true)}
+        userProfile={{ name: "Administrator", role: "LYDO / PCYDO Admin" }}
       >
         {activeContent}
       </PortalShell>
-      <Dialog open={liquidationDetailsOpen} onOpenChange={(open) => { if (!open) closeLiquidationDetails(); }}>
-        <DialogContent className="h-[100dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-[92dvh] sm:w-[min(96vw,96rem)] sm:max-w-none sm:rounded-2xl sm:border">
-          <div className="flex h-full min-h-0 flex-col">
-            <div className="border-b border-border/70 px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
-              <DialogHeader className="text-left sm:text-left">
-                <DialogTitle className="text-xl leading-tight sm:text-2xl">
-                  {selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation Details"}
-                </DialogTitle>
-                <DialogDescription className="max-w-2xl text-sm sm:text-base">
-                  Review the liquidation record, attached files, and linked budget request before updating its status.
-                </DialogDescription>
-              </DialogHeader>
-            </div>
-
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 sm:px-6 sm:py-6">
-              {selectedLiquidationReport ? (
-                <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-                  <div className="space-y-3">
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Organization Details</p>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {renderRegistrationDetailCard({
-                          title: "Organization Name",
-                          value: selectedLiquidationOrganization?.organizationName ?? "N/A",
-                          className: "sm:col-span-2",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Organization Email",
-                          value: selectedLiquidationOrganization?.organizationEmail ?? "N/A",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Contact Number",
-                          value: selectedLiquidationOrganization?.contactNumber ?? "N/A",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Barangay",
-                          value: selectedLiquidationOrganization?.barangay ?? "N/A",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "District",
-                          value: selectedLiquidationOrganization?.district || "N/A",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Submitted By",
-                          value: selectedLiquidationReport.submittedBy,
-                          wrap: true,
-                          className: "sm:col-span-2",
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Liquidation Details</p>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {renderRegistrationDetailCard({
-                          title: "Linked Budget Request",
-                          value: selectedLiquidationBudgetRequest?.activityTitle ?? "N/A",
-                          wrap: true,
-                          className: "sm:col-span-2",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Go Signal",
-                          value: selectedLiquidationReport.goSignalAt || "Pending",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Deadline",
-                          value: selectedLiquidationReport.deadlineAt || "Pending",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Hard Copy Submitted",
-                          value: selectedLiquidationReport.hardCopySubmittedAt || "Pending",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Completed At",
-                          value: selectedLiquidationReport.completedAt || "Pending",
-                        })}
-                        {renderRegistrationDetailCard({
-                          title: "Remarks",
-                          value: selectedLiquidationReport.remarks || "None",
-                          wrap: true,
-                          className: "sm:col-span-2",
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Status Controls</p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        <span>Current status:</span>
-                        <PortalStatusBadge status={selectedLiquidationReport.status} />
-                      </div>
-                      <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full sm:w-auto"
-                          onClick={() =>
-                            openAdminConfirmation({
-                              kind: "liquidation",
-                              action: "approve",
-                              liquidationReportId: selectedLiquidationReport.id,
-                              budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                              organizationId: selectedLiquidationReport.organizationId,
-                              organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                              activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                            })
-                          }
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full sm:w-auto"
-                          onClick={() =>
-                            openAdminConfirmation({
-                              kind: "liquidation",
-                              action: "needs_revision",
-                              liquidationReportId: selectedLiquidationReport.id,
-                              budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                              organizationId: selectedLiquidationReport.organizationId,
-                              organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                              activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                            })
-                          }
-                        >
-                          Needs Revision
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full sm:w-auto"
-                          onClick={() =>
-                            openAdminConfirmation({
-                              kind: "liquidation",
-                              action: "overdue",
-                              liquidationReportId: selectedLiquidationReport.id,
-                              budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                              organizationId: selectedLiquidationReport.organizationId,
-                              organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                              activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                            })
-                          }
-                        >
-                          Mark Overdue
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-5">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Attached Files</p>
-                          <p className="mt-1.5 text-sm text-muted-foreground">
-                            {selectedLiquidationReportFiles.length
-                              ? `${selectedLiquidationReportFiles.length} file${selectedLiquidationReportFiles.length === 1 ? "" : "s"} uploaded.`
-                              : "No attached files were uploaded for this liquidation report."}
-                          </p>
-                        </div>
-                        <div className="self-start">
-                          <PortalStatusBadge status={selectedLiquidationReport.status} />
-                        </div>
-                      </div>
-
-                      {selectedLiquidationReportFiles.length ? (
-                        <div className="mt-3 space-y-3">
-                          <div className="flex flex-wrap gap-2">
-                            {selectedLiquidationReportFiles.map((file) => (
-                              <Button
-                                key={file.id}
-                                type="button"
-                                size="sm"
-                                variant={selectedLiquidationReportFile?.id === file.id ? "default" : "outline"}
-                                className="max-w-full"
-                                onClick={() => setSelectedLiquidationFileId(file.id)}
-                              >
-                                <span className="max-w-[12rem] truncate">{file.fileName}</span>
-                              </Button>
-                            ))}
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-between"
-                            onClick={() => setLiquidationPreviewExpanded((value) => !value)}
-                          >
-                            <span className="inline-flex items-center gap-2">
-                              <Eye className="h-4 w-4" />
-                              {liquidationPreviewExpanded ? "Hide Preview" : "Show Preview"}
-                            </span>
-                            {liquidationPreviewExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-
-                          {liquidationPreviewExpanded ? (
-                            <div className="rounded-xl border border-border/70 bg-background p-2.5">
-                              {liquidationPreviewLoading ? (
-                                <p className="p-2 text-sm text-muted-foreground">Loading preview...</p>
-                              ) : liquidationPreviewUrl && liquidationPreviewCanInline ? (
-                                isImagePreviewFile(liquidationPreviewTitle) || isImagePreviewFile(liquidationPreviewUrl) ? (
-                                  <div className="flex max-h-[18rem] min-h-[12rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
-                                    <img
-                                      src={liquidationPreviewUrl}
-                                      alt={liquidationPreviewTitle || "Liquidation file preview"}
-                                      className="max-h-[18rem] w-full object-contain sm:max-h-[32rem]"
-                                    />
-                                  </div>
-                                ) : (
-                                  <iframe
-                                    title={liquidationPreviewTitle || "Liquidation Preview"}
-                                    src={liquidationPreviewUrl}
-                                    className="h-[18rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
-                                    loading="eager"
-                                  />
-                                )
-                              ) : liquidationPreviewUrl ? (
-                                <div className="space-y-3 p-2.5 text-sm text-muted-foreground">
-                                  <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
-                                  <Button type="button" variant="outline" onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Open File
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="grid min-h-[12rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-4 text-center text-sm text-muted-foreground">
-                                  {liquidationPreviewEmptyMessage || "No liquidation file was uploaded."}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-                              Preview hidden on mobile. Open it to review the uploaded file before acting.
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mt-3 rounded-xl border border-dashed border-border/70 bg-muted/10 p-4 text-sm text-muted-foreground">
-                          No attached liquidation files were submitted.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="border-t border-border/70 px-4 py-3 sm:px-6 sm:py-4">
-              <DialogFooter>
-                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeLiquidationDetails}>
-                  Close
-                </Button>
-              </DialogFooter>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
       <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -4670,14 +6009,20 @@ export default function AdminPortal({ section }: { section: string }) {
           if (!open) setPendingDeleteConfirmation(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {pendingDeleteConfirmation?.kind === "news_release" ? "Delete News Release" : "Delete Transparency Post"}
+              {pendingDeleteConfirmation?.kind === "news_release"
+                ? "Delete News Release"
+                : pendingDeleteConfirmation?.kind === "ypop_period"
+                ? "Delete Semester"
+                : "Delete Transparency Post"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingDeleteConfirmation
-                ? `Delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
+              {pendingDeleteConfirmation?.kind === "ypop_period"
+                ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This will also remove ${pendingDeleteConfirmation.activityCount} configured activit${pendingDeleteConfirmation.activityCount !== 1 ? "ies" : "y"}. This action cannot be undone.`
+                : pendingDeleteConfirmation
+                ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -4689,6 +6034,18 @@ export default function AdminPortal({ section }: { section: string }) {
             >
               Delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>You will be returned to the login page.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void signOut()}>Sign Out</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

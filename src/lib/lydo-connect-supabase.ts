@@ -12,6 +12,10 @@ import type {
   SubmissionFile,
   TemplateRecord,
   TransparencyPost,
+  YPOPEntry,
+  YPOPFile,
+  YPOPPeriod,
+  YPOPCityActivity,
 } from "./lydo-connect-data";
 import { createTemplateLocalId, legacyRemovedTemplateNames, requiredDocumentTypes } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
@@ -21,6 +25,7 @@ const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
 const TEMPLATE_FILES_BUCKET = "template-files";
 const BUDGET_REQUEST_FILES_BUCKET = "budget-request-files";
 const LIQUIDATION_REPORT_FILES_BUCKET = "liquidation-report-files";
+const YPOP_FILES_BUCKET = "ypop-files";
 const STORAGE_URI_PREFIX = "storage://";
 
 type RequiredDocumentTypeRow = {
@@ -55,6 +60,8 @@ type OrganizationProfileRow = {
   profile_status: OrganizationProfile["profileStatus"];
   verified_at: string | null;
   internal_notes: string | null;
+  yorp_registered_year: number | null;
+  yorp_renewed_year: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -220,6 +227,60 @@ type ActivityLogRow = {
   created_at: string;
 };
 
+type YpopPeriodRow = {
+  id: string;
+  semester_key: string;
+  semester_label: string;
+  validation_deadline: string | null;
+  status: string;
+  org_led_tiers: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
+type YpopCityActivityRow = {
+  id: string;
+  semester_key: string;
+  name: string;
+  date: string | null;
+  venue: string | null;
+  points: number;
+  created_at: string;
+};
+
+type YpopEntryRow = {
+  id: string;
+  organization_id: string;
+  submitted_by: string | null;
+  semester: string;
+  semester_label: string;
+  points_earned: number;
+  points_required: number;
+  total_points: number;
+  status: string;
+  admin_remarks: string;
+  submission_note: string;
+  validation_deadline: string | null;
+  submitted_at: string | null;
+  validated_at: string | null;
+  revision_history: unknown[];
+  org_led_project_count: number;
+  city_led_attendance: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
+type YpopFileRow = {
+  id: string;
+  ypop_entry_id: string;
+  organization_id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  uploaded_at: string;
+};
+
 type AdminPortalSnapshot = {
   organization_profiles?: OrganizationProfileRow[];
   document_submissions?: DocumentSubmissionRow[];
@@ -234,6 +295,10 @@ type AdminPortalSnapshot = {
   notifications?: NotificationRow[];
   activity_logs?: ActivityLogRow[];
   templates?: RequiredDocumentTypeRow[];
+  ypop_periods?: YpopPeriodRow[];
+  ypop_city_activities?: YpopCityActivityRow[];
+  ypop_entries?: YpopEntryRow[];
+  ypop_files?: YpopFileRow[];
 };
 
 const localDocumentTypeByName = new Map(requiredDocumentTypes.map((documentType) => [documentType.name, documentType]));
@@ -289,6 +354,8 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   profileStatus: row.profile_status,
   verifiedAt: row.verified_at ?? "",
   internalNotes: row.internal_notes ?? "",
+  yorpRegisteredYear: row.yorp_registered_year ?? null,
+  yorpRenewedYear: row.yorp_renewed_year ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -481,6 +548,59 @@ const mapActivityLog = (row: ActivityLogRow): ActivityLog => ({
   createdAt: row.created_at,
 });
 
+const mapYpopPeriod = (row: YpopPeriodRow): YPOPPeriod => ({
+  id: row.id,
+  semesterKey: row.semester_key,
+  semesterLabel: row.semester_label,
+  validationDeadline: row.validation_deadline ?? "",
+  status: row.status as YPOPPeriod["status"],
+  orgLedTiers: (row.org_led_tiers ?? []) as YPOPPeriod["orgLedTiers"],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopCityActivity = (row: YpopCityActivityRow): YPOPCityActivity => ({
+  id: row.id,
+  semesterKey: row.semester_key,
+  name: row.name,
+  date: row.date ?? "",
+  venue: row.venue ?? "",
+  points: row.points,
+  createdAt: row.created_at,
+});
+
+const mapYpopEntry = (row: YpopEntryRow): YPOPEntry => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by ?? "",
+  semester: row.semester,
+  semesterLabel: row.semester_label,
+  pointsEarned: row.points_earned,
+  pointsRequired: row.points_required,
+  totalPoints: row.total_points,
+  status: row.status as YPOPEntry["status"],
+  adminRemarks: row.admin_remarks,
+  submissionNote: row.submission_note,
+  validationDeadline: row.validation_deadline ?? "",
+  submittedAt: row.submitted_at ?? "",
+  validatedAt: row.validated_at ?? "",
+  revisionHistory: (row.revision_history ?? []) as YPOPEntry["revisionHistory"],
+  orgLedProjectCount: row.org_led_project_count,
+  cityLedAttendance: (row.city_led_attendance ?? []) as YPOPEntry["cityLedAttendance"],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopFile = (row: YpopFileRow): YPOPFile => ({
+  id: row.id,
+  ypopEntryId: row.ypop_entry_id,
+  organizationId: row.organization_id,
+  fileName: row.file_name,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  uploadedAt: row.uploaded_at,
+});
+
 const fetchOrganizationProfile = async (userId: string) => {
   const { data, error } = await supabase!
     .from("organization_profiles")
@@ -625,24 +745,36 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
     ...sharedState,
   };
 
-  const [latestSubmission, budgetRows, liquidationRows] = await Promise.all([
+  const [latestSubmission, budgetRows, liquidationRows, ypopPeriodRows, ypopActivityRows] = await Promise.all([
     fetchLatestSubmission(organizationProfile.id),
     fetchBudgetRequests(organizationProfile.id),
     fetchLiquidationReports(organizationProfile.id),
+    supabase!.from("ypop_periods").select("*").order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_city_activities").select("*").order("created_at", { ascending: true }).then((r) => r.data ?? []),
   ]);
 
   remoteState.budgetRequests = budgetRows.map(mapBudgetRequest);
   remoteState.liquidationReports = liquidationRows.map(mapLiquidationReport);
+  remoteState.ypopPeriods = (ypopPeriodRows as YpopPeriodRow[]).map(mapYpopPeriod);
+  remoteState.ypopCityActivities = (ypopActivityRows as YpopCityActivityRow[]).map(mapYpopCityActivity);
 
   const budgetRequestIds = budgetRows.map((row) => row.id);
   const liquidationReportIds = liquidationRows.map((row) => row.id);
-  const [budgetFileRows, liquidationFileRows] = await Promise.all([
+  const [budgetFileRows, liquidationFileRows, ypopEntryRows, ypopFileRows] = await Promise.all([
     fetchBudgetRequestFiles(budgetRequestIds),
     fetchLiquidationReportFiles(liquidationReportIds),
+    supabase!.from("ypop_entries").select("*").eq("organization_id", organizationProfile.id).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_files").select("*").eq("organization_id", organizationProfile.id).then((r) => r.data ?? []),
   ]);
 
   remoteState.budgetRequestFiles = budgetFileRows.map(mapBudgetRequestFile);
   remoteState.liquidationReportFiles = liquidationFileRows.map(mapLiquidationReportFile);
+  remoteState.ypopEntries = (ypopEntryRows as YpopEntryRow[]).map(mapYpopEntry);
+  remoteState.ypopFiles = (ypopFileRows as YpopFileRow[]).map(mapYpopFile);
+
+  remoteState.documentSubmissions = [];
+  remoteState.documentSubmissionFiles = [];
+
   if (!latestSubmission) {
     return remoteState;
   }
@@ -700,6 +832,10 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     templates: (snapshot.templates ?? [])
       .map(mapTemplate)
       .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name)),
+    ypopPeriods: (snapshot.ypop_periods ?? []).map(mapYpopPeriod),
+    ypopCityActivities: (snapshot.ypop_city_activities ?? []).map(mapYpopCityActivity),
+    ypopEntries: (snapshot.ypop_entries ?? []).map(mapYpopEntry),
+    ypopFiles: (snapshot.ypop_files ?? []).map(mapYpopFile),
   };
 
   return remoteState;
@@ -738,7 +874,7 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
   const { data, error } = await supabase
     .from("organization_profiles")
     .upsert(payload, { onConflict: "user_id" })
-    .select("id,user_id,organization_name,organization_email,contact_number,district,barangay,is_existing_organization,organization_identifier_number,major_classification,sub_classification,advocacies,adviser_name,representative_name,address,facebook_page_url,profile_status,verified_at,internal_notes,created_at,updated_at")
+    .select("id,user_id,organization_name,organization_email,contact_number,district,barangay,is_existing_organization,organization_identifier_number,major_classification,sub_classification,advocacies,adviser_name,representative_name,address,facebook_page_url,profile_status,verified_at,internal_notes,yorp_registered_year,yorp_renewed_year,created_at,updated_at")
     .single();
 
   if (error || !data) {
@@ -1509,4 +1645,241 @@ export const resolveSupabaseFileUrl = async (value: string) => {
   const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
   if (error || !data?.signedUrl) throw new Error(error?.message ?? "Failed to create a file URL.");
   return data.signedUrl;
+};
+
+// ─── YPOP Org-side mutations ──────────────────────────────────
+
+export const createYpopEntryInSupabase = async (
+  params: Omit<YPOPEntry, "id" | "createdAt" | "updatedAt">,
+): Promise<YPOPEntry> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data, error } = await supabase
+    .from("ypop_entries")
+    .insert({
+      organization_id: organizationProfile.id,
+      submitted_by: session.user.id,
+      semester: params.semester,
+      semester_label: params.semesterLabel,
+      points_earned: params.pointsEarned ?? 0,
+      points_required: params.pointsRequired ?? 70,
+      total_points: params.totalPoints ?? 100,
+      status: params.status ?? "draft",
+      admin_remarks: params.adminRemarks ?? "",
+      submission_note: params.submissionNote ?? "",
+      validation_deadline: params.validationDeadline || null,
+      submitted_at: params.submittedAt || null,
+      validated_at: params.validatedAt || null,
+      revision_history: params.revisionHistory ?? [],
+      org_led_project_count: params.orgLedProjectCount ?? 0,
+      city_led_attendance: params.cityLedAttendance ?? [],
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopEntry(data as YpopEntryRow);
+};
+
+export const updateYpopEntryInSupabase = async (
+  entryId: string,
+  patch: Partial<Omit<YPOPEntry, "id" | "createdAt" | "updatedAt">>,
+): Promise<YPOPEntry> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const dbPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.semester !== undefined) dbPatch.semester = patch.semester;
+  if (patch.semesterLabel !== undefined) dbPatch.semester_label = patch.semesterLabel;
+  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.submissionNote !== undefined) dbPatch.submission_note = patch.submissionNote;
+  if (patch.submittedAt !== undefined) dbPatch.submitted_at = patch.submittedAt || null;
+  if (patch.pointsEarned !== undefined) dbPatch.points_earned = patch.pointsEarned;
+  if (patch.orgLedProjectCount !== undefined) dbPatch.org_led_project_count = patch.orgLedProjectCount;
+  if (patch.cityLedAttendance !== undefined) dbPatch.city_led_attendance = patch.cityLedAttendance;
+  if (patch.revisionHistory !== undefined) dbPatch.revision_history = patch.revisionHistory;
+
+  const { data, error } = await supabase
+    .from("ypop_entries")
+    .update(dbPatch)
+    .eq("id", entryId)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopEntry(data as YpopEntryRow);
+};
+
+export const deleteYpopEntryFromSupabase = async (entryId: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const { error } = await supabase.from("ypop_entries").delete().eq("id", entryId);
+  if (error) throw new Error(error.message);
+};
+
+export const uploadYpopFileToSupabase = async (params: {
+  entryId: string;
+  organizationId: string;
+  file: File;
+}): Promise<YPOPFile> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const storageUri = await uploadFileToStorage(YPOP_FILES_BUCKET, params.entryId, params.file);
+
+  const { data, error } = await supabase
+    .from("ypop_files")
+    .insert({
+      ypop_entry_id: params.entryId,
+      organization_id: params.organizationId,
+      file_name: params.file.name,
+      file_url: storageUri,
+      file_type: params.file.type || "",
+      file_size: params.file.size,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopFile(data as YpopFileRow);
+};
+
+export const deleteYpopFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  await removeStorageObjects([fileUrl]);
+  const { error } = await supabase.from("ypop_files").delete().eq("id", fileId);
+  if (error) throw new Error(error.message);
+};
+
+// ─── YPOP Admin mutations (SECURITY DEFINER RPCs) ────────────
+
+export const adminCreateYpopPeriodInSupabase = async (
+  period: Omit<YPOPPeriod, "id" | "createdAt" | "updatedAt">,
+): Promise<YPOPPeriod> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_create_ypop_period", {
+    _session_token: adminSession.sessionToken,
+    _semester_key: period.semesterKey,
+    _semester_label: period.semesterLabel,
+    _validation_deadline: period.validationDeadline || null,
+    _status: period.status,
+    _org_led_tiers: period.orgLedTiers ?? [],
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_create_ypop_period.");
+  return mapYpopPeriod(row as YpopPeriodRow);
+};
+
+export const adminUpdateYpopPeriodInSupabase = async (
+  id: string,
+  patch: Partial<YPOPPeriod>,
+): Promise<YPOPPeriod> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_period", {
+    _session_token: adminSession.sessionToken,
+    _period_id: id,
+    _semester_label: patch.semesterLabel ?? null,
+    _validation_deadline: patch.validationDeadline || null,
+    _status: patch.status ?? null,
+    _org_led_tiers: patch.orgLedTiers ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_period.");
+  return mapYpopPeriod(row as YpopPeriodRow);
+};
+
+export const adminDeleteYpopPeriodFromSupabase = async (id: string): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("admin_delete_ypop_period", {
+    _session_token: adminSession.sessionToken,
+    _period_id: id,
+  });
+  if (error) throw new Error(error.message);
+};
+
+export const adminCreateYpopCityActivityInSupabase = async (
+  activity: Omit<YPOPCityActivity, "id" | "createdAt">,
+): Promise<YPOPCityActivity> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_create_ypop_city_activity", {
+    _session_token: adminSession.sessionToken,
+    _semester_key: activity.semesterKey,
+    _name: activity.name,
+    _date: activity.date || null,
+    _venue: activity.venue || null,
+    _points: activity.points,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_create_ypop_city_activity.");
+  return mapYpopCityActivity(row as YpopCityActivityRow);
+};
+
+export const adminUpdateYpopCityActivityInSupabase = async (
+  id: string,
+  patch: Partial<YPOPCityActivity>,
+): Promise<YPOPCityActivity> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_city_activity", {
+    _session_token: adminSession.sessionToken,
+    _activity_id: id,
+    _name: patch.name ?? null,
+    _date: patch.date ?? null,
+    _venue: patch.venue ?? null,
+    _points: patch.points ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_city_activity.");
+  return mapYpopCityActivity(row as YpopCityActivityRow);
+};
+
+export const adminDeleteYpopCityActivityFromSupabase = async (id: string): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("admin_delete_ypop_city_activity", {
+    _session_token: adminSession.sessionToken,
+    _activity_id: id,
+  });
+  if (error) throw new Error(error.message);
+};
+
+export const adminUpdateYpopEntryInSupabase = async (
+  id: string,
+  patch: Partial<YPOPEntry>,
+): Promise<YPOPEntry> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_entry", {
+    _session_token: adminSession.sessionToken,
+    _entry_id: id,
+    _status: patch.status ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+    _points_earned: patch.pointsEarned ?? null,
+    _org_led_project_count: patch.orgLedProjectCount ?? null,
+    _city_led_attendance: patch.cityLedAttendance ?? null,
+    _revision_history: patch.revisionHistory ?? null,
+    _validated_at: patch.validatedAt || null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_entry.");
+  return mapYpopEntry(row as YpopEntryRow);
+};
+
+// ─── Org YORP fields (admin) ─────────────────────────────────
+
+export const adminUpdateOrgYorpFieldsInSupabase = async (
+  orgId: string,
+  registeredYear: number | null,
+  renewedYear: number | null,
+): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("admin_update_org_yorp_fields", {
+    _session_token: adminSession.sessionToken,
+    _org_id: orgId,
+    _registered_year: registeredYear,
+    _renewed_year: renewedYear,
+  });
+  if (error) throw new Error(error.message);
 };

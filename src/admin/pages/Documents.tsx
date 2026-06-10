@@ -823,12 +823,12 @@ export const Documents = () => {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Document</AlertDialogTitle>
             <AlertDialogDescription>
               {deletingDoc
-                ? `Are you sure you want to delete "${deletingDoc.title}"? This will also remove it from the transparency registry.`
+                ? `Are you sure you want to delete "${deletingDoc.title}"? This action cannot be undone.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -839,7 +839,7 @@ export const Documents = () => {
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete Document"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

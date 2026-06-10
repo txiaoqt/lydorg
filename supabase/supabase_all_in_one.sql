@@ -2547,3 +2547,478 @@ on conflict (username) do update
       display_name = excluded.display_name,
       is_active = excluded.is_active,
       updated_at = now();
+-- ============================================================
+-- YPOP (Youth Participation Outcome Passport) Schema
+-- Run this in the Supabase SQL editor after the main schema.
+-- ============================================================
+
+-- ─── Enum Types ───────────────────────────────────────────────
+
+do $$ begin
+  create type public.ypop_entry_status as enum (
+    'draft',
+    'submitted',
+    'under_review',
+    'needs_revision',
+    'qualified',
+    'not_qualified'
+  );
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.ypop_period_status as enum (
+    'draft',
+    'open',
+    'closed'
+  );
+exception when duplicate_object then null;
+end $$;
+
+-- ─── Tables ───────────────────────────────────────────────────
+
+create table if not exists public.ypop_periods (
+  id                  uuid primary key default gen_random_uuid(),
+  semester_key        text not null unique,
+  semester_label      text not null,
+  validation_deadline timestamptz,
+  status              public.ypop_period_status not null default 'draft',
+  org_led_tiers       jsonb not null default '[]',
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+create table if not exists public.ypop_city_activities (
+  id           uuid primary key default gen_random_uuid(),
+  semester_key text not null references public.ypop_periods(semester_key) on delete cascade,
+  name         text not null,
+  date         text,
+  venue        text,
+  points       integer not null default 5,
+  created_at   timestamptz not null default now()
+);
+
+create table if not exists public.ypop_entries (
+  id                    uuid primary key default gen_random_uuid(),
+  organization_id       uuid not null references public.organization_profiles(id) on delete cascade,
+  submitted_by          uuid references auth.users(id),
+  semester              text not null,
+  semester_label        text not null,
+  points_earned         integer not null default 0,
+  points_required       integer not null default 70,
+  total_points          integer not null default 100,
+  status                public.ypop_entry_status not null default 'draft',
+  admin_remarks         text not null default '',
+  submission_note       text not null default '',
+  validation_deadline   timestamptz,
+  submitted_at          timestamptz,
+  validated_at          timestamptz,
+  revision_history      jsonb not null default '[]',
+  org_led_project_count integer not null default 0,
+  city_led_attendance   jsonb not null default '[]',
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
+);
+
+create table if not exists public.ypop_files (
+  id              uuid primary key default gen_random_uuid(),
+  ypop_entry_id   uuid not null references public.ypop_entries(id) on delete cascade,
+  organization_id uuid not null references public.organization_profiles(id) on delete cascade,
+  file_name       text not null,
+  file_url        text not null default '',
+  file_type       text not null default '',
+  file_size       bigint,
+  uploaded_at     timestamptz not null default now()
+);
+
+-- ─── Indexes ──────────────────────────────────────────────────
+
+create index if not exists idx_ypop_city_activities_semester_key on public.ypop_city_activities(semester_key);
+create index if not exists idx_ypop_entries_organization_id on public.ypop_entries(organization_id);
+create index if not exists idx_ypop_entries_semester on public.ypop_entries(semester);
+create index if not exists idx_ypop_files_ypop_entry_id on public.ypop_files(ypop_entry_id);
+create index if not exists idx_ypop_files_organization_id on public.ypop_files(organization_id);
+
+-- ─── Row Level Security ───────────────────────────────────────
+
+alter table public.ypop_periods enable row level security;
+
+drop policy if exists ypop_periods_read_all on public.ypop_periods;
+create policy ypop_periods_read_all on public.ypop_periods
+  for select using (true);
+
+drop policy if exists ypop_periods_admin_all on public.ypop_periods;
+create policy ypop_periods_admin_all on public.ypop_periods
+  for all using (public.current_user_is_admin());
+
+-- ---
+
+alter table public.ypop_city_activities enable row level security;
+
+drop policy if exists ypop_activities_read_all on public.ypop_city_activities;
+create policy ypop_activities_read_all on public.ypop_city_activities
+  for select using (true);
+
+drop policy if exists ypop_activities_admin_all on public.ypop_city_activities;
+create policy ypop_activities_admin_all on public.ypop_city_activities
+  for all using (public.current_user_is_admin());
+
+-- ---
+
+alter table public.ypop_entries enable row level security;
+
+drop policy if exists ypop_entries_self_or_admin on public.ypop_entries;
+create policy ypop_entries_self_or_admin on public.ypop_entries
+  for all using (
+    public.current_user_is_admin()
+    or submitted_by = auth.uid()
+    or exists (
+      select 1 from public.organization_profiles op
+      where op.id = ypop_entries.organization_id
+        and op.user_id = auth.uid()
+    )
+  ) with check (
+    public.current_user_is_admin()
+    or submitted_by = auth.uid()
+    or exists (
+      select 1 from public.organization_profiles op
+      where op.id = ypop_entries.organization_id
+        and op.user_id = auth.uid()
+    )
+  );
+
+-- ---
+
+alter table public.ypop_files enable row level security;
+
+drop policy if exists ypop_files_self_or_admin on public.ypop_files;
+create policy ypop_files_self_or_admin on public.ypop_files
+  for all using (
+    public.current_user_is_admin()
+    or exists (
+      select 1 from public.organization_profiles op
+      where op.id = ypop_files.organization_id
+        and op.user_id = auth.uid()
+    )
+  ) with check (
+    public.current_user_is_admin()
+    or exists (
+      select 1 from public.organization_profiles op
+      where op.id = ypop_files.organization_id
+        and op.user_id = auth.uid()
+    )
+  );
+
+-- ─── Admin RPC Functions ──────────────────────────────────────
+
+-- 1. admin_create_ypop_period
+create or replace function public.admin_create_ypop_period(
+  _session_token      text,
+  _semester_key       text,
+  _semester_label     text,
+  _validation_deadline timestamptz,
+  _status             public.ypop_period_status,
+  _org_led_tiers      jsonb
+)
+returns setof public.ypop_periods
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+  _new_id   uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  insert into public.ypop_periods
+    (semester_key, semester_label, validation_deadline, status, org_led_tiers)
+  values
+    (_semester_key, _semester_label, _validation_deadline, _status, coalesce(_org_led_tiers, '[]'))
+  returning id into _new_id;
+
+  return query select * from public.ypop_periods where id = _new_id;
+end;
+$$;
+
+-- 2. admin_update_ypop_period
+create or replace function public.admin_update_ypop_period(
+  _session_token       text,
+  _period_id           uuid,
+  _semester_label      text,
+  _validation_deadline timestamptz,
+  _status              public.ypop_period_status,
+  _org_led_tiers       jsonb
+)
+returns setof public.ypop_periods
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  update public.ypop_periods set
+    semester_label      = coalesce(_semester_label, semester_label),
+    validation_deadline = coalesce(_validation_deadline, validation_deadline),
+    status              = coalesce(_status, status),
+    org_led_tiers       = coalesce(_org_led_tiers, org_led_tiers),
+    updated_at          = now()
+  where id = _period_id;
+
+  return query select * from public.ypop_periods where id = _period_id;
+end;
+$$;
+
+-- 3. admin_delete_ypop_period
+create or replace function public.admin_delete_ypop_period(
+  _session_token text,
+  _period_id     uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  delete from public.ypop_periods where id = _period_id;
+end;
+$$;
+
+-- 4. admin_create_ypop_city_activity
+create or replace function public.admin_create_ypop_city_activity(
+  _session_token text,
+  _semester_key  text,
+  _name          text,
+  _date          text,
+  _venue         text,
+  _points        integer
+)
+returns setof public.ypop_city_activities
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+  _new_id   uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  insert into public.ypop_city_activities (semester_key, name, date, venue, points)
+  values (_semester_key, _name, _date, _venue, coalesce(_points, 5))
+  returning id into _new_id;
+
+  return query select * from public.ypop_city_activities where id = _new_id;
+end;
+$$;
+
+-- 5. admin_update_ypop_city_activity
+create or replace function public.admin_update_ypop_city_activity(
+  _session_token text,
+  _activity_id   uuid,
+  _name          text,
+  _date          text,
+  _venue         text,
+  _points        integer
+)
+returns setof public.ypop_city_activities
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  update public.ypop_city_activities set
+    name   = coalesce(_name, name),
+    date   = coalesce(_date, date),
+    venue  = coalesce(_venue, venue),
+    points = coalesce(_points, points)
+  where id = _activity_id;
+
+  return query select * from public.ypop_city_activities where id = _activity_id;
+end;
+$$;
+
+-- 6. admin_delete_ypop_city_activity
+create or replace function public.admin_delete_ypop_city_activity(
+  _session_token text,
+  _activity_id   uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  delete from public.ypop_city_activities where id = _activity_id;
+end;
+$$;
+
+-- 7. admin_update_ypop_entry
+create or replace function public.admin_update_ypop_entry(
+  _session_token        text,
+  _entry_id             uuid,
+  _status               public.ypop_entry_status,
+  _admin_remarks        text,
+  _points_earned        integer,
+  _org_led_project_count integer,
+  _city_led_attendance  jsonb,
+  _revision_history     jsonb,
+  _validated_at         timestamptz
+)
+returns setof public.ypop_entries
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+begin
+  select vat.admin_id into _admin_id
+  from public.validate_admin_session_token(_session_token) vat limit 1;
+  if _admin_id is null then raise exception 'Admin account is not authorized.'; end if;
+
+  update public.ypop_entries set
+    status                = coalesce(_status, status),
+    admin_remarks         = coalesce(_admin_remarks, admin_remarks),
+    points_earned         = coalesce(_points_earned, points_earned),
+    org_led_project_count = coalesce(_org_led_project_count, org_led_project_count),
+    city_led_attendance   = coalesce(_city_led_attendance, city_led_attendance),
+    revision_history      = coalesce(_revision_history, revision_history),
+    validated_at          = coalesce(_validated_at, validated_at),
+    updated_at            = now()
+  where id = _entry_id;
+
+  return query select * from public.ypop_entries where id = _entry_id;
+end;
+$$;
+
+-- ─── Extend get_admin_portal_snapshot ────────────────────────
+-- Replace the existing function to include YPOP data.
+-- Copy the entire original function and add 4 new keys at the end.
+
+create or replace function public.get_admin_portal_snapshot(_session_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _admin_id uuid;
+begin
+  select vat.admin_id
+  into _admin_id
+  from public.validate_admin_session_token(_session_token) vat
+  limit 1;
+
+  if _admin_id is null then
+    raise exception 'Admin account is not authorized.';
+  end if;
+
+  return jsonb_build_object(
+    'organization_profiles',
+    coalesce((select jsonb_agg(to_jsonb(op) order by op.created_at desc) from public.organization_profiles op), '[]'::jsonb),
+    'document_submissions',
+    coalesce((select jsonb_agg(to_jsonb(ds) order by ds.created_at desc) from public.document_submissions ds), '[]'::jsonb),
+    'document_submission_files',
+    coalesce(
+      (select jsonb_agg(
+        jsonb_build_object(
+          'id', dsf.id, 'submission_id', dsf.submission_id, 'file_url', dsf.file_url,
+          'file_name', dsf.file_name, 'file_type', dsf.file_type, 'file_size', dsf.file_size,
+          'ocr_text', dsf.ocr_text, 'ocr_status', dsf.ocr_status, 'ocr_confidence', dsf.ocr_confidence,
+          'validation_status', dsf.validation_status, 'admin_status', dsf.admin_status,
+          'admin_remarks', dsf.admin_remarks, 'ocr_metadata', dsf.ocr_metadata,
+          'uploaded_at', dsf.uploaded_at, 'reviewed_at', dsf.reviewed_at,
+          'created_at', dsf.created_at, 'updated_at', dsf.updated_at,
+          'required_document_types', jsonb_build_object('id', rdt.id, 'name', rdt.name)
+        ) order by dsf.created_at desc)
+       from public.document_submission_files dsf
+       left join public.required_document_types rdt on rdt.id = dsf.document_type_id),
+      '[]'::jsonb),
+    'budget_requests',
+    coalesce((select jsonb_agg(to_jsonb(br) order by br.created_at desc) from public.budget_requests br), '[]'::jsonb),
+    'budget_request_files',
+    coalesce((select jsonb_agg(to_jsonb(brf) order by brf.created_at desc) from public.budget_request_files brf), '[]'::jsonb),
+    'liquidation_reports',
+    coalesce((select jsonb_agg(to_jsonb(lr) order by lr.created_at desc) from public.liquidation_reports lr), '[]'::jsonb),
+    'liquidation_report_files',
+    coalesce((select jsonb_agg(to_jsonb(lrf) order by lrf.created_at desc) from public.liquidation_report_files lrf), '[]'::jsonb),
+    'news_releases',
+    coalesce((select jsonb_agg(to_jsonb(nr) order by nr.date_posted desc, nr.created_at desc) from public.news_releases nr), '[]'::jsonb),
+    'transparency_posts',
+    coalesce((select jsonb_agg(to_jsonb(tp) order by tp.post_date desc, tp.created_at desc) from public.transparency_posts tp), '[]'::jsonb),
+    'compliance_remarks',
+    coalesce((select jsonb_agg(to_jsonb(cr) order by cr.created_at desc) from public.compliance_remarks cr), '[]'::jsonb),
+    'notifications',
+    coalesce((select jsonb_agg(to_jsonb(n) order by n.created_at desc) from public.notifications n), '[]'::jsonb),
+    'activity_logs',
+    coalesce((select jsonb_agg(to_jsonb(al) order by al.created_at desc) from public.activity_logs al), '[]'::jsonb),
+    'templates',
+    coalesce((select jsonb_agg(to_jsonb(rdt) order by rdt.sort_order asc) from public.required_document_types rdt where rdt.is_active = true), '[]'::jsonb),
+    'ypop_periods',
+    coalesce((select jsonb_agg(to_jsonb(yp) order by yp.created_at desc) from public.ypop_periods yp), '[]'::jsonb),
+    'ypop_city_activities',
+    coalesce((select jsonb_agg(to_jsonb(ya) order by ya.created_at asc) from public.ypop_city_activities ya), '[]'::jsonb),
+    'ypop_entries',
+    coalesce((select jsonb_agg(to_jsonb(ye) order by ye.created_at desc) from public.ypop_entries ye), '[]'::jsonb),
+    'ypop_files',
+    coalesce((select jsonb_agg(to_jsonb(yf) order by yf.uploaded_at desc) from public.ypop_files yf), '[]'::jsonb)
+  );
+end;
+$$;
+
+
+-- ─── YORP Registry migration ──────────────────────────────────────────────────
+
+alter table public.organization_profiles
+  add column if not exists yorp_registered_year smallint,
+  add column if not exists yorp_renewed_year smallint;
+
+create or replace function public.admin_update_org_yorp_fields(
+  _session_token   text,
+  _org_id          uuid,
+  _registered_year smallint,
+  _renewed_year    smallint
+) returns void
+language plpgsql security definer as $$
+declare
+  _admin_id uuid;
+begin
+  _admin_id := public.validate_admin_session_token(_session_token);
+  if _admin_id is null then
+    raise exception 'Unauthorized';
+  end if;
+  update public.organization_profiles
+  set yorp_registered_year = _registered_year,
+      yorp_renewed_year    = _renewed_year,
+      updated_at           = now()
+  where id = _org_id;
+end;
+$$;

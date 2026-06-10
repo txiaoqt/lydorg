@@ -14,12 +14,14 @@ export const PortalMetricCard = ({
   value,
   helper,
   onClick,
+  icon: Icon,
   className,
 }: {
   label: string;
   value: string | number;
   helper?: string;
   onClick?: () => void;
+  icon?: React.ComponentType<{ className?: string }>;
   className?: string;
 }) => (
   <Card
@@ -42,10 +44,17 @@ export const PortalMetricCard = ({
         : undefined
     }
   >
-    <CardContent className="p-3 sm:p-4">
-      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">{label}</p>
-      <div className="mt-2 text-xl font-semibold sm:text-2xl">{value}</div>
-      {helper ? <p className="mt-1 text-sm leading-snug text-muted-foreground">{helper}</p> : null}
+    <CardContent className="p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75 leading-snug">{label}</p>
+        {Icon ? (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60">
+            <Icon className="h-4 w-4 text-muted-foreground" />
+          </div>
+        ) : null}
+      </div>
+      <div className="mt-3 text-2xl font-semibold sm:text-3xl">{value}</div>
+      {helper ? <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{helper}</p> : null}
     </CardContent>
   </Card>
 );

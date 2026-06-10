@@ -68,6 +68,7 @@ const DEMO_ADMIN_PASSWORDS = new Set(
 );
 const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 
+
 const toAuthUser = (adminUser: SeededAdminUser): AuthUser => ({
   id: adminUser.id,
   email: adminUser.email,
@@ -295,7 +296,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!supabase) {
       return {
-        error: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.",
+        error: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.",
       };
     }
 
