@@ -158,6 +158,7 @@ const renderRegistrationDetailCard = (params: {
 );
 
 const budgetReleaseStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
+const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["draft", "submitted", "under_review"]);
 
 type PendingAdminConfirmation =
   | {
@@ -185,6 +186,7 @@ type PendingAdminConfirmation =
       organizationName: string;
       activityTitle: string;
       requestedAmount: number;
+      currentStatus: BudgetRequest["status"];
     }
   | {
       kind: "liquidation";
@@ -1448,9 +1450,10 @@ export default function AdminPortal({ section }: { section: string }) {
       } else if (pendingAdminConfirmation.kind === "budget") {
         const adminRemarks = statusChangeRemarkDraft.trim();
         const selectedBudget = state.budgetRequests.find((item) => item.id === pendingAdminConfirmation.budgetRequestId) ?? null;
+        const budgetStatus = selectedBudget?.status ?? pendingAdminConfirmation.currentStatus;
         const approvedAmount = Number(selectedBudget?.approvedAmount || pendingAdminConfirmation.requestedAmount || 0);
 
-        if (pendingAdminConfirmation.action === "approve" && selectedBudget?.status !== "draft" && selectedBudget?.status !== "submitted" && selectedBudget?.status !== "under_review") {
+        if (pendingAdminConfirmation.action === "approve" && !approvableBudgetStatuses.has(budgetStatus)) {
           toast({
             title: "Action unavailable",
             description: "This budget request has already moved beyond the approval step.",
@@ -1461,7 +1464,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
         if (
           pendingAdminConfirmation.action === "submitted_hardcopy" &&
-          selectedBudget?.status !== "approved_for_ftf_green"
+          budgetStatus !== "approved_for_ftf_green"
         ) {
           toast({
             title: "Action unavailable",
@@ -1473,7 +1476,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
         if (
           pendingAdminConfirmation.action === "cash_released" &&
-          selectedBudget?.status !== "hard_copy_submitted"
+          budgetStatus !== "hard_copy_submitted"
         ) {
           toast({
             title: "Action unavailable",
@@ -3034,6 +3037,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={!approvableBudgetStatuses.has(selectedBudgetRequest.status)}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "budget",
@@ -3043,6 +3047,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedBudgetRequest.activityTitle,
                           requestedAmount: selectedBudgetRequest.requestedAmount,
+                          currentStatus: selectedBudgetRequest.status,
                         })
                       }
                     >
@@ -3061,6 +3066,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedBudgetRequest.activityTitle,
                           requestedAmount: selectedBudgetRequest.requestedAmount,
+                          currentStatus: selectedBudgetRequest.status,
                         })
                       }
                     >
@@ -3079,6 +3085,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedBudgetRequest.activityTitle,
                           requestedAmount: selectedBudgetRequest.requestedAmount,
+                          currentStatus: selectedBudgetRequest.status,
                         })
                       }
                     >
@@ -3096,6 +3103,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedBudgetRequest.activityTitle,
                           requestedAmount: selectedBudgetRequest.requestedAmount,
+                          currentStatus: selectedBudgetRequest.status,
                         })
                       }
                     >
@@ -3113,6 +3121,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedBudgetRequest.activityTitle,
                           requestedAmount: selectedBudgetRequest.requestedAmount,
+                          currentStatus: selectedBudgetRequest.status,
                         })
                       }
                     >
