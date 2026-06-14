@@ -1,4 +1,4 @@
-const CACHE_NAME = "lydo-connect-v5";
+const CACHE_NAME = "y-trace-v6";
 const APP_SHELL = [
   "/",
   "/admin",

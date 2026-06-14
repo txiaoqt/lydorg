@@ -168,7 +168,7 @@ export const PortalShell = ({
         {/* Mobile drawer */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(18rem,85vw)] border-r border-border/80 bg-background shadow-2xl transition-transform duration-200 md:hidden",
+            "fixed inset-y-0 left-0 z-50 w-[min(16rem,82vw)] border-r border-border/80 bg-background shadow-2xl transition-transform duration-200 md:hidden",
             mobileOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -207,13 +207,15 @@ export const PortalShell = ({
                     </>
                   ) : null}
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/70">{subtitle}</p>
-                    <h1 className="truncate text-lg font-semibold sm:text-xl">{title}</h1>
+                    <p className="truncate text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70 sm:text-xs sm:tracking-[0.18em]">
+                      {subtitle}
+                    </p>
+                    <h1 className="truncate text-base font-semibold sm:text-xl">{title}</h1>
                   </div>
                 </div>
               </div>
             </header>
-            <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+            <div className="p-3 sm:p-6 lg:p-8">{children}</div>
           </div>
         </main>
       </div>

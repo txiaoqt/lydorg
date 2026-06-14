@@ -26,7 +26,7 @@ export const PortalMetricCard = ({
 }) => (
   <Card
     className={cn(
-      "border-border/70 bg-card/90",
+      "min-w-0 border-border/70 bg-card/90",
       onClick ? "cursor-pointer transition-transform transition-colors hover:-translate-y-0.5 hover:bg-muted/30" : "",
       className,
     )}
@@ -44,17 +44,19 @@ export const PortalMetricCard = ({
         : undefined
     }
   >
-    <CardContent className="p-4 sm:p-5">
+    <CardContent className="p-3.5 sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75 leading-snug">{label}</p>
+        <p className="max-w-[11rem] break-words text-[10px] uppercase tracking-[0.1em] leading-snug text-muted-foreground/75 sm:max-w-none sm:text-xs sm:tracking-[0.16em]">
+          {label}
+        </p>
         {Icon ? (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 sm:h-9 sm:w-9">
             <Icon className="h-4 w-4 text-muted-foreground" />
           </div>
         ) : null}
       </div>
-      <div className="mt-3 text-2xl font-semibold sm:text-3xl">{value}</div>
-      {helper ? <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{helper}</p> : null}
+      <div className="mt-2.5 text-[1.9rem] font-semibold leading-none sm:mt-3 sm:text-3xl">{value}</div>
+      {helper ? <p className="mt-1.5 text-xs leading-snug text-muted-foreground sm:text-sm">{helper}</p> : null}
     </CardContent>
   </Card>
 );
@@ -73,7 +75,7 @@ export const PortalSection = ({
   <Card className="border-border/70 bg-card/90 shadow-sm">
     <CardHeader
       className={cn(
-        "gap-2 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 sm:gap-4",
+        "gap-2 px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-6 sm:gap-4",
         action ? "flex flex-col sm:flex-row sm:items-start sm:justify-between" : "block",
       )}
     >
@@ -81,7 +83,7 @@ export const PortalSection = ({
         <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
         {description ? <CardDescription className="mt-1 text-sm">{description}</CardDescription> : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="w-full min-w-0 sm:w-auto sm:shrink-0">{action}</div> : null}
     </CardHeader>
     <CardContent className="px-4 pb-4 pt-0 sm:px-6 sm:pb-6">{children}</CardContent>
   </Card>

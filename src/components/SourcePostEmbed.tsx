@@ -51,7 +51,7 @@ export default function SourcePostEmbed({ sourcePostUrl, title, instanceKey, cla
   if (!normalizedSourceUrl) return null;
 
   return (
-    <div ref={containerRef} className={cn("space-y-3", className)}>
+    <div ref={containerRef} className={cn("mx-auto w-full max-w-[780px] space-y-3", className)}>
       <a
         href={normalizedSourceUrl}
         target="_blank"

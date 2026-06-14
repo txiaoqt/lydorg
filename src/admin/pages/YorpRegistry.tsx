@@ -107,12 +107,12 @@ export function YorpRegistryPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <PortalMetricCard label="Total Organizations" value={stats.total} icon={Building2} />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <PortalMetricCard className="md:col-span-1" label="Total Organizations" value={stats.total} icon={Building2} />
         <PortalMetricCard label="YORP Registered" value={stats.registered} icon={ClipboardCheck} />
-        <PortalMetricCard label="Renewed" value={stats.renewed} icon={RefreshCw} />
+        <PortalMetricCard className="col-span-2 md:col-span-1" label="Renewed" value={stats.renewed} icon={RefreshCw} />
       </div>
 
       <PortalSection
@@ -122,6 +122,7 @@ export function YorpRegistryPage() {
           <Button
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
             disabled={!filtered.length}
             onClick={() => setExportDialogOpen(true)}
           >
@@ -131,18 +132,18 @@ export function YorpRegistryPage() {
         }
       >
         {/* Filters */}
-        <div className="mb-4 flex flex-wrap gap-2">
-          <div className="relative">
+        <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.8fr))]">
+          <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
             <Input
               placeholder="Search org name, barangay, contact, email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 w-80 pl-8"
+              className="h-10 w-full pl-8"
             />
           </div>
           <Select value={yorpFilter} onValueChange={(v) => setYorpFilter(v as YorpFilter)}>
-            <SelectTrigger className="h-9 w-[150px]">
+            <SelectTrigger className="h-10 w-full">
               <SelectValue placeholder="YORP Status" />
             </SelectTrigger>
             <SelectContent>
@@ -152,7 +153,7 @@ export function YorpRegistryPage() {
             </SelectContent>
           </Select>
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="h-9 w-[120px]">
+            <SelectTrigger className="h-10 w-full">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
@@ -161,7 +162,7 @@ export function YorpRegistryPage() {
             </SelectContent>
           </Select>
           <Select value={classFilter} onValueChange={setClassFilter}>
-            <SelectTrigger className="h-9 w-[200px]">
+            <SelectTrigger className="h-10 w-full sm:col-span-2 xl:col-span-1">
               <SelectValue placeholder="Classification" />
             </SelectTrigger>
             <SelectContent>
@@ -170,7 +171,7 @@ export function YorpRegistryPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 w-[160px]">
+            <SelectTrigger className="h-10 w-full">
               <SelectValue placeholder="Profile Status" />
             </SelectTrigger>
             <SelectContent>
@@ -188,7 +189,52 @@ export function YorpRegistryPage() {
             description={orgs.length === 0 ? "Organizations will appear here once they register on the portal." : "Try adjusting the search or filters."}
           />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="space-y-3 md:hidden">
+              {filtered.map((org, idx) => (
+                <div key={org.id} className="rounded-xl border border-border/70 bg-background p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">#{idx + 1}</p>
+                      <p className="mt-1 break-words text-base font-semibold text-foreground">
+                        {org.organizationName || <span className="italic text-muted-foreground">Unnamed</span>}
+                      </p>
+                      <p className="mt-1 break-words text-sm text-muted-foreground">{org.barangay || "—"}</p>
+                    </div>
+                    <div className="flex shrink-0 items-start gap-2">
+                      <PortalStatusBadge status={org.profileStatus} />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="View details"
+                        onClick={() => setSelectedOrg(org)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">Major classification</p>
+                      <p className="mt-1 break-words text-sm text-foreground">{org.majorClassification || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">Contact number</p>
+                      <p className="mt-1 break-all text-sm text-foreground">{org.contactNumber || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">Email</p>
+                      <p className="mt-1 break-all text-sm text-foreground">{org.organizationEmail || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <p className="px-1 text-xs text-muted-foreground">
+                Showing {filtered.length} of {orgs.length} organizations
+              </p>
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/60">
@@ -231,6 +277,7 @@ export function YorpRegistryPage() {
               Showing {filtered.length} of {orgs.length} organizations
             </p>
           </div>
+          </>
         )}
       </PortalSection>
 
@@ -246,7 +293,7 @@ export function YorpRegistryPage() {
             )}
           </DialogHeader>
           {selectedOrg && (
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4 pt-1">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-4 pt-1 sm:grid-cols-2">
               <Field label="Status">
                 <PortalStatusBadge status={selectedOrg.profileStatus} />
               </Field>

@@ -173,6 +173,8 @@ const renderRegistrationDetailCard = (params: {
 
 const budgetReleaseStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
 const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["draft", "submitted", "under_review"]);
+const liquidationApprovableStatuses = new Set<LiquidationReport["status"]>(["submitted", "under_review", "needs_revision"]);
+const liquidationLockedStatuses = new Set<LiquidationReport["status"]>(["hard_copy_submitted", "completed_liquidated"]);
 
 type PendingAdminConfirmation =
   | {
@@ -204,12 +206,13 @@ type PendingAdminConfirmation =
     }
   | {
       kind: "liquidation";
-      action: "approve" | "needs_revision" | "overdue";
+      action: "approve" | "submitted_hardcopy" | "needs_revision" | "overdue";
       liquidationReportId: string;
       budgetRequestId: string;
       organizationId: string;
       organizationName: string;
       activityTitle: string;
+      currentStatus: LiquidationReport["status"];
     }
   | {
       kind: "news_release";
@@ -1350,6 +1353,17 @@ export default function AdminPortal({ section }: { section: string }) {
           commentPlaceholder: "",
         };
       }
+      if (pendingAdminConfirmation.action === "submitted_hardcopy") {
+        return {
+          title: "Confirm Liquidation Hardcopy Submission",
+          description: `Click the checkbox to confirm that the liquidation hard copy for ${pendingAdminConfirmation.activityTitle} has been submitted. This will complete the liquidation record.`,
+          checkboxLabel: "I acknowledge this liquidation hardcopy submission.",
+          confirmLabel: "Mark Submitted Hardcopy",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
       return {
         title: "Confirm Liquidation Revision",
         description: `Click the checkbox and add a comment before requesting changes for ${pendingAdminConfirmation.activityTitle}.`,
@@ -1694,18 +1708,51 @@ export default function AdminPortal({ section }: { section: string }) {
           });
         }
       } else if (pendingAdminConfirmation.kind === "liquidation") {
-        const status =
-          pendingAdminConfirmation.action === "approve"
-            ? "approved_for_ftf_green"
-            : pendingAdminConfirmation.action === "needs_revision"
-              ? "needs_revision"
-              : "overdue";
+        const selectedLiquidation =
+          state.liquidationReports.find((item) => item.id === pendingAdminConfirmation.liquidationReportId) ?? null;
+        const liquidationStatus = selectedLiquidation?.status ?? pendingAdminConfirmation.currentStatus;
         const adminRemarks = statusChangeRemarkDraft.trim();
         const liqHistoryNow = new Date().toISOString();
         const existingLiqHistory =
           state.liquidationReports.find((r) => r.id === pendingAdminConfirmation.liquidationReportId)?.revisionHistory ?? [];
 
-        if (pendingAdminConfirmation.action !== "approve" && pendingAdminConfirmation.action !== "overdue" && !adminRemarks) {
+        if (
+          pendingAdminConfirmation.action === "approve" &&
+          !liquidationApprovableStatuses.has(liquidationStatus)
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "This liquidation report has already moved beyond the approval step.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          pendingAdminConfirmation.action === "submitted_hardcopy" &&
+          liquidationStatus !== "approved_for_ftf_green"
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "Hard copy submission can only be recorded after the liquidation report is approved.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          liquidationLockedStatuses.has(liquidationStatus) &&
+          pendingAdminConfirmation.action !== "submitted_hardcopy"
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "This liquidation report is already finalized.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (pendingAdminConfirmation.action === "needs_revision" && !adminRemarks) {
           toast({
             title: "Comment required",
             description: "Please add a short comment before requesting a revision.",
@@ -1714,15 +1761,59 @@ export default function AdminPortal({ section }: { section: string }) {
           return;
         }
 
-        await updateLiquidationReportInSupabase(pendingAdminConfirmation.liquidationReportId, {
-          status,
-          remarks: pendingAdminConfirmation.action === "approve" ? undefined : adminRemarks,
-          goSignalAt: pendingAdminConfirmation.action === "approve" ? new Date().toISOString() : undefined,
-        });
+        if (pendingAdminConfirmation.action === "approve") {
+          await updateLiquidationReportInSupabase(pendingAdminConfirmation.liquidationReportId, {
+            status: "approved_for_ftf_green",
+            remarks: undefined,
+            goSignalAt: liqHistoryNow,
+          });
+        } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
+          await updateLiquidationReportInSupabase(pendingAdminConfirmation.liquidationReportId, {
+            status: "completed_liquidated",
+            hardCopySubmittedAt: liqHistoryNow,
+            completedAt: liqHistoryNow,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await updateLiquidationReportInSupabase(pendingAdminConfirmation.liquidationReportId, {
+            status: "needs_revision",
+            remarks: adminRemarks,
+          });
+        } else {
+          await updateLiquidationReportInSupabase(pendingAdminConfirmation.liquidationReportId, {
+            status: "overdue",
+            remarks: adminRemarks,
+          });
+        }
         await refreshAdminState();
-        updateLiquidationReport(pendingAdminConfirmation.liquidationReportId, {
-          revisionHistory: [...existingLiqHistory, { action: status, adminRemarks, changedAt: liqHistoryNow }],
-        });
+        updateLiquidationReport(
+          pendingAdminConfirmation.liquidationReportId,
+          pendingAdminConfirmation.action === "submitted_hardcopy"
+            ? {
+                hardCopySubmittedAt: liqHistoryNow,
+                completedAt: liqHistoryNow,
+                status: "completed_liquidated",
+                revisionHistory: [
+                  ...existingLiqHistory,
+                  { action: "hard_copy_submitted", adminRemarks: "", changedAt: liqHistoryNow },
+                  { action: "completed_liquidated", adminRemarks: "", changedAt: liqHistoryNow },
+                ],
+              }
+            : {
+                revisionHistory: [
+                  ...existingLiqHistory,
+                  {
+                    action:
+                      pendingAdminConfirmation.action === "approve"
+                        ? "approved_for_ftf_green"
+                        : pendingAdminConfirmation.action === "needs_revision"
+                        ? "needs_revision"
+                        : "overdue",
+                    adminRemarks,
+                    changedAt: liqHistoryNow,
+                  },
+                ],
+              },
+        );
 
         if (pendingAdminConfirmation.action === "approve") {
           await appendAuditLog(
@@ -1744,6 +1835,27 @@ export default function AdminPortal({ section }: { section: string }) {
           toast({
             title: "Liquidation approved",
             description: `${pendingAdminConfirmation.organizationName}'s liquidation report is now approved.`,
+          });
+        } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
+          await appendAuditLog(
+            "Liquidation hard copy submitted",
+            "liquidation_report",
+            pendingAdminConfirmation.liquidationReportId,
+            `Recorded liquidation hard copy submission for "${pendingAdminConfirmation.activityTitle}" and marked the record completed.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Liquidation completed",
+            message: "Your liquidation hard copy has been recorded and the liquidation report is now completed.",
+            type: "liquidation_completed",
+            relatedType: "liquidation_report",
+            relatedId: pendingAdminConfirmation.liquidationReportId,
+          });
+          toast({
+            title: "Hard copy recorded",
+            description: `${pendingAdminConfirmation.organizationName}'s liquidation report is now marked completed.`,
           });
         } else if (pendingAdminConfirmation.action === "needs_revision") {
           await appendAuditLog(
@@ -2714,19 +2826,19 @@ export default function AdminPortal({ section }: { section: string }) {
                 <div className="space-y-5">
                   <PortalSection title="Organization Contact">
                     <div className="divide-y divide-border/50">
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Email</p>
                         <p className="break-all text-sm font-medium">{selectedOrg.organizationEmail}</p>
                       </div>
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Contact</p>
                         <p className="text-sm font-medium">{selectedOrg.contactNumber || "N/A"}</p>
                       </div>
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Barangay</p>
                         <p className="text-sm font-medium">{selectedOrg.barangay || "N/A"}</p>
                       </div>
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Facebook</p>
                         {selectedOrg.facebookPageUrl ? (
                           <a href={selectedOrg.facebookPageUrl} target="_blank" rel="noreferrer" className="break-all text-sm font-medium text-primary underline-offset-4 hover:underline">
@@ -2736,7 +2848,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           <p className="text-sm font-medium text-muted-foreground">N/A</p>
                         )}
                       </div>
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Address</p>
                         <p className="break-words text-sm font-medium">{selectedOrg.address || "N/A"}</p>
                       </div>
@@ -2745,15 +2857,15 @@ export default function AdminPortal({ section }: { section: string }) {
 
                   <PortalSection title="Classification">
                     <div className="divide-y divide-border/50">
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Major</p>
                         <p className="text-sm font-medium">{selectedOrg.majorClassification || "N/A"}</p>
                       </div>
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Sub</p>
                         <p className="text-sm font-medium">{selectedOrg.subClassification || "N/A"}</p>
                       </div>
-                      <div className="grid grid-cols-[9rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[9rem_1fr] sm:gap-3">
                         <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Date Created</p>
                         <p className="text-sm font-medium">
                           {selectedOrg.verifiedAt ? formatVerifiedDateLabel(selectedOrg.verifiedAt) : "Pending verification"}
@@ -3056,6 +3168,8 @@ export default function AdminPortal({ section }: { section: string }) {
       }
       case "budget-utilization":
         if (selectedBudgetRequest) {
+          const budgetLockedAfterRelease =
+            selectedBudgetRequest.status === "budget_released" || selectedBudgetRequest.status === "completed";
           return (
             <div className="space-y-4">
               <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
@@ -3077,7 +3191,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={!approvableBudgetStatuses.has(selectedBudgetRequest.status)}
+                      disabled={!approvableBudgetStatuses.has(selectedBudgetRequest.status) || budgetLockedAfterRelease}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "budget",
@@ -3096,7 +3210,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={selectedBudgetRequest.status !== "approved_for_ftf_green"}
+                      disabled={selectedBudgetRequest.status !== "approved_for_ftf_green" || budgetLockedAfterRelease}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "budget",
@@ -3115,7 +3229,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={selectedBudgetRequest.status !== "hard_copy_submitted"}
+                      disabled={selectedBudgetRequest.status !== "hard_copy_submitted" || budgetLockedAfterRelease}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "budget",
@@ -3134,6 +3248,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={budgetLockedAfterRelease}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "budget",
@@ -3152,6 +3267,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={budgetLockedAfterRelease}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "budget",
@@ -3181,43 +3297,43 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   )}
                   <div className="divide-y divide-border/40">
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Requested amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Approved amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.approvedAmount.toLocaleString()}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Released amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.releasedAmount.toLocaleString()}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Activity date</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.activityDate || "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Venue</p>
                       <p className="break-words text-sm font-medium">{selectedBudgetRequest.venue || "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Purpose category</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.purposeCategory || "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Go signal</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.goSignalAt || "Pending"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Hard copy submitted</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.hardCopySubmittedAt || "Pending"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Release date</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.releaseDate || "Pending"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Remarks</p>
                       <p className="break-words text-sm font-medium">{selectedBudgetRequest.remarks || "None"}</p>
                     </div>
@@ -3401,6 +3517,11 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       case "liquidation-monitoring":
         if (liquidationDetailsOpen && selectedLiquidationReport) {
+          const liquidationLockedAfterHardCopy =
+            selectedLiquidationReport.status === "hard_copy_submitted" ||
+            selectedLiquidationReport.status === "completed_liquidated";
+          const canApproveLiquidation = liquidationApprovableStatuses.has(selectedLiquidationReport.status);
+          const canMarkLiquidationHardCopySubmitted = selectedLiquidationReport.status === "approved_for_ftf_green";
           return (
             <div className="space-y-4">
               <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
@@ -3423,6 +3544,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={!canApproveLiquidation || liquidationLockedAfterHardCopy}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "liquidation",
@@ -3432,6 +3554,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationId: selectedLiquidationReport.organizationId,
                           organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                          currentStatus: selectedLiquidationReport.status,
                         })
                       }
                     >
@@ -3440,6 +3563,26 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={!canMarkLiquidationHardCopySubmitted || liquidationLockedAfterHardCopy}
+                      onClick={() =>
+                        openAdminConfirmation({
+                          kind: "liquidation",
+                          action: "submitted_hardcopy",
+                          liquidationReportId: selectedLiquidationReport.id,
+                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                          organizationId: selectedLiquidationReport.organizationId,
+                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                          currentStatus: selectedLiquidationReport.status,
+                        })
+                      }
+                    >
+                      Submitted hardcopy
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={liquidationLockedAfterHardCopy}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "liquidation",
@@ -3449,6 +3592,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationId: selectedLiquidationReport.organizationId,
                           organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                          currentStatus: selectedLiquidationReport.status,
                         })
                       }
                     >
@@ -3457,6 +3601,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={liquidationLockedAfterHardCopy}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "liquidation",
@@ -3466,6 +3611,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           organizationId: selectedLiquidationReport.organizationId,
                           organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
                           activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                          currentStatus: selectedLiquidationReport.status,
                         })
                       }
                     >
@@ -3485,11 +3631,11 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   )}
                   <div className="divide-y divide-border/40">
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Linked Budget</p>
                       <p className="break-words text-sm font-medium">{selectedLiquidationBudgetRequest?.activityTitle ?? "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
                       <p className="text-sm font-medium">{selectedLiquidationReport.goSignalAt || "Pending"}</p>
                     </div>
@@ -3705,6 +3851,7 @@ export default function AdminPortal({ section }: { section: string }) {
               action={
                 <Button
                   type="button"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     setNewsModalMode("create");
                     setEditingNewsReleaseId(null);
@@ -3721,7 +3868,7 @@ export default function AdminPortal({ section }: { section: string }) {
               }
             >
               {newsReleases.length ? (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                   {newsReleases.map((news) => {
                     const dotColor =
                       news.visibilityStatus === "published"
@@ -3738,27 +3885,30 @@ export default function AdminPortal({ section }: { section: string }) {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 items-start gap-2">
                               <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                              <p className="font-semibold leading-snug text-foreground">{news.title}</p>
+                              <p className="break-words font-semibold leading-snug text-foreground">{news.title}</p>
                             </div>
-                            <PortalStatusBadge status={news.visibilityStatus} />
+                            <div className="shrink-0">
+                              <PortalStatusBadge status={news.visibilityStatus} />
+                            </div>
                           </div>
-                          <p className="line-clamp-2 pl-4 text-sm text-muted-foreground">{news.description}</p>
+                          <p className="line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{news.description}</p>
                           <div className="space-y-0.5 pl-4">
                             <p className="text-xs text-muted-foreground">Posted {formattedDate}</p>
                             {news.facebookPostUrl && (
-                              <p className="max-w-full truncate text-xs text-muted-foreground/70">{news.facebookPostUrl}</p>
+                              <p className="max-w-full break-all text-xs text-muted-foreground/70">{news.facebookPostUrl}</p>
                             )}
                           </div>
-                          <div className="mt-auto flex items-center justify-between pt-1">
-                            <Button size="sm" variant="outline" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
+                          <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
                               <Eye className="mr-1.5 h-3.5 w-3.5" />
                               Preview
                             </Button>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center justify-end gap-1.5">
                               {news.visibilityStatus === "published" ? (
                                 <Button
                                   size="sm"
                                   variant="outline"
+                                  className="flex-1 sm:flex-none"
                                   onClick={() => openAdminConfirmation({ kind: "news_release", action: "hide", id: news.id, title: news.title })}
                                 >
                                   Hide
@@ -3767,6 +3917,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                 <Button
                                   size="sm"
                                   variant="outline"
+                                  className="flex-1 sm:flex-none"
                                   onClick={() => openAdminConfirmation({ kind: "news_release", action: "publish", id: news.id, title: news.title })}
                                 >
                                   Publish
@@ -3843,7 +3994,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       placeholder="https://facebook.com/..."
                     />
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <label htmlFor="news-release-date-posted" className="text-sm font-medium">Date Posted</label>
                       <Input
@@ -3871,10 +4022,10 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={resetNewsReleaseForm}>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetNewsReleaseForm}>
                     Cancel
                   </Button>
-                  <Button type="button" onClick={() => void handleSaveNewsRelease()} disabled={savingNewsRelease}>
+                  <Button type="button" className="w-full sm:w-auto" onClick={() => void handleSaveNewsRelease()} disabled={savingNewsRelease}>
                     <Save className="mr-2 h-4 w-4" />
                     {savingNewsRelease ? "Saving..." : newsModalMode === "edit" ? "Save Changes" : "Create News Release"}
                   </Button>
@@ -4432,6 +4583,7 @@ export default function AdminPortal({ section }: { section: string }) {
             action={
               <Button
                 type="button"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setTemplateModalMode("create");
                   setEditingTemplateId(null);
@@ -4451,7 +4603,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 description="Upload a document template for organizations to download."
               />
             ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
               {templateDocuments.map((template) => {
                 const hasFile = Boolean(template.templateFileName);
                 const dotColor = hasFile ? "bg-emerald-500" : "bg-amber-400";
@@ -4463,15 +4615,15 @@ export default function AdminPortal({ section }: { section: string }) {
                     <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
                       <div className="flex min-w-0 items-start gap-2">
                         <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                        <p className="font-semibold leading-snug text-foreground">{template.name}</p>
+                        <p className="break-words font-semibold leading-snug text-foreground">{template.name}</p>
                       </div>
-                      <p className="line-clamp-2 pl-4 text-sm text-muted-foreground">{template.description}</p>
+                      <p className="line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{template.description}</p>
                       <div className="space-y-0.5 pl-4">
                         {hasFile ? (
                           <>
                             <div className="flex items-center gap-1.5">
                               <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                              <p className="truncate text-xs text-muted-foreground">{template.templateFileName}</p>
+                              <p className="break-all text-xs text-muted-foreground">{template.templateFileName}</p>
                             </div>
                             {uploadedDate && (
                               <p className="text-xs text-muted-foreground/70">Uploaded {uploadedDate}</p>
@@ -4481,11 +4633,12 @@ export default function AdminPortal({ section }: { section: string }) {
                           <p className="text-xs text-muted-foreground/70">No file uploaded yet</p>
                         )}
                       </div>
-                      <div className="mt-auto flex items-center justify-between pt-1">
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
+                          className="min-w-0 flex-1 sm:flex-none"
                           disabled={!template.templateFileUrl}
                           onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
                         >
@@ -4571,11 +4724,12 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={resetTemplateForm}>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
                     Cancel
                   </Button>
                   <Button
                     type="button"
+                    className="w-full sm:w-auto"
                     onClick={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
                     disabled={savingTemplate || uploadingTemplateId !== null}
                   >
@@ -4603,12 +4757,13 @@ export default function AdminPortal({ section }: { section: string }) {
                   This removes the template from the active user-side document list.
                 </p>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={resetTemplateForm}>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
                     Cancel
                   </Button>
                   <Button
                     type="button"
                     variant="destructive"
+                    className="w-full sm:w-auto"
                     onClick={() => void (editingTemplateId ? handleDeleteTemplate(editingTemplateId) : Promise.resolve())}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />

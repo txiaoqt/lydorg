@@ -1,7 +1,7 @@
 {
   "id": "/admin",
-  "name": "LYDO Connect Admin Portal",
-  "short_name": "LYDO Admin",
+  "name": "Y-TRACE Admin Portal",
+  "short_name": "Y-TRACE Admin",
   "description": "Administrative dashboard for programs, events, transparency records, and system monitoring.",
   "start_url": "/admin",
   "scope": "/",
