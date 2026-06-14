@@ -2601,9 +2601,9 @@ export default function AdminPortal({ section }: { section: string }) {
           action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
         const taskItems = [
-          { count: overviewStats.pendingProfiles,    label: "org profile(s) pending review",         route: routeMap.registrations,             critical: false },
-          { count: overviewStats.pendingDocuments,   label: "document set(s) awaiting validation",   route: routeMap.registrations,             critical: false },
-          { count: overviewStats.revisions,          label: "document revision(s) need re-review",   route: routeMap.registrations,             critical: false },
+          { count: overviewStats.pendingProfiles,    label: "Org profile(s) pending review",         route: routeMap.registrations,             critical: false },
+          { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",   route: routeMap.registrations,             critical: false },
+          { count: overviewStats.revisions,          label: "Document revision(s) need re-review",   route: routeMap.registrations,             critical: false },
           { count: overviewStats.overdueLiquidation, label: "liquidation report(s) overdue",         route: routeMap["liquidation-monitoring"], critical: true  },
           { count: overviewStats.pendingLiquidation, label: "liquidation report(s) awaiting review", route: routeMap["liquidation-monitoring"], critical: false },
           { count: overviewStats.nonCompliant,       label: "organization(s) with compliance issues", route: routeMap.users,                    critical: true  },

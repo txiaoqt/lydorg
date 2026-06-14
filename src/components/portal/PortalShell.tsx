@@ -51,7 +51,7 @@ export const PortalShell = ({
   }, []);
 
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className="flex h-full w-[18rem] min-w-[18rem] flex-col">
+    <div className={cn("flex h-full flex-col", mobile ? "w-full min-w-0" : "w-[18rem] min-w-[18rem]")}>
       {/* Sidebar header: logo + collapse/close button */}
       <div className="flex items-center justify-between gap-3 border-b border-border/70 p-4">
         <BrandLogo showText imgClassName="h-10 w-10" textClassName="min-w-0" className="min-w-0" />
@@ -168,7 +168,7 @@ export const PortalShell = ({
         {/* Mobile drawer */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(16rem,82vw)] border-r border-border/80 bg-background shadow-2xl transition-transform duration-200 md:hidden",
+            "fixed inset-y-0 left-0 z-50 w-[min(18rem,82vw)] overflow-hidden border-r border-border/80 bg-background shadow-2xl transition-transform duration-200 md:hidden",
             mobileOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >

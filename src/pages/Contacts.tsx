@@ -14,10 +14,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const OFFICE_COORDS: [number, number] = [14.5578, 121.0784];
+const OFFICE_COORDS: [number, number] = [14.592421073182033, 121.08615468030744];
 
 const officeContact = {
-  officeAddress: "Prototype LYDO Office, 2nd Floor, Pasig Youth Services Center, Pasig City, Philippines",
+  officeAddress: "Eulogio Amang Rodriguez Ave, Pasig, 1609 Metro Manila",
   officerInCharge: "Ms. Carla M. Reyes",
   contactNumber: "+63 917 123 4567",
   contactEmail: "lydo.office@prototype.local",
