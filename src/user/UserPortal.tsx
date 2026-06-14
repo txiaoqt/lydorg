@@ -91,6 +91,8 @@ import {
   deleteYpopEntryFromSupabase,
   uploadYpopFileToSupabase,
   deleteYpopFileFromSupabase,
+  markNotificationReadInSupabase,
+  markAllNotificationsReadInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import {
   buildStructuredOcrData,
@@ -742,6 +744,47 @@ export default function UserPortal({ section }: { section: string }) {
     if (profileComplete) return true;
     setProfileRequiredModalOpen(true);
     return false;
+  };
+
+  const handleMarkNotificationRead = async (notificationId: string) => {
+    const targetNotification = userNotifications.find((notification) => notification.id === notificationId);
+    if (!targetNotification || targetNotification.isRead) return;
+
+    markNotificationRead(notificationId);
+
+    try {
+      await markNotificationReadInSupabase(notificationId);
+    } catch (error) {
+      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+      toast({
+        title: "Notification update failed",
+        description: error instanceof Error ? error.message : "The notification could not be marked as read.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    if (!userNotifications.some((notification) => !notification.isRead)) return;
+
+    markAllNotificationsRead();
+
+    try {
+      await markAllNotificationsReadInSupabase();
+    } catch (error) {
+      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+      toast({
+        title: "Notification update failed",
+        description: error instanceof Error ? error.message : "Notifications could not be marked as read.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDocumentUpload = async (documentTypeName: string, file: File | null) => {
@@ -3187,7 +3230,7 @@ export default function UserPortal({ section }: { section: string }) {
                   ))}
                   </div>
                   {hasUnread && (
-                    <Button variant="ghost" size="sm" onClick={markAllNotificationsRead} className="shrink-0 text-xs">
+                    <Button variant="ghost" size="sm" onClick={() => void handleMarkAllNotificationsRead()} className="shrink-0 text-xs">
                       Mark all as read
                     </Button>
                   )}
@@ -3216,7 +3259,7 @@ export default function UserPortal({ section }: { section: string }) {
                               ? "border-border/40 bg-muted/20"
                               : "border-border/70 bg-background"
                           }`}
-                          onClick={() => markNotificationRead(notification.id)}
+                          onClick={() => void handleMarkNotificationRead(notification.id)}
                         >
                           <div className="flex items-start gap-3">
                             <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${bg}`}>
@@ -4278,8 +4321,8 @@ export default function UserPortal({ section }: { section: string }) {
     liquidationFilesByReportId,
     liquidationPercent,
     liquidationReports,
-    markAllNotificationsRead,
-    markNotificationRead,
+    handleMarkAllNotificationsRead,
+    handleMarkNotificationRead,
     majorClassificationOptions,
     mergeRemoteState,
     navigate,
@@ -4357,7 +4400,7 @@ export default function UserPortal({ section }: { section: string }) {
         userDisplayName={user?.displayName}
         userEmail={user?.email}
         notifications={userNotifications}
-        onMarkAllRead={markAllNotificationsRead}
+        onMarkAllRead={() => void handleMarkAllNotificationsRead()}
         groups={userNavigationGroups}
         activeId={section}
         onNavigate={(id) => navigate(userRouteMap[id] ?? userRouteMap.dashboard)}

@@ -349,10 +349,22 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     () => ({
       state,
       mergeRemoteState: (snapshot) =>
-        setState((current) => ({
-          ...current,
-          ...snapshot,
-        })),
+        setState((current) => {
+          const mergedNotifications = snapshot.notifications
+            ? snapshot.notifications.map((remoteNotification) => {
+                const localNotification = current.notifications.find((item) => item.id === remoteNotification.id);
+                return localNotification?.isRead
+                  ? { ...remoteNotification, isRead: true }
+                  : remoteNotification;
+              })
+            : current.notifications;
+
+          return {
+            ...current,
+            ...snapshot,
+            notifications: mergedNotifications,
+          };
+        }),
       createTemplate: (template) =>
         setState((current) => ({
           ...current,

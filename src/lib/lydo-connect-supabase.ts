@@ -795,6 +795,42 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
   return remoteState;
 };
 
+export const markNotificationReadInSupabase = async (notificationId: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const { error } = await supabase!
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", notificationId)
+    .eq("user_id", session.user.id);
+
+  if (error) throw new Error(error.message);
+};
+
+export const markAllNotificationsReadInSupabase = async () => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const { error } = await supabase!
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", session.user.id)
+    .eq("is_read", false);
+
+  if (error) throw new Error(error.message);
+};
+
 export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedState> | null> => {
   if (!supabase) return null;
 
