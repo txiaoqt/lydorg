@@ -18,7 +18,7 @@ const OFFICE_COORDS: [number, number] = [14.592421073182033, 121.08615468030744]
 
 const officeContact = {
   officeAddress: "Eulogio Amang Rodriguez Ave, Pasig, 1609 Metro Manila",
-  officerInCharge: "Ms. Carla M. Reyes",
+  officerInCharge: "Ms. Colleen Gail A. De Guzman",
   contactNumber: "+63 917 123 4567",
   contactEmail: "lydo.office@prototype.local",
 };
