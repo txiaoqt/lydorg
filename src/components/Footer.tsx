@@ -15,7 +15,7 @@ const Footer = () => {
               />
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-secondary-foreground/70">
-              LYDO Connect brings organization registration, compliance document submission, review updates, and reporting into one workflow for youth organizations.
+              Y-TRACE brings organization registration, compliance document submission, review updates, and reporting into one workflow for youth organizations.
             </p>
             <p className="text-xs uppercase tracking-[0.16em] text-secondary-foreground/55">
               LYDO / PCYDO Organization Compliance Portal
@@ -26,7 +26,7 @@ const Footer = () => {
             <h4 className="mb-3 text-sm font-semibold text-secondary-foreground">Explore</h4>
             <ul className="space-y-2 text-sm text-secondary-foreground/70">
               <li><Link to="/" className="transition-colors hover:text-primary">Home</Link></li>
-              <li><Link to="/about" className="transition-colors hover:text-primary">About LYDO Connect</Link></li>
+              <li><Link to="/about" className="transition-colors hover:text-primary">About Y-TRACE</Link></li>
               <li><Link to="/faqs" className="transition-colors hover:text-primary">FAQs</Link></li>
               <li><Link to="/site-map" className="transition-colors hover:text-primary">Site Map</Link></li>
             </ul>
@@ -58,7 +58,7 @@ const Footer = () => {
         <div className="mt-8 border-t border-secondary-foreground/10 pt-5">
           <div className="flex flex-col items-center gap-2.5 text-center">
             <p className="text-[11px] sm:text-xs text-secondary-foreground/55 leading-relaxed">
-              (c) 2026 LYDO Connect - Prototype LYDO Portal. Compliant with RA 10742.
+              (c) 2026 Y-TRACE - Prototype LYDO Portal. Compliant with RA 10742.
             </p>
             <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-secondary-foreground/55">
               <Link to="/privacy" className="hover:text-secondary-foreground/85 transition-colors">

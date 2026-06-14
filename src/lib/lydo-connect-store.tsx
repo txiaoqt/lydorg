@@ -315,7 +315,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           ...snapshot,
         }));
       } catch (error) {
-        console.error("Failed to sync LYDO Connect state from Supabase:", error);
+        console.error("Failed to sync Y-TRACE state from Supabase:", error);
       }
     };
 

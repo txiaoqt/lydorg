@@ -74,7 +74,7 @@ const Contacts = () => {
                 />
                 <Marker position={OFFICE_COORDS}>
                   <Popup>
-                    <strong>LYDO Connect Office</strong><br />
+                    <strong>Y-TRACE Office</strong><br />
                     {officeContact.officeAddress}
                   </Popup>
                 </Marker>

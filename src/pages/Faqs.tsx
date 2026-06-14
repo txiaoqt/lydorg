@@ -9,9 +9,9 @@ import {
 
 const faqs = [
   {
-    question: "What is LYDO Connect?",
+    question: "What is Y-TRACE?",
     answer:
-      "LYDO Connect is a youth organization compliance portal for Pasig City. It covers the full workflow: organization registration, compliance document submission, budget requests, liquidation reporting, and official updates from the LYDO/PCYDO office.",
+      "Y-TRACE is a youth organization compliance portal for Pasig City. It covers the full workflow: organization registration, compliance document submission, budget requests, liquidation reporting, and official updates from the LYDO/PCYDO office.",
   },
   {
     question: "Who can create an account?",
@@ -61,7 +61,7 @@ const Faqs = () => {
               Frequently Asked Questions
             </h1>
             <p className="text-secondary-foreground/70 text-sm sm:text-base md:text-lg leading-relaxed">
-              Quick answers about using LYDO Connect and navigating the compliance workflow.
+              Quick answers about using Y-TRACE and navigating the compliance workflow.
             </p>
           </div>
         </section>

@@ -2,12 +2,19 @@ import { useMemo, useState } from "react";
 import { Building2, ClipboardCheck, Download, Eye, RefreshCw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PortalEmptyState, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
 import { majorClassificationOptions, statusLabelMap, type OrganizationProfile } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
+import {
+  mapOrganizationProfileToYorpExportRow,
+  yorpRegistryExportConfig,
+} from "@/lib/report-export-configs";
+import { exportReport, type ExportFormat } from "@/lib/report-export";
+import { toast } from "@/hooks/use-toast";
 
 type YorpFilter = "all" | "registered" | "renewed" | "not_registered";
 
@@ -20,33 +27,6 @@ const yorpStatusLabel: Record<YorpFilter, string> = {
   not_registered: "Not Registered",
 };
 
-function exportCsv(filtered: OrganizationProfile[]) {
-  const header = ["No.", "Organization Name", "Barangay", "Major Classification", "Contact Number", "Email", "Profile Status", "YORP Reg Year", "YORP Renewed Year", "Reg #", "District"];
-  const rows = filtered.map((org, i) => [
-    String(i + 1),
-    org.organizationName,
-    org.barangay,
-    org.majorClassification,
-    org.contactNumber,
-    org.organizationEmail,
-    statusLabelMap[org.profileStatus] ?? org.profileStatus,
-    org.yorpRegisteredYear != null ? String(org.yorpRegisteredYear) : "",
-    org.yorpRenewedYear != null ? String(org.yorpRenewedYear) : "",
-    org.organizationIdentifierNumber,
-    org.district,
-  ]);
-  const csv = [header, ...rows]
-    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `yorp-registry-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
 export function YorpRegistryPage() {
   const { state } = useLydoConnect();
   const orgs = state.organizationProfiles;
@@ -57,6 +37,7 @@ export function YorpRegistryPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [yorpFilter, setYorpFilter] = useState<YorpFilter>("all");
   const [selectedOrg, setSelectedOrg] = useState<OrganizationProfile | null>(null);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -82,6 +63,49 @@ export function YorpRegistryPage() {
     renewed: orgs.filter((o) => o.yorpRenewedYear != null).length,
   }), [orgs]);
 
+  const exportRows = useMemo(
+    () => filtered.map(mapOrganizationProfileToYorpExportRow),
+    [filtered],
+  );
+
+  const exportFilterSummary = useMemo(() => {
+    const summary: string[] = [];
+    if (search.trim()) summary.push(`Search: ${search.trim()}`);
+    if (yorpFilter !== "all") summary.push(`YORP Status: ${yorpStatusLabel[yorpFilter]}`);
+    if (yearFilter !== "all") summary.push(`Year: ${yearFilter}`);
+    if (classFilter !== "all") summary.push(`Classification: ${classFilter}`);
+    if (statusFilter !== "all") summary.push(`Profile Status: ${statusLabelMap[statusFilter] ?? statusFilter}`);
+    return summary;
+  }, [classFilter, search, statusFilter, yearFilter, yorpFilter]);
+
+  const handleExport = async (format: ExportFormat) => {
+    if (!exportRows.length) {
+      toast({ title: "No Data", description: "No YORP records match the current filters." });
+      return;
+    }
+
+    try {
+      await exportReport(format, {
+        config: yorpRegistryExportConfig,
+        rows: exportRows,
+        metadataLines: [`Total Records: ${exportRows.length}`],
+        filterSummaryLines: exportFilterSummary,
+      });
+      toast({
+        title: "Export Ready",
+        description: `The YORP Registry ${format.toUpperCase()} export has been downloaded.`,
+      });
+    } catch (error) {
+      console.error("Failed to export YORP registry:", error);
+      toast({
+        title: "Export Failed",
+        description: "The YORP Registry export could not be generated.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats */}
@@ -95,9 +119,14 @@ export function YorpRegistryPage() {
         title="YORP Registry"
         description="View and manage YORP registration status for all organizations."
         action={
-          <Button variant="outline" size="sm" onClick={() => exportCsv(filtered)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!filtered.length}
+            onClick={() => setExportDialogOpen(true)}
+          >
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            Export
           </Button>
         }
       >
@@ -297,6 +326,14 @@ export function YorpRegistryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        reportTitle="YORP Registry"
+        description="Export all YORP records matching the current search and filters."
+        onExport={handleExport}
+      />
     </div>
   );
 }

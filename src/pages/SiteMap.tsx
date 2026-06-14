@@ -44,7 +44,7 @@ const SiteMap = () => {
               Site Map
             </h1>
             <p className="text-secondary-foreground/70 text-sm sm:text-base md:text-lg leading-relaxed">
-              Complete directory of the LYDO Connect public pages and user portal routes.
+              Complete directory of the Y-TRACE public pages and user portal routes.
             </p>
           </div>
         </section>

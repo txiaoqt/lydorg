@@ -17,10 +17,10 @@ export default function BrandLogo({
 }: BrandLogoProps) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <img src="/logo-removebg-preview.png" alt="LYDO Connect logo" className={cn("h-10 w-10 object-contain", imgClassName)} />
+      <img src="/logo-removebg-preview.png" alt="Y-TRACE logo" className={cn("h-10 w-10 object-contain", imgClassName)} />
       {showText ? (
         <div className={cn("min-w-0", textClassName)}>
-          <p className="font-heading font-bold leading-tight">LYDO Connect</p>
+          <p className="font-heading font-bold leading-tight">Y-TRACE</p>
           {subtitle ? <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{subtitle}</p> : null}
         </div>
       ) : null}

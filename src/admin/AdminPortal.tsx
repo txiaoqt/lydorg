@@ -37,11 +37,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { PortalEmptyState, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
 import { PortalShell } from "@/components/portal/PortalShell";
+import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { adminNavigationGroups as baseAdminNavigationGroups, computeYpopScore, DEFAULT_ORG_LED_TIERS, type NewsRelease, type TransparencyPost, type YPOPCityActivity, type YPOPEntry, type YPOPFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
+import {
+  allocationByBarangayExportConfig,
+  budgetRequestExportConfig,
+  buildAllocationPdfTotalsRow,
+  buildAllocationTotalsRow,
+  buildAllocationXlsxTotalsRow,
+  buildBudgetRequestPdfTotalsRow,
+  buildBudgetRequestTotalsRow,
+  buildBudgetRequestXlsxTotalsRow,
+  type AllocationByBarangayExportRow,
+  type BudgetRequestExportRow,
+} from "@/lib/report-export-configs";
+import { exportReport, formatCurrencyPdf, type ExportFormat } from "@/lib/report-export";
 import {
   createAdminActivityLogInSupabase,
   createNewsReleaseInSupabase,
@@ -239,6 +253,7 @@ type BudgetMonitoringEntry = {
   utilizationRate: number;
   budgetStatus: string;
   liquidationStatus: string;
+  releaseDate: string;
   goSignalAt: string;
   deadlineAt: string;
   hardCopySubmittedAt: string;
@@ -291,6 +306,8 @@ type BarangayAllocationOrganizationDetail = {
     hardCopySubmittedAt: string;
   }>;
 };
+
+type ActiveReportExport = "budget-requests" | "allocation-by-barangay" | null;
 
 export default function AdminPortal({ section }: { section: string }) {
   const navigate = useNavigate();
@@ -360,6 +377,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation">("overview");
   const [budgetAllocationDistrictFilter, setBudgetAllocationDistrictFilter] = useState("all");
   const [budgetAllocationBarangayFilter, setBudgetAllocationBarangayFilter] = useState("all");
+  const [activeReportExport, setActiveReportExport] = useState<ActiveReportExport>(null);
   const [documentPreviewUrls, setDocumentPreviewUrls] = useState<Record<string, string>>({});
   const documentPreviewSourceRef = useRef<Record<string, string>>({});
   const [selectedYpopId, setSelectedYpopId] = useState<string | null>(null);
@@ -533,6 +551,7 @@ export default function AdminPortal({ section }: { section: string }) {
           utilizationRate,
           budgetStatus: request.status,
           liquidationStatus,
+          releaseDate: request.releaseDate || "",
           goSignalAt,
           deadlineAt: liquidation?.deadlineAt || "",
           hardCopySubmittedAt: liquidation?.hardCopySubmittedAt || "",
@@ -749,101 +768,122 @@ export default function AdminPortal({ section }: { section: string }) {
     });
     return rows;
   }, [budgetMonitoringEntries]);
-  const budgetMonitoringReportRows = useMemo(
+  const allocationOrganizationNamesByGroup = useMemo(() => {
+    const grouped = new Map<string, Set<string>>();
+
+    state.budgetRequests
+      .filter((request) => budgetReleaseStatuses.has(request.status))
+      .forEach((request) => {
+        const organization = organizationProfileById.get(request.organizationId);
+        const district = organization?.district?.trim() || "Unassigned District";
+        const barangay = organization?.barangay?.trim() || "Unassigned Barangay";
+        const name = organization?.organizationName?.trim() || "Unknown organization";
+        const key = `${district}::${barangay}`;
+        const names = grouped.get(key) ?? new Set<string>();
+        names.add(name);
+        grouped.set(key, names);
+      });
+
+    return grouped;
+  }, [organizationProfileById, state.budgetRequests]);
+  const budgetRequestExportRows = useMemo<BudgetRequestExportRow[]>(
     () =>
-      budgetMonitoringEntries.map((entry) => [
-        entry.organizationName,
-        entry.title,
-        String(entry.approvedAmount),
-        String(entry.releasedAmount),
-        String(entry.remainingAmount),
-        String(entry.utilizationRate),
-        entry.budgetStatus,
-        entry.liquidationStatus,
-        entry.goSignalAt,
-        entry.deadlineAt,
-        entry.hardCopySubmittedAt,
-        entry.completedAt,
-        entry.riskLabel,
-        entry.remarks,
-      ]),
+      budgetMonitoringEntries.map((entry) => ({
+        organizationName: entry.organizationName,
+        activity: entry.title,
+        approvedAmount: entry.approvedAmount,
+        releasedAmount: entry.releasedAmount,
+        releasedDate: entry.releaseDate,
+      })),
     [budgetMonitoringEntries],
   );
-  const budgetAllocationReportRows = useMemo(
+  const allocationByBarangayExportRows = useMemo<AllocationByBarangayExportRow[]>(
     () =>
-      filteredBudgetAllocationRows.map((entry) => [
-        entry.district,
-        entry.barangay,
-        String(entry.organizationCount),
-        String(entry.approvedAmount),
-        String(entry.releasedAmount),
-        String(entry.remainingAmount),
-        String(entry.utilizationRate),
-      ]),
-    [filteredBudgetAllocationRows],
+      filteredBudgetAllocationRows.map((entry) => ({
+        district: entry.district,
+        barangay: entry.barangay,
+        organizationNames: [
+          ...(allocationOrganizationNamesByGroup.get(`${entry.district}::${entry.barangay}`) ?? new Set<string>()),
+        ].sort((left, right) => left.localeCompare(right)),
+        approvedAmount: entry.approvedAmount,
+        releasedAmount: entry.releasedAmount,
+      })),
+    [allocationOrganizationNamesByGroup, filteredBudgetAllocationRows],
   );
-  const exportBudgetMonitoringReport = () => {
-    if (!budgetMonitoringEntries.length) {
-      toast({ title: "No Data", description: "No monitored budgets are available to export." });
-      return;
-    }
+  const budgetRequestExportFilters = useMemo(() => {
+    const summary: string[] = [];
+    return summary;
+  }, []);
+  const allocationExportFilters = useMemo(() => {
+    const summary: string[] = [];
+    if (budgetAllocationDistrictFilter !== "all") summary.push(`District: ${budgetAllocationDistrictFilter}`);
+    if (budgetAllocationBarangayFilter !== "all") summary.push(`Barangay: ${budgetAllocationBarangayFilter}`);
+    return summary;
+  }, [budgetAllocationBarangayFilter, budgetAllocationDistrictFilter]);
+  const handleReportExport = async (format: ExportFormat) => {
+    try {
+      if (activeReportExport === "budget-requests") {
+        if (!budgetRequestExportRows.length) {
+          toast({ title: "No Data", description: "No monitored budgets are available to export." });
+          return;
+        }
 
-    const headers = [
-      "Organization",
-      "Activity",
-      "Approved Amount",
-      "Released Amount",
-      "Remaining Amount",
-      "Utilization Rate",
-      "Budget Status",
-      "Liquidation Status",
-      "Go Signal",
-      "Deadline",
-      "Hard Copy Submitted",
-      "Completed At",
-      "Risk Label",
-      "Remarks",
-    ];
-    const csv = [headers, ...budgetMonitoringReportRows]
-      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `budget-monitoring-report-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-  const exportBudgetAllocationReport = () => {
-    if (!filteredBudgetAllocationRows.length) {
-      toast({ title: "No Data", description: "No barangay allocations match the current filters." });
-      return;
-    }
+        await exportReport(format, {
+          config: budgetRequestExportConfig,
+          rows: budgetRequestExportRows,
+          metadataLines: [
+            `Total Records: ${budgetRequestExportRows.length}`,
+            `Total Approved Amount: ${formatCurrencyPdf(budgetMonitoringAnalysis.totalApproved)}`,
+            `Total Released Amount: ${formatCurrencyPdf(budgetMonitoringAnalysis.totalReleased)}`,
+          ],
+          filterSummaryLines: budgetRequestExportFilters,
+          totalsRow:
+            format === "pdf"
+              ? buildBudgetRequestPdfTotalsRow(budgetRequestExportRows)
+              : format === "csv"
+              ? undefined
+              : buildBudgetRequestTotalsRow(budgetRequestExportRows),
+          xlsxTotalsRow: format === "xlsx" ? buildBudgetRequestXlsxTotalsRow(budgetRequestExportRows) : undefined,
+        });
+        toast({ title: "Export Ready", description: `The budget request ${format.toUpperCase()} export has been downloaded.` });
+        return;
+      }
 
-    const headers = [
-      "District",
-      "Barangay",
-      "Organizations",
-      "Approved Amount",
-      "Released Amount",
-      "Remaining Amount",
-      "Utilization Rate",
-    ];
-    const csv = [headers, ...budgetAllocationReportRows]
-      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `barangay-allocation-report-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      if (activeReportExport === "allocation-by-barangay") {
+        if (!allocationByBarangayExportRows.length) {
+          toast({ title: "No Data", description: "No barangay allocations match the current filters." });
+          return;
+        }
+
+        await exportReport(format, {
+          config: allocationByBarangayExportConfig,
+          rows: allocationByBarangayExportRows,
+          metadataLines: [
+            `Total Barangays: ${budgetAllocationSummary.barangayCount}`,
+            `Total Organizations: ${allocationByBarangayExportRows.reduce((sum, row) => sum + row.organizationNames.length, 0)}`,
+            `Total Approved Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalApproved)}`,
+            `Total Released Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalReleased)}`,
+          ],
+          filterSummaryLines: allocationExportFilters,
+          totalsRow:
+            format === "pdf"
+              ? buildAllocationPdfTotalsRow(allocationByBarangayExportRows)
+              : format === "csv"
+              ? undefined
+              : buildAllocationTotalsRow(allocationByBarangayExportRows),
+          xlsxTotalsRow: format === "xlsx" ? buildAllocationXlsxTotalsRow(allocationByBarangayExportRows) : undefined,
+        });
+        toast({ title: "Export Ready", description: `The allocation by barangay ${format.toUpperCase()} export has been downloaded.` });
+      }
+    } catch (error) {
+      console.error("Failed to export admin report:", error);
+      toast({
+        title: "Export Failed",
+        description: "The selected report could not be generated.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
   const validDocumentTypeIds = useMemo(
     () => new Set(templateDocuments.map((documentType) => documentType.id)),
@@ -3862,7 +3902,12 @@ export default function AdminPortal({ section }: { section: string }) {
                 description="Approved budgets are monitored automatically after approval so release, utilization, and liquidation progress stay visible."
                 action={
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={exportBudgetMonitoringReport}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!budgetRequestExportRows.length}
+                      onClick={() => setActiveReportExport("budget-requests")}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       Export Report
                     </Button>
@@ -4092,7 +4137,12 @@ export default function AdminPortal({ section }: { section: string }) {
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Barangay Allocation
                     </Button>
-                    <Button type="button" variant="outline" onClick={exportBudgetAllocationReport}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!allocationByBarangayExportRows.length}
+                      onClick={() => setActiveReportExport("allocation-by-barangay")}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       Export Report
                     </Button>
@@ -4224,7 +4274,12 @@ export default function AdminPortal({ section }: { section: string }) {
                   title="Allocation by Barangay"
                   description="Released budgets broken down by the organizations' registered barangay."
                   action={
-                    <Button type="button" variant="outline" onClick={exportBudgetAllocationReport}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!allocationByBarangayExportRows.length}
+                      onClick={() => setActiveReportExport("allocation-by-barangay")}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       Export Filtered Report
                     </Button>
@@ -6058,6 +6113,19 @@ export default function AdminPortal({ section }: { section: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ExportReportDialog
+        open={activeReportExport !== null}
+        onOpenChange={(open) => {
+          if (!open) setActiveReportExport(null);
+        }}
+        reportTitle={activeReportExport === "allocation-by-barangay" ? "Allocation by Barangay" : "Budget Request Report"}
+        description={
+          activeReportExport === "allocation-by-barangay"
+            ? "Export all barangay allocation rows matching the current district and barangay filters."
+            : "Export all budget request rows in the current monitored report."
+        }
+        onExport={handleReportExport}
+      />
     </>
   );
 }

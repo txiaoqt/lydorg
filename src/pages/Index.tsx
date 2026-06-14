@@ -11,7 +11,7 @@ const howItWorksSteps = [
     step: "01",
     icon: Users,
     title: "Register your organization",
-    description: "Fill in your organization profile — name, location, classification, officers, and adviser.",
+    description: "Fill in your organization profile - name, location, classification, officers, and adviser.",
   },
   {
     step: "02",
@@ -47,7 +47,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* Hero */}
       <section className="hero-gradient relative overflow-x-clip pt-16">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary blur-3xl" />
@@ -57,11 +57,10 @@ const Index = () => {
         <div className="container mx-auto relative z-10 max-w-7xl px-6 py-10 sm:px-8 sm:py-14 md:py-20 lg:px-10 lg:py-24">
           <div className="grid items-center gap-8 md:grid-cols-2 lg:gap-14">
             <div className="animate-fade-up">
-              {/* Kicker badge */}
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary-foreground/20 bg-secondary-foreground/10 px-3 py-1.5">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-brand-skGold shrink-0" />
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-secondary-foreground/80">
-                  LYDO Connect — Organization Compliance Portal
+                  Y-TRACE - Organization Compliance Portal
                 </span>
               </div>
 
@@ -71,10 +70,9 @@ const Index = () => {
               </h1>
 
               <p className="mb-6 max-w-lg text-base leading-relaxed text-secondary-foreground/75 sm:text-lg">
-                Register, submit compliance documents, request activity budgets, and track liquidation deadlines — all in one place with LYDO/PCYDO.
+                Register, submit compliance documents, request activity budgets, and track liquidation deadlines - all in one place with LYDO/PCYDO.
               </p>
 
-              {/* CTAs */}
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
                   <Link to={portalHref}>
@@ -89,7 +87,6 @@ const Index = () => {
                 )}
               </div>
 
-              {/* Trust strip */}
               <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
                 {trustBadges.map((badge, i) => (
                   <span key={badge} className="flex items-center gap-1.5 text-xs text-secondary-foreground/60">
@@ -112,10 +109,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────────────────── */}
+      {/* How It Works */}
       <section className="bg-background py-14 sm:py-16 md:py-24">
         <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-          <div className="mb-10 text-center max-w-2xl mx-auto sm:mb-14">
+          <div className="mb-10 mx-auto max-w-2xl text-center sm:mb-14">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
               How It Works
             </span>
@@ -123,7 +120,7 @@ const Index = () => {
               Four steps from registration to compliance
             </h2>
             <p className="text-sm text-muted-foreground sm:text-base">
-              Every organization follows the same workflow — profile, documents, budget, liquidation.
+              Every organization follows the same workflow - profile, documents, budget, liquidation.
             </p>
           </div>
 
@@ -131,14 +128,13 @@ const Index = () => {
             {howItWorksSteps.map(({ step, icon: Icon, title, description }) => (
               <div
                 key={step}
-                className="relative rounded-xl border border-border bg-card p-5 card-shadow flex flex-col gap-4"
+                className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 card-shadow"
               >
-                {/* Step connector line (desktop only, not last) */}
                 <div className="flex items-start justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="font-heading text-3xl font-extrabold text-muted-foreground/20 leading-none">
+                  <span className="font-heading text-3xl font-extrabold leading-none text-muted-foreground/20">
                     {step}
                   </span>
                 </div>
@@ -154,10 +150,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ── Compliance Features ───────────────────────────────────────────── */}
+      {/* Compliance Features */}
       <section className="bg-muted/40 py-14 sm:py-16 md:py-24">
         <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-          <div className="mb-10 text-center max-w-2xl mx-auto sm:mb-14">
+          <div className="mb-10 mx-auto max-w-2xl text-center sm:mb-14">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
               What's Inside
             </span>
@@ -219,15 +215,14 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ── CTA Band ─────────────────────────────────────────────────────── */}
+      {/* CTA Band */}
       <section className="hero-gradient relative overflow-hidden py-16 sm:py-20 md:py-28">
-        {/* Decorative glow blobs */}
         <div className="absolute inset-0 pointer-events-none opacity-20">
           <div className="absolute -top-16 -left-16 h-64 w-64 rounded-full bg-primary blur-3xl" />
           <div className="absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-brand-skGold blur-3xl" />
         </div>
 
-        <div className="container mx-auto relative z-10 max-w-2xl px-6 sm:px-8 text-center">
+        <div className="container mx-auto relative z-10 max-w-2xl px-6 text-center sm:px-8">
           <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-widest text-secondary-foreground/50">
             Get Started
           </span>
@@ -235,7 +230,7 @@ const Index = () => {
             Ready to register your organization?
           </h2>
           <p className="mb-8 text-base text-secondary-foreground/70 sm:text-lg">
-            Create an account, complete your profile, and start the compliance process — all in one place.
+            Create an account, complete your profile, and start the compliance process - all in one place.
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>

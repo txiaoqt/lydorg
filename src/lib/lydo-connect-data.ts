@@ -1149,7 +1149,7 @@ export const seedState: LydoSeedState = {
       id: "notif-user-002",
       userId: "user-demo-001",
       organizationId: "org-demo-001",
-      title: "Welcome to LYDO Connect",
+      title: "Welcome to Y-TRACE",
       message: "Your account has been set up. Please complete your organization profile to begin the compliance workflow.",
       type: "info",
       relatedType: "organization_profile",
