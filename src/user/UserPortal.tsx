@@ -108,6 +108,7 @@ import {
 } from "@/lib/document-ocr";
 
 const getReadiness = (filled: number, total: number) => (total === 0 ? 0 : Math.round((filled / total) * 100));
+const normalizeText = (value?: string | null) => value?.trim() ?? "";
 const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
@@ -125,6 +126,8 @@ const getDocumentUploadHelpText = (documentTypeId: string) =>
   documentTypeId === "yorp-members"
     ? "Upload a PDF or XLSX file."
     : "Upload a PDF file for submission.";
+const isApprovedSubmissionFile = (file?: Pick<SubmissionFile, "adminStatus"> | null) =>
+  file?.adminStatus === "approved" || file?.adminStatus === "approved_green";
 const formatVerifiedDateLabel = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -225,14 +228,22 @@ const createOrganizationProfileDraft = (
   return {
     ...blank,
     ...profile,
-    organizationName: profile.organizationName.trim() || blank.organizationName,
-    organizationEmail: profile.organizationEmail.trim() || blank.organizationEmail,
-    contactNumber: profile.contactNumber.trim() || blank.contactNumber,
-    district: profile.district.trim() || blank.district,
-    barangay: profile.barangay.trim() || blank.barangay,
+    organizationName: normalizeText(profile.organizationName) || blank.organizationName,
+    organizationEmail: normalizeText(profile.organizationEmail) || blank.organizationEmail,
+    contactNumber: normalizeText(profile.contactNumber) || blank.contactNumber,
+    district: normalizeText(profile.district) || blank.district,
+    barangay: normalizeText(profile.barangay) || blank.barangay,
     isExistingOrganization: Boolean(profile.isExistingOrganization),
-    organizationIdentifierNumber: profile.organizationIdentifierNumber.trim() || blank.organizationIdentifierNumber,
-    advocacies: [...profile.advocacies],
+    organizationIdentifierNumber: normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber,
+    majorClassification: normalizeText(profile.majorClassification) as OrganizationProfile["majorClassification"],
+    subClassification: normalizeText(profile.subClassification) as OrganizationProfile["subClassification"],
+    adviserName: normalizeText(profile.adviserName),
+    representativeName: normalizeText(profile.representativeName),
+    address: normalizeText(profile.address),
+    facebookPageUrl: normalizeText(profile.facebookPageUrl),
+    verifiedAt: normalizeText(profile.verifiedAt),
+    internalNotes: normalizeText(profile.internalNotes),
+    advocacies: Array.isArray(profile.advocacies) ? [...profile.advocacies] : [],
   };
 };
 
@@ -739,6 +750,15 @@ export default function UserPortal({ section }: { section: string }) {
 
     const localDocumentType = templateDocuments.find((documentType) => documentType.name === documentTypeName);
     if (!localDocumentType) return;
+    const existingFile = docFiles.find((entry) => entry.documentTypeId === localDocumentType.id);
+    if (isApprovedSubmissionFile(existingFile)) {
+      toast({
+        title: "Document locked",
+        description: "This approved document can no longer be changed or removed.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const isMembersList = localDocumentType.id === "yorp-members";
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
@@ -820,6 +840,16 @@ export default function UserPortal({ section }: { section: string }) {
 
   const confirmRemoveDocument = async () => {
     if (!pendingDocumentRemoval) return;
+    const targetFile = docFiles.find((entry) => entry.id === pendingDocumentRemoval.fileId);
+    if (isApprovedSubmissionFile(targetFile)) {
+      toast({
+        title: "Document locked",
+        description: "This approved document can no longer be removed.",
+        variant: "destructive",
+      });
+      setPendingDocumentRemoval(null);
+      return;
+    }
 
     setRemovingDocumentId(pendingDocumentRemoval.fileId);
     try {
@@ -838,6 +868,15 @@ export default function UserPortal({ section }: { section: string }) {
 
   const saveAttachedDocumentChanges = async () => {
     if (!attachedDocumentEditor) return;
+    if (isApprovedSubmissionFile(attachedDocumentEditor.file)) {
+      toast({
+        title: "Document locked",
+        description: "This approved document can no longer be changed or removed.",
+        variant: "destructive",
+      });
+      closeAttachedDocumentEditor();
+      return;
+    }
 
     if (attachedDocumentMarkedForRemoval) {
       setSavingAttachedDocument(true);
@@ -2213,6 +2252,11 @@ export default function UserPortal({ section }: { section: string }) {
                               <p className="mt-1.5 flex items-center gap-1 text-xs text-green-600">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 This document has been approved.
+                              </p>
+                            )}
+                            {isApproved && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Approved files are locked and can no longer be modified or removed.
                               </p>
                             )}
                           </div>
@@ -4984,7 +5028,9 @@ export default function UserPortal({ section }: { section: string }) {
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-lg sm:text-xl">{attachedDocumentPreviewTitle || "Attached File"}</DialogTitle>
             <DialogDescription className="text-sm">
-              Review the uploaded file, change it if needed, or remove it before saving.
+              {isApprovedSubmissionFile(attachedDocumentEditor?.file)
+                ? "This approved file is now locked. You can review or open it, but you can no longer change or remove it."
+                : "Review the uploaded file, change it if needed, or remove it before saving."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:items-start">
@@ -5080,7 +5126,7 @@ export default function UserPortal({ section }: { section: string }) {
                   variant="outline"
                   className="w-full justify-start"
                   onClick={() => attachedDocumentInputRef.current?.click()}
-                  disabled={Boolean(savingAttachedDocument)}
+                  disabled={Boolean(savingAttachedDocument) || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
                 >
                   <FileUp className="mr-2 h-4 w-4" />
                   Change File
@@ -5101,7 +5147,7 @@ export default function UserPortal({ section }: { section: string }) {
                       attachedDocumentInputRef.current.value = "";
                     }
                   }}
-                  disabled={Boolean(savingAttachedDocument)}
+                  disabled={Boolean(savingAttachedDocument) || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   {attachedDocumentMarkedForRemoval ? "Undo Remove" : "Remove Document"}
@@ -5115,7 +5161,7 @@ export default function UserPortal({ section }: { section: string }) {
                   type="button"
                   className="flex-1"
                   onClick={() => void saveAttachedDocumentChanges()}
-                  disabled={Boolean(savingAttachedDocument)}
+                  disabled={Boolean(savingAttachedDocument) || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
                 >
                   {savingAttachedDocument ? "Saving..." : "Save Changes"}
                 </Button>

@@ -3182,48 +3182,48 @@ export default function AdminPortal({ section }: { section: string }) {
                   )}
                   <div className="divide-y divide-border/40">
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Requested Amount</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Requested amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved Amount</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Approved amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.approvedAmount.toLocaleString()}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released Amount</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Released amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.releasedAmount.toLocaleString()}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Activity Date</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Activity date</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.activityDate || "N/A"}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Venue</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Venue</p>
                       <p className="break-words text-sm font-medium">{selectedBudgetRequest.venue || "N/A"}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Purpose Category</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Purpose category</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.purposeCategory || "N/A"}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Go signal</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.goSignalAt || "Pending"}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy Submitted</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Hard copy submitted</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.hardCopySubmittedAt || "Pending"}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Release Date</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Release date</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.releaseDate || "Pending"}</p>
                     </div>
                     <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remarks</p>
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Remarks</p>
                       <p className="break-words text-sm font-medium">{selectedBudgetRequest.remarks || "None"}</p>
                     </div>
                   </div>
                   <div className="mt-4 rounded-xl border border-border/70 bg-background p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Recent Activity</p>
+                    <p className="text-xs font-medium text-muted-foreground/75">Recent activity</p>
                     {(selectedBudgetRequest.revisionHistory?.length || selectedBudgetRequest.userNote) ? (
                       <div className="mt-3 space-y-3">
                         <div className="flex items-start gap-2.5">
