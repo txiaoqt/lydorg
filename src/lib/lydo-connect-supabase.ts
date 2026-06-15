@@ -1249,10 +1249,10 @@ export const createBudgetRequestInSupabase = async (params: {
     purpose_category: params.budgetRequest.purposeCategory.trim(),
     status: params.budgetRequest.status,
     remarks: params.budgetRequest.remarks.trim() || null,
-    admin_remarks: params.budgetRequest.adminRemarks?.trim() || null,
+    admin_remarks: params.budgetRequest.adminRemarks?.trim() || "",
     go_signal_at: params.budgetRequest.goSignalAt || null,
     hard_copy_submitted_at: params.budgetRequest.hardCopySubmittedAt || null,
-    user_note: params.budgetRequest.userNote?.trim() || null,
+    user_note: params.budgetRequest.userNote?.trim() || "",
     revision_history: params.budgetRequest.revisionHistory ?? [],
   };
 
