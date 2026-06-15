@@ -427,9 +427,34 @@ export default function UserPortal({ section }: { section: string }) {
       organizationIdentifierNumber: user?.profileHints?.organizationIdentifierNumber ?? "",
     }),
   );
+  const [isProfileDraftDirty, setIsProfileDraftDirty] = useState(false);
+  const lastProfileDraftSourceRef = useRef<string>("");
 
   useEffect(() => {
-    setProfileDraft(
+    const nextSourceKey = [
+      currentProfile?.id ?? "",
+      currentProfile?.updatedAt ?? "",
+      user?.id ?? "",
+      user?.displayName ?? "",
+      user?.email ?? "",
+      user?.profileHints?.contactNumber ?? "",
+      user?.profileHints?.district ?? "",
+      user?.profileHints?.barangay ?? "",
+      user?.profileHints?.isExistingOrganization ? "1" : "0",
+      user?.profileHints?.organizationIdentifierNumber ?? "",
+    ].join("|");
+
+    if (nextSourceKey === lastProfileDraftSourceRef.current) return;
+
+    const previousSourceParts = lastProfileDraftSourceRef.current.split("|");
+    const previousProfileId = previousSourceParts[0] ?? "";
+    const previousUserId = previousSourceParts[2] ?? "";
+    const switchedRecord =
+      previousProfileId !== (currentProfile?.id ?? "") ||
+      previousUserId !== (user?.id ?? "");
+
+    if (!isProfileDraftDirty || switchedRecord) {
+      setProfileDraft(
         createOrganizationProfileDraft(currentProfile?.userId ?? user?.id ?? "", currentProfile, {
           organizationName: user?.displayName ?? "",
           organizationEmail: user?.email ?? "",
@@ -439,9 +464,13 @@ export default function UserPortal({ section }: { section: string }) {
           isExistingOrganization: user?.profileHints?.isExistingOrganization ?? false,
           organizationIdentifierNumber: user?.profileHints?.organizationIdentifierNumber ?? "",
         }),
-    );
+      );
+      setIsProfileDraftDirty(false);
+      lastProfileDraftSourceRef.current = nextSourceKey;
+    }
   }, [
-    currentProfile,
+    currentProfile?.id,
+    currentProfile?.updatedAt,
     user?.displayName,
     user?.email,
     user?.id,
@@ -450,6 +479,7 @@ export default function UserPortal({ section }: { section: string }) {
     user?.profileHints?.district,
     user?.profileHints?.isExistingOrganization,
     user?.profileHints?.organizationIdentifierNumber,
+    isProfileDraftDirty,
   ]);
 
   useEffect(() => {
@@ -1142,6 +1172,7 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const handleProfileFieldChange = <K extends keyof OrganizationProfile>(field: K, value: OrganizationProfile[K]) => {
+    setIsProfileDraftDirty(true);
     setProfileDraft((current) => ({
       ...current,
       [field]: value,
@@ -1149,6 +1180,7 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const toggleAdvocacy = (advocacy: OrganizationProfile["advocacies"][number]) => {
+    setIsProfileDraftDirty(true);
     setProfileDraft((current) => ({
       ...current,
       advocacies: current.advocacies.includes(advocacy)
@@ -1227,6 +1259,7 @@ export default function UserPortal({ section }: { section: string }) {
       const savedProfile = await upsertOrganizationProfileInSupabase(trimmedProfile);
       upsertOrganizationProfile(savedProfile);
       setProfileDraft(savedProfile);
+      setIsProfileDraftDirty(false);
       notifyAdmin({
         title: savedProfile.isExistingOrganization ? "Existing organization profile updated" : "Organization profile updated",
         message: savedProfile.isExistingOrganization
@@ -1875,7 +1908,7 @@ export default function UserPortal({ section }: { section: string }) {
                     <input
                       value={profileDraft.facebookPageUrl}
                       onChange={(event) => handleProfileFieldChange("facebookPageUrl", event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
+                      className="min-w-0 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                       placeholder="https://facebook.com/..."
                     />
                   </FieldGroup>
@@ -1922,7 +1955,21 @@ export default function UserPortal({ section }: { section: string }) {
                         <p><span className="text-muted-foreground">Representative:</span> {currentProfile.representativeName || "N/A"}</p>
                         <p><span className="text-muted-foreground">Adviser:</span> {currentProfile.adviserName || "N/A"}</p>
                         <p><span className="text-muted-foreground">Address:</span> {currentProfile.address || "N/A"}</p>
-                        <p><span className="text-muted-foreground">Facebook Page:</span> {currentProfile.facebookPageUrl || "N/A"}</p>
+                        <div className="min-w-0">
+                          <span className="text-muted-foreground">Facebook Page:</span>{" "}
+                          {currentProfile.facebookPageUrl ? (
+                            <a
+                              href={currentProfile.facebookPageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="break-all text-primary underline-offset-4 hover:underline"
+                            >
+                              {currentProfile.facebookPageUrl}
+                            </a>
+                          ) : (
+                            "N/A"
+                          )}
+                        </div>
                         <div>
                           <p className="text-muted-foreground">Advocacies:</p>
                           {currentProfile.advocacies.length ? (

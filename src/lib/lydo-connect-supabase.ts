@@ -914,7 +914,18 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     .single();
 
   if (error || !data) {
-    if (error?.message?.includes("advocacies") && error.message.includes("organization_profiles")) {
+    if (
+      error?.message?.includes("organization_profiles") &&
+      [
+        "advocacies",
+        "is_existing_organization",
+        "organization_identifier_number",
+        "major_classification",
+        "sub_classification",
+        "district",
+        "profile_status",
+      ].some((columnName) => error.message.includes(columnName))
+    ) {
       throw new Error(
         "The database schema is outdated. Run supabase/repair_organization_profiles_schema.sql in Supabase, then try saving the organization profile again.",
       );
