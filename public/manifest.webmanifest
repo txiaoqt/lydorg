@@ -1,7 +1,7 @@
 ﻿{
   "name": "Y-TRACE",
   "short_name": "Y-TRACE",
-  "description": "Y-TRACE centralizes youth programs, events, organizations, and transparency services.",
+  "description": "Y-TRACE streamlines youth organization registration, compliance documents, budget requests, liquidation reporting, YPOP incentives, and official LYDO updates.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

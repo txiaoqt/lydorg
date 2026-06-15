@@ -143,6 +143,8 @@ const getDocumentUploadHelpText = (documentTypeId: string) =>
     : "Upload a PDF file for submission.";
 const isApprovedSubmissionFile = (file?: Pick<SubmissionFile, "adminStatus"> | null) =>
   file?.adminStatus === "approved" || file?.adminStatus === "approved_green";
+const isApprovedDocumentSubmission = (submission?: { status?: string } | null) =>
+  submission?.status === "approved" || submission?.status === "approved_green";
 const formatVerifiedDateLabel = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -528,6 +530,7 @@ export default function UserPortal({ section }: { section: string }) {
     organizationIdentifierNumber: user?.profileHints?.organizationIdentifierNumber ?? "",
   });
   const submission = state.documentSubmissions.find((s) => s.organizationId === (currentProfile?.id ?? "___")) ?? null;
+  const isDocumentSubmissionApproved = isApprovedDocumentSubmission(submission);
   const userNotifications = useMemo(
     () => state.notifications.filter((notification) => notification.userId === user?.id),
     [state.notifications, user?.id],
@@ -834,6 +837,14 @@ export default function UserPortal({ section }: { section: string }) {
   const handleDocumentUpload = async (documentTypeName: string, file: File | null) => {
     if (!file) return;
     if (!ensureCompletedOrganizationProfile()) return;
+    if (isDocumentSubmissionApproved) {
+      toast({
+        title: "Submission locked",
+        description: "Approved submitted documents can no longer be changed or replaced.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const localDocumentType = templateDocuments.find((documentType) => documentType.name === documentTypeName);
     if (!localDocumentType) return;
@@ -927,6 +938,15 @@ export default function UserPortal({ section }: { section: string }) {
 
   const confirmRemoveDocument = async () => {
     if (!pendingDocumentRemoval) return;
+    if (isDocumentSubmissionApproved) {
+      toast({
+        title: "Submission locked",
+        description: "Approved submitted documents can no longer be removed.",
+        variant: "destructive",
+      });
+      setPendingDocumentRemoval(null);
+      return;
+    }
     const targetFile = docFiles.find((entry) => entry.id === pendingDocumentRemoval.fileId);
     if (isApprovedSubmissionFile(targetFile)) {
       toast({
@@ -955,6 +975,15 @@ export default function UserPortal({ section }: { section: string }) {
 
   const saveAttachedDocumentChanges = async () => {
     if (!attachedDocumentEditor) return;
+    if (isDocumentSubmissionApproved) {
+      toast({
+        title: "Submission locked",
+        description: "Approved submitted documents can no longer be changed or removed.",
+        variant: "destructive",
+      });
+      closeAttachedDocumentEditor();
+      return;
+    }
     if (isApprovedSubmissionFile(attachedDocumentEditor.file)) {
       toast({
         title: "Document locked",
@@ -2426,6 +2455,16 @@ export default function UserPortal({ section }: { section: string }) {
                           </div>
                           <label
                             onClick={(event) => {
+                              if (file) return;
+                              if (isDocumentSubmissionApproved) {
+                                event.preventDefault();
+                                toast({
+                                  title: "Submission locked",
+                                  description: "Approved submitted documents can no longer be changed or replaced.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
                               if (ensureCompletedOrganizationProfile()) return;
                               event.preventDefault();
                             }}
@@ -2434,6 +2473,7 @@ export default function UserPortal({ section }: { section: string }) {
                               type="file"
                               accept={getDocumentUploadAcceptValue(documentType.id)}
                               className="sr-only"
+                              disabled={isDocumentSubmissionApproved}
                               onChange={(event) => {
                                 void handleDocumentUpload(documentType.name, event.target.files?.[0] ?? null);
                                 event.currentTarget.value = "";
@@ -2444,7 +2484,11 @@ export default function UserPortal({ section }: { section: string }) {
                               variant={file ? "outline" : "secondary"}
                               size="sm"
                               asChild
-                              disabled={scanningDocumentId === documentType.id || submittingDocumentId === documentType.id}
+                              disabled={
+                                scanningDocumentId === documentType.id ||
+                                submittingDocumentId === documentType.id ||
+                                (!file && isDocumentSubmissionApproved)
+                              }
                               className="cursor-pointer"
                               onClick={(event) => {
                                 if (file) {
@@ -5278,7 +5322,7 @@ export default function UserPortal({ section }: { section: string }) {
                   variant="outline"
                   className="w-full justify-start"
                   onClick={() => attachedDocumentInputRef.current?.click()}
-                  disabled={Boolean(savingAttachedDocument) || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
+                  disabled={Boolean(savingAttachedDocument) || isDocumentSubmissionApproved || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
                 >
                   <FileUp className="mr-2 h-4 w-4" />
                   Change File
@@ -5299,7 +5343,7 @@ export default function UserPortal({ section }: { section: string }) {
                       attachedDocumentInputRef.current.value = "";
                     }
                   }}
-                  disabled={Boolean(savingAttachedDocument) || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
+                  disabled={Boolean(savingAttachedDocument) || isDocumentSubmissionApproved || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   {attachedDocumentMarkedForRemoval ? "Undo Remove" : "Remove Document"}
@@ -5313,7 +5357,7 @@ export default function UserPortal({ section }: { section: string }) {
                   type="button"
                   className="flex-1"
                   onClick={() => void saveAttachedDocumentChanges()}
-                  disabled={Boolean(savingAttachedDocument) || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
+                  disabled={Boolean(savingAttachedDocument) || isDocumentSubmissionApproved || isApprovedSubmissionFile(attachedDocumentEditor?.file)}
                 >
                   {savingAttachedDocument ? "Saving..." : "Save Changes"}
                 </Button>
