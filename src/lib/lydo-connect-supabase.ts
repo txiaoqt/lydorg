@@ -1278,6 +1278,15 @@ export const updateBudgetRequestInSupabase = async (
 ) => {
   if (!supabase) throw new Error("Supabase is not configured.");
 
+  const normalizedAdminRemarks =
+    patch.adminRemarks !== undefined
+      ? patch.adminRemarks.trim()
+      : undefined;
+  const normalizedUserNote =
+    patch.userNote !== undefined
+      ? patch.userNote.trim()
+      : undefined;
+
   const adminSession = readAdminSession();
   if (adminSession?.sessionToken) {
     const { data, error } = await supabase.rpc("update_admin_budget_request", {
@@ -1288,10 +1297,10 @@ export const updateBudgetRequestInSupabase = async (
       _released_amount: patch.releasedAmount ?? null,
       _release_date: patch.releaseDate || null,
       _remarks: patch.remarks?.trim() || null,
-      _admin_remarks: patch.adminRemarks?.trim() || null,
+      _admin_remarks: normalizedAdminRemarks ?? null,
       _go_signal_at: patch.goSignalAt || null,
       _hard_copy_submitted_at: patch.hardCopySubmittedAt || null,
-      _user_note: patch.userNote?.trim() || null,
+      _user_note: normalizedUserNote ?? null,
       _revision_history: patch.revisionHistory ?? null,
     });
 
@@ -1314,10 +1323,10 @@ export const updateBudgetRequestInSupabase = async (
   if (patch.purposeCategory !== undefined) payload.purpose_category = patch.purposeCategory.trim();
   if (patch.status !== undefined) payload.status = patch.status;
   if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
-  if (patch.adminRemarks !== undefined) payload.admin_remarks = patch.adminRemarks.trim() || null;
+  if (patch.adminRemarks !== undefined) payload.admin_remarks = normalizedAdminRemarks ?? "";
   if (patch.goSignalAt !== undefined) payload.go_signal_at = patch.goSignalAt || null;
   if (patch.hardCopySubmittedAt !== undefined) payload.hard_copy_submitted_at = patch.hardCopySubmittedAt || null;
-  if (patch.userNote !== undefined) payload.user_note = patch.userNote.trim() || null;
+  if (patch.userNote !== undefined) payload.user_note = normalizedUserNote ?? "";
   if (patch.revisionHistory !== undefined) payload.revision_history = patch.revisionHistory;
 
   const { data, error } = await supabase!
