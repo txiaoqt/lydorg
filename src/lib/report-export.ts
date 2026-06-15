@@ -437,6 +437,27 @@ const calculateColumnWidth = (values: string[], minWidth: number, maxWidth: numb
   return Math.min(Math.max(longest + 2, minWidth), maxWidth);
 };
 
+type ExcelJsModuleShape = {
+  Workbook?: new () => {
+    creator?: string;
+    created?: Date;
+    addWorksheet: (name: string) => any;
+    xlsx: { writeBuffer: () => Promise<ArrayBuffer> };
+  };
+  default?: ExcelJsModuleShape;
+};
+
+const resolveExcelJsWorkbook = async () => {
+  const excelJsModule = (await import("exceljs")) as ExcelJsModuleShape;
+  const workbookCtor = excelJsModule.Workbook ?? excelJsModule.default?.Workbook;
+
+  if (!workbookCtor) {
+    throw new Error("ExcelJS workbook constructor is unavailable.");
+  }
+
+  return workbookCtor;
+};
+
 const getWorksheetCellValue = <Row,>(column: ReportColumn<Row>, row: Row, index: number) => {
   const rawValue = (column.xlsxValue ?? column.value)(row, index);
   if (column.xlsxType === "currency" || column.xlsxType === "integer" || column.xlsxType === "decimal") {
@@ -466,8 +487,8 @@ const estimateRowHeight = (values: unknown[]) => {
 };
 
 export const exportReportAsXlsx = async <Row,>(options: ReportExportOptions<Row>) => {
-  const ExcelJS = await import("exceljs");
-  const workbook = new ExcelJS.Workbook();
+  const Workbook = await resolveExcelJsWorkbook();
+  const workbook = new Workbook();
   workbook.creator = "OpenAI Codex";
   workbook.created = new Date();
 
