@@ -445,6 +445,7 @@ export type BudgetRequest = {
   purposeCategory: string;
   status: BudgetRequestStatus;
   remarks: string;
+  adminRemarks: string;
   goSignalAt: string;
   hardCopySubmittedAt: string;
   createdAt: string;

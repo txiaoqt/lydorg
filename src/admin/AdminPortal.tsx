@@ -1569,16 +1569,14 @@ export default function AdminPortal({ section }: { section: string }) {
             status: "approved_for_ftf_green",
             approvedAmount,
             goSignalAt: budgetHistoryNow,
-          });
-          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            adminRemarks: "",
             revisionHistory: [...existingHistory, { action: "approved_for_ftf_green", adminRemarks: "", changedAt: budgetHistoryNow }],
           });
         } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "hard_copy_submitted",
             hardCopySubmittedAt: budgetHistoryNow,
-          });
-          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            adminRemarks: "",
             revisionHistory: [...existingHistory, { action: "hard_copy_submitted", adminRemarks: "", changedAt: budgetHistoryNow }],
           });
         } else if (pendingAdminConfirmation.action === "cash_released") {
@@ -1586,24 +1584,19 @@ export default function AdminPortal({ section }: { section: string }) {
             status: "budget_released",
             releasedAmount: approvedAmount,
             releaseDate: getManilaDateIso(),
-          });
-          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            adminRemarks: "",
             revisionHistory: [...existingHistory, { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow }],
           });
         } else if (pendingAdminConfirmation.action === "needs_revision") {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "needs_revision",
-            remarks: adminRemarks,
-          });
-          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            adminRemarks,
             revisionHistory: [...existingHistory, { action: "needs_revision", adminRemarks, changedAt: budgetHistoryNow }],
           });
         } else {
           await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, {
             status: "rejected_red",
-            remarks: adminRemarks,
-          });
-          updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, {
+            adminRemarks,
             revisionHistory: [...existingHistory, { action: "rejected_red", adminRemarks, changedAt: budgetHistoryNow }],
           });
         }
@@ -3297,45 +3290,49 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   )}
                   <div className="divide-y divide-border/40">
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Requested amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Approved amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.approvedAmount.toLocaleString()}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Released amount</p>
                       <p className="text-sm font-medium">PHP {selectedBudgetRequest.releasedAmount.toLocaleString()}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Activity date</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.activityDate || "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Venue</p>
                       <p className="break-words text-sm font-medium">{selectedBudgetRequest.venue || "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Purpose category</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.purposeCategory || "N/A"}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Go signal</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.goSignalAt || "Pending"}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Hard copy submitted</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.hardCopySubmittedAt || "Pending"}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
                       <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Release date</p>
                       <p className="text-sm font-medium">{selectedBudgetRequest.releaseDate || "Pending"}</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Remarks</p>
+                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Organization remarks</p>
                       <p className="break-words text-sm font-medium">{selectedBudgetRequest.remarks || "None"}</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
+                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Latest admin feedback</p>
+                      <p className="break-words text-sm font-medium">{selectedBudgetRequest.adminRemarks || "None"}</p>
                     </div>
                   </div>
                   <div className="mt-4 rounded-xl border border-border/70 bg-background p-4">

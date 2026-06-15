@@ -363,11 +363,19 @@ create table if not exists public.budget_requests (
   purpose_category text not null default '',
   status public.budget_request_status not null default 'draft',
   remarks text,
+  admin_remarks text not null default '',
   go_signal_at timestamptz,
   hard_copy_submitted_at timestamptz,
+  user_note text not null default '',
+  revision_history jsonb not null default '[]',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table if exists public.budget_requests
+  add column if not exists admin_remarks text not null default '',
+  add column if not exists user_note text not null default '',
+  add column if not exists revision_history jsonb not null default '[]';
 
 create table if not exists public.budget_request_files (
   id uuid primary key default gen_random_uuid(),
@@ -1540,8 +1548,11 @@ create or replace function public.update_admin_budget_request(
   _released_amount numeric(14,2) default null,
   _release_date date default null,
   _remarks text default null,
+  _admin_remarks text default null,
   _go_signal_at timestamptz default null,
-  _hard_copy_submitted_at timestamptz default null
+  _hard_copy_submitted_at timestamptz default null,
+  _user_note text default null,
+  _revision_history jsonb default null
 )
 returns table (
   id uuid,
@@ -1558,8 +1569,11 @@ returns table (
   purpose_category text,
   status public.budget_request_status,
   remarks text,
+  admin_remarks text,
   go_signal_at timestamptz,
   hard_copy_submitted_at timestamptz,
+  user_note text,
+  revision_history jsonb,
   created_at timestamptz,
   updated_at timestamptz
 )
@@ -1587,8 +1601,11 @@ begin
     released_amount = coalesce(_released_amount, budget_requests.released_amount),
     release_date = coalesce(_release_date, budget_requests.release_date),
     remarks = coalesce(_remarks, budget_requests.remarks),
+    admin_remarks = coalesce(_admin_remarks, budget_requests.admin_remarks),
     go_signal_at = coalesce(_go_signal_at, budget_requests.go_signal_at),
     hard_copy_submitted_at = coalesce(_hard_copy_submitted_at, budget_requests.hard_copy_submitted_at),
+    user_note = coalesce(_user_note, budget_requests.user_note),
+    revision_history = coalesce(_revision_history, budget_requests.revision_history),
     updated_at = now()
   where budget_requests.id = _budget_request_id
   returning
@@ -1606,8 +1623,11 @@ begin
     budget_requests.purpose_category,
     budget_requests.status,
     budget_requests.remarks,
+    budget_requests.admin_remarks,
     budget_requests.go_signal_at,
     budget_requests.hard_copy_submitted_at,
+    budget_requests.user_note,
+    budget_requests.revision_history,
     budget_requests.created_at,
     budget_requests.updated_at;
 end;
@@ -1893,15 +1913,15 @@ begin
   if new.status = 'needs_revision' then
     notif_type := 'document_revision';
     notif_title := 'Document revision requested';
-    notif_message := 'Admin requested corrections for your document submission.';
+    notif_message := 'Your document submission has been marked needs revision.';
   elsif new.status = 'approved_green' then
     notif_type := 'document_green';
     notif_title := 'Document submission approved';
-    notif_message := 'Your document has been marked approved.';
+    notif_message := 'Your document submission has been marked approved.';
   elsif new.status = 'rejected_red' then
     notif_type := 'document_red';
     notif_title := 'Document submission rejected';
-    notif_message := 'Your document has been marked rejected.';
+    notif_message := 'Your document submission has been marked rejected.';
   else
     return new;
   end if;
@@ -1983,10 +2003,10 @@ begin
     values (org_user_id, new.organization_id, notif_title, notif_message, notif_type, 'budget_request', new.id);
   elsif new.status = 'needs_revision' then
     insert into public.notifications (user_id, organization_id, title, message, type, related_type, related_id)
-    values (org_user_id, new.organization_id, 'Budget revision requested', 'Admin requested corrections for your budget request.', 'budget_revision', 'budget_request', new.id);
+    values (org_user_id, new.organization_id, 'Budget revision requested', 'Your budget request has been marked needs revision.', 'budget_revision', 'budget_request', new.id);
   elsif new.status = 'rejected_red' then
     insert into public.notifications (user_id, organization_id, title, message, type, related_type, related_id)
-    values (org_user_id, new.organization_id, 'Budget request rejected', 'Your budget request was marked red.', 'document_red', 'budget_request', new.id);
+    values (org_user_id, new.organization_id, 'Budget request rejected', 'Your budget request has been marked rejected.', 'document_red', 'budget_request', new.id);
   end if;
 
   insert into public.activity_logs (actor_user_id, organization_id, action, related_type, related_id, description)

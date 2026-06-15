@@ -81,6 +81,7 @@ import {
   deleteBudgetRequestInSupabase,
   uploadBudgetRequestFileToSupabase,
   createLiquidationReportFileInSupabase,
+  deleteLiquidationReportFileInSupabase,
   resolveSupabaseFileUrl,
   upsertOrganizationProfileInSupabase,
   removeOrganizationDocumentFromSupabase,
@@ -115,6 +116,18 @@ const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
 const formatCurrency = (value: number) => `PHP ${value.toLocaleString()}`;
+const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
+  if (!request) return "";
+  const direct = request.adminRemarks?.trim();
+  if (direct) return direct;
+
+  return (
+    [...(request.revisionHistory ?? [])]
+      .reverse()
+      .find((entry) => (entry.action === "needs_revision" || entry.action === "rejected_red") && entry.adminRemarks?.trim())
+      ?.adminRemarks?.trim() ?? ""
+  );
+};
 const organizationEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const philippineContactNumberPattern = /^09\d{9}$/;
 const canInlinePreviewFile = (value: string) => /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(value);
@@ -264,6 +277,7 @@ const createBlankBudgetRequest = (organizationId: string, submittedBy: string): 
   purposeCategory: "",
   status: "draft",
   remarks: "",
+  adminRemarks: "",
   goSignalAt: "",
   hardCopySubmittedAt: "",
   createdAt: new Date().toISOString(),
@@ -1478,6 +1492,17 @@ export default function UserPortal({ section }: { section: string }) {
     if (!fileList?.length) return;
 
     try {
+      const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
+      const shouldReplaceExistingFiles =
+        report.status === "needs_revision" &&
+        existingFiles.length > 0;
+
+      if (shouldReplaceExistingFiles) {
+        for (const existingFile of existingFiles) {
+          await deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl);
+        }
+      }
+
       for (const file of Array.from(fileList)) {
         await createLiquidationReportFileInSupabase({
           liquidationReportId: report.id,
@@ -1492,7 +1517,9 @@ export default function UserPortal({ section }: { section: string }) {
 
       toast({
         title: "Liquidation files uploaded",
-        description: "The post-activity documents were attached to the liquidation record.",
+        description: shouldReplaceExistingFiles
+          ? "The previous liquidation files were replaced with the new upload."
+          : "The post-activity documents were attached to the liquidation record.",
       });
     } catch (error) {
       toast({
@@ -1503,11 +1530,31 @@ export default function UserPortal({ section }: { section: string }) {
     }
   };
 
+  const handleDeleteLiquidationFile = async (file: LiquidationReportFile) => {
+    try {
+      await deleteLiquidationReportFileInSupabase(file.id, file.fileUrl);
+      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+
+      toast({
+        title: "Liquidation file removed",
+        description: "The selected liquidation attachment was removed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Remove failed",
+        description: error instanceof Error ? error.message : "The liquidation file could not be removed.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmitLiquidation = async (report: LiquidationReport) => {
     setSubmittingLiquidationId(report.id);
     try {
-      const updated = await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
-      updateLiquidationReport(report.id, { status: "submitted", updatedAt: updated.updatedAt });
+      await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
       setLiquidationNotesByReportId((prev) => { const next = { ...prev }; delete next[report.id]; return next; });
       const remoteSnapshot = await loadLydoConnectSupabaseState();
       if (remoteSnapshot) mergeRemoteState(remoteSnapshot);
@@ -2561,7 +2608,7 @@ export default function UserPortal({ section }: { section: string }) {
                               <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Feedback</p>
                             </div>
                             <p className="text-sm text-amber-800">
-                              {budgetRequests.find((r) => r.id === budgetForm.id)?.remarks?.trim() || "No comment was provided."}
+                              {getLatestBudgetAdminFeedback(budgetRequests.find((r) => r.id === budgetForm.id) ?? null) || "No comment was provided."}
                             </p>
                           </div>
                         )}
@@ -2648,13 +2695,13 @@ export default function UserPortal({ section }: { section: string }) {
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="budget-remarks">
-                              Remarks <span className="ml-1 text-destructive">*</span>
+                              Remarks for Admin <span className="ml-1 text-destructive">*</span>
                             </Label>
                             <Textarea
                               id="budget-remarks"
                               value={budgetForm.remarks}
                               onChange={(event) => setBudgetForm((current) => ({ ...current, remarks: event.target.value }))}
-                              placeholder="Notes for the reviewer."
+                              placeholder="Add your request note, justification, or other details for the admin."
                               rows={3}
                               required
                             />
@@ -2809,7 +2856,7 @@ export default function UserPortal({ section }: { section: string }) {
                                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
                                       <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Admin Feedback</p>
                                     </div>
-                                    <p className="text-sm text-amber-800">{request.remarks?.trim() || "No comment was provided."}</p>
+                                    <p className="text-sm text-amber-800">{getLatestBudgetAdminFeedback(request) || "No comment was provided."}</p>
                                   </div>
                                 )}
 
@@ -2975,6 +3022,7 @@ export default function UserPortal({ section }: { section: string }) {
                       report.remarks?.trim().length > 0 &&
                       (report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red");
                     const isSubmittable = liquidationSubmittableStatuses.has(report.status);
+                    const canEditFiles = report.status === "draft" || report.status === "needs_revision" || report.status === "overdue";
                     const isSubmitting = submittingLiquidationId === report.id;
                     const noteValue = liquidationNotesByReportId[report.id] ?? "";
                     return (
@@ -3078,6 +3126,7 @@ export default function UserPortal({ section }: { section: string }) {
                                 </label>
                                 <p className="text-xs text-muted-foreground">
                                   Attendance sheets, photos, narrative reports, expense receipts, etc. PDF/image/Word accepted.
+                                  {report.status === "needs_revision" ? " Uploading new files now will replace the current attached files." : ""}
                                 </p>
                               </div>
                               {attachedFiles.length ? (
@@ -3088,10 +3137,23 @@ export default function UserPortal({ section }: { section: string }) {
                                         <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                                         <span className="truncate font-medium text-foreground">{file.fileName}</span>
                                       </div>
-                                      <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
-                                        <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                        Open File
-                                      </Button>
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
+                                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                          Open File
+                                        </Button>
+                                        {canEditFiles ? (
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => void handleDeleteLiquidationFile(file)}
+                                          >
+                                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                            Remove
+                                          </Button>
+                                        ) : null}
+                                      </div>
                                     </div>
                                   ))}
                                 </div>

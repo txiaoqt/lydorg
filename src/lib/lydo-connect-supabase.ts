@@ -119,8 +119,11 @@ type BudgetRequestRow = {
   purpose_category: string | null;
   status: BudgetRequest["status"];
   remarks: string | null;
+  admin_remarks: string | null;
   go_signal_at: string | null;
   hard_copy_submitted_at: string | null;
+  user_note: string | null;
+  revision_history: unknown[] | null;
   created_at: string;
   updated_at: string;
 };
@@ -426,10 +429,13 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   purposeCategory: row.purpose_category ?? "",
   status: row.status,
   remarks: row.remarks ?? "",
+  adminRemarks: row.admin_remarks ?? "",
   goSignalAt: row.go_signal_at ?? "",
   hardCopySubmittedAt: row.hard_copy_submitted_at ?? "",
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  userNote: row.user_note ?? "",
+  revisionHistory: (row.revision_history ?? []) as BudgetRequest["revisionHistory"],
 });
 
 const mapDocumentSubmission = (row: DocumentSubmissionRow) => ({
@@ -1243,8 +1249,11 @@ export const createBudgetRequestInSupabase = async (params: {
     purpose_category: params.budgetRequest.purposeCategory.trim(),
     status: params.budgetRequest.status,
     remarks: params.budgetRequest.remarks.trim() || null,
+    admin_remarks: params.budgetRequest.adminRemarks?.trim() || null,
     go_signal_at: params.budgetRequest.goSignalAt || null,
     hard_copy_submitted_at: params.budgetRequest.hardCopySubmittedAt || null,
+    user_note: params.budgetRequest.userNote?.trim() || null,
+    revision_history: params.budgetRequest.revisionHistory ?? [],
   };
 
   const { data, error } = await supabase!
@@ -1279,8 +1288,11 @@ export const updateBudgetRequestInSupabase = async (
       _released_amount: patch.releasedAmount ?? null,
       _release_date: patch.releaseDate || null,
       _remarks: patch.remarks?.trim() || null,
+      _admin_remarks: patch.adminRemarks?.trim() || null,
       _go_signal_at: patch.goSignalAt || null,
       _hard_copy_submitted_at: patch.hardCopySubmittedAt || null,
+      _user_note: patch.userNote?.trim() || null,
+      _revision_history: patch.revisionHistory ?? null,
     });
 
     const updatedRow = Array.isArray(data) ? data[0] : null;
@@ -1302,8 +1314,11 @@ export const updateBudgetRequestInSupabase = async (
   if (patch.purposeCategory !== undefined) payload.purpose_category = patch.purposeCategory.trim();
   if (patch.status !== undefined) payload.status = patch.status;
   if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
+  if (patch.adminRemarks !== undefined) payload.admin_remarks = patch.adminRemarks.trim() || null;
   if (patch.goSignalAt !== undefined) payload.go_signal_at = patch.goSignalAt || null;
   if (patch.hardCopySubmittedAt !== undefined) payload.hard_copy_submitted_at = patch.hardCopySubmittedAt || null;
+  if (patch.userNote !== undefined) payload.user_note = patch.userNote.trim() || null;
+  if (patch.revisionHistory !== undefined) payload.revision_history = patch.revisionHistory;
 
   const { data, error } = await supabase!
     .from("budget_requests")
@@ -1394,6 +1409,18 @@ export const createLiquidationReportFileInSupabase = async (params: {
 
   if (error || !data) throw new Error(error?.message ?? "Failed to save the liquidation file.");
   return mapLiquidationReportFile(data as LiquidationReportFileRow);
+};
+
+export const deleteLiquidationReportFileInSupabase = async (fileId: string, fileUrl: string) => {
+  await getAuthenticatedOrganizationContext();
+  await removeStorageObjects([fileUrl]);
+
+  const { error } = await supabase!
+    .from("liquidation_report_files")
+    .delete()
+    .eq("id", fileId);
+
+  if (error) throw new Error(error.message);
 };
 
 export const createNewsReleaseInSupabase = async (params: {
