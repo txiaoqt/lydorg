@@ -167,6 +167,7 @@ const App = () => (
                       <Route path="/admin/document-validation" element={<Navigate to="/admin/registrations" replace />} />
                       <Route path="/admin/budget-utilization" element={<RequireAdmin><AdminPortal section="budget-utilization" /></RequireAdmin>} />
                       <Route path="/admin/liquidation-monitoring" element={<RequireAdmin><AdminPortal section="liquidation-monitoring" /></RequireAdmin>} />
+                      <Route path="/admin/inquiries" element={<RequireAdmin><AdminPortal section="inquiries" /></RequireAdmin>} />
                       <Route path="/admin/news-releases" element={<RequireAdmin><AdminPortal section="news-releases" /></RequireAdmin>} />
                       <Route path="/admin/news-releases/:newsReleaseId" element={<RequireAdmin><NewsReleaseRecord /></RequireAdmin>} />
                       <Route path="/admin/budget-monitoring" element={<RequireAdmin><AdminPortal section="budget-monitoring" /></RequireAdmin>} />
@@ -176,6 +177,7 @@ const App = () => (
                       <Route path="/admin/activity-logs" element={<RequireAdmin><AdminPortal section="activity-logs" /></RequireAdmin>} />
                       <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                       <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
+                      <Route path="/admin/move-applications" element={<Navigate to="/admin/ypop-validation" replace />} />
                       <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
                       <Route path="/" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="*" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
@@ -190,6 +192,7 @@ const App = () => (
                           <Route path="/admin/document-validation" element={<Navigate to="/admin/registrations" replace />} />
                           <Route path="/admin/budget-utilization" element={<RequireAdmin><AdminPortal section="budget-utilization" /></RequireAdmin>} />
                           <Route path="/admin/liquidation-monitoring" element={<RequireAdmin><AdminPortal section="liquidation-monitoring" /></RequireAdmin>} />
+                          <Route path="/admin/inquiries" element={<RequireAdmin><AdminPortal section="inquiries" /></RequireAdmin>} />
                           <Route path="/admin/news-releases" element={<RequireAdmin><AdminPortal section="news-releases" /></RequireAdmin>} />
                           <Route path="/admin/news-releases/:newsReleaseId" element={<RequireAdmin><NewsReleaseRecord /></RequireAdmin>} />
                           <Route path="/admin/budget-monitoring" element={<RequireAdmin><AdminPortal section="budget-monitoring" /></RequireAdmin>} />
@@ -199,6 +202,7 @@ const App = () => (
                           <Route path="/admin/activity-logs" element={<RequireAdmin><AdminPortal section="activity-logs" /></RequireAdmin>} />
                           <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                           <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
+                          <Route path="/admin/move-applications" element={<Navigate to="/admin/ypop-validation" replace />} />
                           <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
                         </>
                       ) : (
@@ -228,6 +232,8 @@ const App = () => (
                       <Route path="/compliance-status" element={<RequireUser><UserPortal section="compliance-status" /></RequireUser>} />
                       <Route path="/notifications" element={<RequireUser><UserPortal section="notifications" /></RequireUser>} />
                       <Route path="/ypop" element={<RequireUser><UserPortal section="ypop" /></RequireUser>} />
+                      <Route path="/move" element={<Navigate to="/ypop" replace />} />
+                      <Route path="/templates" element={<RequireUser><UserPortal section="templates" /></RequireUser>} />
                       <Route path="/profile" element={<Navigate to="/organization-profile" replace />} />
                       <Route path="*" element={<NotFoundRoute />} />
                     </>

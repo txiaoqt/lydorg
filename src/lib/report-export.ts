@@ -441,10 +441,49 @@ type ExcelJsModuleShape = {
   Workbook?: new () => {
     creator?: string;
     created?: Date;
-    addWorksheet: (name: string) => any;
+    addWorksheet: (name: string) => ExcelWorksheetShape;
     xlsx: { writeBuffer: () => Promise<ArrayBuffer> };
   };
   default?: ExcelJsModuleShape;
+};
+
+type ExcelWorksheetShape = {
+  mergeCells: (range: string) => void;
+  getCell: (reference: string) => ExcelCellShape;
+  getRow: (index: number) => ExcelRowShape;
+  columns: Array<{ width?: number }>;
+  autoFilter?: { from: string; to: string };
+  views?: Array<{ state: string; ySplit: number }>;
+  pageSetup?: {
+    orientation: "portrait" | "landscape";
+    fitToPage: boolean;
+    fitToWidth: number;
+    fitToHeight: number;
+    printArea: string;
+    printTitlesRow: string;
+    margins: {
+      left: number;
+      right: number;
+      top: number;
+      bottom: number;
+      header: number;
+      footer: number;
+    };
+  };
+};
+
+type ExcelRowShape = {
+  height?: number;
+  getCell: (index: number) => ExcelCellShape;
+};
+
+type ExcelCellShape = {
+  value: unknown;
+  font?: Record<string, unknown>;
+  alignment?: Record<string, unknown>;
+  fill?: Record<string, unknown>;
+  border?: Record<string, unknown>;
+  numFmt?: string;
 };
 
 const resolveExcelJsWorkbook = async () => {

@@ -5,8 +5,9 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scrollbar-gutter: stable;
+  html,
+  body {
+    scrollbar-gutter: stable both-edges;
   }
 
   html,

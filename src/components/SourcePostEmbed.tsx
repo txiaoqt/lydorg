@@ -8,9 +8,18 @@ type SourcePostEmbedProps = {
   title: string;
   instanceKey?: string;
   className?: string;
+  showOpenLink?: boolean;
+  showSupportText?: boolean;
 };
 
-export default function SourcePostEmbed({ sourcePostUrl, title, instanceKey, className }: SourcePostEmbedProps) {
+export default function SourcePostEmbed({
+  sourcePostUrl,
+  title,
+  instanceKey,
+  className,
+  showOpenLink = true,
+  showSupportText = true,
+}: SourcePostEmbedProps) {
   const normalizedSourceUrl = normalizeSourcePostUrl(sourcePostUrl);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
@@ -52,14 +61,16 @@ export default function SourcePostEmbed({ sourcePostUrl, title, instanceKey, cla
 
   return (
     <div ref={containerRef} className={cn("mx-auto w-full max-w-[780px] space-y-3", className)}>
-      <a
-        href={normalizedSourceUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-      >
-        {openLabel} <ExternalLink className="h-4 w-4" />
-      </a>
+      {showOpenLink ? (
+        <a
+          href={normalizedSourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          {openLabel} <ExternalLink className="h-4 w-4" />
+        </a>
+      ) : null}
 
       {showLiveEmbed && embedConfig ? (
         <div className="relative overflow-hidden rounded-xl border bg-card" style={{ height: scaledEmbedHeight }}>
@@ -103,15 +114,17 @@ export default function SourcePostEmbed({ sourcePostUrl, title, instanceKey, cla
           </div>
         </div>
       )}
-      {embedIssue ? (
-        <p className="text-xs text-warning">{embedIssue.message}</p>
-      ) : embedConfig ? (
-        <p className="text-xs text-muted-foreground">
-          If Facebook shows "post no longer available", the post is usually not public/embeddable for all visitors.
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">Use a direct public Facebook post permalink for embedding.</p>
-      )}
+      {showSupportText ? (
+        embedIssue ? (
+          <p className="text-xs text-warning">{embedIssue.message}</p>
+        ) : embedConfig ? (
+          <p className="text-xs text-muted-foreground">
+            If Facebook shows "post no longer available", the post is usually not public/embeddable for all visitors.
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Use a direct public Facebook post permalink for embedding.</p>
+        )
+      ) : null}
     </div>
   );
 }

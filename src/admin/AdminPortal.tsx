@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, Bell, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Download, Eye, FileText, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, Trophy, Users, Wallet, X } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, Download, Eye, FileText, FolderOpen, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -31,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +41,7 @@ import { PortalShell } from "@/components/portal/PortalShell";
 import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
-import { adminNavigationGroups as baseAdminNavigationGroups, computeYpopScore, DEFAULT_ORG_LED_TIERS, type NewsRelease, type TransparencyPost, type YPOPCityActivity, type YPOPEntry, type YPOPFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildPublicRecordCode, computeYpopScore, DEFAULT_ORG_LED_TIERS, getApprovedYpopOrgActivityCount, getYpopCityLedPoints, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, templateScopeLabelMap, YPOP_BASE_TOTAL_POINTS, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type InquiryRecord, type NewsRelease, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
@@ -82,6 +83,9 @@ import {
   adminUpdateYpopCityActivityInSupabase,
   adminDeleteYpopCityActivityFromSupabase,
   adminUpdateYpopEntryInSupabase,
+  adminUpdateYpopEventParticipationInSupabase,
+  adminUpdateYpopOrgActivityInSupabase,
+  adminUpdateMoveApplicationInSupabase,
 } from "@/lib/lydo-connect-supabase";
 
 const routeMap: Record<string, string> = {
@@ -89,6 +93,7 @@ const routeMap: Record<string, string> = {
   registrations: "/admin/registrations",
   "budget-utilization": "/admin/budget-utilization",
   "liquidation-monitoring": "/admin/liquidation-monitoring",
+  inquiries: "/admin/inquiries",
   "news-releases": "/admin/news-releases",
   "budget-monitoring": "/admin/budget-monitoring",
   templates: "/admin/templates",
@@ -140,6 +145,42 @@ const formatVerifiedDateLabel = (value: string) => {
     year: "numeric",
     timeZone: "Asia/Manila",
   }).format(date).toUpperCase();
+};
+
+const getManilaNow = () => {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(now);
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return { year: Number(year), month: Number(month), day: Number(day), isoDate: `${year}-${month}-${day}` };
+};
+
+const deriveSemesterLabelFromDate = (dateLike?: string) => {
+  const base = dateLike ? new Date(dateLike) : new Date();
+  const safeBase = Number.isNaN(base.getTime()) ? new Date() : base;
+  const manila = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(safeBase);
+  const year = Number(manila.find((part) => part.type === "year")?.value ?? new Date().getFullYear());
+  const month = Number(manila.find((part) => part.type === "month")?.value ?? 1);
+  return `${year} ${month <= 6 ? "First" : "Second"} Semester`;
+};
+
+const buildSemesterKeyFromNow = (existingPeriods: YPOPPeriod[]) => {
+  const { year, month, day } = getManilaNow();
+  const semesterNumber = month <= 6 ? 1 : 2;
+  const prefix = `S${semesterNumber}-${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const existingCount = existingPeriods.filter((period) => period.semesterKey.startsWith(prefix)).length;
+  return `${prefix}-${String(existingCount + 1).padStart(2, "0")}`;
 };
 
 const canInlinePreviewFile = (value: string) => /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(value);
@@ -225,6 +266,27 @@ type PendingAdminConfirmation =
       action: "publish" | "hide";
       id: string;
       title: string;
+    }
+  | {
+      kind: "ypop_event";
+      action: "verified" | "needs_revision" | "rejected";
+      participationId: string;
+      entryId: string;
+      activityId: string;
+      organizationId: string;
+      organizationName: string;
+      activityName: string;
+      currentAdminRemarks: string;
+    }
+  | {
+      kind: "ypop_org_activity";
+      action: "approved" | "needs_revision" | "rejected";
+      orgActivityId: string;
+      entryId: string;
+      organizationId: string;
+      organizationName: string;
+      activityName: string;
+      currentAdminRemarks: string;
     };
 
 type PendingDeleteConfirmation =
@@ -298,6 +360,7 @@ type BarangayAllocationOrganizationDetail = {
   utilizationRate: number;
   requests: Array<{
     id: string;
+    createdAt: string;
     activityTitle: string;
     status: BudgetRequest["status"];
     approvedAmount: number;
@@ -315,7 +378,7 @@ type ActiveReportExport = "budget-requests" | "allocation-by-barangay" | null;
 export default function AdminPortal({ section }: { section: string }) {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { state, mergeRemoteState, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateYPOPEntry, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
+  const { state, mergeRemoteState, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
   const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
@@ -323,6 +386,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateNameDraft, setTemplateNameDraft] = useState("");
   const [templateDescriptionDraft, setTemplateDescriptionDraft] = useState("");
+  const [templateScopeDraft, setTemplateScopeDraft] = useState<"document_submission" | "move" | "other">("document_submission");
   const [templateFileDraft, setTemplateFileDraft] = useState<File | null>(null);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -335,6 +399,9 @@ export default function AdminPortal({ section }: { section: string }) {
   const [newsTitleDraft, setNewsTitleDraft] = useState("");
   const [newsDescriptionDraft, setNewsDescriptionDraft] = useState("");
   const [newsFacebookPostUrlDraft, setNewsFacebookPostUrlDraft] = useState("");
+  const [newsPreviewImageUrlDraft, setNewsPreviewImageUrlDraft] = useState("");
+  const [newsSearch, setNewsSearch] = useState("");
+  const [newsVisibilityFilter, setNewsVisibilityFilter] = useState<"all" | NewsRelease["visibilityStatus"]>("all");
   const [activityLogFilter, setActivityLogFilter] = useState<string>("all");
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const [activityDateFilter, setActivityDateFilter] = useState<"all" | "7d" | "30d" | "90d">("all");
@@ -356,6 +423,9 @@ export default function AdminPortal({ section }: { section: string }) {
   const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
   const [statusChangeRemarkDraft, setStatusChangeRemarkDraft] = useState("");
   const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
+  const [inquirySearch, setInquirySearch] = useState("");
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | InquiryRecord["status"]>("all");
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
   const [expandedRegistrationIds, setExpandedRegistrationIds] = useState<string[]>([]);
   const [expandedDocumentFileIds, setExpandedDocumentFileIds] = useState<string[]>([]);
   const [documentReviewRemarksByFileId, setDocumentReviewRemarksByFileId] = useState<Record<string, string>>({});
@@ -376,8 +446,16 @@ export default function AdminPortal({ section }: { section: string }) {
   const [liquidationPreviewEmptyMessage, setLiquidationPreviewEmptyMessage] = useState("");
   const [liquidationPreviewCanInline, setLiquidationPreviewCanInline] = useState(false);
   const [liquidationPreviewLoading, setLiquidationPreviewLoading] = useState(false);
-  const [liquidationPreviewExpanded, setLiquidationPreviewExpanded] = useState(false);
   const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation">("overview");
+  const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
+  const [budgetRequestsStatusFilter, setBudgetRequestsStatusFilter] = useState("all");
+  const [liquidationReportsSearch, setLiquidationReportsSearch] = useState("");
+  const [liquidationReportsStatusFilter, setLiquidationReportsStatusFilter] = useState("all");
+  const [budgetMonitoringSearch, setBudgetMonitoringSearch] = useState("");
+  const [budgetMonitoringRiskFilter, setBudgetMonitoringRiskFilter] = useState("all");
+  const [registrationSearch, setRegistrationSearch] = useState("");
+  const [registrationStatusFilter, setRegistrationStatusFilter] = useState("all");
+  const [registrationDistrictFilter, setRegistrationDistrictFilter] = useState("all");
   const [budgetAllocationDistrictFilter, setBudgetAllocationDistrictFilter] = useState("all");
   const [budgetAllocationBarangayFilter, setBudgetAllocationBarangayFilter] = useState("all");
   const [activeReportExport, setActiveReportExport] = useState<ActiveReportExport>(null);
@@ -391,32 +469,48 @@ export default function AdminPortal({ section }: { section: string }) {
     adminRemarks: string;
   } | null>(null);
   const [savingYpopValidation, setSavingYpopValidation] = useState(false);
+  const [ypopScoringHelpOpen, setYpopScoringHelpOpen] = useState(false);
+  const [confirmYpopValidationOpen, setConfirmYpopValidationOpen] = useState(false);
+  const [ypopValidationAcknowledged, setYpopValidationAcknowledged] = useState(false);
   const [ypopAdminView, setYpopAdminView] = useState<"periods" | "create-period" | "period-detail" | "entry-review">("periods");
   const [selectedYpopPeriodId, setSelectedYpopPeriodId] = useState<string | null>(null);
-  const [createPeriodForm, setCreatePeriodForm] = useState<{ semesterLabel: string; validationDeadline: string; status: YPOPPeriodStatus }>({ semesterLabel: "", validationDeadline: "", status: "draft" });
+  const [createPeriodForm, setCreatePeriodForm] = useState<{ semesterLabel: string; validationDeadline: string; status: YPOPPeriodStatus }>({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
   const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
-  const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; date: string; venue: string; points: string }>>([]);
-  const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; date: string; venue: string; points: string } | null>(null);
+  const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; date: string; venue: string; category: YPOPCityActivityCategory }>>([]);
+  const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; date: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [createPeriodOrgLedTiers, setCreatePeriodOrgLedTiers] = useState<YPOPOrgLedTier[]>(DEFAULT_ORG_LED_TIERS);
   const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | YPOPStatus>("all");
-  const [newActivityForm, setNewActivityForm] = useState<{ name: string; date: string; venue: string; points: string } | null>(null);
+  const [newActivityForm, setNewActivityForm] = useState<{ name: string; date: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
-  const [editingActivityData, setEditingActivityData] = useState<{ name: string; date: string; venue: string; points: string } | null>(null);
+  const [editingActivityData, setEditingActivityData] = useState<{ name: string; date: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [ypopPreviewFileId, setYpopPreviewFileId] = useState<string | null>(null);
   const [ypopPreviewUrl, setYpopPreviewUrl] = useState("");
   const [ypopPreviewTitle, setYpopPreviewTitle] = useState("");
   const [ypopPreviewCanInline, setYpopPreviewCanInline] = useState(false);
   const [ypopPreviewLoading, setYpopPreviewLoading] = useState(false);
+  const [ypopEventReviewRemarksById, setYpopEventReviewRemarksById] = useState<Record<string, string>>({});
 
   const profile = state.organizationProfiles[0] ?? null;
   const adminNotifications = state.notifications.filter((item) => item.userId === adminId);
   const unread = adminNotifications.filter((item) => !item.isRead).length;
-  const templateDocuments = useMemo(
+  const activeTemplates = useMemo(
     () =>
       [...state.templates]
         .filter((template) => template.templateActive && template.isActive)
         .sort((left, right) => left.sortOrder - right.sortOrder),
     [state.templates],
+  );
+  const templateDocuments = useMemo(
+    () => activeTemplates.filter((template) => template.templateScope === "document_submission"),
+    [activeTemplates],
+  );
+  const moveTemplates = useMemo(
+    () => activeTemplates.filter((template) => template.templateScope === "move"),
+    [activeTemplates],
+  );
+  const otherTemplates = useMemo(
+    () => activeTemplates.filter((template) => template.templateScope === "other"),
+    [activeTemplates],
   );
   const newsReleases = useMemo(
     () =>
@@ -486,6 +580,49 @@ export default function AdminPortal({ section }: { section: string }) {
     [selectedLiquidationReport?.organizationId, state.organizationProfiles],
   );
   const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
+  const formatShortDate = (value?: string | null) => {
+    if (!value) return "Pending";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Pending";
+    return new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(parsed);
+  };
+  const formatDateTimeLabel = (value?: string | null) => {
+    if (!value) return "Pending";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Pending";
+    return new Intl.DateTimeFormat("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsed);
+  };
+  const formatCompactDateParts = (value?: string | null) => {
+    if (!value) {
+      return { date: "Pending", time: "" };
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return { date: "Pending", time: "" };
+    }
+    return {
+      date: new Intl.DateTimeFormat("en-PH", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(parsed),
+      time: new Intl.DateTimeFormat("en-PH", {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(parsed),
+    };
+  };
+  const formatFileMetaLabel = (fileType?: string | null, fileSize?: number | null) => {
+    const normalizedType = (fileType || "PDF").replace("application/", "").toUpperCase();
+    const sizeLabel = fileSize ? `${Math.max(1, Math.round(fileSize / 1024))} KB` : "File attached";
+    return `${normalizedType} • ${sizeLabel}`;
+  };
   const getManilaDateIso = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
   const visibleLiquidationReports = useMemo(
     () =>
@@ -497,13 +634,29 @@ export default function AdminPortal({ section }: { section: string }) {
         .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()),
     [budgetReleaseStatuses, state.budgetRequests, state.liquidationReports],
   );
+  const budgetRequestStatusOptions = useMemo(
+    () => Array.from(new Set(state.budgetRequests.map((request) => request.status))),
+    [state.budgetRequests],
+  );
+  const liquidationReportStatusOptions = useMemo(
+    () => Array.from(new Set(visibleLiquidationReports.map((report) => report.status))),
+    [visibleLiquidationReports],
+  );
+  const getLatestLiquidationReportForBudgetRequest = (budgetRequestId: string) =>
+    [...state.liquidationReports]
+      .filter((item) => item.budgetRequestId === budgetRequestId)
+      .sort((left, right) => {
+        const leftTime = new Date(left.updatedAt || left.createdAt).getTime();
+        const rightTime = new Date(right.updatedAt || right.createdAt).getTime();
+        return rightTime - leftTime;
+      })[0] ?? null;
   const budgetMonitoringEntries = useMemo<BudgetMonitoringEntry[]>(() => {
     const now = new Date();
 
     return state.budgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .map((request) => {
-        const liquidation = state.liquidationReports.find((item) => item.budgetRequestId === request.id) ?? null;
+        const liquidation = getLatestLiquidationReportForBudgetRequest(request.id);
         const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
         const releasedAmount = Number(request.releasedAmount || 0);
         const remainingAmount = Math.max(approvedAmount - releasedAmount, 0);
@@ -576,7 +729,118 @@ export default function AdminPortal({ section }: { section: string }) {
         }
         return right.approvedAmount - left.approvedAmount;
       });
-  }, [state.budgetRequests, state.liquidationReports, state.organizationProfiles]);
+  }, [budgetReleaseStatuses, state.budgetRequests, state.liquidationReports, state.organizationProfiles]);
+  const filteredAdminBudgetRequests = useMemo(() => {
+    const query = budgetRequestsSearch.trim().toLowerCase();
+    return state.budgetRequests.filter((request) => {
+      const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
+      const matchesSearch =
+        !query ||
+        [
+          request.activityTitle,
+          requestOrganization?.organizationName ?? "",
+          request.venue ?? "",
+          buildPublicRecordCode("BR", request, state.budgetRequests),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus = budgetRequestsStatusFilter === "all" || request.status === budgetRequestsStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [budgetRequestsSearch, budgetRequestsStatusFilter, state.budgetRequests, state.organizationProfiles]);
+  const filteredVisibleLiquidationReports = useMemo(() => {
+    const query = liquidationReportsSearch.trim().toLowerCase();
+    return visibleLiquidationReports.filter((report) => {
+      const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
+      const liquidationOrg = state.organizationProfiles.find((org) => org.id === report.organizationId) ?? null;
+      const matchesSearch =
+        !query ||
+        [
+          liquidationOrg?.organizationName ?? "",
+          linkedBudget?.activityTitle ?? "",
+          buildPublicRecordCode("LR", report, visibleLiquidationReports),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus = liquidationReportsStatusFilter === "all" || report.status === liquidationReportsStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [
+    liquidationReportsSearch,
+    liquidationReportsStatusFilter,
+    state.budgetRequests,
+    state.organizationProfiles,
+    visibleLiquidationReports,
+  ]);
+  const filteredBudgetMonitoringEntries = useMemo(() => {
+    const query = budgetMonitoringSearch.trim().toLowerCase();
+    return budgetMonitoringEntries.filter((entry) => {
+      const linkedRequest = state.budgetRequests.find((request) => request.id === entry.budgetRequestId) ?? null;
+      const matchesSearch =
+        !query ||
+        [entry.title, entry.organizationName, buildPublicRecordCode("BR", linkedRequest, state.budgetRequests)]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesRisk = budgetMonitoringRiskFilter === "all" || entry.riskLabel === budgetMonitoringRiskFilter;
+      return matchesSearch && matchesRisk;
+    });
+  }, [budgetMonitoringEntries, budgetMonitoringRiskFilter, budgetMonitoringSearch, state.budgetRequests]);
+  const registrationStatusOptions = useMemo(
+    () => Array.from(new Set(state.organizationProfiles.map((org) => org.profileStatus))),
+    [state.organizationProfiles],
+  );
+  const registrationDistrictOptions = useMemo(
+    () =>
+      Array.from(new Set(state.organizationProfiles.map((org) => org.district?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [state.organizationProfiles],
+  );
+  const filteredRegistrations = useMemo(() => {
+    const query = registrationSearch.trim().toLowerCase();
+    return state.organizationProfiles.filter((org) => {
+      const matchesSearch =
+        !query ||
+        [org.organizationName, org.organizationEmail, org.barangay ?? "", org.district ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus = registrationStatusFilter === "all" || org.profileStatus === registrationStatusFilter;
+      const matchesDistrict = registrationDistrictFilter === "all" || org.district === registrationDistrictFilter;
+      return matchesSearch && matchesStatus && matchesDistrict;
+    });
+  }, [registrationDistrictFilter, registrationSearch, registrationStatusFilter, state.organizationProfiles]);
+  const filteredNewsReleases = useMemo(() => {
+    const query = newsSearch.trim().toLowerCase();
+    return newsReleases.filter((news) => {
+      const matchesSearch =
+        !query ||
+        [news.title, news.description, news.facebookPostUrl ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesVisibility = newsVisibilityFilter === "all" || news.visibilityStatus === newsVisibilityFilter;
+      return matchesSearch && matchesVisibility;
+    });
+  }, [newsSearch, newsVisibilityFilter, newsReleases]);
+  const filteredInquiries = useMemo(() => {
+    const query = inquirySearch.trim().toLowerCase();
+    return [...state.inquiries]
+      .filter((inquiry) => {
+        const matchesSearch =
+          !query ||
+          [inquiry.submitterName, inquiry.organizationName, inquiry.email, inquiry.subject, inquiry.description]
+            .join(" ")
+            .toLowerCase()
+            .includes(query);
+        const matchesStatus = inquiryStatusFilter === "all" || inquiry.status === inquiryStatusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  }, [inquirySearch, inquiryStatusFilter, state.inquiries]);
   const budgetMonitoringAnalysis = useMemo(() => {
     const totalApproved = budgetMonitoringEntries.reduce((sum, entry) => sum + entry.approvedAmount, 0);
     const totalReleased = budgetMonitoringEntries.reduce((sum, entry) => sum + entry.releasedAmount, 0);
@@ -722,6 +986,7 @@ export default function AdminPortal({ section }: { section: string }) {
         current.utilizationRate = current.approvedAmount > 0 ? Math.round((current.releasedAmount / current.approvedAmount) * 100) : 0;
         current.requests.push({
           id: request.id,
+          createdAt: request.createdAt,
           activityTitle: request.activityTitle,
           status: request.status,
           approvedAmount: request.approvedAmount,
@@ -771,6 +1036,37 @@ export default function AdminPortal({ section }: { section: string }) {
     });
     return rows;
   }, [budgetMonitoringEntries]);
+  const budgetMonitoringStatusRows = useMemo(() => {
+    const totalCount = Math.max(budgetMonitoringEntries.length, 1);
+    return budgetMonitoringChartData.map((row) => ({
+      ...row,
+      percentage: budgetMonitoringEntries.length ? Math.round((row.count / totalCount) * 100) : 0,
+      dotClass:
+        row.riskLabel === "On Track"
+          ? "bg-primary"
+          : row.riskLabel === "Needs Attention"
+          ? "bg-amber-400"
+          : row.riskLabel === "Overdue"
+          ? "bg-rose-500"
+          : "bg-emerald-500",
+      barClass:
+        row.riskLabel === "On Track"
+          ? "bg-primary"
+          : row.riskLabel === "Needs Attention"
+          ? "bg-amber-400"
+          : row.riskLabel === "Overdue"
+          ? "bg-rose-500"
+          : "bg-emerald-500",
+      chartColor:
+        row.riskLabel === "On Track"
+          ? "#2460A7"
+          : row.riskLabel === "Needs Attention"
+          ? "#F59E0B"
+          : row.riskLabel === "Overdue"
+          ? "#F43F5E"
+          : "#10B981",
+    }));
+  }, [budgetMonitoringChartData, budgetMonitoringEntries.length]);
   const allocationOrganizationNamesByGroup = useMemo(() => {
     const grouped = new Map<string, Set<string>>();
 
@@ -904,6 +1200,7 @@ export default function AdminPortal({ section }: { section: string }) {
       releasedBudget: state.budgetRequests.filter((item) => item.status === "budget_released").length,
       pendingLiquidation: state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length,
       overdueLiquidation: state.liquidationReports.filter((item) => item.status === "overdue").length,
+      pendingInquiries: state.inquiries.filter((item) => item.status === "pending_review").length,
       nonCompliant: state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length,
     }),
     [state],
@@ -1113,12 +1410,30 @@ export default function AdminPortal({ section }: { section: string }) {
     return () => { isActive = false; };
   }, [ypopPreviewFileId, state.ypopFiles]);
 
+  const mergeRemoteStateRef = useRef(mergeRemoteState);
+  useEffect(() => {
+    mergeRemoteStateRef.current = mergeRemoteState;
+  }, [mergeRemoteState]);
+
   const refreshAdminState = async () => {
     const remoteSnapshot = (await loadAdminPortalSupabaseState()) ?? (await loadLydoConnectSupabaseState());
     if (remoteSnapshot) {
-      mergeRemoteState(remoteSnapshot);
+      mergeRemoteStateRef.current(remoteSnapshot);
     }
   };
+
+  useEffect(() => {
+    let isActive = true;
+
+    void (async () => {
+      await refreshAdminState();
+      if (!isActive) return;
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [section]);
 
   const appendAuditLog = async (
     action: string,
@@ -1418,6 +1733,74 @@ export default function AdminPortal({ section }: { section: string }) {
         showCommentBox: false,
         commentLabel: "",
         commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "ypop_event") {
+      if (pendingAdminConfirmation.action === "verified") {
+        return {
+          title: "Confirm Event Verification",
+          description: `Click the checkbox to acknowledge this approval before verifying the proof submitted for ${pendingAdminConfirmation.activityName}.`,
+          checkboxLabel: "I acknowledge this event verification action.",
+          confirmLabel: "Mark Verified",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "needs_revision") {
+        return {
+          title: "Confirm Event Revision Request",
+          description: `Click the checkbox and add a comment before requesting revisions for ${pendingAdminConfirmation.activityName}.`,
+          checkboxLabel: "I acknowledge this event revision request.",
+          confirmLabel: "Request Revision",
+          showCommentBox: true,
+          commentLabel: "Admin Comment",
+          commentPlaceholder: "Explain what proof needs to be corrected or re-uploaded.",
+        };
+      }
+      return {
+        title: "Confirm Event Rejection",
+        description: `Click the checkbox and add a comment before rejecting the proof submitted for ${pendingAdminConfirmation.activityName}.`,
+        checkboxLabel: "I acknowledge this event rejection action.",
+        confirmLabel: "Reject Event Proof",
+        showCommentBox: true,
+        commentLabel: "Admin Comment",
+        commentPlaceholder: "Explain why this event proof is being rejected.",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "ypop_org_activity") {
+      if (pendingAdminConfirmation.action === "approved") {
+        return {
+          title: "Confirm PPA Approval",
+          description: `Click the checkbox to approve ${pendingAdminConfirmation.activityName}. This will automatically increase the organization-initiated bonus if a tier is reached.`,
+          checkboxLabel: "I acknowledge this PPA approval action.",
+          confirmLabel: "Approve PPA",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "needs_revision") {
+        return {
+          title: "Confirm PPA Revision Request",
+          description: `Click the checkbox and add a comment before requesting revisions for ${pendingAdminConfirmation.activityName}.`,
+          checkboxLabel: "I acknowledge this PPA revision request.",
+          confirmLabel: "Request Revision",
+          showCommentBox: true,
+          commentLabel: "Admin Comment",
+          commentPlaceholder: "Explain what needs to be corrected in the narrative or proof files.",
+        };
+      }
+      return {
+        title: "Confirm PPA Rejection",
+        description: `Click the checkbox and add a comment before rejecting ${pendingAdminConfirmation.activityName}.`,
+        checkboxLabel: "I acknowledge this PPA rejection action.",
+        confirmLabel: "Reject PPA",
+        showCommentBox: true,
+        commentLabel: "Admin Comment",
+        commentPlaceholder: "Explain why this organization-initiated activity is being rejected.",
       };
     }
 
@@ -1893,6 +2276,260 @@ export default function AdminPortal({ section }: { section: string }) {
             description: `${pendingAdminConfirmation.organizationName}'s liquidation report is now overdue.`,
           });
         }
+      } else if (pendingAdminConfirmation.kind === "ypop_event") {
+        const participation =
+          state.ypopEventParticipations.find((item) => item.id === pendingAdminConfirmation.participationId) ?? null;
+        const adminRemarks = statusChangeRemarkDraft.trim();
+
+        if (
+          (pendingAdminConfirmation.action === "needs_revision" || pendingAdminConfirmation.action === "rejected") &&
+          !adminRemarks
+        ) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision or rejecting this event proof.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const patch = {
+          status: pendingAdminConfirmation.action,
+          adminRemarks: pendingAdminConfirmation.action === "verified" ? "" : adminRemarks,
+          proofSubmittedAt: participation?.proofSubmittedAt ?? null,
+          verifiedAt: pendingAdminConfirmation.action === "verified" ? now : "",
+          revisionHistory: [
+            ...(participation?.revisionHistory ?? []),
+            {
+              action: pendingAdminConfirmation.action,
+              adminRemarks: pendingAdminConfirmation.action === "verified" ? "" : adminRemarks,
+              changedAt: now,
+            },
+          ],
+        };
+
+        try {
+          const saved = await adminUpdateYpopEventParticipationInSupabase(pendingAdminConfirmation.participationId, patch);
+          updateYPOPEventParticipation(saved.id, saved);
+        } catch {
+          updateYPOPEventParticipation(pendingAdminConfirmation.participationId, patch);
+        }
+
+        await refreshAdminState();
+
+        const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
+        if (pendingAdminConfirmation.action === "verified") {
+          await appendAuditLog(
+            "Verified YPOP event proof",
+            "ypop_event_participation",
+            pendingAdminConfirmation.participationId,
+            `Verified the YPOP event proof for "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "YPOP event proof verified",
+            message: `Your proof for ${pendingAdminConfirmation.activityName} has been verified.`,
+            type: "ypop_event_verified",
+            relatedType: "ypop_event_participation",
+            relatedId: pendingAdminConfirmation.participationId,
+          });
+          toast({
+            title: "Event proof verified",
+            description: `${pendingAdminConfirmation.organizationName}'s event proof is now marked verified.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Requested YPOP event proof revision",
+            "ypop_event_participation",
+            pendingAdminConfirmation.participationId,
+            `Requested revisions for the YPOP event proof "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "YPOP event revision requested",
+            message: adminRemarks,
+            type: "ypop_event_revision",
+            relatedType: "ypop_event_participation",
+            relatedId: pendingAdminConfirmation.participationId,
+          });
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the event proof.`,
+          });
+        } else {
+          await appendAuditLog(
+            "Rejected YPOP event proof",
+            "ypop_event_participation",
+            pendingAdminConfirmation.participationId,
+            `Rejected the YPOP event proof "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "YPOP event proof rejected",
+            message: adminRemarks,
+            type: "ypop_event_rejected",
+            relatedType: "ypop_event_participation",
+            relatedId: pendingAdminConfirmation.participationId,
+          });
+          toast({
+            title: "Event proof rejected",
+            description: `${pendingAdminConfirmation.organizationName}'s event proof was rejected.`,
+          });
+        }
+      } else if (pendingAdminConfirmation.kind === "ypop_org_activity") {
+        const orgActivity =
+          state.ypopOrgActivities.find((item) => item.id === pendingAdminConfirmation.orgActivityId) ?? null;
+        const relatedEntry =
+          state.ypopEntries.find((item) => item.id === pendingAdminConfirmation.entryId) ?? null;
+        const adminRemarks = statusChangeRemarkDraft.trim();
+
+        if (
+          (pendingAdminConfirmation.action === "needs_revision" || pendingAdminConfirmation.action === "rejected") &&
+          !adminRemarks
+        ) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision or rejecting this PPA log.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const patch = {
+          status: pendingAdminConfirmation.action,
+          adminRemarks: pendingAdminConfirmation.action === "approved" ? "" : adminRemarks,
+          approvedAt: pendingAdminConfirmation.action === "approved" ? now : "",
+          revisionHistory: [
+            ...(orgActivity?.revisionHistory ?? []),
+            {
+              action: pendingAdminConfirmation.action,
+              adminRemarks: pendingAdminConfirmation.action === "approved" ? "" : adminRemarks,
+              changedAt: now,
+            },
+          ],
+        };
+
+        let savedOrgActivity: YPOPOrgActivity | null = null;
+        try {
+          savedOrgActivity = await adminUpdateYpopOrgActivityInSupabase(pendingAdminConfirmation.orgActivityId, patch);
+          updateYPOPOrgActivity(savedOrgActivity.id, savedOrgActivity);
+        } catch {
+          updateYPOPOrgActivity(pendingAdminConfirmation.orgActivityId, patch);
+        }
+
+        if (relatedEntry) {
+          const semesterActivities = state.ypopCityActivities.filter((activity) => activity.semesterKey === relatedEntry.semester);
+          const period = state.ypopPeriods.find((item) => item.semesterKey === relatedEntry.semester) ?? null;
+          const approvedOrgActivities = [
+            ...state.ypopOrgActivities.filter((item) => item.id !== pendingAdminConfirmation.orgActivityId),
+            (savedOrgActivity ?? { ...(orgActivity as YPOPOrgActivity), ...patch, id: pendingAdminConfirmation.orgActivityId, ypopEntryId: pendingAdminConfirmation.entryId, organizationId: pendingAdminConfirmation.organizationId, submittedBy: orgActivity?.submittedBy ?? "", activityName: pendingAdminConfirmation.activityName, activityDate: orgActivity?.activityDate ?? "", venue: orgActivity?.venue ?? "", narrativeReport: orgActivity?.narrativeReport ?? "", createdAt: orgActivity?.createdAt ?? now, updatedAt: now }) as YPOPOrgActivity,
+          ];
+          const approvedCount = getApprovedYpopOrgActivityCount(approvedOrgActivities, relatedEntry.id, relatedEntry.orgLedProjectCount ?? 0);
+          const updatedScore = computeYpopScore(
+            relatedEntry.cityLedAttendance ?? [],
+            semesterActivities,
+            approvedCount,
+            period?.orgLedTiers,
+          );
+          setYpopValidationForm((current) =>
+            current
+              ? {
+                  ...current,
+                  orgLedProjectCount: approvedCount,
+                  status:
+                    current.status === "qualified" || current.status === "not_qualified"
+                      ? (updatedScore.totalScore >= (relatedEntry.pointsRequired ?? YPOP_SCORE_THRESHOLD) ? "qualified" : "not_qualified")
+                      : current.status,
+                }
+              : current,
+          );
+          const entryPatch = {
+            orgLedProjectCount: approvedCount,
+            pointsEarned: updatedScore.totalScore,
+          };
+          try {
+            const savedEntry = await adminUpdateYpopEntryInSupabase(relatedEntry.id, entryPatch);
+            updateYPOPEntry(savedEntry.id, savedEntry);
+          } catch {
+            updateYPOPEntry(relatedEntry.id, entryPatch);
+          }
+        }
+
+        await refreshAdminState();
+
+        const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
+        if (pendingAdminConfirmation.action === "approved") {
+          await appendAuditLog(
+            "Approved YPOP organization-initiated activity",
+            "ypop_org_activity",
+            pendingAdminConfirmation.orgActivityId,
+            `Approved the organization-initiated activity "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "PPA log approved",
+            message: `${pendingAdminConfirmation.activityName} now counts toward your YPOP organization-initiated activity bonus.`,
+            type: "ypop_org_activity_approved",
+            relatedType: "ypop_org_activity",
+            relatedId: pendingAdminConfirmation.orgActivityId,
+          });
+          toast({
+            title: "PPA approved",
+            description: `${pendingAdminConfirmation.organizationName}'s organization-initiated activity now counts toward the YPOP bonus.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Requested YPOP organization-initiated activity revision",
+            "ypop_org_activity",
+            pendingAdminConfirmation.orgActivityId,
+            `Requested revisions for the organization-initiated activity "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "PPA revision requested",
+            message: adminRemarks,
+            type: "ypop_org_activity_revision",
+            relatedType: "ypop_org_activity",
+            relatedId: pendingAdminConfirmation.orgActivityId,
+          });
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the organization-initiated activity log.`,
+          });
+        } else {
+          await appendAuditLog(
+            "Rejected YPOP organization-initiated activity",
+            "ypop_org_activity",
+            pendingAdminConfirmation.orgActivityId,
+            `Rejected the organization-initiated activity "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "PPA log rejected",
+            message: adminRemarks,
+            type: "ypop_org_activity_rejected",
+            relatedType: "ypop_org_activity",
+            relatedId: pendingAdminConfirmation.orgActivityId,
+          });
+          toast({
+            title: "PPA rejected",
+            description: `${pendingAdminConfirmation.organizationName}'s organization-initiated activity log was rejected.`,
+          });
+        }
       } else if (pendingAdminConfirmation.kind === "news_release") {
         const visibilityStatus = pendingAdminConfirmation.action === "publish" ? "published" : "hidden";
         const updatedNewsRelease = await updateNewsReleaseInSupabase(pendingAdminConfirmation.id, {
@@ -2038,6 +2675,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setEditingTemplateId(null);
     setTemplateNameDraft("");
     setTemplateDescriptionDraft("");
+    setTemplateScopeDraft("document_submission");
     setTemplateFileDraft(null);
   };
 
@@ -2047,6 +2685,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setNewsTitleDraft("");
     setNewsDescriptionDraft("");
     setNewsFacebookPostUrlDraft("");
+    setNewsPreviewImageUrlDraft("");
     setNewsDatePostedDraft("");
     setNewsVisibilityDraft("draft");
   };
@@ -2063,12 +2702,13 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const startEditingTemplate = (templateId: string) => {
-    const template = templateDocuments.find((entry) => entry.id === templateId);
+    const template = activeTemplates.find((entry) => entry.id === templateId);
     if (!template) return;
     setTemplateModalMode("edit");
     setEditingTemplateId(templateId);
     setTemplateNameDraft(template.name);
     setTemplateDescriptionDraft(template.description);
+    setTemplateScopeDraft(template.templateScope);
     setTemplateFileDraft(null);
   };
 
@@ -2080,6 +2720,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setNewsTitleDraft(newsRelease.title);
     setNewsDescriptionDraft(newsRelease.description);
     setNewsFacebookPostUrlDraft(newsRelease.facebookPostUrl);
+    setNewsPreviewImageUrlDraft(newsRelease.previewImageUrl ?? "");
     setNewsDatePostedDraft(newsRelease.datePosted);
     setNewsVisibilityDraft(newsRelease.visibilityStatus);
   };
@@ -2113,11 +2754,13 @@ export default function AdminPortal({ section }: { section: string }) {
         name: templateNameDraft,
         description: templateDescriptionDraft,
         templateDescription: templateDescriptionDraft || `Template for ${templateNameDraft.trim()}.`,
+        templateScope: templateScopeDraft,
       });
       createTemplate(newTemplate);
       if (templateFileDraft) {
         setUploadingTemplateId(newTemplate.id);
         const uploadedTemplate = await uploadTemplateDocumentToSupabase({
+          databaseId: newTemplate.databaseId,
           documentTypeName: newTemplate.name,
           file: templateFileDraft,
         });
@@ -2164,6 +2807,7 @@ export default function AdminPortal({ section }: { section: string }) {
           title: newsTitleDraft,
           description: newsDescriptionDraft,
           facebookPostUrl: newsFacebookPostUrlDraft,
+          previewImageUrl: newsPreviewImageUrlDraft,
           datePosted: newsDatePostedDraft,
           visibilityStatus: newsVisibilityDraft,
         });
@@ -2176,6 +2820,7 @@ export default function AdminPortal({ section }: { section: string }) {
           title: newsTitleDraft,
           description: newsDescriptionDraft,
           facebookPostUrl: newsFacebookPostUrlDraft,
+          previewImageUrl: newsPreviewImageUrlDraft,
           datePosted: newsDatePostedDraft,
           visibilityStatus: newsVisibilityDraft,
         });
@@ -2275,11 +2920,13 @@ export default function AdminPortal({ section }: { section: string }) {
         name: templateNameDraft,
         description: templateDescriptionDraft,
         templateDescription: templateDescriptionDraft || `Template for ${templateNameDraft.trim()}.`,
+        templateScope: templateScopeDraft,
       });
       updateTemplate(template.id, updatedTemplate);
       if (templateFileDraft) {
         setUploadingTemplateId(template.id);
         const uploadedTemplate = await uploadTemplateDocumentToSupabase({
+          databaseId: updatedTemplate.databaseId,
           documentTypeName: updatedTemplate.name,
           file: templateFileDraft,
         });
@@ -2302,7 +2949,7 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    const template = templateDocuments.find((entry) => entry.id === templateId);
+    const template = activeTemplates.find((entry) => entry.id === templateId);
     if (!template) return;
 
     try {
@@ -2387,6 +3034,9 @@ export default function AdminPortal({ section }: { section: string }) {
       .filter((file) => file.budgetRequestId === requestId)
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
+    if (section !== "budget-utilization") {
+      navigate(routeMap["budget-utilization"]);
+    }
     setSelectedBudgetRequestId(requestId);
     setSelectedBudgetFileId(requestFiles[0]?.id ?? null);
   };
@@ -2406,11 +3056,13 @@ export default function AdminPortal({ section }: { section: string }) {
       .filter((file) => file.liquidationReportId === report.id)
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
+    if (section !== "liquidation-monitoring") {
+      navigate(routeMap["liquidation-monitoring"]);
+    }
     setSelectedLiquidationReportSnapshot(report);
     setSelectedLiquidationReportId(report.id);
     setSelectedLiquidationFileId(reportFiles[0]?.id ?? null);
     setLiquidationDetailsOpen(true);
-    setLiquidationPreviewExpanded(typeof window !== "undefined" ? window.matchMedia("(min-width: 640px)").matches : false);
   };
 
   const closeLiquidationDetails = () => {
@@ -2423,7 +3075,6 @@ export default function AdminPortal({ section }: { section: string }) {
     setLiquidationPreviewEmptyMessage("");
     setLiquidationPreviewCanInline(false);
     setLiquidationPreviewLoading(false);
-    setLiquidationPreviewExpanded(false);
   };
 
   const performBudgetRequestStatusUpdate = async (
@@ -2526,7 +3177,7 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const selectedTemplate = editingTemplateId
-    ? templateDocuments.find((template) => template.id === editingTemplateId) ?? null
+    ? activeTemplates.find((template) => template.id === editingTemplateId) ?? null
     : null;
 
   const handleSaveTransparencyPost = async () => {
@@ -2594,11 +3245,12 @@ export default function AdminPortal({ section }: { section: string }) {
           action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
         const taskItems = [
-          { count: overviewStats.pendingProfiles,    label: "Org profile(s) pending review",         route: routeMap.registrations,             critical: false },
+          { count: overviewStats.pendingProfiles,    label: "Organization profile(s) pending review", route: routeMap.registrations,             critical: false },
           { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",   route: routeMap.registrations,             critical: false },
           { count: overviewStats.revisions,          label: "Document revision(s) need re-review",   route: routeMap.registrations,             critical: false },
           { count: overviewStats.overdueLiquidation, label: "liquidation report(s) overdue",         route: routeMap["liquidation-monitoring"], critical: true  },
           { count: overviewStats.pendingLiquidation, label: "liquidation report(s) awaiting review", route: routeMap["liquidation-monitoring"], critical: false },
+          { count: overviewStats.pendingInquiries,    label: "inquiry(s) awaiting response",          route: routeMap.inquiries,                 critical: false },
           { count: overviewStats.nonCompliant,       label: "organization(s) with compliance issues", route: routeMap.users,                    critical: true  },
         ].filter((item) => item.count > 0);
 
@@ -2612,6 +3264,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   value={overviewStats.organizations}
                   helper="Total organizations on the portal."
                   icon={Users}
+                  iconTone="primary"
                   onClick={() => navigate(routeMap.registrations)}
                 />
                 <PortalMetricCard
@@ -2619,21 +3272,24 @@ export default function AdminPortal({ section }: { section: string }) {
                   value={overviewStats.approvedDocs}
                   helper="Fully validated document sets."
                   icon={CheckCircle2}
+                  iconTone="emerald"
                   onClick={() => navigate(routeMap.registrations)}
-                />
-                <PortalMetricCard
-                  label="Budget Go Signals"
-                  value={overviewStats.approvedBudget}
-                  helper="Budget requests approved for release."
-                  icon={Wallet}
-                  onClick={() => navigate(routeMap["budget-utilization"])}
                 />
                 <PortalMetricCard
                   label="Budget Released"
                   value={overviewStats.releasedBudget}
                   helper="Funds confirmed released to organizations."
                   icon={Banknote}
+                  iconTone="violet"
                   onClick={() => navigate(routeMap["budget-utilization"])}
+                />
+                <PortalMetricCard
+                  label="Pending Inquiries"
+                  value={overviewStats.pendingInquiries}
+                  helper="User submissions waiting for admin review."
+                  icon={Mail}
+                  iconTone="sky"
+                  onClick={() => navigate(routeMap.inquiries)}
                 />
               </div>
             </PortalSection>
@@ -2713,6 +3369,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <div key={log.id} className="rounded-xl border border-border/70 bg-background p-3.5 text-sm">
                       <p className="font-medium leading-snug">{formatActionName(log.action)}</p>
                       <p className="mt-1 text-muted-foreground">{log.description}</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground/75">{formatDateTimeLabel(log.createdAt)}</p>
                     </div>
                   )) : (
                     <p className="text-sm text-muted-foreground">No recent activity.</p>
@@ -2721,6 +3378,129 @@ export default function AdminPortal({ section }: { section: string }) {
               </PortalSection>
             </div>
           </div>
+        );
+      }
+      case "inquiries": {
+        return (
+          <PortalSection
+            title="Inquiries"
+            description="Submitted inquiries from the user dashboard appear here in a consistent review format."
+          >
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                <Input
+                  value={inquirySearch}
+                  onChange={(event) => setInquirySearch(event.target.value)}
+                  placeholder="Search name, organization, email, subject, or description"
+                  aria-label="Search inquiries"
+                  className="h-11"
+                />
+                <Select value={inquiryStatusFilter} onValueChange={(value) => setInquiryStatusFilter(value as typeof inquiryStatusFilter)}>
+                  <SelectTrigger className="h-11" aria-label="Filter inquiries by status">
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="pending_review">Pending Review</SelectItem>
+                    <SelectItem value="reviewed">Reviewed</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {filteredInquiries.length ? (
+                <div className="overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
+                  <Table className="min-w-[940px] table-fixed">
+                    <TableHeader>
+                      <TableRow className="border-border/70 bg-muted/35 hover:bg-muted/35">
+                        <TableHead className="h-11 w-[16%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Name / Organization
+                        </TableHead>
+                        <TableHead className="h-11 w-[21%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Email
+                        </TableHead>
+                        <TableHead className="h-11 w-[29%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Subject
+                        </TableHead>
+                        <TableHead className="h-11 w-[17%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Submitted
+                        </TableHead>
+                        <TableHead className="h-11 w-[11%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Status
+                        </TableHead>
+                        <TableHead className="h-11 w-[6%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Action
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredInquiries.map((inquiry) => {
+                        const submittedParts = formatCompactDateParts(inquiry.createdAt);
+                        return (
+                          <TableRow key={inquiry.id} className="border-border/60 transition-colors hover:bg-muted/20">
+                            <TableCell className="px-4 py-3.5 align-middle">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-foreground">
+                                  {inquiry.submitterName || "Unnamed submitter"}
+                                </p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {inquiry.organizationName || "No organization name provided"}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3.5 align-middle">
+                              <p className="truncate text-sm text-foreground" title={inquiry.email}>
+                                {inquiry.email}
+                              </p>
+                            </TableCell>
+                            <TableCell className="px-4 py-3.5 align-top">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-foreground" title={inquiry.subject}>
+                                  {inquiry.subject}
+                                </p>
+                                <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted-foreground" title={inquiry.description}>
+                                  {inquiry.description}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3.5 text-center align-middle">
+                              <div className="space-y-0.5">
+                                <p className="text-sm font-medium text-foreground">{submittedParts.date}</p>
+                                <p className="text-xs text-muted-foreground">{submittedParts.time}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3.5 text-center align-middle">
+                              <div className="flex justify-center">
+                                <PortalStatusBadge status={inquiry.status} />
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3.5 text-center align-middle">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2.5 text-xs font-medium"
+                                aria-label={`View inquiry from ${inquiry.submitterName || inquiry.organizationName || inquiry.email}`}
+                                onClick={() => setSelectedInquiry(inquiry)}
+                              >
+                                <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <PortalEmptyState
+                  title="No inquiries yet"
+                  description="Once a user submits an inquiry from the dashboard, it will appear here."
+                />
+              )}
+            </div>
+          </PortalSection>
         );
       }
       case "registrations": {
@@ -2904,7 +3684,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0 space-y-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <FileText className="h-4 w-4 shrink-0 text-red-500" />
                                 <p className="text-sm font-medium">{documentType.name}</p>
                                 {file ? <PortalStatusBadge status={file.adminStatus ?? "submitted"} /> : null}
                               </div>
@@ -2951,7 +3731,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                           <p className="text-sm font-medium">Submitted</p>
                                           {file.uploadedAt ? (
                                             <p className="text-xs text-muted-foreground">
-                                              {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(file.uploadedAt))}
+                                              {formatDateTimeLabel(file.uploadedAt)}
                                             </p>
                                           ) : null}
                                         </div>
@@ -2963,7 +3743,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                             <p className="text-sm font-medium">{statusLabelMap[file.adminStatus] ?? file.adminStatus.replaceAll("_", " ")}</p>
                                             {file.reviewedAt ? (
                                               <p className="text-xs text-muted-foreground">
-                                                {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(file.reviewedAt))}
+                                                {formatDateTimeLabel(file.reviewedAt)}
                                               </p>
                                             ) : null}
                                             {file.adminRemarks ? (
@@ -3093,62 +3873,105 @@ export default function AdminPortal({ section }: { section: string }) {
             description="Review pending organization profiles and their submitted documents. Open an organization to validate files and verify their registration."
           >
             {state.organizationProfiles.length ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {state.organizationProfiles.map((org) => {
-                  const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
-                  const submittedCount = orgSubmission
-                    ? state.documentSubmissionFiles.filter(
-                        (file) => file.submissionId === orgSubmission.id && validDocumentTypeIds.has(file.documentTypeId),
-                      ).length
-                    : 0;
-                  const statusDotColor =
-                    org.profileStatus === "verified"
-                      ? "bg-emerald-500"
-                      : org.profileStatus === "needs_update" || org.profileStatus === "pending_review"
-                      ? "bg-amber-400"
-                      : "bg-muted-foreground/40";
-                  return (
-                    <Card key={org.id} className="border-border/70 shadow-sm">
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-2.5">
-                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
-                            <div className="min-w-0">
-                              <p className="truncate font-semibold text-foreground">{org.organizationName}</p>
-                              <p className="mt-0.5 truncate text-sm text-muted-foreground">{org.organizationEmail}</p>
-                              {org.barangay ? (
-                                <p className="text-sm text-muted-foreground">{org.barangay}</p>
-                              ) : null}
+              <div className="space-y-4">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+                  <Input
+                    value={registrationSearch}
+                    onChange={(event) => setRegistrationSearch(event.target.value)}
+                    placeholder="Search by organization, email, barangay, or district"
+                  />
+                  <Select value={registrationStatusFilter} onValueChange={setRegistrationStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      {registrationStatusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {formatStatusLabel(status)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={registrationDistrictFilter} onValueChange={setRegistrationDistrictFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All districts" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Districts</SelectItem>
+                      {registrationDistrictOptions.map((district) => (
+                        <SelectItem key={district} value={district}>
+                          {district}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {filteredRegistrations.length ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {filteredRegistrations.map((org) => {
+                      const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
+                      const submittedCount = orgSubmission
+                        ? state.documentSubmissionFiles.filter(
+                            (file) => file.submissionId === orgSubmission.id && validDocumentTypeIds.has(file.documentTypeId),
+                          ).length
+                        : 0;
+                      const statusDotColor =
+                        org.profileStatus === "verified"
+                          ? "bg-emerald-500"
+                          : org.profileStatus === "needs_update" || org.profileStatus === "pending_review"
+                          ? "bg-amber-400"
+                          : "bg-muted-foreground/40";
+                      return (
+                        <Card key={org.id} className="border-border/70 shadow-sm">
+                          <CardContent className="p-4 sm:p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex min-w-0 items-start gap-2.5">
+                                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-foreground">{org.organizationName}</p>
+                                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{org.organizationEmail}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {[org.barangay, org.district].filter(Boolean).join(" • ") || "No location provided"}
+                                  </p>
+                                </div>
+                              </div>
+                              <PortalStatusBadge status={org.profileStatus} />
                             </div>
-                          </div>
-                          <PortalStatusBadge status={org.profileStatus} />
-                        </div>
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Documents submitted</span>
-                            <span className="font-medium">{submittedCount}/{templateDocuments.length}</span>
-                          </div>
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary/60 transition-[width]"
-                              style={{ width: templateDocuments.length ? `${(submittedCount / templateDocuments.length) * 100}%` : "0%" }}
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => setSelectedRegistrationId(org.id)}
-                          >
-                            Review
-                            <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                            <div className="mt-4">
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>Documents submitted</span>
+                                <span className="font-medium">{submittedCount}/{templateDocuments.length}</span>
+                              </div>
+                              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary/60 transition-[width]"
+                                  style={{ width: templateDocuments.length ? `${(submittedCount / templateDocuments.length) * 100}%` : "0%" }}
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-4 flex justify-end">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => setSelectedRegistrationId(org.id)}
+                              >
+                                Review
+                                <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <PortalEmptyState
+                    title="No matching registrations"
+                    description="Try adjusting the search, status, or district filter."
+                  />
+                )}
               </div>
             ) : (
               <PortalEmptyState
@@ -3163,189 +3986,124 @@ export default function AdminPortal({ section }: { section: string }) {
         if (selectedBudgetRequest) {
           const budgetLockedAfterRelease =
             selectedBudgetRequest.status === "budget_released" || selectedBudgetRequest.status === "completed";
+          const budgetTimelineLabel = selectedBudgetRequest.activityDate
+            ? formatShortDate(selectedBudgetRequest.activityDate)
+            : "No activity date";
           return (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Button size="sm" variant="ghost" className="-ml-1.5 shrink-0" onClick={closeBudgetRequestDetails}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />Back
-                    </Button>
-                    <span className="h-5 w-px shrink-0 bg-border/60" />
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-foreground">{selectedBudgetRequest.activityTitle}</p>
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {selectedBudgetOrganization?.organizationName ?? "Unknown organization"} · PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <PortalStatusBadge status={selectedBudgetRequest.status} />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!approvableBudgetStatuses.has(selectedBudgetRequest.status) || budgetLockedAfterRelease}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "budget",
-                          action: "approve",
-                          budgetRequestId: selectedBudgetRequest.id,
-                          organizationId: selectedBudgetRequest.organizationId,
-                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedBudgetRequest.activityTitle,
-                          requestedAmount: selectedBudgetRequest.requestedAmount,
-                          currentStatus: selectedBudgetRequest.status,
-                        })
-                      }
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={selectedBudgetRequest.status !== "approved_for_ftf_green" || budgetLockedAfterRelease}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "budget",
-                          action: "submitted_hardcopy",
-                          budgetRequestId: selectedBudgetRequest.id,
-                          organizationId: selectedBudgetRequest.organizationId,
-                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedBudgetRequest.activityTitle,
-                          requestedAmount: selectedBudgetRequest.requestedAmount,
-                          currentStatus: selectedBudgetRequest.status,
-                        })
-                      }
-                    >
-                      Submitted hardcopy
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={selectedBudgetRequest.status !== "hard_copy_submitted" || budgetLockedAfterRelease}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "budget",
-                          action: "cash_released",
-                          budgetRequestId: selectedBudgetRequest.id,
-                          organizationId: selectedBudgetRequest.organizationId,
-                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedBudgetRequest.activityTitle,
-                          requestedAmount: selectedBudgetRequest.requestedAmount,
-                          currentStatus: selectedBudgetRequest.status,
-                        })
-                      }
-                    >
-                      Cash released
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={budgetLockedAfterRelease}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "budget",
-                          action: "needs_revision",
-                          budgetRequestId: selectedBudgetRequest.id,
-                          organizationId: selectedBudgetRequest.organizationId,
-                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedBudgetRequest.activityTitle,
-                          requestedAmount: selectedBudgetRequest.requestedAmount,
-                          currentStatus: selectedBudgetRequest.status,
-                        })
-                      }
-                    >
-                      Needs Revision
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={budgetLockedAfterRelease}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "budget",
-                          action: "reject",
-                          budgetRequestId: selectedBudgetRequest.id,
-                          organizationId: selectedBudgetRequest.organizationId,
-                          organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedBudgetRequest.activityTitle,
-                          requestedAmount: selectedBudgetRequest.requestedAmount,
-                          currentStatus: selectedBudgetRequest.status,
-                        })
-                      }
-                    >
-                      Reject
-                    </Button>
-                  </div>
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={closeBudgetRequestDetails}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Budget Requests
+                </button>
+                <div className="flex items-center gap-2">
+                  <PortalStatusBadge status={selectedBudgetRequest.status} />
+                  {budgetLockedAfterRelease ? <DetailStatusChip label="Finalized" tone="success" /> : null}
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-                <PortalSection title="Request Details">
-                  {selectedBudgetOrganization && (
-                    <div className="mb-4 border-b border-border/40 pb-4">
-                      <p className="font-semibold text-foreground">{selectedBudgetOrganization.organizationName}</p>
-                      <p className="text-sm text-muted-foreground">{selectedBudgetOrganization.organizationEmail}</p>
-                      {selectedBudgetOrganization.barangay ? <p className="text-sm text-muted-foreground">{selectedBudgetOrganization.barangay}</p> : null}
-                    </div>
-                  )}
-                  <div className="divide-y divide-border/40">
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Requested amount</p>
-                      <p className="text-sm font-medium">PHP {selectedBudgetRequest.requestedAmount.toLocaleString()}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Approved amount</p>
-                      <p className="text-sm font-medium">PHP {selectedBudgetRequest.approvedAmount.toLocaleString()}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Released amount</p>
-                      <p className="text-sm font-medium">PHP {selectedBudgetRequest.releasedAmount.toLocaleString()}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Activity date</p>
-                      <p className="text-sm font-medium">{selectedBudgetRequest.activityDate || "N/A"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Venue</p>
-                      <p className="break-words text-sm font-medium">{selectedBudgetRequest.venue || "N/A"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Purpose category</p>
-                      <p className="text-sm font-medium">{selectedBudgetRequest.purposeCategory || "N/A"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Go signal</p>
-                      <p className="text-sm font-medium">{selectedBudgetRequest.goSignalAt || "Pending"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Hard copy submitted</p>
-                      <p className="text-sm font-medium">{selectedBudgetRequest.hardCopySubmittedAt || "Pending"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Release date</p>
-                      <p className="text-sm font-medium">{selectedBudgetRequest.releaseDate || "Pending"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Organization remarks</p>
-                      <p className="break-words text-sm font-medium">{selectedBudgetRequest.remarks || "None"}</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs font-medium text-muted-foreground/75">Latest admin feedback</p>
-                      <p className="break-words text-sm font-medium">{selectedBudgetRequest.adminRemarks || "None"}</p>
+              <DetailInfoCard
+                title="Budget Request"
+                icon={<CircleDollarSign className="h-5 w-5" />}
+                className="overflow-hidden"
+              >
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="space-y-2">
+                    <p className="text-3xl font-semibold tracking-tight text-foreground">{selectedBudgetRequest.activityTitle}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                      <span>Submitted by {selectedBudgetOrganization?.organizationName ?? "Unknown organization"}</span>
+                      {selectedBudgetOrganization?.organizationEmail ? <span>({selectedBudgetOrganization.organizationEmail})</span> : null}
+                      {selectedBudgetOrganization?.barangay ? <span>{selectedBudgetOrganization.barangay}</span> : null}
+                      <span>Activity Date: {budgetTimelineLabel}</span>
                     </div>
                   </div>
-                  <div className="mt-4 rounded-xl border border-border/70 bg-background p-4">
-                    <p className="text-xs font-medium text-muted-foreground/75">Recent activity</p>
+                  <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                    <PortalStatusBadge status={selectedBudgetRequest.status} />
+                    {budgetLockedAfterRelease ? <DetailStatusChip label="Finalized" tone="success" /> : null}
+                  </div>
+                </div>
+              </DetailInfoCard>
+
+              <div className="grid gap-5 xl:grid-cols-[22rem_minmax(0,1fr)]">
+                <DetailInfoCard title="Budget Details" icon={<ClipboardList className="h-5 w-5" />} className="self-start">
+                  <DetailSectionBlock label="Submitted By">
+                    <DetailSubmittedBy
+                      title={selectedBudgetOrganization?.organizationName ?? "Unknown organization"}
+                      email={selectedBudgetOrganization?.organizationEmail}
+                      subtitle={selectedBudgetOrganization?.barangay ?? null}
+                    />
+                  </DetailSectionBlock>
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Financial Information">
+                    <div className="space-y-3">
+                      <DetailInfoRow label="Requested Amount" value={formatPesoAmount(selectedBudgetRequest.requestedAmount)} />
+                      <DetailInfoRow label="Approved Amount" value={formatPesoAmount(selectedBudgetRequest.approvedAmount)} />
+                      <DetailInfoRow label="Released Amount" value={formatPesoAmount(selectedBudgetRequest.releasedAmount)} />
+                    </div>
+                  </DetailSectionBlock>
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Activity Information">
+                    <div className="space-y-3">
+                      <DetailInfoRow label="Activity Date" value={budgetTimelineLabel} />
+                      <DetailInfoRow label="Venue" value={selectedBudgetRequest.venue || "Not specified"} valueClassName="break-words" />
+                      <DetailInfoRow label="Purpose Category" value={selectedBudgetRequest.purposeCategory || "Not specified"} />
+                    </div>
+                  </DetailSectionBlock>
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Process Status">
+                    <div className="space-y-3">
+                      <DetailInfoRow label="Go Signal">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4 text-primary/70" />
+                          <span>{formatShortDate(selectedBudgetRequest.goSignalAt)}</span>
+                        </div>
+                      </DetailInfoRow>
+                      <DetailInfoRow label="Hardcopy Submitted">
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="h-4 w-4 text-primary/70" />
+                          <span>{formatShortDate(selectedBudgetRequest.hardCopySubmittedAt)}</span>
+                        </div>
+                      </DetailInfoRow>
+                      <DetailInfoRow label="Released At">
+                        <div className="flex items-center gap-2">
+                          <Clock3 className="h-4 w-4 text-primary/70" />
+                          <span>{formatShortDate(selectedBudgetRequest.releaseDate)}</span>
+                        </div>
+                      </DetailInfoRow>
+                    </div>
+                  </DetailSectionBlock>
+
+                  {selectedBudgetRequest.remarks ? (
+                    <>
+                      <SectionDivider />
+                      <DetailSectionBlock label="Organization Remarks">
+                        <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-foreground">
+                          {selectedBudgetRequest.remarks}
+                        </div>
+                      </DetailSectionBlock>
+                    </>
+                  ) : null}
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Recent Activity">
                     {(selectedBudgetRequest.revisionHistory?.length || selectedBudgetRequest.userNote) ? (
-                      <div className="mt-3 space-y-3">
+                      <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-3">
                         <div className="flex items-start gap-2.5">
                           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
                           <div className="min-w-0">
                             <p className="text-sm font-medium">Submitted</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(selectedBudgetRequest.createdAt))}
-                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(selectedBudgetRequest.createdAt)}</p>
                           </div>
                         </div>
                         {(selectedBudgetRequest.revisionHistory ?? []).map((entry, idx) => {
@@ -3353,13 +4111,13 @@ export default function AdminPortal({ section }: { section: string }) {
                             entry.action === "needs_revision" || entry.action === "rejected_red"
                               ? "bg-rose-500"
                               : entry.action === "approved_for_ftf_green" || entry.action === "hard_copy_submitted" || entry.action === "budget_released" || entry.action === "completed"
-                              ? "bg-emerald-500"
-                              : "bg-amber-400";
+                                ? "bg-emerald-500"
+                                : "bg-amber-400";
                           const actionLabel =
                             entry.action === "needs_revision" ? "Revision Requested"
                             : entry.action === "rejected_red" ? "Rejected"
                             : entry.action === "approved_for_ftf_green" ? "Approved"
-                            : entry.action === "hard_copy_submitted" ? "Hard Copy Submitted"
+                            : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
                             : entry.action === "budget_released" ? "Budget Released"
                             : entry.action === "completed" ? "Completed"
                             : entry.action.replaceAll("_", " ");
@@ -3368,12 +4126,8 @@ export default function AdminPortal({ section }: { section: string }) {
                               <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
                               <div className="min-w-0">
                                 <p className="text-sm font-medium">{actionLabel}</p>
-                                <p className="mt-0.5 text-xs text-muted-foreground">
-                                  {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.changedAt))}
-                                </p>
-                                {entry.adminRemarks ? (
-                                  <p className="mt-1 text-xs text-muted-foreground italic">"{entry.adminRemarks}"</p>
-                                ) : null}
+                                <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(entry.changedAt)}</p>
+                                {entry.adminRemarks ? <p className="mt-1 text-xs italic text-muted-foreground">"{entry.adminRemarks}"</p> : null}
                               </div>
                             </div>
                           );
@@ -3382,72 +4136,175 @@ export default function AdminPortal({ section }: { section: string }) {
                           <div className="flex items-start gap-2.5">
                             <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-sky-700">Note from org</p>
-                              <p className="mt-1 text-xs text-muted-foreground italic">"{selectedBudgetRequest.userNote}"</p>
+                              <p className="text-sm font-medium text-sky-700">Message from organization</p>
+                              <p className="mt-1 text-xs italic text-muted-foreground">"{selectedBudgetRequest.userNote}"</p>
                             </div>
                           </div>
                         ) : null}
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-muted-foreground">No review activity yet.</p>
+                      <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground">
+                        No review activity yet.
+                      </div>
                     )}
-                  </div>
-                </PortalSection>
+                  </DetailSectionBlock>
+                </DetailInfoCard>
 
-                <PortalSection title="Attached Files">
-                  <div className="space-y-3">
+                <DetailInfoCard title="Review and Attached Files" icon={<FileText className="h-5 w-5" />}>
+                  <DetailSectionBlock label="Review Actions">
+                    <ReviewActionToolbar>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!approvableBudgetStatuses.has(selectedBudgetRequest.status) || budgetLockedAfterRelease}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "budget",
+                            action: "approve",
+                            budgetRequestId: selectedBudgetRequest.id,
+                            organizationId: selectedBudgetRequest.organizationId,
+                            organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedBudgetRequest.activityTitle,
+                            requestedAmount: selectedBudgetRequest.requestedAmount,
+                            currentStatus: selectedBudgetRequest.status,
+                          })
+                        }
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={selectedBudgetRequest.status !== "approved_for_ftf_green" || budgetLockedAfterRelease}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "budget",
+                            action: "submitted_hardcopy",
+                            budgetRequestId: selectedBudgetRequest.id,
+                            organizationId: selectedBudgetRequest.organizationId,
+                            organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedBudgetRequest.activityTitle,
+                            requestedAmount: selectedBudgetRequest.requestedAmount,
+                            currentStatus: selectedBudgetRequest.status,
+                          })
+                        }
+                      >
+                        Mark Hardcopy Submitted
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={selectedBudgetRequest.status !== "hard_copy_submitted" || budgetLockedAfterRelease}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "budget",
+                            action: "cash_released",
+                            budgetRequestId: selectedBudgetRequest.id,
+                            organizationId: selectedBudgetRequest.organizationId,
+                            organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedBudgetRequest.activityTitle,
+                            requestedAmount: selectedBudgetRequest.requestedAmount,
+                            currentStatus: selectedBudgetRequest.status,
+                          })
+                        }
+                      >
+                        Mark Released
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={budgetLockedAfterRelease}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "budget",
+                            action: "needs_revision",
+                            budgetRequestId: selectedBudgetRequest.id,
+                            organizationId: selectedBudgetRequest.organizationId,
+                            organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedBudgetRequest.activityTitle,
+                            requestedAmount: selectedBudgetRequest.requestedAmount,
+                            currentStatus: selectedBudgetRequest.status,
+                          })
+                        }
+                      >
+                        Needs Revision
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={budgetLockedAfterRelease}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "budget",
+                            action: "reject",
+                            budgetRequestId: selectedBudgetRequest.id,
+                            organizationId: selectedBudgetRequest.organizationId,
+                            organizationName: selectedBudgetOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedBudgetRequest.activityTitle,
+                            requestedAmount: selectedBudgetRequest.requestedAmount,
+                            currentStatus: selectedBudgetRequest.status,
+                          })
+                        }
+                      >
+                        Reject
+                      </Button>
+                    </ReviewActionToolbar>
+                    {selectedBudgetRequest.adminRemarks ? (
+                      <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">Latest Admin Feedback</p>
+                        <p className="text-sm text-amber-900">{selectedBudgetRequest.adminRemarks}</p>
+                      </div>
+                    ) : null}
+                  </DetailSectionBlock>
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Attached Files">
                     <p className="text-sm text-muted-foreground">
                       {selectedBudgetRequestFiles.length
                         ? `${selectedBudgetRequestFiles.length} file${selectedBudgetRequestFiles.length === 1 ? "" : "s"} uploaded.`
                         : "No attached files were uploaded for this request."}
                     </p>
                     {selectedBudgetRequestFiles.length ? (
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                          {selectedBudgetRequestFiles.map((file) => (
-                            <Button
-                              key={file.id}
-                              type="button"
-                              size="sm"
-                              variant={selectedBudgetRequestFile?.id === file.id ? "default" : "outline"}
-                              className="max-w-full"
-                              onClick={() => setSelectedBudgetFileId(file.id)}
-                            >
-                              <span className="max-w-[12rem] truncate">{file.fileName}</span>
-                            </Button>
-                          ))}
-                        </div>
-                        <div className="rounded-xl border border-border/70 bg-background p-3">
+                      <div className="space-y-4">
+                        <DetailFilePills
+                          items={selectedBudgetRequestFiles.map((file) => ({ id: file.id, fileName: file.fileName }))}
+                          selectedId={selectedBudgetRequestFile?.id}
+                          onSelect={setSelectedBudgetFileId}
+                        />
+                        <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
                           {budgetPreviewLoading ? (
-                            <p className="p-3 text-sm text-muted-foreground">Loading preview...</p>
+                            <div className="grid min-h-[65vh] place-items-center p-6 text-sm text-muted-foreground">Loading preview...</div>
                           ) : budgetPreviewUrl && budgetPreviewCanInline ? (
                             isImagePreviewFile(budgetPreviewTitle) || isImagePreviewFile(budgetPreviewUrl) ? (
-                              <div className="flex max-h-[24rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
+                              <div className="flex min-h-[65vh] items-center justify-center overflow-hidden bg-background">
                                 <img
                                   src={budgetPreviewUrl}
                                   alt={budgetPreviewTitle || "Budget request preview"}
-                                  className="max-h-[24rem] w-full object-contain sm:max-h-[32rem]"
+                                  className="max-h-[72vh] w-full object-contain"
                                 />
                               </div>
                             ) : (
                               <iframe
                                 title={budgetPreviewTitle || "Budget Request Preview"}
                                 src={budgetPreviewUrl}
-                                className="h-[24rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
+                                className="h-[72vh] w-full border-0 bg-background"
                                 loading="eager"
                               />
                             )
                           ) : budgetPreviewUrl ? (
-                            <div className="space-y-3 p-3 text-sm text-muted-foreground">
-                              <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
-                              <Button type="button" variant="outline" onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Open File
-                              </Button>
+                            <div className="grid min-h-[65vh] place-items-center p-6 text-center text-sm text-muted-foreground">
+                              <div className="space-y-3">
+                                <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
+                                <Button type="button" variant="outline" onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Open File
+                                </Button>
+                              </div>
                             </div>
                           ) : (
-                            <div className="grid min-h-[16rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-6 text-center text-sm text-muted-foreground">
-                              {budgetPreviewEmptyMessage || "No budget request file was uploaded."}
+                            <div className="grid min-h-[65vh] place-items-center border border-dashed border-border/60 bg-muted/10 p-6 text-center text-sm text-muted-foreground">
+                              {budgetPreviewEmptyMessage || "No attached budget request file was uploaded."}
                             </div>
                           )}
                         </div>
@@ -3457,59 +4314,237 @@ export default function AdminPortal({ section }: { section: string }) {
                         No attached budget request files were submitted.
                       </div>
                     )}
-                  </div>
-                </PortalSection>
+                  </DetailSectionBlock>
+                </DetailInfoCard>
               </div>
             </div>
           );
         }
         return (
-            <PortalSection title="Budget Requests" description="Review budget requests submitted by organizations. Approve requests to issue a go-signal, request revisions, or reject.">
+          <PortalSection title="Budget Requests" description="Review budget requests submitted by organizations. Approve requests to issue a go-signal, request revisions, or reject.">
+            {state.budgetRequests.length ? (
               <div className="space-y-3">
-                {state.budgetRequests.length ? (
-                  state.budgetRequests.map((request) => {
-                    const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
-                    const statusDotColor =
-                      request.status === "budget_released" || request.status === "completed"
-                        ? "bg-emerald-500"
-                        : request.status === "rejected_red" || request.status === "draft"
-                        ? "bg-muted-foreground/40"
-                        : "bg-amber-400";
-                    return (
-                      <Card key={request.id} className="border-border/70 shadow-sm">
-                        <CardContent className="p-3 sm:p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 items-start gap-2.5">
-                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
-                              <div className="min-w-0">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                  <Input
+                    value={budgetRequestsSearch}
+                    onChange={(event) => setBudgetRequestsSearch(event.target.value)}
+                    placeholder="Search by request title, organization, venue, or request ID"
+                  />
+                  <Select value={budgetRequestsStatusFilter} onValueChange={setBudgetRequestsStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      {budgetRequestStatusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {formatStatusLabel(status)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {filteredAdminBudgetRequests.length ? (
+                  <>
+                    <div className="space-y-3 md:hidden">
+                      {filteredAdminBudgetRequests.map((request) => {
+                        const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
+                        const primaryFile =
+                          [...state.budgetRequestFiles]
+                            .filter((file) => file.budgetRequestId === request.id)
+                            .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())[0] ?? null;
+                        const latestActivity = (request.revisionHistory ?? []).at(-1) ?? null;
+                        return (
+                          <Card key={request.id} className="border-border/70 shadow-sm">
+                            <CardContent className="space-y-3 p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 space-y-1">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <p className="font-semibold text-foreground">{request.activityTitle}</p>
+                                    {request.budgetRequestType === "ypop_incentive" ? (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                        <Trophy className="h-2.5 w-2.5 text-amber-600" />
+                                        YPOP Incentive
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <p className="text-xs text-primary">Request ID: {buildPublicRecordCode("BR", request, state.budgetRequests)}</p>
+                                  <p className="text-xs text-muted-foreground">{requestOrganization?.organizationName ?? "Unknown organization"}</p>
+                                  <p className="text-xs text-muted-foreground">Created {formatShortDate(request.createdAt)}</p>
+                                </div>
+                                <PortalStatusBadge status={request.status} />
+                              </div>
+
+                              <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/10 p-3 sm:grid-cols-2">
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Proposed Date</p>
+                                  <p className="mt-1 text-sm font-medium text-foreground">{formatShortDate(request.proposedDate)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Venue</p>
+                                  <p className="mt-1 text-sm font-medium text-foreground">{request.venue || "No venue"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Requested</p>
+                                  <p className="mt-1 text-sm font-medium text-foreground">PHP {Number(request.requestedAmount || 0).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Approved</p>
+                                  <p className="mt-1 text-sm font-medium text-emerald-700">PHP {Number(request.approvedAmount || 0).toLocaleString()}</p>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">File</p>
+                                {primaryFile ? (
+                                  <div className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-background p-3">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+                                      <FileText className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="line-clamp-2 break-all text-sm font-medium leading-snug text-foreground">{primaryFile.fileName}</p>
+                                      <p className="text-xs text-muted-foreground">{formatFileMetaLabel(primaryFile.fileType, primaryFile.fileSize)}</p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No file uploaded yet</p>
+                                )}
+                              </div>
+
+                              <div className="space-y-1 rounded-xl border border-border/50 bg-muted/10 p-3">
+                                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Recent Activity</p>
+                                <p className="text-sm text-foreground">{latestActivity ? formatStatusLabel(latestActivity.action) : formatStatusLabel(request.status)}</p>
+                                <p className="text-xs text-muted-foreground">{formatDateTimeLabel(latestActivity?.changedAt ?? request.updatedAt)}</p>
+                                {latestActivity?.adminRemarks ? <p className="text-xs text-muted-foreground">{latestActivity.adminRemarks}</p> : null}
+                              </div>
+
+                              <div className="flex items-center justify-end gap-2">
+                                <Button type="button" size="sm" variant="outline" onClick={() => openBudgetRequestDetails(request.id)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Review
+                                </Button>
+                                {primaryFile ? (
+                                  <Button type="button" size="sm" onClick={() => void openFile(primaryFile.fileUrl, primaryFile.fileName)}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Open File
+                                  </Button>
+                                ) : null}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                    <div className="hidden overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm md:block">
+                <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/35 hover:bg-muted/35">
+                        <TableHead className="min-w-[250px]">Request</TableHead>
+                        <TableHead className="min-w-[160px]">Status</TableHead>
+                        <TableHead className="min-w-[120px]">Proposed Date</TableHead>
+                        <TableHead className="min-w-[140px]">Venue</TableHead>
+                        <TableHead className="min-w-[170px]">Amounts (PHP)</TableHead>
+                        <TableHead className="min-w-[230px]">File</TableHead>
+                        <TableHead className="min-w-[190px]">Recent Activity</TableHead>
+                        <TableHead className="w-[70px] text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {filteredAdminBudgetRequests.map((request) => {
+                        const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
+                        const primaryFile =
+                          [...state.budgetRequestFiles]
+                            .filter((file) => file.budgetRequestId === request.id)
+                            .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())[0] ?? null;
+                        const latestActivity = (request.revisionHistory ?? []).at(-1) ?? null;
+                        return (
+                          <TableRow key={request.id} className="align-middle">
+                            <TableCell className="align-middle">
+                              <div className="space-y-1">
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   <p className="font-semibold text-foreground">{request.activityTitle}</p>
-                                  {request.budgetRequestType === "ypop_incentive" && (
+                                  {request.budgetRequestType === "ypop_incentive" ? (
                                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                                      <Trophy className="h-2.5 w-2.5" />
+                                      <Trophy className="h-2.5 w-2.5 text-amber-600" />
                                       YPOP Incentive
                                     </span>
-                                  )}
+                                  ) : null}
                                 </div>
-                                <p className="mt-0.5 truncate text-sm text-foreground/70"><span className="text-muted-foreground">Organization:</span> {requestOrganization?.organizationName ?? "Unknown organization"}</p>
-                                <p className="mt-0.5 text-sm text-muted-foreground"><span>Amount:</span> PHP {request.requestedAmount.toLocaleString()} · <span>Venue:</span> {request.venue || "No venue"}</p>
+                                <p className="text-xs text-muted-foreground">Request ID: {buildPublicRecordCode("BR", request, state.budgetRequests)}</p>
+                                <p className="text-xs text-muted-foreground">{requestOrganization?.organizationName ?? "Unknown organization"}</p>
+                                <p className="text-xs text-muted-foreground">Created {formatShortDate(request.createdAt)}</p>
                               </div>
-                            </div>
-                            <PortalStatusBadge status={request.status} />
-                          </div>
-                          <div className="mt-3 flex justify-end">
-                            <Button type="button" size="sm" onClick={() => openBudgetRequestDetails(request.id)}>
-                              Review<ArrowRight className="ml-2 h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
+                            </TableCell>
+                            <TableCell className="align-middle">
+                              <PortalStatusBadge status={request.status} />
+                            </TableCell>
+                            <TableCell className="align-middle text-sm text-foreground">{formatShortDate(request.proposedDate)}</TableCell>
+                            <TableCell className="align-middle text-sm text-foreground">{request.venue || "No venue"}</TableCell>
+                            <TableCell className="align-middle">
+                              <div className="space-y-1 text-sm">
+                                <p className="text-muted-foreground">Requested</p>
+                                <p className="font-medium text-foreground">PHP {Number(request.requestedAmount || 0).toLocaleString()}</p>
+                                <p className="text-muted-foreground">Approved</p>
+                                <p className="font-medium text-emerald-700">PHP {Number(request.approvedAmount || 0).toLocaleString()}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="align-middle">
+                              {primaryFile ? (
+                                <div className="flex items-start gap-2">
+                                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+                                    <FileText className="h-4 w-4" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="line-clamp-2 break-all text-sm font-medium leading-snug text-foreground">{primaryFile.fileName}</p>
+                                    <p className="text-xs text-muted-foreground">{formatFileMetaLabel(primaryFile.fileType, primaryFile.fileSize)}</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">No file uploaded yet</p>
+                              )}
+                            </TableCell>
+                            <TableCell className="align-middle">
+                              <div className="space-y-1">
+                                <p className="text-sm text-foreground">{latestActivity ? formatStatusLabel(latestActivity.action) : formatStatusLabel(request.status)}</p>
+                                <p className="text-xs text-muted-foreground">{formatDateTimeLabel(latestActivity?.changedAt ?? request.updatedAt)}</p>
+                                {latestActivity?.adminRemarks ? <p className="line-clamp-2 text-xs text-muted-foreground">{latestActivity.adminRemarks}</p> : null}
+                              </div>
+                            </TableCell>
+                            <TableCell className="align-middle text-right">
+                              <DropdownMenu modal={false}>
+                                <DropdownMenuTrigger asChild>
+                                  <Button type="button" size="icon" variant="outline" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={() => openBudgetRequestDetails(request.id)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Review
+                                  </DropdownMenuItem>
+                                  {primaryFile ? (
+                                    <DropdownMenuItem onClick={() => void openFile(primaryFile.fileUrl, primaryFile.fileName)}>
+                                      <FileText className="mr-2 h-4 w-4" />
+                                      Open File
+                                    </DropdownMenuItem>
+                                  ) : null}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                </Table>
+                  </div>
+                  </>
                 ) : (
-                  <PortalEmptyState title="No budget requests yet" description="Budget requests will appear here after an organization creates one." />
+                  <PortalEmptyState title="No matching budget requests" description="Try adjusting the search or status filter." />
                 )}
               </div>
+            ) : (
+              <PortalEmptyState title="No budget requests yet" description="Budget requests will appear here after an organization creates one." />
+            )}
             </PortalSection>
         );
       case "liquidation-monitoring":
@@ -3519,152 +4554,114 @@ export default function AdminPortal({ section }: { section: string }) {
             selectedLiquidationReport.status === "completed_liquidated";
           const canApproveLiquidation = liquidationApprovableStatuses.has(selectedLiquidationReport.status);
           const canMarkLiquidationHardCopySubmitted = selectedLiquidationReport.status === "approved_for_ftf_green";
+          const liquidationDeadlineLabel = formatShortDate(selectedLiquidationReport.deadlineAt);
           return (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Button size="sm" variant="ghost" className="-ml-1.5 shrink-0" onClick={closeLiquidationDetails}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />Back
-                    </Button>
-                    <span className="h-5 w-px shrink-0 bg-border/60" />
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-foreground">{selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation Report"}</p>
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {selectedLiquidationOrganization?.organizationName ?? "Unknown organization"}
-                        {selectedLiquidationReport.deadlineAt ? ` · Deadline: ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(selectedLiquidationReport.deadlineAt))}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <PortalStatusBadge status={selectedLiquidationReport.status} />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!canApproveLiquidation || liquidationLockedAfterHardCopy}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "liquidation",
-                          action: "approve",
-                          liquidationReportId: selectedLiquidationReport.id,
-                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                          organizationId: selectedLiquidationReport.organizationId,
-                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                          currentStatus: selectedLiquidationReport.status,
-                        })
-                      }
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!canMarkLiquidationHardCopySubmitted || liquidationLockedAfterHardCopy}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "liquidation",
-                          action: "submitted_hardcopy",
-                          liquidationReportId: selectedLiquidationReport.id,
-                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                          organizationId: selectedLiquidationReport.organizationId,
-                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                          currentStatus: selectedLiquidationReport.status,
-                        })
-                      }
-                    >
-                      Submitted hardcopy
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={liquidationLockedAfterHardCopy}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "liquidation",
-                          action: "needs_revision",
-                          liquidationReportId: selectedLiquidationReport.id,
-                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                          organizationId: selectedLiquidationReport.organizationId,
-                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                          currentStatus: selectedLiquidationReport.status,
-                        })
-                      }
-                    >
-                      Needs Revision
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={liquidationLockedAfterHardCopy}
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "liquidation",
-                          action: "overdue",
-                          liquidationReportId: selectedLiquidationReport.id,
-                          budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                          organizationId: selectedLiquidationReport.organizationId,
-                          organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
-                          activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
-                          currentStatus: selectedLiquidationReport.status,
-                        })
-                      }
-                    >
-                      Mark Overdue
-                    </Button>
-                  </div>
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={closeLiquidationDetails}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Liquidation Reports
+                </button>
+                <div className="flex items-center gap-2">
+                  <PortalStatusBadge status={selectedLiquidationReport.status} />
+                  {liquidationLockedAfterHardCopy ? <DetailStatusChip label="Finalized" tone="success" /> : null}
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-                <PortalSection title="Liquidation Details">
-                  {selectedLiquidationOrganization && (
-                    <div className="mb-4 border-b border-border/40 pb-4">
-                      <p className="font-semibold text-foreground">{selectedLiquidationOrganization.organizationName}</p>
-                      <p className="text-sm text-muted-foreground">{selectedLiquidationOrganization.organizationEmail}</p>
-                      {selectedLiquidationOrganization.barangay ? <p className="text-sm text-muted-foreground">{selectedLiquidationOrganization.barangay}</p> : null}
-                    </div>
-                  )}
-                  <div className="divide-y divide-border/40">
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Linked Budget</p>
-                      <p className="break-words text-sm font-medium">{selectedLiquidationBudgetRequest?.activityTitle ?? "N/A"}</p>
-                    </div>
-                      <div className="grid grid-cols-1 gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[11rem_1fr] sm:gap-3">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
-                      <p className="text-sm font-medium">{selectedLiquidationReport.goSignalAt || "Pending"}</p>
-                    </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Deadline</p>
-                      <p className="text-sm font-medium">{selectedLiquidationReport.deadlineAt || "Pending"}</p>
-                    </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy Submitted</p>
-                      <p className="text-sm font-medium">{selectedLiquidationReport.hardCopySubmittedAt || "Pending"}</p>
-                    </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Completed At</p>
-                      <p className="text-sm font-medium">{selectedLiquidationReport.completedAt || "Pending"}</p>
-                    </div>
-                    <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remarks</p>
-                      <p className="break-words text-sm font-medium">{selectedLiquidationReport.remarks || "None"}</p>
+              <DetailInfoCard
+                title="Liquidation Record"
+                icon={<FileText className="h-5 w-5" />}
+                className="overflow-hidden"
+              >
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="space-y-2">
+                    <p className="text-3xl font-semibold tracking-tight text-foreground">{selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation Report"}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                      <span>Submitted by {selectedLiquidationOrganization?.organizationName ?? "Unknown organization"}</span>
+                      {selectedLiquidationOrganization?.organizationEmail ? <span>({selectedLiquidationOrganization.organizationEmail})</span> : null}
+                      {selectedLiquidationOrganization?.barangay ? <span>{selectedLiquidationOrganization.barangay}</span> : null}
+                      <span>Deadline: {liquidationDeadlineLabel}</span>
                     </div>
                   </div>
+                  <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                    <PortalStatusBadge status={selectedLiquidationReport.status} />
+                    {liquidationLockedAfterHardCopy ? <DetailStatusChip label="Finalized" tone="success" /> : null}
+                  </div>
+                </div>
+              </DetailInfoCard>
 
-                  <div className="mt-4 rounded-xl border border-border/70 bg-background p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Recent Activity</p>
+              <div className="grid gap-5 xl:grid-cols-[22rem_minmax(0,1fr)]">
+                <DetailInfoCard title="Liquidation Details" icon={<ClipboardList className="h-5 w-5" />} className="self-start">
+                  <DetailSectionBlock label="Submitted By">
+                    <DetailSubmittedBy
+                      title={selectedLiquidationOrganization?.organizationName ?? "Unknown organization"}
+                      email={selectedLiquidationOrganization?.organizationEmail}
+                      subtitle={selectedLiquidationOrganization?.barangay ?? null}
+                    />
+                  </DetailSectionBlock>
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Record Information">
+                    <div className="space-y-3">
+                      <DetailInfoRow label="Linked Budget">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-primary/70" />
+                          <span className="break-words">{selectedLiquidationBudgetRequest?.activityTitle ?? "Not linked"}</span>
+                        </div>
+                      </DetailInfoRow>
+                      <DetailInfoRow label="Go Signal">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4 text-primary/70" />
+                          <span>{formatShortDate(selectedLiquidationReport.goSignalAt)}</span>
+                        </div>
+                      </DetailInfoRow>
+                      <DetailInfoRow label="Deadline">
+                        <div className="flex items-center gap-2">
+                          <Clock3 className="h-4 w-4 text-primary/70" />
+                          <span>{liquidationDeadlineLabel}</span>
+                        </div>
+                      </DetailInfoRow>
+                      <DetailInfoRow label="Hardcopy Submitted">
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="h-4 w-4 text-primary/70" />
+                          <span>{formatShortDate(selectedLiquidationReport.hardCopySubmittedAt)}</span>
+                        </div>
+                      </DetailInfoRow>
+                      <DetailInfoRow label="Completed At">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-primary/70" />
+                          <span>{formatShortDate(selectedLiquidationReport.completedAt)}</span>
+                        </div>
+                      </DetailInfoRow>
+                    </div>
+                  </DetailSectionBlock>
+
+                  {selectedLiquidationReport.remarks ? (
+                    <>
+                      <SectionDivider />
+                      <DetailSectionBlock label="Organization Remarks">
+                        <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-foreground">
+                          {selectedLiquidationReport.remarks}
+                        </div>
+                      </DetailSectionBlock>
+                    </>
+                  ) : null}
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Recent Activity">
                     {selectedLiquidationReport.revisionHistory?.length ? (
-                      <div className="mt-3 space-y-3">
+                      <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-3">
                         <div className="flex items-start gap-2.5">
                           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
                           <div className="min-w-0">
                             <p className="text-sm font-medium">Report Created</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(selectedLiquidationReport.createdAt))}
-                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(selectedLiquidationReport.createdAt)}</p>
                           </div>
                         </div>
                         {selectedLiquidationReport.revisionHistory.map((entry, idx) => {
@@ -3672,26 +4669,24 @@ export default function AdminPortal({ section }: { section: string }) {
                             entry.action === "overdue" || entry.action === "rejected_red"
                               ? "bg-rose-500"
                               : entry.action === "approved_for_ftf_green" || entry.action === "completed_liquidated" || entry.action === "hard_copy_submitted"
-                              ? "bg-emerald-500"
-                              : entry.action === "submitted"
-                              ? "bg-muted-foreground/40"
-                              : "bg-amber-400";
+                                ? "bg-emerald-500"
+                                : entry.action === "submitted"
+                                  ? "bg-muted-foreground/40"
+                                  : "bg-amber-400";
                           const liqActionLabel =
                             entry.action === "overdue" ? "Marked Overdue"
                             : entry.action === "needs_revision" ? "Revision Requested"
-                            : entry.action === "approved_for_ftf_green" ? "Approved (Go Signal)"
+                            : entry.action === "approved_for_ftf_green" ? "Approved"
                             : entry.action === "submitted" ? "Submitted"
-                            : entry.action === "hard_copy_submitted" ? "Hard Copy Submitted"
-                            : entry.action === "completed_liquidated" ? "Completed"
+                            : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+                            : entry.action === "completed_liquidated" ? "Liquidated"
                             : entry.action;
                           return (
                             <div key={idx} className="flex items-start gap-2.5">
                               <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${liqDotColor}`} />
                               <div className="min-w-0">
                                 <p className="text-sm font-medium">{liqActionLabel}</p>
-                                <p className="mt-0.5 text-xs text-muted-foreground">
-                                  {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.changedAt))}
-                                </p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(entry.changedAt)}</p>
                                 {entry.adminRemarks ? <p className="mt-1 text-xs italic text-muted-foreground">"{entry.adminRemarks}"</p> : null}
                               </div>
                             </div>
@@ -3699,144 +4694,364 @@ export default function AdminPortal({ section }: { section: string }) {
                         })}
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-muted-foreground">No review activity yet.</p>
+                      <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground">
+                        No review activity yet.
+                      </div>
                     )}
-                  </div>
-                </PortalSection>
+                  </DetailSectionBlock>
+                </DetailInfoCard>
 
-                <PortalSection title="Attached Files">
-                  <div className="space-y-3">
+                <DetailInfoCard title="Review and Attached Files" icon={<FileText className="h-5 w-5" />}>
+                  <DetailSectionBlock label="Review Actions">
+                    <ReviewActionToolbar>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!canApproveLiquidation || liquidationLockedAfterHardCopy}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "liquidation",
+                            action: "approve",
+                            liquidationReportId: selectedLiquidationReport.id,
+                            budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                            organizationId: selectedLiquidationReport.organizationId,
+                            organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            currentStatus: selectedLiquidationReport.status,
+                          })
+                        }
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!canMarkLiquidationHardCopySubmitted || liquidationLockedAfterHardCopy}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "liquidation",
+                            action: "submitted_hardcopy",
+                            liquidationReportId: selectedLiquidationReport.id,
+                            budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                            organizationId: selectedLiquidationReport.organizationId,
+                            organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            currentStatus: selectedLiquidationReport.status,
+                          })
+                        }
+                      >
+                        Mark Hardcopy Submitted
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={liquidationLockedAfterHardCopy}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "liquidation",
+                            action: "needs_revision",
+                            liquidationReportId: selectedLiquidationReport.id,
+                            budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                            organizationId: selectedLiquidationReport.organizationId,
+                            organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            currentStatus: selectedLiquidationReport.status,
+                          })
+                        }
+                      >
+                        Needs Revision
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={liquidationLockedAfterHardCopy}
+                        onClick={() =>
+                          openAdminConfirmation({
+                            kind: "liquidation",
+                            action: "overdue",
+                            liquidationReportId: selectedLiquidationReport.id,
+                            budgetRequestId: selectedLiquidationReport.budgetRequestId,
+                            organizationId: selectedLiquidationReport.organizationId,
+                            organizationName: selectedLiquidationOrganization?.organizationName ?? "Unknown organization",
+                            activityTitle: selectedLiquidationBudgetRequest?.activityTitle ?? "Liquidation report",
+                            currentStatus: selectedLiquidationReport.status,
+                          })
+                        }
+                      >
+                        Mark Overdue
+                      </Button>
+                    </ReviewActionToolbar>
+                    {selectedLiquidationReport.remarks ? (
+                      <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">Latest Admin Feedback</p>
+                        <p className="text-sm text-amber-900">{selectedLiquidationReport.remarks}</p>
+                      </div>
+                    ) : null}
+                  </DetailSectionBlock>
+
+                  <SectionDivider />
+
+                  <DetailSectionBlock label="Attached Files">
                     <p className="text-sm text-muted-foreground">
                       {selectedLiquidationReportFiles.length
                         ? `${selectedLiquidationReportFiles.length} file${selectedLiquidationReportFiles.length === 1 ? "" : "s"} uploaded.`
                         : "No attached files were uploaded for this liquidation report."}
                     </p>
                     {selectedLiquidationReportFiles.length ? (
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                          {selectedLiquidationReportFiles.map((file) => (
-                            <Button
-                              key={file.id}
-                              type="button"
-                              size="sm"
-                              variant={selectedLiquidationReportFile?.id === file.id ? "default" : "outline"}
-                              className="max-w-full"
-                              onClick={() => setSelectedLiquidationFileId(file.id)}
-                            >
-                              <span className="max-w-[12rem] truncate">{file.fileName}</span>
-                            </Button>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-between"
-                          onClick={() => setLiquidationPreviewExpanded((value) => !value)}
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            {liquidationPreviewExpanded ? "Hide Preview" : "Show Preview"}
-                          </span>
-                          {liquidationPreviewExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
-                        {liquidationPreviewExpanded ? (
-                          <div className="rounded-xl border border-border/70 bg-background p-2.5">
-                            {liquidationPreviewLoading ? (
-                              <p className="p-2 text-sm text-muted-foreground">Loading preview...</p>
-                            ) : liquidationPreviewUrl && liquidationPreviewCanInline ? (
-                              isImagePreviewFile(liquidationPreviewTitle) || isImagePreviewFile(liquidationPreviewUrl) ? (
-                                <div className="flex max-h-[18rem] min-h-[12rem] items-center justify-center overflow-hidden rounded-md bg-background sm:max-h-[32rem]">
-                                  <img
-                                    src={liquidationPreviewUrl}
-                                    alt={liquidationPreviewTitle || "Liquidation file preview"}
-                                    className="max-h-[18rem] w-full object-contain sm:max-h-[32rem]"
-                                  />
-                                </div>
-                              ) : (
-                                <iframe
-                                  title={liquidationPreviewTitle || "Liquidation Preview"}
+                      <div className="space-y-4">
+                        <DetailFilePills
+                          items={selectedLiquidationReportFiles.map((file) => ({ id: file.id, fileName: file.fileName }))}
+                          selectedId={selectedLiquidationReportFile?.id}
+                          onSelect={setSelectedLiquidationFileId}
+                        />
+                        <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
+                          {liquidationPreviewLoading ? (
+                            <div className="grid min-h-[65vh] place-items-center p-6 text-sm text-muted-foreground">Loading preview...</div>
+                          ) : liquidationPreviewUrl && liquidationPreviewCanInline ? (
+                            isImagePreviewFile(liquidationPreviewTitle) || isImagePreviewFile(liquidationPreviewUrl) ? (
+                              <div className="flex min-h-[65vh] items-center justify-center overflow-hidden bg-background">
+                                <img
                                   src={liquidationPreviewUrl}
-                                  className="h-[18rem] w-full rounded-md border-0 bg-background sm:h-[32rem]"
-                                  loading="eager"
+                                  alt={liquidationPreviewTitle || "Liquidation file preview"}
+                                  className="max-h-[72vh] w-full object-contain"
                                 />
-                              )
-                            ) : liquidationPreviewUrl ? (
-                              <div className="space-y-3 p-2.5 text-sm text-muted-foreground">
+                              </div>
+                            ) : (
+                              <iframe
+                                title={liquidationPreviewTitle || "Liquidation Preview"}
+                                src={liquidationPreviewUrl}
+                                className="h-[72vh] w-full border-0 bg-background"
+                                loading="eager"
+                              />
+                            )
+                          ) : liquidationPreviewUrl ? (
+                            <div className="grid min-h-[65vh] place-items-center p-6 text-center text-sm text-muted-foreground">
+                              <div className="space-y-3">
                                 <p>This uploaded file cannot be shown inline. You can open it in a new tab if needed.</p>
                                 <Button type="button" variant="outline" onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   Open File
                                 </Button>
                               </div>
-                            ) : (
-                              <div className="grid min-h-[12rem] place-items-center rounded-md border border-dashed border-border/70 bg-muted/10 p-4 text-center text-sm text-muted-foreground">
-                                {liquidationPreviewEmptyMessage || "No liquidation file was uploaded."}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-                            Preview hidden. Click "Show Preview" to review the uploaded file before acting.
-                          </div>
-                        )}
+                            </div>
+                          ) : (
+                            <div className="grid min-h-[65vh] place-items-center border border-dashed border-border/60 bg-muted/10 p-6 text-center text-sm text-muted-foreground">
+                              {liquidationPreviewEmptyMessage || "No liquidation file was uploaded."}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 p-6 text-sm text-muted-foreground">
                         No attached liquidation files were submitted.
                       </div>
                     )}
-                  </div>
-                </PortalSection>
+                  </DetailSectionBlock>
+                </DetailInfoCard>
               </div>
             </div>
           );
         }
         return (
           <PortalSection title="Liquidation Reports" description="Review liquidation reports submitted after funded activities. Approve completed reports, request revisions, or flag overdue ones.">
-            <div className="space-y-3">
-              {visibleLiquidationReports.length ? (
-                visibleLiquidationReports.map((record) => {
-                  const linkedBudget = state.budgetRequests.find((item) => item.id === record.budgetRequestId) ?? null;
-                  const liquidationOrg = state.organizationProfiles.find((item) => item.id === record.organizationId) ?? null;
-                  const statusDotColor =
-                    record.status === "approved_for_ftf_green" || record.status === "hard_copy_submitted" || record.status === "completed_liquidated"
-                      ? "bg-emerald-500"
-                      : record.status === "overdue" || record.status === "rejected_red"
-                      ? "bg-rose-500"
-                      : record.status === "pending_activity_completion" || record.status === "not_started" || record.status === "draft"
-                      ? "bg-muted-foreground/40"
-                      : "bg-amber-400";
-                  return (
-                    <Card key={record.id} className="border-border/70 shadow-sm">
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-2.5">
-                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
-                            <div className="min-w-0">
-                              <p className="font-semibold text-foreground">{linkedBudget?.activityTitle ?? "Liquidation item"}</p>
-                              <p className="mt-0.5 truncate text-sm text-foreground/70"><span className="text-muted-foreground">Organization:</span> {liquidationOrg?.organizationName ?? "Unknown organization"}</p>
-                              {record.deadlineAt ? (
-                                <p className="mt-0.5 text-sm text-muted-foreground">
-                                  Deadline: {new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(record.deadlineAt))}
-                                </p>
-                              ) : null}
+            {visibleLiquidationReports.length ? (
+              <div className="space-y-3">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                  <Input
+                    value={liquidationReportsSearch}
+                    onChange={(event) => setLiquidationReportsSearch(event.target.value)}
+                    placeholder="Search by organization, linked budget, or report ID"
+                  />
+                  <Select value={liquidationReportsStatusFilter} onValueChange={setLiquidationReportsStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      {liquidationReportStatusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {formatStatusLabel(status)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {filteredVisibleLiquidationReports.length ? (
+                  <>
+                    <div className="space-y-3 md:hidden">
+                      {filteredVisibleLiquidationReports.map((record) => {
+                        const linkedBudget = state.budgetRequests.find((item) => item.id === record.budgetRequestId) ?? null;
+                        const liquidationOrg = state.organizationProfiles.find((item) => item.id === record.organizationId) ?? null;
+                        const primaryFile =
+                          [...state.liquidationReportFiles]
+                            .filter((file) => file.liquidationReportId === record.id)
+                            .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())[0] ?? null;
+                        const latestActivity = (record.revisionHistory ?? []).at(-1) ?? null;
+                        return (
+                          <Card key={record.id} className="border-border/70 shadow-sm">
+                            <CardContent className="space-y-3 p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 space-y-1">
+                                  <p className="font-semibold text-foreground">{liquidationOrg?.organizationName ?? "Unknown organization"}</p>
+                                  <p className="text-xs text-primary">Report ID: {buildPublicRecordCode("LR", record, visibleLiquidationReports)}</p>
+                                  <p className="text-xs text-muted-foreground">{linkedBudget?.activityTitle ?? "Liquidation item"}</p>
+                                  <p className="text-xs text-muted-foreground">Created {formatShortDate(record.createdAt)}</p>
+                                </div>
+                                <PortalStatusBadge status={record.status} />
+                              </div>
+
+                              <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/10 p-3 sm:grid-cols-2">
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Deadline</p>
+                                  <p className="mt-1 text-sm font-medium text-foreground">{formatShortDate(record.deadlineAt)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Linked Budget</p>
+                                  <p className="mt-1 text-sm font-medium text-foreground">{linkedBudget?.activityTitle ?? "No linked budget"}</p>
+                                  <p className="text-xs text-muted-foreground">Go signal {formatShortDate(record.goSignalAt || linkedBudget?.goSignalAt)}</p>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">File</p>
+                                {primaryFile ? (
+                                  <div className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-background p-3">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+                                      <FileText className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="line-clamp-2 break-all text-sm font-medium leading-snug text-foreground">{primaryFile.fileName}</p>
+                                      <p className="text-xs text-muted-foreground">{formatFileMetaLabel(primaryFile.fileType, primaryFile.fileSize)}</p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No file uploaded yet</p>
+                                )}
+                              </div>
+
+                              <div className="space-y-1 rounded-xl border border-border/50 bg-muted/10 p-3">
+                                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Recent Activity</p>
+                                <p className="text-sm text-foreground">{latestActivity ? formatStatusLabel(latestActivity.action) : formatStatusLabel(record.status)}</p>
+                                <p className="text-xs text-muted-foreground">{formatDateTimeLabel(latestActivity?.changedAt ?? record.updatedAt)}</p>
+                                {latestActivity?.adminRemarks ? <p className="text-xs text-muted-foreground">{latestActivity.adminRemarks}</p> : null}
+                              </div>
+
+                              <div className="flex items-center justify-end gap-2">
+                                <Button type="button" size="sm" variant="outline" onClick={() => openLiquidationDetails(record)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Review
+                                </Button>
+                                {primaryFile ? (
+                                  <Button type="button" size="sm" onClick={() => void openFile(primaryFile.fileUrl, primaryFile.fileName)}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Open File
+                                  </Button>
+                                ) : null}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                    <div className="hidden overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/35 hover:bg-muted/35">
+                      <TableHead className="min-w-[250px]">Report</TableHead>
+                      <TableHead className="min-w-[160px]">Status</TableHead>
+                      <TableHead className="min-w-[120px]">Deadline</TableHead>
+                      <TableHead className="min-w-[220px]">Linked Budget</TableHead>
+                      <TableHead className="min-w-[230px]">File</TableHead>
+                      <TableHead className="min-w-[190px]">Recent Activity</TableHead>
+                      <TableHead className="w-[70px] text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredVisibleLiquidationReports.map((record) => {
+                      const linkedBudget = state.budgetRequests.find((item) => item.id === record.budgetRequestId) ?? null;
+                      const liquidationOrg = state.organizationProfiles.find((item) => item.id === record.organizationId) ?? null;
+                      const primaryFile =
+                        [...state.liquidationReportFiles]
+                          .filter((file) => file.liquidationReportId === record.id)
+                          .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())[0] ?? null;
+                      const latestActivity = (record.revisionHistory ?? []).at(-1) ?? null;
+                      return (
+                        <TableRow key={record.id} className="align-middle">
+                          <TableCell className="align-middle">
+                            <div className="space-y-1">
+                              <p className="font-semibold text-foreground">{liquidationOrg?.organizationName ?? "Unknown organization"}</p>
+                              <p className="text-xs text-muted-foreground">Report ID: {buildPublicRecordCode("LR", record, visibleLiquidationReports)}</p>
+                              <p className="text-xs text-muted-foreground">{linkedBudget?.activityTitle ?? "Liquidation item"}</p>
+                              <p className="text-xs text-muted-foreground">Created {formatShortDate(record.createdAt)}</p>
                             </div>
-                          </div>
-                          <PortalStatusBadge status={record.status} />
-                        </div>
-                        <div className="mt-3 flex justify-end">
-                          <Button type="button" size="sm" onClick={() => openLiquidationDetails(record)}>
-                            Review<ArrowRight className="ml-2 h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              ) : (
-                <PortalEmptyState title="No liquidation records yet" description="Cash-released budgets create liquidation records automatically." />
-              )}
-            </div>
+                          </TableCell>
+                          <TableCell className="align-middle">
+                            <PortalStatusBadge status={record.status} />
+                          </TableCell>
+                          <TableCell className="align-middle text-sm text-foreground">{formatShortDate(record.deadlineAt)}</TableCell>
+                          <TableCell className="align-middle">
+                            <div className="space-y-1 text-sm">
+                              <p className="font-medium text-foreground">{linkedBudget?.activityTitle ?? "No linked budget"}</p>
+                              <p className="text-xs text-muted-foreground">Go signal {formatShortDate(record.goSignalAt || linkedBudget?.goSignalAt)}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="align-middle">
+                            {primaryFile ? (
+                              <div className="flex items-start gap-2">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+                                  <FileText className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="line-clamp-2 break-all text-sm font-medium leading-snug text-foreground">{primaryFile.fileName}</p>
+                                  <p className="text-xs text-muted-foreground">{formatFileMetaLabel(primaryFile.fileType, primaryFile.fileSize)}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">No file uploaded yet</p>
+                            )}
+                          </TableCell>
+                          <TableCell className="align-middle">
+                            <div className="space-y-1">
+                              <p className="text-sm text-foreground">{latestActivity ? formatStatusLabel(latestActivity.action) : formatStatusLabel(record.status)}</p>
+                              <p className="text-xs text-muted-foreground">{formatDateTimeLabel(latestActivity?.changedAt ?? record.updatedAt)}</p>
+                              {latestActivity?.adminRemarks ? <p className="line-clamp-2 text-xs text-muted-foreground">{latestActivity.adminRemarks}</p> : null}
+                            </div>
+                          </TableCell>
+                          <TableCell className="align-middle text-right">
+                            <DropdownMenu modal={false}>
+                              <DropdownMenuTrigger asChild>
+                                <Button type="button" size="icon" variant="outline" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem onClick={() => openLiquidationDetails(record)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Review
+                                </DropdownMenuItem>
+                                {primaryFile ? (
+                                  <DropdownMenuItem onClick={() => void openFile(primaryFile.fileUrl, primaryFile.fileName)}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Open File
+                                  </DropdownMenuItem>
+                                ) : null}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                  </div>
+                  </>
+                ) : (
+                  <PortalEmptyState title="No matching liquidation reports" description="Try adjusting the search or status filter." />
+                )}
+              </div>
+            ) : (
+              <PortalEmptyState title="No liquidation records yet" description="Cash-released budgets create liquidation records automatically." />
+            )}
           </PortalSection>
         );
       case "news-releases":
@@ -3855,6 +5070,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     setNewsTitleDraft("");
                     setNewsDescriptionDraft("");
                     setNewsFacebookPostUrlDraft("");
+                    setNewsPreviewImageUrlDraft("");
                     setNewsDatePostedDraft(new Date().toISOString().slice(0, 10));
                     setNewsVisibilityDraft("draft");
                   }}
@@ -3865,89 +5081,119 @@ export default function AdminPortal({ section }: { section: string }) {
               }
             >
               {newsReleases.length ? (
-                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-                  {newsReleases.map((news) => {
-                    const dotColor =
-                      news.visibilityStatus === "published"
-                        ? "bg-emerald-500"
-                        : news.visibilityStatus === "hidden"
-                        ? "bg-rose-500"
-                        : "bg-amber-400";
-                    const formattedDate = news.datePosted
-                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(news.datePosted))
-                      : "—";
-                    return (
-                      <Card key={news.id} className="flex flex-col border-border/70 shadow-sm">
-                        <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 items-start gap-2">
-                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                              <p className="break-words font-semibold leading-snug text-foreground">{news.title}</p>
-                            </div>
-                            <div className="shrink-0">
-                              <PortalStatusBadge status={news.visibilityStatus} />
-                            </div>
-                          </div>
-                          <p className="line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{news.description}</p>
-                          <div className="space-y-0.5 pl-4">
-                            <p className="text-xs text-muted-foreground">Posted {formattedDate}</p>
-                            {news.facebookPostUrl && (
-                              <p className="max-w-full break-all text-xs text-muted-foreground/70">{news.facebookPostUrl}</p>
-                            )}
-                          </div>
-                          <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
-                              <Eye className="mr-1.5 h-3.5 w-3.5" />
-                              Preview
-                            </Button>
-                            <div className="flex items-center justify-end gap-1.5">
-                              {news.visibilityStatus === "published" ? (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-1 sm:flex-none"
-                                  onClick={() => openAdminConfirmation({ kind: "news_release", action: "hide", id: news.id, title: news.title })}
-                                >
-                                  Hide
+                <div className="space-y-3">
+                  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                    <Input
+                      value={newsSearch}
+                      onChange={(event) => setNewsSearch(event.target.value)}
+                      placeholder="Search by title, description, or Facebook link"
+                    />
+                    <Select value={newsVisibilityFilter} onValueChange={(value) => setNewsVisibilityFilter(value as "all" | NewsRelease["visibilityStatus"])}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All visibility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Visibility</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="hidden">Hidden</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {filteredNewsReleases.length ? (
+                    <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                      {filteredNewsReleases.map((news) => {
+                        const dotColor =
+                          news.visibilityStatus === "published"
+                            ? "bg-emerald-500"
+                            : news.visibilityStatus === "hidden"
+                            ? "bg-rose-500"
+                            : "bg-amber-400";
+                        const formattedDate = news.datePosted
+                          ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(news.datePosted))
+                          : "?";
+                        return (
+                          <Card key={news.id} className="flex flex-col border-border/70 shadow-sm">
+                            <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-start gap-2">
+                                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
+                                  <p className="break-words font-semibold leading-snug text-foreground">{news.title}</p>
+                                </div>
+                                <div className="shrink-0">
+                                  <PortalStatusBadge status={news.visibilityStatus} />
+                                </div>
+                              </div>
+                              <p className="line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{news.description}</p>
+                              <div className="space-y-0.5 pl-4">
+                                <p className="text-xs text-muted-foreground">Posted {formattedDate}</p>
+                                {news.facebookPostUrl && (
+                                  <p className="max-w-full break-all text-xs text-muted-foreground/70">{news.facebookPostUrl}</p>
+                                )}
+                                {news.previewImageUrl ? (
+                                  <p className="max-w-full break-all text-xs text-muted-foreground/70">Preview image: {news.previewImageUrl}</p>
+                                ) : null}
+                              </div>
+                              <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+                                <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
+                                  <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                  Preview
                                 </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-1 sm:flex-none"
-                                  onClick={() => openAdminConfirmation({ kind: "news_release", action: "publish", id: news.id, title: news.title })}
-                                >
-                                  Publish
-                                </Button>
-                              )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">More actions</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-36">
-                                  <DropdownMenuItem onClick={() => startEditingNewsRelease(news.id)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => void handleDeleteNewsRelease(news.id)}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {news.visibilityStatus === "published" ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 sm:flex-none"
+                                      onClick={() => openAdminConfirmation({ kind: "news_release", action: "hide", id: news.id, title: news.title })}
+                                    >
+                                      Hide
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 sm:flex-none"
+                                      onClick={() => openAdminConfirmation({ kind: "news_release", action: "publish", id: news.id, title: news.title })}
+                                    >
+                                      Publish
+                                    </Button>
+                                  )}
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">More actions</span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-36">
+                                      <DropdownMenuItem onClick={() => startEditingNewsRelease(news.id)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() => void handleDeleteNewsRelease(news.id)}
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <PortalEmptyState
+                      title="No matching news releases"
+                      description="Try adjusting the search or visibility filter."
+                    />
+                  )}
                 </div>
               ) : (
                 <PortalEmptyState
@@ -3990,6 +5236,19 @@ export default function AdminPortal({ section }: { section: string }) {
                       onChange={(event) => setNewsFacebookPostUrlDraft(event.target.value)}
                       placeholder="https://facebook.com/..."
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="news-release-preview-image-url" className="text-sm font-medium">Thumbnail Image URL</label>
+                    <Input
+                      id="news-release-preview-image-url"
+                      name="newsReleasePreviewImageUrl"
+                      value={newsPreviewImageUrlDraft}
+                      onChange={(event) => setNewsPreviewImageUrlDraft(event.target.value)}
+                      placeholder="https://.../thumbnail.jpg"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Optional. This image will be used as the thumbnail shown on the organization-side News Releases cards.
+                    </p>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -4037,244 +5296,407 @@ export default function AdminPortal({ section }: { section: string }) {
           <Tabs
             value={budgetMonitoringTab}
             onValueChange={(value) => setBudgetMonitoringTab(value as typeof budgetMonitoringTab)}
-            className="space-y-6"
+            className="space-y-5"
           >
-            <TabsList className="grid w-full max-w-xl grid-cols-2">
-              <TabsTrigger value="overview">Monitoring Overview</TabsTrigger>
-              <TabsTrigger value="barangay-allocation">Allocation by Barangay</TabsTrigger>
-            </TabsList>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-1">
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Budget Monitoring</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Track approved budgets, utilization, and liquidation progress.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!budgetRequestExportRows.length}
+                    onClick={() => setActiveReportExport("budget-requests")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Report
+                  </Button>
+                  <Button type="button" onClick={() => navigate("/admin/budget-utilization")}>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Review Budget Requests
+                  </Button>
+                </div>
+              </div>
+
+              <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0">
+                <TabsTrigger
+                  value="overview"
+                  className="relative h-auto rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-0 text-sm font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                >
+                  Monitoring Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="barangay-allocation"
+                  className="relative h-auto rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-0 text-sm font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                >
+                  Allocation by Barangay
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="overview" className="mt-0">
-              <PortalSection
-                title="Budget Monitoring"
-                description="Approved budgets are monitored automatically after approval so release, utilization, and liquidation progress stay visible."
-                action={
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!budgetRequestExportRows.length}
-                      onClick={() => setActiveReportExport("budget-requests")}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export Report
-                    </Button>
-                    <Button type="button" onClick={() => navigate("/admin/budget-utilization")}>
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      Review Budget Requests
-                    </Button>
-                  </div>
-                }
-              >
-                <div className="grid gap-4">
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <PortalMetricCard
-                      label="Released Budgets"
-                      value={budgetMonitoringEntries.length.toLocaleString()}
-                      helper="Budget requests that have already been released."
-                    />
-                    <PortalMetricCard
-                      label="Released Amount"
-                      value={`PHP ${budgetMonitoringAnalysis.totalReleased.toLocaleString()}`}
-                      helper="Total amount already released to organizations."
-                    />
-                    <PortalMetricCard
-                      label="Remaining Amount"
-                      value={`PHP ${budgetMonitoringAnalysis.totalRemaining.toLocaleString()}`}
-                      helper="Approved amount still not released."
-                    />
-                    <PortalMetricCard
-                      label="Utilization Rate"
-                      value={`${budgetMonitoringAnalysis.utilizationRate}%`}
-                      helper="Released amount as a share of approved funds."
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {[
+                    {
+                      label: "Released Budgets",
+                      value: budgetMonitoringEntries.length.toLocaleString(),
+                      helper: "Budget requests already released.",
+                      icon: ClipboardList,
+                      iconClasses: "bg-primary/10 text-primary",
+                    },
+                    {
+                      label: "Released Amount",
+                      value: `PHP ${budgetMonitoringAnalysis.totalReleased.toLocaleString()}`,
+                      helper: "Total amount already released.",
+                      icon: Banknote,
+                      iconClasses: "bg-emerald-500/10 text-emerald-700",
+                    },
+                    {
+                      label: "Remaining Amount",
+                      value: `PHP ${budgetMonitoringAnalysis.totalRemaining.toLocaleString()}`,
+                      helper: "Approved amount still unreleased.",
+                      icon: Wallet,
+                      iconClasses: "bg-violet-500/10 text-violet-700",
+                    },
+                    {
+                      label: "Utilization Rate",
+                      value: `${budgetMonitoringAnalysis.utilizationRate}%`,
+                      helper: "Released share of approved funds.",
+                      icon: CheckCircle2,
+                      iconClasses: "bg-amber-400/15 text-amber-700",
+                    },
+                  ].map((metric) => {
+                    const MetricIcon = metric.icon;
+                    return (
+                      <Card key={metric.label} className="border-border/70 shadow-sm">
+                        <CardContent className="flex min-h-[136px] items-start gap-4 p-4">
+                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${metric.iconClasses}`}>
+                            <MetricIcon className="h-5 w-5" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/75">{metric.label}</p>
+                            <p className="text-3xl font-semibold tracking-tight text-foreground">{metric.value}</p>
+                            <p className="text-sm text-muted-foreground">{metric.helper}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
 
-                  <Card className="border-border/70">
-                    <CardContent className="space-y-4 p-4 sm:p-5">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.8fr)]">
+                  <Card className="border-border/70 shadow-sm">
+                    <CardContent className="space-y-5 p-4 sm:p-5">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/75">Budget Health Snapshot</p>
-                        <p className="mt-0.5 text-sm text-muted-foreground">
+                        <h2 className="text-lg font-semibold text-foreground">Budget Health Snapshot</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {budgetMonitoringEntries.length} cash-released budget{budgetMonitoringEntries.length === 1 ? "" : "s"} under monitoring.
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <div className="rounded-xl border border-border/70 bg-card p-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">On Track</p>
+                      {budgetMonitoringStatusRows.some((row) => row.count > 0) ? (
+                        <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:items-center">
+                          <div className="relative mx-auto h-56 w-full max-w-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={budgetMonitoringStatusRows}
+                                  dataKey="count"
+                                  nameKey="riskLabel"
+                                  innerRadius={70}
+                                  outerRadius={98}
+                                  strokeWidth={0}
+                                  paddingAngle={2}
+                                >
+                                  {budgetMonitoringStatusRows.map((row) => (
+                                    <Cell key={row.riskLabel} fill={row.chartColor} />
+                                  ))}
+                                </Pie>
+                              </PieChart>
+                            </ResponsiveContainer>
+                            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                              <p className="text-3xl font-semibold tracking-tight text-foreground">{budgetMonitoringEntries.length}</p>
+                              <p className="text-sm text-muted-foreground">Total Budgets</p>
+                            </div>
                           </div>
-                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.onTrackCount}</p>
-                        </div>
-                        <div className="rounded-xl border border-border/70 bg-card p-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />
-                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Needs Attention</p>
-                          </div>
-                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.needsAttentionCount}</p>
-                        </div>
-                        <div className="rounded-xl border border-border/70 bg-card p-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
-                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Overdue</p>
-                          </div>
-                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.overdueCount}</p>
-                        </div>
-                        <div className="rounded-xl border border-border/70 bg-card p-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Completed</p>
-                          </div>
-                          <p className="mt-2 text-3xl font-bold text-foreground">{budgetMonitoringAnalysis.completedCount}</p>
-                        </div>
-                      </div>
 
-                      <div className="h-52">
-                        {budgetMonitoringChartData.some((d) => d.count > 0) ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={budgetMonitoringChartData} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                              <YAxis type="category" dataKey="riskLabel" width={120} tick={{ fontSize: 11 }} />
-                              <Tooltip formatter={(value: number) => [String(value), "Count"]} />
-                              <Bar dataKey="count" name="Count" fill="#2460A7" radius={[0, 6, 6, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="grid h-full place-items-center rounded-xl border border-dashed border-border/70 bg-muted/10 text-sm text-muted-foreground">
-                            No cash-released budgets yet.
+                          <div className="space-y-4">
+                            {budgetMonitoringStatusRows.map((row) => (
+                              <div key={row.riskLabel} className="space-y-2">
+                                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <span className={`h-2.5 w-2.5 rounded-full ${row.dotClass}`} />
+                                    <p className="text-sm font-medium text-foreground">{row.riskLabel}</p>
+                                  </div>
+                                  <div className="text-right text-sm text-muted-foreground">
+                                    <span className="font-semibold text-foreground">{row.count}</span> ({row.percentage}%)
+                                  </div>
+                                </div>
+                                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                                  <div className={`h-full rounded-full ${row.barClass}`} style={{ width: `${row.percentage}%` }} />
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
-                      </div>
-
+                        </div>
+                      ) : (
+                        <div className="grid min-h-[240px] place-items-center rounded-xl border border-dashed border-border/70 bg-muted/10 text-sm text-muted-foreground">
+                          No cash-released budgets yet.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
 
-                  {budgetMonitoringAnalysis.insights.length ? (
-                    <PortalSection title="Analysis Notes">
-                      <ul className="space-y-2">
-                        {budgetMonitoringAnalysis.insights.map((insight) => (
-                          <li key={insight} className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/10 px-4 py-3 text-sm text-foreground">
-                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary/60" />
-                            {insight}
-                          </li>
-                        ))}
-                      </ul>
-                    </PortalSection>
-                  ) : null}
+                  <div className="space-y-4">
+                    {budgetMonitoringAnalysis.insights.length ? (
+                      <Card className="border-border/70 shadow-sm">
+                        <CardContent className="space-y-4 p-4 sm:p-5">
+                          <div>
+                            <h2 className="text-lg font-semibold text-foreground">Analysis Notes</h2>
+                            <p className="mt-1 text-sm text-muted-foreground">Existing monitoring insights based on the current budget data.</p>
+                          </div>
+                          <ul className="space-y-2.5">
+                            {budgetMonitoringAnalysis.insights.map((insight) => (
+                              <li key={insight} className="flex items-start gap-3 rounded-xl bg-muted/10 px-3.5 py-3 text-sm text-foreground">
+                                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                  <ClipboardList className="h-3 w-3" />
+                                </span>
+                                <span>{insight}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    ) : null}
+                  </div>
+                </div>
 
-                  {budgetMonitoringEntries.length ? (
-                    <div className="space-y-3">
-                      {budgetMonitoringEntries.map((entry) => {
-                        const entryDotColor =
-                          entry.riskLabel === "Overdue"
-                            ? "bg-rose-500"
-                            : entry.riskLabel === "Completed"
-                            ? "bg-emerald-500"
-                            : entry.riskLabel === "On Track"
-                            ? "bg-primary"
-                            : "bg-amber-400";
-                        return (
-                          <Card key={entry.budgetRequestId} className="border-border/70 shadow-sm">
-                            <CardContent className="p-4 sm:p-5">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-start gap-2.5">
-                                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${entryDotColor}`} />
-                                  <div className="min-w-0">
+                {budgetMonitoringEntries.length ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                      <Input
+                        value={budgetMonitoringSearch}
+                        onChange={(event) => setBudgetMonitoringSearch(event.target.value)}
+                        placeholder="Search by request title, organization, or request ID"
+                      />
+                      <Select value={budgetMonitoringRiskFilter} onValueChange={setBudgetMonitoringRiskFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All risk levels" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Risk Levels</SelectItem>
+                          <SelectItem value="On Track">On Track</SelectItem>
+                          <SelectItem value="Needs Attention">Needs Attention</SelectItem>
+                          <SelectItem value="Overdue">Overdue</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {filteredBudgetMonitoringEntries.length ? (
+                      <>
+                      <div className="space-y-3 md:hidden">
+                        {filteredBudgetMonitoringEntries.map((entry) => {
+                          const linkedRequest = state.budgetRequests.find((request) => request.id === entry.budgetRequestId) ?? null;
+                          const riskClasses =
+                            entry.riskLabel === "Overdue"
+                              ? "bg-destructive/15 text-destructive"
+                              : entry.riskLabel === "Completed"
+                              ? "bg-emerald-500/15 text-emerald-700"
+                              : entry.riskLabel === "On Track"
+                              ? "bg-primary/15 text-primary"
+                              : "bg-amber-400/15 text-amber-700";
+                          return (
+                            <Card key={entry.budgetRequestId} className="border-border/70 shadow-sm">
+                              <CardContent className="space-y-3 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 space-y-1">
                                     <p className="font-semibold text-foreground">{entry.title}</p>
-                                    <p className="mt-0.5 truncate text-sm text-muted-foreground">{entry.organizationName}</p>
+                                    <p className="text-xs text-primary">Request ID: {buildPublicRecordCode("BR", linkedRequest, state.budgetRequests)}</p>
+                                    <p className="text-xs text-muted-foreground">{entry.organizationName}</p>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${riskClasses}`}>{entry.riskLabel}</span>
+                                    <PortalStatusBadge status={entry.budgetStatus} />
                                   </div>
                                 </div>
-                                <div className="flex shrink-0 flex-wrap items-start justify-end gap-1.5">
-                                  <span
-                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                      entry.riskLabel === "Overdue"
-                                        ? "bg-destructive/15 text-destructive"
-                                        : entry.riskLabel === "Completed"
-                                        ? "bg-emerald-500/15 text-emerald-700"
-                                        : entry.riskLabel === "On Track"
-                                        ? "bg-primary/15 text-primary"
-                                        : "bg-amber-400/15 text-amber-700"
-                                    }`}
-                                  >
-                                    {entry.riskLabel}
-                                  </span>
-                                  <PortalStatusBadge status={entry.budgetStatus} />
-                                </div>
-                              </div>
 
-                              <div className="mt-4 divide-y divide-border/40 border-t border-border/40 pt-4">
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 first:pt-0">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved Amount</p>
-                                  <p className="text-sm font-medium">PHP {entry.approvedAmount.toLocaleString()}</p>
+                                <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/10 p-3 sm:grid-cols-2">
+                                  <div>
+                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Approved</p>
+                                    <p className="mt-1 text-sm font-medium text-foreground">PHP {entry.approvedAmount.toLocaleString()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Released</p>
+                                    <p className="mt-1 text-sm font-medium text-emerald-700">PHP {entry.releasedAmount.toLocaleString()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                                    <p className="mt-1 text-sm font-medium text-foreground">{formatShortDate(entry.goSignalAt)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Deadline</p>
+                                    <p className="mt-1 text-sm font-medium text-foreground">{formatShortDate(entry.deadlineAt)}</p>
+                                  </div>
                                 </div>
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released Amount</p>
-                                  <p className="text-sm font-medium">PHP {entry.releasedAmount.toLocaleString()}</p>
-                                </div>
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Remaining</p>
-                                  <p className="text-sm font-medium">PHP {entry.remainingAmount.toLocaleString()}</p>
-                                </div>
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
-                                  <p className="text-sm font-medium">
-                                    {entry.goSignalAt
-                                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.goSignalAt))
-                                      : "Pending"}
+
+                                <div className="space-y-2 rounded-xl border border-border/50 bg-muted/10 p-3">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Progress</p>
+                                    <p className="text-sm font-medium text-foreground">{entry.utilizationRate}%</p>
+                                  </div>
+                                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                                    <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatStatusLabel(entry.liquidationStatus)} · Hard copy {formatShortDate(entry.hardCopySubmittedAt)} · Completed {formatShortDate(entry.completedAt)}
                                   </p>
                                 </div>
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Deadline</p>
-                                  <p className="text-sm font-medium">
-                                    {entry.deadlineAt
-                                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.deadlineAt))
-                                      : "Pending"}
-                                  </p>
-                                </div>
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy</p>
-                                  <p className="text-sm font-medium">
-                                    {entry.hardCopySubmittedAt
-                                      ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(entry.hardCopySubmittedAt))
-                                      : "Pending"}
-                                  </p>
-                                </div>
-                                <div className="grid grid-cols-[11rem_1fr] gap-3 py-2.5 last:pb-0">
-                                  <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Liquidation</p>
-                                  <p className="text-sm font-medium">{formatStatusLabel(entry.liquidationStatus)}</p>
-                                </div>
-                              </div>
 
-                              <div className="mt-4">
-                                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground/75">
-                                  <span className="uppercase tracking-[0.14em]">Release Progress</span>
-                                  <span>{entry.utilizationRate}%</span>
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button type="button" size="sm" variant="outline" onClick={() => openBudgetRequestDetails(entry.budgetRequestId)}>
+                                    <ClipboardList className="mr-2 h-4 w-4" />
+                                    Budget Review
+                                  </Button>
+                                  {entry.liquidationReportId ? (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => {
+                                        const report = state.liquidationReports.find((item) => item.id === entry.liquidationReportId);
+                                        if (report) openLiquidationDetails(report);
+                                      }}
+                                    >
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      Liquidation
+                                    </Button>
+                                  ) : null}
                                 </div>
-                                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
-                                  <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
-                                </div>
-                              </div>
-
-                              <div className="mt-4 flex justify-end">
-                                <Button type="button" size="sm" variant="outline" onClick={() => navigate("/admin/budget-utilization")}>
-                                  Open Budget Review<ArrowRight className="ml-2 h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <PortalEmptyState
-                      title="No approved budgets yet"
-                      description="Approved budget requests automatically appear here once the budget review marks them green."
-                    />
-                  )}
-                </div>
-              </PortalSection>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                      <div className="hidden overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/35 hover:bg-muted/35">
+                            <TableHead className="min-w-[240px]">Request</TableHead>
+                            <TableHead className="min-w-[170px]">Risk & Status</TableHead>
+                            <TableHead className="min-w-[190px]">Amounts (PHP)</TableHead>
+                            <TableHead className="min-w-[170px]">Timeline</TableHead>
+                            <TableHead className="min-w-[160px]">Liquidation</TableHead>
+                            <TableHead className="min-w-[120px]">Progress</TableHead>
+                            <TableHead className="w-[70px] text-right">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredBudgetMonitoringEntries.map((entry) => {
+                            const linkedRequest = state.budgetRequests.find((request) => request.id === entry.budgetRequestId) ?? null;
+                            const riskClasses =
+                              entry.riskLabel === "Overdue"
+                                ? "bg-destructive/15 text-destructive"
+                                : entry.riskLabel === "Completed"
+                                ? "bg-emerald-500/15 text-emerald-700"
+                                : entry.riskLabel === "On Track"
+                                ? "bg-primary/15 text-primary"
+                                : "bg-amber-400/15 text-amber-700";
+                            return (
+                              <TableRow key={entry.budgetRequestId}>
+                                <TableCell className="align-top">
+                                  <div className="space-y-1">
+                                    <p className="font-semibold text-foreground">{entry.title}</p>
+                                    <p className="text-xs text-muted-foreground">Request ID: {buildPublicRecordCode("BR", linkedRequest, state.budgetRequests)}</p>
+                                    <p className="text-xs text-muted-foreground">{entry.organizationName}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top">
+                                  <div className="space-y-1">
+                                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${riskClasses}`}>{entry.riskLabel}</span>
+                                    <PortalStatusBadge status={entry.budgetStatus} />
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top">
+                                  <div className="space-y-1 text-sm">
+                                    <p className="text-muted-foreground">Approved</p>
+                                    <p className="font-medium text-foreground">PHP {entry.approvedAmount.toLocaleString()}</p>
+                                    <p className="text-muted-foreground">Released</p>
+                                    <p className="font-medium text-emerald-700">PHP {entry.releasedAmount.toLocaleString()}</p>
+                                    <p className="text-xs text-muted-foreground">Remaining PHP {entry.remainingAmount.toLocaleString()}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top">
+                                  <div className="space-y-1 text-sm">
+                                    <p className="text-muted-foreground">Go signal</p>
+                                    <p className="font-medium text-foreground">{formatShortDate(entry.goSignalAt)}</p>
+                                    <p className="text-muted-foreground">Deadline</p>
+                                    <p className="font-medium text-foreground">{formatShortDate(entry.deadlineAt)}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top">
+                                  <div className="space-y-1 text-sm">
+                                    <p className="font-medium text-foreground">{formatStatusLabel(entry.liquidationStatus)}</p>
+                                    <p className="text-xs text-muted-foreground">Hard copy {formatShortDate(entry.hardCopySubmittedAt)}</p>
+                                    <p className="text-xs text-muted-foreground">Completed {formatShortDate(entry.completedAt)}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top">
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium text-foreground">{entry.utilizationRate}%</p>
+                                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(entry.utilizationRate, 100)}%` }} />
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top text-right">
+                                  <DropdownMenu modal={false}>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button type="button" size="icon" variant="outline" className="h-8 w-8">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-44">
+                                      <DropdownMenuItem onClick={() => openBudgetRequestDetails(entry.budgetRequestId)}>
+                                        <ClipboardList className="mr-2 h-4 w-4" />
+                                        Open Budget Review
+                                      </DropdownMenuItem>
+                                      {entry.liquidationReportId ? (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            const report = state.liquidationReports.find((item) => item.id === entry.liquidationReportId);
+                                            if (report) openLiquidationDetails(report);
+                                          }}
+                                        >
+                                          <Eye className="mr-2 h-4 w-4" />
+                                          Open Liquidation
+                                        </DropdownMenuItem>
+                                      ) : null}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                      </div>
+                      </>
+                    ) : (
+                      <PortalEmptyState title="No matching monitored budgets" description="Try adjusting the search or risk filter." />
+                    )}
+                  </div>
+                ) : (
+                  <PortalEmptyState
+                    title="No approved budgets yet"
+                    description="Approved budget requests automatically appear here once the budget review marks them green."
+                  />
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="barangay-allocation" className="mt-0">
@@ -4300,28 +5722,6 @@ export default function AdminPortal({ section }: { section: string }) {
                     title={selectedBudgetAllocation.barangay}
                     description={`${selectedBudgetAllocation.district} · ${selectedBudgetAllocation.organizationCount} organization${selectedBudgetAllocation.organizationCount === 1 ? "" : "s"} · ${selectedBudgetAllocation.releasedBudgetCount} released budget${selectedBudgetAllocation.releasedBudgetCount === 1 ? "" : "s"}`}
                   >
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                      <PortalMetricCard
-                        label="Organizations"
-                        value={selectedBudgetAllocation.organizationCount.toLocaleString()}
-                        helper="Organizations with released budgets in this barangay."
-                      />
-                      <PortalMetricCard
-                        label="Approved"
-                        value={`PHP ${selectedBudgetAllocation.approvedAmount.toLocaleString()}`}
-                        helper="Total approved amount across all released requests."
-                      />
-                      <PortalMetricCard
-                        label="Released"
-                        value={`PHP ${selectedBudgetAllocation.releasedAmount.toLocaleString()}`}
-                        helper="Total cash already released to organizations."
-                      />
-                      <PortalMetricCard
-                        label="Utilization"
-                        value={`${selectedBudgetAllocation.utilizationRate}%`}
-                        helper="Released versus approved amount."
-                      />
-                    </div>
                   </PortalSection>
 
                   {selectedBudgetAllocationOrganizationDetails.length ? (
@@ -4368,41 +5768,83 @@ export default function AdminPortal({ section }: { section: string }) {
                             {detail.requests.length ? (
                               <div className="mt-4">
                                 <p className="mb-2 text-sm font-medium text-foreground">Released Requests</p>
-                                <div className="space-y-2">
-                                  {detail.requests.map((request) => (
-                                    <div key={request.id} className="rounded-xl border border-border/70 bg-muted/10 p-4">
-                                      <div className="flex items-start justify-between gap-3">
-                                        <p className="text-sm font-semibold text-foreground">{request.activityTitle}</p>
-                                        <PortalStatusBadge status={request.status} />
-                                      </div>
-                                      <div className="mt-3 divide-y divide-border/40 border-t border-border/40 pt-3">
-                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2 first:pt-0">
-                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Approved</p>
-                                          <p className="text-sm">PHP {request.approvedAmount.toLocaleString()}</p>
+                                <div className="space-y-3">
+                                  <div className="space-y-3 md:hidden">
+                                    {detail.requests.map((request) => (
+                                      <div key={request.id} className="rounded-xl border border-border/70 bg-background p-3">
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0 space-y-1">
+                                            <p className="text-sm font-semibold text-foreground">{request.activityTitle}</p>
+                                            <p className="text-xs text-primary">{buildPublicRecordCode("BR", request, detail.requests)}</p>
+                                          </div>
+                                          <PortalStatusBadge status={request.status} />
                                         </div>
-                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2">
-                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Released</p>
-                                          <p className="text-sm">PHP {request.releasedAmount.toLocaleString()}</p>
-                                        </div>
-                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2">
-                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
-                                          <p className="text-sm">
-                                            {request.goSignalAt
-                                              ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(request.goSignalAt))
-                                              : "Pending"}
-                                          </p>
-                                        </div>
-                                        <div className="grid grid-cols-[11rem_1fr] gap-3 py-2 last:pb-0">
-                                          <p className="pt-0.5 text-xs uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy</p>
-                                          <p className="text-sm">
-                                            {request.hardCopySubmittedAt
-                                              ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(request.hardCopySubmittedAt))
-                                              : "Pending"}
-                                          </p>
+                                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                          <div>
+                                            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Approved</p>
+                                            <p className="mt-1 text-sm font-medium">PHP {request.approvedAmount.toLocaleString()}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Released</p>
+                                            <p className="mt-1 text-sm font-medium">PHP {request.releasedAmount.toLocaleString()}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Go Signal</p>
+                                            <p className="mt-1 text-sm font-medium">{request.goSignalAt ? formatShortDate(request.goSignalAt) : "Pending"}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Hard Copy</p>
+                                            <p className="mt-1 text-sm font-medium">{request.hardCopySubmittedAt ? formatShortDate(request.hardCopySubmittedAt) : "Pending"}</p>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    ))}
+                                  </div>
+                                <div className="hidden overflow-hidden rounded-xl border border-border/70 md:block">
+                                  <div className="overflow-x-auto">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow className="bg-muted/20">
+                                          <TableHead className="min-w-[220px]">Request</TableHead>
+                                          <TableHead className="min-w-[150px]">Status</TableHead>
+                                          <TableHead className="min-w-[120px]">Approved</TableHead>
+                                          <TableHead className="min-w-[120px]">Released</TableHead>
+                                          <TableHead className="min-w-[130px]">Go Signal</TableHead>
+                                          <TableHead className="min-w-[130px]">Hard Copy</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {detail.requests.map((request) => (
+                                          <TableRow key={request.id}>
+                                            <TableCell>
+                                              <div className="space-y-1">
+                                                <p className="text-sm font-semibold text-foreground">{request.activityTitle}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {buildPublicRecordCode("BR", request, detail.requests)}
+                                                </p>
+                                              </div>
+                                            </TableCell>
+                                            <TableCell>
+                                              <PortalStatusBadge status={request.status} />
+                                            </TableCell>
+                                            <TableCell className="text-sm font-medium">
+                                              PHP {request.approvedAmount.toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="text-sm font-medium">
+                                              PHP {request.releasedAmount.toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                              {request.goSignalAt ? formatShortDate(request.goSignalAt) : "Pending"}
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                              {request.hardCopySubmittedAt ? formatShortDate(request.hardCopySubmittedAt) : "Pending"}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                </div>
+                                  </div>
                                 </div>
                               </div>
                             ) : null}
@@ -4475,31 +5917,42 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Active Barangays</p>
-                      <p className="mt-1.5 text-xl font-bold text-foreground">{budgetAllocationSummary.barangayCount.toLocaleString()}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Barangays with released budgets</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Released</p>
-                      <p className="mt-1.5 text-xl font-bold text-foreground">PHP {budgetAllocationSummary.totalReleased.toLocaleString()}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Total cash released</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Approved</p>
-                      <p className="mt-1.5 text-xl font-bold text-foreground">PHP {budgetAllocationSummary.totalApproved.toLocaleString()}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Budget ceiling before release</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Remaining</p>
-                      <p className="mt-1.5 text-xl font-bold text-foreground">PHP {budgetAllocationSummary.totalRemaining.toLocaleString()}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Not yet released</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 bg-card px-3 py-3 sm:col-span-3 lg:col-span-1">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">Utilization Rate</p>
-                      <p className="mt-1.5 text-xl font-bold text-foreground">{budgetAllocationSummary.utilizationRate}%</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Released vs. approved</p>
-                    </div>
+                    <PortalMetricCard
+                      label="Active Barangays"
+                      value={budgetAllocationSummary.barangayCount.toLocaleString()}
+                      helper="Barangays with released budgets"
+                      icon={MapPin}
+                      iconTone="primary"
+                    />
+                    <PortalMetricCard
+                      label="Released"
+                      value={`PHP ${budgetAllocationSummary.totalReleased.toLocaleString()}`}
+                      helper="Total cash released"
+                      icon={Banknote}
+                      iconTone="emerald"
+                    />
+                    <PortalMetricCard
+                      label="Approved"
+                      value={`PHP ${budgetAllocationSummary.totalApproved.toLocaleString()}`}
+                      helper="Budget ceiling before release"
+                      icon={Wallet}
+                      iconTone="amber"
+                    />
+                    <PortalMetricCard
+                      label="Remaining"
+                      value={`PHP ${budgetAllocationSummary.totalRemaining.toLocaleString()}`}
+                      helper="Not yet released"
+                      icon={AlertTriangle}
+                      iconTone="red"
+                    />
+                    <PortalMetricCard
+                      label="Utilization Rate"
+                      value={`${budgetAllocationSummary.utilizationRate}%`}
+                      helper="Released vs. approved"
+                      icon={CheckCircle2}
+                      iconTone="violet"
+                      className="sm:col-span-3 lg:col-span-1"
+                    />
                   </div>
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-border/70 bg-background">
@@ -4576,7 +6029,7 @@ export default function AdminPortal({ section }: { section: string }) {
         return (
           <PortalSection
             title="Template Management"
-            description="Manage downloadable document templates that organizations use during registration and compliance submissions."
+            description="Manage downloadable templates for document submissions, MOVE, and other user-side reference files."
             action={
               <Button
                 type="button"
@@ -4586,102 +6039,177 @@ export default function AdminPortal({ section }: { section: string }) {
                   setEditingTemplateId(null);
                   setTemplateNameDraft("");
                   setTemplateDescriptionDraft("");
+                  setTemplateScopeDraft("document_submission");
                   setTemplateFileDraft(null);
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Add Document
+                Add Template
               </Button>
             }
           >
-            {templateDocuments.length === 0 ? (
+            {activeTemplates.length === 0 ? (
               <PortalEmptyState
                 title="No templates yet"
-                description="Upload a document template for organizations to download."
+                description="Upload a template file and assign where it should appear in the user portal."
               />
             ) : (
-            <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {templateDocuments.map((template) => {
-                const hasFile = Boolean(template.templateFileName);
-                const dotColor = hasFile ? "bg-emerald-500" : "bg-amber-400";
-                const uploadedDate = template.templateUploadedAt
-                  ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))
-                  : null;
-                return (
-                  <Card key={template.id} className="flex flex-col border-border/70 shadow-sm">
-                    <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                        <p className="break-words font-semibold leading-snug text-foreground">{template.name}</p>
+              <div className="space-y-6">
+                {[
+                  {
+                    key: "document_submission" as const,
+                    title: "Document Submissions",
+                    description: "These templates appear inside the user document submissions page.",
+                    items: templateDocuments,
+                  },
+                  {
+                    key: "move" as const,
+                    title: "MOVE Template",
+                    description: "These templates appear inside the user MOVE page.",
+                    items: moveTemplates,
+                  },
+                  {
+                    key: "other" as const,
+                    title: "Other Templates",
+                    description: "These templates appear in the user Templates page for download and reference.",
+                    items: otherTemplates,
+                  },
+                ].map((group) => (
+                  <div key={group.key} className="space-y-3">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-foreground">{group.title}</h3>
+                      <p className="text-sm text-muted-foreground">{group.description}</p>
+                    </div>
+                    {group.items.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
+                        No templates added for this section yet.
                       </div>
-                      <p className="line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{template.description}</p>
-                      <div className="space-y-0.5 pl-4">
-                        {hasFile ? (
-                          <>
-                            <div className="flex items-center gap-1.5">
-                              <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                              <p className="break-all text-xs text-muted-foreground">{template.templateFileName}</p>
-                            </div>
-                            {uploadedDate && (
-                              <p className="text-xs text-muted-foreground/70">Uploaded {uploadedDate}</p>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-xs text-muted-foreground/70">No file uploaded yet</p>
-                        )}
+                    ) : (
+                      <div className="overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/35 hover:bg-muted/35">
+                              <TableHead className="min-w-[260px]">Template</TableHead>
+                              <TableHead className="min-w-[300px]">Description</TableHead>
+                              <TableHead className="min-w-[220px]">File</TableHead>
+                              <TableHead className="min-w-[150px]">Updated</TableHead>
+                              <TableHead className="w-[70px] text-right">Action</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {group.items.map((template) => {
+                              const hasFile = Boolean(template.templateFileName);
+                              const uploadedDate = template.templateUploadedAt
+                                ? new Intl.DateTimeFormat("en-PH", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  }).format(new Date(template.templateUploadedAt))
+                                : null;
+                              return (
+                                <TableRow key={template.id}>
+                                  <TableCell className="align-top">
+                                    <div className="flex items-start gap-2.5">
+                                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${hasFile ? "bg-emerald-500" : "bg-amber-400"}`} />
+                                      <div className="space-y-1">
+                                        <p className="font-semibold leading-snug text-foreground">{template.name}</p>
+                                        <p className="text-xs text-muted-foreground">{templateScopeLabelMap[template.templateScope]}</p>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="align-top">
+                                    <p className="text-sm leading-relaxed text-muted-foreground">{template.description || "No description provided."}</p>
+                                  </TableCell>
+                                  <TableCell className="align-top">
+                                    {hasFile ? (
+                                      <div className="space-y-1">
+                                        <div className="flex items-center gap-1.5">
+                                        <FileText className="h-3.5 w-3.5 shrink-0 text-red-500/80" />
+                                          <p className="break-all text-sm text-foreground">{template.templateFileName}</p>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Ready for preview and download</p>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-muted-foreground">No file uploaded yet</p>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="align-top">
+                                    <p className="text-sm text-foreground">{uploadedDate ?? "Not uploaded"}</p>
+                                  </TableCell>
+                                  <TableCell className="align-top text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        disabled={!template.templateFileUrl}
+                                        onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
+                                      >
+                                        <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                        Preview
+                                      </Button>
+                                      <DropdownMenu modal={false}>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button size="icon" variant="ghost" className="h-8 w-8">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">More actions</span>
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-36">
+                                          <DropdownMenuItem onClick={() => startEditingTemplate(template.id)}>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Edit
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem
+                                            className="text-destructive focus:text-destructive"
+                                            onClick={() => {
+                                              setEditingTemplateId(template.id);
+                                              setTemplateModalMode("delete");
+                                            }}
+                                          >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
                       </div>
-                      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="min-w-0 flex-1 sm:flex-none"
-                          disabled={!template.templateFileUrl}
-                          onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
-                        >
-                          <Eye className="mr-1.5 h-3.5 w-3.5" />
-                          Preview
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-36">
-                            <DropdownMenuItem onClick={() => startEditingTemplate(template.id)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => { setEditingTemplateId(template.id); setTemplateModalMode("delete"); }}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
             <Dialog open={templateModalMode === "create" || templateModalMode === "edit"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>{templateModalMode === "edit" ? "Edit Template" : "Add Document Template"}</DialogTitle>
+                  <DialogTitle>{templateModalMode === "edit" ? "Edit Template" : "Add Template"}</DialogTitle>
                   <DialogDescription>
                     {templateModalMode === "edit"
-                      ? "Update the document information and replace the uploaded file if needed."
-                      : "Create a new template record and upload the document file that users will access."}
+                      ? "Update the template details, category, and uploaded file if needed."
+                      : "Create a new template record, assign where it should appear, then upload the file users will access."}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="template-document-scope" className="text-sm font-medium">Template Section</label>
+                    <Select value={templateScopeDraft} onValueChange={(value) => setTemplateScopeDraft(value as "document_submission" | "move" | "other")}>
+                      <SelectTrigger id="template-document-scope">
+                        <SelectValue placeholder="Select where this template should appear" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="document_submission">Document Submissions</SelectItem>
+                        <SelectItem value="move">MOVE Template</SelectItem>
+                        <SelectItem value="other">Other Templates</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <label htmlFor="template-document-name" className="text-sm font-medium">Document Name</label>
                     <Input
@@ -4751,7 +6279,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   </DialogDescription>
                 </DialogHeader>
                 <p className="text-sm text-muted-foreground">
-                  This removes the template from the active user-side document list.
+                  This removes the template from the active user-side template list.
                 </p>
                 <DialogFooter>
                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
@@ -5020,26 +6548,90 @@ export default function AdminPortal({ section }: { section: string }) {
           const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
           const entryFiles = state.ypopFiles.filter((f) => f.ypopEntryId === entry.id);
           const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
+          const semesterActivityIds = new Set(semesterActivities.map((activity) => activity.id));
+          const orgEventParticipations = [...state.ypopEventParticipations]
+            .filter((participation) => participation.organizationId === entry.organizationId && semesterActivityIds.has(participation.activityId))
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          const eventFilesByParticipationId = new Map<string, YPOPEventFile[]>();
+          state.ypopEventFiles.forEach((file) => {
+            const existing = eventFilesByParticipationId.get(file.participationId) ?? [];
+            existing.push(file);
+            eventFilesByParticipationId.set(file.participationId, existing);
+          });
+          const orgActivities = [...state.ypopOrgActivities]
+            .filter((activity) => activity.ypopEntryId === entry.id)
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          const orgActivityFilesByActivityId = new Map<string, YPOPOrgActivityFile[]>();
+          state.ypopOrgActivityFiles.forEach((file) => {
+            const existing = orgActivityFilesByActivityId.get(file.orgActivityId) ?? [];
+            existing.push(file);
+            orgActivityFilesByActivityId.set(file.orgActivityId, existing);
+          });
           const entryPeriod = state.ypopPeriods.find((p) => p.semesterKey === entry.semester);
           const periodTiers = entryPeriod?.orgLedTiers?.length ? entryPeriod.orgLedTiers : DEFAULT_ORG_LED_TIERS;
           const isTerminal = entry.status === "qualified" || entry.status === "not_qualified";
+          const verifiedCityLedAttendance = semesterActivities.map((activity) => ({
+            activityId: activity.id,
+            attended: orgEventParticipations.some(
+              (participation) => participation.activityId === activity.id && participation.status === "verified",
+            ),
+          }));
+          const approvedOrgActivityCount = getApprovedYpopOrgActivityCount(orgActivities, entry.id, entry.orgLedProjectCount ?? 0);
           const form = ypopValidationForm ?? {
-            cityLedAttendance: entry.cityLedAttendance?.length
-              ? entry.cityLedAttendance
-              : semesterActivities.map((a) => ({ activityId: a.id, attended: false })),
-            orgLedProjectCount: entry.orgLedProjectCount ?? 0,
+            cityLedAttendance: verifiedCityLedAttendance,
+            orgLedProjectCount: approvedOrgActivityCount,
             status: (entry.status === "draft" || entry.status === "submitted") ? "under_review" as YPOPStatus : entry.status,
             adminRemarks: entry.adminRemarks ?? "",
           };
-          const { cityLedEarned, cityLedMax, orgLedBonus, totalScore } = computeYpopScore(
-            form.cityLedAttendance, semesterActivities, form.orgLedProjectCount, periodTiers
+          const effectiveCityLedAttendance = verifiedCityLedAttendance;
+          const { cityLedEarned, cityLedMax, cityLedPercent, cityLedWeightedScore, orgLedBonus, totalScore } = computeYpopScore(
+            effectiveCityLedAttendance, semesterActivities, form.orgLedProjectCount, periodTiers
           );
           const _sortedTiers = [...periodTiers].sort((a, b) => b.minProjects - a.minProjects);
           const _matchedTier = _sortedTiers.find((t) => form.orgLedProjectCount >= t.minProjects);
           const orgLedTierLabel = _matchedTier
-            ? `≥ ${_matchedTier.minProjects} projects → +${_matchedTier.bonus} pts`
-            : "0 projects → +0 pts";
-          const qualifies = totalScore >= (entry.pointsRequired ?? 70);
+            ? `≥ ${_matchedTier.minProjects} projects → +${_matchedTier.bonus}% bonus`
+            : "0 projects → +0% bonus";
+          const qualifies = totalScore >= (entry.pointsRequired ?? YPOP_SCORE_THRESHOLD);
+          const orgLedTierLabelDisplay = orgLedTierLabel && (_matchedTier
+            ? `>= ${_matchedTier.minProjects} activit${_matchedTier.minProjects === 1 ? "y" : "ies"} -> +${_matchedTier.bonus}% bonus`
+            : "0 activities -> +0% bonus");
+          const persistYpopValidation = async () => {
+            setSavingYpopValidation(true);
+            try {
+              const now = new Date().toISOString();
+              const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
+              const { totalScore: computedScore } = computeYpopScore(effectiveCityLedAttendance, semActs, form.orgLedProjectCount, periodTiers);
+              const patch = {
+                pointsEarned: computedScore,
+                status: form.status,
+                adminRemarks: form.adminRemarks,
+                orgLedProjectCount: form.orgLedProjectCount,
+                cityLedAttendance: effectiveCityLedAttendance,
+                validatedAt: now,
+                updatedAt: now,
+                revisionHistory: [
+                  ...(entry.revisionHistory ?? []),
+                  { action: form.status, adminRemarks: form.adminRemarks, changedAt: now },
+                ],
+              };
+              try {
+                const saved = await adminUpdateYpopEntryInSupabase(entry.id, patch);
+                updateYPOPEntry(saved.id, saved);
+              } catch {
+                updateYPOPEntry(entry.id, patch);
+              }
+              toast({ title: "Validation saved", description: `${entryOrg?.organizationName ?? "Org"}'s YPOP entry updated to ${statusLabelMap[form.status] ?? form.status}.` });
+              setConfirmYpopValidationOpen(false);
+              setYpopValidationAcknowledged(false);
+              setSelectedYpopId(null);
+              setYpopValidationForm(null);
+              setYpopPreviewFileId(null);
+              setYpopAdminView("period-detail");
+            } finally {
+              setSavingYpopValidation(false);
+            }
+          };
 
           return (
             <div className="space-y-5">
@@ -5090,7 +6682,9 @@ export default function AdminPortal({ section }: { section: string }) {
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium">City-Led Activities</p>
                           {semesterActivities.length > 0 && (
-                            <span className="text-xs text-muted-foreground">{cityLedEarned} / {cityLedMax} pts</span>
+                              <span className="text-xs text-muted-foreground">
+                                {cityLedEarned} / {cityLedMax} pts ({cityLedPercent}%)
+                              </span>
                           )}
                         </div>
                         {semesterActivities.length === 0 ? (
@@ -5100,29 +6694,19 @@ export default function AdminPortal({ section }: { section: string }) {
                         ) : (
                           <div className="space-y-1.5">
                             {semesterActivities.map((act: YPOPCityActivity) => {
-                              const checked = form.cityLedAttendance.find((a) => a.activityId === act.id)?.attended ?? false;
+                              const checked = effectiveCityLedAttendance.find((a) => a.activityId === act.id)?.attended ?? false;
                               return (
-                                <label
+                                <div
                                   key={act.id}
-                                  className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
-                                    isTerminal ? "cursor-default opacity-70" : "hover:bg-muted/20"
+                                  className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+                                    isTerminal ? "opacity-70" : ""
                                   } ${checked ? "border-primary/30 bg-primary/5" : "border-border/50 bg-background"}`}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={checked}
-                                    disabled={isTerminal || savingYpopValidation}
-                                    onChange={(e) => {
-                                      const updated = form.cityLedAttendance.some((a) => a.activityId === act.id)
-                                        ? form.cityLedAttendance.map((a) => a.activityId === act.id ? { ...a, attended: e.target.checked } : a)
-                                        : [...form.cityLedAttendance, { activityId: act.id, attended: e.target.checked }];
-                                      const newScore = computeYpopScore(updated, semesterActivities, form.orgLedProjectCount, periodTiers);
-                                      setYpopValidationForm({
-                                        ...form,
-                                        cityLedAttendance: updated,
-                                        status: newScore.totalScore >= (entry.pointsRequired ?? 70) ? "qualified" : "not_qualified",
-                                      });
-                                    }}
+                                    disabled
+                                    readOnly
                                     className="mt-0.5 shrink-0 accent-primary"
                                   />
                                   <div className="min-w-0 flex-1">
@@ -5130,75 +6714,186 @@ export default function AdminPortal({ section }: { section: string }) {
                                     <p className="mt-0.5 text-xs text-muted-foreground">{act.date} · {act.venue}</p>
                                   </div>
                                   <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                                    {act.points} pts
+                                    {normalizeYpopCityLedPoints(act.points, act.category)} pts
                                   </span>
-                                </label>
+                                </div>
                               );
                             })}
                           </div>
                         )}
                       </div>
 
-                      {/* Org-Led */}
+                      {/* Organization-initiated */}
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Organization-Led Activities</p>
+                        <p className="text-sm font-medium">Organization-Initiated Activities</p>
                         <div className="flex flex-wrap items-center gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground" htmlFor="ypop-org-led-count">Number of org-led projects</label>
-                            <Input
-                              id="ypop-org-led-count"
-                              type="number"
-                              min={0}
-                              value={form.orgLedProjectCount}
-                              onChange={(e) => {
-                                const count = Math.max(0, Number(e.target.value || 0));
-                                const newScore = computeYpopScore(form.cityLedAttendance, semesterActivities, count, periodTiers);
-                                setYpopValidationForm({
-                                  ...form,
-                                  orgLedProjectCount: count,
-                                  status: isTerminal ? form.status : (newScore.totalScore >= (entry.pointsRequired ?? 70) ? "qualified" : "not_qualified"),
-                                });
-                              }}
-                              disabled={isTerminal || savingYpopValidation}
-                              className="h-8 w-24 text-sm"
-                            />
+                          <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-sm font-semibold tabular-nums">
+                            {approvedOrgActivityCount} approved activit{approvedOrgActivityCount === 1 ? "y" : "ies"}
                           </div>
                           <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                            {orgLedTierLabel}
+                            {orgLedTierLabelDisplay}
                           </div>
                         </div>
+                        {orgActivities.length === 0 ? (
+                          <p className="rounded-md border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
+                            No organization-initiated activity logs were submitted for this semester yet.
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {orgActivities.map((activity) => {
+                              const files = orgActivityFilesByActivityId.get(activity.id) ?? [];
+                              return (
+                                <div key={activity.id} className="rounded-lg border border-border/60 bg-background p-3">
+                                  <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold leading-snug">{activity.activityName}</p>
+                                      <p className="mt-0.5 text-xs text-muted-foreground">
+                                        {activity.activityDate || "Date TBD"}{activity.venue ? ` • ${activity.venue}` : ""}
+                                      </p>
+                                    </div>
+                                    <PortalStatusBadge status={activity.status} />
+                                  </div>
+                                  <div className="mt-3 rounded-md border border-border/50 bg-muted/20 p-3">
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Narrative Report</p>
+                                    <p className="text-sm whitespace-pre-wrap">{activity.narrativeReport}</p>
+                                  </div>
+                                  <div className="mt-3 space-y-2">
+                                    <p className="text-xs font-medium text-muted-foreground">Attached Files ({files.length})</p>
+                                    {files.length === 0 ? (
+                                      <p className="text-sm text-muted-foreground">No proof files uploaded yet.</p>
+                                    ) : (
+                                      <div className="space-y-2">
+                                        {files.map((file) => (
+                                          <div key={file.id} className="flex items-center justify-between gap-2 rounded-md border border-border/50 px-3 py-2">
+                                            <span className="min-w-0 truncate text-sm">{file.fileName}</span>
+                                            <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
+                                              Open
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="mt-3 space-y-2">
+                                    <label className="text-sm font-medium">PPA Remarks</label>
+                                    <Textarea
+                                      value={ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks}
+                                      onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [activity.id]: event.target.value }))}
+                                      rows={3}
+                                      className="resize-none text-sm"
+                                      placeholder="Feedback for this organization-initiated activity…"
+                                      disabled={isTerminal}
+                                    />
+                                  </div>
+                                  {!isTerminal && (
+                                    <div className="mt-3 flex flex-wrap justify-end gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "ypop_org_activity",
+                                            action: "needs_revision",
+                                            orgActivityId: activity.id,
+                                            entryId: entry.id,
+                                            organizationId: activity.organizationId,
+                                            organizationName: entryOrg?.organizationName ?? "Organization",
+                                            activityName: activity.activityName,
+                                            currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
+                                          })
+                                        }
+                                      >
+                                        Needs Revision
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "ypop_org_activity",
+                                            action: "rejected",
+                                            orgActivityId: activity.id,
+                                            entryId: entry.id,
+                                            organizationId: activity.organizationId,
+                                            organizationName: entryOrg?.organizationName ?? "Organization",
+                                            activityName: activity.activityName,
+                                            currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
+                                          })
+                                        }
+                                      >
+                                        Rejected
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "ypop_org_activity",
+                                            action: "approved",
+                                            orgActivityId: activity.id,
+                                            entryId: entry.id,
+                                            organizationId: activity.organizationId,
+                                            organizationName: entryOrg?.organizationName ?? "Organization",
+                                            activityName: activity.activityName,
+                                            currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
+                                          })
+                                        }
+                                      >
+                                        Approve PPA
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
                       {/* Score */}
                       <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold">Computed Score</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold">Computed Score</p>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setYpopScoringHelpOpen(true)}
+                              aria-label="View YPOP scoring guide"
+                            >
+                              <CircleHelp className="h-4 w-4" />
+                            </Button>
+                          </div>
                           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${qualifies ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
                             {qualifies ? "Qualifies ✓" : "Does Not Qualify"}
                           </span>
                         </div>
                         <div className="flex items-end gap-1">
                           <span className="text-2xl font-bold tabular-nums">{totalScore}</span>
-                          <span className="mb-0.5 text-sm text-muted-foreground">/ 100</span>
+                          <span className="mb-0.5 text-sm text-muted-foreground">%</span>
                         </div>
                         <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
-                          <div className={`h-full rounded-full transition-all ${totalScore >= 70 ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${Math.min(totalScore, 100)}%` }} />
-                          <div className="absolute top-0 h-full w-px bg-foreground/30" style={{ left: "70%" }} />
+                          <div className={`h-full rounded-full transition-all ${totalScore >= YPOP_SCORE_THRESHOLD ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${Math.min(totalScore, 100)}%` }} />
+                          <div className="absolute top-0 h-full w-px bg-foreground/30" style={{ left: `${YPOP_SCORE_THRESHOLD}%` }} />
                         </div>
                         <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <span>0</span><span className="font-medium">70 (threshold)</span><span>100</span>
+                          <span>0</span><span className="font-medium">{YPOP_SCORE_THRESHOLD}% threshold</span><span>{YPOP_BASE_TOTAL_POINTS}%+</span>
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-center text-xs">
                           <div className="rounded-md border border-border/50 bg-background py-1.5">
-                            <p className="font-semibold">{cityLedEarned}/{cityLedMax}</p>
-                            <p className="text-muted-foreground">City-Led pts</p>
+                            <p className="font-semibold">{cityLedWeightedScore}%</p>
+                            <p className="text-muted-foreground">City-Led score</p>
                           </div>
                           <div className="rounded-md border border-border/50 bg-background py-1.5">
-                            <p className="font-semibold">+{orgLedBonus}</p>
-                            <p className="text-muted-foreground">Org-Led bonus</p>
+                            <p className="font-semibold">+{orgLedBonus}%</p>
+                            <p className="text-muted-foreground">Org-initiated bonus</p>
                           </div>
                           <div className="rounded-md border border-border/50 bg-background py-1.5">
-                            <p className="font-semibold">{totalScore}/100</p>
+                            <p className="font-semibold">{totalScore}%</p>
                             <p className="text-muted-foreground">Total</p>
                           </div>
                         </div>
@@ -5238,39 +6933,9 @@ export default function AdminPortal({ section }: { section: string }) {
                           type="button"
                           className="w-full"
                           disabled={savingYpopValidation}
-                          onClick={async () => {
-                            setSavingYpopValidation(true);
-                            try {
-                              const now = new Date().toISOString();
-                              const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
-                              const { totalScore: computedScore } = computeYpopScore(form.cityLedAttendance, semActs, form.orgLedProjectCount, periodTiers);
-                              const patch = {
-                                pointsEarned: computedScore,
-                                status: form.status,
-                                adminRemarks: form.adminRemarks,
-                                orgLedProjectCount: form.orgLedProjectCount,
-                                cityLedAttendance: form.cityLedAttendance,
-                                validatedAt: now,
-                                updatedAt: now,
-                                revisionHistory: [
-                                  ...(entry.revisionHistory ?? []),
-                                  { action: form.status, adminRemarks: form.adminRemarks, changedAt: now },
-                                ],
-                              };
-                              try {
-                                const saved = await adminUpdateYpopEntryInSupabase(entry.id, patch);
-                                updateYPOPEntry(saved.id, saved);
-                              } catch {
-                                updateYPOPEntry(entry.id, patch);
-                              }
-                              toast({ title: "Validation saved", description: `${entryOrg?.organizationName ?? "Org"}'s YPOP entry updated to ${statusLabelMap[form.status] ?? form.status}.` });
-                              setSelectedYpopId(null);
-                              setYpopValidationForm(null);
-                              setYpopPreviewFileId(null);
-                              setYpopAdminView("period-detail");
-                            } finally {
-                              setSavingYpopValidation(false);
-                            }
+                          onClick={() => {
+                            setYpopValidationAcknowledged(false);
+                            setConfirmYpopValidationOpen(true);
                           }}
                         >
                           {savingYpopValidation ? "Saving…" : "Save Validation"}
@@ -5285,68 +6950,208 @@ export default function AdminPortal({ section }: { section: string }) {
                 <div className="space-y-3">
                   <Card className="border-border/70">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-semibold">Proof Documents ({entryFiles.length})</CardTitle>
+                      <CardTitle className="text-sm font-semibold">Proof Documents ({orgEventParticipations.length})</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 pt-0">
-                      {entryFiles.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No files attached to this submission.</p>
+                      {orgEventParticipations.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No joined YPOP events for this organization in the selected semester yet.</p>
                       ) : (
-                        <>
-                          <div className="flex flex-wrap gap-2">
-                            {entryFiles.map((f: YPOPFile) => (
-                              <Button
-                                key={f.id}
-                                type="button"
-                                size="sm"
-                                variant={ypopPreviewFileId === f.id ? "default" : "outline"}
-                                className="max-w-full"
-                                onClick={() => setYpopPreviewFileId(ypopPreviewFileId === f.id ? null : f.id)}
-                              >
-                                <FileText className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                                <span className="max-w-[12rem] truncate">{f.fileName}</span>
-                              </Button>
-                            ))}
-                          </div>
+                        <Accordion type="multiple" className="w-full rounded-xl border border-border/60">
+                          {orgEventParticipations.map((participation) => {
+                            const files = eventFilesByParticipationId.get(participation.id) ?? [];
+                            const remarksDraft = ypopEventReviewRemarksById[participation.id] ?? participation.adminRemarks;
+                            const isSaving = processingAdminConfirmation && pendingAdminConfirmation?.kind === "ypop_event" && pendingAdminConfirmation.participationId === participation.id;
 
-                          <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/10">
-                            {ypopPreviewFileId === null ? (
-                              <div className="flex min-h-[32rem] items-center justify-center p-4 text-sm text-muted-foreground">
-                                Select a file above to preview it here.
-                              </div>
-                            ) : ypopPreviewLoading ? (
-                              <div className="flex min-h-[6rem] items-center justify-center p-4 text-sm text-muted-foreground">
-                                Loading preview…
-                              </div>
-                            ) : ypopPreviewUrl && ypopPreviewCanInline ? (
-                              isImagePreviewFile(ypopPreviewTitle) || isImagePreviewFile(ypopPreviewUrl) ? (
-                                <div className="flex max-h-[52rem] items-center justify-center overflow-hidden bg-background sm:max-h-[60rem]">
-                                  <img src={ypopPreviewUrl} alt={ypopPreviewTitle || "YPOP proof"} className="max-h-[52rem] w-full object-contain sm:max-h-[60rem]" />
-                                </div>
-                              ) : (
-                                <iframe
-                                  title={ypopPreviewTitle || "YPOP Proof Preview"}
-                                  src={ypopPreviewUrl}
-                                  className="h-[52rem] w-full border-0 bg-background sm:h-[60rem]"
-                                  loading="eager"
-                                />
-                              )
-                            ) : ypopPreviewUrl ? (
-                              <div className="flex flex-col items-start gap-3 p-4 text-sm text-muted-foreground">
-                                <p>This file cannot be previewed inline.</p>
-                                <Button type="button" variant="outline" size="sm" onClick={() => window.open(ypopPreviewUrl, "_blank", "noopener,noreferrer")}>
-                                  <Eye className="mr-2 h-4 w-4" />Open File
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="flex min-h-[6rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
-                                No preview available — file URL not set in this demo.
-                              </div>
-                            )}
-                          </div>
-                        </>
+                            return (
+                              <AccordionItem key={participation.id} value={participation.id} className="border-border/60 px-4">
+                                <AccordionTrigger className="gap-3 py-4 text-left hover:no-underline">
+                                  <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-semibold text-foreground">{participation.activityName}</p>
+                                      <p className="mt-0.5 text-xs text-muted-foreground">
+                                        {participation.activityDate || "Date TBD"}{participation.venue ? ` • ${participation.venue}` : ""}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {participation.proofSubmittedAt
+                                          ? `Proof submitted ${new Date(participation.proofSubmittedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`
+                                          : "No proof submitted yet"}
+                                      </p>
+                                    </div>
+                                    <div className="shrink-0">
+                                      <PortalStatusBadge status={participation.status} />
+                                    </div>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="space-y-4 pb-4">
+                                  {participation.status === "verified" && participation.verifiedAt ? (
+                                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700">
+                                      <p className="text-sm font-semibold">Verified</p>
+                                      <p className="text-xs">{new Date(participation.verifiedAt).toLocaleDateString("en-US")}</p>
+                                    </div>
+                                  ) : null}
+
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium">Files ({files.length})</p>
+                                    {files.length === 0 ? (
+                                      <p className="text-sm text-muted-foreground">No proof files uploaded yet.</p>
+                                    ) : (
+                                      <div className="space-y-2">
+                                        {files.map((file) => (
+                                          <div key={file.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                                            <span className="truncate text-sm">{file.fileName}</span>
+                                            <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
+                                              Open
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium">Event Remarks</label>
+                                    <Textarea
+                                      value={remarksDraft}
+                                      onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [participation.id]: event.target.value }))}
+                                      rows={3}
+                                      className="resize-none text-sm"
+                                      placeholder="Feedback for this event proof…"
+                                    />
+                                  </div>
+
+                                  <div className="flex flex-wrap justify-end gap-2">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={isSaving}
+                                      onClick={() =>
+                                        openAdminConfirmation({
+                                          kind: "ypop_event",
+                                          action: "needs_revision",
+                                          participationId: participation.id,
+                                          entryId: entry.id,
+                                          activityId: participation.activityId,
+                                          organizationId: participation.organizationId,
+                                          organizationName: entryOrg?.organizationName ?? "Organization",
+                                          activityName: participation.activityName,
+                                          currentAdminRemarks: remarksDraft,
+                                        })
+                                      }
+                                    >
+                                      Needs Revision
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="destructive"
+                                      disabled={isSaving}
+                                      onClick={() =>
+                                        openAdminConfirmation({
+                                          kind: "ypop_event",
+                                          action: "rejected",
+                                          participationId: participation.id,
+                                          entryId: entry.id,
+                                          activityId: participation.activityId,
+                                          organizationId: participation.organizationId,
+                                          organizationName: entryOrg?.organizationName ?? "Organization",
+                                          activityName: participation.activityName,
+                                          currentAdminRemarks: remarksDraft,
+                                        })
+                                      }
+                                    >
+                                      Rejected
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      disabled={isSaving}
+                                      onClick={() =>
+                                        openAdminConfirmation({
+                                          kind: "ypop_event",
+                                          action: "verified",
+                                          participationId: participation.id,
+                                          entryId: entry.id,
+                                          activityId: participation.activityId,
+                                          organizationId: participation.organizationId,
+                                          organizationName: entryOrg?.organizationName ?? "Organization",
+                                          activityName: participation.activityName,
+                                          currentAdminRemarks: remarksDraft,
+                                        })
+                                      }
+                                    >
+                                      {isSaving ? "Saving..." : "Verified"}
+                                    </Button>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            );
+                          })}
+                        </Accordion>
                       )}
                     </CardContent>
                   </Card>
+
+                  {entryFiles.length > 0 && (
+                    <Card className="border-border/70">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-semibold">General Submission Files ({entryFiles.length})</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-2">
+                          {entryFiles.map((f: YPOPFile) => (
+                            <Button
+                              key={f.id}
+                              type="button"
+                              size="sm"
+                              variant={ypopPreviewFileId === f.id ? "default" : "outline"}
+                              className="max-w-full"
+                              onClick={() => setYpopPreviewFileId(ypopPreviewFileId === f.id ? null : f.id)}
+                            >
+                              <FileText className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              <span className="max-w-[12rem] truncate">{f.fileName}</span>
+                            </Button>
+                          ))}
+                        </div>
+
+                        <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/10">
+                          {ypopPreviewFileId === null ? (
+                            <div className="flex min-h-[20rem] items-center justify-center p-4 text-sm text-muted-foreground">
+                              Select a file above to preview it here.
+                            </div>
+                          ) : ypopPreviewLoading ? (
+                            <div className="flex min-h-[6rem] items-center justify-center p-4 text-sm text-muted-foreground">
+                              Loading preview…
+                            </div>
+                          ) : ypopPreviewUrl && ypopPreviewCanInline ? (
+                            isImagePreviewFile(ypopPreviewTitle) || isImagePreviewFile(ypopPreviewUrl) ? (
+                              <div className="flex max-h-[32rem] items-center justify-center overflow-hidden bg-background sm:max-h-[40rem]">
+                                <img src={ypopPreviewUrl} alt={ypopPreviewTitle || "YPOP proof"} className="max-h-[32rem] w-full object-contain sm:max-h-[40rem]" />
+                              </div>
+                            ) : (
+                              <iframe
+                                title={ypopPreviewTitle || "YPOP Proof Preview"}
+                                src={ypopPreviewUrl}
+                                className="h-[32rem] w-full border-0 bg-background sm:h-[40rem]"
+                                loading="eager"
+                              />
+                            )
+                          ) : ypopPreviewUrl ? (
+                            <div className="flex flex-col items-start gap-3 p-4 text-sm text-muted-foreground">
+                              <p>This file cannot be previewed inline.</p>
+                              <Button type="button" variant="outline" size="sm" onClick={() => window.open(ypopPreviewUrl, "_blank", "noopener,noreferrer")}>
+                                <Eye className="mr-2 h-4 w-4" />Open File
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex min-h-[6rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                              No preview available — file URL not set in this demo.
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {(entry.revisionHistory?.length ?? 0) > 0 && (
                     <Card className="border-border/70">
@@ -5366,7 +7171,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               <div>
                                 <p className="font-medium capitalize">{rev.action.replace(/_/g, " ")}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {new Date(rev.changedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+                                  {formatDateTimeLabel(rev.changedAt)}
                                 </p>
                                 {rev.adminRemarks && (
                                   <p className="mt-0.5 text-xs italic text-muted-foreground/80">"{rev.adminRemarks}"</p>
@@ -5380,6 +7185,97 @@ export default function AdminPortal({ section }: { section: string }) {
                   )}
                 </div>
               </div>
+
+              <Dialog open={ypopScoringHelpOpen} onOpenChange={setYpopScoringHelpOpen}>
+                <DialogContent className="sm:max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>YPOP Scoring Breakdown</DialogTitle>
+                    <DialogDescription>
+                      City-led score uses verified proof records only. Total possible points are based on the sum of available city-led activity categories for the semester: Mandatory = 4, Invitational = 3, Partnership = 2. Approved organization-initiated activities then add bonus percentage points.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto rounded-xl border border-border/70">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Points Earned</TableHead>
+                            <TableHead>Total Possible Points</TableHead>
+                            <TableHead>Percentage (%)</TableHead>
+                            <TableHead>Weighted Points</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>City-Led Activities</TableCell>
+                            <TableCell>{cityLedEarned}</TableCell>
+                            <TableCell>{cityLedMax}</TableCell>
+                            <TableCell>{cityLedEarned} ÷ {cityLedMax || 0} × 100 = {cityLedPercent}%</TableCell>
+                            <TableCell>{cityLedPercent}% of total</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Organization-Initiated Activities</TableCell>
+                            <TableCell>{approvedOrgActivityCount} approved</TableCell>
+                            <TableCell>Bonus tier basis</TableCell>
+                            <TableCell>Based on approved PPA count</TableCell>
+                            <TableCell>+{orgLedBonus}% bonus</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-semibold">Total YPOP Points</TableCell>
+                            <TableCell colSpan={3} className="font-medium">City-led percentage + organization-initiated bonus</TableCell>
+                            <TableCell className="font-semibold">{totalScore}%</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Example: if the semester has one Mandatory, one Invitational, and one Partnership activity, the total possible city-led points are 9. If the organization verifies the Mandatory and Partnership activities only, the city-led score is 6 ÷ 9 × 100 = 66.67%, rounded to 67%.
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <AlertDialog
+                open={confirmYpopValidationOpen}
+                onOpenChange={(open) => {
+                  setConfirmYpopValidationOpen(open);
+                  if (!open) {
+                    setYpopValidationAcknowledged(false);
+                  }
+                }}
+              >
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Validation Save</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will save the YPOP validation using the currently verified city-led proofs and approved organization-initiated activities.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <label htmlFor="ypop-validation-acknowledged" className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 text-sm">
+                    <input
+                      id="ypop-validation-acknowledged"
+                      type="checkbox"
+                      checked={ypopValidationAcknowledged}
+                      onChange={(event) => setYpopValidationAcknowledged(event.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-border text-primary"
+                    />
+                    <span>I acknowledge that the validated YPOP result is based on the records shown on this page.</span>
+                  </label>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={savingYpopValidation}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void persistYpopValidation();
+                      }}
+                      disabled={!ypopValidationAcknowledged || savingYpopValidation}
+                    >
+                      {savingYpopValidation ? "Saving…" : "Save Validation"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           );
         }
@@ -5393,14 +7289,44 @@ export default function AdminPortal({ section }: { section: string }) {
             return null;
           }
           const periodActivities = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey);
-          const totalCityLedPts = periodActivities.reduce((s, a) => s + a.points, 0);
+          const totalCityLedPts = periodActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0);
+          const periodActivityIds = new Set(periodActivities.map((activity) => activity.id));
+          const periodParticipations = state.ypopEventParticipations.filter((participation) => periodActivityIds.has(participation.activityId));
+          const participationCountByOrgId = new Map<string, number>();
+          periodParticipations.forEach((participation) => {
+            participationCountByOrgId.set(participation.organizationId, (participationCountByOrgId.get(participation.organizationId) ?? 0) + 1);
+          });
           const periodEntries = [...state.ypopEntries]
             .filter((e) => e.semester === period.semesterKey)
             .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          const supplementalEntries = [...participationCountByOrgId.keys()]
+            .filter((organizationId) => !periodEntries.some((entry) => entry.organizationId === organizationId))
+            .map((organizationId) => ({
+              id: `virtual-${period.semesterKey}-${organizationId}`,
+              organizationId,
+              semester: period.semesterKey,
+              semesterLabel: period.semesterLabel,
+              pointsEarned: 0,
+              pointsRequired: 70,
+              totalPoints: 100,
+              status: "draft" as YPOPStatus,
+              adminRemarks: "",
+              submissionNote: "",
+              validationDeadline: period.validationDeadline,
+              submittedAt: "",
+              validatedAt: "",
+              revisionHistory: [],
+              orgLedProjectCount: 0,
+              cityLedAttendance: [],
+              createdAt: period.createdAt,
+              updatedAt: period.updatedAt,
+              _isVirtual: true,
+            }));
+          const combinedPeriodEntries = [...periodEntries, ...supplementalEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
           const filteredPeriodEntries =
             ypopSubmissionFilter === "all"
-              ? periodEntries
-              : periodEntries.filter((e) => e.status === ypopSubmissionFilter);
+              ? combinedPeriodEntries
+              : combinedPeriodEntries.filter((e) => e.status === ypopSubmissionFilter);
           const statusBadgeClass =
             period.status === "open" ? "bg-emerald-100 text-emerald-700"
             : period.status === "draft" ? "bg-muted text-muted-foreground"
@@ -5428,7 +7354,7 @@ export default function AdminPortal({ section }: { section: string }) {
               >
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">Organization Submissions <span className="font-normal text-muted-foreground">({periodEntries.length})</span></p>
+                    <p className="text-sm font-semibold">Organization Submissions <span className="font-normal text-muted-foreground">({combinedPeriodEntries.length})</span></p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -5451,13 +7377,15 @@ export default function AdminPortal({ section }: { section: string }) {
                   {filteredPeriodEntries.length === 0 ? (
                     <PortalEmptyState
                       title="No submissions"
-                      description={ypopSubmissionFilter === "all" ? "No organizations have submitted entries for this semester." : "No submissions match this filter."}
+                      description={ypopSubmissionFilter === "all" ? "No organizations have active YPOP records for this semester yet." : "No submissions match this filter."}
                     />
                   ) : (
                     <div className="space-y-3">
                       {filteredPeriodEntries.map((entry) => {
+                        const isVirtualEntry = "_isVirtual" in entry;
                         const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
                         const entryFiles = state.ypopFiles.filter((f) => f.ypopEntryId === entry.id);
+                        const joinedEventCount = participationCountByOrgId.get(entry.organizationId) ?? 0;
                         const isTerminal = entry.status === "qualified" || entry.status === "not_qualified";
                         const statusDotColor =
                           entry.status === "qualified" ? "bg-emerald-500"
@@ -5472,16 +7400,20 @@ export default function AdminPortal({ section }: { section: string }) {
                                   <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                      <Medal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                      <Medal className="h-3.5 w-3.5 shrink-0 text-primary" />
                                       <p className="font-semibold text-foreground">{entryOrg?.organizationName ?? "Unknown organization"}</p>
                                     </div>
                                     <p className="mt-0.5 text-xs text-muted-foreground/80">
-                                      {isTerminal ? `${entry.pointsEarned}/${entry.totalPoints} pts` : "Awaiting validation"}
-                                      {" · "}{entryFiles.length} file{entryFiles.length !== 1 ? "s" : ""}
+                                      {isTerminal ? `${entry.pointsEarned}%` : "Awaiting validation"}
+                                      {" · "}{joinedEventCount} joined event{joinedEventCount !== 1 ? "s" : ""}
+                                      {" · "}{entryFiles.length} general file{entryFiles.length !== 1 ? "s" : ""}
                                     </p>
+                                    {isVirtualEntry && (
+                                      <p className="mt-1 text-[11px] text-muted-foreground">Draft review record generated from joined YPOP events.</p>
+                                    )}
                                   </div>
                                 </div>
-                                <PortalStatusBadge status={entry.status} />
+                                <PortalStatusBadge status={isVirtualEntry ? "draft" : entry.status} />
                               </div>
                               <div className="mt-4 flex justify-end">
                                 <Button
@@ -5490,15 +7422,41 @@ export default function AdminPortal({ section }: { section: string }) {
                                   variant={isTerminal ? "outline" : "default"}
                                   onClick={() => {
                                     const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
-                                    setSelectedYpopId(entry.id);
+                                    const reviewEntry = isVirtualEntry
+                                      ? {
+                                          id: `ypop-${Date.now()}`,
+                                          organizationId: entry.organizationId,
+                                          submittedBy: "",
+                                          semester: entry.semester,
+                                          semesterLabel: entry.semesterLabel,
+                                          pointsEarned: 0,
+                                          pointsRequired: 70,
+                                          totalPoints: 100,
+                                          status: "draft" as const,
+                                          adminRemarks: "",
+                                          submissionNote: "",
+                                          validationDeadline: entry.validationDeadline,
+                                          submittedAt: "",
+                                          validatedAt: "",
+                                          revisionHistory: [],
+                                          orgLedProjectCount: 0,
+                                          cityLedAttendance: [],
+                                          createdAt: new Date().toISOString(),
+                                          updatedAt: new Date().toISOString(),
+                                        }
+                                      : entry;
+                                    if (isVirtualEntry) {
+                                      createYPOPEntry(reviewEntry);
+                                    }
+                                    setSelectedYpopId(reviewEntry.id);
                                     setYpopPreviewFileId(null);
                                     setYpopValidationForm({
-                                      cityLedAttendance: entry.cityLedAttendance?.length
-                                        ? entry.cityLedAttendance
+                                      cityLedAttendance: reviewEntry.cityLedAttendance?.length
+                                        ? reviewEntry.cityLedAttendance
                                         : semActs.map((a) => ({ activityId: a.id, attended: false })),
-                                      orgLedProjectCount: entry.orgLedProjectCount ?? 0,
-                                      status: (entry.status === "draft" || entry.status === "submitted") ? "under_review" : entry.status,
-                                      adminRemarks: entry.adminRemarks ?? "",
+                                      orgLedProjectCount: reviewEntry.orgLedProjectCount ?? 0,
+                                      status: (reviewEntry.status === "draft" || reviewEntry.status === "submitted") ? "under_review" : reviewEntry.status,
+                                      adminRemarks: reviewEntry.adminRemarks ?? "",
                                     });
                                     setYpopAdminView("entry-review");
                                   }}
@@ -5527,14 +7485,16 @@ export default function AdminPortal({ section }: { section: string }) {
             ? state.ypopCityActivities.filter((a) => a.semesterKey === editPeriod.semesterKey)
             : [];
 
-          const derivedSemesterKey = createPeriodForm.semesterLabel
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "");
-          const canSubmit = createPeriodForm.semesterLabel.trim().length > 0 && createPeriodForm.validationDeadline.length > 0;
+          const generatedSemesterLabel = isEditMode
+            ? (editPeriod?.semesterLabel ?? createPeriodForm.semesterLabel)
+            : deriveSemesterLabelFromDate();
+          const generatedSemesterKey = isEditMode
+            ? (editPeriod?.semesterKey ?? "")
+            : buildSemesterKeyFromNow(state.ypopPeriods);
+          const canSubmit = generatedSemesterLabel.trim().length > 0 && createPeriodForm.validationDeadline.length > 0;
 
           const resetForm = () => {
-            setCreatePeriodForm({ semesterLabel: "", validationDeadline: "", status: "draft" });
+            setCreatePeriodForm({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
             setCreatePeriodActivities([]);
             setCreateFormNewActivity(null);
             setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
@@ -5562,22 +7522,20 @@ export default function AdminPortal({ section }: { section: string }) {
                   {/* Metadata fields */}
                   <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-medium" htmlFor="cp-label">Semester Label <span className="text-destructive">*</span></label>
+                      <label className="text-sm font-medium" htmlFor="cp-label">Semester Label <span className="font-normal text-muted-foreground">(auto-generated)</span></label>
                       <Input
                         id="cp-label"
-                        placeholder="e.g. 2026 Second Semester"
-                        value={createPeriodForm.semesterLabel}
-                        onChange={(e) => setCreatePeriodForm({ ...createPeriodForm, semesterLabel: e.target.value })}
+                        value={generatedSemesterLabel}
+                        readOnly
+                        className="bg-muted/40"
                       />
                     </div>
 
-                    {!isEditMode && (
-                      <div className="space-y-2 sm:col-span-2">
-                        <label className="text-sm font-medium" htmlFor="cp-key">Semester Key <span className="font-normal text-muted-foreground">(auto-derived, read-only)</span></label>
-                        <Input id="cp-key" value={derivedSemesterKey || "—"} readOnly className="bg-muted/40 font-mono text-sm text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">Used to link submissions and activities to this semester.</p>
-                      </div>
-                    )}
+                    <div className="space-y-2 sm:col-span-2">
+                      <label className="text-sm font-medium" htmlFor="cp-key">Semester Key <span className="font-normal text-muted-foreground">(auto-derived, read-only)</span></label>
+                      <Input id="cp-key" value={generatedSemesterKey || "—"} readOnly className="bg-muted/40 font-mono text-sm text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Used to link submissions and activities to this semester.</p>
+                    </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium" htmlFor="cp-deadline">Validation Deadline <span className="text-destructive">*</span></label>
@@ -5610,7 +7568,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <p className="text-sm font-semibold">City-Led Activities</p>
-                        <p className="text-xs text-muted-foreground">Add activities with their point values. These are used to calculate the YPOP score.</p>
+                        <p className="text-xs text-muted-foreground">Assign a memo-based category for each city-led activity. Points are automatic: Mandatory = 4, Invitational = 3, Partnership = 2.</p>
                       </div>
                       {!createFormNewActivity && (
                         <Button
@@ -5618,7 +7576,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           variant="outline"
                           size="sm"
                           className="shrink-0"
-                          onClick={() => setCreateFormNewActivity({ name: "", date: "", venue: "", points: "0" })}
+                          onClick={() => setCreateFormNewActivity({ name: "", date: "", venue: "", category: "mandatory" })}
                         >
                           <Plus className="mr-1.5 h-3.5 w-3.5" />Add Activity
                         </Button>
@@ -5645,12 +7603,21 @@ export default function AdminPortal({ section }: { section: string }) {
                                 <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Date</label>
                                 <Input className="h-7 w-full text-xs" type="date" value={editingActivityData.date} onChange={(e) => setEditingActivityData({ ...editingActivityData, date: e.target.value })} />
                               </div>
-                              <div className="w-20 shrink-0 space-y-1">
-                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Points</label>
-                                <Input className="h-7 w-full text-xs" type="number" min={0} value={editingActivityData.points} onChange={(e) => setEditingActivityData({ ...editingActivityData, points: e.target.value })} />
+                              <div className="w-44 shrink-0 space-y-1">
+                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Category</label>
+                                <Select value={editingActivityData.category} onValueChange={(value) => setEditingActivityData({ ...editingActivityData, category: value as YPOPCityActivityCategory })}>
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="mandatory">Mandatory • 4 pts</SelectItem>
+                                    <SelectItem value="invitational">Invitational • 3 pts</SelectItem>
+                                    <SelectItem value="partnership">Partnership • 2 pts</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div className="flex shrink-0 items-end gap-1 pb-0.5">
-                                <Button type="button" size="sm" className="h-7 px-2 text-xs" disabled={!editingActivityData.name.trim()} onClick={async () => { const patch = { name: editingActivityData.name.trim(), date: editingActivityData.date.trim(), venue: editingActivityData.venue.trim(), points: Math.max(0, Number(editingActivityData.points) || 0) }; try { const saved = await adminUpdateYpopCityActivityInSupabase(act.id, patch); updateYPOPCityActivity(saved.id, saved); } catch { updateYPOPCityActivity(act.id, patch); } setEditingActivityId(null); setEditingActivityData(null); }}>
+                                <Button type="button" size="sm" className="h-7 px-2 text-xs" disabled={!editingActivityData.name.trim()} onClick={async () => { const patch = { name: editingActivityData.name.trim(), date: editingActivityData.date.trim(), venue: editingActivityData.venue.trim(), category: editingActivityData.category, points: getYpopCityLedPoints(editingActivityData.category) }; try { const saved = await adminUpdateYpopCityActivityInSupabase(act.id, patch); updateYPOPCityActivity(saved.id, saved); } catch { updateYPOPCityActivity(act.id, patch); } setEditingActivityId(null); setEditingActivityData(null); }}>
                                   <Save className="h-3 w-3" />
                                 </Button>
                                 <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setEditingActivityId(null); setEditingActivityData(null); }}>Cancel</Button>
@@ -5662,8 +7629,9 @@ export default function AdminPortal({ section }: { section: string }) {
                                 <p className="text-sm font-medium">{act.name}</p>
                                 <p className="text-xs text-muted-foreground">{act.date} · {act.venue}</p>
                               </div>
-                              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{act.points} pts</span>
-                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0" onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, date: act.date, venue: act.venue, points: String(act.points) }); }}>
+                              <span className="shrink-0 rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{YPOP_CITY_LED_CATEGORY_LABELS[resolveYpopCityLedCategory(act.category, act.points)]}</span>
+                              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{normalizeYpopCityLedPoints(act.points, act.category)} pts</span>
+                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0" onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, date: act.date, venue: act.venue, category: resolveYpopCityLedCategory(act.category, act.points) }); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
                               <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive" onClick={() => { void adminDeleteYpopCityActivityFromSupabase(act.id).catch(() => {}); deleteYPOPCityActivity(act.id); }}>
@@ -5679,7 +7647,8 @@ export default function AdminPortal({ section }: { section: string }) {
                               <p className="text-sm font-medium">{act.name}</p>
                               <p className="text-xs text-muted-foreground">{act.date}{act.venue ? ` · ${act.venue}` : ""}</p>
                             </div>
-                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{act.points} pts</span>
+                            <span className="shrink-0 rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{YPOP_CITY_LED_CATEGORY_LABELS[act.category]}</span>
+                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{getYpopCityLedPoints(act.category)} pts</span>
                             <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive" onClick={() => setCreatePeriodActivities((prev) => prev.filter((_, i) => i !== idx))}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
@@ -5702,9 +7671,18 @@ export default function AdminPortal({ section }: { section: string }) {
                             <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Date</label>
                             <Input className="h-7 w-full text-xs" type="date" value={createFormNewActivity.date} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, date: e.target.value })} />
                           </div>
-                          <div className="w-20 shrink-0 space-y-1">
-                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Points</label>
-                            <Input className="h-7 w-full text-xs" type="number" min={0} value={createFormNewActivity.points} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, points: e.target.value })} />
+                          <div className="w-44 shrink-0 space-y-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Category</label>
+                            <Select value={createFormNewActivity.category} onValueChange={(value) => setCreateFormNewActivity({ ...createFormNewActivity, category: value as YPOPCityActivityCategory })}>
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="mandatory">Mandatory • 4 pts</SelectItem>
+                                <SelectItem value="invitational">Invitational • 3 pts</SelectItem>
+                                <SelectItem value="partnership">Partnership • 2 pts</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="flex shrink-0 items-end gap-1 pb-0.5">
                             <Button
@@ -5714,7 +7692,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               disabled={!createFormNewActivity.name.trim()}
                               onClick={async () => {
                                 if (isEditMode && editPeriod) {
-                                  const actData = { semesterKey: editPeriod.semesterKey, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), points: Math.max(0, Number(createFormNewActivity.points) || 0) };
+                                  const actData = { semesterKey: editPeriod.semesterKey, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), category: createFormNewActivity.category, points: getYpopCityLedPoints(createFormNewActivity.category) };
                                   try {
                                     const saved = await adminCreateYpopCityActivityInSupabase(actData);
                                     createYPOPCityActivity({ ...saved });
@@ -5722,7 +7700,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                     createYPOPCityActivity({ id: `ypop-act-${Date.now()}`, ...actData, createdAt: new Date().toISOString() });
                                   }
                                 } else {
-                                  setCreatePeriodActivities((prev) => [...prev, { tempId: `tmp-${Date.now()}`, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), points: createFormNewActivity.points }]);
+                                  setCreatePeriodActivities((prev) => [...prev, { tempId: `tmp-${Date.now()}`, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), category: createFormNewActivity.category }]);
                                 }
                                 setCreateFormNewActivity(null);
                               }}
@@ -5737,8 +7715,8 @@ export default function AdminPortal({ section }: { section: string }) {
                       {/* Total pts footer */}
                       {(() => {
                         const totalPts = isEditMode
-                          ? editActivities.reduce((s, a) => s + a.points, 0)
-                          : createPeriodActivities.reduce((s, a) => s + Math.max(0, Number(a.points) || 0), 0);
+                          ? editActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0)
+                          : createPeriodActivities.reduce((s, a) => s + getYpopCityLedPoints(a.category), 0);
                         return totalPts > 0 ? (
                           <p className="pt-1 text-right text-xs font-medium text-muted-foreground">
                             Total: <span className="text-foreground">{totalPts} pts</span>
@@ -5752,8 +7730,8 @@ export default function AdminPortal({ section }: { section: string }) {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-sm font-semibold">Organization-Led Scoring</p>
-                        <p className="text-xs text-muted-foreground">Configure how org-led project counts map to bonus points.</p>
+                        <p className="text-sm font-semibold">Organization-Initiated Scoring</p>
+                        <p className="text-xs text-muted-foreground">Configure how organization-initiated activity counts map to bonus percentages. Defaults follow the memo and can still be adjusted by admin.</p>
                       </div>
                       <Button
                         type="button"
@@ -5793,7 +7771,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                   prev.map((t, i) => i === actualIdx ? { ...t, bonus: Math.max(0, Number(e.target.value) || 0) } : t)
                                 )}
                               />
-                              <span className="shrink-0 text-sm text-muted-foreground">pts</span>
+                              <span className="shrink-0 text-sm text-muted-foreground">% bonus</span>
                               <Button
                                 type="button"
                                 size="sm"
@@ -5834,7 +7812,7 @@ export default function AdminPortal({ section }: { section: string }) {
                             ? createPeriodForm.validationDeadline
                             : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
                           const patch = {
-                            semesterLabel: createPeriodForm.semesterLabel.trim(),
+                            semesterLabel: generatedSemesterLabel,
                             validationDeadline: deadline,
                             status: createPeriodForm.status,
                             orgLedTiers: createPeriodOrgLedTiers,
@@ -5845,7 +7823,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           } catch {
                             updateYPOPPeriod(editingPeriodId, patch);
                           }
-                          toast({ title: "Semester updated", description: `${createPeriodForm.semesterLabel.trim()} has been saved.` });
+                          toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
                           resetForm();
                           setYpopAdminView("periods");
                         } else {
@@ -5853,7 +7831,7 @@ export default function AdminPortal({ section }: { section: string }) {
                           const deadline = createPeriodForm.validationDeadline.includes("T")
                             ? createPeriodForm.validationDeadline
                             : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
-                          const periodData = { semesterKey: derivedSemesterKey, semesterLabel: createPeriodForm.semesterLabel.trim(), validationDeadline: deadline, status: createPeriodForm.status, orgLedTiers: createPeriodOrgLedTiers };
+                          const periodData = { semesterKey: generatedSemesterKey, semesterLabel: generatedSemesterLabel, validationDeadline: deadline, status: createPeriodForm.status, orgLedTiers: createPeriodOrgLedTiers };
                           let savedPeriodId: string;
                           try {
                             const saved = await adminCreateYpopPeriodInSupabase(periodData);
@@ -5862,21 +7840,21 @@ export default function AdminPortal({ section }: { section: string }) {
                             for (let i = 0; i < createPeriodActivities.length; i++) {
                               const act = createPeriodActivities[i];
                               try {
-                                const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, points: Math.max(0, Number(act.points) || 0) });
+                                const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
                                 createYPOPCityActivity({ ...savedAct });
                               } catch {
-                                createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, points: Math.max(0, Number(act.points) || 0), createdAt: now });
+                                createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
                               }
                             }
                           } catch {
                             const newId = `ypop-period-${Date.now()}`;
                             createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
                             createPeriodActivities.forEach((act, i) => {
-                              createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: derivedSemesterKey, name: act.name, date: act.date, venue: act.venue, points: Math.max(0, Number(act.points) || 0), createdAt: now });
+                              createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.date, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
                             });
                             savedPeriodId = newId;
                           }
-                          toast({ title: "Semester created", description: `${createPeriodForm.semesterLabel.trim()} is ready.` });
+                          toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
                           setSelectedYpopPeriodId(savedPeriodId);
                           setYpopSubmissionFilter("all");
                           resetForm();
@@ -5898,19 +7876,21 @@ export default function AdminPortal({ section }: { section: string }) {
 
         // ── VIEW 1: YPOP Semesters list ───────────────────────────────────────
         const sortedPeriods = [...state.ypopPeriods].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
         return (
           <PortalSection
             title="YPOP Semesters"
-            description="Manage YPOP semester registrations and review organization submissions."
+            description="Manage YPOP event participation verification and semester-level incentive validation."
             action={
               <Button
                 type="button"
                 size="sm"
                 onClick={() => {
-                  setCreatePeriodForm({ semesterLabel: "", validationDeadline: "", status: "draft" });
+                  setCreatePeriodForm({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
                   setCreatePeriodActivities([]);
                   setCreateFormNewActivity(null);
+                  setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
+                  setEditingActivityId(null);
+                  setEditingActivityData(null);
                   setEditingPeriodId(null);
                   setYpopAdminView("create-period");
                 }}
@@ -6072,15 +8052,22 @@ export default function AdminPortal({ section }: { section: string }) {
     state.documentSubmissionFiles,
     state.liquidationReports,
     state.notifications,
+    state.inquiries,
     state.organizationProfiles,
     state.templates,
     state.transparencyPosts,
+    inquirySearch,
+    inquiryStatusFilter,
+    activeTemplates,
+    moveTemplates,
+    otherTemplates,
     selectedTemplate,
     templateDescriptionDraft,
     templateDocuments,
     templateFileDraft,
     templateNameDraft,
     templateModalMode,
+    templateScopeDraft,
     transparencyAttachmentUrlDraft,
     transparencyCategoryDraft,
     transparencyDescriptionDraft,
@@ -6090,6 +8077,8 @@ export default function AdminPortal({ section }: { section: string }) {
     transparencyTitleDraft,
     transparencyVisibilityDraft,
     openAdminConfirmation,
+    pendingAdminConfirmation,
+    processingAdminConfirmation,
     removeNewsRelease,
     updateComplianceRemark,
     updateNewsRelease,
@@ -6101,6 +8090,7 @@ export default function AdminPortal({ section }: { section: string }) {
     savingNewsRelease,
     savingTransparencyPost,
     startEditingNewsRelease,
+    startEditingTemplate,
     startEditingTransparencyPost,
     validDocumentTypeIds,
     savingTemplate,
@@ -6130,11 +8120,19 @@ export default function AdminPortal({ section }: { section: string }) {
     ypopPreviewTitle,
     ypopPreviewCanInline,
     ypopPreviewLoading,
+    ypopEventReviewRemarksById,
     state.ypopEntries,
     state.ypopFiles,
+    state.ypopEventParticipations,
+    state.ypopEventFiles,
+    state.ypopOrgActivities,
+    state.ypopOrgActivityFiles,
     state.ypopCityActivities,
     state.ypopPeriods,
     updateYPOPEntry,
+    updateYPOPEventParticipation,
+    createYPOPOrgActivity,
+    updateYPOPOrgActivity,
     createYPOPCityActivity,
     updateYPOPCityActivity,
     deleteYPOPCityActivity,
@@ -6156,6 +8154,9 @@ export default function AdminPortal({ section }: { section: string }) {
     adminUpdateYpopCityActivityInSupabase,
     adminDeleteYpopCityActivityFromSupabase,
     adminUpdateYpopEntryInSupabase,
+    adminUpdateYpopEventParticipationInSupabase,
+    adminUpdateYpopOrgActivityInSupabase,
+    adminUpdateMoveApplicationInSupabase,
   ]);
 
   const adminConfirmationCopy = getAdminConfirmationCopy();
@@ -6173,6 +8174,55 @@ export default function AdminPortal({ section }: { section: string }) {
       >
         {activeContent}
       </PortalShell>
+      <Dialog open={Boolean(selectedInquiry)} onOpenChange={(open) => (!open ? setSelectedInquiry(null) : undefined)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedInquiry?.subject || "Inquiry details"}</DialogTitle>
+            <DialogDescription>
+              Full inquiry details from the user dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInquiry ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Name / Organization</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {selectedInquiry.submitterName || "Unnamed submitter"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {selectedInquiry.organizationName || "No organization name provided"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Email</p>
+                  <p className="mt-1 break-all text-sm font-medium text-foreground">{selectedInquiry.email}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Submitted</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{formatDateTimeLabel(selectedInquiry.createdAt)}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Status</p>
+                  <div className="mt-1">
+                    <PortalStatusBadge status={selectedInquiry.status} />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Description</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{selectedInquiry.description}</p>
+              </div>
+              {selectedInquiry.adminRemarks ? (
+                <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">Admin Remarks</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{selectedInquiry.adminRemarks}</p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -6280,6 +8330,169 @@ export default function AdminPortal({ section }: { section: string }) {
       />
     </>
   );
+}
+
+const pesoCurrencyFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatPesoAmount(value?: number | null) {
+  return pesoCurrencyFormatter.format(Number(value ?? 0));
+}
+
+function DetailStatusChip({
+  label,
+  tone = "neutral",
+}: {
+  label: string;
+  tone?: "neutral" | "warning" | "success" | "danger";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : tone === "warning"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : tone === "danger"
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : "border-border/70 bg-muted/30 text-muted-foreground";
+
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${toneClass}`}>{label}</span>;
+}
+
+function DetailInfoCard({
+  title,
+  icon,
+  children,
+  className = "",
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card className={`border-border/70 shadow-sm ${className}`}>
+      <CardHeader className="space-y-0 pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/5 text-primary">{icon}</span>
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5 pt-0">{children}</CardContent>
+    </Card>
+  );
+}
+
+function DetailSectionBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function DetailInfoRow({
+  label,
+  value,
+  children,
+  valueClassName = "",
+}: {
+  label: string;
+  value?: ReactNode;
+  children?: ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="grid gap-1.5 border-b border-border/40 pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[10.5rem_minmax(0,1fr)] sm:gap-3">
+      <p className="text-[12px] text-muted-foreground">{label}</p>
+      <div className={`min-w-0 text-sm font-medium text-foreground ${valueClassName}`}>{children ?? value}</div>
+    </div>
+  );
+}
+
+function DetailSubmittedBy({
+  title,
+  email,
+  subtitle,
+}: {
+  title: string;
+  email?: string | null;
+  subtitle?: string | null;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/5 text-primary">
+        <UserRound className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 space-y-1">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        {email ? (
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Mail className="h-3.5 w-3.5 shrink-0" />
+            <span className="break-all">{email}</span>
+          </div>
+        ) : null}
+        {subtitle ? (
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="break-words">{subtitle}</span>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function DetailFilePills({
+  items,
+  selectedId,
+  onSelect,
+}: {
+  items: Array<{ id: string; fileName: string }>;
+  selectedId?: string | null;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((file) => {
+        const isSelected = selectedId === file.id;
+        return (
+          <button
+            key={file.id}
+            type="button"
+            title={file.fileName}
+            onClick={() => onSelect(file.id)}
+            className={`inline-flex max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
+              isSelected
+                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                : "border-border/70 bg-background text-foreground hover:border-primary/40 hover:bg-primary/5"
+            }`}
+          >
+            <FileText className="h-4 w-4 shrink-0 text-red-500" />
+            <span className="line-clamp-2 break-all text-sm font-medium leading-snug">{file.fileName}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReviewActionToolbar({ children }: { children: ReactNode }) {
+  return <div className="flex flex-wrap gap-2.5">{children}</div>;
+}
+
+function SectionDivider() {
+  return <div className="border-t border-border/50" />;
 }
 
 function BadgePanel({ count }: { count: number }) {

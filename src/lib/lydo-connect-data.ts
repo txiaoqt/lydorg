@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Building2, CalendarCheck, CalendarDays, ClipboardCheck, ClipboardList, FileCheck2, FileText, LayoutDashboard, Medal, Megaphone, Wallet } from "lucide-react";
+import { BarChart3, Bell, Building2, CalendarCheck, CalendarDays, ClipboardCheck, ClipboardList, FileCheck2, FileText, LayoutDashboard, Mail, Medal, Megaphone, PlaneTakeoff, Wallet } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type ProfileStatus =
@@ -54,6 +54,38 @@ export type YPOPStatus =
   | "qualified"
   | "not_qualified";
 
+export type InquiryStatus = "pending_review" | "reviewed" | "closed";
+
+const getReferenceDateSegment = (value?: string) => {
+  const date = value ? new Date(value) : new Date();
+  const safeDate = Number.isNaN(date.getTime()) ? new Date() : date;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(safeDate);
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "00";
+  const day = parts.find((part) => part.type === "day")?.value ?? "00";
+  return `${year}-${month}-${day}`;
+};
+
+export const buildPublicRecordCode = <T extends { id: string; createdAt: string }>(
+  prefix: string,
+  record: T | null | undefined,
+  records: T[],
+) => {
+  if (!record) return `${prefix}-PENDING`;
+  const dateSegment = getReferenceDateSegment(record.createdAt);
+  const sameDayRecords = [...records]
+    .filter((item) => getReferenceDateSegment(item.createdAt) === dateSegment)
+    .sort((left, right) => left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id));
+  const index = sameDayRecords.findIndex((item) => item.id === record.id);
+  const suffix = sameDayRecords.length > 1 && index >= 0 ? `-${String(index + 1).padStart(2, "0")}` : "";
+  return `${prefix}-${dateSegment}${suffix}`;
+};
+
 export type YPOPEntry = {
   id: string;
   organizationId: string;
@@ -86,12 +118,119 @@ export type YPOPFile = {
   uploadedAt: string;
 };
 
+export type YPOPEventParticipationStatus =
+  | "pending_verification"
+  | "verified"
+  | "needs_revision"
+  | "rejected";
+
+export type YPOPEventParticipation = {
+  id: string;
+  organizationId: string;
+  activityId: string;
+  activityName: string;
+  activityDate: string;
+  venue: string;
+  status: YPOPEventParticipationStatus;
+  adminRemarks: string;
+  joinedAt: string;
+  proofSubmittedAt: string;
+  verifiedAt: string;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type YPOPEventFile = {
+  id: string;
+  participationId: string;
+  organizationId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+};
+
+export type YPOPOrgActivityStatus =
+  | "draft"
+  | "submitted"
+  | "under_review"
+  | "needs_revision"
+  | "approved"
+  | "rejected";
+
+export type YPOPOrgActivity = {
+  id: string;
+  ypopEntryId: string;
+  organizationId: string;
+  submittedBy: string;
+  activityName: string;
+  activityDate: string;
+  venue: string;
+  narrativeReport: string;
+  status: YPOPOrgActivityStatus;
+  adminRemarks: string;
+  submittedAt: string;
+  approvedAt: string;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type YPOPOrgActivityFile = {
+  id: string;
+  orgActivityId: string;
+  organizationId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+};
+
+export type YPOPCityActivityCategory = "mandatory" | "invitational" | "partnership";
+
+export const YPOP_CITY_LED_CATEGORY_POINTS: Record<YPOPCityActivityCategory, number> = {
+  mandatory: 4,
+  invitational: 3,
+  partnership: 2,
+};
+
+export const YPOP_CITY_LED_CATEGORY_LABELS: Record<YPOPCityActivityCategory, string> = {
+  mandatory: "Mandatory",
+  invitational: "Invitational",
+  partnership: "Partnership",
+};
+
+export const resolveYpopCityLedCategory = (
+  category?: string | null,
+  points?: number,
+): YPOPCityActivityCategory => {
+  if (category === "mandatory" || category === "invitational" || category === "partnership") {
+    return category;
+  }
+
+  const normalizedPoints = Math.max(0, Number.isFinite(points) ? Number(points) : 0);
+  if (normalizedPoints >= YPOP_CITY_LED_CATEGORY_POINTS.mandatory) {
+    return "mandatory";
+  }
+  if (normalizedPoints >= YPOP_CITY_LED_CATEGORY_POINTS.invitational) {
+    return "invitational";
+  }
+  return "partnership";
+};
+
+export const getYpopCityLedPoints = (
+  category?: string | null,
+  fallbackPoints?: number,
+) => YPOP_CITY_LED_CATEGORY_POINTS[resolveYpopCityLedCategory(category, fallbackPoints)];
+
 export type YPOPCityActivity = {
   id: string;
   semesterKey: string;
   name: string;
   date: string;
   venue: string;
+  category?: YPOPCityActivityCategory;
   points: number;
   createdAt: string;
 };
@@ -103,12 +242,19 @@ export type YPOPOrgLedTier = {
   bonus: number;
 };
 
+export const YPOP_CITY_LED_MAX_POINTS = 4;
+export const YPOP_SCORE_THRESHOLD = 70;
+export const YPOP_BASE_TOTAL_POINTS = 100;
+
 export const DEFAULT_ORG_LED_TIERS: YPOPOrgLedTier[] = [
   { minProjects: 1, bonus: 10 },
   { minProjects: 4, bonus: 15 },
   { minProjects: 7, bonus: 20 },
   { minProjects: 10, bonus: 25 },
 ];
+
+export const normalizeYpopCityLedPoints = (value: number, category?: string | null) =>
+  Math.min(YPOP_CITY_LED_MAX_POINTS, Math.max(0, getYpopCityLedPoints(category, value)));
 
 export type YPOPPeriod = {
   id: string;
@@ -121,6 +267,109 @@ export type YPOPPeriod = {
   updatedAt: string;
 };
 
+export type MOVEApplicationStatus =
+  | "draft"
+  | "submitted"
+  | "under_review"
+  | "needs_revision"
+  | "approved_for_ftf_green"
+  | "rejected_red"
+  | "completed";
+
+export type MOVEOpportunityType =
+  | "international_delegation"
+  | "national_delegation"
+  | "seminar_internship_sports"
+  | "academic_research"
+  | "cultural_exchange";
+
+export type MOVERequirementPhase = "pre_application" | "post_program";
+
+export type MOVERequirementKey =
+  | "move_form"
+  | "valid_id"
+  | "parent_consent"
+  | "expected_expenditures"
+  | "barangay_residency"
+  | "invitation_letter"
+  | "acceptance_letter"
+  | "endorsement_letter"
+  | "good_moral"
+  | "kk_profiling"
+  | "post_delegation_report";
+
+export type MOVERequirementDefinition = {
+  key: MOVERequirementKey;
+  label: string;
+  description: string;
+  required: boolean;
+  phase: MOVERequirementPhase;
+};
+
+export type MOVEApplication = {
+  id: string;
+  organizationId: string;
+  submittedBy: string;
+  programTitle: string;
+  opportunityType: MOVEOpportunityType;
+  organizerName: string;
+  location: string;
+  invitationSource: string;
+  startDate: string;
+  endDate: string;
+  expectedExpenseTotal: number;
+  approvedAssistancePercent: number | null;
+  status: MOVEApplicationStatus;
+  adminRemarks: string;
+  applicantNote: string;
+  submittedAt: string;
+  reviewedAt: string;
+  completedAt: string;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MOVEFile = {
+  id: string;
+  applicationId: string;
+  organizationId: string;
+  requirementKey: MOVERequirementKey;
+  requirementPhase: MOVERequirementPhase;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+};
+
+export const MOVE_OPPORTUNITY_LABELS: Record<MOVEOpportunityType, string> = {
+  international_delegation: "International Delegation",
+  national_delegation: "National Delegation / NCR",
+  seminar_internship_sports: "Seminar / Internship / Sports Representative",
+  academic_research: "Academic / Research Work",
+  cultural_exchange: "Cultural Exchange Delegation",
+};
+
+export const MOVE_REQUIREMENTS: MOVERequirementDefinition[] = [
+  {
+    key: "move_form",
+    label: "Accomplished MOVE Application Form (PDF)",
+    description: "Download the official MOVE form, accomplish it, then upload the scanned or soft-copy PDF here.",
+    required: true,
+    phase: "pre_application",
+  },
+];
+
+export const computeMoveAssistanceBracket = (expectedExpenseTotal: number) => {
+  if (expectedExpenseTotal >= 500001) {
+    return { label: "10%", minPercent: 10, maxPercent: 10 };
+  }
+  if (expectedExpenseTotal >= 100001) {
+    return { label: "10% - 20%", minPercent: 10, maxPercent: 20 };
+  }
+  return { label: "20% - 30%", minPercent: 20, maxPercent: 30 };
+};
+
 export type BudgetRequestType = "regular" | "ypop_incentive";
 
 export type RequiredDocumentType = {
@@ -131,6 +380,13 @@ export type RequiredDocumentType = {
   sortOrder: number;
   isRequired: boolean;
   isActive: boolean;
+  templateScope: "document_submission" | "move" | "other";
+};
+
+export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"], string> = {
+  document_submission: "Document Submissions",
+  move: "MOVE Template",
+  other: "Other Templates",
 };
 
 export const createTemplateLocalId = (name: string) =>
@@ -162,17 +418,40 @@ export function computeYpopScore(
   activities: YPOPCityActivity[],
   orgLedProjectCount: number,
   orgLedTiers?: YPOPOrgLedTier[],
-): { cityLedEarned: number; cityLedMax: number; orgLedBonus: number; totalScore: number } {
+): {
+  cityLedEarned: number;
+  cityLedMax: number;
+  cityLedPercent: number;
+  cityLedWeightedScore: number;
+  orgLedBonus: number;
+  totalScore: number;
+} {
   const tiers = orgLedTiers?.length ? orgLedTiers : DEFAULT_ORG_LED_TIERS;
   const sorted = [...tiers].sort((a, b) => b.minProjects - a.minProjects);
   const matched = sorted.find((t) => orgLedProjectCount >= t.minProjects);
   const orgLedBonus = matched?.bonus ?? 0;
-  const cityLedMax = activities.reduce((s, a) => s + a.points, 0);
+  const cityLedMax = activities.reduce(
+    (sum, activity) => sum + normalizeYpopCityLedPoints(activity.points, activity.category),
+    0,
+  );
   const cityLedEarned = attendance
     .filter((a) => a.attended)
-    .reduce((s, a) => s + (activities.find((x) => x.id === a.activityId)?.points ?? 0), 0);
-  const cityLedScore = cityLedMax > 0 ? (cityLedEarned / cityLedMax) * 75 : 0;
-  return { cityLedEarned, cityLedMax, orgLedBonus, totalScore: Math.round(cityLedScore + orgLedBonus) };
+    .reduce((sum, attendanceItem) => {
+      const activity = activities.find((item) => item.id === attendanceItem.activityId);
+      return sum + normalizeYpopCityLedPoints(activity?.points ?? 0, activity?.category);
+    }, 0);
+  const cityLedPercent = cityLedMax > 0 ? Math.round((cityLedEarned / cityLedMax) * 100) : 0;
+  const cityLedWeightedScore = cityLedPercent;
+  return { cityLedEarned, cityLedMax, cityLedPercent, cityLedWeightedScore, orgLedBonus, totalScore: Math.round(cityLedPercent + orgLedBonus) };
+}
+
+export function getApprovedYpopOrgActivityCount(
+  activities: YPOPOrgActivity[],
+  entryId: string,
+  fallbackCount = 0,
+) {
+  const approvedCount = activities.filter((activity) => activity.ypopEntryId === entryId && activity.status === "approved").length;
+  return approvedCount > 0 ? approvedCount : fallbackCount;
 }
 
 export const majorClassificationOptions = ["Youth Organization", "Youth-Serving Organization"] as const;
@@ -221,6 +500,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 1,
     isRequired: true,
     isActive: true,
+    templateScope: "document_submission",
   },
   {
     id: "yorp-form-b",
@@ -230,6 +510,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 2,
     isRequired: true,
     isActive: true,
+    templateScope: "document_submission",
   },
   {
     id: "yorp-officers-adviser",
@@ -239,6 +520,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 3,
     isRequired: true,
     isActive: true,
+    templateScope: "document_submission",
   },
   {
     id: "yorp-members",
@@ -248,6 +530,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 4,
     isRequired: true,
     isActive: true,
+    templateScope: "document_submission",
   },
   {
     id: "pcydo-form-a",
@@ -257,6 +540,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 5,
     isRequired: true,
     isActive: true,
+    templateScope: "document_submission",
   },
   {
     id: "pcydo-data-request",
@@ -266,6 +550,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 6,
     isRequired: true,
     isActive: true,
+    templateScope: "document_submission",
   },
 ];
 
@@ -280,7 +565,6 @@ export const userNavigationGroups: PortalNavGroup[] = [
     label: "Compliance",
     items: [
       { id: "document-submission", label: "Document Submissions", icon: FileText },
-      { id: "budget-request", label: "Budget Requests", icon: ClipboardList },
       { id: "liquidation-reporting", label: "Liquidation Reports", icon: CalendarDays },
     ],
   },
@@ -288,8 +572,14 @@ export const userNavigationGroups: PortalNavGroup[] = [
     id: "grants-incentives",
     label: "Grants & Incentives",
     items: [
+      { id: "budget-request", label: "Budget Requests", icon: ClipboardList },
       { id: "ypop", label: "YPOP Incentive", icon: Medal },
     ],
+  },
+  {
+    id: "templates",
+    label: "Templates",
+    items: [{ id: "templates", label: "Templates", icon: FileText }],
   },
   {
     id: "updates",
@@ -312,6 +602,7 @@ export const userRouteMap: Record<string, string> = {
   "compliance-status": "/compliance-status",
   notifications: "/notifications",
   ypop: "/ypop",
+  templates: "/templates",
 };
 
 export const adminNavigationGroups: PortalNavGroup[] = [
@@ -337,6 +628,12 @@ export const adminNavigationGroups: PortalNavGroup[] = [
       { id: "budget-utilization", label: "Budget Requests", icon: Wallet },
       { id: "liquidation-monitoring", label: "Liquidation Reports", icon: CalendarCheck },
       { id: "budget-monitoring", label: "Budget Tracking", icon: BarChart3 },
+    ],
+  },
+  {
+    id: "incentives",
+    label: "Grants & Incentives",
+    items: [
       { id: "ypop-validation", label: "YPOP Validation", icon: Medal },
     ],
   },
@@ -351,7 +648,10 @@ export const adminNavigationGroups: PortalNavGroup[] = [
   {
     id: "system",
     label: "System",
-    items: [{ id: "notifications-activity", label: "Notifications / Activity Logs", icon: Bell }],
+    items: [
+      { id: "inquiries", label: "Inquiries", icon: Mail },
+      { id: "notifications-activity", label: "Notifications / Activity Logs", icon: Bell },
+    ],
   },
 ];
 
@@ -488,6 +788,7 @@ export type NewsRelease = {
   title: string;
   description: string;
   facebookPostUrl: string;
+  previewImageUrl?: string;
   datePosted: string;
   visibilityStatus: VisibilityStatus;
   createdBy: string;
@@ -548,6 +849,22 @@ export type ActivityLog = {
   createdAt: string;
 };
 
+export type InquiryRecord = {
+  id: string;
+  organizationId: string;
+  submittedBy: string;
+  submitterName: string;
+  organizationName: string;
+  email: string;
+  subject: string;
+  description: string;
+  status: InquiryStatus;
+  adminRemarks: string;
+  reviewedAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type TemplateRecord = RequiredDocumentType & {
   databaseId: string;
   templateDescription: string;
@@ -571,11 +888,18 @@ export type LydoSeedState = {
   complianceRemarks: ComplianceRemark[];
   notifications: NotificationRecord[];
   activityLogs: ActivityLog[];
+  inquiries: InquiryRecord[];
   templates: TemplateRecord[];
   ypopEntries: YPOPEntry[];
   ypopFiles: YPOPFile[];
+  ypopEventParticipations: YPOPEventParticipation[];
+  ypopEventFiles: YPOPEventFile[];
+  ypopOrgActivities: YPOPOrgActivity[];
+  ypopOrgActivityFiles: YPOPOrgActivityFile[];
   ypopCityActivities: YPOPCityActivity[];
   ypopPeriods: YPOPPeriod[];
+  moveApplications: MOVEApplication[];
+  moveFiles: MOVEFile[];
 };
 
 const nowIso = new Date().toISOString();
@@ -993,6 +1317,7 @@ export const seedState: LydoSeedState = {
       title: "LYDO Launches 2026 Youth Organization Registration Drive",
       description: "The Local Youth Development Office officially opens the 2026 registration season for all youth organizations in Pasig City. Organizations are encouraged to submit their documents early.",
       facebookPostUrl: "https://facebook.com/lydo",
+      previewImageUrl: "",
       datePosted: "2026-02-01",
       visibilityStatus: "published",
       createdBy: "admin-demo",
@@ -1004,6 +1329,7 @@ export const seedState: LydoSeedState = {
       title: "Youth Leadership Summit 2026 — Applications Now Open",
       description: "The LYDO Youth Leadership Summit will be held on April 25, 2026 at Pasig City Hall. All registered youth organization representatives are invited to apply for the limited slots.",
       facebookPostUrl: "https://facebook.com/lydo",
+      previewImageUrl: "",
       datePosted: "2026-03-10",
       visibilityStatus: "published",
       createdBy: "admin-demo",
@@ -1015,6 +1341,7 @@ export const seedState: LydoSeedState = {
       title: "2026 Kabataan Awards — Nomination Period Now Open",
       description: "LYDO is accepting nominations for the 2026 Kabataan Awards recognizing outstanding youth leaders in Pasig City. Deadline for submissions is June 30, 2026.",
       facebookPostUrl: "https://facebook.com/lydo",
+      previewImageUrl: "",
       datePosted: "2026-06-01",
       visibilityStatus: "draft",
       createdBy: "admin-demo",
@@ -1334,15 +1661,104 @@ export const seedState: LydoSeedState = {
       uploadedAt: "2026-06-03T10:45:00.000Z",
     },
   ],
+  ypopEventParticipations: [
+    {
+      id: "ypop-participation-001",
+      organizationId: "org-demo-001",
+      activityId: "ypop-act-005",
+      activityName: "Digital Power-Up! Mastering Skills for a Career-Ready Future",
+      activityDate: "October 26, 2025",
+      venue: "Google Meet",
+      status: "verified" as YPOPEventParticipationStatus,
+      adminRemarks: "Attendance and post-event proof matched the submitted participant list.",
+      joinedAt: "2025-10-20T08:00:00.000Z",
+      proofSubmittedAt: "2025-10-27T09:30:00.000Z",
+      verifiedAt: "2025-10-29T14:20:00.000Z",
+      revisionHistory: [
+        { action: "pending_verification", adminRemarks: "Organization joined the YPOP event.", changedAt: "2025-10-20T08:00:00.000Z" },
+        { action: "verified", adminRemarks: "Attendance and post-event proof matched the submitted participant list.", changedAt: "2025-10-29T14:20:00.000Z" },
+      ],
+      createdAt: "2025-10-20T08:00:00.000Z",
+      updatedAt: "2025-10-29T14:20:00.000Z",
+    },
+    {
+      id: "ypop-participation-002",
+      organizationId: "org-demo-001",
+      activityId: "ypop-act-006",
+      activityName: "Cyber Youth Empowerment Orientation",
+      activityDate: "October 29, 2025",
+      venue: "Astoria Plaza",
+      status: "needs_revision" as YPOPEventParticipationStatus,
+      adminRemarks: "Please re-upload clearer photo documentation and include the narrative report.",
+      joinedAt: "2025-10-22T08:00:00.000Z",
+      proofSubmittedAt: "2025-10-30T11:00:00.000Z",
+      verifiedAt: "",
+      revisionHistory: [
+        { action: "pending_verification", adminRemarks: "Organization joined the YPOP event.", changedAt: "2025-10-22T08:00:00.000Z" },
+        { action: "needs_revision", adminRemarks: "Please re-upload clearer photo documentation and include the narrative report.", changedAt: "2025-10-31T15:00:00.000Z" },
+      ],
+      createdAt: "2025-10-22T08:00:00.000Z",
+      updatedAt: "2025-10-31T15:00:00.000Z",
+    },
+    {
+      id: "ypop-participation-003",
+      organizationId: "org-demo-001",
+      activityId: "ypop-act-008",
+      activityName: "PLP Youth Summit 2025",
+      activityDate: "November 25, 2025",
+      venue: "PLP Auditorium",
+      status: "pending_verification" as YPOPEventParticipationStatus,
+      adminRemarks: "",
+      joinedAt: "2025-11-10T09:00:00.000Z",
+      proofSubmittedAt: "",
+      verifiedAt: "",
+      revisionHistory: [
+        { action: "pending_verification", adminRemarks: "Organization joined the YPOP event.", changedAt: "2025-11-10T09:00:00.000Z" },
+      ],
+      createdAt: "2025-11-10T09:00:00.000Z",
+      updatedAt: "2025-11-10T09:00:00.000Z",
+    },
+  ],
+  ypopEventFiles: [
+    {
+      id: "ypop-event-file-001",
+      participationId: "ypop-participation-001",
+      organizationId: "org-demo-001",
+      fileName: "sjya-digital-power-up-photo-docs.pdf",
+      fileUrl: "",
+      fileType: "application/pdf",
+      uploadedAt: "2025-10-27T09:10:00.000Z",
+    },
+    {
+      id: "ypop-event-file-002",
+      participationId: "ypop-participation-001",
+      organizationId: "org-demo-001",
+      fileName: "sjya-digital-power-up-narrative-report.pdf",
+      fileUrl: "",
+      fileType: "application/pdf",
+      uploadedAt: "2025-10-27T09:15:00.000Z",
+    },
+    {
+      id: "ypop-event-file-003",
+      participationId: "ypop-participation-002",
+      organizationId: "org-demo-001",
+      fileName: "sjya-cyber-youth-photo-docs.pdf",
+      fileUrl: "",
+      fileType: "application/pdf",
+      uploadedAt: "2025-10-30T10:55:00.000Z",
+    },
+  ],
+  ypopOrgActivities: [],
+  ypopOrgActivityFiles: [],
   ypopCityActivities: [
-    { id: "ypop-act-001", semesterKey: "2025-S2", name: "Seminar on Responsible Parenthood and Reproductive Health", date: "August 5, 2025", venue: "Tanghalang Pasigueño", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-002", semesterKey: "2025-S2", name: "SEATED! Youth Participation in Local Governance", date: "August 23, 2025", venue: "Zoom", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-003", semesterKey: "2025-S2", name: "Jobstart Philippines Program", date: "August 26–27, 2025", venue: "PESO", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-004", semesterKey: "2025-S2", name: "Youthnified: Youth for Inclusive and Gender-Fair Community (Gender Sensitivity Training)", date: "October 3–5, 2025", venue: "Laurel, Batangas", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-005", semesterKey: "2025-S2", name: "Digital Power-Up! Mastering Skills for a Career-Ready Future", date: "October 26, 2025", venue: "Google Meet", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-006", semesterKey: "2025-S2", name: "Cyber Youth Empowerment Orientation", date: "October 29, 2025", venue: "Astoria Plaza", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-007", semesterKey: "2025-S2", name: "Galing Kabataan Awards Application", date: "November 15, 2025", venue: "Temporary Pasig City Hall", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-008", semesterKey: "2025-S2", name: "PLP Youth Summit 2025", date: "November 25, 2025", venue: "PLP Auditorium", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-001", semesterKey: "2025-S2", name: "Seminar on Responsible Parenthood and Reproductive Health", date: "August 5, 2025", venue: "Tanghalang Pasigueño", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-002", semesterKey: "2025-S2", name: "SEATED! Youth Participation in Local Governance", date: "August 23, 2025", venue: "Zoom", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-003", semesterKey: "2025-S2", name: "Jobstart Philippines Program", date: "August 26–27, 2025", venue: "PESO", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-004", semesterKey: "2025-S2", name: "Youthnified: Youth for Inclusive and Gender-Fair Community (Gender Sensitivity Training)", date: "October 3–5, 2025", venue: "Laurel, Batangas", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-005", semesterKey: "2025-S2", name: "Digital Power-Up! Mastering Skills for a Career-Ready Future", date: "October 26, 2025", venue: "Google Meet", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-006", semesterKey: "2025-S2", name: "Cyber Youth Empowerment Orientation", date: "October 29, 2025", venue: "Astoria Plaza", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-007", semesterKey: "2025-S2", name: "Galing Kabataan Awards Application", date: "November 15, 2025", venue: "Temporary Pasig City Hall", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-008", semesterKey: "2025-S2", name: "PLP Youth Summit 2025", date: "November 25, 2025", venue: "PLP Auditorium", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
   ],
   ypopPeriods: [
     {
@@ -1364,6 +1780,9 @@ export const seedState: LydoSeedState = {
       updatedAt: "2026-05-01T00:00:00.000Z",
     },
   ],
+  moveApplications: [],
+  moveFiles: [],
+  inquiries: [],
 };
 
 export const statusToneMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -1394,6 +1813,11 @@ export const statusToneMap: Record<string, "default" | "secondary" | "destructiv
   hidden: "outline",
   qualified: "default",
   not_qualified: "destructive",
+  pending_verification: "secondary",
+  approved: "default",
+  rejected: "destructive",
+  reviewed: "default",
+  closed: "outline",
 };
 
 export const statusLabelMap: Record<string, string> = {
@@ -1413,18 +1837,23 @@ export const statusLabelMap: Record<string, string> = {
   approved_green: "Approved",
   rejected_red: "Rejected",
   under_review: "Under Review",
-  approved_for_ftf_green: "Approved for FTF Submission",
-  hard_copy_submitted: "Hard Copy Submitted",
+  approved_for_ftf_green: "Submit Onsite",
+  hard_copy_submitted: "Hardcopy Submitted",
   budget_released: "Budget Released",
   completed: "Completed",
   pending_activity_completion: "Pending Activity Completion",
-  completed_liquidated: "Completed / Liquidated",
+  completed_liquidated: "Liquidated",
   overdue: "Overdue",
   published: "Published",
   hidden: "Hidden",
   draft_visibility: "Draft",
   qualified: "Qualified",
   not_qualified: "Not Qualified",
+  pending_verification: "Pending Verification",
+  approved: "Approved",
+  rejected: "Rejected",
+  reviewed: "Reviewed",
+  closed: "Closed",
 };
 
 export const complianceSummaryHighlights = [

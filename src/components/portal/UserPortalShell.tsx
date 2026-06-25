@@ -42,6 +42,7 @@ type NotificationItem = {
 type UserPortalShellProps = {
   title: string;
   subtitle: string;
+  hidePageBanner?: boolean;
   userDisplayName?: string;
   userEmail?: string;
   notifications?: NotificationItem[];
@@ -58,6 +59,7 @@ const flattenItems = (groups: PortalNavGroup[]) => groups.flatMap((group) => gro
 export const UserPortalShell = ({
   title,
   subtitle,
+  hidePageBanner = false,
   userDisplayName,
   userEmail,
   notifications,
@@ -166,7 +168,7 @@ export const UserPortalShell = ({
                 );
               }
               return (
-                <DropdownMenu key={group.id}>
+                <DropdownMenu key={group.id} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       type="button"
@@ -203,7 +205,7 @@ export const UserPortalShell = ({
 
           {/* Right — bell + avatar dropdown */}
           <div className="flex flex-1 hidden items-center justify-end gap-1 lg:flex">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
@@ -254,7 +256,7 @@ export const UserPortalShell = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
@@ -289,19 +291,21 @@ export const UserPortalShell = ({
       </header>
 
       <main className="container mx-auto px-3 py-3 sm:px-4 sm:py-8">
-        <section className="mb-4 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 sm:mb-6 sm:px-5 sm:py-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
-                {subtitle}
-              </p>
-              <h1 className="mt-0.5 truncate text-base font-semibold sm:text-lg">{title}</h1>
+        {!hidePageBanner ? (
+          <section className="mb-4 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 sm:mb-6 sm:px-5 sm:py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
+                  {subtitle}
+                </p>
+                <h1 className="mt-0.5 truncate text-base font-semibold sm:text-lg">{title}</h1>
+              </div>
+              <div className="shrink-0 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary sm:text-sm">
+                {activeItem?.label ?? title}
+              </div>
             </div>
-            <div className="shrink-0 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary sm:text-sm">
-              {activeItem?.label ?? title}
-            </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
         {children}
       </main>

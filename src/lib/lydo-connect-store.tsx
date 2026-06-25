@@ -13,15 +13,22 @@ import {
   type LiquidationReport,
   type LiquidationReportFile,
   type LydoSeedState,
+  type MOVEApplication,
+  type MOVEFile,
   type NewsRelease,
   type NotificationRecord,
+  type InquiryRecord,
   type OrganizationProfile,
   type SubmissionFile,
   type TemplateRecord,
   type TransparencyPost,
   type YPOPCityActivity,
   type YPOPEntry,
+  type YPOPEventFile,
+  type YPOPEventParticipation,
   type YPOPFile,
+  type YPOPOrgActivity,
+  type YPOPOrgActivityFile,
   type YPOPPeriod,
   legacyRemovedTemplateNames,
   seedState,
@@ -53,6 +60,8 @@ const legacySeedIds = new Set([
   "ypop-act-001", "ypop-act-002", "ypop-act-003", "ypop-act-004",
   "ypop-act-005", "ypop-act-006", "ypop-act-007", "ypop-act-008",
   "ypop-file-001", "ypop-file-002", "ypop-file-003",
+  "ypop-participation-001", "ypop-participation-002", "ypop-participation-003",
+  "ypop-event-file-001", "ypop-event-file-002", "ypop-event-file-003",
 ]);
 
 type LydoConnectState = LydoSeedState;
@@ -104,6 +113,8 @@ type LydoConnectContextValue = {
   updateComplianceRemark: (id: string, patch: UpdatePatch<ComplianceRemark>) => void;
   updateNotification: (id: string, patch: UpdatePatch<NotificationRecord>) => void;
   updateActivityLog: (id: string, patch: UpdatePatch<ActivityLog>) => void;
+  createInquiry: (inquiry: InquiryRecord) => void;
+  updateInquiry: (id: string, patch: UpdatePatch<InquiryRecord>) => void;
   updateTemplate: (id: string, patch: UpdatePatch<TemplateRecord>) => void;
   createNotification: (notification: NotificationRecord) => void;
   createActivityLog: (activity: ActivityLog) => void;
@@ -115,12 +126,26 @@ type LydoConnectContextValue = {
   deleteYPOPEntry: (id: string) => void;
   createYPOPFile: (file: YPOPFile) => void;
   deleteYPOPFile: (id: string) => void;
+  createYPOPEventParticipation: (participation: YPOPEventParticipation) => void;
+  updateYPOPEventParticipation: (id: string, patch: UpdatePatch<YPOPEventParticipation>) => void;
+  createYPOPEventFile: (file: YPOPEventFile) => void;
+  deleteYPOPEventFile: (id: string) => void;
+  createYPOPOrgActivity: (activity: YPOPOrgActivity) => void;
+  updateYPOPOrgActivity: (id: string, patch: UpdatePatch<YPOPOrgActivity>) => void;
+  deleteYPOPOrgActivity: (id: string) => void;
+  createYPOPOrgActivityFile: (file: YPOPOrgActivityFile) => void;
+  deleteYPOPOrgActivityFile: (id: string) => void;
   createYPOPCityActivity: (activity: YPOPCityActivity) => void;
   updateYPOPCityActivity: (id: string, patch: UpdatePatch<YPOPCityActivity>) => void;
   deleteYPOPCityActivity: (id: string) => void;
   createYPOPPeriod: (period: YPOPPeriod) => void;
   updateYPOPPeriod: (id: string, patch: UpdatePatch<YPOPPeriod>) => void;
   deleteYPOPPeriod: (id: string) => void;
+  createMoveApplication: (application: MOVEApplication) => void;
+  updateMoveApplication: (id: string, patch: UpdatePatch<MOVEApplication>) => void;
+  deleteMoveApplication: (id: string) => void;
+  createMoveFile: (file: MOVEFile) => void;
+  deleteMoveFile: (id: string) => void;
 };
 
 const LydoConnectContext = createContext<LydoConnectContextValue | undefined>(undefined);
@@ -209,6 +234,9 @@ const readState = (): LydoConnectState => {
         const storedIds = new Set(stored.map((l) => l.id));
         return [...stored, ...seedState.activityLogs.filter((l) => !storedIds.has(l.id))];
       })(),
+      inquiries: ((parsed.inquiries ?? seedState.inquiries) as InquiryRecord[]).filter(
+        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.organizationId),
+      ),
       templates: (parsed.templates ?? seedState.templates).filter((template) => !legacyRemovedTemplateNames.has(template.name)),
       ypopEntries: (() => {
         const stored = ((parsed.ypopEntries ?? []) as YPOPEntry[]).filter((e) => !legacySeedIds.has(e.id));
@@ -216,6 +244,24 @@ const readState = (): LydoConnectState => {
         return [...stored, ...seedState.ypopEntries.filter((e) => !storedIds.has(e.id) && !legacySeedIds.has(e.id))];
       })(),
       ypopFiles: ((parsed.ypopFiles ?? seedState.ypopFiles) as YPOPFile[]).filter((f) => !legacySeedIds.has(f.id)),
+      ypopEventParticipations: (() => {
+        const stored = ((parsed.ypopEventParticipations ?? []) as YPOPEventParticipation[]).filter((p) => !legacySeedIds.has(p.id));
+        const storedIds = new Set(stored.map((p) => p.id));
+        return [
+          ...stored,
+          ...seedState.ypopEventParticipations.filter((p) => !storedIds.has(p.id) && !legacySeedIds.has(p.id)),
+        ];
+      })(),
+      ypopEventFiles: ((parsed.ypopEventFiles ?? seedState.ypopEventFiles) as YPOPEventFile[]).filter((f) => !legacySeedIds.has(f.id)),
+      ypopOrgActivities: (() => {
+        const stored = ((parsed.ypopOrgActivities ?? []) as YPOPOrgActivity[]).filter((activity) => !legacySeedIds.has(activity.id));
+        const storedIds = new Set(stored.map((activity) => activity.id));
+        return [
+          ...stored,
+          ...seedState.ypopOrgActivities.filter((activity) => !storedIds.has(activity.id) && !legacySeedIds.has(activity.id)),
+        ];
+      })(),
+      ypopOrgActivityFiles: ((parsed.ypopOrgActivityFiles ?? seedState.ypopOrgActivityFiles) as YPOPOrgActivityFile[]).filter((file) => !legacySeedIds.has(file.id)),
       ypopCityActivities: (() => {
         const stored = ((parsed.ypopCityActivities ?? []) as YPOPCityActivity[]).filter((a) => !legacySeedIds.has(a.id));
         const storedIds = new Set(stored.map((a) => a.id));
@@ -226,6 +272,12 @@ const readState = (): LydoConnectState => {
         const storedIds = new Set(stored.map((p) => p.id));
         return [...stored, ...seedState.ypopPeriods.filter((p) => !storedIds.has(p.id) && !legacySeedIds.has(p.id))];
       })(),
+      moveApplications: (() => {
+        const stored = ((parsed.moveApplications ?? []) as MOVEApplication[]).filter((application) => !legacySeedIds.has(application.id));
+        const storedIds = new Set(stored.map((application) => application.id));
+        return [...stored, ...seedState.moveApplications.filter((application) => !storedIds.has(application.id) && !legacySeedIds.has(application.id))];
+      })(),
+      moveFiles: ((parsed.moveFiles ?? seedState.moveFiles) as MOVEFile[]).filter((file) => !legacySeedIds.has(file.id)),
     };
   } catch {
     return seedState;
@@ -240,6 +292,13 @@ const applyPatch = <T extends { id: string }>(items: T[], id: string, patch: Upd
 
 const removeById = <T extends { id: string }>(items: T[], id: string) =>
   items.filter((item) => item.id !== id);
+
+const mergeById = <T extends { id: string }>(localItems: T[], remoteItems: T[]) => {
+  const merged = new Map<string, T>();
+  localItems.forEach((item) => merged.set(item.id, item));
+  remoteItems.forEach((item) => merged.set(item.id, item));
+  return Array.from(merged.values());
+};
 
 const syncLiquidationReportForBudget = (
   liquidations: LiquidationReport[],
@@ -306,13 +365,30 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
 
     const syncState = async () => {
       try {
-        const snapshot =
-          (await loadLydoConnectSupabaseState()) ??
-          (readAdminSession() ? await loadAdminPortalSupabaseState() : null);
+        const adminSnapshotPromise = readAdminSession() ? loadAdminPortalSupabaseState() : Promise.resolve(null);
+        const userSnapshotPromise = loadLydoConnectSupabaseState();
+        const [adminSnapshot, userSnapshot] = await Promise.all([adminSnapshotPromise, userSnapshotPromise]);
+        const snapshot = adminSnapshot ?? userSnapshot;
         if (!active || !snapshot) return;
         setState((current) => ({
           ...current,
           ...snapshot,
+          notifications: snapshot.notifications
+            ? snapshot.notifications.map((remoteNotification) => {
+                const localNotification = current.notifications.find((item) => item.id === remoteNotification.id);
+                return localNotification?.isRead
+                  ? { ...remoteNotification, isRead: true }
+                  : remoteNotification;
+              })
+            : current.notifications,
+          ypopFiles: snapshot.ypopFiles ? mergeById(current.ypopFiles, snapshot.ypopFiles) : current.ypopFiles,
+          ypopEventFiles: snapshot.ypopEventFiles ? mergeById(current.ypopEventFiles, snapshot.ypopEventFiles) : current.ypopEventFiles,
+          ypopOrgActivities: snapshot.ypopOrgActivities ? mergeById(current.ypopOrgActivities, snapshot.ypopOrgActivities) : current.ypopOrgActivities,
+          ypopOrgActivityFiles: snapshot.ypopOrgActivityFiles ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles) : current.ypopOrgActivityFiles,
+          moveApplications: snapshot.moveApplications
+            ? mergeById(current.moveApplications, snapshot.moveApplications)
+            : current.moveApplications,
+          moveFiles: snapshot.moveFiles ? mergeById(current.moveFiles, snapshot.moveFiles) : current.moveFiles,
         }));
       } catch (error) {
         console.error("Failed to sync Y-TRACE state from Supabase:", error);
@@ -358,11 +434,37 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
                   : remoteNotification;
               })
             : current.notifications;
+          const mergedYpopFiles = snapshot.ypopFiles
+            ? mergeById(current.ypopFiles, snapshot.ypopFiles)
+            : current.ypopFiles;
+          const mergedYpopEventFiles = snapshot.ypopEventFiles
+            ? mergeById(current.ypopEventFiles, snapshot.ypopEventFiles)
+            : current.ypopEventFiles;
+          const mergedYpopOrgActivities = snapshot.ypopOrgActivities
+            ? mergeById(current.ypopOrgActivities, snapshot.ypopOrgActivities)
+            : current.ypopOrgActivities;
+          const mergedYpopOrgActivityFiles = snapshot.ypopOrgActivityFiles
+            ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles)
+            : current.ypopOrgActivityFiles;
+          const mergedMoveApplications = snapshot.moveApplications
+            ? mergeById(current.moveApplications, snapshot.moveApplications)
+            : current.moveApplications;
+          const mergedMoveFiles = snapshot.moveFiles
+            ? mergeById(current.moveFiles, snapshot.moveFiles)
+            : current.moveFiles;
+          const mergedInquiries = snapshot.inquiries ? mergeById(current.inquiries, snapshot.inquiries) : current.inquiries;
 
           return {
             ...current,
             ...snapshot,
             notifications: mergedNotifications,
+            ypopFiles: mergedYpopFiles,
+            ypopEventFiles: mergedYpopEventFiles,
+            ypopOrgActivities: mergedYpopOrgActivities,
+            ypopOrgActivityFiles: mergedYpopOrgActivityFiles,
+            moveApplications: mergedMoveApplications,
+            moveFiles: mergedMoveFiles,
+            inquiries: mergedInquiries,
           };
         }),
       createTemplate: (template) =>
@@ -569,6 +671,19 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           ...current,
           activityLogs: applyPatch(current.activityLogs, id, patch),
         })),
+      createInquiry: (inquiry) =>
+        setState((current) => ({
+          ...current,
+          inquiries: [inquiry, ...current.inquiries],
+        })),
+      updateInquiry: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          inquiries: applyPatch(current.inquiries, id, patch).map((inquiry) => ({
+            ...inquiry,
+            updatedAt: inquiry.id === id ? new Date().toISOString() : inquiry.updatedAt,
+          })),
+        })),
       updateTemplate: (id, patch) =>
         setState((current) => ({
           ...current,
@@ -639,6 +754,58 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           ...current,
           ypopFiles: removeById(current.ypopFiles, id),
         })),
+      createYPOPEventParticipation: (participation) =>
+        setState((current) => ({
+          ...current,
+          ypopEventParticipations: [participation, ...current.ypopEventParticipations],
+        })),
+      updateYPOPEventParticipation: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          ypopEventParticipations: applyPatch(current.ypopEventParticipations, id, patch).map((participation) => ({
+            ...participation,
+            updatedAt: participation.id === id ? new Date().toISOString() : participation.updatedAt,
+          })),
+        })),
+      createYPOPEventFile: (file) =>
+        setState((current) => ({
+          ...current,
+          ypopEventFiles: [file, ...current.ypopEventFiles],
+        })),
+      deleteYPOPEventFile: (id) =>
+        setState((current) => ({
+          ...current,
+          ypopEventFiles: removeById(current.ypopEventFiles, id),
+        })),
+      createYPOPOrgActivity: (activity) =>
+        setState((current) => ({
+          ...current,
+          ypopOrgActivities: [activity, ...current.ypopOrgActivities],
+        })),
+      updateYPOPOrgActivity: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          ypopOrgActivities: applyPatch(current.ypopOrgActivities, id, patch).map((activity) => ({
+            ...activity,
+            updatedAt: activity.id === id ? new Date().toISOString() : activity.updatedAt,
+          })),
+        })),
+      deleteYPOPOrgActivity: (id) =>
+        setState((current) => ({
+          ...current,
+          ypopOrgActivities: removeById(current.ypopOrgActivities, id),
+          ypopOrgActivityFiles: current.ypopOrgActivityFiles.filter((file) => file.orgActivityId !== id),
+        })),
+      createYPOPOrgActivityFile: (file) =>
+        setState((current) => ({
+          ...current,
+          ypopOrgActivityFiles: [file, ...current.ypopOrgActivityFiles],
+        })),
+      deleteYPOPOrgActivityFile: (id) =>
+        setState((current) => ({
+          ...current,
+          ypopOrgActivityFiles: removeById(current.ypopOrgActivityFiles, id),
+        })),
       createYPOPCityActivity: (activity) =>
         setState((current) => ({
           ...current,
@@ -678,6 +845,35 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
               : current.ypopCityActivities,
           };
         }),
+      createMoveApplication: (application) =>
+        setState((current) => ({
+          ...current,
+          moveApplications: [application, ...current.moveApplications],
+        })),
+      updateMoveApplication: (id, patch) =>
+        setState((current) => ({
+          ...current,
+          moveApplications: applyPatch(current.moveApplications, id, patch).map((application) => ({
+            ...application,
+            updatedAt: application.id === id ? new Date().toISOString() : application.updatedAt,
+          })),
+        })),
+      deleteMoveApplication: (id) =>
+        setState((current) => ({
+          ...current,
+          moveApplications: removeById(current.moveApplications, id),
+          moveFiles: current.moveFiles.filter((file) => file.applicationId !== id),
+        })),
+      createMoveFile: (file) =>
+        setState((current) => ({
+          ...current,
+          moveFiles: [file, ...current.moveFiles],
+        })),
+      deleteMoveFile: (id) =>
+        setState((current) => ({
+          ...current,
+          moveFiles: removeById(current.moveFiles, id),
+        })),
     }),
     [state],
   );

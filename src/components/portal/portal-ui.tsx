@@ -3,6 +3,53 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils";
 import { statusLabelMap, statusToneMap } from "@/lib/lydo-connect-data";
 
+const portalIconToneMap = {
+  primary: "border-primary/15 bg-primary/10 text-primary",
+  sky: "border-sky-500/15 bg-sky-500/10 text-sky-600",
+  emerald: "border-emerald-500/15 bg-emerald-500/10 text-emerald-600",
+  amber: "border-amber-500/15 bg-amber-500/10 text-amber-600",
+  orange: "border-orange-500/15 bg-orange-500/10 text-orange-600",
+  red: "border-red-500/15 bg-red-500/10 text-red-600",
+  violet: "border-violet-500/15 bg-violet-500/10 text-violet-600",
+} as const;
+
+type PortalIconTone = keyof typeof portalIconToneMap;
+
+export const PortalIconBadge = ({
+  icon: Icon,
+  tone = "primary",
+  size = "md",
+  className,
+  iconClassName,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  tone?: PortalIconTone;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  iconClassName?: string;
+}) => {
+  const sizeClassName =
+    size === "sm"
+      ? "h-9 w-9 rounded-xl"
+      : size === "lg"
+        ? "h-20 w-20 rounded-full"
+        : "h-11 w-11 rounded-2xl";
+  const iconSizeClassName = size === "sm" ? "h-4 w-4" : size === "lg" ? "h-10 w-10" : "h-5 w-5";
+
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 items-center justify-center border",
+        sizeClassName,
+        portalIconToneMap[tone],
+        className,
+      )}
+    >
+      <Icon className={cn(iconSizeClassName, iconClassName)} />
+    </div>
+  );
+};
+
 export const PortalStatusBadge = ({ status }: { status: string }) => (
   <Badge variant={statusToneMap[status] ?? "secondary"} className="capitalize">
     {statusLabelMap[status] ?? status.replaceAll("_", " ")}
@@ -15,6 +62,7 @@ export const PortalMetricCard = ({
   helper,
   onClick,
   icon: Icon,
+  iconTone = "primary",
   className,
 }: {
   label: string;
@@ -22,6 +70,7 @@ export const PortalMetricCard = ({
   helper?: string;
   onClick?: () => void;
   icon?: React.ComponentType<{ className?: string }>;
+  iconTone?: PortalIconTone;
   className?: string;
 }) => (
   <Card
@@ -49,11 +98,7 @@ export const PortalMetricCard = ({
         <p className="max-w-[11rem] break-words text-[10px] uppercase tracking-[0.1em] leading-snug text-muted-foreground/75 sm:max-w-none sm:text-xs sm:tracking-[0.16em]">
           {label}
         </p>
-        {Icon ? (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 sm:h-9 sm:w-9">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          </div>
-        ) : null}
+        {Icon ? <PortalIconBadge icon={Icon} tone={iconTone} size="sm" /> : null}
       </div>
       <div className="mt-2.5 text-[1.9rem] font-semibold leading-none sm:mt-3 sm:text-3xl">{value}</div>
       {helper ? <p className="mt-1.5 text-xs leading-snug text-muted-foreground sm:text-sm">{helper}</p> : null}

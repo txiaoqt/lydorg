@@ -27,6 +27,12 @@ const yorpStatusLabel: Record<YorpFilter, string> = {
   not_registered: "Not Registered",
 };
 
+const isYorpRegistered = (org: OrganizationProfile) =>
+  org.yorpRegisteredYear != null || org.profileStatus === "verified";
+
+const isYorpRenewed = (org: OrganizationProfile) =>
+  org.yorpRenewedYear != null;
+
 export function YorpRegistryPage() {
   const { state } = useLydoConnect();
   const orgs = state.organizationProfiles;
@@ -50,17 +56,17 @@ export function YorpRegistryPage() {
       }
       if (classFilter !== "all" && org.majorClassification !== classFilter) return false;
       if (statusFilter !== "all" && org.profileStatus !== statusFilter) return false;
-      if (yorpFilter === "registered" && org.yorpRegisteredYear == null) return false;
-      if (yorpFilter === "renewed" && org.yorpRenewedYear == null) return false;
-      if (yorpFilter === "not_registered" && (org.yorpRegisteredYear != null || org.yorpRenewedYear != null)) return false;
+      if (yorpFilter === "registered" && !isYorpRegistered(org)) return false;
+      if (yorpFilter === "renewed" && !isYorpRenewed(org)) return false;
+      if (yorpFilter === "not_registered" && (isYorpRegistered(org) || isYorpRenewed(org))) return false;
       return true;
     });
   }, [orgs, search, yearFilter, classFilter, statusFilter, yorpFilter]);
 
   const stats = useMemo(() => ({
     total: orgs.length,
-    registered: orgs.filter((o) => o.yorpRegisteredYear != null).length,
-    renewed: orgs.filter((o) => o.yorpRenewedYear != null).length,
+    registered: orgs.filter(isYorpRegistered).length,
+    renewed: orgs.filter(isYorpRenewed).length,
   }), [orgs]);
 
   const exportRows = useMemo(
