@@ -134,6 +134,7 @@ import {
   updateYpopEventParticipationInSupabase,
   deleteYpopEntryFromSupabase,
   deleteYpopOrgActivityFromSupabase,
+  uploadYpopNarrativeToSupabase,
   uploadYpopOrgActivityFileToSupabase,
   uploadYpopEventFileToSupabase,
   uploadYpopFileToSupabase,
@@ -369,6 +370,17 @@ const createBlankBudgetRequest = (organizationId: string, submittedBy: string): 
   updatedAt: new Date().toISOString(),
 });
 
+const budgetActionLabels: Record<string, string> = {
+  needs_revision: "Revision requested",
+  approved_for_ftf_green: "Submit Onsite",
+  hard_copy_submitted: "Hardcopy Submitted",
+  budget_released: "Budget released",
+  completed: "Completed",
+  submitted: "Submitted for review",
+  rejected_red: "Rejected",
+  draft: "Saved as draft",
+};
+
 export default function UserPortal({ section }: { section: string }) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
@@ -403,6 +415,8 @@ export default function UserPortal({ section }: { section: string }) {
   const [userRemarkDraftsByFileId, setUserRemarkDraftsByFileId] = useState<Record<string, string>>({});
   const [budgetUserNoteDrafts, setBudgetUserNoteDrafts] = useState<Record<string, string>>({});
   const [liquidationNotesByReportId, setLiquidationNotesByReportId] = useState<Record<string, string>>({});
+  const [liquidationNoteAttempted, setLiquidationNoteAttempted] = useState<Record<string, boolean>>({});
+  const [confirmLiquidationReport, setConfirmLiquidationReport] = useState<LiquidationReport | null>(null);
   const [submittingLiquidationId, setSubmittingLiquidationId] = useState<string | null>(null);
   const [liquidationSearch, setLiquidationSearch] = useState("");
   const [liquidationStatusFilter, setLiquidationStatusFilter] = useState<"all" | LiquidationStatus>("all");
@@ -416,6 +430,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [ypopNotesByEntryId, setYpopNotesByEntryId] = useState<Record<string, string>>({});
   const [submittingYpopId, setSubmittingYpopId] = useState<string | null>(null);
   const [ypopUploadingId, setYpopUploadingId] = useState<string | null>(null);
+  const [joiningYpopActivityId, setJoiningYpopActivityId] = useState<string | null>(null);
   const [submittingYpopEventParticipationId, setSubmittingYpopEventParticipationId] = useState<string | null>(null);
   const [ypopEventUploadingId, setYpopEventUploadingId] = useState<string | null>(null);
   const [ypopHistoryOpenById, setYpopHistoryOpenById] = useState<Record<string, boolean>>({});
@@ -424,7 +439,10 @@ export default function UserPortal({ section }: { section: string }) {
   const [ypopScoringHelpOpen, setYpopScoringHelpOpen] = useState(false);
   const [editingYpopOrgActivityId, setEditingYpopOrgActivityId] = useState<string | null>(null);
   const [ypopOrgActivityDraft, setYpopOrgActivityDraft] = useState({ activityName: "", venue: "", activityDate: "", narrativeReport: "" });
+  const [ypopNarrativeFile, setYpopNarrativeFile] = useState<File | null>(null);
   const [savingYpopOrgActivity, setSavingYpopOrgActivity] = useState(false);
+  const [ypopPpaErrors, setYpopPpaErrors] = useState<Record<string, string>>({});
+  const [ypopPpaSubmitAttempted, setYpopPpaSubmitAttempted] = useState(false);
   const [ypopOrgActivityUploadingId, setYpopOrgActivityUploadingId] = useState<string | null>(null);
   const [submittingYpopOrgActivityId, setSubmittingYpopOrgActivityId] = useState<string | null>(null);
   const [ypopOrgView, setYpopOrgView] = useState<"list" | "entry-detail">("list");
@@ -478,6 +496,8 @@ export default function UserPortal({ section }: { section: string }) {
   } | null>(null);
   const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [savingBudgetRequest, setSavingBudgetRequest] = useState(false);
+  const [budgetErrors, setBudgetErrors] = useState<Record<string, string>>({});
+  const [budgetSubmitAttempted, setBudgetSubmitAttempted] = useState(false);
   const [budgetFileDraft, setBudgetFileDraft] = useState<File | null>(null);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [notifFilter, setNotifFilter] = useState<"all" | "unread" | "read">("all");
@@ -511,6 +531,8 @@ export default function UserPortal({ section }: { section: string }) {
   });
   const [savingInquiry, setSavingInquiry] = useState(false);
   const [confirmInquirySubmitOpen, setConfirmInquirySubmitOpen] = useState(false);
+  const [inquiryErrors, setInquiryErrors] = useState<Record<string, string>>({});
+  const [inquirySubmitAttempted, setInquirySubmitAttempted] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
@@ -1229,6 +1251,7 @@ export default function UserPortal({ section }: { section: string }) {
     try {
       await removeDocumentById(pendingDocumentRemoval.fileId, pendingDocumentRemoval.documentTypeName);
       setPendingDocumentRemoval(null);
+      closeAttachedDocumentEditor();
     } catch (error) {
       toast({
         title: "Remove failed",
@@ -1262,19 +1285,11 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     if (attachedDocumentMarkedForRemoval) {
-      setSavingAttachedDocument(true);
-      try {
-        await removeDocumentById(attachedDocumentEditor.file.id, attachedDocumentEditor.documentTypeName);
-        closeAttachedDocumentEditor();
-      } catch (error) {
-        toast({
-          title: "Remove failed",
-          description: error instanceof Error ? error.message : "The uploaded document could not be removed right now.",
-          variant: "destructive",
-        });
-      } finally {
-        setSavingAttachedDocument(false);
-      }
+      setPendingDocumentRemoval({
+        fileId: attachedDocumentEditor.file.id,
+        fileName: attachedDocumentEditor.file.fileName,
+        documentTypeName: attachedDocumentEditor.documentTypeName,
+      });
       return;
     }
 
@@ -1614,6 +1629,19 @@ export default function UserPortal({ section }: { section: string }) {
     setBudgetFileDraft(null);
   };
 
+  const validateBudgetSubmitForm = (form: BudgetRequest, hasFile: boolean): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!form.activityTitle.trim()) errors.activityTitle = "Activity title is required.";
+    if (!form.activityDescription.trim()) errors.activityDescription = "Description is required.";
+    if (!form.activityDate) errors.activityDate = "Proposed date is required.";
+    if (!form.venue.trim()) errors.venue = "Venue is required.";
+    if (Number(form.requestedAmount || 0) <= 0) errors.requestedAmount = "Requested amount must be greater than 0.";
+    if (!form.purposeCategory.trim()) errors.purposeCategory = "Purpose and category is required.";
+    if (!form.remarks.trim()) errors.remarks = "Remarks for admin is required.";
+    if (!hasFile) errors.budgetFile = "Please attach the detailed budget document (PDF).";
+    return errors;
+  };
+
   const saveBudgetRequest = async (status: BudgetRequest["status"] = budgetForm.status) => {
     if (!user || !currentProfile) {
       toast({
@@ -1655,41 +1683,30 @@ export default function UserPortal({ section }: { section: string }) {
       createdAt: budgetForm.createdAt || new Date().toISOString(),
     };
 
-    if (
-      !nextBudgetRequest.activityTitle ||
-      !nextBudgetRequest.activityDescription ||
-      !nextBudgetRequest.activityDate ||
-      !nextBudgetRequest.venue ||
-      nextBudgetRequest.requestedAmount <= 0 ||
-      !nextBudgetRequest.purposeCategory ||
-      !nextBudgetRequest.remarks.trim()
-    ) {
-      toast({
-        title: "Complete the budget form",
-        description:
-          "Activity title, description, proposed date, venue, requested amount, purpose/category, and remarks are required.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const existingBudgetFile = budgetRequestFilesByBudgetId.get(nextBudgetRequest.id);
-    if (!budgetFileDraft && !existingBudgetFile) {
-      toast({
-        title: "Attach the required document",
-        description: "Please upload the detailed budget document before saving the request.",
-        variant: "destructive",
-      });
-      return;
-    }
+    const hasFile = !!(budgetFileDraft ?? existingBudgetFile);
 
-    if (budgetFileDraft && budgetFileDraft.type !== "application/pdf" && !/\.pdf$/i.test(budgetFileDraft.name)) {
-      toast({
-        title: "PDF only",
-        description: "Please upload a PDF file for the budget request document.",
-        variant: "destructive",
-      });
-      return;
+    if (status === "draft") {
+      if (!nextBudgetRequest.activityTitle) {
+        toast({
+          title: "Activity title required",
+          description: "Please enter an activity title before saving the draft.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (budgetFileDraft && (budgetFileDraft.type !== "application/pdf" || !/\.pdf$/i.test(budgetFileDraft.name))) {
+        toast({ title: "PDF only", description: "Please upload a PDF file for the budget document.", variant: "destructive" });
+        return;
+      }
+    } else {
+      setBudgetSubmitAttempted(true);
+      const errors = validateBudgetSubmitForm(nextBudgetRequest, hasFile);
+      if (budgetFileDraft && (budgetFileDraft.type !== "application/pdf" || !/\.pdf$/i.test(budgetFileDraft.name))) {
+        errors.budgetFile = "Please upload a PDF file.";
+      }
+      setBudgetErrors(errors);
+      if (Object.keys(errors).length > 0) return;
     }
 
     setSavingBudgetRequest(true);
@@ -1714,6 +1731,8 @@ export default function UserPortal({ section }: { section: string }) {
         mergeRemoteState(remoteSnapshot);
       }
       resetBudgetForm();
+      setBudgetErrors({});
+      setBudgetSubmitAttempted(false);
       setShowBudgetForm(false);
       toast({
         title: isExisting ? "Budget request updated" : "Budget request saved",
@@ -1905,6 +1924,34 @@ export default function UserPortal({ section }: { section: string }) {
     }
   };
 
+  const INQUIRY_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateInquiryField = (field: string, value: string): string => {
+    switch (field) {
+      case "submitterName":
+        return value.trim() ? "" : "Name / Organization name is required.";
+      case "email":
+        if (!value.trim()) return "Email is required.";
+        return INQUIRY_EMAIL_REGEX.test(value.trim()) ? "" : "Enter a valid email address.";
+      case "subject":
+        return value.trim() ? "" : "Subject is required.";
+      case "description":
+        if (!value.trim()) return "Description is required.";
+        return value.trim().length < 20 ? "Please provide more detail (minimum 20 characters)." : "";
+      default:
+        return "";
+    }
+  };
+
+  const validateInquiryForm = (form: typeof inquiryForm): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    for (const field of ["submitterName", "email", "subject", "description"] as const) {
+      const err = validateInquiryField(field, form[field]);
+      if (err) errors[field] = err;
+    }
+    return errors;
+  };
+
   const handleSubmitInquiry = async () => {
     if (!currentProfile) {
       toast({
@@ -1950,6 +1997,8 @@ export default function UserPortal({ section }: { section: string }) {
         subject: "",
         description: "",
       });
+      setInquiryErrors({});
+      setInquirySubmitAttempted(false);
       toast({
         title: "Inquiry sent",
         description: "Your message has been forwarded to the admin dashboard.",
@@ -1975,20 +2024,10 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
-    const submitterName = inquiryForm.submitterName.trim();
-    const organizationName = inquiryForm.organizationName.trim();
-    const email = inquiryForm.email.trim();
-    const subject = inquiryForm.subject.trim();
-    const description = inquiryForm.description.trim();
-
-    if (!submitterName || !organizationName || !email || !subject || !description) {
-      toast({
-        title: "Missing details",
-        description: "Please complete the name, email, subject, and description fields.",
-        variant: "destructive",
-      });
-      return;
-    }
+    setInquirySubmitAttempted(true);
+    const errors = validateInquiryForm(inquiryForm);
+    setInquiryErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setConfirmInquirySubmitOpen(true);
   };
@@ -2024,10 +2063,13 @@ export default function UserPortal({ section }: { section: string }) {
         const hasSubmittedDocuments = submission !== null && submission.status !== "draft";
         const stepsCompleted = (isProfileSaved ? 1 : 0) + (hasSubmittedDocuments ? 1 : 0);
         const pendingDocumentIssues = docFiles.filter((file) => file.validationStatus !== "correct");
-        const latestAnnouncements = state.newsReleases
+        const publishedReleasesSorted = state.newsReleases
           .filter((n) => n.visibilityStatus === "published")
-          .sort((a, b) => b.datePosted.localeCompare(a.datePosted))
-          .slice(0, 2);
+          .sort((a, b) => b.datePosted.localeCompare(a.datePosted));
+        const recentReleases = publishedReleasesSorted.filter(
+          (n) => (Date.now() - new Date(n.datePosted).getTime()) / (1000 * 60 * 60 * 24) <= 30,
+        );
+        const latestAnnouncements = recentReleases.length > 0 ? recentReleases : publishedReleasesSorted.slice(0, 2);
         const dashboardTasks: Array<{
           key: string;
           title: string;
@@ -2374,32 +2416,67 @@ export default function UserPortal({ section }: { section: string }) {
                         onChange={(event) =>
                           setInquiryForm((current) => ({ ...current, submitterName: event.target.value, organizationName: event.target.value }))
                         }
+                        onBlur={() => setInquiryErrors(validateInquiryForm(inquiryForm))}
                         placeholder="Enter your name or organization name"
+                        className={cn(
+                          inquirySubmitAttempted && inquiryErrors.submitterName ? "border-destructive" : "",
+                        )}
                       />
+                      {inquirySubmitAttempted && inquiryErrors.submitterName && (
+                        <p className="text-xs text-destructive">{inquiryErrors.submitterName}</p>
+                      )}
                     </FieldGroup>
                     <FieldGroup label="Email" required>
                       <Input
                         type="email"
                         value={inquiryForm.email}
                         onChange={(event) => setInquiryForm((current) => ({ ...current, email: event.target.value }))}
+                        onBlur={() => setInquiryErrors(validateInquiryForm(inquiryForm))}
                         placeholder="name@example.com"
+                        className={cn(
+                          inquirySubmitAttempted && inquiryErrors.email ? "border-destructive" : "",
+                        )}
                       />
+                      {inquirySubmitAttempted && inquiryErrors.email && (
+                        <p className="text-xs text-destructive">{inquiryErrors.email}</p>
+                      )}
                     </FieldGroup>
                   </div>
                   <FieldGroup label="Subject" required>
                     <Input
                       value={inquiryForm.subject}
                       onChange={(event) => setInquiryForm((current) => ({ ...current, subject: event.target.value }))}
+                      onBlur={() => setInquiryErrors(validateInquiryForm(inquiryForm))}
                       placeholder="What is your inquiry about?"
+                      maxLength={200}
+                      className={cn(
+                        inquirySubmitAttempted && inquiryErrors.subject ? "border-destructive" : "",
+                      )}
                     />
+                    {inquirySubmitAttempted && inquiryErrors.subject && (
+                      <p className="text-xs text-destructive">{inquiryErrors.subject}</p>
+                    )}
                   </FieldGroup>
                   <FieldGroup label="Description" required>
                     <Textarea
                       value={inquiryForm.description}
                       onChange={(event) => setInquiryForm((current) => ({ ...current, description: event.target.value }))}
+                      onBlur={() => setInquiryErrors(validateInquiryForm(inquiryForm))}
                       placeholder="Write the full details of your inquiry here."
-                      className="min-h-32"
+                      className={cn(
+                        "min-h-32",
+                        inquirySubmitAttempted && inquiryErrors.description ? "border-destructive" : "",
+                      )}
+                      maxLength={2000}
                     />
+                    <div className="flex justify-between">
+                      {inquirySubmitAttempted && inquiryErrors.description ? (
+                        <p className="text-xs text-destructive">{inquiryErrors.description}</p>
+                      ) : (
+                        <span />
+                      )}
+                      <span className="text-xs text-muted-foreground">{inquiryForm.description.length} / 2000</span>
+                    </div>
                   </FieldGroup>
                   <div className="flex justify-end">
                     <Button type="button" onClick={handleConfirmInquirySubmit} disabled={savingInquiry}>
@@ -3758,16 +3835,6 @@ No activity yet.</p>
           );
         }
         {
-          const budgetActionLabels: Record<string, string> = {
-            needs_revision: "Revision requested",
-            approved_for_ftf_green: "Submit Onsite",
-            hard_copy_submitted: "Hardcopy Submitted",
-            budget_released: "Budget released",
-            completed: "Completed",
-            submitted: "Submitted for review",
-            rejected_red: "Rejected",
-            draft: "Saved as draft",
-          };
           return (
             <div className="space-y-6">
               <PortalSection
@@ -3838,8 +3905,11 @@ No activity yet.</p>
                               value={budgetForm.activityTitle}
                               onChange={(event) => setBudgetForm((current) => ({ ...current, activityTitle: event.target.value }))}
                               placeholder="Youth leadership training"
-                              required
+                              className={cn(budgetSubmitAttempted && budgetErrors.activityTitle ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.activityTitle && (
+                              <p className="text-xs text-destructive">{budgetErrors.activityTitle}</p>
+                            )}
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="budget-description">
@@ -3851,8 +3921,11 @@ No activity yet.</p>
                               onChange={(event) => setBudgetForm((current) => ({ ...current, activityDescription: event.target.value }))}
                               placeholder="Explain the activity, expected participants, and goals."
                               rows={4}
-                              required
+                              className={cn(budgetSubmitAttempted && budgetErrors.activityDescription ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.activityDescription && (
+                              <p className="text-xs text-destructive">{budgetErrors.activityDescription}</p>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="budget-date">
@@ -3863,8 +3936,11 @@ No activity yet.</p>
                               type="date"
                               value={budgetForm.activityDate}
                               onChange={(event) => setBudgetForm((current) => ({ ...current, activityDate: event.target.value }))}
-                              required
+                              className={cn(budgetSubmitAttempted && budgetErrors.activityDate ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.activityDate && (
+                              <p className="text-xs text-destructive">{budgetErrors.activityDate}</p>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="budget-venue">
@@ -3875,8 +3951,11 @@ No activity yet.</p>
                               value={budgetForm.venue}
                               onChange={(event) => setBudgetForm((current) => ({ ...current, venue: event.target.value }))}
                               placeholder="LYDO Hall"
-                              required
+                              className={cn(budgetSubmitAttempted && budgetErrors.venue ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.venue && (
+                              <p className="text-xs text-destructive">{budgetErrors.venue}</p>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="budget-amount">
@@ -3895,7 +3974,11 @@ No activity yet.</p>
                                 }))
                               }
                               placeholder="15000"
+                              className={cn(budgetSubmitAttempted && budgetErrors.requestedAmount ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.requestedAmount && (
+                              <p className="text-xs text-destructive">{budgetErrors.requestedAmount}</p>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="budget-category">
@@ -3906,8 +3989,11 @@ No activity yet.</p>
                               value={budgetForm.purposeCategory}
                               onChange={(event) => setBudgetForm((current) => ({ ...current, purposeCategory: event.target.value }))}
                               placeholder="Capacity building / training"
-                              required
+                              className={cn(budgetSubmitAttempted && budgetErrors.purposeCategory ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.purposeCategory && (
+                              <p className="text-xs text-destructive">{budgetErrors.purposeCategory}</p>
+                            )}
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="budget-remarks">
@@ -3919,8 +4005,11 @@ No activity yet.</p>
                               onChange={(event) => setBudgetForm((current) => ({ ...current, remarks: event.target.value }))}
                               placeholder="Add your request note, justification, or other details for the admin."
                               rows={3}
-                              required
+                              className={cn(budgetSubmitAttempted && budgetErrors.remarks ? "border-destructive" : "")}
                             />
+                            {budgetSubmitAttempted && budgetErrors.remarks && (
+                              <p className="text-xs text-destructive">{budgetErrors.remarks}</p>
+                            )}
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="budget-file">
@@ -3932,11 +4021,12 @@ No activity yet.</p>
                               accept=".pdf,application/pdf"
                               onChange={handleBudgetFileDraftChange}
                             />
-      
-                      <p className="text-[11px] leading-snug text-muted-foreground">
-
+                            <p className="text-[11px] leading-snug text-muted-foreground">
                               PDF only. Upload the budget document with full breakdown and supporting details.
                             </p>
+                            {budgetSubmitAttempted && budgetErrors.budgetFile && (
+                              <p className="text-xs text-destructive">{budgetErrors.budgetFile}</p>
+                            )}
                             {budgetFileDraft ? (
                               <p className="text-xs text-foreground">Selected: {budgetFileDraft.name}</p>
                             ) : null}
@@ -4297,7 +4387,7 @@ No activity yet.</p>
                                             </div>
 
                                             <div className="flex items-center justify-end">
-                                              {attachedFile ? (
+                                              {(attachedFile || !approvedBudgetStatuses.has(request.status)) ? (
                                                 <DropdownMenu modal={false}>
                                                   <DropdownMenuTrigger asChild>
                                                     <Button type="button" size="sm" variant="outline">
@@ -4306,11 +4396,15 @@ No activity yet.</p>
                                                     </Button>
                                                   </DropdownMenuTrigger>
                                                   <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
-                                                      <Eye className="mr-2 h-4 w-4" />
-                                                      Open File
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
+                                                    {attachedFile ? (
+                                                      <>
+                                                        <DropdownMenuItem onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
+                                                          <Eye className="mr-2 h-4 w-4" />
+                                                          Open File
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                      </>
+                                                    ) : null}
                                                     {!approvedBudgetStatuses.has(request.status) ? (
                                                       <>
                                                         <DropdownMenuItem onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
@@ -4449,6 +4543,28 @@ No activity yet.</p>
                                                         <FileText className="h-4 w-4 text-red-500" />
                                                       </div>
                                                       <span>No file attached</span>
+                                                      {!approvedBudgetStatuses.has(request.status) ? (
+                                                        <DropdownMenu modal={false}>
+                                                          <DropdownMenuTrigger asChild>
+                                                            <Button type="button" size="icon" variant="ghost" className="ml-auto h-8 w-8 shrink-0">
+                                                              <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                          </DropdownMenuTrigger>
+                                                          <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
+                                                              <PenSquare className="mr-2 h-4 w-4" />
+                                                              Edit Request
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                              className="text-destructive focus:text-destructive"
+                                                              onClick={() => handleDeleteBudgetRequest(request)}
+                                                            >
+                                                              <Trash2 className="mr-2 h-4 w-4" />
+                                                              Delete Request
+                                                            </DropdownMenuItem>
+                                                          </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                      ) : null}
                                                     </div>
                                                   )}
                                                 </TableCell>
@@ -4976,23 +5092,33 @@ No activity yet.</p>
                                               <Textarea
                                                 id={`liq-note-${report.id}`}
                                                 value={noteValue}
-                                                onChange={(e) =>
-                                                  setLiquidationNotesByReportId((prev) => ({ ...prev, [report.id]: e.target.value }))
-                                                }
+                                                onChange={(e) => {
+                                                  setLiquidationNotesByReportId((prev) => ({ ...prev, [report.id]: e.target.value }));
+                                                  if (e.target.value.trim()) setLiquidationNoteAttempted((prev) => ({ ...prev, [report.id]: false }));
+                                                }}
                                                 placeholder={
                                                   report.status === "needs_revision"
-                                                    ? "Briefly explain what you changed."
+                                                    ? "Briefly explain what you changed. (Required)"
                                                     : "Optional note for admin."
                                                 }
                                                 rows={3}
-                                                className="min-h-[76px] resize-none text-xs"
+                                                className={`min-h-[76px] resize-none text-xs${report.status === "needs_revision" && liquidationNoteAttempted[report.id] && !noteValue?.trim() ? " border-destructive" : ""}`}
                                                 disabled={isSubmitting}
                                               />
+                                              {report.status === "needs_revision" && liquidationNoteAttempted[report.id] && !noteValue?.trim() ? (
+                                                <p className="text-xs text-destructive">Please explain what changes you made before resubmitting.</p>
+                                              ) : null}
                                               <Button
                                                 type="button"
                                                 size="sm"
                                                 className="h-8 w-full text-xs"
-                                                onClick={() => void handleSubmitLiquidation(report)}
+                                                onClick={() => {
+                                                  if (report.status === "needs_revision" && !noteValue?.trim()) {
+                                                    setLiquidationNoteAttempted((prev) => ({ ...prev, [report.id]: true }));
+                                                    return;
+                                                  }
+                                                  setConfirmLiquidationReport(report);
+                                                }}
                                                 disabled={isSubmitting || !hasAttachedFile}
                                               >
                                                 {isSubmitting ? (
@@ -5190,23 +5316,33 @@ No activity yet.</p>
                                                     <Textarea
                                                       id={`liq-note-${report.id}`}
                                                       value={noteValue}
-                                                      onChange={(e) =>
-                                                        setLiquidationNotesByReportId((prev) => ({ ...prev, [report.id]: e.target.value }))
-                                                      }
+                                                      onChange={(e) => {
+                                                        setLiquidationNotesByReportId((prev) => ({ ...prev, [report.id]: e.target.value }));
+                                                        if (e.target.value.trim()) setLiquidationNoteAttempted((prev) => ({ ...prev, [report.id]: false }));
+                                                      }}
                                                       placeholder={
                                                         report.status === "needs_revision"
-                                                          ? "Briefly explain what you changed."
+                                                          ? "Briefly explain what you changed. (Required)"
                                                           : "Optional note for admin."
                                                       }
                                                       rows={3}
-                                                      className="min-h-[76px] resize-none text-xs"
+                                                      className={`min-h-[76px] resize-none text-xs${report.status === "needs_revision" && liquidationNoteAttempted[report.id] && !noteValue?.trim() ? " border-destructive" : ""}`}
                                                       disabled={isSubmitting}
                                                     />
+                                                    {report.status === "needs_revision" && liquidationNoteAttempted[report.id] && !noteValue?.trim() ? (
+                                                      <p className="text-xs text-destructive">Please explain what changes you made before resubmitting.</p>
+                                                    ) : null}
                                                     <Button
                                                       type="button"
                                                       size="sm"
                                                       className="h-8 w-full text-xs"
-                                                      onClick={() => void handleSubmitLiquidation(report)}
+                                                      onClick={() => {
+                                                        if (report.status === "needs_revision" && !noteValue?.trim()) {
+                                                          setLiquidationNoteAttempted((prev) => ({ ...prev, [report.id]: true }));
+                                                          return;
+                                                        }
+                                                        setConfirmLiquidationReport(report);
+                                                      }}
                                                       disabled={isSubmitting || !hasAttachedFile}
                                                     >
                                                       {isSubmitting ? (
@@ -5677,17 +5813,21 @@ No activity yet.</p>
         const resetYpopOrgActivityDraft = () => {
           setEditingYpopOrgActivityId(null);
           setYpopOrgActivityDraft({ activityName: "", venue: "", activityDate: "", narrativeReport: "" });
+          setYpopNarrativeFile(null);
         };
 
         const handleYpopOrgActivityModalChange = (open: boolean) => {
           setYpopOrgActivityModalOpen(open);
           if (!open) {
             resetYpopOrgActivityDraft();
+            setYpopPpaErrors({});
+            setYpopPpaSubmitAttempted(false);
           }
         };
 
         const handleEditYpopOrgActivity = (activity: YPOPOrgActivity) => {
           setEditingYpopOrgActivityId(activity.id);
+          setYpopNarrativeFile(null);
           setYpopOrgActivityDraft({
             activityName: activity.activityName,
             venue: activity.venue,
@@ -5702,16 +5842,24 @@ No activity yet.</p>
           const activityName = ypopOrgActivityDraft.activityName.trim();
           const venue = ypopOrgActivityDraft.venue.trim();
           const activityDate = ypopOrgActivityDraft.activityDate.trim();
-          const narrativeReport = ypopOrgActivityDraft.narrativeReport.trim();
+          const existingNarrativeReport = ypopOrgActivityDraft.narrativeReport.trim();
 
-          if (!activityName || !venue || !activityDate || !narrativeReport) {
-            toast({ title: "Missing details", description: "Please complete the activity name, venue, date, and narrative report first.", variant: "destructive" });
-            return;
-          }
+          setYpopPpaSubmitAttempted(true);
+          const ppaErrors: Record<string, string> = {};
+          if (!activityName) ppaErrors.activityName = "Activity name is required.";
+          if (!venue) ppaErrors.venue = "Venue is required.";
+          if (!activityDate) ppaErrors.activityDate = "Date is required.";
+          if (!ypopNarrativeFile && !existingNarrativeReport) ppaErrors.narrativeReport = "Narrative report is required.";
+          setYpopPpaErrors(ppaErrors);
+          if (Object.keys(ppaErrors).length > 0) return;
 
           setSavingYpopOrgActivity(true);
           try {
             const now = new Date().toISOString();
+            let narrativeReport = existingNarrativeReport;
+            if (ypopNarrativeFile) {
+              narrativeReport = await uploadYpopNarrativeToSupabase(currentProfile.id, ypopNarrativeFile);
+            }
             const payload = {
               ypopEntryId: entry.id,
               organizationId: currentProfile.id,
@@ -5866,66 +6014,73 @@ No activity yet.</p>
         const handleJoinYpopEvent = async (activityId: string) => {
           const activity = state.ypopCityActivities.find((item) => item.id === activityId);
           if (!activity || !currentProfile?.id) return;
-          const now = new Date().toISOString();
-          const linkedPeriod = state.ypopPeriods.find((period) => period.semesterKey === activity.semesterKey);
-          const existingEntry = state.ypopEntries.find(
-            (entry) => entry.organizationId === currentProfile.id && entry.semester === activity.semesterKey,
-          );
-          if (!existingEntry && linkedPeriod) {
-            const entryData = {
+          setJoiningYpopActivityId(activityId);
+          try {
+            const now = new Date().toISOString();
+            const linkedPeriod = state.ypopPeriods.find((period) => period.semesterKey === activity.semesterKey);
+            const existingEntry = state.ypopEntries.find(
+              (entry) => entry.organizationId === currentProfile.id && entry.semester === activity.semesterKey,
+            );
+            if (!existingEntry && linkedPeriod) {
+              const entryData = {
+                organizationId: currentProfile.id,
+                submittedBy: user?.id ?? "",
+                semester: linkedPeriod.semesterKey,
+                semesterLabel: linkedPeriod.semesterLabel,
+                pointsEarned: 0,
+                pointsRequired: 70,
+                totalPoints: 100,
+                status: "draft" as const,
+                adminRemarks: "",
+                submissionNote: "",
+                validationDeadline: linkedPeriod.validationDeadline,
+                submittedAt: "",
+                validatedAt: "",
+                revisionHistory: [],
+                orgLedProjectCount: 0,
+                cityLedAttendance: [],
+              };
+              try {
+                const savedEntry = await createYpopEntryInSupabase(entryData);
+                createYPOPEntry({ ...savedEntry });
+              } catch {
+                createYPOPEntry({ id: `ypop-${Date.now()}`, ...entryData, createdAt: now, updatedAt: now });
+              }
+            }
+            const payload = {
               organizationId: currentProfile.id,
-              submittedBy: user?.id ?? "",
-              semester: linkedPeriod.semesterKey,
-              semesterLabel: linkedPeriod.semesterLabel,
-              pointsEarned: 0,
-              pointsRequired: 70,
-              totalPoints: 100,
-              status: "draft" as const,
+              activityId: activity.id,
+              activityName: activity.name,
+              activityDate: activity.date,
+              venue: activity.venue,
+              status: "pending_verification" as const,
               adminRemarks: "",
-              submissionNote: "",
-              validationDeadline: linkedPeriod.validationDeadline,
-              submittedAt: "",
-              validatedAt: "",
-              revisionHistory: [],
-              orgLedProjectCount: 0,
-              cityLedAttendance: [],
+              joinedAt: now,
             };
             try {
-              const savedEntry = await createYpopEntryInSupabase(entryData);
-              createYPOPEntry({ ...savedEntry });
-            } catch {
-              createYPOPEntry({ id: `ypop-${Date.now()}`, ...entryData, createdAt: now, updatedAt: now });
+              const saved = await createYpopEventParticipationInSupabase(payload);
+              createYPOPEventParticipation(saved);
+            } catch (error) {
+              createYPOPEventParticipation({
+                id: `ypop-participation-${Date.now()}`,
+                ...payload,
+                proofSubmittedAt: "",
+                verifiedAt: "",
+                revisionHistory: [{ action: "pending_verification", adminRemarks: "Organization joined the YPOP event.", changedAt: now }],
+                createdAt: now,
+                updatedAt: now,
+              });
+              if (error instanceof Error && !/duplicate/i.test(error.message)) {
+                toast({ title: "Joined locally", description: "The event was added locally, but Supabase sync should be checked later." });
+                return;
+              }
             }
-          }
-          const payload = {
-            organizationId: currentProfile.id,
-            activityId: activity.id,
-            activityName: activity.name,
-            activityDate: activity.date,
-            venue: activity.venue,
-            status: "pending_verification" as const,
-            adminRemarks: "",
-            joinedAt: now,
-          };
-          try {
-            const saved = await createYpopEventParticipationInSupabase(payload);
-            createYPOPEventParticipation(saved);
+            toast({ title: "YPOP event joined", description: "This event now appears in your joined YPOP events with pending verification status." });
           } catch (error) {
-            createYPOPEventParticipation({
-              id: `ypop-participation-${Date.now()}`,
-              ...payload,
-              proofSubmittedAt: "",
-              verifiedAt: "",
-              revisionHistory: [{ action: "pending_verification", adminRemarks: "Organization joined the YPOP event.", changedAt: now }],
-              createdAt: now,
-              updatedAt: now,
-            });
-            if (error instanceof Error && !/duplicate/i.test(error.message)) {
-              toast({ title: "Joined locally", description: "The event was added locally, but Supabase sync should be checked later." });
-              return;
-            }
+            toast({ title: "Failed to join", description: error instanceof Error ? error.message : "An error occurred.", variant: "destructive" });
+          } finally {
+            setJoiningYpopActivityId(null);
           }
-          toast({ title: "YPOP event joined", description: "This event now appears in your joined YPOP events with pending verification status." });
         };
 
         const handleUploadYpopEventFile = async (participationId: string, file: File) => {
@@ -5977,8 +6132,15 @@ No activity yet.</p>
                   {activity.venue ? ` • ${activity.venue}` : ""} • {YPOP_CITY_LED_CATEGORY_LABELS[resolveYpopCityLedCategory(activity.category, activity.points)]} • {normalizeYpopCityLedPoints(activity.points, activity.category)} pts
                 </p>
               </div>
-              <Button type="button" size="sm" onClick={() => void handleJoinYpopEvent(activity.id)}>
-                Join Event
+              <Button
+                type="button"
+                size="sm"
+                disabled={joiningYpopActivityId === activity.id}
+                onClick={() => void handleJoinYpopEvent(activity.id)}
+              >
+                {joiningYpopActivityId === activity.id
+                  ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Joining...</>
+                  : "Join Event"}
               </Button>
             </CardContent>
           </Card>
@@ -6026,11 +6188,10 @@ No activity yet.</p>
 
         const renderJoinedYpopEventCard = (participation: YPOPEventParticipation) => {
           const files = ypopEventFilesByParticipationId.get(participation.id) ?? [];
-          const eventDate = parseYpopActivityDate(participation.activityDate);
-          const canSubmitProof = participation.status === "needs_revision" || (eventDate ? eventDate <= new Date() : false);
           const isSubmitting = submittingYpopEventParticipationId === participation.id;
           const isUploading = ypopEventUploadingId === participation.id;
-          const canEditProof = participation.status !== "verified";
+          const canSubmitProof = participation.status !== "verified" && participation.status !== "rejected";
+          const canEditProof = participation.status !== "verified" && participation.status !== "rejected";
 
           return (
             <Card key={participation.id} className="border-border/70">
@@ -6059,49 +6220,43 @@ No activity yet.</p>
                   </div>
                 )}
 
-                {participation.status !== "verified" && (
+                {canEditProof && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium">Proof Files</p>
-                      {canEditProof && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={!canSubmitProof || isUploading}
-                          onClick={() => {
-                            promptUploadYpopEventFile(participation.id);
-                          }}
-                        >
-                          {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
-                          <span className="ml-1.5">Attach File</span>
-                        </Button>
-                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={isUploading}
+                        onClick={() => {
+                          promptUploadYpopEventFile(participation.id);
+                        }}
+                      >
+                        {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+                        <span className="ml-1.5">Attach File</span>
+                      </Button>
                     </div>
                     {files.length > 0 ? (
                       <ul className="space-y-1.5">
                         {files.map((file) => (
                           <li key={file.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
                             <span className="truncate text-sm">{file.fileName}</span>
-                            {canEditProof && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => handleDeleteYpopEventFile(file.id)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteYpopEventFile(file.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </li>
                         ))}
                       </ul>
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        {canSubmitProof
-                          ? "Upload your post-event proof here: photo documentation and narrative report."
-                          : "Proof upload unlocks after the event date."}
+                        Upload your post-event proof here: photo documentation and narrative report.
                       </p>
                     )}
                   </div>
@@ -6674,7 +6829,6 @@ Validated {validatedDate}</p>
             }),
           ];
           const activityLog: Array<{ label: string; date: string; note?: string }> = [
-            { label: "Submission started", date: activeEntry.createdAt },
             ...(activeEntry.submittedAt ? [{ label: "Submitted for validation", date: activeEntry.submittedAt }] : []),
             ...revHistoryForLog.map((r) => ({
               label:
@@ -6689,7 +6843,7 @@ Validated {validatedDate}</p>
             ...(activeEntry.validatedAt ? [{ label: "Validated", date: activeEntry.validatedAt }] : []),
             ...eventActivityLog,
             ...orgActivityLog,
-          ].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+          ].sort((left, right) => new Date(left.date).getTime() - new Date(right.date).getTime());
 
           const handleBackToList = () => {
             setYpopOrgView("list");
@@ -7128,7 +7282,19 @@ Threshold</p>
 
                                     <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                                       <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Narrative Report</p>
-                                      <p className="text-sm text-foreground whitespace-pre-wrap">{activity.narrativeReport}</p>
+                                      {activity.narrativeReport?.startsWith("storage://") ? (
+                                        <button
+                                          type="button"
+                                          className="truncate text-left text-sm font-medium text-primary hover:underline"
+                                          onClick={() => void openFile(activity.narrativeReport)}
+                                        >
+                                          {(activity.narrativeReport.split("/").pop() ?? "narrative-report.pdf").replace(/^\d+-+/, "") || "narrative-report.pdf"}
+                                        </button>
+                                      ) : activity.narrativeReport ? (
+                                        <p className="text-sm text-foreground whitespace-pre-wrap">{activity.narrativeReport}</p>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground">No narrative report uploaded yet.</p>
+                                      )}
                                     </div>
 
                                     {activity.status === "needs_revision" && activity.adminRemarks.trim() && (
@@ -7299,44 +7465,88 @@ Threshold</p>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="ypop-ppa-name">Activity Name</Label>
+                      <Label htmlFor="ypop-ppa-name">
+                        Activity Name <span className="ml-1 text-destructive">*</span>
+                      </Label>
                       <Input
                         id="ypop-ppa-name"
                         value={ypopOrgActivityDraft.activityName}
                         onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, activityName: event.target.value }))}
                         placeholder="Enter the PPA or activity title"
+                        className={cn(ypopPpaSubmitAttempted && ypopPpaErrors.activityName ? "border-destructive" : "")}
                       />
+                      {ypopPpaSubmitAttempted && ypopPpaErrors.activityName && (
+                        <p className="text-xs text-destructive">{ypopPpaErrors.activityName}</p>
+                      )}
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="ypop-ppa-venue">Venue</Label>
+                        <Label htmlFor="ypop-ppa-venue">
+                          Venue <span className="ml-1 text-destructive">*</span>
+                        </Label>
                         <Input
                           id="ypop-ppa-venue"
                           value={ypopOrgActivityDraft.venue}
                           onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, venue: event.target.value }))}
                           placeholder="Activity venue"
+                          className={cn(ypopPpaSubmitAttempted && ypopPpaErrors.venue ? "border-destructive" : "")}
                         />
+                        {ypopPpaSubmitAttempted && ypopPpaErrors.venue && (
+                          <p className="text-xs text-destructive">{ypopPpaErrors.venue}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="ypop-ppa-date">Date</Label>
+                        <Label htmlFor="ypop-ppa-date">
+                          Date <span className="ml-1 text-destructive">*</span>
+                        </Label>
                         <Input
                           id="ypop-ppa-date"
                           type="date"
                           value={ypopOrgActivityDraft.activityDate}
                           onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, activityDate: event.target.value }))}
+                          className={cn(ypopPpaSubmitAttempted && ypopPpaErrors.activityDate ? "border-destructive" : "")}
                         />
+                        {ypopPpaSubmitAttempted && ypopPpaErrors.activityDate && (
+                          <p className="text-xs text-destructive">{ypopPpaErrors.activityDate}</p>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="ypop-ppa-narrative">Narrative Report</Label>
-                      <Textarea
-                        id="ypop-ppa-narrative"
-                        value={ypopOrgActivityDraft.narrativeReport}
-                        onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, narrativeReport: event.target.value }))}
-                        placeholder="Summarize what happened, the objective, and the outcomes of the activity."
-                        rows={5}
-                        className="resize-none"
-                      />
+                      <Label>
+                        Narrative Report <span className="ml-1 text-destructive">*</span>
+                      </Label>
+                      <div className="flex items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <span className="flex-1 truncate text-muted-foreground">
+                          {ypopNarrativeFile
+                            ? ypopNarrativeFile.name
+                            : ypopOrgActivityDraft.narrativeReport
+                              ? ypopOrgActivityDraft.narrativeReport.startsWith("storage://")
+                                ? ypopOrgActivityDraft.narrativeReport.split("/").pop() ?? "Uploaded file"
+                                : "Uploaded file"
+                              : "No file chosen"}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                            input.onchange = () => {
+                              const file = input.files?.[0];
+                              if (file) setYpopNarrativeFile(file);
+                            };
+                            input.click();
+                          }}
+                        >
+                          {ypopOrgActivityDraft.narrativeReport || ypopNarrativeFile ? "Replace" : "Choose File"}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Accepted formats: PDF, DOC, DOCX</p>
+                      {ypopPpaSubmitAttempted && ypopPpaErrors.narrativeReport && (
+                        <p className="text-xs text-destructive">{ypopPpaErrors.narrativeReport}</p>
+                      )}
                     </div>
                   </div>
                   <DialogFooter>
@@ -7597,6 +7807,7 @@ Current score</p>
     state.ypopOrgActivityFiles,
     ypopNotesByEntryId,
     setYpopNotesByEntryId,
+    joiningYpopActivityId,
     submittingYpopId,
     ypopUploadingId,
     submittingYpopEventParticipationId,
@@ -7604,6 +7815,7 @@ Current score</p>
     ypopOrgActivityModalOpen,
     editingYpopOrgActivityId,
     ypopOrgActivityDraft,
+    ypopNarrativeFile,
     savingYpopOrgActivity,
     ypopOrgActivityUploadingId,
     submittingYpopOrgActivityId,
@@ -8773,6 +8985,64 @@ Current score</p>
           <DialogFooter>
             <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setLiquidationRecentActivityModal(null)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(confirmLiquidationReport)}
+        onOpenChange={(open) => { if (!open) setConfirmLiquidationReport(null); }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Submission</DialogTitle>
+            <DialogDescription>Review the details below before submitting your liquidation report.</DialogDescription>
+          </DialogHeader>
+          {confirmLiquidationReport ? (() => {
+            const relatedBudget = budgetRequests.find((r) => r.id === confirmLiquidationReport.budgetRequestId);
+            const attachedFiles = liquidationFilesByReportId.get(confirmLiquidationReport.id) ?? [];
+            const note = liquidationNotesByReportId[confirmLiquidationReport.id]?.trim() ?? "";
+            return (
+              <div className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
+                {relatedBudget ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide">Activity</p>
+                    <p className="mt-0.5 font-medium text-foreground">{relatedBudget.activityTitle}</p>
+                  </div>
+                ) : null}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide">Attached Files</p>
+                  <p className="mt-0.5">{attachedFiles.length} file(s) attached</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide">Note</p>
+                  <p className="mt-0.5">{note || "No note provided."}</p>
+                </div>
+              </div>
+            );
+          })() : null}
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setConfirmLiquidationReport(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              disabled={Boolean(confirmLiquidationReport && submittingLiquidationId === confirmLiquidationReport.id)}
+              onClick={() => {
+                if (!confirmLiquidationReport) return;
+                const report = confirmLiquidationReport;
+                setConfirmLiquidationReport(null);
+                void handleSubmitLiquidation(report);
+              }}
+            >
+              {confirmLiquidationReport && submittingLiquidationId === confirmLiquidationReport.id ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
+              ) : confirmLiquidationReport?.status === "needs_revision" ? (
+                "Confirm & Resubmit"
+              ) : (
+                "Confirm & Submit"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

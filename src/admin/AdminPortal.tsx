@@ -269,7 +269,7 @@ type PendingAdminConfirmation =
     }
   | {
       kind: "ypop_event";
-      action: "verified" | "needs_revision" | "rejected";
+      action: "confirmed" | "verified" | "needs_revision" | "rejected";
       participationId: string;
       entryId: string;
       activityId: string;
@@ -594,6 +594,18 @@ export default function AdminPortal({ section }: { section: string }) {
     () => state.organizationProfiles.find((org) => org.id === selectedLiquidationReport?.organizationId) ?? null,
     [selectedLiquidationReport?.organizationId, state.organizationProfiles],
   );
+  const formatDateTimeLabel = (value?: string | null) => {
+    if (!value) return "Pending";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Pending";
+    return new Intl.DateTimeFormat("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsed);
+  };
   const budgetRecentActivities = useMemo<RecentActivityEntry[]>(() => {
     if (!selectedBudgetRequest) return [];
     const historyEntries = (selectedBudgetRequest.revisionHistory ?? []).map((entry, idx) => {
@@ -644,7 +656,7 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [selectedBudgetRequest]);
   const liquidationRecentActivities = useMemo<RecentActivityEntry[]>(() => {
     if (!selectedLiquidationReport) return [];
-    const historyEntries = selectedLiquidationReport.revisionHistory.map((entry, idx) => {
+    const historyEntries = (selectedLiquidationReport.revisionHistory ?? []).map((entry, idx) => {
       const dotClassName =
         entry.action === "overdue" || entry.action === "rejected_red"
           ? "bg-rose-500"
@@ -687,18 +699,6 @@ export default function AdminPortal({ section }: { section: string }) {
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return "Pending";
     return new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(parsed);
-  };
-  const formatDateTimeLabel = (value?: string | null) => {
-    if (!value) return "Pending";
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return "Pending";
-    return new Intl.DateTimeFormat("en-PH", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(parsed);
   };
   const formatCompactDateParts = (value?: string | null) => {
     if (!value) {
@@ -2421,7 +2421,28 @@ export default function AdminPortal({ section }: { section: string }) {
         await refreshAdminState();
 
         const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
-        if (pendingAdminConfirmation.action === "verified") {
+        if (pendingAdminConfirmation.action === "confirmed") {
+          await appendAuditLog(
+            "Approved YPOP event participation",
+            "ypop_event_participation",
+            pendingAdminConfirmation.participationId,
+            `Approved participation in "${pendingAdminConfirmation.activityName}". Organization may now submit proof.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "YPOP event participation approved",
+            message: `Your participation in ${pendingAdminConfirmation.activityName} has been approved. You may now upload your proof files.`,
+            type: "ypop_event_confirmed",
+            relatedType: "ypop_event_participation",
+            relatedId: pendingAdminConfirmation.participationId,
+          });
+          toast({
+            title: "Participation approved",
+            description: `${pendingAdminConfirmation.organizationName} can now upload proof for ${pendingAdminConfirmation.activityName}.`,
+          });
+        } else if (pendingAdminConfirmation.action === "verified") {
           await appendAuditLog(
             "Verified YPOP event proof",
             "ypop_event_participation",
@@ -3678,6 +3699,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={selectedOrg.profileStatus === "verified"}
                       onClick={() =>
                         openAdminConfirmation({
                           kind: "profile",
@@ -5210,7 +5232,6 @@ export default function AdminPortal({ section }: { section: string }) {
                                   <PortalStatusBadge status={news.visibilityStatus} />
                                 </div>
                               </div>
-                              <p className="line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{news.description}</p>
                               <div className="space-y-0.5 pl-4">
                                 <p className="text-xs text-muted-foreground">Posted {formattedDate}</p>
                                 {news.facebookPostUrl && (
@@ -5806,15 +5827,6 @@ export default function AdminPortal({ section }: { section: string }) {
                     <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedBudgetAllocation(null)}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Barangay Allocation
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!allocationByBarangayExportRows.length}
-                      onClick={() => setActiveReportExport("allocation-by-barangay")}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export Report
                     </Button>
                   </div>
 
@@ -6855,7 +6867,19 @@ export default function AdminPortal({ section }: { section: string }) {
                                   </div>
                                   <div className="mt-3 rounded-md border border-border/50 bg-muted/20 p-3">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Narrative Report</p>
-                                    <p className="text-sm whitespace-pre-wrap">{activity.narrativeReport}</p>
+                                    {activity.narrativeReport?.startsWith("storage://") ? (
+                                      <button
+                                        type="button"
+                                        className="truncate text-left text-sm font-medium text-primary hover:underline"
+                                        onClick={() => void openFile(activity.narrativeReport)}
+                                      >
+                                        {(activity.narrativeReport.split("/").pop() ?? "narrative-report.pdf").replace(/^\d+-+/, "") || "narrative-report.pdf"}
+                                      </button>
+                                    ) : activity.narrativeReport ? (
+                                      <p className="text-sm whitespace-pre-wrap">{activity.narrativeReport}</p>
+                                    ) : (
+                                      <p className="text-sm text-muted-foreground">No narrative report uploaded yet.</p>
+                                    )}
                                   </div>
                                   <div className="mt-3 space-y-2">
                                     <p className="text-xs font-medium text-muted-foreground">Attached Files ({files.length})</p>
@@ -7028,11 +7052,16 @@ export default function AdminPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
+                      {!isTerminal && orgActivities.some((a) => a.status === "submitted") && (
+                        <p className="text-xs text-destructive">
+                          Review all submitted org-initiated activities (approve or reject) before saving the validation.
+                        </p>
+                      )}
                       {!isTerminal && (
                         <Button
                           type="button"
                           className="w-full"
-                          disabled={savingYpopValidation}
+                          disabled={savingYpopValidation || orgActivities.some((a) => a.status === "submitted")}
                           onClick={() => {
                             setYpopValidationAcknowledged(false);
                             setConfirmYpopValidationOpen(true);
@@ -7120,6 +7149,29 @@ export default function AdminPortal({ section }: { section: string }) {
                                   </div>
 
                                   <div className="flex flex-wrap justify-end gap-2">
+                                    {participation.status === "pending_verification" && (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="secondary"
+                                        disabled={isSaving}
+                                        onClick={() =>
+                                          openAdminConfirmation({
+                                            kind: "ypop_event",
+                                            action: "confirmed",
+                                            participationId: participation.id,
+                                            entryId: entry.id,
+                                            activityId: participation.activityId,
+                                            organizationId: participation.organizationId,
+                                            organizationName: entryOrg?.organizationName ?? "Organization",
+                                            activityName: participation.activityName,
+                                            currentAdminRemarks: remarksDraft,
+                                          })
+                                        }
+                                      >
+                                        Approve Participation
+                                      </Button>
+                                    )}
                                     <Button
                                       type="button"
                                       size="sm"

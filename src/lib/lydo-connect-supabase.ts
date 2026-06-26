@@ -1529,7 +1529,7 @@ export const createBudgetRequestInSupabase = async (params: {
     submitted_by: session.user.id,
     activity_title: params.budgetRequest.activityTitle.trim(),
     activity_description: params.budgetRequest.activityDescription.trim(),
-    activity_date: params.budgetRequest.activityDate,
+    activity_date: params.budgetRequest.activityDate || null,
     venue: params.budgetRequest.venue.trim(),
     requested_amount: params.budgetRequest.requestedAmount,
     approved_amount: params.budgetRequest.approvedAmount,
@@ -1603,7 +1603,7 @@ export const updateBudgetRequestInSupabase = async (
   const payload: Record<string, unknown> = {};
   if (patch.activityTitle !== undefined) payload.activity_title = patch.activityTitle.trim();
   if (patch.activityDescription !== undefined) payload.activity_description = patch.activityDescription.trim();
-  if (patch.activityDate !== undefined) payload.activity_date = patch.activityDate;
+  if (patch.activityDate !== undefined) payload.activity_date = patch.activityDate || null;
   if (patch.venue !== undefined) payload.venue = patch.venue.trim();
   if (patch.requestedAmount !== undefined) payload.requested_amount = patch.requestedAmount;
   if (patch.approvedAmount !== undefined) payload.approved_amount = patch.approvedAmount;
@@ -2402,6 +2402,11 @@ export const uploadYpopOrgActivityFileToSupabase = async (params: {
 
   if (error) throw new Error(error.message);
   return mapYpopOrgActivityFile(data as YpopOrgActivityFileRow);
+};
+
+export const uploadYpopNarrativeToSupabase = async (orgId: string, file: File): Promise<string> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  return uploadFileToStorage(YPOP_FILES_BUCKET, `${orgId}/narrative`, file);
 };
 
 export const deleteYpopOrgActivityFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {

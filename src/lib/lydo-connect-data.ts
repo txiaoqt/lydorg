@@ -120,6 +120,7 @@ export type YPOPFile = {
 
 export type YPOPEventParticipationStatus =
   | "pending_verification"
+  | "confirmed"
   | "verified"
   | "needs_revision"
   | "rejected";
@@ -1814,6 +1815,7 @@ export const statusToneMap: Record<string, "default" | "secondary" | "destructiv
   qualified: "default",
   not_qualified: "destructive",
   pending_verification: "secondary",
+  confirmed: "default",
   approved: "default",
   rejected: "destructive",
   reviewed: "default",
@@ -1850,6 +1852,7 @@ export const statusLabelMap: Record<string, string> = {
   qualified: "Qualified",
   not_qualified: "Not Qualified",
   pending_verification: "Pending Verification",
+  confirmed: "Participation Confirmed",
   approved: "Approved",
   rejected: "Rejected",
   reviewed: "Reviewed",
