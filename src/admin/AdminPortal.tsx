@@ -110,10 +110,7 @@ const splitNotificationsGroup = baseAdminNavigationGroups.map((group) =>
         ...group,
         items: group.items.flatMap((item) =>
           item.id === "notifications-activity"
-            ? [
-                { id: "notifications", label: "Notifications", icon: Bell },
-                { id: "activity-logs", label: "Activity Logs", icon: ClipboardList },
-              ]
+            ? [{ id: "activity-logs", label: "Activity Logs", icon: ClipboardList }]
             : [item],
         ),
       }

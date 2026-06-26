@@ -6278,7 +6278,7 @@ No activity yet.</p>
                   {canEditProof && (
                     <Button
                       type="button"
-                      disabled={!canSubmitProof || files.length === 0 || isSubmitting || participation.status === "pending_verification"}
+                      disabled={!canSubmitProof || files.length === 0 || isSubmitting || (participation.status === "pending_verification" && Boolean(participation.proofSubmittedAt))}
                       onClick={() => void handleSubmitYpopEventProof(participation)}
                     >
                       {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : participation.status === "needs_revision" ? "Resubmit Proof" : "Submit Proof"}

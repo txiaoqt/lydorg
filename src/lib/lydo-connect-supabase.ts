@@ -134,6 +134,8 @@ type BudgetRequestRow = {
   hard_copy_submitted_at: string | null;
   user_note: string | null;
   revision_history: unknown[] | null;
+  budget_request_type: string | null;
+  ypop_entry_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -566,6 +568,8 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   updatedAt: row.updated_at,
   userNote: row.user_note ?? "",
   revisionHistory: (row.revision_history ?? []) as BudgetRequest["revisionHistory"],
+  budgetRequestType: (row.budget_request_type ?? "regular") as BudgetRequest["budgetRequestType"],
+  ypopEntryId: row.ypop_entry_id ?? undefined,
 });
 
 const mapDocumentSubmission = (row: DocumentSubmissionRow) => ({
@@ -1543,6 +1547,8 @@ export const createBudgetRequestInSupabase = async (params: {
     hard_copy_submitted_at: params.budgetRequest.hardCopySubmittedAt || null,
     user_note: params.budgetRequest.userNote?.trim() || "",
     revision_history: params.budgetRequest.revisionHistory ?? [],
+    budget_request_type: params.budgetRequest.budgetRequestType ?? "regular",
+    ypop_entry_id: params.budgetRequest.ypopEntryId || null,
   };
 
   const { data, error } = await supabase!
