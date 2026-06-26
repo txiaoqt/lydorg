@@ -446,6 +446,14 @@ export default function UserPortal({ section }: { section: string }) {
   >("overview");
   const [ocrPreviewOpen, setOcrPreviewOpen] = useState(false);
   const [budgetReviewNote, setBudgetReviewNote] = useState<{ title: string; note: string; status: BudgetRequestStatus } | null>(null);
+  const [budgetRecentActivityModal, setBudgetRecentActivityModal] = useState<{
+    title: string;
+    entries: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  } | null>(null);
+  const [liquidationRecentActivityModal, setLiquidationRecentActivityModal] = useState<{
+    title: string;
+    entries: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  } | null>(null);
 
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [submissionSuccessOpen, setSubmissionSuccessOpen] = useState(false);
@@ -475,6 +483,13 @@ export default function UserPortal({ section }: { section: string }) {
   const [notifFilter, setNotifFilter] = useState<"all" | "unread" | "read">("all");
   const [verifiedBannerDismissed, setVerifiedBannerDismissed] = useState(false);
   const [pendingBudgetDelete, setPendingBudgetDelete] = useState<BudgetRequest | null>(null);
+  const [pendingDeleteConfirmation, setPendingDeleteConfirmation] = useState<{
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    action: () => Promise<void> | void;
+  } | null>(null);
+  const [processingDeleteConfirmation, setProcessingDeleteConfirmation] = useState(false);
   const [budgetSearch, setBudgetSearch] = useState("");
   const [budgetStatusFilter, setBudgetStatusFilter] = useState<"all" | BudgetRequest["status"]>("all");
   const [budgetDateRangeFilter, setBudgetDateRangeFilter] = useState<"all" | "30d" | "90d" | "year">("all");
@@ -495,6 +510,7 @@ export default function UserPortal({ section }: { section: string }) {
     description: "",
   });
   const [savingInquiry, setSavingInquiry] = useState(false);
+  const [confirmInquirySubmitOpen, setConfirmInquirySubmitOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
@@ -1839,7 +1855,42 @@ export default function UserPortal({ section }: { section: string }) {
     }
   };
 
+  const requestDeleteConfirmation = (config: {
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    action: () => Promise<void> | void;
+  }) => {
+    setPendingDeleteConfirmation(config);
+  };
+
+  const confirmPendingDelete = async () => {
+    const pending = pendingDeleteConfirmation;
+    if (!pending) return;
+
+    setProcessingDeleteConfirmation(true);
+    try {
+      await pending.action();
+      setPendingDeleteConfirmation(null);
+    } finally {
+      setProcessingDeleteConfirmation(false);
+    }
+  };
+
   const handleSubmitLiquidation = async (report: LiquidationReport) => {
+    const attachedFiles = liquidationFilesByReportId.get(report.id) ?? [];
+    if (attachedFiles.length === 0) {
+      toast({
+        title: report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red"
+          ? "Attachment required for resubmission"
+          : "Attachment required",
+        description:
+          "Please upload a liquidation file before submitting this report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmittingLiquidationId(report.id);
     try {
       await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
@@ -1879,6 +1930,7 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    setConfirmInquirySubmitOpen(false);
     setSavingInquiry(true);
     try {
       const createdInquiry = await createInquiryInSupabase({
@@ -1911,6 +1963,57 @@ export default function UserPortal({ section }: { section: string }) {
     } finally {
       setSavingInquiry(false);
     }
+  };
+
+  const handleConfirmInquirySubmit = () => {
+    if (!currentProfile) {
+      toast({
+        title: "Profile required",
+        description: "Please save your organization profile before submitting an inquiry.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const submitterName = inquiryForm.submitterName.trim();
+    const organizationName = inquiryForm.organizationName.trim();
+    const email = inquiryForm.email.trim();
+    const subject = inquiryForm.subject.trim();
+    const description = inquiryForm.description.trim();
+
+    if (!submitterName || !organizationName || !email || !subject || !description) {
+      toast({
+        title: "Missing details",
+        description: "Please complete the name, email, subject, and description fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setConfirmInquirySubmitOpen(true);
+  };
+
+  const openBudgetRecentActivityModal = (request: BudgetRequest) => {
+    const entries = [...(request.revisionHistory ?? [])]
+      .filter((entry) => entry.changedAt)
+      .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime());
+
+    setBudgetRecentActivityModal({
+      title: request.activityTitle || "Budget Request Activity",
+      entries,
+    });
+  };
+
+  const openLiquidationRecentActivityModal = (report: LiquidationReport) => {
+    const relatedBudget = budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
+    const entries = [...(report.revisionHistory ?? [])]
+      .filter((entry) => entry.changedAt)
+      .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime());
+
+    setLiquidationRecentActivityModal({
+      title: relatedBudget?.activityTitle || "Liquidation Report Activity",
+      entries,
+    });
   };
 
   const activeContent = useMemo(() => {
@@ -2299,7 +2402,7 @@ export default function UserPortal({ section }: { section: string }) {
                     />
                   </FieldGroup>
                   <div className="flex justify-end">
-                    <Button type="button" onClick={() => void handleSubmitInquiry()} disabled={savingInquiry}>
+                    <Button type="button" onClick={handleConfirmInquirySubmit} disabled={savingInquiry}>
                       {savingInquiry ? "Sending..." : "Send Inquiry"}
                     </Button>
                   </div>
@@ -3553,7 +3656,8 @@ No activity yet.</p>
                                     disabled={
                                       scanningDocumentId === documentType.id ||
                                       submittingDocumentId === documentType.id ||
-                                      (!file && isDocumentSubmissionApproved)
+                                      (!file && isDocumentSubmissionApproved) ||
+                                      (Boolean(file) && isApproved)
                                     }
                                     className="w-full cursor-pointer xl:w-auto"
                                     onClick={(event) => {
@@ -4185,7 +4289,7 @@ No activity yet.</p>
                                                 <button
                                                   type="button"
                                                   className="text-xs font-medium text-primary hover:underline"
-                                                  onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}
+                                                  onClick={() => openBudgetRecentActivityModal(request)}
                                                 >
                                                   +{additionalActivities} more
                                                 </button>
@@ -4360,7 +4464,7 @@ No activity yet.</p>
                                                       <button
                                                         type="button"
                                                         className="text-xs font-medium text-primary hover:underline"
-                                                        onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}
+                                                        onClick={() => openBudgetRecentActivityModal(request)}
                                                       >
                                                         +{additionalActivities} more
                                                       </button>
@@ -4725,6 +4829,7 @@ No activity yet.</p>
                                   const canRemoveSubmittedFile = !liquidationLockedStatuses.has(report.status);
                                   const canUploadReplacement = report.status === "needs_revision" || report.status === "rejected_red";
                                   const isSubmitting = submittingLiquidationId === report.id;
+                                  const hasAttachedFile = attachedFiles.length > 0;
                                   const noteValue = liquidationNotesByReportId[report.id] ?? "";
                                   const latestActivity = report.revisionHistory?.length
                                     ? report.revisionHistory[report.revisionHistory.length - 1]
@@ -4799,7 +4904,15 @@ No activity yet.</p>
                                           <p className="text-xs text-muted-foreground">
                                             {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(report.updatedAt)}
                                           </p>
-                                          {additionalActivities > 0 ? <span className="text-xs font-medium text-primary">+{additionalActivities} more</span> : null}
+                                          {additionalActivities > 0 ? (
+                                            <button
+                                              type="button"
+                                              className="text-xs font-medium text-primary transition hover:underline"
+                                              onClick={() => openLiquidationRecentActivityModal(report)}
+                                            >
+                                              +{additionalActivities} more
+                                            </button>
+                                          ) : null}
                                         </div>
 
                                         <div className="space-y-2.5">
@@ -4829,7 +4942,15 @@ No activity yet.</p>
                                                       Open File
                                                     </DropdownMenuItem>
                                                     {canRemoveSubmittedFile ? (
-                                                      <DropdownMenuItem onClick={() => void handleDeleteLiquidationFile(primaryFile)}>
+                                                      <DropdownMenuItem
+                                                        onClick={() =>
+                                                          requestDeleteConfirmation({
+                                                            title: "Remove Submitted File",
+                                                            description: `Are you sure you want to delete "${primaryFile.fileName}"? This action cannot be undone.`,
+                                                            action: () => handleDeleteLiquidationFile(primaryFile),
+                                                          })
+                                                        }
+                                                      >
                                                         <Trash2 className="mr-2 h-4 w-4" />
                                                         Remove Submitted File
                                                       </DropdownMenuItem>
@@ -4872,7 +4993,7 @@ No activity yet.</p>
                                                 size="sm"
                                                 className="h-8 w-full text-xs"
                                                 onClick={() => void handleSubmitLiquidation(report)}
-                                                disabled={isSubmitting}
+                                                disabled={isSubmitting || !hasAttachedFile}
                                               >
                                                 {isSubmitting ? (
                                                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
@@ -4917,6 +5038,7 @@ No activity yet.</p>
                                         const canRemoveSubmittedFile = !liquidationLockedStatuses.has(report.status);
                                         const canUploadReplacement = report.status === "needs_revision" || report.status === "rejected_red";
                                         const isSubmitting = submittingLiquidationId === report.id;
+                                        const hasAttachedFile = attachedFiles.length > 0;
                                         const noteValue = liquidationNotesByReportId[report.id] ?? "";
                                         const latestActivity = report.revisionHistory?.length
                                           ? report.revisionHistory[report.revisionHistory.length - 1]
@@ -4997,7 +5119,13 @@ No activity yet.</p>
                                                   {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(report.updatedAt)}
                                                 </p>
                                                 {additionalActivities > 0 ? (
-                                                  <span className="text-xs font-medium text-primary">+{additionalActivities} more</span>
+                                                  <button
+                                                    type="button"
+                                                    className="text-xs font-medium text-primary transition hover:underline"
+                                                    onClick={() => openLiquidationRecentActivityModal(report)}
+                                                  >
+                                                    +{additionalActivities} more
+                                                  </button>
                                                 ) : null}
                                               </div>
                                             </TableCell>
@@ -5028,7 +5156,15 @@ No activity yet.</p>
                                                             Open File
                                                           </DropdownMenuItem>
                                                           {canRemoveSubmittedFile ? (
-                                                            <DropdownMenuItem onClick={() => void handleDeleteLiquidationFile(primaryFile)}>
+                                                            <DropdownMenuItem
+                                                              onClick={() =>
+                                                                requestDeleteConfirmation({
+                                                                  title: "Remove Submitted File",
+                                                                  description: `Are you sure you want to delete "${primaryFile.fileName}"? This action cannot be undone.`,
+                                                                  action: () => handleDeleteLiquidationFile(primaryFile),
+                                                                })
+                                                              }
+                                                            >
                                                               <Trash2 className="mr-2 h-4 w-4" />
                                                               Remove Submitted File
                                                             </DropdownMenuItem>
@@ -5071,7 +5207,7 @@ No activity yet.</p>
                                                       size="sm"
                                                       className="h-8 w-full text-xs"
                                                       onClick={() => void handleSubmitLiquidation(report)}
-                                                      disabled={isSubmitting}
+                                                      disabled={isSubmitting || !hasAttachedFile}
                                                     >
                                                       {isSubmitting ? (
                                                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
@@ -5526,9 +5662,16 @@ No activity yet.</p>
         };
 
         const handleDeleteYpopFile = (fileId: string) => {
-          const fileUrl = state.ypopFiles.find((f) => f.id === fileId)?.fileUrl ?? "";
-          void deleteYpopFileFromSupabase(fileId, fileUrl).catch(() => {});
-          deleteYPOPFile(fileId);
+          const targetFile = state.ypopFiles.find((f) => f.id === fileId);
+          requestDeleteConfirmation({
+            title: "Delete Attached File",
+            description: `Are you sure you want to delete "${targetFile?.fileName ?? "this file"}"? This action cannot be undone.`,
+            action: async () => {
+              const fileUrl = targetFile?.fileUrl ?? "";
+              void deleteYpopFileFromSupabase(fileId, fileUrl).catch(() => {});
+              deleteYPOPFile(fileId);
+            },
+          });
         };
 
         const resetYpopOrgActivityDraft = () => {
@@ -5663,9 +5806,16 @@ No activity yet.</p>
         };
 
         const handleDeleteYpopOrgActivityFile = (fileId: string) => {
-          const fileUrl = state.ypopOrgActivityFiles.find((file) => file.id === fileId)?.fileUrl ?? "";
-          void deleteYpopOrgActivityFileFromSupabase(fileId, fileUrl).catch(() => {});
-          deleteYPOPOrgActivityFile(fileId);
+          const targetFile = state.ypopOrgActivityFiles.find((file) => file.id === fileId);
+          requestDeleteConfirmation({
+            title: "Delete PPA Attachment",
+            description: `Are you sure you want to delete "${targetFile?.fileName ?? "this file"}"? This action cannot be undone.`,
+            action: async () => {
+              const fileUrl = targetFile?.fileUrl ?? "";
+              void deleteYpopOrgActivityFileFromSupabase(fileId, fileUrl).catch(() => {});
+              deleteYPOPOrgActivityFile(fileId);
+            },
+          });
         };
 
         const handleSubmitYpopOrgActivity = async (activity: YPOPOrgActivity) => {
@@ -5702,8 +5852,15 @@ No activity yet.</p>
         };
 
         const handleDeleteYpopOrgActivity = (activityId: string) => {
-          void deleteYpopOrgActivityFromSupabase(activityId).catch(() => {});
-          deleteYPOPOrgActivity(activityId);
+          const targetActivity = state.ypopOrgActivities.find((activity) => activity.id === activityId);
+          requestDeleteConfirmation({
+            title: "Delete PPA Log",
+            description: `Are you sure you want to delete "${targetActivity?.activityName ?? "this PPA log"}"? This action cannot be undone.`,
+            action: async () => {
+              void deleteYpopOrgActivityFromSupabase(activityId).catch(() => {});
+              deleteYPOPOrgActivity(activityId);
+            },
+          });
         };
 
         const handleJoinYpopEvent = async (activityId: string) => {
@@ -5828,9 +5985,16 @@ No activity yet.</p>
         );
 
         const handleDeleteYpopEventFile = (fileId: string) => {
-          const fileUrl = state.ypopEventFiles.find((file) => file.id === fileId)?.fileUrl ?? "";
-          void deleteYpopEventFileFromSupabase(fileId, fileUrl).catch(() => {});
-          deleteYPOPEventFile(fileId);
+          const targetFile = state.ypopEventFiles.find((file) => file.id === fileId);
+          requestDeleteConfirmation({
+            title: "Delete Proof File",
+            description: `Are you sure you want to delete "${targetFile?.fileName ?? "this proof file"}"? This action cannot be undone.`,
+            action: async () => {
+              const fileUrl = targetFile?.fileUrl ?? "";
+              void deleteYpopEventFileFromSupabase(fileId, fileUrl).catch(() => {});
+              deleteYPOPEventFile(fileId);
+            },
+          });
         };
 
         const handleSubmitYpopEventProof = async (participation: YPOPEventParticipation) => {
@@ -7879,7 +8043,11 @@ Current score</p>
                                                 className="text-destructive hover:text-destructive"
                                                 onClick={(event) => {
                                                   event.stopPropagation();
-                                                  deleteEditableOcrField(field);
+                                                  requestDeleteConfirmation({
+                                                    title: "Delete OCR Field",
+                                                    description: `Are you sure you want to delete "${field.label}"? This action cannot be undone.`,
+                                                    action: () => deleteEditableOcrField(field),
+                                                  });
                                                 }}
                                               >
                                                 Delete
@@ -7925,7 +8093,19 @@ Current score</p>
                                               <div key={row.id} className="min-w-[52rem] rounded-xl border border-border/70 p-3">
                                                 <div className="mb-3 flex items-center justify-between gap-3">
                                                   <p className="text-sm font-medium text-foreground">Row {row.rowNumber}</p>
-                                                  <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteEditableOcrTableRow(table.id, row.id)}>
+                                                  <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="text-destructive hover:text-destructive"
+                                                    onClick={() =>
+                                                      requestDeleteConfirmation({
+                                                        title: "Delete Table Row",
+                                                        description: `Are you sure you want to delete Row ${row.rowNumber}? This action cannot be undone.`,
+                                                        action: () => deleteEditableOcrTableRow(table.id, row.id),
+                                                      })
+                                                    }
+                                                  >
                                                     Delete Row
                                                   </Button>
                                                 </div>
@@ -8517,6 +8697,86 @@ Current score</p>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={Boolean(budgetRecentActivityModal)}
+        onOpenChange={(open) => {
+          if (!open) setBudgetRecentActivityModal(null);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{budgetRecentActivityModal?.title || "Recent Activity"}</DialogTitle>
+            <DialogDescription>
+              Full activity history for this budget request.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {budgetRecentActivityModal?.entries.length ? (
+              budgetRecentActivityModal.entries.map((entry, index) => (
+                <div key={`${entry.action}-${entry.changedAt}-${index}`} className="rounded-xl border border-border/70 bg-muted/15 p-3.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {budgetActionLabels[entry.action] ?? formatStatusLabel(entry.action)}
+                  </p>
+                  {entry.adminRemarks?.trim() ? (
+                    <p className="mt-1 text-sm text-muted-foreground">{entry.adminRemarks.trim()}</p>
+                  ) : null}
+                  <p className="mt-1 text-xs text-muted-foreground">{formatDateTimeLabel(entry.changedAt)}</p>
+                </div>
+              ))
+            ) : (
+              <PortalEmptyState
+                title="No recent activity yet"
+                description="Budget request updates will appear here once the request has been processed."
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setBudgetRecentActivityModal(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(liquidationRecentActivityModal)}
+        onOpenChange={(open) => {
+          if (!open) setLiquidationRecentActivityModal(null);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{liquidationRecentActivityModal?.title || "Recent Activity"}</DialogTitle>
+            <DialogDescription>
+              Full activity history for this liquidation report.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {liquidationRecentActivityModal?.entries.length ? (
+              liquidationRecentActivityModal.entries.map((entry, index) => (
+                <div key={`${entry.action}-${entry.changedAt}-${index}`} className="rounded-xl border border-border/70 bg-muted/15 p-3.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {liquidationActionLabels[entry.action] ?? formatStatusLabel(entry.action)}
+                  </p>
+                  {entry.adminRemarks?.trim() ? (
+                    <p className="mt-1 text-sm text-muted-foreground">{entry.adminRemarks.trim()}</p>
+                  ) : null}
+                  <p className="mt-1 text-xs text-muted-foreground">{formatDateTimeLabel(entry.changedAt)}</p>
+                </div>
+              ))
+            ) : (
+              <PortalEmptyState
+                title="No recent activity yet"
+                description="Liquidation report updates will appear here once the report has been processed."
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setLiquidationRecentActivityModal(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <AlertDialog
         open={Boolean(pendingBudgetDelete)}
         onOpenChange={(open) => {
@@ -8574,6 +8834,52 @@ Current score</p>
               }}
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={confirmInquirySubmitOpen} onOpenChange={setConfirmInquirySubmitOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit Inquiry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to submit this inquiry?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={savingInquiry}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleSubmitInquiry()}
+              disabled={savingInquiry}
+            >
+              {savingInquiry ? "Submitting..." : "Yes, submit"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={Boolean(pendingDeleteConfirmation)}
+        onOpenChange={(open) => {
+          if (!open && !processingDeleteConfirmation) {
+            setPendingDeleteConfirmation(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingDeleteConfirmation?.title ?? "Delete Item"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeleteConfirmation?.description ?? "Are you sure you want to delete this item?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={processingDeleteConfirmation}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmPendingDelete()}
+              disabled={processingDeleteConfirmation}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {processingDeleteConfirmation ? "Deleting..." : (pendingDeleteConfirmation?.confirmLabel ?? "Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

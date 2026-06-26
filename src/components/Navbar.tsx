@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
   { label: "Home", href: "/" },
+  { label: "Templates", href: "/public-templates" },
   { label: "About", href: "/about" },
   { label: "FAQs", href: "/faqs" },
   { label: "Contacts", href: "/contacts" },
@@ -24,6 +25,14 @@ const Navbar = () => {
     navigate("/");
   };
 
+  const isNavItemActive = (href: string) => {
+    if (href.includes("#")) {
+      const [path, hash] = href.split("#");
+      return location.pathname === (path || "/") && location.hash === `#${hash}`;
+    }
+    return location.pathname === href;
+  };
+
   const portalHref = role === "admin" ? "/admin" : "/dashboard";
   const portalLabel = role === "admin" ? "Admin Portal" : "Open Portal";
 
@@ -39,10 +48,10 @@ const Navbar = () => {
           {!isAuthenticated
             ? navItems.map((item) => (
                 <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    location.pathname === item.href
+                    key={item.href}
+                    to={item.href}
+                    className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    isNavItemActive(item.href)
                       ? "border border-primary/25 bg-primary/12 text-primary"
                       : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                   }`}
@@ -99,7 +108,7 @@ const Navbar = () => {
                     to={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={`block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                      location.pathname === item.href
+                      isNavItemActive(item.href)
                         ? "border border-primary/25 bg-primary/12 text-primary"
                         : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
                     }`}

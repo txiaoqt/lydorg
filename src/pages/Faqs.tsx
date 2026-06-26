@@ -11,7 +11,7 @@ const faqs = [
   {
     question: "What is Y-TRACE?",
     answer:
-      "Y-TRACE is a youth organization compliance portal for Pasig City. It covers the full workflow: organization registration, compliance document submission, budget requests, liquidation reporting, and official updates from the LYDO/PCYDO office.",
+      "Y-TRACE is a youth organization compliance portal for Pasig City. It supports organization registration, compliance document submission, budget requests, liquidation reporting, templates, and official updates from the LYDO/PCYDO office.",
   },
   {
     question: "Who can create an account?",
@@ -26,17 +26,17 @@ const faqs = [
   {
     question: "How does document submission work?",
     answer:
-      "Go to Document Submission and upload a PDF (or XLSX for the members list) for each of the 6 required documents. An OCR scan runs automatically to help with review. Once you upload, the submission moves to admin review — you'll be notified if any file needs revision.",
+      "Go to Document Submission and upload the required file for each published document slot. Once a file is attached, it becomes available for admin review, and you will be notified if any document needs revision or has been approved.",
   },
   {
     question: "What happens after a budget request is approved?",
     answer:
-      "Once approved, your budget request moves to 'Approved for FTF'. You then submit a hard copy to the LYDO office and confirm it in the portal. After the office releases the budget, a liquidation report is automatically created for you to complete after your activity.",
+      "Once approved, your budget request moves to 'Submit Onsite'. You then submit the required hard copy to the LYDO office. After the office confirms release of funds, a liquidation report becomes available for you to complete after your activity.",
   },
   {
     question: "What is a liquidation report and when do I submit it?",
     answer:
-      "A liquidation report accounts for how the released budget was used. It is automatically created when your budget is approved. You can submit it after your activity is completed. There is a one-month deadline from the budget release date — watch the Notifications section for reminders.",
+      "A liquidation report accounts for how the released budget was used. It becomes available after the budget release process is completed. You submit it after your activity, and the deadline is based on the release timeline shown in the portal and notifications.",
   },
   {
     question: "Where do I see status updates and admin remarks?",
@@ -44,9 +44,14 @@ const faqs = [
       "Check the Notifications section for real-time updates on document approvals, revision requests, budget decisions, and liquidation reminders. The Compliance Status section gives you a full summary of your current standing.",
   },
   {
+    question: "Where can I download the official forms and templates?",
+    answer:
+      "Published templates are available from the public Templates page and inside the portal's Templates area. Document submission templates and other shared reference files will appear there once the admin uploads them.",
+  },
+  {
     question: "How do admins manage records?",
     answer:
-      "LYDO/PCYDO staff use a separate Admin Portal to review organization profiles, validate documents, approve or reject budget requests, monitor liquidation reports, manage document templates, and publish news and transparency posts.",
+      "LYDO/PCYDO staff use a separate Admin Portal to review organization profiles, validate documents, approve or reject budget requests, monitor liquidation reports, manage templates, and publish news and transparency updates.",
   },
 ];
 

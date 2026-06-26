@@ -18,6 +18,7 @@ import Contacts from "./pages/Contacts";
 import ResetPassword from "./pages/ResetPassword";
 import SiteMap from "./pages/SiteMap";
 import NewsReleaseRecord from "./pages/NewsReleaseRecord";
+import PublicTemplates from "./pages/PublicTemplates";
 import { usePolicyAgreement } from "./hooks/use-policy-agreement";
 import { TermsPrivacyAgreementModal } from "./components/TermsPrivacyAgreementModal";
 import UserPortal from "./user/UserPortal";
@@ -209,6 +210,7 @@ const App = () => (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />
                       )}
                       <Route path="/" element={<Index />} />
+                      <Route path="/public-templates" element={<PublicTemplates />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/faqs" element={<Faqs />} />
                       <Route path="/contacts" element={<Contacts />} />

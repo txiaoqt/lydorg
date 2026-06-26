@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCircle2, ClipboardList, FileText, Users, Wallet } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -17,7 +18,7 @@ const howItWorksSteps = [
     step: "02",
     icon: FileText,
     title: "Submit required documents",
-    description: "Upload the 6 compliance documents. Our OCR assistant pre-checks each file before admin review.",
+    description: "Upload the required compliance documents, monitor their status, and respond to admin revision requests when needed.",
   },
   {
     step: "03",
@@ -41,7 +42,19 @@ const trustBadges = [
 
 const Index = () => {
   const { isAuthenticated, role } = useAuth();
+  const { hash } = useLocation();
   const portalHref = isAuthenticated ? (role === "admin" ? "/admin" : "/dashboard") : "/signin";
+
+  useEffect(() => {
+    if (!hash) return;
+    const targetId = hash.replace("#", "");
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    const handle = window.requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(handle);
+  }, [hash]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -175,7 +188,7 @@ const Index = () => {
               {
                 icon: FileText,
                 title: "Document Submission",
-                description: "Upload the 6 required registration documents. OCR assistance checks your files before review.",
+                description: "Upload the required registration documents, attach replacement files when needed, and track each review result from the admin.",
               },
               {
                 icon: ClipboardList,
@@ -189,8 +202,8 @@ const Index = () => {
               },
               {
                 icon: Wallet,
-                title: "Transparency Board",
-                description: "View public financial disclosures and news releases from the LYDO office.",
+                title: "Templates & Updates",
+                description: "Download published templates and stay updated through official news releases from the LYDO office.",
               },
               {
                 icon: ArrowRight,

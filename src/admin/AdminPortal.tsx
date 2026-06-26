@@ -305,6 +305,11 @@ type PendingDeleteConfirmation =
       id: string;
       title: string;
       activityCount: number;
+    }
+  | {
+      kind: "ypop_city_activity";
+      id: string;
+      title: string;
     };
 
 type BudgetMonitoringEntry = {
@@ -374,6 +379,13 @@ type BarangayAllocationOrganizationDetail = {
 };
 
 type ActiveReportExport = "budget-requests" | "allocation-by-barangay" | null;
+type RecentActivityEntry = {
+  key: string;
+  title: string;
+  timestamp?: string;
+  note?: string;
+  dotClassName: string;
+};
 
 export default function AdminPortal({ section }: { section: string }) {
   const navigate = useNavigate();
@@ -489,6 +501,9 @@ export default function AdminPortal({ section }: { section: string }) {
   const [ypopPreviewCanInline, setYpopPreviewCanInline] = useState(false);
   const [ypopPreviewLoading, setYpopPreviewLoading] = useState(false);
   const [ypopEventReviewRemarksById, setYpopEventReviewRemarksById] = useState<Record<string, string>>({});
+  const [recentActivityDialogOpen, setRecentActivityDialogOpen] = useState(false);
+  const [recentActivityDialogTitle, setRecentActivityDialogTitle] = useState("Recent Activity");
+  const [recentActivityDialogEntries, setRecentActivityDialogEntries] = useState<RecentActivityEntry[]>([]);
 
   const profile = state.organizationProfiles[0] ?? null;
   const adminNotifications = state.notifications.filter((item) => item.userId === adminId);
@@ -579,6 +594,93 @@ export default function AdminPortal({ section }: { section: string }) {
     () => state.organizationProfiles.find((org) => org.id === selectedLiquidationReport?.organizationId) ?? null,
     [selectedLiquidationReport?.organizationId, state.organizationProfiles],
   );
+  const budgetRecentActivities = useMemo<RecentActivityEntry[]>(() => {
+    if (!selectedBudgetRequest) return [];
+    const historyEntries = (selectedBudgetRequest.revisionHistory ?? []).map((entry, idx) => {
+      const dotClassName =
+        entry.action === "needs_revision" || entry.action === "rejected_red"
+          ? "bg-rose-500"
+          : entry.action === "approved_for_ftf_green" ||
+              entry.action === "hard_copy_submitted" ||
+              entry.action === "budget_released" ||
+              entry.action === "completed"
+            ? "bg-emerald-500"
+            : "bg-amber-400";
+      const title =
+        entry.action === "needs_revision" ? "Revision Requested"
+        : entry.action === "rejected_red" ? "Rejected"
+        : entry.action === "approved_for_ftf_green" ? "Approved"
+        : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+        : entry.action === "budget_released" ? "Budget Released"
+        : entry.action === "completed" ? "Completed"
+        : entry.action.replaceAll("_", " ");
+      return {
+        key: `budget-history-${idx}-${entry.changedAt}`,
+        title,
+        timestamp: formatDateTimeLabel(entry.changedAt),
+        note: entry.adminRemarks ? `"${entry.adminRemarks}"` : undefined,
+        dotClassName,
+      };
+    });
+    return [
+      {
+        key: `budget-submitted-${selectedBudgetRequest.id}`,
+        title: "Submitted",
+        timestamp: formatDateTimeLabel(selectedBudgetRequest.createdAt),
+        dotClassName: "bg-muted-foreground/40",
+      },
+      ...historyEntries,
+      ...(selectedBudgetRequest.userNote
+        ? [
+            {
+              key: `budget-note-${selectedBudgetRequest.id}`,
+              title: "Message from organization",
+              note: `"${selectedBudgetRequest.userNote}"`,
+              dotClassName: "bg-sky-500",
+            },
+          ]
+        : []),
+    ];
+  }, [selectedBudgetRequest]);
+  const liquidationRecentActivities = useMemo<RecentActivityEntry[]>(() => {
+    if (!selectedLiquidationReport) return [];
+    const historyEntries = selectedLiquidationReport.revisionHistory.map((entry, idx) => {
+      const dotClassName =
+        entry.action === "overdue" || entry.action === "rejected_red"
+          ? "bg-rose-500"
+          : entry.action === "approved_for_ftf_green" ||
+              entry.action === "completed_liquidated" ||
+              entry.action === "hard_copy_submitted"
+            ? "bg-emerald-500"
+            : entry.action === "submitted"
+              ? "bg-muted-foreground/40"
+              : "bg-amber-400";
+      const title =
+        entry.action === "overdue" ? "Marked Overdue"
+        : entry.action === "needs_revision" ? "Revision Requested"
+        : entry.action === "approved_for_ftf_green" ? "Approved"
+        : entry.action === "submitted" ? "Submitted"
+        : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+        : entry.action === "completed_liquidated" ? "Liquidated"
+        : entry.action;
+      return {
+        key: `liquidation-history-${idx}-${entry.changedAt}`,
+        title,
+        timestamp: formatDateTimeLabel(entry.changedAt),
+        note: entry.adminRemarks ? `"${entry.adminRemarks}"` : undefined,
+        dotClassName,
+      };
+    });
+    return [
+      {
+        key: `liquidation-created-${selectedLiquidationReport.id}`,
+        title: "Report Created",
+        timestamp: formatDateTimeLabel(selectedLiquidationReport.createdAt),
+        dotClassName: "bg-muted-foreground/40",
+      },
+      ...historyEntries,
+    ];
+  }, [selectedLiquidationReport]);
   const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
   const formatShortDate = (value?: string | null) => {
     if (!value) return "Pending";
@@ -2802,12 +2904,14 @@ export default function AdminPortal({ section }: { section: string }) {
 
     setSavingNewsRelease(true);
     try {
+      const resolvedPreviewImageUrl = newsPreviewImageUrlDraft.trim();
+
       if (newsModalMode === "edit" && editingNewsReleaseId) {
         const updatedNewsRelease = await updateNewsReleaseInSupabase(editingNewsReleaseId, {
           title: newsTitleDraft,
           description: newsDescriptionDraft,
           facebookPostUrl: newsFacebookPostUrlDraft,
-          previewImageUrl: newsPreviewImageUrlDraft,
+          previewImageUrl: resolvedPreviewImageUrl,
           datePosted: newsDatePostedDraft,
           visibilityStatus: newsVisibilityDraft,
         });
@@ -2820,7 +2924,7 @@ export default function AdminPortal({ section }: { section: string }) {
           title: newsTitleDraft,
           description: newsDescriptionDraft,
           facebookPostUrl: newsFacebookPostUrlDraft,
-          previewImageUrl: newsPreviewImageUrlDraft,
+          previewImageUrl: resolvedPreviewImageUrl,
           datePosted: newsDatePostedDraft,
           visibilityStatus: newsVisibilityDraft,
         });
@@ -2881,6 +2985,13 @@ export default function AdminPortal({ section }: { section: string }) {
         return;
       }
 
+      if (pending.kind === "ypop_city_activity") {
+        try { await adminDeleteYpopCityActivityFromSupabase(pending.id); } catch { /* local-only fallback */ }
+        deleteYPOPCityActivity(pending.id);
+        toast({ title: "City-led activity deleted", description: `"${pending.title}" was removed successfully.` });
+        return;
+      }
+
       const post = transparencyPosts.find((entry) => entry.id === pending.id);
       if (!post) return;
       await deleteTransparencyPostInSupabase(pending.id);
@@ -2898,6 +3009,8 @@ export default function AdminPortal({ section }: { section: string }) {
             ? error.message
             : pending.kind === "news_release"
               ? "The news release could not be deleted."
+              : pending.kind === "ypop_city_activity"
+                ? "The city-led activity could not be deleted."
               : "The transparency post could not be deleted.",
         variant: "destructive",
       });
@@ -4097,49 +4210,32 @@ export default function AdminPortal({ section }: { section: string }) {
                   <SectionDivider />
 
                   <DetailSectionBlock label="Recent Activity">
-                    {(selectedBudgetRequest.revisionHistory?.length || selectedBudgetRequest.userNote) ? (
+                    {budgetRecentActivities.length ? (
                       <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-3">
-                        <div className="flex items-start gap-2.5">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium">Submitted</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(selectedBudgetRequest.createdAt)}</p>
-                          </div>
-                        </div>
-                        {(selectedBudgetRequest.revisionHistory ?? []).map((entry, idx) => {
-                          const dotColor =
-                            entry.action === "needs_revision" || entry.action === "rejected_red"
-                              ? "bg-rose-500"
-                              : entry.action === "approved_for_ftf_green" || entry.action === "hard_copy_submitted" || entry.action === "budget_released" || entry.action === "completed"
-                                ? "bg-emerald-500"
-                                : "bg-amber-400";
-                          const actionLabel =
-                            entry.action === "needs_revision" ? "Revision Requested"
-                            : entry.action === "rejected_red" ? "Rejected"
-                            : entry.action === "approved_for_ftf_green" ? "Approved"
-                            : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
-                            : entry.action === "budget_released" ? "Budget Released"
-                            : entry.action === "completed" ? "Completed"
-                            : entry.action.replaceAll("_", " ");
-                          return (
-                            <div key={idx} className="flex items-start gap-2.5">
-                              <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium">{actionLabel}</p>
-                                <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(entry.changedAt)}</p>
-                                {entry.adminRemarks ? <p className="mt-1 text-xs italic text-muted-foreground">"{entry.adminRemarks}"</p> : null}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {selectedBudgetRequest.userNote ? (
-                          <div className="flex items-start gap-2.5">
-                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                        {budgetRecentActivities.slice(0, 3).map((entry) => (
+                          <div key={entry.key} className="flex items-start gap-2.5">
+                            <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${entry.dotClassName}`} />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-sky-700">Message from organization</p>
-                              <p className="mt-1 text-xs italic text-muted-foreground">"{selectedBudgetRequest.userNote}"</p>
+                              <p className="text-sm font-medium">{entry.title}</p>
+                              {entry.timestamp ? <p className="mt-0.5 text-xs text-muted-foreground">{entry.timestamp}</p> : null}
+                              {entry.note ? <p className="mt-1 text-xs italic text-muted-foreground">{entry.note}</p> : null}
                             </div>
                           </div>
+                        ))}
+                        {budgetRecentActivities.length > 3 ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-0 text-sm text-primary hover:bg-transparent hover:text-primary/80"
+                            onClick={() => {
+                              setRecentActivityDialogTitle("Budget Request Activity");
+                              setRecentActivityDialogEntries(budgetRecentActivities);
+                              setRecentActivityDialogOpen(true);
+                            }}
+                          >
+                            View all recent activities
+                          </Button>
                         ) : null}
                       </div>
                     ) : (
@@ -4655,43 +4751,33 @@ export default function AdminPortal({ section }: { section: string }) {
                   <SectionDivider />
 
                   <DetailSectionBlock label="Recent Activity">
-                    {selectedLiquidationReport.revisionHistory?.length ? (
+                    {liquidationRecentActivities.length ? (
                       <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-3">
-                        <div className="flex items-start gap-2.5">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium">Report Created</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(selectedLiquidationReport.createdAt)}</p>
-                          </div>
-                        </div>
-                        {selectedLiquidationReport.revisionHistory.map((entry, idx) => {
-                          const liqDotColor =
-                            entry.action === "overdue" || entry.action === "rejected_red"
-                              ? "bg-rose-500"
-                              : entry.action === "approved_for_ftf_green" || entry.action === "completed_liquidated" || entry.action === "hard_copy_submitted"
-                                ? "bg-emerald-500"
-                                : entry.action === "submitted"
-                                  ? "bg-muted-foreground/40"
-                                  : "bg-amber-400";
-                          const liqActionLabel =
-                            entry.action === "overdue" ? "Marked Overdue"
-                            : entry.action === "needs_revision" ? "Revision Requested"
-                            : entry.action === "approved_for_ftf_green" ? "Approved"
-                            : entry.action === "submitted" ? "Submitted"
-                            : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
-                            : entry.action === "completed_liquidated" ? "Liquidated"
-                            : entry.action;
-                          return (
-                            <div key={idx} className="flex items-start gap-2.5">
-                              <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${liqDotColor}`} />
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium">{liqActionLabel}</p>
-                                <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTimeLabel(entry.changedAt)}</p>
-                                {entry.adminRemarks ? <p className="mt-1 text-xs italic text-muted-foreground">"{entry.adminRemarks}"</p> : null}
-                              </div>
+                        {liquidationRecentActivities.slice(0, 3).map((entry) => (
+                          <div key={entry.key} className="flex items-start gap-2.5">
+                            <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${entry.dotClassName}`} />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium">{entry.title}</p>
+                              {entry.timestamp ? <p className="mt-0.5 text-xs text-muted-foreground">{entry.timestamp}</p> : null}
+                              {entry.note ? <p className="mt-1 text-xs italic text-muted-foreground">{entry.note}</p> : null}
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
+                        {liquidationRecentActivities.length > 3 ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-0 text-sm text-primary hover:bg-transparent hover:text-primary/80"
+                            onClick={() => {
+                              setRecentActivityDialogTitle("Liquidation Activity");
+                              setRecentActivityDialogEntries(liquidationRecentActivities);
+                              setRecentActivityDialogOpen(true);
+                            }}
+                          >
+                            View all recent activities
+                          </Button>
+                        ) : null}
                       </div>
                     ) : (
                       <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground">
@@ -5131,8 +5217,10 @@ export default function AdminPortal({ section }: { section: string }) {
                                   <p className="max-w-full break-all text-xs text-muted-foreground/70">{news.facebookPostUrl}</p>
                                 )}
                                 {news.previewImageUrl ? (
-                                  <p className="max-w-full break-all text-xs text-muted-foreground/70">Preview image: {news.previewImageUrl}</p>
-                                ) : null}
+                                  <p className="max-w-full text-xs text-muted-foreground/70">Thumbnail uploaded and ready for public preview.</p>
+                                ) : (
+                                  <p className="max-w-full text-xs text-muted-foreground/70">No thumbnail link added yet.</p>
+                                )}
                               </div>
                               <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
                                 <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
@@ -5208,8 +5296,8 @@ export default function AdminPortal({ section }: { section: string }) {
                   <DialogTitle>{newsModalMode === "edit" ? "Edit News Release" : "Add News Release"}</DialogTitle>
                   <DialogDescription>
                     {newsModalMode === "edit"
-                      ? "Update the public news release details and source post link."
-                      : "Create a news release record that can be previewed on the public and admin sides."}
+                      ? "Update the public news release details, source post link, and thumbnail image link."
+                      : "Create a news release record with a source post link and optional thumbnail image link."}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -5237,18 +5325,30 @@ export default function AdminPortal({ section }: { section: string }) {
                       placeholder="https://facebook.com/..."
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-preview-image-url" className="text-sm font-medium">Thumbnail Image URL</label>
+                  <div className="space-y-3">
+                    <label htmlFor="news-release-preview-image-url" className="text-sm font-medium">Thumbnail Image Link</label>
                     <Input
                       id="news-release-preview-image-url"
                       name="newsReleasePreviewImageUrl"
                       value={newsPreviewImageUrlDraft}
                       onChange={(event) => setNewsPreviewImageUrlDraft(event.target.value)}
-                      placeholder="https://.../thumbnail.jpg"
+                      placeholder="https://example.com/thumbnail.jpg"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Optional. This image will be used as the thumbnail shown on the organization-side News Releases cards.
+                      Optional. Paste the public image link that should appear as the thumbnail on the organization-side News Releases cards.
                     </p>
+                    {newsPreviewImageUrlDraft.trim() ? (
+                      <div className="space-y-2 rounded-xl border border-border/70 bg-muted/10 p-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                          Thumbnail Preview
+                        </p>
+                        <img
+                          src={newsPreviewImageUrlDraft}
+                          alt="News release thumbnail preview"
+                          className="h-40 w-full rounded-lg border border-border/60 object-cover"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -7634,7 +7734,13 @@ export default function AdminPortal({ section }: { section: string }) {
                               <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0" onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, date: act.date, venue: act.venue, category: resolveYpopCityLedCategory(act.category, act.points) }); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive" onClick={() => { void adminDeleteYpopCityActivityFromSupabase(act.id).catch(() => {}); deleteYPOPCityActivity(act.id); }}>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive"
+                                onClick={() => setPendingDeleteConfirmation({ kind: "ypop_city_activity", id: act.id, title: act.name })}
+                              >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -8041,6 +8147,7 @@ export default function AdminPortal({ section }: { section: string }) {
     newsDescriptionDraft,
     newsFacebookPostUrlDraft,
     newsModalMode,
+    newsPreviewImageUrlDraft,
     newsReleases,
     newsTitleDraft,
     newsVisibilityDraft,
@@ -8174,6 +8281,34 @@ export default function AdminPortal({ section }: { section: string }) {
       >
         {activeContent}
       </PortalShell>
+      <Dialog open={recentActivityDialogOpen} onOpenChange={setRecentActivityDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{recentActivityDialogTitle}</DialogTitle>
+            <DialogDescription>
+              Full activity history for this record.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
+            {recentActivityDialogEntries.length ? (
+              recentActivityDialogEntries.map((entry) => (
+                <div key={entry.key} className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/10 p-3">
+                  <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${entry.dotClassName}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{entry.title}</p>
+                    {entry.timestamp ? <p className="mt-0.5 text-xs text-muted-foreground">{entry.timestamp}</p> : null}
+                    {entry.note ? <p className="mt-1 text-xs italic text-muted-foreground">{entry.note}</p> : null}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground">
+                No recent activity yet.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(selectedInquiry)} onOpenChange={(open) => (!open ? setSelectedInquiry(null) : undefined)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -8282,11 +8417,15 @@ export default function AdminPortal({ section }: { section: string }) {
                 ? "Delete News Release"
                 : pendingDeleteConfirmation?.kind === "ypop_period"
                 ? "Delete Semester"
+                : pendingDeleteConfirmation?.kind === "ypop_city_activity"
+                ? "Delete City-Led Activity"
                 : "Delete Transparency Post"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingDeleteConfirmation?.kind === "ypop_period"
                 ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This will also remove ${pendingDeleteConfirmation.activityCount} configured activit${pendingDeleteConfirmation.activityCount !== 1 ? "ies" : "y"}. This action cannot be undone.`
+                : pendingDeleteConfirmation?.kind === "ypop_city_activity"
+                ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
                 : pendingDeleteConfirmation
                 ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
                 : "This action cannot be undone."}

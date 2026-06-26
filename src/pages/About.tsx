@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 
 const workflows = [
   { icon: Users, title: "Organization Profile", description: "Register and maintain your org's details for admin verification." },
-  { icon: FileText, title: "Document Submission", description: "Upload the 6 required compliance documents with OCR-assisted review." },
+  { icon: FileText, title: "Document Submission", description: "Upload required compliance documents and track admin review results inside the portal." },
   { icon: Wallet, title: "Budget Requests", description: "Submit activity budgets, track approvals, and receive fund releases." },
   { icon: CalendarDays, title: "Liquidation Reports", description: "Account for released funds after your activity within the deadline." },
 ];
@@ -54,6 +54,8 @@ const About = () => {
                   Y-TRACE moves the entire compliance workflow online - from initial org registration
                   all the way through document review, budget approval, and liquidation - so both
                   organizations and LYDO staff always have a clear, up-to-date view of where things stand.
+                  It also gives organizations access to published templates, official announcements,
+                  and activity-related status updates in one place.
                 </p>
               </div>
 
@@ -95,12 +97,12 @@ const About = () => {
                   Leaders of registered youth organizations who manage the compliance process on behalf of their group.
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  {[
+                  {[ 
                     "Fill out and submit the organization profile",
-                    "Upload 6 required compliance documents",
+                    "Upload and manage required compliance documents",
                     "Submit and track activity budget requests",
                     "File liquidation reports after activities",
-                    "Receive notifications and admin remarks",
+                    "Download templates and receive notifications",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

@@ -34,6 +34,7 @@ const BUDGET_REQUEST_FILES_BUCKET = "budget-request-files";
 const LIQUIDATION_REPORT_FILES_BUCKET = "liquidation-report-files";
 const YPOP_FILES_BUCKET = "ypop-files";
 const MOVE_FILES_BUCKET = "move-files";
+const NEWS_RELEASE_IMAGES_BUCKET = "news-release-images";
 const STORAGE_URI_PREFIX = "storage://";
 
 type RequiredDocumentTypeRow = {
@@ -967,7 +968,7 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
 
   const { data: templateRows, error: templatesError } = await supabase!
     .from("required_document_types")
-    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,updated_at")
+    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -1644,6 +1645,50 @@ export const deleteBudgetRequestInSupabase = async (budgetRequestId: string) => 
   if (existingFiles.length) {
     await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
   }
+};
+
+const extractPublicStoragePath = (value: string, bucket: string) => {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
+    return decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+  } catch {
+    return null;
+  }
+};
+
+export const uploadNewsReleasePreviewImageToSupabase = async (file: File) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  getAuthenticatedAdminSession();
+
+  const safeFileName = sanitizeFileName(file.name);
+  const objectPath = `news-releases/${Date.now()}-${safeFileName}`;
+  const { error: uploadError } = await supabase.storage.from(NEWS_RELEASE_IMAGES_BUCKET).upload(objectPath, file, {
+    upsert: true,
+    contentType: file.type || "application/octet-stream",
+  });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data } = supabase.storage.from(NEWS_RELEASE_IMAGES_BUCKET).getPublicUrl(objectPath);
+  if (!data?.publicUrl) throw new Error("Failed to create the news release image URL.");
+  return data.publicUrl;
+};
+
+export const deleteNewsReleasePreviewImageFromSupabase = async (value: string) => {
+  if (!supabase || !value) return;
+  getAuthenticatedAdminSession();
+
+  const publicPath = extractPublicStoragePath(value, NEWS_RELEASE_IMAGES_BUCKET);
+  if (publicPath) {
+    await supabase.storage.from(NEWS_RELEASE_IMAGES_BUCKET).remove([publicPath]);
+    return;
+  }
+
+  await removeStorageObjects([value]);
 };
 
 export const createInquiryInSupabase = async (params: {
