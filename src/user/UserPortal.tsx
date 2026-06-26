@@ -143,6 +143,7 @@ import {
   deleteYpopFileFromSupabase,
   markNotificationReadInSupabase,
   markAllNotificationsReadInSupabase,
+  createAdminActivityLogInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import {
   buildStructuredOcrData,
@@ -1195,6 +1196,13 @@ export default function UserPortal({ section }: { section: string }) {
       });
 
       updateDocumentFile(submissionResult.file.id, submissionResult.file);
+      await createAdminActivityLogInSupabase({
+        organizationId: profile.id,
+        action: "document_uploaded",
+        relatedType: "document_submission",
+        relatedId: submissionResult.submissionId,
+        description: `${pendingDocumentScan.documentTypeName} submitted for admin review.`,
+      });
       const remoteSnapshot = await loadLydoConnectSupabaseState();
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
@@ -6270,7 +6278,7 @@ No activity yet.</p>
                   {canEditProof && (
                     <Button
                       type="button"
-                      disabled={!canSubmitProof || files.length === 0 || isSubmitting}
+                      disabled={!canSubmitProof || files.length === 0 || isSubmitting || participation.status === "pending_verification"}
                       onClick={() => void handleSubmitYpopEventProof(participation)}
                     >
                       {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : participation.status === "needs_revision" ? "Resubmit Proof" : "Submit Proof"}
