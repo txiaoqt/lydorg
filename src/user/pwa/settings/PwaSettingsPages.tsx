@@ -22,6 +22,14 @@ import { usePwaPreferences, type PwaPreferences } from "../hooks/usePwaPreferenc
 import { usePwaRuntimeStatus } from "../hooks/usePwaRuntimeStatus";
 import { PWA_ROUTES } from "../pwaRoutes";
 import { parseAppVersion } from "./appVersion";
+import {
+  DEFAULT_PWA_ACCENT_THEME,
+  PWA_ACCENT_THEME_GROUPS,
+  PWA_ACCENT_THEME_IDS,
+  PWA_ACCENT_THEMES,
+  type PwaAccentTheme,
+} from "../pwaAccentThemes";
+import { previewPwaAccentTheme } from "../hooks/usePwaPreferences";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Icon = typeof Bell;
@@ -164,12 +172,95 @@ export function PwaNotificationSettings() {
 
 export function PwaAppearanceSettings() {
   const { preferences, updatePreferences } = usePwaPreferences();
+  const { back } = usePwaNavigation();
+  const [selectedTheme, setSelectedTheme] = useState<PwaAccentTheme>(preferences.accentTheme);
+  const [saveError, setSaveError] = useState("");
   const update = <K extends keyof PwaPreferences>(key: K, value: PwaPreferences[K]) => updatePreferences({ [key]: value });
+
+  useEffect(() => {
+    setSelectedTheme(preferences.accentTheme);
+    previewPwaAccentTheme(null);
+    return () => previewPwaAccentTheme(null);
+  }, [preferences.accentTheme]);
+
+  const selectTheme = (theme: PwaAccentTheme) => {
+    setSaveError("");
+    setSelectedTheme(theme);
+    previewPwaAccentTheme(theme);
+  };
+
+  const saveAppearance = () => {
+    try {
+      updatePreferences({ accentTheme: selectedTheme });
+      previewPwaAccentTheme(null);
+      setSaveError("");
+      toast({ title: "Appearance updated." });
+    } catch {
+      previewPwaAccentTheme(null);
+      setSelectedTheme(preferences.accentTheme);
+      setSaveError("Appearance could not be saved on this device. Try again.");
+    }
+  };
+
+  const cancelAppearance = () => {
+    setSelectedTheme(preferences.accentTheme);
+    previewPwaAccentTheme(null);
+    back(PWA_ROUTES.settings);
+  };
+
   return (
     <div className="pwa-stack">
       <section className="pwa-card pwa-settings-note">
         <strong>Theme</strong>
         <p>Y-TRACE currently uses its supported light application theme. Dark mode is not offered until every workflow and document viewer supports it completely.</p>
+      </section>
+      <section className="pwa-app-color-section" aria-labelledby="pwa-app-color-title">
+        <div className="pwa-app-color-heading">
+          <h2 id="pwa-app-color-title">App Color</h2>
+          <p>Choose the accent color used throughout the Y-TRACE app.</p>
+        </div>
+        <div className="pwa-theme-groups" role="radiogroup" aria-labelledby="pwa-app-color-title">
+          {PWA_ACCENT_THEME_GROUPS.map((group) => {
+            const themes = PWA_ACCENT_THEME_IDS.filter((theme) => PWA_ACCENT_THEMES[theme].group === group);
+            return (
+              <section key={group} className="pwa-theme-group" aria-labelledby={`pwa-theme-group-${group}`}>
+                <h3 id={`pwa-theme-group-${group}`}>{group}</h3>
+                <div className="pwa-theme-grid">
+                  {themes.map((theme) => {
+                    const preset = PWA_ACCENT_THEMES[theme];
+                    const checked = selectedTheme === theme;
+                    return (
+                      <button
+                        key={theme}
+                        type="button"
+                        role="radio"
+                        aria-checked={checked}
+                        className={`pwa-theme-card ${checked ? "is-selected" : ""}`}
+                        onClick={() => selectTheme(theme)}
+                      >
+                        <span className="pwa-theme-card-top">
+                          <span className="pwa-theme-name"><i style={{ background: preset.accent }} aria-hidden="true" />{preset.label}</span>
+                          {checked ? <Check aria-hidden="true" /> : null}
+                        </span>
+                        <span className="pwa-theme-preview" style={{ background: preset.background, borderColor: preset.borderTint }}>
+                          <span style={{ background: preset.accent, color: preset.onAccent }}>Button</span>
+                          <i style={{ background: preset.soft, borderColor: preset.muted }} aria-hidden="true" />
+                          <b style={{ background: preset.accent }} aria-hidden="true" />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      </section>
+      {saveError ? <p className="pwa-settings-error" role="alert">{saveError}</p> : null}
+      <section className="pwa-appearance-actions" aria-label="Appearance actions">
+        <button type="button" className="pwa-primary-button" onClick={saveAppearance}>Save Appearance</button>
+        <button type="button" className="pwa-secondary-button" onClick={cancelAppearance}>Cancel</button>
+        <button type="button" className="pwa-text-button" onClick={() => selectTheme(DEFAULT_PWA_ACCENT_THEME)}>Reset to Pasig Blue</button>
       </section>
       <ChoiceGroup
         label="Text size"

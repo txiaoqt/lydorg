@@ -15,6 +15,8 @@ import {
   PWA_ENTRY_ROUTE,
   pwaAuthRoute,
 } from "@/user/pwa/pwaAuthFlow";
+import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
+import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 
 const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -30,6 +32,7 @@ const VerifyEmail = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isInitialized } = useAuth();
   const pwaFlow = isPwaAuthFlow(location.search);
+  const pwaTheme = readPwaPreferences().accentTheme;
   const email = useMemo(() => {
     const stateEmail = (location.state as VerifyEmailLocationState | null)?.email;
     const storedEmail =
@@ -144,7 +147,11 @@ const VerifyEmail = () => {
   };
 
   return (
-    <div className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground`}>
+    <div
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground`}
+      data-pwa-theme={pwaFlow ? pwaTheme : undefined}
+      style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
+    >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />

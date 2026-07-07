@@ -3,9 +3,10 @@ import { useLocation } from "react-router-dom";
 import { PwaHeader } from "./PwaHeader";
 import { PwaBottomNavigation } from "./PwaBottomNavigation";
 import { usePwaNavigation } from "./hooks/usePwaNavigation";
-import { usePwaPreferences } from "./hooks/usePwaPreferences";
+import { usePwaActiveAccentTheme, usePwaPreferences } from "./hooks/usePwaPreferences";
 import { usePwaRuntimeStatus } from "./hooks/usePwaRuntimeStatus";
 import { getPwaParentRoute, PWA_ROUTES } from "./pwaRoutes";
+import { getPwaThemeStyle } from "./pwaAccentThemes";
 
 export function PwaAppShell({
   title,
@@ -25,6 +26,7 @@ export function PwaAppShell({
   const { go, back } = usePwaNavigation();
   const { pathname } = useLocation();
   const { preferences } = usePwaPreferences();
+  const activeTheme = usePwaActiveAccentTheme(preferences.accentTheme);
   const runtime = usePwaRuntimeStatus();
 
   const identityHeaderRoutes = new Set([
@@ -66,12 +68,16 @@ export function PwaAppShell({
   }, [preferences.reduceMotion, preferences.textSize]);
 
   return (
-    <div className={[
+    <div
+      className={[
       "ytrace-pwa-app",
       "pwa-authenticated-app",
       preferences.increaseContrast ? "pwa-high-contrast" : "",
       preferences.underlineLinks ? "pwa-underline-links" : "",
-    ].filter(Boolean).join(" ")}>
+    ].filter(Boolean).join(" ")}
+      data-pwa-theme={activeTheme}
+      style={getPwaThemeStyle(activeTheme)}
+    >
       <div className={`pwa-app-frame pwa-shell-width-${contentWidth} ${pageHasInlineBackButton ? "pwa-app-frame--headerless" : ""}`}>
         {!pageHasInlineBackButton ? (
           <PwaHeader

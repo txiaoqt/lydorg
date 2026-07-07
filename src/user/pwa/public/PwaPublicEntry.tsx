@@ -18,6 +18,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { PwaContactPage, PwaFaqPage, PwaLegalPage } from "../PwaInformationPages";
 import PwaInitialLoadingScreen from "../PwaInitialLoadingScreen";
 import { useInstalledUserPwa } from "../hooks/useInstalledUserPwa";
+import { usePwaActiveAccentTheme, usePwaPreferences } from "../hooks/usePwaPreferences";
+import { getPwaThemeStyle } from "../pwaAccentThemes";
 import {
   beginPwaAuthFlow,
   PWA_ENTRY_ROUTE,
@@ -46,8 +48,14 @@ function PwaPublicShell({
   welcome?: boolean;
 }) {
   const navigate = useNavigate();
+  const { preferences } = usePwaPreferences();
+  const activeTheme = usePwaActiveAccentTheme(preferences.accentTheme);
   return (
-    <div className={`ytrace-pwa-app pwa-public-app ${welcome ? "is-welcome" : ""}`}>
+    <div
+      className={`ytrace-pwa-app pwa-public-app ${welcome ? "is-welcome" : ""}`}
+      data-pwa-theme={activeTheme}
+      style={getPwaThemeStyle(activeTheme)}
+    >
       <header className={`pwa-public-header ${welcome ? "is-utility-only" : ""}`}>
         {!welcome ? (
           <button

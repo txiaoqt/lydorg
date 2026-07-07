@@ -14,12 +14,15 @@ import {
   PWA_ENTRY_ROUTE,
   pwaAuthRoute,
 } from "@/user/pwa/pwaAuthFlow";
+import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
+import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
 const ResetPassword = () => {
   const location = useLocation();
   const pwaFlow = isPwaAuthFlow(location.search);
+  const pwaTheme = readPwaPreferences().accentTheme;
   const recovery = useMemo(
     () => parsePasswordRecoveryUrl(typeof window === "undefined" ? "/reset-password" : window.location.href),
     [],
@@ -172,7 +175,11 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground`}>
+    <div
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground`}
+      data-pwa-theme={pwaFlow ? pwaTheme : undefined}
+      style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
+    >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />

@@ -16,6 +16,8 @@ import {
   PWA_ENTRY_ROUTE,
   pwaAuthRoute,
 } from "@/user/pwa/pwaAuthFlow";
+import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
+import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 
 type SignInProps = {
   forcedMode?: "user" | "admin";
@@ -40,6 +42,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const pwaFlow = isPwaAuthFlow(location.search);
+  const pwaTheme = readPwaPreferences().accentTheme;
   const { signIn, isAuthenticated, isInitialized, role } = useAuth();
   const useSupabaseAuth = Boolean(supabase);
   const roleSelectionEnabled = !pwaFlow && !forcedMode && !IS_ADMIN_SURFACE && !IS_USER_SURFACE;
@@ -98,7 +101,11 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   };
 
   return (
-    <div className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}>
+    <div
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}
+      data-pwa-theme={pwaFlow ? pwaTheme : undefined}
+      style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
+    >
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-180px] left-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
