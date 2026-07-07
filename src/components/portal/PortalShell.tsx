@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BrandLogo from "@/components/BrandLogo";
@@ -39,6 +39,7 @@ export const PortalShell = ({
 }: PortalShellProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.classList.add("portal-shell-active");
@@ -49,6 +50,10 @@ export const PortalShell = ({
       document.body.classList.remove("portal-shell-active");
     };
   }, []);
+
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [activeId]);
 
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
     <div className={cn("flex h-full flex-col", mobile ? "w-full min-w-0" : "w-[18rem] min-w-[18rem]")}>
@@ -177,7 +182,7 @@ export const PortalShell = ({
 
         {/* Main content */}
         <main className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
+          <div ref={contentScrollRef} className="flex-1 overflow-y-auto">
             <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
                 <div className="flex min-w-0 items-center gap-3">

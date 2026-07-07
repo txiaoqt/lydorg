@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { StatusBadge } from "@/components/portal/StatusBadge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,13 +47,6 @@ const ticketFilterOptions: Array<{ value: TicketViewFilter; label: string }> = [
   { value: "received", label: "Received" },
   { value: "closed", label: "Closed" },
 ];
-
-const statusBadgeClasses: Record<TicketStatus, string> = {
-  received: "border-warning/35 bg-warning/10 text-warning",
-  in_progress: "border-info/35 bg-info/10 text-info",
-  resolved: "border-success/35 bg-success/10 text-success",
-  closed: "border-border bg-muted text-muted-foreground",
-};
 
 const formatStatus = (value: TicketStatus | string) =>
   value
@@ -449,11 +443,7 @@ export default function YouthDesk() {
                       <span className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 font-mono text-xs sm:text-sm font-semibold tracking-wide text-foreground">
                         {ticket.referenceNo}
                       </span>
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusBadgeClasses[ticket.status]}`}
-                      >
-                        {formatStatus(ticket.status)}
-                      </span>
+                      <StatusBadge status={ticket.status} />
                     </div>
 
                     <p className="mt-3 text-sm font-semibold text-foreground leading-snug">{ticket.subject}</p>

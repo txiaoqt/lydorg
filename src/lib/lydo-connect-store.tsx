@@ -13,8 +13,6 @@ import {
   type LiquidationReport,
   type LiquidationReportFile,
   type LydoSeedState,
-  type MOVEApplication,
-  type MOVEFile,
   type NewsRelease,
   type NotificationRecord,
   type InquiryRecord,
@@ -93,6 +91,7 @@ type LydoConnectContextValue = {
   removeTemplate: (id: string) => void;
   updateOrganizationProfile: (id: string, patch: UpdatePatch<OrganizationProfile>) => void;
   upsertOrganizationProfile: (profile: OrganizationProfile) => void;
+  removeOrganizationAccountFromCache: (organizationId: string) => void;
   updateDocumentSubmission: (id: string, patch: UpdatePatch<DocumentSubmission>) => void;
   updateDocumentFile: (id: string, patch: UpdatePatch<SubmissionFile>) => void;
   createBudgetRequest: (budgetRequest: BudgetRequest) => void;
@@ -141,11 +140,6 @@ type LydoConnectContextValue = {
   createYPOPPeriod: (period: YPOPPeriod) => void;
   updateYPOPPeriod: (id: string, patch: UpdatePatch<YPOPPeriod>) => void;
   deleteYPOPPeriod: (id: string) => void;
-  createMoveApplication: (application: MOVEApplication) => void;
-  updateMoveApplication: (id: string, patch: UpdatePatch<MOVEApplication>) => void;
-  deleteMoveApplication: (id: string) => void;
-  createMoveFile: (file: MOVEFile) => void;
-  deleteMoveFile: (id: string) => void;
 };
 
 const LydoConnectContext = createContext<LydoConnectContextValue | undefined>(undefined);
@@ -272,12 +266,6 @@ const readState = (): LydoConnectState => {
         const storedIds = new Set(stored.map((p) => p.id));
         return [...stored, ...seedState.ypopPeriods.filter((p) => !storedIds.has(p.id) && !legacySeedIds.has(p.id))];
       })(),
-      moveApplications: (() => {
-        const stored = ((parsed.moveApplications ?? []) as MOVEApplication[]).filter((application) => !legacySeedIds.has(application.id));
-        const storedIds = new Set(stored.map((application) => application.id));
-        return [...stored, ...seedState.moveApplications.filter((application) => !storedIds.has(application.id) && !legacySeedIds.has(application.id))];
-      })(),
-      moveFiles: ((parsed.moveFiles ?? seedState.moveFiles) as MOVEFile[]).filter((file) => !legacySeedIds.has(file.id)),
     };
   } catch {
     return seedState;
@@ -385,10 +373,6 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           ypopEventFiles: snapshot.ypopEventFiles ? mergeById(current.ypopEventFiles, snapshot.ypopEventFiles) : current.ypopEventFiles,
           ypopOrgActivities: snapshot.ypopOrgActivities ? mergeById(current.ypopOrgActivities, snapshot.ypopOrgActivities) : current.ypopOrgActivities,
           ypopOrgActivityFiles: snapshot.ypopOrgActivityFiles ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles) : current.ypopOrgActivityFiles,
-          moveApplications: snapshot.moveApplications
-            ? mergeById(current.moveApplications, snapshot.moveApplications)
-            : current.moveApplications,
-          moveFiles: snapshot.moveFiles ? mergeById(current.moveFiles, snapshot.moveFiles) : current.moveFiles,
         }));
       } catch (error) {
         console.error("Failed to sync Y-TRACE state from Supabase:", error);
@@ -446,12 +430,6 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           const mergedYpopOrgActivityFiles = snapshot.ypopOrgActivityFiles
             ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles)
             : current.ypopOrgActivityFiles;
-          const mergedMoveApplications = snapshot.moveApplications
-            ? mergeById(current.moveApplications, snapshot.moveApplications)
-            : current.moveApplications;
-          const mergedMoveFiles = snapshot.moveFiles
-            ? mergeById(current.moveFiles, snapshot.moveFiles)
-            : current.moveFiles;
           const mergedInquiries = snapshot.inquiries ? mergeById(current.inquiries, snapshot.inquiries) : current.inquiries;
 
           return {
@@ -462,8 +440,6 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             ypopEventFiles: mergedYpopEventFiles,
             ypopOrgActivities: mergedYpopOrgActivities,
             ypopOrgActivityFiles: mergedYpopOrgActivityFiles,
-            moveApplications: mergedMoveApplications,
-            moveFiles: mergedMoveFiles,
             inquiries: mergedInquiries,
           };
         }),
@@ -837,43 +813,123 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       deleteYPOPPeriod: (id) =>
         setState((current) => {
           const period = current.ypopPeriods.find((p) => p.id === id);
+          const entryIds = new Set(
+            period
+              ? current.ypopEntries
+                .filter((entry) => entry.semester === period.semesterKey)
+                .map((entry) => entry.id)
+              : [],
+          );
+          const cityActivityIds = new Set(
+            period
+              ? current.ypopCityActivities
+                .filter((activity) => activity.semesterKey === period.semesterKey)
+                .map((activity) => activity.id)
+              : [],
+          );
+          const participationIds = new Set(
+            current.ypopEventParticipations
+              .filter((participation) => cityActivityIds.has(participation.activityId))
+              .map((participation) => participation.id),
+          );
+          const orgActivityIds = new Set(
+            current.ypopOrgActivities
+              .filter((activity) => entryIds.has(activity.ypopEntryId))
+              .map((activity) => activity.id),
+          );
           return {
             ...current,
             ypopPeriods: removeById(current.ypopPeriods, id),
             ypopCityActivities: period
               ? current.ypopCityActivities.filter((a) => a.semesterKey !== period.semesterKey)
               : current.ypopCityActivities,
+            ypopEntries: current.ypopEntries.filter((entry) => !entryIds.has(entry.id)),
+            ypopFiles: current.ypopFiles.filter((file) => !entryIds.has(file.ypopEntryId)),
+            ypopEventParticipations: current.ypopEventParticipations.filter(
+              (participation) => !participationIds.has(participation.id),
+            ),
+            ypopEventFiles: current.ypopEventFiles.filter(
+              (file) => !participationIds.has(file.participationId),
+            ),
+            ypopOrgActivities: current.ypopOrgActivities.filter(
+              (activity) => !orgActivityIds.has(activity.id),
+            ),
+            ypopOrgActivityFiles: current.ypopOrgActivityFiles.filter(
+              (file) => !orgActivityIds.has(file.orgActivityId),
+            ),
           };
         }),
-      createMoveApplication: (application) =>
-        setState((current) => ({
-          ...current,
-          moveApplications: [application, ...current.moveApplications],
-        })),
-      updateMoveApplication: (id, patch) =>
-        setState((current) => ({
-          ...current,
-          moveApplications: applyPatch(current.moveApplications, id, patch).map((application) => ({
-            ...application,
-            updatedAt: application.id === id ? new Date().toISOString() : application.updatedAt,
-          })),
-        })),
-      deleteMoveApplication: (id) =>
-        setState((current) => ({
-          ...current,
-          moveApplications: removeById(current.moveApplications, id),
-          moveFiles: current.moveFiles.filter((file) => file.applicationId !== id),
-        })),
-      createMoveFile: (file) =>
-        setState((current) => ({
-          ...current,
-          moveFiles: [file, ...current.moveFiles],
-        })),
-      deleteMoveFile: (id) =>
-        setState((current) => ({
-          ...current,
-          moveFiles: removeById(current.moveFiles, id),
-        })),
+      removeOrganizationAccountFromCache: (organizationId) =>
+        setState((current) => {
+          const documentSubmissionIds = new Set(
+            current.documentSubmissions
+              .filter((submission) => submission.organizationId === organizationId)
+              .map(({ id }) => id),
+          );
+          const budgetRequestIds = new Set(
+            current.budgetRequests
+              .filter((request) => request.organizationId === organizationId)
+              .map(({ id }) => id),
+          );
+          const liquidationReportIds = new Set(
+            current.liquidationReports
+              .filter((report) => report.organizationId === organizationId)
+              .map(({ id }) => id),
+          );
+
+          return {
+            ...current,
+            organizationProfiles: current.organizationProfiles.filter(({ id }) => id !== organizationId),
+            documentSubmissions: current.documentSubmissions.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            documentSubmissionFiles: current.documentSubmissionFiles.filter(
+              ({ submissionId }) => !documentSubmissionIds.has(submissionId),
+            ),
+            budgetRequests: current.budgetRequests.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            budgetRequestFiles: current.budgetRequestFiles.filter(
+              ({ budgetRequestId }) => !budgetRequestIds.has(budgetRequestId),
+            ),
+            liquidationReports: current.liquidationReports.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            liquidationReportFiles: current.liquidationReportFiles.filter(
+              ({ liquidationReportId }) => !liquidationReportIds.has(liquidationReportId),
+            ),
+            complianceRemarks: current.complianceRemarks.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            notifications: current.notifications.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            activityLogs: current.activityLogs.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            inquiries: current.inquiries.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            ypopEntries: current.ypopEntries.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            ypopFiles: current.ypopFiles.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            ypopEventParticipations: current.ypopEventParticipations.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            ypopEventFiles: current.ypopEventFiles.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            ypopOrgActivities: current.ypopOrgActivities.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+            ypopOrgActivityFiles: current.ypopOrgActivityFiles.filter(
+              ({ organizationId: ownerId }) => ownerId !== organizationId,
+            ),
+          };
+        }),
     }),
     [state],
   );

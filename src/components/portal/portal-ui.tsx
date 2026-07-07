@@ -1,16 +1,15 @@
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { statusLabelMap, statusToneMap } from "@/lib/lydo-connect-data";
+import { StatusBadge } from "@/components/portal/StatusBadge";
 
 const portalIconToneMap = {
-  primary: "border-primary/15 bg-primary/10 text-primary",
-  sky: "border-sky-500/15 bg-sky-500/10 text-sky-600",
+  primary: "border-primary/15 bg-primary-soft text-primary",
+  sky: "border-primary/15 bg-primary-soft text-primary",
   emerald: "border-emerald-500/15 bg-emerald-500/10 text-emerald-600",
   amber: "border-amber-500/15 bg-amber-500/10 text-amber-600",
   orange: "border-orange-500/15 bg-orange-500/10 text-orange-600",
   red: "border-red-500/15 bg-red-500/10 text-red-600",
-  violet: "border-violet-500/15 bg-violet-500/10 text-violet-600",
+  violet: "border-primary/15 bg-primary-soft text-primary",
 } as const;
 
 type PortalIconTone = keyof typeof portalIconToneMap;
@@ -50,11 +49,7 @@ export const PortalIconBadge = ({
   );
 };
 
-export const PortalStatusBadge = ({ status }: { status: string }) => (
-  <Badge variant={statusToneMap[status] ?? "secondary"} className="capitalize">
-    {statusLabelMap[status] ?? status.replaceAll("_", " ")}
-  </Badge>
-);
+export const PortalStatusBadge = StatusBadge;
 
 export const PortalMetricCard = ({
   label,
@@ -111,17 +106,20 @@ export const PortalSection = ({
   description,
   children,
   action,
+  headerClassName,
 }: {
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   children: React.ReactNode;
   action?: React.ReactNode;
+  headerClassName?: string;
 }) => (
   <Card className="border-border/70 bg-card/90 shadow-sm">
     <CardHeader
       className={cn(
         "gap-2 px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-6 sm:gap-4",
         action ? "flex flex-col sm:flex-row sm:items-start sm:justify-between" : "block",
+        headerClassName,
       )}
     >
       <div className="min-w-0">

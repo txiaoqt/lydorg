@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { hasPublishablePolicyContent } from "@/lib/ytrace-policy";
 
 export type ActivePolicyVersion = {
   id: string;
@@ -51,6 +52,13 @@ export const usePolicyAgreement = ({ userId, enabled }: UsePolicyAgreementParams
     }
 
     if (!policy) {
+      setActivePolicy(null);
+      setIsRequired(false);
+      setIsChecking(false);
+      return;
+    }
+
+    if (!hasPublishablePolicyContent(policy.terms_content, policy.privacy_content)) {
       setActivePolicy(null);
       setIsRequired(false);
       setIsChecking(false);

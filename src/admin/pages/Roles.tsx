@@ -240,7 +240,7 @@ export const Roles = () => {
         <button
           type="button"
           onClick={openCreateModal}
-          className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary/90 transition-all"
+          className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary-hover active:bg-primary-active transition-all"
         >
           <Plus size={20} />
           Create Role

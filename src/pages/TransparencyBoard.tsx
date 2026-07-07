@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, CircleX, FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/portal/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { fetchComplianceBoardData, fetchMonthlyComplianceData, type ComplianceBoardRow } from "@/lib/data-api";
@@ -31,17 +31,7 @@ const statusIcon = (state: DocState) => {
 
 const statusBadge = (remarks: string) => {
   const partial = remarks.toLowerCase().includes("partially");
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-        partial
-          ? "bg-warning/15 text-warning border border-warning/40"
-          : "bg-success/12 text-success border border-success/30"
-      }`}
-    >
-      {remarks}
-    </span>
-  );
+  return <StatusBadge status={partial ? "partial" : "compliant"} label={remarks} size="md" />;
 };
 
 const docIcon = (state: SubmissionState) => {
@@ -68,10 +58,7 @@ const computeMonthlyStatus = (item: MonthlyComplianceItem): MonthlyOverallStatus
 };
 
 const monthlyStatusBadge = (status: MonthlyOverallStatus) => {
-  if (status === "Completed") return <Badge className="bg-success text-success-foreground">Completed</Badge>;
-  if (status === "Late") return <Badge variant="outline" className="border-destructive text-destructive">Late</Badge>;
-  if (status === "Due Soon") return <Badge variant="outline" className="border-warning text-warning">Due Soon</Badge>;
-  return <Badge variant="outline" className="border-primary text-primary">Open</Badge>;
+  return <StatusBadge status={status} />;
 };
 
 const completionScore = (submissions: Record<MonthlyDocKey, SubmissionState>) => {
@@ -82,51 +69,115 @@ const completionScore = (submissions: Record<MonthlyDocKey, SubmissionState>) =>
 type MonthlyComputedRow = MonthlyComplianceItem & { overallStatus: MonthlyOverallStatus; completion: number };
 
 const MonthlyTable = ({ rows, showMonth = true }: { rows: MonthlyComputedRow[]; showMonth?: boolean }) => (
-  <div className="overflow-x-auto">
-    <table className="w-full min-w-[920px] text-xs sm:text-sm">
-      <thead>
-        <tr className="bg-muted/60 border-b">
-          {showMonth ? <th className="px-4 py-3 text-left font-semibold">Month</th> : null}
-          <th className="px-3 sm:px-4 py-3 text-left font-semibold">Barangay</th>
-          <th className="px-3 sm:px-4 py-3 text-left font-semibold">Due Date</th>
-          <th className="px-4 py-3 text-center font-semibold">MFR</th>
-          <th className="px-4 py-3 text-center font-semibold">MIL</th>
-          <th className="px-4 py-3 text-center font-semibold">RCB</th>
-          <th className="px-4 py-3 text-center font-semibold">Accomplishment</th>
-          <th className="px-4 py-3 text-center font-semibold">Youth Census</th>
-          <th className="px-4 py-3 text-center font-semibold">Completion</th>
-          <th className="px-4 py-3 text-center font-semibold">Overall Status</th>
-          <th className="px-4 py-3 text-center font-semibold">Report</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr key={`${row.month}-${row.barangay}`} className="border-b last:border-b-0">
-            {showMonth ? <td className="px-3 sm:px-4 py-3">{row.month}</td> : null}
-            <td className="px-3 sm:px-4 py-3 font-medium">{row.barangay}</td>
-            <td className="px-3 sm:px-4 py-3">{row.dueDate}</td>
-            <td className="px-4 py-3 text-center">{docIcon(row.submissions.mfr)}</td>
-            <td className="px-4 py-3 text-center">{docIcon(row.submissions.mil)}</td>
-            <td className="px-4 py-3 text-center">{docIcon(row.submissions.rcb)}</td>
-            <td className="px-4 py-3 text-center">{docIcon(row.submissions.accomplishment)}</td>
-            <td className="px-4 py-3 text-center">{docIcon(row.submissions.census)}</td>
-            <td className="px-4 py-3 text-center font-semibold">{row.completion}%</td>
-            <td className="px-4 py-3 text-center">{monthlyStatusBadge(row.overallStatus)}</td>
-            <td className="px-4 py-3 text-center">
-              {row.reportPdf ? (
-                <a href={row.reportPdf} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
-                  <FileText className="h-4 w-4" />
-                  PDF
-                </a>
-              ) : (
-                <span className="text-muted-foreground">N/A</span>
-              )}
-            </td>
+  <>
+    <div className="space-y-3 p-4 md:hidden">
+      {rows.map((row) => (
+        <article key={`${row.month}-${row.barangay}`} className="rounded-xl border border-border/70 bg-background p-4 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="break-words text-base font-semibold text-foreground">{row.barangay}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {showMonth ? `${row.month} - ` : ""}Due {row.dueDate}
+              </p>
+            </div>
+            <div className="shrink-0">{monthlyStatusBadge(row.overallStatus)}</div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {showMonth ? (
+              <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Month</p>
+                <p className="mt-1 text-sm font-medium text-foreground">{row.month}</p>
+              </div>
+            ) : null}
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Completion</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{row.completion}%</p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">MFR</p>
+              <div className="mt-1">{docIcon(row.submissions.mfr)}</div>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">MIL</p>
+              <div className="mt-1">{docIcon(row.submissions.mil)}</div>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">RCB</p>
+              <div className="mt-1">{docIcon(row.submissions.rcb)}</div>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Accomplishment</p>
+              <div className="mt-1">{docIcon(row.submissions.accomplishment)}</div>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Youth Census</p>
+              <div className="mt-1">{docIcon(row.submissions.census)}</div>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Report</p>
+              <div className="mt-1 text-sm">
+                {row.reportPdf ? (
+                  <a href={row.reportPdf} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <FileText className="h-4 w-4" />
+                    PDF
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">N/A</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <div className="hidden md:block">
+      <table className="w-full text-xs sm:text-sm">
+        <thead>
+          <tr className="border-b bg-muted/60">
+            {showMonth ? <th className="px-4 py-3 text-left font-semibold">Month</th> : null}
+            <th className="px-3 py-3 text-left font-semibold sm:px-4">Barangay</th>
+            <th className="px-3 py-3 text-left font-semibold sm:px-4">Due Date</th>
+            <th className="px-4 py-3 text-center font-semibold">MFR</th>
+            <th className="px-4 py-3 text-center font-semibold">MIL</th>
+            <th className="px-4 py-3 text-center font-semibold">RCB</th>
+            <th className="px-4 py-3 text-center font-semibold">Accomplishment</th>
+            <th className="px-4 py-3 text-center font-semibold">Youth Census</th>
+            <th className="px-4 py-3 text-center font-semibold">Completion</th>
+            <th className="px-4 py-3 text-center font-semibold">Overall Status</th>
+            <th className="px-4 py-3 text-center font-semibold">Report</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={`${row.month}-${row.barangay}`} className="border-b last:border-b-0">
+              {showMonth ? <td className="px-3 py-3 sm:px-4">{row.month}</td> : null}
+              <td className="px-3 py-3 font-medium sm:px-4">{row.barangay}</td>
+              <td className="px-3 py-3 sm:px-4">{row.dueDate}</td>
+              <td className="px-4 py-3 text-center">{docIcon(row.submissions.mfr)}</td>
+              <td className="px-4 py-3 text-center">{docIcon(row.submissions.mil)}</td>
+              <td className="px-4 py-3 text-center">{docIcon(row.submissions.rcb)}</td>
+              <td className="px-4 py-3 text-center">{docIcon(row.submissions.accomplishment)}</td>
+              <td className="px-4 py-3 text-center">{docIcon(row.submissions.census)}</td>
+              <td className="px-4 py-3 text-center font-semibold">{row.completion}%</td>
+              <td className="px-4 py-3 text-center">{monthlyStatusBadge(row.overallStatus)}</td>
+              <td className="px-4 py-3 text-center">
+                {row.reportPdf ? (
+                  <a href={row.reportPdf} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <FileText className="h-4 w-4" />
+                    PDF
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">N/A</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </>
 );
 
 export default function TransparencyBoard() {

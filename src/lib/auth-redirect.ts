@@ -1,4 +1,5 @@
 const AUTH_CALLBACK_PATH = "/auth/callback";
+const PASSWORD_RESET_PATH = "/reset-password";
 
 const cleanUrl = (value: unknown) => {
   if (typeof value !== "string") return "";
@@ -10,16 +11,39 @@ const joinUrl = (origin: string, path: string) => {
   return `${normalizedOrigin}${path}`;
 };
 
-export const getAuthCallbackUrl = () => {
+const withPwaAuthMarker = (value: string, pwaFlow: boolean) => {
+  if (!pwaFlow) return value;
+  try {
+    const url = new URL(value, typeof window !== "undefined" ? window.location.origin : "https://ytrace.local");
+    url.searchParams.set("pwa", "1");
+    if (/^https?:/i.test(value)) return url.toString();
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return value;
+  }
+};
+
+export const getAuthCallbackUrl = (options?: { pwaFlow?: boolean }) => {
   const explicitRedirectUrl = cleanUrl(import.meta.env.VITE_AUTH_REDIRECT_URL);
-  if (explicitRedirectUrl) return explicitRedirectUrl;
+  if (explicitRedirectUrl) return withPwaAuthMarker(explicitRedirectUrl, Boolean(options?.pwaFlow));
 
   const configuredSiteUrl = cleanUrl(import.meta.env.VITE_SITE_URL);
-  if (configuredSiteUrl) return joinUrl(configuredSiteUrl, AUTH_CALLBACK_PATH);
+  if (configuredSiteUrl) return withPwaAuthMarker(joinUrl(configuredSiteUrl, AUTH_CALLBACK_PATH), Boolean(options?.pwaFlow));
 
   if (typeof window !== "undefined" && window.location.origin) {
-    return joinUrl(window.location.origin, AUTH_CALLBACK_PATH);
+    return withPwaAuthMarker(joinUrl(window.location.origin, AUTH_CALLBACK_PATH), Boolean(options?.pwaFlow));
   }
 
-  return AUTH_CALLBACK_PATH;
+  return withPwaAuthMarker(AUTH_CALLBACK_PATH, Boolean(options?.pwaFlow));
+};
+
+export const getPasswordResetUrl = (options?: { pwaFlow?: boolean }) => {
+  const configuredSiteUrl = cleanUrl(import.meta.env.VITE_SITE_URL);
+  if (configuredSiteUrl) return withPwaAuthMarker(joinUrl(configuredSiteUrl, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
+
+  if (typeof window !== "undefined" && window.location.origin) {
+    return withPwaAuthMarker(joinUrl(window.location.origin, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
+  }
+
+  return withPwaAuthMarker(PASSWORD_RESET_PATH, Boolean(options?.pwaFlow));
 };

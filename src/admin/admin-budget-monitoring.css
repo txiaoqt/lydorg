@@ -1,0 +1,490 @@
+@media (max-width: 1023px) {
+  .admin-budget-monitoring-page {
+    --border-default: var(--yt-border);
+    --text-primary: var(--yt-text);
+    --text-secondary: var(--yt-text-muted);
+    --primary-blue: var(--yt-primary);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-budget-monitoring-page,
+  .admin-budget-monitoring-page * {
+    box-sizing: border-box;
+  }
+
+  .admin-budget-monitoring-page .page-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .admin-budget-monitoring-page .page-actions > button {
+    min-width: 0;
+    min-height: 2.75rem;
+    white-space: normal;
+  }
+
+  .admin-budget-monitoring-page .page-actions > button:nth-child(2) {
+    order: -1;
+  }
+
+  .admin-budget-monitoring-page .monitoring-tabs {
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: 0.625rem;
+    background: var(--yt-surface);
+  }
+
+  .admin-budget-monitoring-page .monitoring-tabs > button {
+    min-width: 0;
+    min-height: 2.75rem;
+    border-radius: 0;
+    padding-inline: 0.5rem;
+    white-space: normal;
+    line-height: 1.15;
+  }
+
+  .admin-budget-monitoring-page .allocation-filtered-export {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-mobile-filters,
+  .admin-budget-monitoring-page .allocation-mobile-filters > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-budget-monitoring-page .allocation-mobile-filters [role="combobox"] {
+    min-height: 2.75rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-summary-grid {
+    gap: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-summary-pair {
+    min-width: 0;
+    gap: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-summary-card {
+    min-width: 0;
+    max-width: 100%;
+    border-color: var(--border-default);
+    background: var(--yt-surface);
+  }
+
+  .admin-budget-monitoring-page .allocation-summary-card > div {
+    min-width: 0;
+    padding: 0.875rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-summary-card p:nth-child(2) {
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-budget-monitoring-page .allocation-summary-card.is-currency p:nth-child(2) {
+    font-size: clamp(1rem, 4.8vw, 1.35rem);
+    line-height: 1.2;
+  }
+
+  .admin-budget-monitoring-page .allocation-by-barangay-mobile,
+  .admin-budget-monitoring-page .mobile-barangay-card,
+  .admin-budget-monitoring-page .barangay-card-heading,
+  .admin-budget-monitoring-page .barangay-financial-summary {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-budget-monitoring-page .allocation-result-count {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-district-groups {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-district-group {
+    min-width: 0;
+  }
+
+  .admin-budget-monitoring-page .allocation-district-heading {
+    margin-bottom: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-district-heading h2 {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .admin-budget-monitoring-page .allocation-district-heading p {
+    margin-top: 0.125rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-barangay-list {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-barangay-card {
+    padding: 0.875rem;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: 0.875rem;
+    background: var(--yt-surface);
+    box-shadow: var(--yt-shadow-sm);
+  }
+
+  .admin-budget-monitoring-page .barangay-card-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .admin-budget-monitoring-page .barangay-card-heading h3 {
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .admin-budget-monitoring-page .organization-count {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .admin-budget-monitoring-page .barangay-financial-summary {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .admin-budget-monitoring-page .barangay-financial-summary > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .admin-budget-monitoring-page .barangay-financial-summary dt {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-budget-monitoring-page .barangay-financial-summary dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-budget-monitoring-page .barangay-financial-summary dd.is-released {
+    color: #047857;
+  }
+
+  .admin-budget-monitoring-page .barangay-utilization {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .admin-budget-monitoring-page .utilization-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-budget-monitoring-page .utilization-heading strong {
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-budget-monitoring-page .utilization-track {
+    height: 0.375rem;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--yt-border);
+  }
+
+  .admin-budget-monitoring-page .utilization-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary-blue);
+  }
+
+  .admin-budget-monitoring-page .barangay-view-details {
+    display: inline-flex;
+    width: 100%;
+    min-height: 2.625rem;
+    margin-top: 0.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid var(--border-default);
+    border-radius: 0.625rem;
+    background: var(--yt-surface);
+    color: var(--primary-blue);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .admin-budget-monitoring-page .barangay-view-details:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary-blue) 35%, transparent);
+    outline-offset: 2px;
+  }
+
+  .admin-budget-monitoring-page .allocation-pagination {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .admin-budget-monitoring-page .allocation-pagination > p {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .admin-budget-monitoring-page .allocation-pagination > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-pagination button {
+    min-width: 0;
+    min-height: 2.625rem;
+    padding-inline: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .allocation-pagination span {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .admin-budget-monitoring-page .monitoring-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .monitoring-summary-card.summary-card--currency {
+    grid-column: 1 / -1;
+  }
+
+  .admin-budget-monitoring-page .monitoring-summary-card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-budget-monitoring-page .monitoring-summary-card > div {
+    min-width: 0;
+    padding: 0.875rem;
+  }
+
+  .admin-budget-monitoring-page .monitoring-summary-card.summary-card--currency .summary-value {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    font-size: clamp(1.15rem, 5.5vw, 1.45rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-budget-monitoring-page .monitoring-summary-card:not(.summary-card--currency) .summary-description {
+    display: none;
+  }
+
+  .admin-budget-monitoring-page .budget-health-snapshot > div {
+    gap: 0.875rem;
+    padding: 1rem;
+  }
+
+  .admin-budget-monitoring-page .budget-health-chart {
+    width: min(196px, 65vw);
+    height: auto;
+    max-width: none;
+    aspect-ratio: 1;
+  }
+
+  .admin-budget-monitoring-page .desktop-analysis-notes {
+    display: none;
+  }
+
+  .admin-budget-monitoring-page input,
+  .admin-budget-monitoring-page [role="combobox"] {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.625rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-result-count {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-list {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-card,
+  .admin-budget-monitoring-page .budget-primary-info,
+  .admin-budget-monitoring-page .mobile-budget-details {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-card {
+    border-color: var(--border-default);
+    border-radius: 0.875rem;
+    background: var(--yt-surface);
+    box-shadow: var(--yt-shadow-sm);
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-card > div {
+    padding: 0.875rem;
+  }
+
+  .admin-budget-monitoring-page .budget-primary-info p:first-child {
+    overflow-wrap: anywhere;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+
+  .admin-budget-monitoring-page .budget-status-row {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.625rem;
+  }
+
+  .admin-budget-monitoring-page .budget-status-row > * {
+    width: fit-content;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 0.75rem 0;
+    border: 0;
+    border-top: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-default);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-details p:last-child {
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-progress {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-progress > p {
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-actions {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .admin-budget-monitoring-page .mobile-budget-actions button {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding-inline: 0.5rem;
+    white-space: normal;
+  }
+
+  .admin-budget-monitoring-page .mobile-monitoring-insights > div {
+    padding: 1rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-monitoring-insights ul {
+    margin-top: 0.625rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .admin-budget-monitoring-page .mobile-monitoring-insights li {
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.35rem;
+  }
+
+  .admin-budget-monitoring-page .mobile-monitoring-insights li::before {
+    margin-right: 0.4rem;
+    color: var(--primary-blue);
+    content: "\2022";
+  }
+
+  .admin-budget-monitoring-page .mobile-monitoring-insights button {
+    margin-top: 0.625rem;
+    color: var(--primary-blue);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 374px) {
+  .admin-budget-monitoring-page .page-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-budget-monitoring-page .allocation-currency-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-budget-monitoring-page .barangay-financial-summary > div {
+    grid-template-columns: minmax(5rem, 0.7fr) minmax(0, 1fr);
+  }
+}

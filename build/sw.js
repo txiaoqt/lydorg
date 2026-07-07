@@ -1,8 +1,12 @@
-const CACHE_NAME = "y-trace-v6";
+const CACHE_NAME = "y-trace-v11";
 const APP_SHELL = [
   "/",
+  "/app-start",
+  "/dashboard",
+  "/app",
   "/admin",
   "/signin",
+  "/signup",
   "/index.html",
   "/manifest.webmanifest",
   "/manifest-admin.webmanifest",
@@ -14,7 +18,9 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+    )
   );
   self.skipWaiting();
 });
@@ -30,6 +36,12 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {

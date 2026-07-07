@@ -3,7 +3,9 @@ import type { Session } from "@supabase/supabase-js";
 import { readAdminSession, type SeededAdminUser, writeAdminSession } from "@/lib/admin-auth";
 import { getAuthCallbackUrl } from "@/lib/auth-redirect";
 import { IS_USER_SURFACE } from "@/lib/deployment-surface";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseAuthStorageKey } from "@/lib/supabase";
+import { normalizeUrn } from "@/lib/urn-registration";
+import { clearSupabaseAuthStorage, isInvalidRefreshTokenError } from "@/lib/auth-session-recovery";
 
 export type UserRole = "guest" | "youth" | "sk" | "staff" | "admin";
 export type AuthUser = {
@@ -41,6 +43,7 @@ type SignUpParams = {
   barangayName?: string;
   isExistingOrganization?: boolean;
   organizationIdentifierNumber?: string;
+  pwaFlow?: boolean;
 };
 
 type AuthContextValue = {
@@ -159,7 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const [profileResp, rolesResp] = await Promise.all([
         supabaseClient!
           .from("user_profiles")
-          .select("display_name,full_name,email")
+          .select("display_name,full_name,email,contact_number")
           .eq("user_id", authUser.id)
           .maybeSingle(),
         supabaseClient!.from("user_roles").select("roles(code)").eq("user_id", authUser.id),
@@ -187,7 +190,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           (profileResp.data?.full_name as string | undefined) ??
           defaultDisplayName,
         profileHints: {
-          contactNumber: (authUser.user_metadata?.contact_number as string | undefined) ?? "",
+          contactNumber:
+            (profileResp.data?.contact_number as string | undefined) ??
+            (authUser.user_metadata?.contact_number as string | undefined) ??
+            "",
           district: (authUser.user_metadata?.district as string | undefined) ?? "",
           barangay: (authUser.user_metadata?.barangay_name as string | undefined) ?? "",
           isExistingOrganization: Boolean(authUser.user_metadata?.is_existing_organization),
@@ -216,9 +222,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    supabaseClient.auth.getSession().then(({ data }) => {
-      void applySession(data.session ?? null);
-    });
+    const recoverInvalidRefreshSession = async (error: unknown) => {
+      if (!isInvalidRefreshTokenError(error)) return false;
+      clearSupabaseAuthStorage(supabaseAuthStorageKey);
+      try {
+        await supabaseClient.auth.signOut({ scope: "local" });
+      } catch {
+        // Storage was already cleared directly; local sign-out is best effort.
+      }
+      if (mounted) await applySession(null);
+      return true;
+    };
+
+    void supabaseClient.auth.getSession()
+      .then(async ({ data, error }) => {
+        if (error && await recoverInvalidRefreshSession(error)) return;
+        if (mounted) await applySession(data.session ?? null);
+      })
+      .catch(async (error: unknown) => {
+        if (await recoverInvalidRefreshSession(error)) return;
+        if (mounted) await applySession(null);
+      });
+
+    const handleUnhandledAuthRejection = (event: PromiseRejectionEvent) => {
+      if (!isInvalidRefreshTokenError(event.reason)) return;
+      event.preventDefault();
+      void recoverInvalidRefreshSession(event.reason);
+    };
+    window.addEventListener("unhandledrejection", handleUnhandledAuthRejection);
 
     const { data: authListener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       void applySession(session);
@@ -226,6 +257,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       mounted = false;
+      window.removeEventListener("unhandledrejection", handleUnhandledAuthRejection);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -318,6 +350,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     barangayName,
     isExistingOrganization,
     organizationIdentifierNumber,
+    pwaFlow,
   }: SignUpParams) => {
     if (!supabase) {
       return {
@@ -325,11 +358,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      password,
       options: {
-        emailRedirectTo: getAuthCallbackUrl(),
+        shouldCreateUser: true,
+        emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
         data: {
           full_name: organizationName ?? "",
           display_name: organizationName ?? "",
@@ -340,6 +373,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           barangay_name: barangayName ?? "",
           is_existing_organization: Boolean(isExistingOrganization),
           organization_identifier_number: organizationIdentifierNumber ?? "",
+          registration_type: isExistingOrganization ? "existing_urn" : "new_organization",
+          urn: isExistingOrganization ? normalizeUrn(organizationIdentifierNumber ?? "") : "",
+          urn_review_status: isExistingOrganization ? "pending" : "not_applicable",
           municipality: "Prototype Municipality",
         },
       },
@@ -347,14 +383,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (error) return { error: error.message };
 
-    // Force manual sign-in after registration even when email confirmation is disabled.
-    await supabase.auth.signOut();
-    setIsAuthenticated(false);
-    setRole("guest");
-    setUser(null);
-
     return {
-      needsEmailConfirmation: Boolean(data.user && !data.session),
+      needsEmailConfirmation: true,
     };
   };
 

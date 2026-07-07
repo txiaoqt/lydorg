@@ -44,6 +44,38 @@ const Index = () => {
   const { isAuthenticated, role } = useAuth();
   const { hash } = useLocation();
   const portalHref = isAuthenticated ? (role === "admin" ? "/admin" : "/dashboard") : "/signin";
+  const homepageFeatures = [
+    {
+      icon: Users,
+      title: "Organization Profile",
+      description: "Keep your organization details, officers, and adviser info current.",
+    },
+    {
+      icon: FileText,
+      title: "Document Submission",
+      description: "Upload required documents and track review results.",
+    },
+    {
+      icon: ClipboardList,
+      title: "Budget Requests",
+      description: "Submit activity budgets and monitor approval status.",
+    },
+    {
+      icon: CheckCircle2,
+      title: "Liquidation & Reporting",
+      description: "Submit liquidation reports and monitor deadlines.",
+    },
+    {
+      icon: Wallet,
+      title: "Templates & Updates",
+      description: "Download templates and follow official LYDO updates.",
+    },
+    {
+      icon: ArrowRight,
+      title: "Compliance Status",
+      description: "See what is complete, pending, and due next.",
+    },
+  ];
 
   useEffect(() => {
     if (!hash) return;
@@ -57,36 +89,36 @@ const Index = () => {
   }, [hash]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="public-home-page min-h-screen bg-background">
       <Navbar />
 
       {/* Hero */}
-      <section className="hero-gradient relative overflow-x-clip pt-16">
+      <section className="hero-section hero-gradient relative overflow-x-clip pt-14 lg:pt-16">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary blur-3xl" />
           <div className="absolute bottom-10 right-20 h-96 w-96 rounded-full bg-primary blur-3xl" />
         </div>
 
-        <div className="container mx-auto relative z-10 max-w-7xl px-6 py-10 sm:px-8 sm:py-14 md:py-20 lg:px-10 lg:py-24">
+        <div className="container mx-auto relative z-10 max-w-7xl px-5 py-8 sm:px-6 sm:py-10 md:py-20 lg:px-10 lg:py-24">
           <div className="grid items-center gap-8 md:grid-cols-2 lg:gap-14">
             <div className="animate-fade-up">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary-foreground/20 bg-secondary-foreground/10 px-3 py-1.5">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-secondary-foreground/20 bg-secondary-foreground/10 px-3 py-1.5">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-brand-skGold shrink-0" />
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-secondary-foreground/80">
                   Y-TRACE - Organization Compliance Portal
                 </span>
               </div>
 
-              <h1 className="mb-4 text-[2rem] font-heading font-extrabold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl lg:text-[3.4rem]">
+              <h1 className="hero-title mb-3 text-[2rem] font-heading font-extrabold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl lg:text-[3.4rem]">
                 Your youth organization's compliance,{" "}
                 <span className="text-gradient">simplified.</span>
               </h1>
 
-              <p className="mb-6 max-w-lg text-base leading-relaxed text-secondary-foreground/75 sm:text-lg">
+              <p className="hero-description mb-5 max-w-lg text-[0.95rem] leading-relaxed text-secondary-foreground/75 sm:text-lg">
                 Register, submit compliance documents, request activity budgets, and track liquidation deadlines - all in one place with LYDO/PCYDO.
               </p>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                 <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
                   <Link to={portalHref}>
                     {isAuthenticated ? "Open Portal" : "Sign In"}{" "}
@@ -100,7 +132,7 @@ const Index = () => {
                 )}
               </div>
 
-              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="hero-trust-list mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
                 {trustBadges.map((badge, i) => (
                   <span key={badge} className="flex items-center gap-1.5 text-xs text-secondary-foreground/60">
                     {i > 0 && <span className="hidden sm:inline text-secondary-foreground/30">·</span>}
@@ -115,7 +147,7 @@ const Index = () => {
               <img
                 src={heroImage}
                 alt="Youth organization members coordinating documents and compliance tasks"
-                className="mx-auto h-auto w-full max-w-full rounded-2xl object-contain shadow-2xl md:max-w-[520px]"
+                className="hero-illustration mx-auto h-auto max-h-[220px] w-full max-w-full rounded-2xl object-contain shadow-2xl md:max-h-none md:max-w-[520px]"
               />
             </div>
           </div>
@@ -123,9 +155,9 @@ const Index = () => {
       </section>
 
       {/* How It Works */}
-      <section className="bg-background py-14 sm:py-16 md:py-24">
+      <section className="bg-background py-10 sm:py-12 md:py-24">
         <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-          <div className="mb-10 mx-auto max-w-2xl text-center sm:mb-14">
+          <div className="mb-6 mx-auto max-w-2xl text-center md:mb-14">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
               How It Works
             </span>
@@ -137,25 +169,25 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="how-it-works-list grid gap-0 lg:grid-cols-4 lg:gap-4">
             {howItWorksSteps.map(({ step, icon: Icon, title, description }) => (
               <div
                 key={step}
-                className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 card-shadow"
+                className="how-it-works-item grid grid-cols-[48px_minmax(0,1fr)] gap-x-3.5 border-b border-border/70 py-6 last:border-b-0 md:grid-cols-[auto_minmax(0,1fr)] md:gap-3 md:py-4 lg:flex lg:flex-col lg:gap-4 lg:rounded-xl lg:border lg:bg-card lg:p-5 lg:card-shadow"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <div className="contents md:flex md:items-start md:gap-3 lg:justify-between">
+                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 md:flex lg:h-11 lg:w-11">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="font-heading text-3xl font-extrabold leading-none text-muted-foreground/20">
+                  <span className="self-start font-heading text-[2rem] font-semibold leading-none tabular-nums text-primary/60 md:normal-nums md:text-2xl md:font-extrabold md:text-muted-foreground/20 lg:text-3xl">
                     {step}
                   </span>
                 </div>
-                <div>
-                  <h3 className="mb-1.5 font-heading text-base font-bold leading-snug text-foreground">
+                <div className="min-w-0">
+                  <h3 className="mb-1.5 font-heading text-[1.08rem] font-bold leading-snug text-foreground md:mb-1 md:text-[0.98rem] lg:mb-1.5 lg:text-base">
                     {title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  <p className="min-w-0 break-words text-left text-[0.9375rem] leading-[1.6] text-muted-foreground md:text-[0.875rem] md:leading-relaxed lg:text-sm">{description}</p>
                 </div>
               </div>
             ))}
@@ -164,9 +196,9 @@ const Index = () => {
       </section>
 
       {/* Compliance Features */}
-      <section className="bg-muted/40 py-14 sm:py-16 md:py-24">
+      <section className="bg-muted/40 py-10 sm:py-12 md:py-24">
         <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-          <div className="mb-10 mx-auto max-w-2xl text-center sm:mb-14">
+          <div className="mb-8 mx-auto max-w-2xl text-center sm:mb-14">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
               What's Inside
             </span>
@@ -178,50 +210,19 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                icon: Users,
-                title: "Organization Profile",
-                description: "Keep your organization details, officers, and adviser info up to date for admin verification.",
-              },
-              {
-                icon: FileText,
-                title: "Document Submission",
-                description: "Upload the required registration documents, attach replacement files when needed, and track each review result from the admin.",
-              },
-              {
-                icon: ClipboardList,
-                title: "Budget Requests",
-                description: "Submit activity budget requests, track approval status, and receive go-signals from LYDO.",
-              },
-              {
-                icon: CheckCircle2,
-                title: "Liquidation & Reporting",
-                description: "Submit liquidation reports after activities with automatic deadline tracking.",
-              },
-              {
-                icon: Wallet,
-                title: "Templates & Updates",
-                description: "Download published templates and stay updated through official news releases from the LYDO office.",
-              },
-              {
-                icon: ArrowRight,
-                title: "Compliance Status",
-                description: "Get a clear summary of your current standing, open remarks, and what to do next.",
-              },
-            ].map(({ icon: Icon, title, description }) => (
+          <div className="homepage-feature-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+            {homepageFeatures.map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className="rounded-xl border border-border bg-card p-5 card-shadow transition-all duration-200 hover:border-primary/30 hover:card-shadow-hover"
+                className="homepage-feature-card rounded-xl border border-border bg-card p-4 card-shadow transition-all duration-200 hover:border-primary/30 hover:card-shadow-hover lg:p-5"
               >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
+                <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 lg:mb-3 lg:h-10 lg:w-10">
+                  <Icon className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
                 </div>
-                <h3 className="mb-1.5 font-heading text-base font-bold leading-snug text-foreground">
+                <h3 className="mb-1 font-heading text-[0.98rem] font-bold leading-snug text-foreground lg:mb-1.5 lg:text-base">
                   {title}
                 </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="line-clamp-3 text-[0.875rem] leading-relaxed text-muted-foreground lg:line-clamp-none lg:text-sm">{description}</p>
               </div>
             ))}
           </div>
@@ -229,23 +230,23 @@ const Index = () => {
       </section>
 
       {/* CTA Band */}
-      <section className="hero-gradient relative overflow-hidden py-16 sm:py-20 md:py-28">
+      <section className="homepage-final-cta hero-gradient relative overflow-hidden py-10 sm:py-12 md:py-28">
         <div className="absolute inset-0 pointer-events-none opacity-20">
           <div className="absolute -top-16 -left-16 h-64 w-64 rounded-full bg-primary blur-3xl" />
           <div className="absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-brand-skGold blur-3xl" />
         </div>
 
-        <div className="container mx-auto relative z-10 max-w-2xl px-6 text-center sm:px-8">
-          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-widest text-secondary-foreground/50">
+        <div className="container mx-auto relative z-10 max-w-2xl px-5 text-center sm:px-8">
+          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-secondary-foreground/50">
             Get Started
           </span>
-          <h2 className="mb-4 text-3xl font-heading font-extrabold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl">
+          <h2 className="mb-3 text-[1.85rem] font-heading font-extrabold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl">
             Ready to register your organization?
           </h2>
-          <p className="mb-8 text-base text-secondary-foreground/70 sm:text-lg">
+          <p className="mb-5 text-[0.95rem] text-secondary-foreground/70 sm:text-lg">
             Create an account, complete your profile, and start the compliance process - all in one place.
           </p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div className="flex flex-col items-center gap-2.5 sm:flex-row sm:justify-center">
             <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
               <Link to={portalHref}>
                 {isAuthenticated ? "Open Portal" : "Sign In"}{" "}

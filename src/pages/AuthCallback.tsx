@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  beginPwaAuthFlow,
+  endPwaAuthFlow,
+  isPwaAuthFlow,
+  pwaAuthRoute,
+} from "@/user/pwa/pwaAuthFlow";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isInitialized, role } = useAuth();
+  const pwaFlow = isPwaAuthFlow(location.search);
   const [readyToFallback, setReadyToFallback] = useState(false);
   const hasAuthParams = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -13,15 +21,20 @@ const AuthCallback = () => {
   }, []);
 
   useEffect(() => {
+    if (new URLSearchParams(location.search).get("pwa") === "1") beginPwaAuthFlow();
+  }, [location.search]);
+
+  useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-      navigate(role === "admin" ? "/admin" : "/organization-profile", { replace: true });
+      if (pwaFlow && role !== "admin") endPwaAuthFlow();
+      navigate(role === "admin" ? "/admin" : pwaFlow ? "/app" : "/organization-profile", { replace: true });
       return;
     }
     if (!hasAuthParams || readyToFallback) {
-      navigate("/signin", { replace: true });
+      navigate(pwaFlow ? pwaAuthRoute("/signin") : "/signin", { replace: true });
     }
-  }, [hasAuthParams, isAuthenticated, isInitialized, navigate, readyToFallback, role]);
+  }, [hasAuthParams, isAuthenticated, isInitialized, navigate, pwaFlow, readyToFallback, role]);
 
   useEffect(() => {
     if (!isInitialized || isAuthenticated || !hasAuthParams) return;

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
+import { UserFeatureIcon } from "@/components/portal/UserFeatureIcon";
 
 type PublicTemplatesCatalogProps = {
   compactHeader?: boolean;
@@ -51,35 +52,32 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
     tone: "blue" | "emerald",
     fallbackDescription: string,
   ) => {
-    const iconTone =
-      tone === "blue"
-        ? "bg-blue-100 text-blue-600"
-        : "bg-emerald-100 text-emerald-600";
-
     return (
       <div
         key={template.id}
-        className="flex h-full flex-col rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
+        className="template-item flex h-full flex-col rounded-2xl border border-border/70 bg-card p-3.5 shadow-sm transition-shadow hover:shadow-md lg:p-5"
       >
-        <div className="flex min-h-[88px] items-start gap-3">
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconTone}`}>
-            {tone === "blue" ? (
-              <FileText className="h-5 w-5" />
-            ) : (
-              <ClipboardList className="h-5 w-5" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="line-clamp-2 text-[1.05rem] font-semibold leading-snug text-foreground">
+        <div className="template-item-main grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 lg:flex lg:min-h-[88px]">
+          <UserFeatureIcon
+            icon={tone === "blue" ? FileText : ClipboardList}
+            className="template-item-icon"
+          />
+          <div className="template-item-content min-w-0 flex-1">
+            <p className="text-[0.98rem] font-semibold leading-snug text-foreground lg:line-clamp-2 lg:text-[1.05rem]">
               {template.name}
             </p>
-            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+            <p className="template-item-description mt-1.5 line-clamp-3 text-[0.875rem] leading-relaxed text-muted-foreground lg:mt-2 lg:line-clamp-2 lg:text-sm">
               {template.description || fallbackDescription}
             </p>
+            <span className="template-updated-date mt-1.5 block text-[0.78rem] text-muted-foreground lg:hidden">
+              {template.templateUploadedAt
+                ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
+                : "Template file will appear here once uploaded by the admin."}
+            </span>
           </div>
         </div>
 
-        <div className="mt-4 rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+        <div className="mt-4 hidden rounded-xl border border-border/70 bg-muted/20 px-4 py-3 lg:block">
           <p className="text-xs text-muted-foreground">
             {template.templateUploadedAt
               ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
@@ -87,7 +85,7 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
           </p>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="template-item-actions mt-3 grid grid-cols-2 gap-2 lg:mt-4">
           <Button
             type="button"
             size="sm"
@@ -97,7 +95,12 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
             onClick={() => void openTemplate(template.templateFileUrl, template.name)}
           >
             <Eye className="mr-1.5 h-3.5 w-3.5" />
-            {openingTemplateId === template.name ? "Opening..." : "View Template"}
+            {openingTemplateId === template.name ? "Opening..." : (
+              <>
+                <span className="lg:hidden">View</span>
+                <span className="hidden lg:inline">View Template</span>
+              </>
+            )}
           </Button>
           <Button
             type="button"
@@ -115,7 +118,7 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 lg:space-y-8">
       {!compactHeader ? (
         <div className="mb-10 mx-auto max-w-2xl text-center sm:mb-14">
           <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
@@ -130,19 +133,17 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
         </div>
       ) : null}
 
-      <div className="space-y-8">
+      <div className="space-y-8 lg:space-y-8">
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-heading text-xl font-bold text-foreground">Document Submission Templates</h3>
+          <div className="template-category-header grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 lg:flex lg:items-center">
+            <UserFeatureIcon icon={FileText} />
+            <div className="template-category-header-content min-w-0">
+              <h3 className="font-heading text-lg font-bold text-foreground lg:text-xl">Document Submission Templates</h3>
               <p className="text-sm text-muted-foreground">Official forms and compliance documents published by the admin.</p>
             </div>
           </div>
           {publicDocumentTemplates.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="template-list grid gap-3 md:grid-cols-2 xl:grid-cols-3 lg:gap-4">
               {publicDocumentTemplates.map((template) =>
                 renderTemplateCard(template, "blue", "Shared compliance form ready for preview and download."),
               )}
@@ -155,17 +156,15 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
-              <ClipboardList className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="font-heading text-xl font-bold text-foreground">Other Templates</h3>
+          <div className="template-category-header grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 lg:flex lg:items-center">
+            <UserFeatureIcon icon={ClipboardList} />
+            <div className="template-category-header-content min-w-0">
+              <h3 className="font-heading text-lg font-bold text-foreground lg:text-xl">Other Templates</h3>
               <p className="text-sm text-muted-foreground">Additional downloadable references that the admin has made available to organizations.</p>
             </div>
           </div>
           {publicOtherTemplates.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="template-list grid gap-3 md:grid-cols-2 xl:grid-cols-3 lg:gap-4">
               {publicOtherTemplates.map((template) =>
                 renderTemplateCard(template, "emerald", "Shared reference template ready for preview and download."),
               )}

@@ -4,25 +4,25 @@ import PublicTemplatesCatalog from "@/components/public/PublicTemplatesCatalog";
 
 const PublicTemplates = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="public-templates-page min-h-screen bg-background">
       <Navbar />
       <div className="pt-16">
-        <section className="hero-gradient py-10 sm:py-12 md:py-20">
-          <div className="container mx-auto max-w-3xl px-6 text-center sm:px-8">
+        <section className="templates-hero hero-gradient py-8 sm:py-10 md:py-20">
+          <div className="container mx-auto max-w-3xl px-5 text-center sm:px-8">
             <span className="mb-3 block text-xs font-semibold uppercase tracking-widest text-secondary-foreground/60">
               Templates
             </span>
-            <h1 className="mb-4 text-[1.9rem] font-heading font-bold text-secondary-foreground sm:mb-6 sm:text-4xl md:text-5xl">
+            <h1 className="templates-hero-title mb-3 text-[1.9rem] font-heading font-bold text-secondary-foreground sm:mb-6 sm:text-4xl md:text-5xl">
               Public Templates
             </h1>
-            <p className="text-sm leading-relaxed text-secondary-foreground/70 sm:text-base md:text-lg">
+            <p className="templates-hero-description mx-auto max-w-[32rem] text-[0.92rem] leading-relaxed text-secondary-foreground/70 sm:text-base md:text-lg">
               Browse and download the latest published forms, compliance templates, and shared reference files from Y-TRACE.
             </p>
           </div>
         </section>
 
-        <section className="py-10 sm:py-14 md:py-20">
-          <div className="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+        <section className="py-8 sm:py-10 md:py-20">
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
             <PublicTemplatesCatalog compactHeader />
           </div>
         </section>

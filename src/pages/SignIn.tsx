@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { IS_ADMIN_SURFACE, IS_USER_SURFACE } from "@/lib/deployment-surface";
 import { supabase } from "@/lib/supabase";
+import {
+  beginPwaAuthFlow,
+  endPwaAuthFlow,
+  isPwaAuthFlow,
+  PWA_ENTRY_ROUTE,
+  pwaAuthRoute,
+} from "@/user/pwa/pwaAuthFlow";
 
 type SignInProps = {
   forcedMode?: "user" | "admin";
@@ -31,9 +38,11 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const pwaFlow = isPwaAuthFlow(location.search);
   const { signIn, isAuthenticated, isInitialized, role } = useAuth();
   const useSupabaseAuth = Boolean(supabase);
-  const roleSelectionEnabled = !forcedMode && !IS_ADMIN_SURFACE && !IS_USER_SURFACE;
+  const roleSelectionEnabled = !pwaFlow && !forcedMode && !IS_ADMIN_SURFACE && !IS_USER_SURFACE;
 
   const isAdminMode = mode === "admin";
 
@@ -42,13 +51,18 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   }, [inferredMode]);
 
   useEffect(() => {
+    if (new URLSearchParams(location.search).get("pwa") === "1") beginPwaAuthFlow();
+  }, [location.search]);
+
+  useEffect(() => {
     if (!isInitialized || !isAuthenticated) return;
     if (role === "admin") {
       navigate("/admin", { replace: true });
       return;
     }
-    navigate("/dashboard", { replace: true });
-  }, [isAuthenticated, isInitialized, navigate, role]);
+    if (pwaFlow) endPwaAuthFlow();
+    navigate(pwaFlow ? "/app" : "/dashboard", { replace: true });
+  }, [isAuthenticated, isInitialized, navigate, pwaFlow, role]);
 
   const canSubmit = isAdminMode
     ? Boolean(username.trim() && password) && !isLoading
@@ -79,11 +93,12 @@ const SignIn = ({ forcedMode }: SignInProps) => {
     setEmail("");
     setPassword("");
     setShowPassword(false);
-    navigate(isAdminMode ? "/admin" : "/dashboard", { replace: true });
+    if (pwaFlow && !isAdminMode) endPwaAuthFlow();
+    navigate(isAdminMode ? "/admin" : pwaFlow ? "/app" : "/dashboard", { replace: true });
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden">
+    <div className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}>
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-180px] left-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
@@ -93,7 +108,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="mb-7 text-left">
-          <Link to="/" className="inline-flex items-center gap-3 max-w-full">
+          <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
             <BrandLogo
               imgClassName="h-10 w-10"
               showText
@@ -190,7 +205,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
               <Label htmlFor="password">Password</Label>
               {!isAdminMode && (
                 <Link
-                  to="/reset-password"
+                  to={pwaFlow ? pwaAuthRoute("/reset-password") : "/reset-password"}
                   tabIndex={-1}
                   className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
@@ -251,14 +266,14 @@ const SignIn = ({ forcedMode }: SignInProps) => {
           {!isAdminMode && (
             <p>
               Don't have an account?{" "}
-              <Link to="/signup" className="font-medium text-primary hover:text-primary/80 transition-colors">
+              <Link to={pwaFlow ? pwaAuthRoute("/signup") : "/signup"} className="font-medium text-primary hover:text-primary/80 transition-colors">
                 Create one
               </Link>
             </p>
           )}
           <p>
-            <Link to="/" className="hover:text-foreground transition-colors">
-              ← Back to home
+            <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
+              ← Back to {pwaFlow ? "welcome" : "home"}
             </Link>
           </p>
         </div>

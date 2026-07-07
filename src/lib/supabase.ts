@@ -14,6 +14,15 @@ const normalizeEnvValue = (value: string | undefined) => {
 
 const supabaseUrl = normalizeEnvValue(import.meta.env.VITE_SUPABASE_URL);
 const supabaseAnonKey = normalizeEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY);
+const supabaseProjectRef = (() => {
+  try {
+    return new URL(supabaseUrl).hostname.split(".")[0] || "project";
+  } catch {
+    return "project";
+  }
+})();
+
+export const supabaseAuthStorageKey = `sb-${supabaseProjectRef}-auth-token`;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
@@ -23,6 +32,7 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: supabaseAuthStorageKey,
       },
     })
   : null;

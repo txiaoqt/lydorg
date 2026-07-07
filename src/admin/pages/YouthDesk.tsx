@@ -5,6 +5,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/portal/StatusBadge";
 import {
   Dialog,
   DialogContent,
@@ -47,13 +48,6 @@ const formatStatus = (value: TicketStatus | string) =>
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-
-const statusBadgeClass = (status: TicketStatus) => {
-  if (status === "received") return "bg-muted text-muted-foreground";
-  if (status === "in_progress") return "bg-warning/20 text-warning";
-  if (status === "resolved") return "bg-accent/15 text-accent";
-  return "bg-primary/10 text-primary";
-};
 
 export const YouthDeskAdmin = () => {
   const [tickets, setTickets] = useState<TicketRow[]>([]);
@@ -239,9 +233,7 @@ export const YouthDeskAdmin = () => {
     {
       header: "Status",
       accessor: (ticket: TicketRow) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${statusBadgeClass(ticket.status)}`}>
-          {formatStatus(ticket.status)}
-        </span>
+        <StatusBadge status={ticket.status} size="md" />
       ),
     },
     {

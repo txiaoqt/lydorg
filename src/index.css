@@ -23,30 +23,79 @@
   }
 
   :root {
-    --brand-deep-blue: 218 64% 29%;
-    --brand-mid-blue: 212 64% 40%;
-    --brand-sk-gold: 49 92% 48%;
-    --brand-sk-red: 354 73% 46%;
+    /* Shared Y-TRACE palette, aligned with the installed PWA. */
+    --yt-bg: #f6f8fc;
+    --yt-surface: #ffffff;
+    --yt-surface-subtle: #f8fafd;
+    --yt-surface-hover: #f4f8fe;
+    --yt-border: #dfe7f2;
+    --yt-border-strong: #cbd8e8;
+    --yt-primary: #2460a7;
+    --yt-primary-hover: #1f5595;
+    --yt-primary-active: #19477e;
+    --yt-primary-strong: #1455c5;
+    --yt-primary-soft: #eaf2fd;
+    --yt-text: #172033;
+    --yt-text-secondary: #475569;
+    --yt-text-muted: #64748b;
+    --yt-text-subtle: #94a3b8;
+    --yt-text-on-primary: #ffffff;
+    --yt-focus: #3b82f6;
+    --yt-focus-ring: rgb(59 130 246 / 22%);
+    --yt-shadow-sm: 0 1px 2px rgb(15 23 42 / 5%);
+    --yt-shadow-md: 0 6px 18px rgb(15 23 42 / 7%);
+    --yt-success-bg: #ecfdf5;
+    --yt-success-text: #047857;
+    --yt-success-border: #a7f3d0;
+    --yt-info-bg: #eff6ff;
+    --yt-info-text: #1d4ed8;
+    --yt-info-border: #bfdbfe;
+    --yt-progress-bg: #f0fdfa;
+    --yt-progress-text: #0f766e;
+    --yt-progress-border: #99f6e4;
+    --yt-warning-bg: #fffbeb;
+    --yt-warning-text: #b45309;
+    --yt-warning-border: #fde68a;
+    --yt-revision-bg: #fff7ed;
+    --yt-revision-text: #c2410c;
+    --yt-revision-border: #fed7aa;
+    --yt-danger-bg: #fef2f2;
+    --yt-danger-text: #b91c1c;
+    --yt-danger-border: #fecaca;
+    --yt-neutral-bg: #f8fafc;
+    --yt-neutral-text: #475569;
+    --yt-neutral-border: #cbd5e1;
+    --yt-brand-red: #cb2031;
+    --yt-brand-gold: #ebc20a;
 
-    --admin-page-bg: 244 100% 98%;
+    --brand-deep-blue: 218 64% 29%;
+    --brand-mid-blue: 212.52 64.53% 39.8%;
+    --brand-sk-gold: 49.07 91.84% 48.04%;
+    --brand-sk-red: 354.04 72.77% 46.08%;
+
+    --admin-page-bg: 220 50% 97.65%;
     --admin-surface: 0 0% 100%;
-    --admin-border: 247 46% 89%;
+    --admin-surface-subtle: 216 55.56% 98.24%;
+    --admin-border: 214.74 42.22% 91.18%;
+    --admin-border-strong: 213.1 38.67% 85.29%;
     --admin-nav-dark: 218 64% 23%;
-    --admin-heading: 225 61% 27%;
-    --admin-link: 212 64% 40%;
-    --admin-body: 180 12% 21%;
-    --admin-meta: 240 13% 48%;
+    --admin-heading: 220.71 37.84% 14.51%;
+    --admin-link: 212.52 64.53% 39.8%;
+    --admin-body: 220.71 37.84% 14.51%;
+    --admin-meta: 215.38 16.32% 46.86%;
     --admin-on-dark: 0 0% 100%;
     --admin-active-on-dark: 49 92% 48%;
 
-    --user-page-bg: 244 100% 98%;
+    --user-page-bg: 220 50% 97.65%;
     --user-surface: 0 0% 100%;
-    --user-border: 247 46% 89%;
+    --user-surface-subtle: 216 55.56% 98.24%;
+    --user-border: 214.74 42.22% 91.18%;
+    --user-border-strong: 213.1 38.67% 85.29%;
     --user-nav-dark: 218 64% 23%;
-    --user-heading: 225 61% 27%;
-    --user-link: 212 64% 40%;
-    --user-body: 180 12% 21%;
-    --user-meta: 240 13% 48%;
+    --user-heading: 220.71 37.84% 14.51%;
+    --user-link: 212.52 64.53% 39.8%;
+    --user-body: 220.71 37.84% 14.51%;
+    --user-meta: 215.38 16.32% 46.86%;
     --user-on-dark: 0 0% 100%;
     --user-active-on-dark: 49 92% 48%;
 
@@ -55,8 +104,8 @@
     --semantic-danger: 354 73% 46%;
     --semantic-info-admin: 225 61% 27%;
     --semantic-info-user: 225 61% 27%;
-    --semantic-disabled: 0 0% 73%;
-    --semantic-placeholder: 0 0% 67%;
+    --semantic-disabled: 215 20.22% 65.1%;
+    --semantic-placeholder: 215 20.22% 65.1%;
 
     --background: var(--admin-page-bg);
     --foreground: var(--admin-body);
@@ -68,23 +117,28 @@
     --popover-foreground: var(--admin-body);
 
     --primary: var(--brand-mid-blue);
+    --primary-hover: 212.54 65.56% 35.29%;
+    --primary-active: 212.67 66.89% 29.61%;
+    --primary-strong: 217.97 81.57% 42.55%;
+    --primary-soft: 214.74 82.61% 95.49%;
+    --surface-hover: 216 83.33% 97.65%;
     --primary-foreground: var(--admin-on-dark);
 
     --secondary: var(--brand-deep-blue);
     --secondary-foreground: var(--admin-on-dark);
 
-    --muted: 244 62% 96%;
+    --muted: var(--admin-surface-subtle);
     --muted-foreground: var(--admin-meta);
 
-    --accent: var(--admin-link);
-    --accent-foreground: var(--admin-on-dark);
+    --accent: var(--primary-soft);
+    --accent-foreground: var(--primary);
 
     --destructive: var(--semantic-danger);
     --destructive-foreground: var(--admin-on-dark);
 
     --border: var(--admin-border);
     --input: var(--admin-border);
-    --ring: var(--brand-mid-blue);
+    --ring: 217.22 91.22% 59.8%;
 
     --radius: 0.625rem;
 
@@ -107,8 +161,8 @@
     /* Custom tokens */
     --hero-gradient: linear-gradient(135deg, hsl(var(--admin-nav-dark)), hsl(var(--brand-deep-blue)), hsl(var(--brand-mid-blue)));
     --stats-gradient: linear-gradient(135deg, hsl(var(--brand-deep-blue)), hsl(var(--admin-heading)), hsl(var(--brand-mid-blue)));
-    --card-shadow: 0 1px 2px hsl(225 45% 16% / 0.06), 0 10px 24px hsl(225 45% 16% / 0.08);
-    --card-shadow-hover: 0 4px 14px hsl(225 45% 16% / 0.1), 0 16px 34px hsl(225 45% 16% / 0.1);
+    --card-shadow: var(--yt-shadow-sm);
+    --card-shadow-hover: var(--yt-shadow-md);
     --glow-primary: 0 0 20px hsl(var(--brand-mid-blue) / 0.24);
   }
 
@@ -120,18 +174,23 @@
     --popover: var(--user-surface);
     --popover-foreground: var(--user-body);
     --primary: var(--brand-mid-blue);
+    --primary-hover: 212.54 65.56% 35.29%;
+    --primary-active: 212.67 66.89% 29.61%;
+    --primary-strong: 217.97 81.57% 42.55%;
+    --primary-soft: 214.74 82.61% 95.49%;
+    --surface-hover: 216 83.33% 97.65%;
     --primary-foreground: var(--user-on-dark);
     --secondary: var(--brand-deep-blue);
     --secondary-foreground: var(--user-on-dark);
-    --muted: 244 62% 96%;
+    --muted: var(--user-surface-subtle);
     --muted-foreground: var(--user-meta);
-    --accent: var(--user-link);
-    --accent-foreground: var(--user-on-dark);
+    --accent: var(--primary-soft);
+    --accent-foreground: var(--primary);
     --destructive: var(--semantic-danger);
     --destructive-foreground: var(--user-on-dark);
     --border: var(--user-border);
     --input: var(--user-border);
-    --ring: var(--brand-mid-blue);
+    --ring: 217.22 91.22% 59.8%;
     --success: var(--semantic-success);
     --success-foreground: var(--user-on-dark);
     --warning: var(--semantic-warning);
@@ -140,8 +199,8 @@
     --info-foreground: var(--user-on-dark);
     --hero-gradient: linear-gradient(135deg, hsl(var(--user-nav-dark)), hsl(var(--brand-deep-blue)), hsl(var(--brand-mid-blue)));
     --stats-gradient: linear-gradient(135deg, hsl(var(--brand-deep-blue)), hsl(var(--user-heading)), hsl(var(--brand-mid-blue)));
-    --card-shadow: 0 1px 2px hsl(225 45% 16% / 0.06), 0 10px 24px hsl(225 45% 16% / 0.08);
-    --card-shadow-hover: 0 4px 14px hsl(225 45% 16% / 0.1), 0 16px 34px hsl(225 45% 16% / 0.1);
+    --card-shadow: var(--yt-shadow-sm);
+    --card-shadow-hover: var(--yt-shadow-md);
     --glow-primary: 0 0 20px hsl(var(--brand-mid-blue) / 0.24);
   }
 

@@ -8,6 +8,10 @@ export type ProfileStatus =
   | "needs_update"
   | "suspended_inactive";
 
+export type RegistrationType = "new_organization" | "existing_urn";
+export type UrnReviewStatus = "not_applicable" | "pending" | "verified" | "needs_correction" | "rejected";
+export type VerificationMethod = "documents" | "urn" | null;
+
 export type DocumentSubmissionStatus =
   | "not_started"
   | "draft"
@@ -120,7 +124,6 @@ export type YPOPFile = {
 
 export type YPOPEventParticipationStatus =
   | "pending_verification"
-  | "confirmed"
   | "verified"
   | "needs_revision"
   | "rejected";
@@ -268,109 +271,6 @@ export type YPOPPeriod = {
   updatedAt: string;
 };
 
-export type MOVEApplicationStatus =
-  | "draft"
-  | "submitted"
-  | "under_review"
-  | "needs_revision"
-  | "approved_for_ftf_green"
-  | "rejected_red"
-  | "completed";
-
-export type MOVEOpportunityType =
-  | "international_delegation"
-  | "national_delegation"
-  | "seminar_internship_sports"
-  | "academic_research"
-  | "cultural_exchange";
-
-export type MOVERequirementPhase = "pre_application" | "post_program";
-
-export type MOVERequirementKey =
-  | "move_form"
-  | "valid_id"
-  | "parent_consent"
-  | "expected_expenditures"
-  | "barangay_residency"
-  | "invitation_letter"
-  | "acceptance_letter"
-  | "endorsement_letter"
-  | "good_moral"
-  | "kk_profiling"
-  | "post_delegation_report";
-
-export type MOVERequirementDefinition = {
-  key: MOVERequirementKey;
-  label: string;
-  description: string;
-  required: boolean;
-  phase: MOVERequirementPhase;
-};
-
-export type MOVEApplication = {
-  id: string;
-  organizationId: string;
-  submittedBy: string;
-  programTitle: string;
-  opportunityType: MOVEOpportunityType;
-  organizerName: string;
-  location: string;
-  invitationSource: string;
-  startDate: string;
-  endDate: string;
-  expectedExpenseTotal: number;
-  approvedAssistancePercent: number | null;
-  status: MOVEApplicationStatus;
-  adminRemarks: string;
-  applicantNote: string;
-  submittedAt: string;
-  reviewedAt: string;
-  completedAt: string;
-  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type MOVEFile = {
-  id: string;
-  applicationId: string;
-  organizationId: string;
-  requirementKey: MOVERequirementKey;
-  requirementPhase: MOVERequirementPhase;
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  uploadedAt: string;
-};
-
-export const MOVE_OPPORTUNITY_LABELS: Record<MOVEOpportunityType, string> = {
-  international_delegation: "International Delegation",
-  national_delegation: "National Delegation / NCR",
-  seminar_internship_sports: "Seminar / Internship / Sports Representative",
-  academic_research: "Academic / Research Work",
-  cultural_exchange: "Cultural Exchange Delegation",
-};
-
-export const MOVE_REQUIREMENTS: MOVERequirementDefinition[] = [
-  {
-    key: "move_form",
-    label: "Accomplished MOVE Application Form (PDF)",
-    description: "Download the official MOVE form, accomplish it, then upload the scanned or soft-copy PDF here.",
-    required: true,
-    phase: "pre_application",
-  },
-];
-
-export const computeMoveAssistanceBracket = (expectedExpenseTotal: number) => {
-  if (expectedExpenseTotal >= 500001) {
-    return { label: "10%", minPercent: 10, maxPercent: 10 };
-  }
-  if (expectedExpenseTotal >= 100001) {
-    return { label: "10% - 20%", minPercent: 10, maxPercent: 20 };
-  }
-  return { label: "20% - 30%", minPercent: 20, maxPercent: 30 };
-};
-
 export type BudgetRequestType = "regular" | "ypop_incentive";
 
 export type RequiredDocumentType = {
@@ -381,12 +281,11 @@ export type RequiredDocumentType = {
   sortOrder: number;
   isRequired: boolean;
   isActive: boolean;
-  templateScope: "document_submission" | "move" | "other";
+  templateScope: "document_submission" | "other";
 };
 
 export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"], string> = {
   document_submission: "Document Submissions",
-  move: "MOVE Template",
   other: "Other Templates",
 };
 
@@ -446,13 +345,30 @@ export function computeYpopScore(
   return { cityLedEarned, cityLedMax, cityLedPercent, cityLedWeightedScore, orgLedBonus, totalScore: Math.round(cityLedPercent + orgLedBonus) };
 }
 
+export function buildVerifiedYpopAttendance(
+  activities: YPOPCityActivity[],
+  participations: Array<Pick<YPOPEventParticipation, "activityId" | "status">>,
+  legacyAttendance: Array<{ activityId: string; attended: boolean }> = [],
+) {
+  return activities.map((activity) => {
+    const participation = participations.find((item) => item.activityId === activity.id);
+    return {
+      activityId: activity.id,
+      attended: participation
+        ? participation.status === "verified"
+        : Boolean(legacyAttendance.find((item) => item.activityId === activity.id)?.attended),
+    };
+  });
+}
+
 export function getApprovedYpopOrgActivityCount(
   activities: YPOPOrgActivity[],
   entryId: string,
   fallbackCount = 0,
 ) {
-  const approvedCount = activities.filter((activity) => activity.ypopEntryId === entryId && activity.status === "approved").length;
-  return approvedCount > 0 ? approvedCount : fallbackCount;
+  const linkedActivities = activities.filter((activity) => activity.ypopEntryId === entryId);
+  if (!linkedActivities.length) return fallbackCount;
+  return linkedActivities.filter((activity) => activity.status === "approved").length;
 }
 
 export const majorClassificationOptions = ["Youth Organization", "Youth-Serving Organization"] as const;
@@ -668,6 +584,14 @@ export type OrganizationProfile = {
   barangay: string;
   isExistingOrganization: boolean;
   organizationIdentifierNumber: string;
+  registrationType: RegistrationType;
+  urn: string;
+  urnNormalized: string;
+  urnReviewStatus: UrnReviewStatus;
+  urnAdminRemarks: string;
+  urnReviewedBy: string;
+  urnReviewedAt: string;
+  verificationMethod: VerificationMethod;
   majorClassification: MajorClassification | "";
   subClassification: SubClassification | "";
   advocacies: Advocacy[];
@@ -675,6 +599,10 @@ export type OrganizationProfile = {
   representativeName: string;
   address: string;
   facebookPageUrl: string;
+  profileImageUrl?: string;
+  directoryVisibility?: boolean;
+  directoryShowRepresentative?: boolean;
+  directoryShowAdviser?: boolean;
   profileStatus: ProfileStatus;
   verifiedAt: string;
   internalNotes: string;
@@ -700,6 +628,17 @@ export type SubmissionFile = {
   adminRemarks: string;
   userRemarks?: string;
   ocrMetadata?: Record<string, unknown> | null;
+  revisionHistory?: Array<{
+    action?: string;
+    adminRemarks?: string;
+    changedAt?: string;
+    previousFileName?: string;
+    previousFileType?: string;
+    previousFileSize?: number;
+    previousFileUrl?: string;
+    previousStatus?: string;
+    reviewedAt?: string;
+  }>;
   uploadedAt: string;
   reviewedAt: string;
   createdAt: string;
@@ -850,6 +789,30 @@ export type ActivityLog = {
   createdAt: string;
 };
 
+export type PublicOrganizationDirectoryItem = {
+  organizationId: string;
+  organizationName: string;
+  profileImageUrl: string;
+  majorClassification: string;
+  subClassification: string;
+  district: string;
+  barangay: string;
+  advocacies: string[];
+  facebookPageUrl: string;
+  verifiedAt: string;
+  yorpRegisteredYear: number | null;
+  representativeName: string;
+  adviserName: string;
+};
+
+export type PublicOrganizationActivity = {
+  id: string;
+  name: string;
+  date: string;
+  venue: string;
+  kind: "city_led" | "organization_led";
+};
+
 export type InquiryRecord = {
   id: string;
   organizationId: string;
@@ -899,8 +862,6 @@ export type LydoSeedState = {
   ypopOrgActivityFiles: YPOPOrgActivityFile[];
   ypopCityActivities: YPOPCityActivity[];
   ypopPeriods: YPOPPeriod[];
-  moveApplications: MOVEApplication[];
-  moveFiles: MOVEFile[];
 };
 
 const nowIso = new Date().toISOString();
@@ -1781,8 +1742,6 @@ export const seedState: LydoSeedState = {
       updatedAt: "2026-05-01T00:00:00.000Z",
     },
   ],
-  moveApplications: [],
-  moveFiles: [],
   inquiries: [],
 };
 
@@ -1815,7 +1774,6 @@ export const statusToneMap: Record<string, "default" | "secondary" | "destructiv
   qualified: "default",
   not_qualified: "destructive",
   pending_verification: "secondary",
-  confirmed: "default",
   approved: "default",
   rejected: "destructive",
   reviewed: "default",
@@ -1857,6 +1815,34 @@ export const statusLabelMap: Record<string, string> = {
   rejected: "Rejected",
   reviewed: "Reviewed",
   closed: "Closed",
+  open: "Open",
+  upcoming: "Upcoming",
+  ongoing: "Ongoing",
+  past: "Past",
+  archived: "Archived",
+  postponed: "Postponed",
+  cancelled: "Cancelled",
+  active: "Active",
+  partner: "Partner",
+  pending: "Pending",
+  inactive: "Inactive",
+  registered: "Registered",
+  attended: "Attended",
+  partial: "Partial",
+  issue: "Issue",
+  late: "Late",
+  missing: "Missing",
+  compliant: "Compliant",
+  failed: "Failed",
+  needs_reupload: "Needs Re-upload",
+  mismatch: "Mismatch",
+  received: "Received",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+  finalized: "Finalized",
+  due_soon: "Due Soon",
+  enabled: "Enabled",
+  disabled: "Disabled",
 };
 
 export const complianceSummaryHighlights = [

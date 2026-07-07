@@ -3,11 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import VerifyEmail from "./pages/VerifyEmail";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
@@ -21,7 +22,11 @@ import NewsReleaseRecord from "./pages/NewsReleaseRecord";
 import PublicTemplates from "./pages/PublicTemplates";
 import { usePolicyAgreement } from "./hooks/use-policy-agreement";
 import { TermsPrivacyAgreementModal } from "./components/TermsPrivacyAgreementModal";
-import UserPortal from "./user/UserPortal";
+import UserPortalEntry, { PwaRouteEntry } from "./user/UserPortalEntry";
+import { useInstalledUserPwa } from "./user/pwa/hooks/useInstalledUserPwa";
+import PwaInitialLoadingScreen from "./user/pwa/PwaInitialLoadingScreen";
+import { PwaEntryGate, PwaPublicResourceGate } from "./user/pwa/public/PwaPublicEntry";
+import { PWA_ENTRY_ROUTE } from "./user/pwa/pwaAuthFlow";
 import { LydoConnectProvider } from "./lib/lydo-connect-store";
 import { isSupabaseConfigured } from "./lib/supabase";
 import {
@@ -41,43 +46,19 @@ const FullScreenLoader = () => (
 
 const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isAuthenticated, role, user, signOut } = useAuth();
-  const shouldCheckPolicy = isInitialized && isAuthenticated && role !== "admin" && Boolean(user?.id);
-  const { isChecking, isRequired, activePolicy, accepting, error, accept, refresh } = usePolicyAgreement({
+  const usePwaUi = useInstalledUserPwa();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const isRecoveryRoute = pathname === "/reset-password" || pathname === "/auth/callback";
+  const shouldCheckPolicy =
+    !isRecoveryRoute && isInitialized && isAuthenticated && role !== "admin" && Boolean(user?.id);
+  const { isChecking, isRequired, activePolicy, accepting, error, accept } = usePolicyAgreement({
     userId: user?.id ?? null,
     enabled: shouldCheckPolicy,
   });
 
-  if (!isInitialized) return <FullScreenLoader />;
-  if (shouldCheckPolicy && isChecking) return <FullScreenLoader />;
-  if (shouldCheckPolicy && !activePolicy) {
-    return (
-      <div className="min-h-screen bg-background grid place-items-center px-4">
-        <div className="max-w-md rounded-xl border border-border bg-card p-5 text-center">
-          <h2 className="text-lg font-semibold text-foreground">Policy Agreement Required</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            We could not load the active Terms of Service and Privacy Policy right now.
-          </p>
-          {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
-          <div className="mt-4 flex justify-center gap-2">
-            <button
-              type="button"
-              className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
-              onClick={() => void refresh()}
-            >
-              Retry
-            </button>
-            <button
-              type="button"
-              className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:bg-primary/90"
-              onClick={() => void signOut()}
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
+  if (shouldCheckPolicy && isChecking) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
 
   return (
     <>
@@ -86,9 +67,13 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
         open={Boolean(shouldCheckPolicy && isRequired && activePolicy)}
         policy={activePolicy}
         saving={accepting}
+        variant={usePwaUi ? "pwa" : "website"}
         error={error}
         onAccept={async () => {
-          await accept();
+          const result = await accept();
+          if (!result.error && pathname === "/verify-email") {
+            navigate(usePwaUi ? "/app" : "/dashboard", { replace: true });
+          }
         }}
         onDecline={async () => {
           await signOut();
@@ -107,9 +92,10 @@ const RequireAdmin = ({ children }: { children: JSX.Element }) => {
 
 const RequireUser = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isAuthenticated, role } = useAuth();
-  if (!isInitialized) return <FullScreenLoader />;
+  const usePwaUi = useInstalledUserPwa();
+  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
   if (role === "admin") return <Navigate to="/admin" replace />;
-  if (!isAuthenticated) return <Navigate to={USER_SIGNIN_PATH} replace />;
+  if (!isAuthenticated) return <Navigate to={usePwaUi ? PWA_ENTRY_ROUTE : USER_SIGNIN_PATH} replace />;
   return children;
 };
 
@@ -119,6 +105,11 @@ const NotFoundRoute = () => {
   if (IS_ADMIN_SURFACE) return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   return <NotFound />;
+};
+
+const UserSurfaceRoot = () => {
+  const usePwaUi = useInstalledUserPwa();
+  return usePwaUi ? <Navigate to={PWA_ENTRY_ROUTE} replace /> : <Index />;
 };
 
 const ScrollToTopOnRouteChange = () => {
@@ -150,14 +141,14 @@ const App = () => (
     <LydoConnectProvider>
       <AuthProvider>
         <TooltipProvider>
-          <PolicyAgreementGate>
-            <>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <PolicyAgreementGate>
+              <>
               <Toaster />
               <Sonner />
-              <BrowserRouter>
-                <ScrollToTopOnRouteChange />
-                <SurfaceThemeClass />
-                <Routes>
+              <ScrollToTopOnRouteChange />
+              <SurfaceThemeClass />
+              <Routes>
                   {IS_ADMIN_SURFACE ? (
                     <>
                       <Route path={ADMIN_SIGNIN_PATH} element={<SignIn forcedMode="admin" />} />
@@ -178,7 +169,6 @@ const App = () => (
                       <Route path="/admin/activity-logs" element={<RequireAdmin><AdminPortal section="activity-logs" /></RequireAdmin>} />
                       <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                       <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
-                      <Route path="/admin/move-applications" element={<Navigate to="/admin/ypop-validation" replace />} />
                       <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
                       <Route path="/" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="*" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
@@ -203,13 +193,12 @@ const App = () => (
                           <Route path="/admin/activity-logs" element={<RequireAdmin><AdminPortal section="activity-logs" /></RequireAdmin>} />
                           <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                           <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
-                          <Route path="/admin/move-applications" element={<Navigate to="/admin/ypop-validation" replace />} />
                           <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
                         </>
                       ) : (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />
                       )}
-                      <Route path="/" element={<Index />} />
+                      <Route path="/" element={<UserSurfaceRoot />} />
                       <Route path="/public-templates" element={<PublicTemplates />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/faqs" element={<Faqs />} />
@@ -218,32 +207,41 @@ const App = () => (
                       <Route path="/terms" element={<LegalPolicy />} />
                       <Route path="/privacy" element={<LegalPolicy />} />
                       <Route path="/advocacy" element={<About />} />
+                      <Route path={PWA_ENTRY_ROUTE} element={<PwaEntryGate />} />
+                      <Route path={`${PWA_ENTRY_ROUTE}/help`} element={<PwaPublicResourceGate page="help" />} />
+                      <Route path={`${PWA_ENTRY_ROUTE}/faqs`} element={<PwaPublicResourceGate page="faqs" />} />
+                      <Route path={`${PWA_ENTRY_ROUTE}/contact`} element={<PwaPublicResourceGate page="contact" />} />
+                      <Route path={`${PWA_ENTRY_ROUTE}/privacy`} element={<PwaPublicResourceGate page="privacy" />} />
+                      <Route path={`${PWA_ENTRY_ROUTE}/terms`} element={<PwaPublicResourceGate page="terms" />} />
                       <Route path={USER_SIGNIN_PATH} element={<SignIn forcedMode={IS_USER_SURFACE ? "user" : undefined} />} />
                       <Route path="/auth/callback" element={<AuthCallback />} />
                       <Route path="/signup" element={<SignUp />} />
+                      <Route path="/verify-email" element={<VerifyEmail />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
-                      <Route path="/dashboard" element={<RequireUser><UserPortal section="dashboard" /></RequireUser>} />
-                      <Route path="/organization-profile" element={<RequireUser><UserPortal section="organization-profile" /></RequireUser>} />
-                      <Route path="/document-submission" element={<RequireUser><UserPortal section="document-submission" /></RequireUser>} />
+                      <Route path="/dashboard" element={<RequireUser><UserPortalEntry section="dashboard" /></RequireUser>} />
+                      <Route path="/organization-profile" element={<RequireUser><UserPortalEntry section="organization-profile" /></RequireUser>} />
+                      <Route path="/document-submission" element={<RequireUser><UserPortalEntry section="document-submission" /></RequireUser>} />
                       <Route path="/validation-review" element={<Navigate to="/document-submission" replace />} />
-                      <Route path="/budget-request" element={<RequireUser><UserPortal section="budget-request" /></RequireUser>} />
-                      <Route path="/liquidation-reporting" element={<RequireUser><UserPortal section="liquidation-reporting" /></RequireUser>} />
-                      <Route path="/news-releases" element={<RequireUser><UserPortal section="news-releases" /></RequireUser>} />
-                      <Route path="/news-releases/:newsReleaseId" element={<NewsReleaseRecord />} />
-                      <Route path="/public-transparency" element={<RequireUser><UserPortal section="public-transparency" /></RequireUser>} />
-                      <Route path="/compliance-status" element={<RequireUser><UserPortal section="compliance-status" /></RequireUser>} />
-                      <Route path="/notifications" element={<RequireUser><UserPortal section="notifications" /></RequireUser>} />
-                      <Route path="/ypop" element={<RequireUser><UserPortal section="ypop" /></RequireUser>} />
-                      <Route path="/move" element={<Navigate to="/ypop" replace />} />
-                      <Route path="/templates" element={<RequireUser><UserPortal section="templates" /></RequireUser>} />
+                      <Route path="/budget-request" element={<RequireUser><UserPortalEntry section="budget-request" /></RequireUser>} />
+                      <Route path="/liquidation-reporting" element={<RequireUser><UserPortalEntry section="liquidation-reporting" /></RequireUser>} />
+                      <Route path="/news-releases" element={<RequireUser><UserPortalEntry section="news-releases" /></RequireUser>} />
+                      <Route path="/news-releases/:newsReleaseId" element={<RequireUser><UserPortalEntry section="news-releases" browserElement={<NewsReleaseRecord />} /></RequireUser>} />
+                      <Route path="/public-transparency" element={<RequireUser><UserPortalEntry section="public-transparency" /></RequireUser>} />
+                      <Route path="/compliance-status" element={<RequireUser><UserPortalEntry section="compliance-status" /></RequireUser>} />
+                      <Route path="/notifications" element={<RequireUser><UserPortalEntry section="notifications" /></RequireUser>} />
+                      <Route path="/ypop" element={<RequireUser><UserPortalEntry section="ypop" /></RequireUser>} />
+                      <Route path="/templates" element={<RequireUser><UserPortalEntry section="templates" /></RequireUser>} />
+                      <Route path="/app-more" element={<RequireUser><UserPortalEntry section="more" /></RequireUser>} />
+                      <Route path="/app-inquiries" element={<RequireUser><UserPortalEntry section="inquiries" /></RequireUser>} />
+                      <Route path="/app/*" element={<RequireUser><PwaRouteEntry /></RequireUser>} />
                       <Route path="/profile" element={<Navigate to="/organization-profile" replace />} />
                       <Route path="*" element={<NotFoundRoute />} />
                     </>
                   )}
-                </Routes>
-              </BrowserRouter>
-            </>
-          </PolicyAgreementGate>
+              </Routes>
+              </>
+            </PolicyAgreementGate>
+          </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
     </LydoConnectProvider>

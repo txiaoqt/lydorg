@@ -16,7 +16,7 @@ const faqs = [
   {
     question: "Who can create an account?",
     answer:
-      "Only organization representatives can register an account. Each account is tied to one youth organization. If your organization already has a YORP Pasig identifier number, check the 'existing organization' box during sign-up.",
+      "Only organization representatives can register an account. Each account is tied to one youth organization. If your organization already has a Unique Registration Number (URN), select the previously registered organization option during sign-up.",
   },
   {
     question: "What do I need to complete first before submitting documents?",
