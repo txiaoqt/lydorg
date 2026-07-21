@@ -16,8 +16,8 @@ export default function BrandLogo({
   textClassName,
 }: BrandLogoProps) {
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <img src="/y-trace-logo.png" alt="Y-TRACE logo" className={cn("h-10 w-10 object-contain", imgClassName)} />
+    <div className={cn("flex h-[49px] w-[129px] items-center gap-[10px] px-[10px] py-0", className)}>
+      <img src="/y-trace-logo.svg" alt="Y-TRACE logo" className={cn("h-full w-auto object-contain", imgClassName)} />
       {showText ? (
         <div className={cn("min-w-0", textClassName)}>
           <p className="font-heading font-bold leading-tight">Y-TRACE</p>

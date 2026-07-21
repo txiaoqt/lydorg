@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { LegalPolicyView } from "@/components/LegalPolicyView";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 
@@ -17,7 +17,6 @@ type PolicyVersion = {
 
 const LegalPolicy = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const isTerms = location.pathname === "/terms";
   const [policy, setPolicy] = useState<PolicyVersion | null>(null);
   const displayPolicy = resolveDisplayPolicy(policy);
@@ -44,46 +43,56 @@ const LegalPolicy = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
-      <main className="container mx-auto px-5 py-7 sm:py-10">
-        <div className="mx-auto max-w-[800px]">
-          <header className="mb-5">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="mb-3 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label="Go back from legal policy"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back
-            </button>
-            <h1 className="text-[1.75rem] font-bold tracking-tight text-foreground sm:text-3xl">
-              {isTerms ? "Terms of Service" : "Privacy Policy"}
-            </h1>
-          </header>
 
-          <nav className="mb-5 flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card p-1 text-sm" aria-label="Legal policies">
-            <Link
-              to="/terms"
-              className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                isTerms ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              Terms of Service
-            </Link>
+      {/* Hero */}
+      <section className="public-templates-hero-gradient px-5 pt-[120px] sm:px-6 lg:px-[64px]">
+        <div className="mx-auto flex min-h-[285px] w-full max-w-7xl flex-col justify-center gap-[16px] py-[48px]">
+          <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-public-fs-hero">
+            Legal Policies
+          </h1>
+          <p className="font-segoe font-normal leading-[120%] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
+            Review how Y-TRACE handles your data and the terms for using the platform.
+          </p>
+        </div>
+      </section>
+
+      {/* Tab bar */}
+      <section className="bg-public-bg-section px-5 pb-[32px] pt-[48px] sm:px-6 lg:px-[64px]">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="flex gap-[10px] rounded-[16px] border border-public-border-default bg-white p-[16px] shadow-public-nav">
             <Link
               to="/privacy"
-              className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                !isTerms ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              className={`flex h-[48px] flex-1 items-center justify-center rounded-[8px] px-[16px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] transition-colors ${
+                !isTerms
+                  ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                  : "text-public-text-brand hover:bg-public-bg-section"
               }`}
             >
               Privacy Policy
             </Link>
-          </nav>
+            <Link
+              to="/terms"
+              className={`flex h-[48px] flex-1 items-center justify-center rounded-[8px] px-[16px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] transition-colors ${
+                isTerms
+                  ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                  : "text-public-text-brand hover:bg-public-bg-section"
+              }`}
+            >
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </section>
 
+      {/* Policy content */}
+      <section className="bg-public-bg-section px-5 pb-[64px] sm:px-6 lg:px-[64px]">
+        <div className="mx-auto w-full max-w-7xl">
           <LegalPolicyView type={isTerms ? "terms" : "privacy"} policy={displayPolicy} />
         </div>
-      </main>
+      </section>
+
       <Footer />
     </div>
   );

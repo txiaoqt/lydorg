@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -260,6 +261,7 @@ export default function YouthDesk() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <PageHero

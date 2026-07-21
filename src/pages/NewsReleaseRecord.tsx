@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,7 +39,8 @@ export default function NewsReleaseRecord() {
   if (!newsRelease) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <AnnouncementBar />
+      <Navbar />
         <main className="pt-16">
           <div className="sticky top-16 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
@@ -68,6 +70,7 @@ export default function NewsReleaseRecord() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
       <main className="pt-16">
 

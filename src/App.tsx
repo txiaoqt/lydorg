@@ -2,10 +2,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import Index from "./pages/Index";
-import About from "./pages/About";
+const Index = lazy(() => import("./pages/Index"));
+const About = lazy(() => import("./pages/About"));
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -13,18 +13,19 @@ import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import AdminPortal from "./admin/AdminPortal";
-import LegalPolicy from "./pages/LegalPolicy";
-import Faqs from "./pages/Faqs";
-import Contacts from "./pages/Contacts";
+const LegalPolicy = lazy(() => import("./pages/LegalPolicy"));
+const Faqs = lazy(() => import("./pages/Faqs"));
+const Contacts = lazy(() => import("./pages/Contacts"));
 import ResetPassword from "./pages/ResetPassword";
-import SiteMap from "./pages/SiteMap";
+const SiteMap = lazy(() => import("./pages/SiteMap"));
 import NewsReleaseRecord from "./pages/NewsReleaseRecord";
-import PublicTemplates from "./pages/PublicTemplates";
+const PublicTemplates = lazy(() => import("./pages/PublicTemplates"));
 import { usePolicyAgreement } from "./hooks/use-policy-agreement";
 import { TermsPrivacyAgreementModal } from "./components/TermsPrivacyAgreementModal";
 import UserPortalEntry, { PwaRouteEntry } from "./user/UserPortalEntry";
 import { useInstalledUserPwa } from "./user/pwa/hooks/useInstalledUserPwa";
 import PwaInitialLoadingScreen from "./user/pwa/PwaInitialLoadingScreen";
+import PublicPageLoader from "./components/PublicPageLoader";
 import { PwaEntryGate, PwaPublicResourceGate } from "./user/pwa/public/PwaPublicEntry";
 import { PWA_ENTRY_ROUTE } from "./user/pwa/pwaAuthFlow";
 import { LydoConnectProvider } from "./lib/lydo-connect-store";
@@ -57,8 +58,19 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
     enabled: shouldCheckPolicy,
   });
 
-  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
-  if (shouldCheckPolicy && isChecking) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
+  const publicPaths = ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/advocacy"];
+  const isPublicPath = publicPaths.includes(pathname);
+
+  if (!isInitialized) {
+    if (usePwaUi) return <PwaInitialLoadingScreen />;
+    if (isPublicPath) return <PublicPageLoader />;
+    return <FullScreenLoader />;
+  }
+  if (shouldCheckPolicy && isChecking) {
+    if (usePwaUi) return <PwaInitialLoadingScreen />;
+    if (isPublicPath) return <PublicPageLoader />;
+    return <FullScreenLoader />;
+  }
 
   return (
     <>
@@ -198,15 +210,15 @@ const App = () => (
                       ) : (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />
                       )}
-                      <Route path="/" element={<UserSurfaceRoot />} />
-                      <Route path="/public-templates" element={<PublicTemplates />} />
-                      <Route path="/about" element={<About />} />
-                      <Route path="/faqs" element={<Faqs />} />
-                      <Route path="/contacts" element={<Contacts />} />
-                      <Route path="/site-map" element={<SiteMap />} />
-                      <Route path="/terms" element={<LegalPolicy />} />
-                      <Route path="/privacy" element={<LegalPolicy />} />
-                      <Route path="/advocacy" element={<About />} />
+                      <Route path="/" element={<Suspense fallback={<PublicPageLoader />}><UserSurfaceRoot /></Suspense>} />
+                      <Route path="/public-templates" element={<Suspense fallback={<PublicPageLoader />}><PublicTemplates /></Suspense>} />
+                      <Route path="/about" element={<Suspense fallback={<PublicPageLoader />}><About /></Suspense>} />
+                      <Route path="/faqs" element={<Suspense fallback={<PublicPageLoader />}><Faqs /></Suspense>} />
+                      <Route path="/contacts" element={<Suspense fallback={<PublicPageLoader />}><Contacts /></Suspense>} />
+                      <Route path="/site-map" element={<Suspense fallback={<PublicPageLoader />}><SiteMap /></Suspense>} />
+                      <Route path="/terms" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
+                      <Route path="/privacy" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
+                      <Route path="/advocacy" element={<Suspense fallback={<PublicPageLoader />}><About /></Suspense>} />
                       <Route path={PWA_ENTRY_ROUTE} element={<PwaEntryGate />} />
                       <Route path={`${PWA_ENTRY_ROUTE}/help`} element={<PwaPublicResourceGate page="help" />} />
                       <Route path={`${PWA_ENTRY_ROUTE}/faqs`} element={<PwaPublicResourceGate page="faqs" />} />

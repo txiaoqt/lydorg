@@ -1,4 +1,5 @@
-import { ArrowUp, ScrollText, ShieldCheck } from "lucide-react";
+import { useMemo } from "react";
+import { ArrowUp } from "lucide-react";
 import { PolicyContent } from "@/components/PolicyContent";
 import { getPolicySections } from "@/lib/policy-content";
 import type { DisplayPolicy } from "@/lib/ytrace-policy";
@@ -17,64 +18,57 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
   const isPrivacy = type === "privacy";
   const title = isPrivacy ? "Privacy Policy" : "Terms of Service";
   const content = isPrivacy ? policy.privacy_content : policy.terms_content;
-  const sections = getPolicySections(content);
-  const Icon = isPrivacy ? ShieldCheck : ScrollText;
+  const sections = useMemo(() => getPolicySections(content), [content]);
 
   return (
-    <article className="legal-policy-view mx-auto w-full max-w-[800px]">
-      <section className="mb-5 flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5" aria-label="Policy information">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold leading-tight text-foreground sm:text-xl">{title}</h2>
-            <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
-              Active
+    <article className="legal-policy-view w-full">
+      <div className="flex flex-col gap-[24px] lg:flex-row lg:items-start">
+
+        {/* Left column — sticky TOC */}
+        <div className="hidden w-[274px] shrink-0 lg:block">
+          <div className="sticky top-[130px] flex flex-col gap-[28px] p-[10px]">
+            <span className="font-segoe text-public-fs-subheading-sm font-semibold uppercase leading-[140%] tracking-[0.04em] text-public-text-secondary">
+              Table of Contents
             </span>
-          </div>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
-            Version {policy.version} · Effective {policy.effectiveDate}
-          </p>
-        </div>
-      </section>
-
-      {sections.length ? (
-        <details className="group mb-5 rounded-xl border border-border bg-card">
-          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-            Contents
-            <span className="text-xs font-normal text-muted-foreground group-open:hidden">Show sections</span>
-            <span className="hidden text-xs font-normal text-muted-foreground group-open:inline">Hide sections</span>
-          </summary>
-          <nav className="border-t border-border px-4 py-3" aria-label={`${title} contents`}>
-            <ol className="grid gap-1 sm:grid-cols-2 sm:gap-x-6">
+            <nav className="flex flex-col gap-[12px]">
               {sections.map((section) => (
-                <li key={section.id}>
-                  <a
-                    href={`#${section.id}`}
-                    className="flex min-h-11 items-center rounded-lg px-2 py-2 text-sm leading-5 text-muted-foreground transition-colors hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    {section.title}
-                  </a>
-                </li>
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  className="line-clamp-2 font-segoe text-public-fs-subheading-sm font-normal leading-[140%] text-[rgba(179,179,179,1)] transition-colors hover:text-public-text-brand"
+                >
+                  {section.title}
+                </a>
               ))}
-            </ol>
-          </nav>
-        </details>
-      ) : null}
+            </nav>
+          </div>
+        </div>
 
-      <section className="rounded-2xl border border-border bg-card px-5 py-6 shadow-sm sm:px-8 sm:py-8" aria-label={`${title} content`}>
-        <PolicyContent content={content} hideDocumentTitle hideMetadata />
-      </section>
+        {/* Right column */}
+        <div className="flex flex-1 flex-col gap-[16px]">
 
-      <footer className="mt-5 flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-4 text-xs leading-5 text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:text-sm">
-        <p>
-          Version {policy.version} · Last updated {policy.updatedAt ?? "June 30, 2026"} · Effective {policy.effectiveDate}
-        </p>
+          {/* Title frame */}
+          <div className="flex flex-col gap-[10px] border-b border-public-border-default pb-[10px]">
+            <h2 className="font-segoe text-[24px] font-bold leading-[120%] text-public-text-brand">
+              {title}
+            </h2>
+            <p className="font-segoe text-public-fs-body-sm font-normal leading-[120%] text-public-text-secondary">
+              Last Updated: {policy.updatedAt ?? "June 30, 2026"}
+            </p>
+          </div>
+
+          {/* Policy body */}
+          <PolicyContent content={content} hideDocumentTitle hideMetadata variant="redesign" />
+
+        </div>
+      </div>
+
+      {/* Back to top */}
+      <footer className="mt-5 flex justify-end rounded-xl border border-border bg-card px-4 py-4">
         <button
           type="button"
           onClick={backToTop}
-          className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-lg px-3 font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:self-auto"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={`Back to top of ${title}`}
         >
           <ArrowUp className="h-4 w-4" aria-hidden="true" />

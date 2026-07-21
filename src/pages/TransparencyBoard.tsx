@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, CircleX, FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import { StatusBadge } from "@/components/portal/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -261,6 +262,7 @@ export default function TransparencyBoard() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <section className="container py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6">

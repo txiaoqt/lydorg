@@ -2,6 +2,7 @@ import { Building2, Camera, Save, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,8 @@ export default function Profile() {
   if (!isInitialized) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <AnnouncementBar />
+      <Navbar />
         <div className="pt-24 container">
           <p className="text-sm text-muted-foreground">Loading profile...</p>
         </div>
@@ -82,6 +84,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <section className="container py-8 space-y-6 max-w-5xl">

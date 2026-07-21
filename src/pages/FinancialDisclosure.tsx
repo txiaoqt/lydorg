@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import StatCard from "@/components/StatCard";
@@ -57,6 +58,7 @@ export default function FinancialDisclosure() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <PageHero

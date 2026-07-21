@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "Templates", href: "/public-templates" },
   { label: "About", href: "/about" },
+  { label: "Forms & Templates", href: "/public-templates" },
+  { label: "News Releases", href: "/news-releases" },
   { label: "FAQs", href: "/faqs" },
-  { label: "Contacts", href: "/contacts" },
+  { label: "Contact", href: "/contacts" },
 ];
 
 const Navbar = () => {
@@ -37,23 +37,23 @@ const Navbar = () => {
   const portalLabel = role === "admin" ? "Admin Portal" : "Open Portal";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-primary/15 bg-background/90 backdrop-blur-xl">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:px-4">
+    <nav className="fixed left-0 right-0 top-[40px] z-50 bg-public-nav-bg shadow-public-nav">
+      <div className="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-5 py-[10px] sm:px-10 lg:px-20">
         <Link to="/" className="min-w-0 shrink-0">
-          <BrandLogo imgClassName="h-9 w-9 sm:h-10 sm:w-10" showText textClassName="hidden sm:block" />
+          <BrandLogo showText={false} />
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden h-[42px] items-center gap-[10px] bg-public-nav-bg px-[10px] md:flex">
           {!isAuthenticated
             ? navItems.map((item) => (
                 <Link
-                    key={item.href}
-                    to={item.href}
-                    className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  key={item.href}
+                  to={item.href}
+                  className={`flex h-[42px] items-center px-[12px] py-[10px] text-public-fs-body-sm font-normal leading-[140%] transition-colors ${
                     isNavItemActive(item.href)
-                      ? "border border-primary/25 bg-primary/12 text-primary"
-                      : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                      ? "border-b border-public-border-brand text-public-text-brand"
+                      : "border-b border-transparent text-public-text-secondary hover:text-public-text-brand"
                   }`}
                 >
                   {item.label}
@@ -63,24 +63,37 @@ const Navbar = () => {
         </div>
 
         {/* Desktop right actions */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden h-[40px] items-center gap-[16px] md:flex">
           {isAuthenticated ? (
             <>
-              <Button variant="outline" size="sm" asChild>
-                <Link to={portalHref}>{portalLabel}</Link>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Link
+                to={portalHref}
+                className="flex h-[40px] items-center rounded-[8px] border border-public-border-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+              >
+                {portalLabel}
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex h-[40px] items-center rounded-[8px] bg-public-bg-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+              >
                 Sign Out
-              </Button>
+              </button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/signin">Sign In</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/signup">Create Account</Link>
-              </Button>
+              <Link
+                to="/signin"
+                className="flex h-[40px] items-center rounded-[8px] border border-public-border-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="flex h-[40px] items-center rounded-[8px] bg-public-bg-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+              >
+                Create an Account
+              </Link>
             </>
           )}
         </div>
@@ -98,7 +111,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileOpen ? (
-        <div className="border-b border-primary/15 bg-background px-4 pb-4 md:hidden">
+        <div className="border-b border-primary/15 bg-public-nav-bg px-5 pb-4 sm:px-10 lg:px-20 md:hidden">
           {!isAuthenticated ? (
             <>
               <div className="space-y-0.5 py-3">
@@ -107,35 +120,49 @@ const Navbar = () => {
                     key={item.href}
                     to={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                    className={`block border-b py-2.5 pl-1 pr-4 text-public-fs-body-sm font-normal leading-[140%] transition-colors ${
                       isNavItemActive(item.href)
-                        ? "border border-primary/25 bg-primary/12 text-primary"
-                        : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                        ? "border-public-border-brand text-public-text-brand"
+                        : "border-transparent text-public-text-secondary hover:text-public-text-brand"
                     }`}
                   >
                     {item.label}
                   </Link>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <Link to="/signin" onClick={() => setMobileOpen(false)}>Sign In</Link>
-                </Button>
-                <Button size="sm" className="w-full" asChild>
-                  <Link to="/signup" onClick={() => setMobileOpen(false)}>Create Account</Link>
-                </Button>
+              <div className="grid grid-cols-2 gap-[16px] pt-1">
+                <Link
+                  to="/signin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-[40px] items-center justify-center rounded-[8px] border border-public-border-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-[40px] items-center justify-center rounded-[8px] bg-public-bg-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand"
+                >
+                  Create an Account
+                </Link>
               </div>
             </>
           ) : (
-            <div className="space-y-2 py-3">
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link to={portalHref} onClick={() => setMobileOpen(false)}>
-                  {portalLabel}
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full" onClick={handleSignOut}>
+            <div className="flex flex-col gap-[16px] py-3">
+              <Link
+                to={portalHref}
+                onClick={() => setMobileOpen(false)}
+                className="flex h-[40px] items-center justify-center rounded-[8px] border border-public-border-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand"
+              >
+                {portalLabel}
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex h-[40px] items-center justify-center rounded-[8px] bg-public-bg-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand"
+              >
                 Sign Out
-              </Button>
+              </button>
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { AlertCircle, Building2, CalendarDays, FileText, Filter, MapPin, Search, ShieldCheck, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ export default function Organizations() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <PageHero
