@@ -116,11 +116,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
         {/* Logo */}
         <div className="mb-7 text-left">
           <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
-            <BrandLogo
-              imgClassName="h-10 w-10"
-              showText
-              subtitle={isAdminMode ? "Admin Portal" : "Youth Portal"}
-            />
+            <BrandLogo imgClassName="h-10 w-10" showText={false} />
           </Link>
         </div>
 
