@@ -28,12 +28,12 @@ const Contacts = () => {
 
       {/* Hero */}
       <section className="public-templates-hero-gradient px-5 pt-[120px] sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex min-h-[285px] w-full max-w-7xl flex-col justify-center gap-[16px] py-[48px]">
-          <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-public-fs-hero">
+        <div className="mx-auto flex min-h-[285px] w-full max-w-7xl flex-col items-center justify-center gap-[16px] py-[48px] text-center sm:items-start sm:text-left">
+          <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[32px] sm:text-public-fs-hero">
             Contact Us
           </h1>
           <p className="font-segoe font-normal leading-[120%] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
-            Get in touch with the PCYDO office in Pasig City.
+            Get in touch with the PCYDO office<br className="sm:hidden" /> in Pasig City.
           </p>
         </div>
       </section>
@@ -44,8 +44,7 @@ const Contacts = () => {
 
           {/* Row 1 — Map */}
           <div
-            className="isolate overflow-hidden rounded-[16px] border border-public-bg-brand-subtle shadow-public-nav"
-            style={{ height: 282 }}
+            className="isolate h-[200px] overflow-hidden rounded-[16px] border border-public-bg-brand-subtle shadow-public-nav sm:h-[282px]"
           >
             <MapContainer
               center={COORDS}
@@ -69,7 +68,7 @@ const Contacts = () => {
           </div>
 
           {/* Row 2 — Office Address */}
-          <div className="flex items-center gap-[24px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav">
+          <div className="flex flex-col items-start gap-[12px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav sm:flex-row sm:items-center sm:gap-[24px]">
             <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
               <MapPin className="h-8 w-8 text-public-text-brand" />
             </div>
@@ -90,7 +89,7 @@ const Contacts = () => {
             <div className="flex flex-1 flex-col gap-[24px]">
 
               {/* Telephone */}
-              <div className="flex items-center gap-[24px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav">
+              <div className="flex flex-col items-start gap-[12px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav sm:flex-row sm:items-center sm:gap-[24px]">
                 <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
                   <Phone className="h-8 w-8 text-public-text-brand" />
                 </div>
@@ -105,7 +104,7 @@ const Contacts = () => {
               </div>
 
               {/* Email */}
-              <div className="flex items-center gap-[24px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav">
+              <div className="flex flex-col items-start gap-[12px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav sm:flex-row sm:items-center sm:gap-[24px]">
                 <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
                   <Mail className="h-8 w-8 text-public-text-brand" />
                 </div>

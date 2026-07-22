@@ -44,7 +44,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden h-[42px] items-center gap-[10px] bg-public-nav-bg px-[10px] md:flex">
+        <div className="hidden h-[42px] items-center gap-[10px] bg-public-nav-bg px-[10px] xl:flex">
           {!isAuthenticated
             ? navItems.map((item) => (
                 <Link
@@ -63,7 +63,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop right actions */}
-        <div className="hidden h-[40px] items-center gap-[16px] md:flex">
+        <div className="hidden h-[40px] items-center gap-[16px] xl:flex">
           {isAuthenticated ? (
             <>
               <Link
@@ -102,7 +102,7 @@ const Navbar = () => {
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
-          className="shrink-0 p-2 text-foreground md:hidden"
+          className="shrink-0 p-2 text-foreground xl:hidden"
           aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
         >
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -111,7 +111,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileOpen ? (
-        <div className="border-b border-primary/15 bg-public-nav-bg px-5 pb-4 sm:px-10 lg:px-20 md:hidden">
+        <div className="border-b border-primary/15 bg-public-nav-bg px-5 pb-4 sm:px-10 xl:hidden">
           {!isAuthenticated ? (
             <>
               <div className="space-y-0.5 py-3">

@@ -663,6 +663,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [activityExportDialogOpen, setActivityExportDialogOpen] = useState(false);
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
+  const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
   const [savingNewsRelease, setSavingNewsRelease] = useState(false);
   const [transparencyModalMode, setTransparencyModalMode] = useState<"create" | "edit" | null>(null);
   const [editingTransparencyPostId, setEditingTransparencyPostId] = useState<string | null>(null);
@@ -3455,6 +3456,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setNewsPreviewImageFileDraft(null);
     setNewsDatePostedDraft("");
     setNewsVisibilityDraft("draft");
+    setNewsCategoryDraft("");
   };
 
   const resetTransparencyForm = () => {
@@ -3491,6 +3493,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setNewsPreviewImageFileDraft(null);
     setNewsDatePostedDraft(newsRelease.datePosted);
     setNewsVisibilityDraft(newsRelease.visibilityStatus);
+    setNewsCategoryDraft(newsRelease.category ?? "");
   };
 
   const startEditingTransparencyPost = (postId: string) => {
@@ -3587,6 +3590,7 @@ export default function AdminPortal({ section }: { section: string }) {
           previewImageUrl: resolvedPreviewImageUrl,
           datePosted: newsDatePostedDraft,
           visibilityStatus: newsVisibilityDraft,
+          category: newsCategoryDraft,
         });
         updateNewsRelease(editingNewsReleaseId, updatedNewsRelease);
         await appendAuditLog("Updated news release", "news_release", updatedNewsRelease.id, `Updated news release "${updatedNewsRelease.title}".`);
@@ -3603,6 +3607,7 @@ export default function AdminPortal({ section }: { section: string }) {
           previewImageUrl: resolvedPreviewImageUrl,
           datePosted: newsDatePostedDraft,
           visibilityStatus: newsVisibilityDraft,
+          category: newsCategoryDraft,
         });
         createNewsRelease(createdNewsRelease);
         await appendAuditLog("Created news release", "news_release", createdNewsRelease.id, `Created news release "${createdNewsRelease.title}".`);
@@ -7148,6 +7153,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     setNewsPreviewImageUrlDraft("");
                     setNewsDatePostedDraft(new Date().toISOString().slice(0, 10));
                     setNewsVisibilityDraft("draft");
+                    setNewsCategoryDraft("");
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -7359,6 +7365,17 @@ export default function AdminPortal({ section }: { section: string }) {
                       onChange={(event) => setNewsDescriptionDraft(event.target.value)}
                       placeholder="Write the summary shown in the preview page."
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="news-release-category" className="text-sm font-medium">Category</label>
+                    <Input
+                      id="news-release-category"
+                      name="newsReleaseCategory"
+                      value={newsCategoryDraft}
+                      onChange={(event) => setNewsCategoryDraft(event.target.value)}
+                      placeholder="e.g. YORP, YPOP, MOVE"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional tag shown on public news release cards.</p>
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="news-release-facebook-url" className="text-sm font-medium">Facebook Post URL</label>

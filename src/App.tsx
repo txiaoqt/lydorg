@@ -20,6 +20,7 @@ import ResetPassword from "./pages/ResetPassword";
 const SiteMap = lazy(() => import("./pages/SiteMap"));
 import NewsReleaseRecord from "./pages/NewsReleaseRecord";
 const PublicTemplates = lazy(() => import("./pages/PublicTemplates"));
+const NewsReleases = lazy(() => import("./pages/NewsReleases"));
 import { usePolicyAgreement } from "./hooks/use-policy-agreement";
 import { TermsPrivacyAgreementModal } from "./components/TermsPrivacyAgreementModal";
 import UserPortalEntry, { PwaRouteEntry } from "./user/UserPortalEntry";
@@ -58,8 +59,9 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
     enabled: shouldCheckPolicy,
   });
 
-  const publicPaths = ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/advocacy"];
-  const isPublicPath = publicPaths.includes(pathname);
+  const isPublicPath =
+    ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/advocacy"].includes(pathname) ||
+    pathname.startsWith("/news-releases");
 
   if (!isInitialized) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
@@ -219,6 +221,8 @@ const App = () => (
                       <Route path="/terms" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
                       <Route path="/privacy" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
                       <Route path="/advocacy" element={<Suspense fallback={<PublicPageLoader />}><About /></Suspense>} />
+                      <Route path="/news-releases" element={<Suspense fallback={<PublicPageLoader />}><NewsReleases /></Suspense>} />
+                      <Route path="/news-releases/:newsReleaseId" element={<Suspense fallback={<PublicPageLoader />}><NewsReleaseRecord /></Suspense>} />
                       <Route path={PWA_ENTRY_ROUTE} element={<PwaEntryGate />} />
                       <Route path={`${PWA_ENTRY_ROUTE}/help`} element={<PwaPublicResourceGate page="help" />} />
                       <Route path={`${PWA_ENTRY_ROUTE}/faqs`} element={<PwaPublicResourceGate page="faqs" />} />
@@ -236,8 +240,7 @@ const App = () => (
                       <Route path="/validation-review" element={<Navigate to="/document-submission" replace />} />
                       <Route path="/budget-request" element={<RequireUser><UserPortalEntry section="budget-request" /></RequireUser>} />
                       <Route path="/liquidation-reporting" element={<RequireUser><UserPortalEntry section="liquidation-reporting" /></RequireUser>} />
-                      <Route path="/news-releases" element={<RequireUser><UserPortalEntry section="news-releases" /></RequireUser>} />
-                      <Route path="/news-releases/:newsReleaseId" element={<RequireUser><UserPortalEntry section="news-releases" browserElement={<NewsReleaseRecord />} /></RequireUser>} />
+
                       <Route path="/public-transparency" element={<RequireUser><UserPortalEntry section="public-transparency" /></RequireUser>} />
                       <Route path="/compliance-status" element={<RequireUser><UserPortalEntry section="compliance-status" /></RequireUser>} />
                       <Route path="/notifications" element={<RequireUser><UserPortalEntry section="notifications" /></RequireUser>} />

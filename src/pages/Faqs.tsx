@@ -109,10 +109,10 @@ const Faqs = () => {
 
       {/* Hero */}
       <section className="public-templates-hero-gradient px-5 pt-[120px] sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-[48px] pb-[48px] pt-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-[48px] pb-[32px] pt-[40px] sm:pb-[48px] sm:pt-[64px]">
 
-          <div className="flex flex-col gap-[16px]">
-            <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-public-fs-hero">
+          <div className="flex flex-col items-center gap-[16px] text-center sm:items-start sm:text-left">
+            <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[32px] sm:text-public-fs-hero">
               Frequently Asked Questions
             </h1>
             <p className="font-segoe font-normal leading-[120%] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
@@ -139,7 +139,7 @@ const Faqs = () => {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-[24px]">
 
           {/* Filter tabs */}
-          <div className="flex flex-wrap justify-center gap-[10px] p-[10px]">
+          <div className="flex gap-[10px] overflow-x-auto p-[10px] sm:justify-center">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -147,8 +147,8 @@ const Faqs = () => {
                 onClick={() => setActiveFilter(tab.id)}
                 className={
                   activeFilter === tab.id
-                    ? `rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
-                    : `rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default${tab.id === "all" ? " min-w-[80px]" : ""}`
+                    ? `shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
+                    : `shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default${tab.id === "all" ? " min-w-[80px]" : ""}`
                 }
               >
                 {tab.label}

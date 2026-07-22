@@ -200,7 +200,7 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
     <div className="flex flex-col gap-[24px]">
 
       {/* Filter tabs */}
-      <div className="flex flex-wrap justify-center gap-[10px] p-[10px]">
+      <div className="flex gap-[10px] overflow-x-auto p-[10px] sm:justify-center">
         {filterTabs.map((tab) => (
           <button
             key={tab.id}
@@ -208,8 +208,8 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
             onClick={() => setActiveFilter(tab.id)}
             className={
               activeFilter === tab.id
-                ? `rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
-                : `rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default${tab.id === "all" ? " min-w-[80px]" : ""}`
+                ? `shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
+                : `shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default${tab.id === "all" ? " min-w-[80px]" : ""}`
             }
           >
             {tab.label}
@@ -232,7 +232,7 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
                   <Icon className="h-6 w-6 text-public-text-brand" />
                 </div>
                 <div className="flex flex-col gap-[10px]">
-                  <h3 className="font-segoe text-[20px] font-bold leading-[120%] text-public-text-brand">
+                  <h3 className="font-segoe text-public-fs-subtitle-sm font-bold leading-[120%] text-public-text-brand">
                     {cat.title}
                   </h3>
                   <p className="font-segoe text-public-fs-body-sm font-normal leading-[120%] text-public-text-secondary">
@@ -243,7 +243,7 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
 
               {/* Cards or empty state */}
               {templates.length > 0 ? (
-                <div className="grid grid-cols-1 gap-[24px] py-[10px] sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-[24px] py-[10px] sm:grid-cols-2 xl:grid-cols-3">
                   {templates.map((t) => renderTemplateCard(t, cat.fallback))}
                 </div>
               ) : (

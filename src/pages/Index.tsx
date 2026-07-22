@@ -36,11 +36,14 @@ const getFileType = (url: string | null | undefined): string => {
   return ext.length <= 5 ? ext : "FILE";
 };
 
-const newsItems = [
-  { category: "YORP", title: "PCYDO Pasig City Announcement", date: "Month xx, 202x", facebookUrl: "#" },
-  { category: "YPOP", title: "PCYDO Pasig City Announcement", date: "Month xx, 202x", facebookUrl: "#" },
-  { category: "MOVE", title: "PCYDO Pasig City Announcement", date: "Month xx, 202x", facebookUrl: "#" },
-];
+type LatestNewsRelease = {
+  id: string;
+  title: string;
+  facebook_post_url: string;
+  preview_image_url: string | null;
+  date_posted: string;
+  category: string | null;
+};
 
 const overviewCards = [
   { icon: BookOpen,      title: "Learn the Process",       description: "Understand the compliance workflow and requirements for PCYDO-registered youth organizations." },
@@ -62,6 +65,7 @@ const Index = () => {
   const [activityCount, setActivityCount] = useState<number | null>(null);
   const [openingTemplateId, setOpeningTemplateId] = useState<string | null>(null);
   const [downloadingTemplateId, setDownloadingTemplateId] = useState<string | null>(null);
+  const [latestReleases, setLatestReleases] = useState<LatestNewsRelease[] | null>(null);
   const { isAuthenticated, role } = useAuth();
   const { hash } = useLocation();
   const { state } = useLydoConnect();
@@ -75,6 +79,20 @@ const Index = () => {
         .slice(0, 3),
     [state.templates],
   );
+
+  useEffect(() => {
+    if (!supabase) return;
+    void supabase
+      .from("news_releases")
+      .select("id,title,facebook_post_url,preview_image_url,date_posted,category")
+      .eq("visibility_status", "published")
+      .order("date_posted", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        setLatestReleases((data as LatestNewsRelease[] | null) ?? []);
+      });
+  }, []);
 
   const openTemplate = async (fileUrl: string, fileName: string) => {
     if (!fileUrl) return;
@@ -141,32 +159,34 @@ const Index = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="hero-section public-hero-gradient relative flex min-h-[758px] flex-col justify-center overflow-x-clip pt-[120px]">
+      <section className="hero-section public-hero-gradient relative flex min-h-[480px] flex-col justify-center overflow-x-clip pt-[120px] sm:min-h-[758px]">
         <div className="container mx-auto relative z-10 w-full max-w-7xl px-5 py-10 sm:px-6 lg:px-[64px] lg:py-0">
-          <div className="flex flex-col items-center gap-[10px] lg:flex-row lg:items-center lg:gap-[40px]">
+          <div className="flex flex-col-reverse items-center gap-[24px] lg:flex-row lg:items-center lg:gap-[40px]">
             {/* Left column */}
-            <div className="animate-fade-up flex w-full flex-col gap-[32px] py-[10px] lg:max-w-[510px] lg:shrink-0">
-              <div className="flex flex-col gap-[16px]">
-                <div className="inline-flex w-fit items-center gap-[8px] rounded-full border border-[rgba(220,228,240,0.4)] bg-white/15 px-[20px] py-[10px] backdrop-blur-[4px]">
+            <div className="animate-fade-up flex w-full flex-col items-center gap-[32px] py-[10px] text-center lg:max-w-[440px] lg:items-start lg:shrink-0 lg:text-left xl:max-w-[510px]">
+              <div className="flex flex-col items-center gap-[16px] lg:items-start">
+                <div className="inline-flex max-w-full overflow-hidden items-center gap-[8px] rounded-full border border-[rgba(220,228,240,0.4)] bg-white/15 px-[20px] py-[10px] backdrop-blur-[4px]">
                   <Shield className="h-5 w-5 shrink-0 text-white" />
-                  <span className="font-segoe text-public-fs-scale-01 font-semibold leading-[140%] text-white">
+                  <span className="truncate font-segoe text-public-fs-scale-01 font-semibold leading-[140%] text-white">
                     OFFICIAL PASIG CITY LOCAL YOUTH DEVELOPMENT OFFICE PORTAL
                   </span>
                 </div>
 
-                <h1 className="hero-title font-segoe font-bold leading-none tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] lg:text-public-fs-hero">
-                  Your youth organization's compliance, simplified.
+                <h1 className="hero-title font-segoe font-bold leading-none tracking-[-0.03em] text-public-text-neutral-on-neutral text-[26px] sm:text-public-fs-hero lg:text-[30px] xl:text-public-fs-hero">
+                  Your youth organization's
+                  <br className="hidden sm:block lg:hidden" />
+                  {" "}compliance, simplified.
                 </h1>
 
-                <p className="hero-description font-segoe font-normal leading-[120%] tracking-[-0.02em] text-justify text-white text-public-fs-body-md">
+                <p className="hero-description font-segoe font-normal leading-[120%] tracking-[-0.02em] text-center text-white text-public-fs-body-md sm:max-w-[500px] lg:max-w-none lg:text-justify">
                   Register, submit compliance documents, request activity budgets, and track liquidation deadlines - all in one place with PCYDO.
                 </p>
               </div>
 
-              <div className="flex items-center gap-[16px]">
+              <div className="flex w-full flex-col items-stretch gap-[12px] sm:w-auto sm:flex-row sm:items-center sm:gap-[16px]">
                 <Link
                   to={isAuthenticated ? portalHref : "/signin"}
-                  className="flex items-center gap-[8px] rounded-[8px] border border-public-bg-brand-subtle px-[24px] py-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
+                  className="flex items-center justify-center gap-[8px] rounded-[8px] border border-public-bg-brand-subtle px-[24px] py-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
                 >
                   {isAuthenticated ? "Open Portal" : "Sign In"}
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -174,7 +194,7 @@ const Index = () => {
                 {!isAuthenticated && (
                   <Link
                     to="/signup"
-                    className="flex items-center rounded-[8px] bg-white px-[24px] py-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                    className="flex items-center justify-center rounded-[8px] bg-white px-[24px] py-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
                   >
                     Create an Account
                   </Link>
@@ -185,7 +205,7 @@ const Index = () => {
             {/* Right column — hero image with floating stat cards */}
             <div className="animate-float relative min-w-0 flex-1 bg-transparent">
               {/* Floating card — top right */}
-              <div className="absolute -right-4 -top-6 z-10 flex h-[48px] w-auto min-w-[152px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card">
+              <div className="absolute -right-4 -top-6 z-10 hidden h-[48px] w-auto min-w-[152px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card sm:flex">
                 <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-public-bg-brand-subtle p-[6px]">
                   <Users className="h-4 w-4 text-public-text-brand" />
                 </div>
@@ -204,7 +224,7 @@ const Index = () => {
               />
 
               {/* Floating card — bottom left */}
-              <div className="absolute -bottom-6 -left-10 z-10 flex h-[48px] w-auto min-w-[132px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card">
+              <div className="absolute -bottom-6 -left-10 z-10 hidden h-[48px] w-auto min-w-[132px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card sm:flex">
                 <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-public-bg-brand-subtle p-[6px]">
                   <ClipboardList className="h-4 w-4 text-public-text-brand" />
                 </div>
@@ -221,7 +241,7 @@ const Index = () => {
       </section>
 
       {/* Quick Access */}
-      <section className="bg-public-bg-section py-[96px]">
+      <section className="bg-public-bg-section py-[48px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-[10px] px-5 sm:px-6 lg:px-[64px]">
           {/* Title block */}
           <div className="flex flex-col gap-[10px] py-[10px]">
@@ -239,7 +259,7 @@ const Index = () => {
           </div>
 
           {/* Cards grid */}
-          <div className="grid gap-[24px] py-[10px] sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-[24px] py-[10px] sm:grid-cols-2 xl:grid-cols-4">
             {quickLinks.map(({ icon: Icon, title, description, href }) => (
               <Link
                 key={href}
@@ -264,20 +284,20 @@ const Index = () => {
       </section>
 
       {/* Overview */}
-      <section className="bg-white px-5 py-[96px] sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-[24px] lg:flex-row lg:items-center">
+      <section className="bg-white px-5 py-[48px] sm:px-6 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-[24px] xl:flex-row xl:items-center">
 
           {/* Left column — portal preview card */}
-          <div className="flex w-full items-center justify-center rounded-[16px] border border-public-bg-brand-subtle bg-white p-[10px] shadow-public-overview-card lg:h-[700px] lg:w-[620px] lg:shrink-0">
+          <div className="flex w-full items-center justify-center rounded-[16px] border border-public-bg-brand-subtle bg-white p-[10px] shadow-public-overview-card xl:h-[700px] xl:w-[620px] xl:shrink-0">
             <img
               src={overviewPreview}
               alt="Y-TRACE portal preview"
-              className="block h-[323px] w-[540px] rounded-[12px] object-cover"
+              className="h-auto w-full max-w-[540px] rounded-[12px] object-cover"
             />
           </div>
 
           {/* Right column */}
-          <div className="flex w-full flex-col gap-[24px] lg:px-[24px]">
+          <div className="flex w-full flex-col gap-[24px] xl:px-[24px]">
 
             {/* Title block */}
             <div className="flex flex-col gap-[10px] py-[10px]">
@@ -295,7 +315,7 @@ const Index = () => {
             </div>
 
             {/* 2×2 feature cards */}
-            <div className="grid grid-cols-2 gap-x-[24px] gap-y-[12px] py-[10px]">
+            <div className="grid grid-cols-1 gap-x-[24px] gap-y-[12px] py-[10px] sm:grid-cols-2">
               {overviewCards.map(({ icon: Icon, title, description }) => (
                 <div key={title} className="flex flex-col gap-[8px] rounded-[8px] border border-public-bg-brand-subtle bg-white p-[16px]">
                   <div className="flex h-[40px] w-[40px] items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
@@ -312,16 +332,16 @@ const Index = () => {
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center gap-[16px]">
+            <div className="flex flex-col items-stretch gap-[12px] sm:flex-row sm:items-center sm:gap-[16px]">
               <Link
                 to="/about"
-                className="flex items-center gap-[8px] rounded-[8px] bg-public-bg-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+                className="flex items-center justify-center gap-[8px] rounded-[8px] bg-public-bg-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
               >
                 Learn More <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 to="/public-templates"
-                className="flex items-center rounded-[8px] border border-public-border-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex items-center justify-center rounded-[8px] border border-public-border-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
               >
                 Browse Forms & Templates
               </Link>
@@ -332,7 +352,8 @@ const Index = () => {
       </section>
 
       {/* Latest News */}
-      <section className="bg-public-bg-section px-5 py-[96px] sm:px-6 lg:px-[64px]">
+      {latestReleases !== null && latestReleases.length > 0 && (
+      <section className="bg-public-bg-section px-5 py-[48px] sm:px-6 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-[10px]">
 
           {/* Title group */}
@@ -350,9 +371,9 @@ const Index = () => {
             </p>
           </div>
 
-          {/* View all + cards */}
+          {/* Cards + view all */}
           <div className="flex flex-col gap-[8px]">
-            <div className="flex justify-end">
+            <div className="hidden justify-end sm:flex">
               <Link
                 to="/news-releases"
                 className="flex items-center gap-[8px] rounded-[8px] border border-public-border-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
@@ -360,55 +381,88 @@ const Index = () => {
                 View all <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid gap-[24px] py-[10px] sm:grid-cols-2 lg:grid-cols-3">
-            {newsItems.map(({ category, title, date, facebookUrl }) => (
-              <div key={category} className="flex flex-col overflow-hidden rounded-[16px] border border-public-bg-brand-subtle bg-white shadow-public-nav">
+            <div className="grid gap-[24px] py-[10px] sm:grid-cols-2 xl:grid-cols-3">
+              {latestReleases === null ? (
+                [1, 2, 3].map((i) => (
+                  <div key={i} className="h-[400px] animate-pulse rounded-[16px] bg-white" />
+                ))
+              ) : (
+                latestReleases.map((news) => {
+                  const formattedDate = new Intl.DateTimeFormat("en-PH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }).format(new Date(news.date_posted));
+                  return (
+                    <div key={news.id} className="flex flex-col overflow-hidden rounded-[16px] border border-public-bg-brand-subtle bg-white shadow-public-nav">
 
-                {/* Image frame */}
-                <div className="public-hero-gradient relative flex h-[309px] items-center justify-center">
-                  <div className="absolute left-[10px] top-[10px] inline-flex w-fit items-center rounded-full border border-public-bg-secondary-100 bg-white px-[10px] py-[4px]">
-                    <span className="font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
-                      {category}
-                    </span>
-                  </div>
-                  <Megaphone className="h-[111px] w-[111px] text-white/80" strokeWidth={1.5} />
-                </div>
+                      {/* Image frame */}
+                      <div className="relative flex h-[180px] items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] p-[10px] sm:h-[260px]">
+                        {news.category && (
+                          <div className="absolute left-[10px] top-[10px] z-10 inline-flex w-fit items-center rounded-full border border-[#DCF0FD] bg-white px-[10px] py-[4px]">
+                            <span className="font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
+                              {news.category}
+                            </span>
+                          </div>
+                        )}
+                        <Megaphone className="h-[111px] w-[111px] text-white/80" strokeWidth={1.5} />
+                        {news.preview_image_url && (
+                          <img
+                            src={news.preview_image_url}
+                            alt={news.title}
+                            referrerPolicy="no-referrer"
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          />
+                        )}
+                      </div>
 
-                {/* Details */}
-                <div className="flex flex-col gap-[16px] px-[24px] py-[10px]">
-                  <h3 className="font-segoe font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand text-public-fs-subheading-sm">
-                    {title}
-                  </h3>
-                  <hr className="border-public-border-neutral-tertiary" />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-[8px] py-[4px]">
-                      <Calendar className="h-4 w-4 shrink-0 text-public-text-secondary" />
-                      <span className="font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
-                        {date}
-                      </span>
+                      {/* Details */}
+                      <div className="flex flex-col gap-[16px] px-[24px] pb-[20px] pt-[20px]">
+                        <h3 className="font-segoe font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand text-public-fs-subtitle-sm line-clamp-2">
+                          {news.title}
+                        </h3>
+                        <hr className="border-public-border-neutral-tertiary" />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-[8px] py-[4px]">
+                            <Calendar className="h-4 w-4 shrink-0 text-public-text-secondary" />
+                            <span className="font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
+                              {formattedDate}
+                            </span>
+                          </div>
+                          <a
+                            href={news.facebook_post_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-[8px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:underline"
+                          >
+                            View on Facebook <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
+                      </div>
+
                     </div>
-                    <a
-                      href={facebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-[8px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:underline"
-                    >
-                      View on Facebook <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                </div>
-
-              </div>
-            ))}
+                  );
+                })
+              )}
+            </div>
+            <div className="flex pt-[8px] sm:hidden">
+              <Link
+                to="/news-releases"
+                className="flex w-full items-center justify-center gap-[8px] rounded-[8px] border border-public-border-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
           </div>
 
         </div>
       </section>
+      )}
 
       {/* Resources */}
-      <section className="bg-white px-5 py-[96px] sm:px-6 lg:px-[64px]">
+      <section className="bg-white px-5 py-[48px] sm:px-6 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-[10px]">
 
           {/* Title group */}
@@ -426,9 +480,9 @@ const Index = () => {
             </p>
           </div>
 
-          {/* View all + cards */}
+          {/* Cards + view all */}
           <div className="flex flex-col gap-[8px]">
-            <div className="flex justify-end">
+            <div className="hidden justify-end sm:flex">
               <Link
                 to="/public-templates"
                 className="flex items-center gap-[8px] rounded-[8px] border border-public-border-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
@@ -436,9 +490,8 @@ const Index = () => {
                 View all <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-
             {featuredTemplates.length > 0 ? (
-              <div className="grid gap-[24px] py-[10px] sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-[24px] py-[10px] sm:grid-cols-2 xl:grid-cols-3">
                 {featuredTemplates.map((template) => {
                   const fileType = getFileType(template.templateFileUrl);
                   const formattedDate = template.templateUploadedAt
@@ -499,17 +552,25 @@ const Index = () => {
                 })}
               </div>
             ) : null}
+            <div className="flex pt-[8px] sm:hidden">
+              <Link
+                to="/public-templates"
+                className="flex w-full items-center justify-center gap-[8px] rounded-[8px] border border-public-border-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
 
         </div>
       </section>
 
       {/* Help Center */}
-      <section className="bg-public-bg-section px-5 py-[96px] sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-[24px] lg:flex-row lg:items-center">
+      <section className="bg-public-bg-section px-5 py-[48px] sm:px-6 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-[24px] xl:flex-row xl:items-center">
 
           {/* Left column */}
-          <div className="flex w-full flex-col gap-[10px] py-[10px] lg:w-[564px] lg:shrink-0">
+          <div className="flex w-full flex-col gap-[10px] py-[10px] xl:w-[564px] xl:shrink-0">
             <div className="inline-flex w-fit items-center gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-[10px] py-[4px] backdrop-blur-[4px]">
               <span className="font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 HELP CENTER
@@ -524,7 +585,7 @@ const Index = () => {
           </div>
 
           {/* Right column — accordion */}
-          <div className="flex w-full flex-1 flex-col gap-[16px] pb-[24px] pt-[16px] lg:px-[16px]">
+          <div className="flex w-full flex-1 flex-col gap-[16px] pb-[24px] pt-[16px] xl:px-[16px]">
             {faqs.map(({ id, question, answer }) => (
               <div key={id} className="rounded-[16px] border border-public-border-default bg-white p-[24px]">
                 <button
@@ -552,13 +613,15 @@ const Index = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="bg-white px-[10px] py-[96px]">
+      <section className="bg-white px-[10px] py-[48px] lg:py-[96px]">
         <div className="public-hero-gradient mx-auto flex w-full max-w-[1090px] flex-col items-center gap-[32px] rounded-[16px] px-5 py-[64px] shadow-public-overview-card sm:px-[32px] lg:px-[64px] lg:py-[160px]">
 
           {/* Title group */}
           <div className="flex w-full flex-col items-center gap-[24px] p-[10px] text-center">
             <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-public-fs-title-page">
-              Ready to get started with PCYDO?
+              Ready to get started
+              <br className="sm:hidden" />
+              {" "}with PCYDO?
             </h2>
             <p className="font-segoe font-semibold leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
               Join the growing community of youth organizations in Pasig City.
@@ -566,16 +629,16 @@ const Index = () => {
           </div>
 
           {/* Button group */}
-          <div className="flex flex-wrap items-center justify-center gap-[16px]">
+          <div className="flex w-full flex-col items-stretch gap-[12px] sm:w-auto sm:flex-row sm:items-center sm:gap-[16px]">
             <Link
               to="/signup"
-              className="flex items-center rounded-[8px] bg-white px-[24px] py-[16px] font-segoe text-public-fs-body-md font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+              className="flex items-center justify-center rounded-[8px] bg-white px-[24px] py-[16px] font-segoe text-public-fs-body-md font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
             >
               Create an Account
             </Link>
             <Link
               to="/public-templates"
-              className="flex items-center rounded-[8px] border border-public-bg-brand-subtle px-[24px] py-[16px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
+              className="flex items-center justify-center rounded-[8px] border border-public-bg-brand-subtle px-[24px] py-[16px] font-segoe text-public-fs-subheading-sm font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
             >
               Browse Forms &amp; Templates
             </Link>
@@ -585,7 +648,7 @@ const Index = () => {
       </section>
 
       {/* Contact */}
-      <section className="bg-white px-5 py-[96px] sm:px-6 lg:px-[64px]">
+      <section className="bg-white px-5 py-[48px] sm:px-6 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-[10px]">
 
           {/* Title frame — centered */}

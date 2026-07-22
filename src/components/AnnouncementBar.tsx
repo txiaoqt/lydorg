@@ -22,10 +22,10 @@ const AnnouncementBar = () => {
   if (!message) return null;
 
   return (
-    <div className="fixed left-0 right-0 top-0 z-[60] flex h-[40px] items-center justify-center gap-[10px] bg-public-bg-brand px-[10px]">
-      <div className="flex items-center gap-[10px] px-[10px]">
-        <Megaphone size={24} className="shrink-0 text-public-text-neutral-on-neutral" />
-        <span className="font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-neutral-on-neutral">
+    <div className="fixed left-0 right-0 top-0 z-[60] flex h-[40px] items-center justify-center overflow-hidden bg-public-bg-brand px-[10px]">
+      <div className="flex min-w-0 items-center gap-[10px] px-[10px]">
+        <Megaphone size={16} className="shrink-0 text-public-text-neutral-on-neutral sm:size-[24px]" />
+        <span className="line-clamp-1 font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-neutral-on-neutral">
           Reminder: {message}
         </span>
       </div>

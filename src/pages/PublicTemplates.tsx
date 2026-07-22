@@ -15,11 +15,11 @@ const PublicTemplates = () => {
 
       {/* Hero */}
       <section className="public-templates-hero-gradient px-5 pt-[120px] sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-[48px] pb-[48px] pt-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-[48px] pb-[32px] pt-[40px] sm:pb-[48px] sm:pt-[64px]">
 
           {/* Title block */}
-          <div className="flex flex-col gap-[16px]">
-            <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-public-fs-hero">
+          <div className="flex flex-col items-center gap-[16px] text-center sm:items-start sm:text-left">
+            <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[32px] sm:text-public-fs-hero">
               Forms &amp; Templates
             </h1>
             <p className="font-segoe font-normal leading-[120%] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
