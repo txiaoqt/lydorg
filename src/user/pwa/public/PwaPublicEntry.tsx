@@ -64,7 +64,7 @@ function PwaPublicShell({
             aria-label="Y-TRACE welcome"
             onClick={() => navigate(PWA_ENTRY_ROUTE)}
           >
-            <BrandLogo imgClassName="h-9 w-9" subtitle="Compliance App" />
+            <BrandLogo showText={false} />
           </button>
         ) : null}
         {showBack ? (
@@ -115,7 +115,7 @@ function PwaWelcomePage() {
   return (
     <PwaPublicShell welcome>
       <section className="pwa-public-welcome" aria-labelledby="pwa-welcome-title">
-        <img className="pwa-public-hero-logo" src="/y-trace-logo.png" alt="Y-TRACE" />
+        <BrandLogo showText={false} />
         <p className="pwa-public-product-label">Compliance App</p>
         <h1 id="pwa-welcome-title"><span>Youth Organization</span><span>Compliance App</span></h1>
         <p>Manage your organization profile, compliance documents, YPOP participation, budget requests, and liquidation requirements in one secure portal.</p>

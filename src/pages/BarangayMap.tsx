@@ -7,6 +7,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import ComplianceBadge from "@/components/ComplianceBadge";
@@ -108,6 +109,7 @@ export default function BarangayMap() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <PageHero

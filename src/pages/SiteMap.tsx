@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 
 const siteMapSections: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [
@@ -36,6 +37,7 @@ const siteMapSections: Array<{ title: string; links: Array<{ label: string; href
 const SiteMap = () => {
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <section className="hero-gradient py-10 sm:py-12 md:py-20">

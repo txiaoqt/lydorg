@@ -123,7 +123,7 @@ function TemplateRow({ template, onPreview, onDownload, downloading }: {
         <div className="pwa-template-meta">
           <span>{getFileTypeLabel(template)}</span><span aria-hidden="true">·</span><span>{formatUpdatedDate(template.templateUploadedAt)}</span>
         </div>
-        <small className="pwa-template-file-name">{available ? getTemplateFileName(template) : "This template file is currently unavailable."}</small>
+        <small className="pwa-template-file-name">{available ? resolvedDownloadName(template) : "This template file is currently unavailable."}</small>
       </div>
       {!available ? <span className="pwa-template-unavailable">Unavailable</span> : null}
       <div className="pwa-template-actions">
@@ -328,7 +328,7 @@ export function PwaTemplatePreview({ data }: { data: PortalData }) {
       <PwaBackButton fallback={PWA_ROUTES.templates} label="Templates" />
       <section className="pwa-card pwa-template-preview-heading">
         <FileTypeIcon template={template} />
-        <div><h2>{template.name}</h2><p>{template.description || template.templateDescription}</p><div><span>{getFileTypeLabel(template)}</span><span>·</span><span>{formatUpdatedDate(template.templateUploadedAt)}</span></div><small>{available ? getTemplateFileName(template) : "This template file is currently unavailable."}</small></div>
+        <div><h2>{template.name}</h2><p>{template.description || template.templateDescription}</p><div><span>{getFileTypeLabel(template)}</span><span>·</span><span>{formatUpdatedDate(template.templateUploadedAt)}</span></div><small>{available ? resolvedDownloadName(template) : "This template file is currently unavailable."}</small></div>
       </section>
       <section className="pwa-card pwa-template-viewer">
         {loading ? <div className="pwa-template-preview-state"><span className="pwa-template-spinner" /><p>Loading preview...</p></div> : null}

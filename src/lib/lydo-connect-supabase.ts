@@ -196,6 +196,7 @@ type NewsReleaseRow = {
   preview_image_url: string | null;
   date_posted: string;
   visibility_status: NewsRelease["visibilityStatus"];
+  category: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -614,6 +615,7 @@ const mapNewsRelease = (row: NewsReleaseRow): NewsRelease => ({
   previewImageUrl: row.preview_image_url ?? "",
   datePosted: formatDateOnly(row.date_posted),
   visibilityStatus: row.visibility_status,
+  category: row.category ?? null,
   createdBy: row.created_by ?? "",
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -2142,6 +2144,7 @@ export const createNewsReleaseInSupabase = async (params: {
   previewImageUrl?: string;
   datePosted: string;
   visibilityStatus: NewsRelease["visibilityStatus"];
+  category?: string;
 }) => {
   const adminSession = getAuthenticatedAdminSession();
   const { data, error } = await supabase!.rpc("create_admin_news_release", {
@@ -2152,6 +2155,7 @@ export const createNewsReleaseInSupabase = async (params: {
     _preview_image_url: params.previewImageUrl?.trim() ?? "",
     _date_posted: params.datePosted,
     _visibility_status: params.visibilityStatus,
+    _category: params.category?.trim() || null,
   });
 
   const createdRow = Array.isArray(data) ? data[0] : null;
@@ -2161,7 +2165,7 @@ export const createNewsReleaseInSupabase = async (params: {
 
 export const updateNewsReleaseInSupabase = async (
   newsReleaseId: string,
-  patch: Partial<Pick<NewsRelease, "title" | "description" | "facebookPostUrl" | "previewImageUrl" | "datePosted" | "visibilityStatus">>,
+  patch: Partial<Pick<NewsRelease, "title" | "description" | "facebookPostUrl" | "previewImageUrl" | "datePosted" | "visibilityStatus" | "category">>,
 ) => {
   const adminSession = getAuthenticatedAdminSession();
 
@@ -2172,6 +2176,7 @@ export const updateNewsReleaseInSupabase = async (
   if (patch.previewImageUrl !== undefined) payload.preview_image_url = patch.previewImageUrl.trim();
   if (patch.datePosted !== undefined) payload.date_posted = patch.datePosted;
   if (patch.visibilityStatus !== undefined) payload.visibility_status = patch.visibilityStatus;
+  if (patch.category !== undefined) payload.category = patch.category?.trim() || null;
 
   const { data, error } = await supabase!.rpc("update_admin_news_release", {
     _session_token: adminSession.sessionToken,
@@ -2182,6 +2187,7 @@ export const updateNewsReleaseInSupabase = async (
     _preview_image_url: payload.preview_image_url ?? null,
     _date_posted: payload.date_posted ?? null,
     _visibility_status: payload.visibility_status ?? null,
+    _category: payload.category ?? null,
   });
 
   const updatedRow = Array.isArray(data) ? data[0] : null;

@@ -18,6 +18,7 @@ import {
 } from "@/user/pwa/pwaAuthFlow";
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
+import { getPasswordResetUrl } from "@/lib/auth-redirect";
 
 type SignInProps = {
   forcedMode?: "user" | "admin";
@@ -116,11 +117,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
         {/* Logo */}
         <div className="mb-7 text-left">
           <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
-            <BrandLogo
-              imgClassName="h-10 w-10"
-              showText
-              subtitle={isAdminMode ? "Admin Portal" : "Youth Portal"}
-            />
+            <BrandLogo showText={false} />
           </Link>
         </div>
 
@@ -211,13 +208,13 @@ const SignIn = ({ forcedMode }: SignInProps) => {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               {!isAdminMode && (
-                <Link
-                  to={pwaFlow ? pwaAuthRoute("/reset-password") : "/reset-password"}
+                <a
+                  href={getPasswordResetUrl({ pwaFlow })}
                   tabIndex={-1}
                   className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   Forgot password?
-                </Link>
+                </a>
               )}
             </div>
             <div className="relative">

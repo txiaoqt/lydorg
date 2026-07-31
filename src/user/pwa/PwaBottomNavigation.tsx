@@ -2,6 +2,7 @@ import { FileText, Home, Menu, ReceiptText, WalletCards } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { usePwaNavigation } from "./hooks/usePwaNavigation";
 import { PWA_ROUTES } from "./pwaRoutes";
+import BrandLogo from "@/components/BrandLogo";
 
 const items = [
   { label: "Home", path: PWA_ROUTES.home, icon: Home },
@@ -26,7 +27,7 @@ export function PwaBottomNavigation() {
   return (
     <nav className="pwa-bottom-nav" aria-label="Primary app navigation">
       <button type="button" className="pwa-nav-brand" aria-label="Open Y-TRACE Home" onClick={() => go(PWA_ROUTES.home)}>
-        <img src="/y-trace-logo.png" alt="" />
+        <BrandLogo showText={false} />
         <span>Y-TRACE</span>
       </button>
       <div className="pwa-bottom-nav-inner">

@@ -268,14 +268,14 @@ const SignUp = () => {
 
     const missingFields = [
       !name.trim() ? "organization name" : "",
-      !email.trim() ? "email address" : "",
-      !normalizedContactNumber ? "contact number" : "",
+      !email.trim() ? "Email Address" : "",
+      !normalizedContactNumber ? "Contact Number" : "",
       !district ? "district" : "",
-      !barangayId ? "barangay" : "",
+      !barangayId ? "Barangay" : "",
       isExistingOrganization && !normalizedIdentifierNumber ? "Unique Registration Number (URN)" : "",
       !password ? "password" : "",
-      !confirmPassword ? "confirm password" : "",
-      !agreedToPolicies ? "Terms of Service and Privacy Policy agreement" : "",
+      !confirmPassword ? "Confirm Password" : "",
+      !agreedToPolicies ? "Privacy Policy & Terms of Service agreement" : "",
     ].filter(Boolean);
 
     if (missingFields.length) {
@@ -284,7 +284,7 @@ const SignUp = () => {
       return;
     }
     if (!passwordsMatch) {
-      setInlineError("Password and confirm password must match.");
+      setInlineError("Password and Confirm Password must match.");
       return;
     }
     if (!isGmailEmail) {
@@ -292,7 +292,7 @@ const SignUp = () => {
       return;
     }
     if (emailAvailability === "checking") {
-      setInlineError("Please wait while we check your email address.");
+      setInlineError("Please wait while we check your Email Address.");
       return;
     }
     if (emailAvailability === "registered") {
@@ -300,7 +300,7 @@ const SignUp = () => {
       return;
     }
     if (!isContactNumberValid) {
-      setInlineError("Contact number must be 11 digits starting with 09.");
+      setInlineError("Contact Number must be 11 digits starting with 09.");
       return;
     }
     if (isExistingOrganization && urnError) {
@@ -383,7 +383,7 @@ const SignUp = () => {
         {/* Logo */}
         <div className="mb-7 text-left">
           <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
-            <BrandLogo imgClassName="h-10 w-10" showText subtitle="Youth Portal" />
+            <BrandLogo showText={false} />
           </Link>
         </div>
 
@@ -451,7 +451,7 @@ const SignUp = () => {
 
             <FormSection title="Account details" hidden={currentStep !== 2}>
               <div className="space-y-1.5">
-                <RequiredLabel htmlFor="email">Email address</RequiredLabel>
+                <RequiredLabel htmlFor="email">Email Address</RequiredLabel>
                 <Input
                   id="email"
                   type="email"
@@ -466,7 +466,7 @@ const SignUp = () => {
                 />
                 <div id="signup-email-status" aria-live="polite">
                   {touched.has("email") && !email.trim() ? (
-                    <p className="text-xs text-destructive">Email address is required.</p>
+                    <p className="text-xs text-destructive">Email Address is required.</p>
                   ) : null}
                   {touched.has("email") && email && !isGmailEmail ? (
                     <p className="text-xs text-destructive">Email must end with @gmail.com.</p>
@@ -544,7 +544,7 @@ const SignUp = () => {
                     disabled={!district}
                   >
                     <SelectTrigger id="barangay">
-                      <SelectValue placeholder={district ? "Select barangay" : "Choose district first"} />
+                    <SelectValue placeholder={district ? "Select Barangay" : "Choose district first"} />
                     </SelectTrigger>
                     <SelectContent>
                       {districtBarangays.map((b) => (
@@ -692,8 +692,18 @@ const SignUp = () => {
                 className="shrink-0 mt-[3px]"
               />
               <Label htmlFor="policy-agreement" className="text-sm font-normal leading-relaxed cursor-pointer">
-                <span className="text-destructive" aria-hidden="true">*</span>{" "}
                 I have read and agree to the{" "}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setLegalPolicyType("privacy");
+                  }}
+                >
+                  Privacy Policy
+                </button>{" & "}
                 <button
                   type="button"
                   className="font-medium text-primary hover:underline"
@@ -705,22 +715,10 @@ const SignUp = () => {
                 >
                   Terms of Service
                 </button>{" "}
-                and{" "}
-                <button
-                  type="button"
-                  className="font-medium text-primary hover:underline"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setLegalPolicyType("privacy");
-                  }}
-                >
-                  Privacy Policy
-                </button>
-                .
+                <span className="text-destructive" aria-hidden="true">*</span>
               </Label>
             </div>
-            {currentStep === 2 && touched.has("policies") && !agreedToPolicies ? <p className="-mt-4 text-xs text-destructive">You must accept the Terms of Service and Privacy Policy.</p> : null}
+            {currentStep === 2 && touched.has("policies") && !agreedToPolicies ? <p className="-mt-4 text-xs text-destructive">You must accept the Privacy Policy &amp; Terms of Service.</p> : null}
 
             {/* Submit */}
             <div className={`space-y-2.5 ${currentStep === 2 ? "" : "hidden"}`}>
@@ -840,7 +838,7 @@ const SignUp = () => {
                 <span className="font-medium text-foreground">{selectedBarangayName}</span>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Existing org</span>
+                <span className="text-muted-foreground">Existing Organization</span>
                 <span className="font-medium text-foreground">{isExistingOrganization ? "Yes" : "No"}</span>
               </div>
               {isExistingOrganization && (

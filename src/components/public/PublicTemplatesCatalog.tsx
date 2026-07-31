@@ -1,34 +1,86 @@
-import { ClipboardList, Download, Eye, FileText } from "lucide-react";
+import { ClipboardList, Download, Eye, FileText, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
-import { UserFeatureIcon } from "@/components/portal/UserFeatureIcon";
+
+type FilterId = "all" | "document_submission" | "other";
 
 type PublicTemplatesCatalogProps = {
   compactHeader?: boolean;
+  searchTerm?: string;
 };
 
-const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalogProps) => {
+const filterTabs: { id: FilterId; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "document_submission", label: "Document Submission" },
+  { id: "other", label: "Other Templates" },
+];
+
+const categoryDefs: {
+  id: "document_submission" | "other";
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  fallback: string;
+  empty: string;
+}[] = [
+  {
+    id: "document_submission",
+    icon: FileText,
+    title: "Document Submission Templates",
+    subtitle: "Official forms and compliance documents published by the admin.",
+    fallback: "Shared compliance form ready for preview and download.",
+    empty: "No document submission templates are available right now.",
+  },
+  {
+    id: "other",
+    icon: ClipboardList,
+    title: "Other Templates",
+    subtitle: "Additional downloadable references that the admin has made available to organizations.",
+    fallback: "Shared reference template ready for preview and download.",
+    empty: "No other templates are available right now.",
+  },
+];
+
+const getFileType = (url: string | null | undefined): string => {
+  if (!url) return "FILE";
+  const ext = url.split(".").pop()?.split("?")[0].toUpperCase() ?? "FILE";
+  return ext.length <= 5 ? ext : "FILE";
+};
+
+const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: PublicTemplatesCatalogProps) => {
   const { state } = useLydoConnect();
   const [openingTemplateId, setOpeningTemplateId] = useState<string | null>(null);
+  const [downloadingTemplateId, setDownloadingTemplateId] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterId>("all");
+
+  const query = searchTerm.trim().toLowerCase();
 
   const publicDocumentTemplates = useMemo(
     () =>
       [...state.templates]
-        .filter((template) => template.templateActive && template.isActive && template.templateScope === "document_submission")
-        .sort((left, right) => left.sortOrder - right.sortOrder),
+        .filter((t) => t.templateActive && t.isActive && t.templateScope === "document_submission")
+        .sort((a, b) => a.sortOrder - b.sortOrder),
     [state.templates],
   );
 
   const publicOtherTemplates = useMemo(
     () =>
       [...state.templates]
-        .filter((template) => template.templateActive && template.isActive && template.templateScope === "other")
-        .sort((left, right) => left.sortOrder - right.sortOrder),
+        .filter((t) => t.templateActive && t.isActive && t.templateScope === "other")
+        .sort((a, b) => a.sortOrder - b.sortOrder),
     [state.templates],
   );
+
+  const applySearch = (templates: typeof state.templates) => {
+    if (!query) return templates;
+    return templates.filter(
+      (t) =>
+        t.name.toLowerCase().includes(query) ||
+        (t.description ?? "").toLowerCase().includes(query),
+    );
+  };
 
   const openTemplate = async (fileUrl: string, fileName: string) => {
     if (!fileUrl) return;
@@ -47,135 +99,163 @@ const PublicTemplatesCatalog = ({ compactHeader = false }: PublicTemplatesCatalo
     }
   };
 
+  const downloadTemplate = async (fileUrl: string, fileName: string) => {
+    if (!fileUrl) return;
+    setDownloadingTemplateId(fileName);
+    try {
+      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
+      const response = await fetch(resolvedUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: error instanceof Error ? error.message : "The template file could not be downloaded.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingTemplateId(null);
+    }
+  };
+
   const renderTemplateCard = (
     template: (typeof state.templates)[number],
-    tone: "blue" | "emerald",
     fallbackDescription: string,
   ) => {
+    const fileType = getFileType(template.templateFileUrl);
+    const formattedDate = template.templateUploadedAt
+      ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
+      : "Upload date unavailable";
+    const isOpening = openingTemplateId === template.name;
+    const isDownloading = downloadingTemplateId === template.name;
+    const viewDisabled = !template.templateFileUrl || isOpening;
+    const downloadDisabled = !template.templateFileUrl || isDownloading;
+
     return (
       <div
         key={template.id}
-        className="template-item flex h-full flex-col rounded-2xl border border-border/70 bg-card p-3.5 shadow-sm transition-shadow hover:shadow-md lg:p-5"
+        className="flex flex-col gap-[24px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav"
       >
-        <div className="template-item-main grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 lg:flex lg:min-h-[88px]">
-          <UserFeatureIcon
-            icon={tone === "blue" ? FileText : ClipboardList}
-            className="template-item-icon"
-          />
-          <div className="template-item-content min-w-0 flex-1">
-            <p className="text-[0.98rem] font-semibold leading-snug text-foreground lg:line-clamp-2 lg:text-[1.05rem]">
-              {template.name}
-            </p>
-            <p className="template-item-description mt-1.5 line-clamp-3 text-[0.875rem] leading-relaxed text-muted-foreground lg:mt-2 lg:line-clamp-2 lg:text-sm">
-              {template.description || fallbackDescription}
-            </p>
-            <span className="template-updated-date mt-1.5 block text-[0.78rem] text-muted-foreground lg:hidden">
-              {template.templateUploadedAt
-                ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
-                : "Template file will appear here once uploaded by the admin."}
-            </span>
-          </div>
+        {/* File type tag */}
+        <div className="flex justify-end">
+          <span className="rounded-full bg-[rgba(220,239,253,0.5)] px-[10px] py-[10px] font-mono text-public-fs-body-sm font-semibold leading-[100%] text-public-text-brand backdrop-blur-[4px]">
+            {fileType}
+          </span>
         </div>
 
-        <div className="mt-4 hidden rounded-xl border border-border/70 bg-muted/20 px-4 py-3 lg:block">
-          <p className="text-xs text-muted-foreground">
-            {template.templateUploadedAt
-              ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
-              : "Template file will appear here once uploaded by the admin."}
+        {/* Title + updated date */}
+        <div className="flex flex-col gap-[10px]">
+          <h3 className="font-segoe text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+            {template.name}
+          </h3>
+          <p className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-secondary">
+            {formattedDate}
           </p>
         </div>
 
-        <div className="template-item-actions mt-3 grid grid-cols-2 gap-2 lg:mt-4">
-          <Button
+        {/* Description */}
+        <p className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-justify text-public-text-neutral-default">
+          {template.description || fallbackDescription}
+        </p>
+
+        {/* Buttons */}
+        <div className="flex gap-[10px]">
+          <button
             type="button"
-            size="sm"
-            variant="outline"
-            className="w-full"
-            disabled={!template.templateFileUrl || openingTemplateId === template.name}
+            disabled={viewDisabled}
             onClick={() => void openTemplate(template.templateFileUrl, template.name)}
+            className="flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border border-public-border-brand bg-white px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle disabled:opacity-50"
           >
-            <Eye className="mr-1.5 h-3.5 w-3.5" />
-            {openingTemplateId === template.name ? "Opening..." : (
-              <>
-                <span className="lg:hidden">View</span>
-                <span className="hidden lg:inline">View Template</span>
-              </>
-            )}
-          </Button>
-          <Button
+            <Eye className="h-4 w-4 shrink-0" />
+            {isOpening ? "Opening…" : "View"}
+          </button>
+          <button
             type="button"
-            size="sm"
-            className="w-full"
-            disabled={!template.templateFileUrl || openingTemplateId === template.name}
-            onClick={() => void openTemplate(template.templateFileUrl, template.name)}
+            disabled={downloadDisabled}
+            onClick={() => void downloadTemplate(template.templateFileUrl, template.name)}
+            className="flex flex-1 items-center justify-center gap-[8px] rounded-[8px] bg-public-bg-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover disabled:opacity-50"
           >
-            <Download className="mr-1.5 h-3.5 w-3.5" />
-            Download
-          </Button>
+            <Download className="h-4 w-4 shrink-0" />
+            {isDownloading ? "Downloading…" : "Download"}
+          </button>
         </div>
       </div>
     );
   };
 
+  const templatesByCategory = {
+    document_submission: applySearch(publicDocumentTemplates),
+    other: applySearch(publicOtherTemplates),
+  };
+
   return (
-    <div className="space-y-8 lg:space-y-8">
-      {!compactHeader ? (
-        <div className="mb-10 mx-auto max-w-2xl text-center sm:mb-14">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
-            Templates
-          </span>
-          <h2 className="mb-3 text-[1.6rem] font-heading font-bold text-foreground sm:text-3xl md:text-4xl">
-            Download the latest portal templates
-          </h2>
-          <p className="text-sm text-muted-foreground sm:text-base">
-            Access the published document submission and other shared templates before creating your organization account or opening the portal.
-          </p>
-        </div>
-      ) : null}
+    <div className="flex flex-col gap-[24px]">
 
-      <div className="space-y-8 lg:space-y-8">
-        <div className="space-y-4">
-          <div className="template-category-header grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 lg:flex lg:items-center">
-            <UserFeatureIcon icon={FileText} />
-            <div className="template-category-header-content min-w-0">
-              <h3 className="font-heading text-lg font-bold text-foreground lg:text-xl">Document Submission Templates</h3>
-              <p className="text-sm text-muted-foreground">Official forms and compliance documents published by the admin.</p>
-            </div>
-          </div>
-          {publicDocumentTemplates.length ? (
-            <div className="template-list grid gap-3 md:grid-cols-2 xl:grid-cols-3 lg:gap-4">
-              {publicDocumentTemplates.map((template) =>
-                renderTemplateCard(template, "blue", "Shared compliance form ready for preview and download."),
-              )}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-5 py-8 text-center text-sm text-muted-foreground">
-              No document submission templates are available right now.
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="template-category-header grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 lg:flex lg:items-center">
-            <UserFeatureIcon icon={ClipboardList} />
-            <div className="template-category-header-content min-w-0">
-              <h3 className="font-heading text-lg font-bold text-foreground lg:text-xl">Other Templates</h3>
-              <p className="text-sm text-muted-foreground">Additional downloadable references that the admin has made available to organizations.</p>
-            </div>
-          </div>
-          {publicOtherTemplates.length ? (
-            <div className="template-list grid gap-3 md:grid-cols-2 xl:grid-cols-3 lg:gap-4">
-              {publicOtherTemplates.map((template) =>
-                renderTemplateCard(template, "emerald", "Shared reference template ready for preview and download."),
-              )}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-5 py-8 text-center text-sm text-muted-foreground">
-              No other templates are available right now.
-            </div>
-          )}
-        </div>
+      {/* Filter tabs */}
+      <div className="flex gap-[10px] overflow-x-auto p-[10px] sm:justify-center">
+        {filterTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveFilter(tab.id)}
+            className={
+              activeFilter === tab.id
+                ? `shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
+                : `shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default${tab.id === "all" ? " min-w-[80px]" : ""}`
+            }
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {/* Category sections */}
+      {categoryDefs
+        .filter((cat) => activeFilter === "all" || activeFilter === cat.id)
+        .map((cat) => {
+          const Icon = cat.icon;
+          const templates = templatesByCategory[cat.id];
+          return (
+            <div key={cat.id} className="flex flex-col gap-[10px]">
+
+              {/* Category header */}
+              <div className="flex items-center gap-[16px] py-[10px]">
+                <div className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
+                  <Icon className="h-6 w-6 text-public-text-brand" />
+                </div>
+                <div className="flex flex-col gap-[10px]">
+                  <h3 className="font-segoe text-public-fs-subtitle-sm font-bold leading-[120%] text-public-text-brand">
+                    {cat.title}
+                  </h3>
+                  <p className="font-segoe text-public-fs-body-sm font-normal leading-[120%] text-public-text-secondary">
+                    {cat.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              {/* Cards or empty state */}
+              {templates.length > 0 ? (
+                <div className="grid grid-cols-1 gap-[24px] py-[10px] sm:grid-cols-2 xl:grid-cols-3">
+                  {templates.map((t) => renderTemplateCard(t, cat.fallback))}
+                </div>
+              ) : (
+                <div className="rounded-[16px] border border-dashed border-public-bg-brand-subtle bg-white px-5 py-8 text-center font-segoe text-public-fs-body-sm text-public-text-secondary">
+                  {cat.empty}
+                </div>
+              )}
+
+            </div>
+          );
+        })}
+
     </div>
   );
 };

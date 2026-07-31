@@ -160,7 +160,7 @@ const VerifyEmail = () => {
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-7 text-left">
           <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex max-w-full items-center gap-3">
-            <BrandLogo imgClassName="h-10 w-10" showText subtitle="Youth Portal" />
+            <BrandLogo showText={false} />
           </Link>
         </div>
 

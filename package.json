@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:vercel": "vite build",
+    "postinstall": "node scripts/patch-radix-select.cjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",

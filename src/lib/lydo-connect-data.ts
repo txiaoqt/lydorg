@@ -731,6 +731,7 @@ export type NewsRelease = {
   previewImageUrl?: string;
   datePosted: string;
   visibilityStatus: VisibilityStatus;
+  category?: string | null;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

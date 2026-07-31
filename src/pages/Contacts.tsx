@@ -4,9 +4,10 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { CircleHelp, Mail, MapPin, Phone, Send } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
-import { Mail, MapPin, Phone, UserRound } from "lucide-react";
 
 L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
@@ -14,159 +15,177 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const OFFICE_COORDS: [number, number] = [14.592421073182033, 121.08615468030744];
-
-const officeContact = {
-  officeAddress: "Eulogio Amang Rodriguez Ave, Pasig, 1609 Metro Manila",
-  officerInCharge: "Ms. Colleen Gail A. De Guzman",
-  contactNumber: "+63 917 123 4567",
-  contactEmail: "lydo.office@prototype.local",
-};
-
-const staffContacts = [
-  {
-    name: "Staff Coordination Desk",
-    contactNumber: "+63 918 234 5678",
-    contactEmail: "lydo.staff@prototype.local",
-  },
-  {
-    name: "Youth Support",
-    contactNumber: "+63 919 345 6789",
-    contactEmail: "lydo.support@prototype.local",
-  },
-];
+const COORDS: [number, number] = [14.592421073182033, 121.08615468030744];
+const address = "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City";
+const phone = "(02) 8643-7632";
+const email = "lydo@pasigcity.gov.ph";
 
 const Contacts = () => {
   return (
-    <div className="contact-directory-page min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
-      <div className="pt-16">
-        <section className="contact-directory-hero hero-gradient py-8 sm:py-10 md:py-20">
-          <div className="container mx-auto max-w-4xl px-5 text-center sm:px-8">
-            <p className="text-xs uppercase tracking-[0.3em] text-secondary-foreground/60">
-              Contact Directory
-            </p>
-            <h1 className="mt-3 text-[1.85rem] font-heading font-bold leading-tight text-secondary-foreground sm:text-4xl md:text-5xl">
-              Office and Staff Contacts
-            </h1>
-            <p className="mx-auto mt-3 max-w-[30rem] text-[0.9rem] leading-relaxed text-secondary-foreground/70 sm:mt-4 sm:max-w-2xl sm:text-base">
-              Find the LYDO office address, officer in charge, and staff contact details below.
-            </p>
-          </div>
-        </section>
 
-        <section className="py-8 sm:py-10 md:py-16">
-          <div className="container mx-auto max-w-4xl space-y-6 px-4 sm:px-6 md:space-y-8 md:px-8">
-            <div
-              className="contact-map-wrapper contact-directory-map relative isolate overflow-hidden rounded-2xl border border-border shadow-sm sm:h-96"
-              style={{ height: "240px", minHeight: "240px" }}
+      {/* Hero */}
+      <section className="public-templates-hero-gradient px-5 pt-[120px] sm:px-6 lg:px-[64px]">
+        <div className="mx-auto flex min-h-[285px] w-full max-w-7xl flex-col items-center justify-center gap-[16px] py-[48px] text-center sm:items-start sm:text-left">
+          <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[32px] sm:text-public-fs-hero">
+            Contact Us
+          </h1>
+          <p className="font-segoe font-normal leading-[120%] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
+            Get in touch with the PCYDO office<br className="sm:hidden" /> in Pasig City.
+          </p>
+        </div>
+      </section>
+
+      {/* Body */}
+      <section className="bg-public-bg-section px-5 pb-[48px] pt-[64px] sm:px-6 lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-[936px] flex-col gap-[24px]">
+
+          {/* Row 1 — Map */}
+          <div
+            className="isolate h-[200px] overflow-hidden rounded-[16px] border border-public-bg-brand-subtle shadow-public-nav sm:h-[282px]"
+          >
+            <MapContainer
+              center={COORDS}
+              zoom={16}
+              scrollWheelZoom={false}
+              zoomControl={false}
+              style={{ height: "100%", width: "100%" }}
             >
-              <MapContainer
-                center={OFFICE_COORDS}
-                zoom={15}
-                scrollWheelZoom={false}
-                className="contact-map h-full w-full"
-                style={{ height: "100%", width: "100%", minHeight: "240px" }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <Marker position={OFFICE_COORDS}>
-                  <Popup>
-                    <strong>Y-TRACE Office</strong>
-                    <br />
-                    {officeContact.officeAddress}
-                  </Popup>
-                </Marker>
-              </MapContainer>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker position={COORDS}>
+                <Popup>
+                  <strong>PCYDO Office</strong>
+                  <br />
+                  {address}
+                </Popup>
+              </Marker>
+            </MapContainer>
+          </div>
+
+          {/* Row 2 — Office Address */}
+          <div className="flex flex-col items-start gap-[12px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav sm:flex-row sm:items-center sm:gap-[24px]">
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
+              <MapPin className="h-8 w-8 text-public-text-brand" />
             </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4 card-shadow sm:p-5 md:p-8">
-              <div className="grid gap-4 sm:gap-5 md:grid-cols-[1fr_auto] md:items-start md:gap-6">
-                <div className="flex min-w-0 gap-3 sm:gap-4">
-                  <div className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary md:h-11 md:w-11">
-                    <MapPin className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      LYDO Office
-                    </p>
-                    <p className="text-[1rem] font-medium leading-snug text-foreground md:text-base">
-                      {officeContact.officeAddress}
-                    </p>
-                    <div className="mt-3 grid gap-1.5 text-muted-foreground">
-                      <span className="text-[0.8rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                        Officer in charge
-                      </span>
-                      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1 text-[0.92rem]">
-                        <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        <span className="min-w-0 font-medium text-foreground [overflow-wrap:anywhere]">
-                          {officeContact.officerInCharge}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="min-w-0 md:min-w-[16rem]">
-                  <a
-                    href={`tel:${officeContact.contactNumber}`}
-                    className="contact-method grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 border-t border-border py-2.5 text-[0.9rem] font-medium text-foreground transition-colors first:border-t-0 hover:text-primary md:rounded-xl md:border md:bg-muted/40 md:px-4 md:py-2.5 md:hover:border-primary/40 md:hover:bg-primary/5"
-                  >
-                    <Phone className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="contact-method-value min-w-0 [overflow-wrap:anywhere]">
-                      {officeContact.contactNumber}
-                    </span>
-                  </a>
-                  <a
-                    href={`mailto:${officeContact.contactEmail}`}
-                    className="contact-method contact-email grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 border-t border-border py-2.5 text-[0.9rem] font-medium text-foreground transition-colors hover:text-primary md:rounded-xl md:border md:bg-muted/40 md:px-4 md:py-2.5 md:hover:border-primary/40 md:hover:bg-primary/5"
-                  >
-                    <Mail className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="contact-method-value min-w-0 [overflow-wrap:anywhere]">
-                      {officeContact.contactEmail}
-                    </span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Support Staff
+            <div className="flex flex-col gap-[6px]">
+              <p className="font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-default">
+                Office Address
               </p>
-              <div className="support-contact-grid grid gap-3 sm:grid-cols-2 md:gap-4">
-                {staffContacts.map((staff) => (
-                  <div key={staff.name} className="rounded-2xl border border-border bg-card p-4 card-shadow md:p-5">
-                    <p className="mb-3 font-heading font-semibold text-foreground">{staff.name}</p>
-                    <div>
-                      <a
-                        href={`tel:${staff.contactNumber}`}
-                        className="contact-method grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 border-t border-border py-2.5 text-[0.88rem] text-foreground transition-colors first:border-t-0 hover:text-primary md:rounded-lg md:border md:border-border/70 md:bg-muted/30 md:px-3 md:py-2 md:text-sm md:hover:border-primary/30"
-                      >
-                        <Phone className="h-3.5 w-3.5 shrink-0 text-primary" />
-                        <span className="contact-method-value min-w-0 [overflow-wrap:anywhere]">
-                          {staff.contactNumber}
-                        </span>
-                      </a>
-                      <a
-                        href={`mailto:${staff.contactEmail}`}
-                        className="contact-method contact-email grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 border-t border-border py-2.5 text-[0.88rem] text-foreground transition-colors hover:text-primary md:rounded-lg md:border md:border-border/70 md:bg-muted/30 md:px-3 md:py-2 md:text-sm md:hover:border-primary/30"
-                      >
-                        <Mail className="h-3.5 w-3.5 shrink-0 text-primary" />
-                        <span className="contact-method-value min-w-0 [overflow-wrap:anywhere]">
-                          {staff.contactEmail}
-                        </span>
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-[120%] text-public-text-brand">
+                {address}
+              </p>
             </div>
           </div>
-        </section>
-      </div>
+
+          {/* Row 3 — Telephone + Email (left) | Office Hours (right) */}
+          <div className="flex flex-col gap-[24px] sm:flex-row sm:items-stretch">
+
+            {/* Left: Telephone + Email stacked */}
+            <div className="flex flex-1 flex-col gap-[24px]">
+
+              {/* Telephone */}
+              <div className="flex flex-col items-start gap-[12px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav sm:flex-row sm:items-center sm:gap-[24px]">
+                <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
+                  <Phone className="h-8 w-8 text-public-text-brand" />
+                </div>
+                <div className="flex flex-col gap-[6px]">
+                  <p className="font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-default">
+                    Telephone
+                  </p>
+                  <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-[120%] text-public-text-brand">
+                    {phone}
+                  </p>
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="flex flex-col items-start gap-[12px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav sm:flex-row sm:items-center sm:gap-[24px]">
+                <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
+                  <Mail className="h-8 w-8 text-public-text-brand" />
+                </div>
+                <div className="flex flex-col gap-[6px]">
+                  <p className="font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-default">
+                    Email
+                  </p>
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-segoe text-public-fs-subheading-sm font-semibold leading-[120%] text-public-text-brand hover:underline"
+                  >
+                    {email}
+                  </a>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right: Office Hours */}
+            <div className="flex flex-1 flex-col gap-[16px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav">
+              <p className="font-segoe text-public-fs-body-sm font-normal leading-[120%] text-public-text-neutral-default">
+                Office Hours
+              </p>
+              <div className="flex justify-between border-b border-public-border-default pb-[12px]">
+                <span className="font-segoe text-public-fs-subheading-sm font-semibold leading-[100%] text-public-text-brand">
+                  Monday - Friday
+                </span>
+                <span className="font-segoe text-public-fs-subheading-sm font-semibold leading-[100%] text-public-text-brand">
+                  7:00 AM – 4:00 PM
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-public-border-default pb-[12px]">
+                <span className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-secondary">
+                  Saturday
+                </span>
+                <span className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-secondary">
+                  Closed
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-public-border-default pb-[12px]">
+                <span className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-secondary">
+                  Sunday
+                </span>
+                <span className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-secondary">
+                  Closed
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Row 4 — Still Need Help? */}
+          <div className="flex flex-col items-center gap-[16px] rounded-[16px] border border-public-border-default bg-white px-[24px] py-[60px] text-center shadow-public-nav">
+            <div className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-public-bg-tertiary-100 p-[8px]">
+              <CircleHelp className="h-8 w-8 text-public-text-brand" />
+            </div>
+            <div className="flex flex-col gap-[10px] px-[10px]">
+              <h3 className="font-segoe text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                Still Need Help?
+              </h3>
+              <p className="font-segoe text-public-fs-body-sm font-normal leading-[120%] text-public-text-secondary">
+                Can't find the answer you're looking for? Reach out to the PCYDO office directly
+                and we'll get back to you as soon as possible.
+              </p>
+            </div>
+            <a
+              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-[8px] rounded-[8px] bg-public-bg-brand px-[20px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+            >
+              <Send className="h-4 w-4 shrink-0" />
+              Send an Email
+            </a>
+          </div>
+
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

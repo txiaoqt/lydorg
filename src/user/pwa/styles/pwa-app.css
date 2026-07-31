@@ -1176,7 +1176,6 @@ html.ytrace-pwa-reduce-motion .ytrace-pwa-app *, html.ytrace-pwa-reduce-motion .
     font-weight: 800;
     letter-spacing: 0.06em;
   }
-  .ytrace-pwa-app .pwa-nav-brand img { width: 2.4rem; height: 2.4rem; object-fit: contain; }
   .ytrace-pwa-app .pwa-bottom-nav-inner {
     width: 100%;
     height: auto;

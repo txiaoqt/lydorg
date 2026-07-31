@@ -1,116 +1,89 @@
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import BrandLogo from "@/components/BrandLogo";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+const linkClass =
+  "font-segoe text-public-fs-body-md font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:text-white";
 
 const Footer = () => {
   return (
-    <footer className="hero-gradient text-secondary-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[1.3fr_1fr_1fr_1.1fr] md:gap-10">
-          <div className="space-y-3">
-            <div>
-              <BrandLogo
-                imgClassName="h-8 w-8 sm:h-9 sm:w-9"
-                showText
-                textClassName="text-sm sm:text-base text-secondary-foreground"
-              />
+    <footer className="bg-gradient-to-r from-[#0E2F66] to-[#1A5CA8] px-5 py-[96px] sm:px-6 lg:px-[64px]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-[32px]">
+
+        {/* Links group */}
+        <div className="flex flex-col gap-[24px] py-[10px] lg:flex-row lg:justify-between">
+
+          {/* Y-TRACE group */}
+          <div className="flex flex-col gap-[12px] p-[10px] lg:max-w-[373px]">
+            <div className="flex items-center gap-[10px]">
+              <BrandLogo showText={false} />
             </div>
-            <p className="max-w-sm text-sm leading-relaxed text-secondary-foreground/70">
-              Y-TRACE brings organization registration, compliance document submission, review updates, and reporting into one workflow for youth organizations.
+            <p className="font-segoe text-public-fs-body-sm font-normal leading-[140%] text-white">
+              Official Pasig City Local Youth Development Office Portal
             </p>
-            <p className="text-xs uppercase tracking-[0.16em] text-secondary-foreground/55">
-              LYDO / PCYDO Organization Compliance Portal
+            <p className="font-segoe text-public-fs-body-sm font-normal leading-[140%] text-white">
+              Empowering Pasig City youth organizations through streamlined compliance, transparent governance, and accessible digital services.
             </p>
           </div>
 
-          <div className="hidden md:block">
-            <h4 className="mb-3 text-sm font-semibold text-secondary-foreground">Explore</h4>
-            <ul className="space-y-2 text-sm text-secondary-foreground/70">
-              <li><Link to="/" className="transition-colors hover:text-primary">Home</Link></li>
-              <li><Link to="/about" className="transition-colors hover:text-primary">About Y-TRACE</Link></li>
-              <li><Link to="/faqs" className="transition-colors hover:text-primary">FAQs</Link></li>
-              <li><Link to="/site-map" className="transition-colors hover:text-primary">Site Map</Link></li>
-            </ul>
-          </div>
+          {/* Nav columns */}
+          <div className="flex flex-col gap-[24px] p-[10px] sm:flex-row sm:gap-[10px] lg:w-[826px]">
 
-          <div className="hidden md:block">
-            <h4 className="mb-3 text-sm font-semibold text-secondary-foreground">Portal Access</h4>
-            <ul className="space-y-2 text-sm text-secondary-foreground/70">
-              <li><Link to="/signin" className="transition-colors hover:text-primary">Sign In</Link></li>
-              <li><Link to="/signup" className="transition-colors hover:text-primary">Create Account</Link></li>
-              <li><Link to="/dashboard" className="transition-colors hover:text-primary">Organization Portal</Link></li>
-              <li><Link to="/contacts" className="transition-colors hover:text-primary">Contact Directory</Link></li>
-            </ul>
-          </div>
+            {/* Quick Links */}
+            <div className="flex flex-1 flex-col">
+              <h4 className="mb-[16px] font-segoe text-public-fs-body-md font-semibold leading-[140%] text-white">
+                Quick Links
+              </h4>
+              <div className="flex flex-col gap-[12px]">
+                <Link to="/" className={linkClass}>Home</Link>
+                <Link to="/about" className={linkClass}>About</Link>
+                <Link to="/public-templates" className={linkClass}>Forms &amp; Templates</Link>
+                <Link to="/news-releases" className={linkClass}>News Releases</Link>
+                <Link to="/faqs" className={linkClass}>FAQs</Link>
+                <Link to="/contacts" className={linkClass}>Contacts</Link>
+                <Link to="/site-map" className={linkClass}>Site Map</Link>
+              </div>
+            </div>
 
-          <div className="hidden md:block">
-            <h4 className="mb-3 text-sm font-semibold text-secondary-foreground">Support</h4>
-            <div className="space-y-2 text-sm text-secondary-foreground/70">
-              <p>For office details and staff contacts, open the dedicated Contact Directory page.</p>
-              <p>
-                <Link to="/contacts" className="transition-colors hover:text-primary">
-                  View contact information
+            {/* Legal */}
+            <div className="flex flex-1 flex-col">
+              <h4 className="mb-[16px] font-segoe text-public-fs-body-md font-semibold leading-[140%] text-white">
+                Legal
+              </h4>
+              <div className="flex flex-col gap-[12px]">
+                <Link to="/privacy" className={linkClass}>Privacy Policy</Link>
+                <Link to="/terms" className={linkClass}>Terms of Service</Link>
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="flex flex-1 flex-col">
+              <h4 className="mb-[16px] font-segoe text-public-fs-body-md font-semibold leading-[140%] text-white">
+                Contact
+              </h4>
+              <div className="flex flex-col gap-[12px]">
+                <span className={linkClass}>(02) 8643-7632</span>
+                <a href="mailto:lydo@pasigcity.gov.ph" className={linkClass}>
+                  lydo@pasigcity.gov.ph
+                </a>
+                <Link to="/contacts" className={`${linkClass} flex items-center gap-[8px]`}>
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                  Contact Us
                 </Link>
-              </p>
+              </div>
             </div>
-          </div>
 
-          <div className="md:hidden">
-            <Accordion type="multiple" className="space-y-1">
-              <AccordionItem value="explore" className="border-b border-secondary-foreground/10">
-                <AccordionTrigger className="py-3 text-sm font-semibold text-secondary-foreground hover:no-underline">Explore</AccordionTrigger>
-                <AccordionContent>
-                  <ul className="space-y-2 pb-3 text-sm text-secondary-foreground/70">
-                    <li><Link to="/" className="transition-colors hover:text-primary">Home</Link></li>
-                    <li><Link to="/about" className="transition-colors hover:text-primary">About Y-TRACE</Link></li>
-                    <li><Link to="/faqs" className="transition-colors hover:text-primary">FAQs</Link></li>
-                    <li><Link to="/site-map" className="transition-colors hover:text-primary">Site Map</Link></li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="portal-access" className="border-b border-secondary-foreground/10">
-                <AccordionTrigger className="py-3 text-sm font-semibold text-secondary-foreground hover:no-underline">Portal Access</AccordionTrigger>
-                <AccordionContent>
-                  <ul className="space-y-2 pb-3 text-sm text-secondary-foreground/70">
-                    <li><Link to="/signin" className="transition-colors hover:text-primary">Sign In</Link></li>
-                    <li><Link to="/signup" className="transition-colors hover:text-primary">Create Account</Link></li>
-                    <li><Link to="/dashboard" className="transition-colors hover:text-primary">Organization Portal</Link></li>
-                    <li><Link to="/contacts" className="transition-colors hover:text-primary">Contact Directory</Link></li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="support" className="border-b border-secondary-foreground/10">
-                <AccordionTrigger className="py-3 text-sm font-semibold text-secondary-foreground hover:no-underline">Support</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 pb-3 text-sm text-secondary-foreground/70">
-                    <p>For office details and staff contacts, open the dedicated Contact Directory page.</p>
-                    <p>
-                      <Link to="/contacts" className="transition-colors hover:text-primary">
-                        View contact information
-                      </Link>
-                    </p>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-secondary-foreground/10 pt-5">
-          <div className="flex flex-col items-center gap-2.5 text-center">
-            <p className="text-[11px] sm:text-xs text-secondary-foreground/55 leading-relaxed">
-              (c) 2026 Y-TRACE - Prototype LYDO Portal. Compliant with RA 10742.
-            </p>
-            <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-secondary-foreground/55">
-              <Link to="/privacy" className="hover:text-secondary-foreground/85 transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-secondary-foreground/85 transition-colors">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
+        {/* Bottom group */}
+        <div className="flex flex-col gap-[24px] p-[10px]">
+          <hr className="border-t border-white" />
+          <p className="text-center font-segoe text-public-fs-body-md font-normal leading-[140%] text-white">
+            © 2026 Y-TRACE • Pasig City Local Youth Development Office. All rights reserved.
+          </p>
         </div>
+
       </div>
     </footer>
   );

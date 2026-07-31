@@ -1,13 +1,16 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
-import { statusLabelMap } from "@/lib/lydo-connect-data";
+import { statusLabelMap, type NewsRelease } from "@/lib/lydo-connect-data";
 import SourcePostEmbed from "@/components/SourcePostEmbed";
+import { supabase } from "@/lib/supabase";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function NewsReleaseRecord() {
   const { newsReleaseId = "" } = useParams<{ newsReleaseId?: string }>();
@@ -16,10 +19,44 @@ export default function NewsReleaseRecord() {
   const { state } = useLydoConnect();
   const isAdminPreview = pathname.startsWith("/admin");
 
-  const newsRelease = useMemo(
+  const storeRelease = useMemo(
     () => state.newsReleases.find((item) => item.id === newsReleaseId) ?? null,
     [newsReleaseId, state.newsReleases],
   );
+
+  const [fetchedRelease, setFetchedRelease] = useState<NewsRelease | null>(null);
+  const [fetching, setFetching] = useState(false);
+
+  useEffect(() => {
+    if (storeRelease || !newsReleaseId || !supabase) return;
+    setFetching(true);
+    void supabase
+      .from("news_releases")
+      .select("*")
+      .eq("id", newsReleaseId)
+      .eq("visibility_status", "published")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          const row = data as Record<string, unknown>;
+          setFetchedRelease({
+            id: row.id as string,
+            title: row.title as string,
+            description: (row.description as string | null) ?? "",
+            facebookPostUrl: row.facebook_post_url as string,
+            previewImageUrl: (row.preview_image_url as string | null) ?? "",
+            datePosted: (row.date_posted as string).slice(0, 10),
+            visibilityStatus: row.visibility_status as NewsRelease["visibilityStatus"],
+            createdBy: (row.created_by as string | null) ?? "",
+            createdAt: row.created_at as string,
+            updatedAt: row.updated_at as string,
+          });
+        }
+      })
+      .finally(() => setFetching(false));
+  }, [newsReleaseId, storeRelease]);
+
+  const newsRelease = storeRelease ?? fetchedRelease;
 
   const formattedDate = useMemo(() => {
     if (!newsRelease?.datePosted) return "—";
@@ -35,10 +72,20 @@ export default function NewsReleaseRecord() {
 
   const backPath = isAdminPreview ? "/admin/news-releases" : "/news-releases";
 
+  if (fetching) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-white">
+        <BrandLogo showText={false} />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-public-bg-section border-t-[#0E2F66]" />
+      </div>
+    );
+  }
+
   if (!newsRelease) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <AnnouncementBar />
+      <Navbar />
         <main className="pt-16">
           <div className="sticky top-16 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
@@ -68,6 +115,7 @@ export default function NewsReleaseRecord() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Navbar />
       <main className="pt-16">
 

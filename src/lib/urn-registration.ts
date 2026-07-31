@@ -9,8 +9,8 @@ export type UrnReviewStatus =
   | "rejected";
 export type VerificationMethod = "documents" | "urn" | null;
 
-export const URN_MIN_LENGTH = 4;
 export const URN_MAX_LENGTH = 80;
+const URN_PATTERN = /^PCYDO-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
 export const normalizeUrn = (value: string) =>
   value.trim().replace(/[ \t]+/g, " ").toUpperCase();
@@ -23,12 +23,12 @@ export const validateUrn = (value: string): string | null => {
   });
   if (!normalized) return "Enter your Unique Registration Number (URN).";
   if (
-    normalized.length < URN_MIN_LENGTH ||
     normalized.length > URN_MAX_LENGTH ||
     hasControlCharacter ||
-    /[<>]/.test(normalized)
+    /[<>]/.test(normalized) ||
+    !URN_PATTERN.test(normalized)
   ) {
-    return "Check the URN and enter it exactly as shown in your registration record.";
+    return "Please enter a valid Unique Registration Number (URN) in the format PCYDO-XXXX-XXXX.";
   }
   return null;
 };

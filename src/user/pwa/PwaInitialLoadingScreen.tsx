@@ -1,5 +1,6 @@
 import { readPwaPreferences, usePwaActiveAccentTheme } from "./hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "./pwaAccentThemes";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function PwaInitialLoadingScreen() {
   const preferences = readPwaPreferences();
@@ -12,7 +13,7 @@ export default function PwaInitialLoadingScreen() {
       role="status"
       aria-live="polite"
     >
-      <img className="pwa-loading-mark" src="/y-trace-logo.png" alt="Y-TRACE" />
+      <BrandLogo showText={false} />
       <p>Loading Y-TRACE...</p>
     </div>
   );

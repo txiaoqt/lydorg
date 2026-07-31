@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, Download, FileText, Filter, Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,7 @@ export default function TransparencyReports() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <AnnouncementBar />
       <Navbar />
       <div className="pt-16">
         <PageHero

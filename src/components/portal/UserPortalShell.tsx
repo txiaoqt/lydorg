@@ -97,7 +97,7 @@ export const UserPortalShell = ({
               </SheetTrigger>
               <SheetContent side="left" className="w-[min(20rem,88vw)] overflow-y-auto">
                 <SheetHeader className="pr-8">
-                  <BrandLogo showText imgClassName="h-10 w-10" className="min-w-0" />
+                  <BrandLogo showText={false} className="min-w-0" />
                   <SheetTitle>{title}</SheetTitle>
                   <SheetDescription>{subtitle}</SheetDescription>
                 </SheetHeader>
@@ -177,7 +177,7 @@ export const UserPortalShell = ({
               </SheetContent>
             </Sheet>
             <button type="button" onClick={() => onNavigate("dashboard")} className="inline-flex min-w-0 focus-visible:outline-none">
-              <BrandLogo showText imgClassName="h-9 w-9 sm:h-10 sm:w-10" textClassName="min-w-0 text-sm sm:text-base" className="min-w-0" />
+              <BrandLogo showText={false} className="min-w-0" />
             </button>
           </div>
 
