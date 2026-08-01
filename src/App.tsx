@@ -52,11 +52,6 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password") {
-    console.debug("[AuthDebug] PolicyAgreementGate redirecting recovery session from", pathname, "to /reset-password");
-    return <Navigate to="/reset-password" replace />;
-  }
-
   const isRecoveryRoute = pathname === "/reset-password" || pathname === "/auth/callback";
   const shouldCheckPolicy =
     !isRecoveryRoute && isInitialized && isAuthenticated && !isPasswordRecoverySession && role !== "admin" && Boolean(user?.id);
@@ -68,6 +63,11 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   const isPublicPath =
     ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/advocacy"].includes(pathname) ||
     pathname.startsWith("/news-releases");
+
+  if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password") {
+    console.debug("[AuthDebug] PolicyAgreementGate redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
 
   if (!isInitialized) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
