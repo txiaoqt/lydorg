@@ -47,13 +47,18 @@ const FullScreenLoader = () => (
 );
 
 const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
-  const { isInitialized, isAuthenticated, role, user, signOut } = useAuth();
+  const { isInitialized, isAuthenticated, isPasswordRecoverySession, role, user, signOut } = useAuth();
   const usePwaUi = useInstalledUserPwa();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
+  if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password") {
+    return <Navigate to="/reset-password" replace />;
+  }
+
   const isRecoveryRoute = pathname === "/reset-password" || pathname === "/auth/callback";
   const shouldCheckPolicy =
-    !isRecoveryRoute && isInitialized && isAuthenticated && role !== "admin" && Boolean(user?.id);
+    !isRecoveryRoute && isInitialized && isAuthenticated && !isPasswordRecoverySession && role !== "admin" && Boolean(user?.id);
   const { isChecking, isRequired, activePolicy, accepting, error, accept } = usePolicyAgreement({
     userId: user?.id ?? null,
     enabled: shouldCheckPolicy,
@@ -98,31 +103,36 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
 };
 
 const RequireAdmin = ({ children }: { children: JSX.Element }) => {
-  const { isInitialized, role } = useAuth();
+  const { isInitialized, isPasswordRecoverySession, role } = useAuth();
   if (!isInitialized) return <FullScreenLoader />;
+  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
   if (role !== "admin") return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
   return children;
 };
 
 const RequireUser = ({ children }: { children: JSX.Element }) => {
-  const { isInitialized, isAuthenticated, role } = useAuth();
+  const { isInitialized, isAuthenticated, isPasswordRecoverySession, role } = useAuth();
   const usePwaUi = useInstalledUserPwa();
   if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
+  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   if (!isAuthenticated) return <Navigate to={usePwaUi ? PWA_ENTRY_ROUTE : USER_SIGNIN_PATH} replace />;
   return children;
 };
 
 const NotFoundRoute = () => {
-  const { isInitialized, role } = useAuth();
+  const { isInitialized, isPasswordRecoverySession, role } = useAuth();
   if (!isInitialized) return <FullScreenLoader />;
+  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
   if (IS_ADMIN_SURFACE) return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   return <NotFound />;
 };
 
 const UserSurfaceRoot = () => {
+  const { isPasswordRecoverySession } = useAuth();
   const usePwaUi = useInstalledUserPwa();
+  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
   return usePwaUi ? <Navigate to={PWA_ENTRY_ROUTE} replace /> : <Index />;
 };
 

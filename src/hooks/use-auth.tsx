@@ -6,6 +6,9 @@ import { IS_USER_SURFACE } from "@/lib/deployment-surface";
 import { supabase, supabaseAuthStorageKey } from "@/lib/supabase";
 import { normalizeUrn } from "@/lib/urn-registration";
 import { clearSupabaseAuthStorage, isInvalidRefreshTokenError } from "@/lib/auth-session-recovery";
+import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
+
+const RECOVERY_SESSION_STORAGE_KEY = "ytrace-recovery-session";
 
 export type UserRole = "guest" | "youth" | "sk" | "staff" | "admin";
 export type AuthUser = {
@@ -49,6 +52,7 @@ type SignUpParams = {
 type AuthContextValue = {
   isAuthenticated: boolean;
   isInitialized: boolean;
+  isPasswordRecoverySession: boolean;
   role: UserRole;
   user: AuthUser | null;
   signIn: (params: SignInParams) => Promise<{ error?: string }>;
@@ -106,6 +110,12 @@ const priorityRole = (codes: string[]): UserRole => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isPasswordRecoverySession, setIsPasswordRecoverySession] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const hasUrlCredentials = parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials;
+    const hasStoredFlag = window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
+    return hasUrlCredentials || hasStoredFlag;
+  });
   const [role, setRole] = useState<UserRole>("guest");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -115,11 +125,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
     const supabaseClient = supabase;
 
-    const applySession = async (session: Session | null) => {
+    const applySession = async (session: Session | null, eventName?: string) => {
       const applyVersion = ++applySessionVersionRef.current;
       if (!mounted) return;
 
       if (!session?.user) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
+        }
+        setIsPasswordRecoverySession(false);
         const storedAdmin = LOCAL_ADMIN_ALLOWED ? readAdminSession() : null;
         if (storedAdmin) {
           if (supabaseClient) {
@@ -201,6 +215,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       };
 
+      const hasUrlCredentials =
+        typeof window !== "undefined" ? parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials : false;
+      const isRecoveryEvent = eventName === "PASSWORD_RECOVERY";
+      const isStoredRecovery =
+        typeof window !== "undefined" && window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
+      const isRecovery = Boolean(isRecoveryEvent || hasUrlCredentials || isStoredRecovery);
+
+      if (isRecovery) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(RECOVERY_SESSION_STORAGE_KEY, "1");
+        }
+        setIsPasswordRecoverySession(true);
+      } else {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
+        }
+        setIsPasswordRecoverySession(false);
+      }
+
       setIsAuthenticated(true);
       setRole(resolvedRole);
       setUser(resolvedUser);
@@ -251,8 +284,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     window.addEventListener("unhandledrejection", handleUnhandledAuthRejection);
 
-    const { data: authListener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      void applySession(session);
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      void applySession(session, event);
     });
 
     return () => {
@@ -332,6 +365,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
     }
 
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
+    }
+    setIsPasswordRecoverySession(false);
+
     const { error } = await supabase.auth.signInWithPassword({
       email: params.email.trim(),
       password: params.password,
@@ -389,6 +427,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
+    }
+    setIsPasswordRecoverySession(false);
     const storedAdmin = readAdminSession();
     if (supabase && storedAdmin?.sessionToken) {
       await supabase.rpc("revoke_admin_session_token", {
@@ -406,13 +448,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       isAuthenticated,
       isInitialized,
+      isPasswordRecoverySession,
       role,
       user,
       signIn,
       signUp,
       signOut,
     }),
-    [isAuthenticated, isInitialized, role, user],
+    [isAuthenticated, isInitialized, isPasswordRecoverySession, role, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

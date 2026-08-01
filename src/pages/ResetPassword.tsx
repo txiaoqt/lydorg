@@ -8,10 +8,12 @@ import BrandLogo from "@/components/BrandLogo";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
 import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-auth";
 
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
 const ResetPassword = () => {
+  const { signOut } = useAuth();
   const recovery = useMemo(
     () => parsePasswordRecoveryUrl(typeof window === "undefined" ? "/reset-password" : window.location.href),
     [],
@@ -145,7 +147,7 @@ const ResetPassword = () => {
       setInlineError(error.message);
       return;
     }
-    await supabase.auth.signOut({ scope: "local" });
+    await signOut();
     setIsLoading(false);
     setPassword("");
     setConfirmPassword("");
