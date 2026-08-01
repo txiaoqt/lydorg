@@ -7,8 +7,7 @@ const detectStandalone = () => {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     window.matchMedia("(display-mode: fullscreen)").matches ||
-    (window.navigator as NavigatorWithStandalone).standalone === true ||
-    document.referrer.startsWith("android-app://")
+    (window.navigator as NavigatorWithStandalone).standalone === true
   );
 };
 
