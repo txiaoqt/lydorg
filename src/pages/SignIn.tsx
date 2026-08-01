@@ -208,13 +208,12 @@ const SignIn = ({ forcedMode }: SignInProps) => {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               {!isAdminMode && (
-                <a
-                  href={getPasswordResetUrl({ pwaFlow })}
-                  tabIndex={-1}
+                <Link
+                  to={getPasswordResetUrl({ pwaFlow })}
                   className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   Forgot password?
-                </a>
+                </Link>
               )}
             </div>
             <div className="relative">

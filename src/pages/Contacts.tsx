@@ -135,7 +135,7 @@ const Contacts = () => {
                   Monday - Friday
                 </span>
                 <span className="font-segoe text-public-fs-subheading-sm font-semibold leading-[100%] text-public-text-brand">
-                  7:00 AM – 4:00 PM
+                  8:00 AM – 5:00 PM
                 </span>
               </div>
               <div className="flex justify-between border-b border-public-border-default pb-[12px]">

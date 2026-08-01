@@ -10,7 +10,7 @@ const navItems = [
   { label: "Forms & Templates", href: "/public-templates" },
   { label: "News Releases", href: "/news-releases" },
   { label: "FAQs", href: "/faqs" },
-  { label: "Contact", href: "/contacts" },
+  { label: "Contacts", href: "/contacts" },
 ];
 
 const Navbar = () => {
