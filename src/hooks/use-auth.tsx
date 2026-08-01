@@ -246,6 +246,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           isExistingOrganization: Boolean(authUser.user_metadata?.is_existing_organization),
           organizationIdentifierNumber: (authUser.user_metadata?.organization_identifier_number as string | undefined) ?? "",
         },
+      };
+
       setIsAuthenticated(true);
       setRole(resolvedRole);
       setUser(resolvedUser);
