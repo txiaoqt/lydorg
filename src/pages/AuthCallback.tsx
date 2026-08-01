@@ -11,7 +11,7 @@ import {
 const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isInitialized, role } = useAuth();
+  const { isAuthenticated, isInitialized, isPasswordRecoverySession, role } = useAuth();
   const pwaFlow = isPwaAuthFlow(location.search);
   const [readyToFallback, setReadyToFallback] = useState(false);
   const hasAuthParams = useMemo(() => {
@@ -26,6 +26,10 @@ const AuthCallback = () => {
 
   useEffect(() => {
     if (!isInitialized) return;
+    if (isPasswordRecoverySession) {
+      navigate("/reset-password", { replace: true });
+      return;
+    }
     if (isAuthenticated) {
       if (pwaFlow && role !== "admin") endPwaAuthFlow();
       navigate(role === "admin" ? "/admin" : pwaFlow ? "/app" : "/organization-profile", { replace: true });
@@ -34,7 +38,7 @@ const AuthCallback = () => {
     if (!hasAuthParams || readyToFallback) {
       navigate(pwaFlow ? pwaAuthRoute("/signin") : "/signin", { replace: true });
     }
-  }, [hasAuthParams, isAuthenticated, isInitialized, navigate, pwaFlow, readyToFallback, role]);
+  }, [hasAuthParams, isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow, readyToFallback, role]);
 
   useEffect(() => {
     if (!isInitialized || isAuthenticated || !hasAuthParams) return;

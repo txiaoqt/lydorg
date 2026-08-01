@@ -44,7 +44,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   const location = useLocation();
   const pwaFlow = isPwaAuthFlow(location.search);
   const pwaTheme = readPwaPreferences().accentTheme;
-  const { signIn, isAuthenticated, isInitialized, role } = useAuth();
+  const { signIn, isAuthenticated, isInitialized, isPasswordRecoverySession, role } = useAuth();
   const useSupabaseAuth = Boolean(supabase);
   const roleSelectionEnabled = !pwaFlow && !forcedMode && !IS_ADMIN_SURFACE && !IS_USER_SURFACE;
 
@@ -60,13 +60,17 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
   useEffect(() => {
     if (!isInitialized || !isAuthenticated) return;
+    if (isPasswordRecoverySession) {
+      navigate("/reset-password", { replace: true });
+      return;
+    }
     if (role === "admin") {
       navigate("/admin", { replace: true });
       return;
     }
     if (pwaFlow) endPwaAuthFlow();
     navigate(pwaFlow ? "/app" : "/dashboard", { replace: true });
-  }, [isAuthenticated, isInitialized, navigate, pwaFlow, role]);
+  }, [isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow, role]);
 
   const canSubmit = isAdminMode
     ? Boolean(username.trim() && password) && !isLoading

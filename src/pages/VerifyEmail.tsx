@@ -30,7 +30,7 @@ type VerifyEmailLocationState = {
 const VerifyEmail = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, isInitialized } = useAuth();
+  const { isAuthenticated, isInitialized, isPasswordRecoverySession } = useAuth();
   const pwaFlow = isPwaAuthFlow(location.search);
   const pwaTheme = readPwaPreferences().accentTheme;
   const email = useMemo(() => {
@@ -58,6 +58,10 @@ const VerifyEmail = () => {
 
   useEffect(() => {
     if (!isInitialized || !isAuthenticated) return;
+    if (isPasswordRecoverySession) {
+      navigate("/reset-password", { replace: true });
+      return;
+    }
     const hasPendingSignup =
       typeof window !== "undefined" &&
       Boolean(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY));
@@ -65,7 +69,7 @@ const VerifyEmail = () => {
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
     if (pwaFlow) endPwaAuthFlow();
     navigate(pwaFlow ? "/app" : "/dashboard", { replace: true });
-  }, [isAuthenticated, isInitialized, isVerified, navigate, password, pwaFlow]);
+  }, [isAuthenticated, isInitialized, isPasswordRecoverySession, isVerified, navigate, password, pwaFlow]);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;

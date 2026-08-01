@@ -186,9 +186,10 @@ function PwaPublicHelpPage() {
 
 export function PwaEntryGate() {
   const installedPwa = useInstalledUserPwa();
-  const { isInitialized, isAuthenticated, role } = useAuth();
+  const { isInitialized, isAuthenticated, isPasswordRecoverySession, role } = useAuth();
   if (!installedPwa) return <Navigate to="/" replace />;
   if (!isInitialized) return <PwaInitialLoadingScreen />;
+  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   if (isAuthenticated) return <Navigate to="/app" replace />;
   return <PwaWelcomePage />;
@@ -196,9 +197,10 @@ export function PwaEntryGate() {
 
 export function PwaPublicResourceGate({ page }: { page: PublicPage }) {
   const installedPwa = useInstalledUserPwa();
-  const { isInitialized, isAuthenticated, role } = useAuth();
+  const { isInitialized, isAuthenticated, isPasswordRecoverySession, role } = useAuth();
   if (!installedPwa) return <Navigate to={websiteFallbacks[page]} replace />;
   if (!isInitialized) return <PwaInitialLoadingScreen />;
+  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   if (isAuthenticated) return <Navigate to="/app" replace />;
 
