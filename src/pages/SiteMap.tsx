@@ -12,8 +12,8 @@ const siteMapSections: Array<{ title: string; links: Array<{ label: string; href
       { label: "FAQs", href: "/faqs" },
       { label: "Contacts", href: "/contacts" },
       { label: "Site Map", href: "/site-map" },
-      { label: "Terms of Service", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
     ],
   },
   {

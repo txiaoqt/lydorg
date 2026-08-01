@@ -779,20 +779,20 @@ const SignUp = () => {
             <button
               type="button"
               role="tab"
-              aria-selected={legalPolicyType === "terms"}
-              className={`min-h-11 rounded-lg px-3 text-sm font-medium transition-colors ${legalPolicyType === "terms" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              onClick={() => setLegalPolicyType("terms")}
-            >
-              Terms of Service
-            </button>
-            <button
-              type="button"
-              role="tab"
               aria-selected={legalPolicyType === "privacy"}
               className={`min-h-11 rounded-lg px-3 text-sm font-medium transition-colors ${legalPolicyType === "privacy" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               onClick={() => setLegalPolicyType("privacy")}
             >
               Privacy Policy
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={legalPolicyType === "terms"}
+              className={`min-h-11 rounded-lg px-3 text-sm font-medium transition-colors ${legalPolicyType === "terms" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setLegalPolicyType("terms")}
+            >
+              Terms of Service
             </button>
           </div>
           <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6" tabIndex={0}>

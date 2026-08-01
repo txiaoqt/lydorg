@@ -79,8 +79,8 @@ export const TermsPrivacyAgreementModal = ({
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
             <Tabs defaultValue="terms" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="terms">Terms of Service</TabsTrigger>
                 <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
+                <TabsTrigger value="terms">Terms of Service</TabsTrigger>
               </TabsList>
               <TabsContent value="terms" className="mt-3">
                 <ScrollArea className={`${isPwa ? "h-[34vh]" : "h-[44vh]"} rounded-lg border border-border bg-background p-4`}>
@@ -99,17 +99,6 @@ export const TermsPrivacyAgreementModal = ({
             <div className="mb-4 space-y-3">
               <div className="flex min-h-11 items-start gap-2">
                 <Checkbox
-                  id="terms-agreement"
-                  checked={acceptedTerms}
-                  onCheckedChange={(checked) => setAcceptedTerms(Boolean(checked))}
-                  disabled={saving}
-                />
-                <Label htmlFor="terms-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
-                  I have read and agree to the Terms of Service.
-                </Label>
-              </div>
-              <div className="flex min-h-11 items-start gap-2">
-                <Checkbox
                   id="privacy-agreement"
                   checked={acceptedPrivacy}
                   onCheckedChange={(checked) => setAcceptedPrivacy(Boolean(checked))}
@@ -117,6 +106,17 @@ export const TermsPrivacyAgreementModal = ({
                 />
                 <Label htmlFor="privacy-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
                   I have read and acknowledge the Privacy Policy.
+                </Label>
+              </div>
+              <div className="flex min-h-11 items-start gap-2">
+                <Checkbox
+                  id="terms-agreement"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(Boolean(checked))}
+                  disabled={saving}
+                />
+                <Label htmlFor="terms-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
+                  I have read and agree to the Terms of Service.
                 </Label>
               </div>
             </div>
