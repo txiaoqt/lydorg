@@ -154,10 +154,38 @@ const UserSurfaceRoot = () => {
 };
 
 const ScrollToTopOnRouteChange = () => {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
+
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [pathname, search]);
+    if (!hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      return;
+    }
+
+    const rawId = hash.replace(/^#/, "");
+    if (!rawId) return;
+
+    const scrollToAnchor = () => {
+      const targetElement =
+        document.getElementById(rawId) ||
+        document.querySelector(`[data-alias-id="${rawId}"]`) ||
+        document.getElementById(`policy-${rawId}`);
+
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        return true;
+      }
+      return false;
+    };
+
+    if (!scrollToAnchor()) {
+      const timer = setTimeout(() => {
+        scrollToAnchor();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, search, hash]);
+
   return null;
 };
 

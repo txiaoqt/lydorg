@@ -36,14 +36,20 @@ export const PolicyContent = ({
 
     if (line.startsWith("## ")) {
       const heading = normalizePolicyHeading(line);
+      const sectionId = getPolicySectionId(heading);
+      const isLegalBases = heading.includes("Legal Bases for Processing");
       blocks.push(
         <h2
-          id={getPolicySectionId(heading)}
+          id={sectionId}
+          data-alias-id={isLegalBases ? "legal-bases-for-processing" : undefined}
           key={`h2-${index}`}
           className={isRedesign
             ? "font-segoe scroll-mt-[130px] border-b border-public-border-default pb-[10px] text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand"
             : "scroll-mt-24 border-t border-border pt-6 text-[1.08rem] font-semibold leading-snug text-foreground sm:text-xl"}
         >
+          {isLegalBases ? (
+            <span id="legal-bases-for-processing" className="scroll-mt-[130px]" />
+          ) : null}
           {heading}
         </h2>,
       );

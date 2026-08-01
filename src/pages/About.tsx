@@ -120,7 +120,7 @@ const policyCards = [
     icon: ScrollText,
     title: "Data Privacy Act Compliance",
     description: "Our compliance with Republic Act 10173, ensuring the lawful processing of personal data for all Y-TRACE users.",
-    href: "/privacy#policy-6-legal-bases-for-processing",
+    href: "/privacy#legal-bases-for-processing",
   },
 ];
 
