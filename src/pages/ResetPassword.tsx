@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,12 @@ type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
 const ResetPassword = () => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const cancelRecovery = async (destination: string) => {
+    await signOut();
+    navigate(destination, { replace: true });
+  };
   const recovery = useMemo(
     () => parsePasswordRecoveryUrl(typeof window === "undefined" ? "/reset-password" : window.location.href),
     [],
@@ -263,7 +269,7 @@ const ResetPassword = () => {
                 <h1 className="text-2xl font-heading font-bold">Password updated</h1>
                 <p className="mt-2 text-sm text-muted-foreground">Your new password is ready. Sign in again to continue.</p>
               </div>
-              <Button className="w-full font-semibold" asChild><Link to="/signin">Continue to Sign In</Link></Button>
+              <Button className="w-full font-semibold" onClick={() => cancelRecovery("/signin")}>Continue to Sign In</Button>
             </div>
           ) : null}
 
@@ -276,8 +282,8 @@ const ResetPassword = () => {
 
         {mode !== "updated" ? (
           <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
-            <p>Remember your password? <Link to="/signin" className="font-medium text-primary hover:text-primary/80">Sign in</Link></p>
-            <p><Link to="/" className="hover:text-foreground">← Back to home</Link></p>
+            <p>Remember your password? <button type="button" onClick={() => cancelRecovery("/signin")} className="font-medium text-primary hover:text-primary/80">Sign in</button></p>
+            <p><button type="button" onClick={() => cancelRecovery("/")} className="hover:text-foreground">← Back to home</button></p>
           </div>
         ) : null}
       </div>
