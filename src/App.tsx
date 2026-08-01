@@ -53,6 +53,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   const navigate = useNavigate();
 
   if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password") {
+    console.debug("[AuthDebug] PolicyAgreementGate redirecting recovery session from", pathname, "to /reset-password");
     return <Navigate to="/reset-password" replace />;
   }
 
@@ -104,8 +105,12 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
 
 const RequireAdmin = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isPasswordRecoverySession, role } = useAuth();
+  const { pathname } = useLocation();
   if (!isInitialized) return <FullScreenLoader />;
-  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
+  if (isPasswordRecoverySession) {
+    console.debug("[AuthDebug] RequireAdmin redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
   if (role !== "admin") return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
   return children;
 };
@@ -113,8 +118,12 @@ const RequireAdmin = ({ children }: { children: JSX.Element }) => {
 const RequireUser = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isAuthenticated, isPasswordRecoverySession, role } = useAuth();
   const usePwaUi = useInstalledUserPwa();
+  const { pathname } = useLocation();
   if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
-  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
+  if (isPasswordRecoverySession) {
+    console.debug("[AuthDebug] RequireUser redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
   if (role === "admin") return <Navigate to="/admin" replace />;
   if (!isAuthenticated) return <Navigate to={usePwaUi ? PWA_ENTRY_ROUTE : USER_SIGNIN_PATH} replace />;
   return children;
@@ -122,8 +131,12 @@ const RequireUser = ({ children }: { children: JSX.Element }) => {
 
 const NotFoundRoute = () => {
   const { isInitialized, isPasswordRecoverySession, role } = useAuth();
+  const { pathname } = useLocation();
   if (!isInitialized) return <FullScreenLoader />;
-  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
+  if (isPasswordRecoverySession) {
+    console.debug("[AuthDebug] NotFoundRoute redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
   if (IS_ADMIN_SURFACE) return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   return <NotFound />;
@@ -132,7 +145,11 @@ const NotFoundRoute = () => {
 const UserSurfaceRoot = () => {
   const { isPasswordRecoverySession } = useAuth();
   const usePwaUi = useInstalledUserPwa();
-  if (isPasswordRecoverySession) return <Navigate to="/reset-password" replace />;
+  const { pathname } = useLocation();
+  if (isPasswordRecoverySession) {
+    console.debug("[AuthDebug] UserSurfaceRoot redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
   return usePwaUi ? <Navigate to={PWA_ENTRY_ROUTE} replace /> : <Index />;
 };
 

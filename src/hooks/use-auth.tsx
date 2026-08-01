@@ -114,7 +114,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (typeof window === "undefined") return false;
     const hasUrlCredentials = parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials;
     const hasStoredFlag = window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
-    return hasUrlCredentials || hasStoredFlag;
+    const isRecovery = hasUrlCredentials || hasStoredFlag;
+    if (isRecovery) {
+      window.sessionStorage.setItem(RECOVERY_SESSION_STORAGE_KEY, "1");
+    }
+    return isRecovery;
   });
   const [role, setRole] = useState<UserRole>("guest");
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -129,13 +133,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const applyVersion = ++applySessionVersionRef.current;
       if (!mounted) return;
 
-      if (!session?.user) {
+      const hasUrlCredentials =
+        typeof window !== "undefined" ? parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials : false;
+      const isRecoveryEvent = eventName === "PASSWORD_RECOVERY";
+      const isStoredRecovery =
+        typeof window !== "undefined" && window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
+      const isRecovery = Boolean(isRecoveryEvent || hasUrlCredentials || isStoredRecovery);
+
+      if (typeof window !== "undefined") {
+        console.debug("[AuthDebug] applySession:", {
+          eventName: eventName ?? "NONE",
+          pathname: window.location.pathname,
+          url: window.location.href,
+          hasSessionUser: Boolean(session?.user),
+          hasUrlCredentials,
+          isRecoveryEvent,
+          isStoredRecovery,
+          isRecovery,
+          sessionStorageFlag: window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY),
+        });
+      }
+
+      if (isRecovery) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(RECOVERY_SESSION_STORAGE_KEY, "1");
+        }
+        setIsPasswordRecoverySession(true);
+      } else {
         if (typeof window !== "undefined") {
           window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
         }
         setIsPasswordRecoverySession(false);
+      }
+
+      if (!session?.user) {
         const storedAdmin = LOCAL_ADMIN_ALLOWED ? readAdminSession() : null;
-        if (storedAdmin) {
+        if (storedAdmin && !isRecovery) {
           if (supabaseClient) {
             const { data, error } = await supabaseClient.rpc("validate_admin_session_token", {
               _session_token: storedAdmin.sessionToken,
@@ -213,27 +246,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           isExistingOrganization: Boolean(authUser.user_metadata?.is_existing_organization),
           organizationIdentifierNumber: (authUser.user_metadata?.organization_identifier_number as string | undefined) ?? "",
         },
-      };
-
-      const hasUrlCredentials =
-        typeof window !== "undefined" ? parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials : false;
-      const isRecoveryEvent = eventName === "PASSWORD_RECOVERY";
-      const isStoredRecovery =
-        typeof window !== "undefined" && window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
-      const isRecovery = Boolean(isRecoveryEvent || hasUrlCredentials || isStoredRecovery);
-
-      if (isRecovery) {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.setItem(RECOVERY_SESSION_STORAGE_KEY, "1");
-        }
-        setIsPasswordRecoverySession(true);
-      } else {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
-        }
-        setIsPasswordRecoverySession(false);
-      }
-
       setIsAuthenticated(true);
       setRole(resolvedRole);
       setUser(resolvedUser);
