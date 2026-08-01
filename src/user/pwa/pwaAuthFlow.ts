@@ -4,7 +4,7 @@ export const PWA_AUTH_MARKER = "ytrace-pwa-auth-flow";
 export const pwaPublicRoute = (page: "help" | "faqs" | "contact" | "privacy" | "terms") =>
   `${PWA_ENTRY_ROUTE}/${page}`;
 
-export const pwaAuthRoute = (route: "/signin" | "/signup" | "/verify-email" | "/reset-password" | "/auth/callback") =>
+export const pwaAuthRoute = (route: "/signin" | "/signup" | "/verify-email" | "/auth/callback") =>
   `${route}?pwa=1`;
 
 export const beginPwaAuthFlow = () => {

@@ -37,26 +37,26 @@ export const getAuthCallbackUrl = (options?: { pwaFlow?: boolean }) => {
   return withPwaAuthMarker(AUTH_CALLBACK_PATH, Boolean(options?.pwaFlow));
 };
 
-export const getPasswordResetUrl = (options?: { pwaFlow?: boolean }) => {
+export const getPasswordResetUrl = () => {
   const explicitResetUrl = cleanUrl(import.meta.env.VITE_PASSWORD_RESET_URL);
-  if (explicitResetUrl) return withPwaAuthMarker(explicitResetUrl, Boolean(options?.pwaFlow));
+  if (explicitResetUrl) return explicitResetUrl;
 
   const explicitRedirectUrl = cleanUrl(import.meta.env.VITE_AUTH_REDIRECT_URL);
   if (explicitRedirectUrl) {
     try {
       const origin = new URL(explicitRedirectUrl).origin;
-      return withPwaAuthMarker(joinUrl(origin, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
+      return joinUrl(origin, PASSWORD_RESET_PATH);
     } catch {
       // Fall through if parsing fails
     }
   }
 
   const configuredSiteUrl = cleanUrl(import.meta.env.VITE_SITE_URL);
-  if (configuredSiteUrl) return withPwaAuthMarker(joinUrl(configuredSiteUrl, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
+  if (configuredSiteUrl) return joinUrl(configuredSiteUrl, PASSWORD_RESET_PATH);
 
   if (typeof window !== "undefined" && window.location.origin) {
-    return withPwaAuthMarker(joinUrl(window.location.origin, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
+    return joinUrl(window.location.origin, PASSWORD_RESET_PATH);
   }
 
-  return withPwaAuthMarker(PASSWORD_RESET_PATH, Boolean(options?.pwaFlow));
+  return PASSWORD_RESET_PATH;
 };

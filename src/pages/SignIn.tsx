@@ -209,7 +209,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
               <Label htmlFor="password">Password</Label>
               {!isAdminMode && (
                 <Link
-                  to={getPasswordResetUrl({ pwaFlow })}
+                  to={getPasswordResetUrl()}
                   className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   Forgot password?
