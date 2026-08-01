@@ -38,6 +38,19 @@ export const getAuthCallbackUrl = (options?: { pwaFlow?: boolean }) => {
 };
 
 export const getPasswordResetUrl = (options?: { pwaFlow?: boolean }) => {
+  const explicitResetUrl = cleanUrl(import.meta.env.VITE_PASSWORD_RESET_URL);
+  if (explicitResetUrl) return withPwaAuthMarker(explicitResetUrl, Boolean(options?.pwaFlow));
+
+  const explicitRedirectUrl = cleanUrl(import.meta.env.VITE_AUTH_REDIRECT_URL);
+  if (explicitRedirectUrl) {
+    try {
+      const origin = new URL(explicitRedirectUrl).origin;
+      return withPwaAuthMarker(joinUrl(origin, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
+    } catch {
+      // Fall through if parsing fails
+    }
+  }
+
   const configuredSiteUrl = cleanUrl(import.meta.env.VITE_SITE_URL);
   if (configuredSiteUrl) return withPwaAuthMarker(joinUrl(configuredSiteUrl, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
 
