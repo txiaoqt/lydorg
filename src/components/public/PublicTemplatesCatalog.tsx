@@ -142,49 +142,50 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
     return (
       <div
         key={template.id}
-        className="flex flex-col gap-[24px] rounded-[16px] border border-public-bg-brand-subtle bg-white p-[24px] shadow-public-nav"
+        className="group flex h-full flex-col justify-between rounded-xl border border-public-border-default bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-public-border-brand/50 hover:shadow-md sm:p-6"
       >
-        {/* File type tag */}
-        <div className="flex justify-end">
-          <span className="rounded-full bg-[rgba(220,239,253,0.5)] px-[10px] py-[10px] font-mono text-public-fs-body-sm font-semibold leading-[100%] text-public-text-brand backdrop-blur-[4px]">
-            {fileType}
-          </span>
-        </div>
+        <div className="flex flex-1 flex-col gap-3">
+          {/* Header row: File Type Badge + Upload Date */}
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-public-bg-tertiary-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-public-text-brand border border-public-border-brand/20">
+              <FileText className="h-3.5 w-3.5 shrink-0" />
+              {fileType}
+            </span>
+            <span className="font-segoe text-xs text-public-text-secondary">
+              {formattedDate}
+            </span>
+          </div>
 
-        {/* Title + updated date */}
-        <div className="flex flex-col gap-[10px]">
-          <h3 className="font-segoe text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+          {/* Title */}
+          <h3 className="font-segoe text-lg font-bold leading-snug tracking-tight text-public-text-brand group-hover:text-primary transition-colors">
             {template.name}
           </h3>
-          <p className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-secondary">
-            {formattedDate}
+
+          {/* Description */}
+          <p className="font-segoe text-sm leading-relaxed text-public-text-neutral-default line-clamp-3">
+            {template.description || fallbackDescription}
           </p>
         </div>
 
-        {/* Description */}
-        <p className="font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-justify text-public-text-neutral-default">
-          {template.description || fallbackDescription}
-        </p>
-
-        {/* Buttons */}
-        <div className="flex gap-[10px]">
+        {/* Divider + Actions */}
+        <div className="mt-5 border-t border-public-border-default pt-4 flex gap-2.5">
           <button
             type="button"
             disabled={viewDisabled}
             onClick={() => void openTemplate(template.templateFileUrl, template.name)}
-            className="flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border border-public-border-brand bg-white px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle disabled:opacity-50"
+            className="flex-1 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-public-border-brand bg-white px-3 font-segoe text-xs font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           >
             <Eye className="h-4 w-4 shrink-0" />
-            {isOpening ? "Opening…" : "View"}
+            <span>{isOpening ? "Opening…" : "View"}</span>
           </button>
           <button
             type="button"
             disabled={downloadDisabled}
             onClick={() => void downloadTemplate(template.templateFileUrl, template.name)}
-            className="flex flex-1 items-center justify-center gap-[8px] rounded-[8px] bg-public-bg-brand px-[12px] py-[12px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover disabled:opacity-50"
+            className="flex-1 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-public-bg-brand px-3 font-segoe text-xs font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           >
             <Download className="h-4 w-4 shrink-0" />
-            {isDownloading ? "Downloading…" : "Download"}
+            <span>{isDownloading ? "Downloading…" : "Download"}</span>
           </button>
         </div>
       </div>
@@ -197,10 +198,10 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
   };
 
   return (
-    <div className="flex flex-col gap-[24px]">
+    <div className="flex flex-col gap-8">
 
       {/* Filter tabs */}
-      <div className="flex gap-[10px] overflow-x-auto p-[10px] sm:justify-center">
+      <div className="flex gap-2 overflow-x-auto pb-1 sm:justify-center">
         {filterTabs.map((tab) => (
           <button
             key={tab.id}
@@ -208,8 +209,8 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
             onClick={() => setActiveFilter(tab.id)}
             className={
               activeFilter === tab.id
-                ? `shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
-                : `shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default${tab.id === "all" ? " min-w-[80px]" : ""}`
+                ? "shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-5 py-2 font-segoe text-xs font-semibold text-public-text-on-brand shadow-sm transition-all"
+                : "shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-5 py-2 font-segoe text-xs font-medium text-public-text-neutral-default hover:bg-muted/50 transition-all"
             }
           >
             {tab.label}
@@ -224,18 +225,18 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
           const Icon = cat.icon;
           const templates = templatesByCategory[cat.id];
           return (
-            <div key={cat.id} className="flex flex-col gap-[10px]">
+            <div key={cat.id} className="flex flex-col gap-4">
 
               {/* Category header */}
-              <div className="flex items-center gap-[16px] py-[10px]">
-                <div className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[16px] bg-public-bg-tertiary-100 p-[8px]">
-                  <Icon className="h-6 w-6 text-public-text-brand" />
+              <div className="flex items-start gap-3.5 border-b border-public-border-default/60 pb-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-public-bg-tertiary-100 p-2 text-public-text-brand">
+                  <Icon className="h-5 w-5" />
                 </div>
-                <div className="flex flex-col gap-[10px]">
-                  <h3 className="font-segoe text-public-fs-subtitle-sm font-bold leading-[120%] text-public-text-brand">
+                <div className="flex flex-col gap-0.5">
+                  <h2 className="font-segoe text-xl font-bold text-public-text-brand tracking-tight">
                     {cat.title}
-                  </h3>
-                  <p className="font-segoe text-public-fs-body-sm font-normal leading-[120%] text-public-text-secondary">
+                  </h2>
+                  <p className="font-segoe text-xs sm:text-sm text-public-text-secondary leading-relaxed">
                     {cat.subtitle}
                   </p>
                 </div>
@@ -243,11 +244,11 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
 
               {/* Cards or empty state */}
               {templates.length > 0 ? (
-                <div className="grid grid-cols-1 gap-[24px] py-[10px] sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
                   {templates.map((t) => renderTemplateCard(t, cat.fallback))}
                 </div>
               ) : (
-                <div className="rounded-[16px] border border-dashed border-public-bg-brand-subtle bg-white px-5 py-8 text-center font-segoe text-public-fs-body-sm text-public-text-secondary">
+                <div className="rounded-xl border border-dashed border-public-border-default bg-white/60 p-8 text-center font-segoe text-sm text-public-text-secondary">
                   {cat.empty}
                 </div>
               )}
