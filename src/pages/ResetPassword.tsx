@@ -9,6 +9,7 @@ import { getPasswordResetUrl } from "@/lib/auth-redirect";
 import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
+import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
 
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
@@ -28,6 +29,7 @@ const ResetPassword = () => {
   const [inlineError, setInlineError] = useState("");
 
   useEffect(() => {
+    endPwaAuthFlow();
     if (!supabase) {
       if (recovery.hasRecoveryCredentials) {
         setInlineError("Password recovery is unavailable because Supabase is not configured.");

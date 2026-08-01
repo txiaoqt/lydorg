@@ -7,6 +7,7 @@ import { supabase, supabaseAuthStorageKey } from "@/lib/supabase";
 import { normalizeUrn } from "@/lib/urn-registration";
 import { clearSupabaseAuthStorage, isInvalidRefreshTokenError } from "@/lib/auth-session-recovery";
 import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
+import { PWA_AUTH_MARKER } from "@/user/pwa/pwaAuthFlow";
 
 const RECOVERY_SESSION_STORAGE_KEY = "ytrace-recovery-session";
 
@@ -443,6 +444,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
+      window.sessionStorage.removeItem(PWA_AUTH_MARKER);
     }
     setIsPasswordRecoverySession(false);
     const storedAdmin = readAdminSession();
