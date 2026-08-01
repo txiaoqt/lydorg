@@ -14,7 +14,7 @@ import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
 const ResetPassword = () => {
-  const { signOut } = useAuth();
+  const { signOut, isPasswordRecoverySession } = useAuth();
   const navigate = useNavigate();
 
   const cancelRecovery = async (destination: string) => {
@@ -96,6 +96,15 @@ const ResetPassword = () => {
 
     if (recovery.hasRecoveryCredentials) {
       void establishRecoverySession();
+    } else if (isPasswordRecoverySession) {
+      // detectSessionInUrl already consumed the URL credentials and established
+      // the recovery session before this component mounted. Verify the session
+      // is still valid and transition to the password update form.
+      void supabase.auth.getSession().then(({ data }) => {
+        if (active && data.session) {
+          setMode("update");
+        }
+      });
     }
     return () => {
       active = false;
