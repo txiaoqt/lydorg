@@ -2,10 +2,6 @@
   "outputDirectory": "build",
   "rewrites": [
     {
-      "source": "/api/sync-run-once",
-      "destination": "/api/sync-run-once"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "https://airnet-backend.vercel.app/api/$1"
     },

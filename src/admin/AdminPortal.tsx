@@ -7,7 +7,9 @@ import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
 import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, Download, Eye, FileText, FolderOpen, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
+import { UsersPage } from "./pages/Users";
+import { Roles } from "./pages/Roles";
+import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, Download, Eye, FileText, FolderOpen, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, TrendingUp, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,6 +107,7 @@ import {
   adminUpdateYpopEventParticipationInSupabase,
   adminUpdateYpopOrgActivityInSupabase,
   adminUpdateInquiryInSupabase,
+  createNotificationInSupabase,
 } from "@/lib/lydo-connect-supabase";
 
 const routeMap: Record<string, string> = {
@@ -120,24 +123,11 @@ const routeMap: Record<string, string> = {
   "activity-logs": "/admin/activity-logs",
   "ypop-validation": "/admin/ypop-validation",
   "yorp-registry": "/admin/yorp-registry",
+  users: "/admin/users",
+  "roles-permissions": "/admin/roles-permissions",
 };
 
 const adminId = "admin-demo";
-const splitNotificationsGroup = baseAdminNavigationGroups.map((group) =>
-  group.items.some((item) => item.id === "notifications-activity")
-    ? {
-        ...group,
-        items: group.items.flatMap((item) =>
-          item.id === "notifications-activity"
-            ? [
-                { id: "notifications", label: "Notifications", icon: Bell },
-                { id: "activity-logs", label: "Activity Logs", icon: ClipboardList },
-              ]
-            : [item],
-        ),
-      }
-    : group,
-);
 
 const renderAdvocacyChips = (advocacies: string[]) =>
   advocacies.length ? (
@@ -629,7 +619,7 @@ type RecentActivityEntry = {
 export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateInquiry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
@@ -1620,10 +1610,67 @@ export default function AdminPortal({ section }: { section: string }) {
       pendingLiquidation: state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length,
       overdueLiquidation: state.liquidationReports.filter((item) => item.status === "overdue").length,
       pendingInquiries: state.inquiries.filter((item) => item.status === "pending_review").length,
+      pendingYpop: state.ypopEntries.filter((item) => item.status === "submitted" || item.status === "under_review").length,
       nonCompliant: state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length,
     }),
     [state],
   );
+
+  const overviewTags = useMemo(() => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const newOrgs = state.organizationProfiles.filter(
+      (p) => new Date(p.createdAt) >= weekAgo,
+    ).length;
+
+    const approvedToday = state.documentSubmissions.filter(
+      (s) => s.status === "approved_green" && s.reviewedAt && new Date(s.reviewedAt) >= startOfToday,
+    ).length;
+
+    const totalReleased = state.budgetRequests
+      .filter((r) => r.status === "budget_released")
+      .reduce((sum, r) => sum + (r.releasedAmount ?? 0), 0);
+    const budgetTag =
+      totalReleased >= 1_000_000
+        ? `₱${(totalReleased / 1_000_000).toFixed(1)}m cycle`
+        : totalReleased >= 1_000
+        ? `₱${(totalReleased / 1_000).toFixed(0)}k cycle`
+        : `₱${totalReleased} cycle`;
+
+    const pending = state.inquiries.filter((i) => i.status === "pending_review");
+    let inquiryTag = "None pending";
+    if (pending.length > 0) {
+      const oldestMs = Math.min(...pending.map((i) => new Date(i.createdAt).getTime()));
+      const daysOld = Math.floor((now.getTime() - oldestMs) / (1000 * 60 * 60 * 24));
+      inquiryTag = daysOld === 0 ? "Today" : `Oldest ${daysOld}d`;
+    }
+
+    return {
+      orgs:    newOrgs > 0 ? `+${newOrgs} this week` : "No change",
+      docs:    approvedToday > 0 ? `+${approvedToday} today` : "None today",
+      budget:  budgetTag,
+      inquiry: inquiryTag,
+    };
+  }, [state]);
+
+  const navGroups = useMemo(() => {
+    const counts: Record<string, number> = {
+      registrations: overviewStats.pendingProfiles,
+      "ypop-validation": overviewStats.pendingYpop,
+      "budget-utilization": overviewStats.pendingBudget,
+      "liquidation-monitoring": overviewStats.pendingLiquidation,
+      inquiries: overviewStats.pendingInquiries,
+    };
+    return baseAdminNavigationGroups.map((group) => ({
+      ...group,
+      items: group.items.map((item) => ({
+        ...item,
+        count: (counts[item.id] ?? 0) > 0 ? counts[item.id] : undefined,
+      })),
+    }));
+  }, [overviewStats]);
 
   useEffect(() => {
     let isActive = true;
@@ -1956,7 +2003,7 @@ export default function AdminPortal({ section }: { section: string }) {
     relatedType: string;
     relatedId: string;
   }) => {
-    createNotification({
+    const notif = {
       id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       userId: params.userId,
       organizationId: params.organizationId,
@@ -1967,7 +2014,9 @@ export default function AdminPortal({ section }: { section: string }) {
       relatedId: params.relatedId,
       isRead: false,
       createdAt: new Date().toISOString(),
-    });
+    };
+    createNotification(notif);
+    void createNotificationInSupabase(notif);
   };
 
   const getRegistrationReviewDraft = (fileId: string, fallbackRemark = "", expectedUpdatedAt = "") =>
@@ -4042,16 +4091,23 @@ export default function AdminPortal({ section }: { section: string }) {
         const formatActionName = (action: string) =>
           action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+        const getActivityDotColor = (action: string): string => {
+          const a = action.toLowerCase();
+          if (/verif|approv|releas|publish/.test(a)) return "#009951";
+          if (/reject|remov|delet|hidden/.test(a)) return "#C00F0C";
+          if (/revision|needs|flagg|overdue/.test(a)) return "#975102";
+          return "#3271D7";
+        };
+
         const taskItems = [
-          { count: overviewStats.pendingProfiles,    label: "Organization profile(s) pending review", route: routeMap.registrations,             critical: false },
-          { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",   route: routeMap.registrations,             critical: false },
-          { count: overviewStats.revisions,          label: "Document revision(s) need re-review",   route: routeMap.registrations,             critical: false },
-          { count: overviewStats.overdueLiquidation, label: "liquidation report(s) overdue",         route: routeMap["liquidation-monitoring"], critical: true  },
-          { count: overviewStats.pendingLiquidation, label: "liquidation report(s) awaiting review", route: routeMap["liquidation-monitoring"], critical: false },
-          { count: overviewStats.pendingInquiries,    label: "inquiry(s) awaiting response",          route: routeMap.inquiries,                 critical: false },
-          { count: overviewStats.nonCompliant,       label: "organization(s) with compliance issues", route: routeMap.users,                    critical: true  },
+          { count: overviewStats.pendingProfiles,    label: "Organization profile(s) pending review",  route: routeMap.registrations,             icon: Users,         iconBg: "#FFFBEB", iconColor: "#522504" },
+          { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",     route: routeMap.registrations,             icon: FileText,      iconBg: "#FFFBEB", iconColor: "#522504" },
+          { count: overviewStats.revisions,          label: "Document revision(s) need re-review",     route: routeMap.registrations,             icon: ClipboardList, iconBg: "#FFFBEB", iconColor: "#522504" },
+          { count: overviewStats.overdueLiquidation, label: "Liquidation report(s) overdue",           route: routeMap["liquidation-monitoring"], icon: ClipboardList, iconBg: "#DCEFFD", iconColor: "#118DF0" },
+          { count: overviewStats.pendingLiquidation, label: "Liquidation report(s) awaiting review",   route: routeMap["liquidation-monitoring"], icon: ClipboardList, iconBg: "#DCEFFD", iconColor: "#118DF0" },
+          { count: overviewStats.pendingInquiries,   label: "Inquiry(s) awaiting response",            route: routeMap.inquiries,                 icon: Mail,          iconBg: "#EBFFEE", iconColor: "#02542D" },
+          { count: overviewStats.nonCompliant,       label: "Organization(s) with compliance issues",  route: routeMap.users,                     icon: AlertTriangle, iconBg: "#FEE9E7", iconColor: "#C00F0C" },
         ].filter((item) => item.count > 0);
-        const totalPendingTaskItems = taskItems.reduce((sum, item) => sum + item.count, 0);
         const dashboardRecentActivities = state.activityLogs.map((log) => ({
           id: log.id,
           message: formatActionName(log.action),
@@ -4061,165 +4117,194 @@ export default function AdminPortal({ section }: { section: string }) {
         }));
 
         return (
-          <div className="admin-dashboard-page space-y-3 lg:space-y-5">
-            {/* Summary stats */}
-            <PortalSection title="Summary" description="Current compliance and budget status across all organizations." headerClassName="gap-1.5 sm:gap-4">
-              <div className="summary-grid grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-                <PortalMetricCard
-                  label="Registered Organizations"
-                  value={overviewStats.organizations}
-                  helper="Total organizations on the portal."
-                  icon={Users}
-                  iconTone="primary"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap.registrations)}
-                />
-                <PortalMetricCard
-                  label="Approved Documents"
-                  value={overviewStats.approvedDocs}
-                  helper="Fully validated document sets."
-                  icon={CheckCircle2}
-                  iconTone="emerald"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap.registrations)}
-                />
-                <PortalMetricCard
-                  label="Budget Released"
-                  value={overviewStats.releasedBudget}
-                  helper="Funds confirmed released to organizations."
-                  icon={Banknote}
-                  iconTone="violet"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap["budget-utilization"])}
-                />
-                <PortalMetricCard
-                  label="Pending Inquiries"
-                  value={overviewStats.pendingInquiries}
-                  helper="User submissions waiting for admin review."
-                  icon={Mail}
-                  iconTone="sky"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap.inquiries)}
-                />
-              </div>
-            </PortalSection>
+          <div className="-m-3 sm:-m-6 lg:-m-8">
+            {/* Breadcrumb bar */}
+            <div className="border-b border-[#E5E7EB] bg-white px-4 py-[6px]">
+              <nav className="flex items-center gap-[10px]" aria-label="Breadcrumb">
+                <span className="text-[14px] leading-[100%] text-[#B3B3B3]">Workspace</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={2} />
+                <span className="text-[14px] leading-[100%] text-[#1E1E1E]">Overview</span>
+              </nav>
+            </div>
 
-            {/* Tasks */}
-            <PortalSection
-              title="Tasks"
-              action={
-                taskItems.length > 0 ? (
-                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                    <span className="lg:hidden">{totalPendingTaskItems} pending items</span>
-                    <span className="hidden lg:inline">{taskItems.length} pending</span>
+            {/* Main content area */}
+            <div className="flex flex-col gap-5 bg-[#F5F7FA] px-4 py-3">
+              {/* Page title */}
+              <div className="flex flex-col gap-[10px]">
+                <h1 className="font-segoe text-[24px] font-bold leading-[100%] tracking-[-0.03em] text-[#1E1E1E]">
+                  Overview
+                </h1>
+                <p className="font-segoe text-[14px] font-normal leading-[140%] text-[#757575]">
+                  Monitor registrations, compliance, and budget status across all youth programs.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-5">
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 gap-[10px] xl:grid-cols-4">
+              {(
+                [
+                  {
+                    label: "Registered Organizations",
+                    value: overviewStats.organizations,
+                    tag: overviewTags.orgs,
+                    description: "Total registered youth organizations.",
+                    icon: Users,
+                    iconBg: "#DCE4F0",
+                    iconBorder: "#0E2F66",
+                    iconColor: "#0E2F66",
+                    onClick: () => navigate(routeMap.registrations),
+                  },
+                  {
+                    label: "Approved Documents",
+                    value: overviewStats.approvedDocs,
+                    tag: overviewTags.docs,
+                    description: "Documents with full compliance approval.",
+                    icon: CheckCircle2,
+                    iconBg: "#EBFFEE",
+                    iconBorder: "#02542D",
+                    iconColor: "#02542D",
+                    onClick: () => navigate(routeMap.registrations),
+                  },
+                  {
+                    label: "Budget Released",
+                    value: overviewStats.releasedBudget,
+                    tag: overviewTags.budget,
+                    description: "Total budget requests released to date.",
+                    icon: Banknote,
+                    iconBg: "#DCEFFD",
+                    iconBorder: "#118DF0",
+                    iconColor: "#118DF0",
+                    onClick: () => navigate(routeMap["budget-utilization"]),
+                  },
+                  {
+                    label: "Pending Inquiries",
+                    value: overviewStats.pendingInquiries,
+                    tag: overviewTags.inquiry,
+                    description: "Inquiries awaiting admin response.",
+                    icon: Mail,
+                    iconBg: "#FFFBEB",
+                    iconBorder: "#522504",
+                    iconColor: "#522504",
+                    onClick: () => navigate(routeMap.inquiries),
+                  },
+                ] as const
+              ).map((card) => {
+                const Icon = card.icon;
+                return (
+                  <button
+                    key={card.label}
+                    type="button"
+                    onClick={card.onClick}
+                    className="flex flex-col gap-2 rounded-lg border border-[#E5E7EB] bg-white p-4 text-left shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)] transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    {/* Title block */}
+                    <div className="flex w-full items-center justify-between">
+                      <span className="font-segoe text-[11px] font-semibold uppercase leading-[140%] text-[#757575]">
+                        {card.label}
+                      </span>
+                      <div
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[14px] p-2"
+                        style={{ background: card.iconBg }}
+                      >
+                        <Icon className="h-4 w-4" style={{ color: card.iconColor }} strokeWidth={1.6} />
+                      </div>
+                    </div>
+
+                    {/* Stat info */}
+                    <div className="flex flex-col gap-[10px]">
+                      <div className="flex items-center gap-[10px]">
+                        <span className="font-mono text-[32px] font-bold leading-[120%] tracking-[-0.02em] text-[#1E1E1E]">
+                          {card.value}
+                        </span>
+                        <div className="flex items-center gap-1 rounded-full bg-[#F1F6FD] px-[6px] py-[2px]">
+                          <TrendingUp className="h-[10px] w-[10px] text-[#444444]" strokeWidth={1} />
+                          <span className="font-mono text-[11px] font-semibold leading-[140%] text-[#444444]">
+                            {card.tag}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="font-segoe text-[12px] leading-[140%] text-[#757575]">
+                        {card.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tasks card */}
+            <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#F0F1F3] bg-white px-4 pb-3 pt-5">
+                <div className="flex flex-col gap-1">
+                  <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">Tasks</span>
+                  <span className="font-segoe text-[13px] font-normal leading-[100%] text-[#B3B3B3]">
+                    Pending actions across all modules.
                   </span>
-                ) : null
-              }
-              headerClassName="gap-1.5 sm:gap-4"
-            >
+                </div>
+                {taskItems.length > 0 && (
+                  <div className="flex items-center gap-2 rounded-full bg-[#FFFBEB] px-[10px] py-1">
+                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#975102]" />
+                    <span className="font-segoe text-[12px] font-semibold leading-[100%] text-[#975102]">
+                      {taskItems.length} pending
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Task rows */}
               {taskItems.length === 0 ? (
-                <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <div className="flex items-center gap-3 px-5 py-4 text-sm text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
                   All clear — no pending tasks right now.
                 </div>
               ) : (
-                <div className="task-list divide-y divide-border/60">
-                  {taskItems.map((item, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => navigate(item.route)}
-                      className="task-row grid w-full grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-1 py-3 text-left text-sm transition-colors hover:bg-muted/40"
-                    >
-                      <AlertTriangle className={`h-4 w-4 shrink-0 ${item.critical ? "text-destructive" : "text-amber-500"}`} />
-                      <span className={`inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md px-1.5 text-xs font-semibold tabular-nums ${
-                        item.critical
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                      }`}>
-                        {item.count}
-                      </span>
-                      <span className="min-w-0 text-foreground">{item.label}</span>
-                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                    </button>
-                  ))}
+                <div className="pb-3">
+                  {taskItems.map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => navigate(item.route)}
+                        className="group flex w-full items-center justify-between border-b border-[#F0F1F3] px-5 py-3 text-left transition-colors last:border-b-0 hover:rounded-lg hover:bg-[#F5F7FA]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[14px] p-2"
+                            style={{ background: item.iconBg }}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" style={{ color: item.iconColor }} strokeWidth={1.6} />
+                          </div>
+                          <span className="font-mono text-[14px] leading-[100%] text-[#1E1E1E] group-hover:text-[#0E2F66]">
+                            {item.count}
+                          </span>
+                          <span className="font-segoe text-[14px] leading-[100%] text-[#1E1E1E] group-hover:text-[#0E2F66]">
+                            {item.label}
+                          </span>
+                        </div>
+                        <ArrowUpRight
+                          className="h-[18px] w-[18px] shrink-0 text-[#757575] group-hover:text-[#0E2F66]"
+                          strokeWidth={1.6}
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-            </PortalSection>
-
-            {/* Recent Activity — two separate cards */}
-            <div className="hidden gap-5 xl:grid-cols-2 lg:grid">
-              <PortalSection title="Notifications">
-                <div className="space-y-2">
-                  {state.notifications.slice(0, 4).length > 0 ? state.notifications.slice(0, 4).map((notification) => (
-                    <button
-                      key={notification.id}
-                      type="button"
-                      className="w-full rounded-xl border border-border/70 bg-background p-3.5 text-left text-sm transition-colors hover:bg-muted/40"
-                      onClick={() => markNotificationRead(notification.id)}
-                    >
-                      <div className="flex items-start gap-2.5">
-                        {!notification.isRead && (
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className={`font-medium leading-snug ${!notification.isRead ? "text-foreground" : "text-muted-foreground"}`}>
-                            {notification.title}
-                          </p>
-                          <p className="mt-1 text-muted-foreground text-xs">{notification.message}</p>
-                        </div>
-                      </div>
-                    </button>
-                  )) : (
-                    <p className="text-sm text-muted-foreground">No notifications.</p>
-                  )}
-                </div>
-              </PortalSection>
-              <PortalSection title="Recent Activity">
-                <RecentActivityPreview
-                  title="Recent Activity"
-                  activities={state.activityLogs.map((log) => ({
-                    id: log.id,
-                    message: formatActionName(log.action),
-                    note: log.description,
-                    timestamp: log.createdAt,
-                    timestampLabel: formatDateTimeLabel(log.createdAt),
-                  }))}
-                  onViewAll={
-                    state.activityLogs.length > 3
-                      ? () => {
-                          setRecentActivityDialogTitle("Recent Activity");
-                          setRecentActivityDialogEntries(
-                            state.activityLogs.map((log) => ({
-                              key: log.id,
-                              title: formatActionName(log.action),
-                              note: log.description,
-                              timestamp: formatDateTimeLabel(log.createdAt),
-                              dotClassName: "bg-primary",
-                            })),
-                          );
-                          setRecentActivityDialogOpen(true);
-                        }
-                      : undefined
-                  }
-                  className="border-0 bg-transparent p-0 shadow-none"
-                  headerClassName="mb-3"
-                  emptyMessage="No recent activity yet."
-                />
-              </PortalSection>
             </div>
 
-            <PortalSection title="Recent Activity" headerClassName="gap-1.5 sm:gap-4 lg:hidden">
-              <div className="recent-activity-card">
-                <RecentActivityList
-                  activities={dashboardRecentActivities}
-                  maxItems={3}
-                  emptyMessage="No recent activity yet."
-                />
-                {dashboardRecentActivities.length > 3 ? (
+            {/* Recent Activity card */}
+            <div className="w-full max-w-[549px] overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#F0F1F3] px-4 pb-3 pt-5">
+                <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                  Recent activity
+                </span>
+                {state.activityLogs.length > 0 && (
                   <button
                     type="button"
-                    className="mt-3 inline-flex text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
                     onClick={() => {
                       setRecentActivityDialogTitle("Recent Activity");
                       setRecentActivityDialogEntries(
@@ -4233,12 +4318,49 @@ export default function AdminPortal({ section }: { section: string }) {
                       );
                       setRecentActivityDialogOpen(true);
                     }}
+                    className="font-segoe text-[13px] leading-[140%] text-[#0E2F66] hover:underline"
                   >
-                    View full activity log
+                    View full log
                   </button>
-                ) : null}
+                )}
               </div>
-            </PortalSection>
+
+              {/* Log items */}
+              {state.activityLogs.length === 0 ? (
+                <div className="px-5 py-4 font-segoe text-[13px] text-[#757575]">
+                  No recent activity yet.
+                </div>
+              ) : (
+                <div className="pb-5">
+                  {state.activityLogs.slice(0, 3).map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-start gap-4 border-b border-[#F0F1F3] px-5 py-3 last:border-b-0"
+                    >
+                      <span
+                        className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: getActivityDotColor(log.action) }}
+                      />
+                      <div className="flex flex-col gap-1">
+                        <span className="font-segoe text-[14px] leading-[120%] text-[#1E1E1E]">
+                          {formatActionName(log.action)}
+                        </span>
+                        {log.description && (
+                          <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">
+                            {log.description}
+                          </span>
+                        )}
+                        <time className="font-mono text-[12px] leading-[140%] text-[#757575]">
+                          {formatDateTimeLabel(log.createdAt)}
+                        </time>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+              </div>
+            </div>
           </div>
         );
       }
@@ -9169,6 +9291,10 @@ export default function AdminPortal({ section }: { section: string }) {
           </div>
         );
       }
+      case "users":
+        return <UsersPage />;
+      case "roles-permissions":
+        return <Roles />;
       case "ypop-validation": {
         // ── VIEW 4: entry-review (two-column layout) ──────────────────────────
         if (ypopAdminView === "entry-review" && selectedYpopId) {
@@ -11365,13 +11491,13 @@ export default function AdminPortal({ section }: { section: string }) {
   return (
     <>
       <PortalShell
-        title="Admin Portal"
-        subtitle="LYDO / PCYDO Admin"
-        groups={splitNotificationsGroup}
+        groups={navGroups}
         activeId={section}
         onNavigate={handleAdminSectionNavigate}
         onSignOut={() => setSignOutConfirmOpen(true)}
-        userProfile={{ name: "Administrator", role: "LYDO / PCYDO Admin" }}
+        userProfile={{ name: user?.displayName ?? "Administrator", role: "Super Admin", email: user?.email ?? "" }}
+        notifications={adminNotifications}
+        onMarkAllNotificationsRead={() => markAllNotificationsRead()}
       >
         {activeContent}
       </PortalShell>

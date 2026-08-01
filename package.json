@@ -10,9 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "sync:once": "python worker/gform_sync_worker.py --once",
-    "sync:worker": "python worker/gform_sync_worker.py"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Building2, CalendarCheck, CalendarDays, ClipboardCheck, ClipboardList, FileCheck2, FileText, LayoutDashboard, Mail, Medal, Megaphone, PlaneTakeoff, Wallet } from "lucide-react";
+import { Activity, Banknote, BarChart3, Bell, Building2, CalendarCheck, CalendarDays, ClipboardCheck, ClipboardList, Copy, FileCheck2, FileText, Globe, LayoutDashboard, Mail, Medal, Megaphone, PlaneTakeoff, Shield, TrendingUp, UserPlus, Users, Wallet } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type ProfileStatus =
@@ -304,7 +304,8 @@ export const legacyRemovedTemplateNames = new Set([
 export type PortalNavItem = {
   id: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  count?: number;
 };
 
 export type PortalNavGroup = {
@@ -525,7 +526,7 @@ export const userRouteMap: Record<string, string> = {
 export const adminNavigationGroups: PortalNavGroup[] = [
   {
     id: "main",
-    label: "",
+    label: "Workspace",
     items: [
       { id: "overview", label: "Overview", icon: LayoutDashboard },
     ],
@@ -534,40 +535,48 @@ export const adminNavigationGroups: PortalNavGroup[] = [
     id: "organizations",
     label: "Organizations",
     items: [
-      { id: "registrations", label: "Registration Review", icon: ClipboardCheck },
-      { id: "yorp-registry", label: "YORP Registry", icon: ClipboardList },
+      { id: "registrations", label: "Registrations", icon: UserPlus },
+      { id: "yorp-registry", label: "YORP Registry", icon: Globe },
+    ],
+  },
+  {
+    id: "programs",
+    label: "Programs",
+    items: [
+      { id: "ypop-validation", label: "YPOP Validation", icon: Medal },
     ],
   },
   {
     id: "budget-finance",
     label: "Budget & Finance",
     items: [
-      { id: "budget-utilization", label: "Budget Requests", icon: Wallet },
-      { id: "liquidation-monitoring", label: "Liquidation Reports", icon: CalendarCheck },
-      { id: "budget-monitoring", label: "Budget Tracking", icon: BarChart3 },
-    ],
-  },
-  {
-    id: "incentives",
-    label: "Grants & Incentives",
-    items: [
-      { id: "ypop-validation", label: "YPOP Validation", icon: Medal },
+      { id: "budget-utilization", label: "Budget Requests", icon: Banknote },
+      { id: "liquidation-monitoring", label: "Liquidation Reports", icon: ClipboardList },
+      { id: "budget-monitoring", label: "Budget Monitoring", icon: TrendingUp },
     ],
   },
   {
     id: "content",
     label: "Content",
     items: [
-      { id: "news-releases", label: "News Releases", icon: Megaphone },
-      { id: "templates", label: "Templates", icon: FileText },
+      { id: "news-releases", label: "News", icon: FileText },
+      { id: "templates", label: "Forms & Templates", icon: Copy },
     ],
   },
   {
-    id: "system",
-    label: "System",
+    id: "communication",
+    label: "Communication",
     items: [
       { id: "inquiries", label: "Inquiries", icon: Mail },
-      { id: "notifications-activity", label: "Notifications / Activity Logs", icon: Bell },
+    ],
+  },
+  {
+    id: "administration",
+    label: "Administration",
+    items: [
+      { id: "users", label: "Users", icon: Users },
+      { id: "roles-permissions", label: "Roles and Permissions", icon: Shield },
+      { id: "activity-logs", label: "Activity Logs", icon: Activity },
     ],
   },
 ];

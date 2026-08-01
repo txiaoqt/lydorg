@@ -1062,6 +1062,35 @@ export const markAllNotificationsReadInSupabase = async () => {
   if (error) throw new Error(error.message);
 };
 
+export const createNotificationInSupabase = async (notification: {
+  id: string;
+  userId: string;
+  organizationId: string;
+  title: string;
+  message: string;
+  type: string;
+  relatedType: string;
+  relatedId: string;
+  createdAt: string;
+}): Promise<void> => {
+  if (!supabase) return;
+  try {
+    await supabase.rpc("create_notification_record", {
+      p_id:            notification.id,
+      p_user_id:       notification.userId,
+      p_org_id:        notification.organizationId,
+      p_title:         notification.title,
+      p_message:       notification.message,
+      p_type:          notification.type,
+      p_related_type:  notification.relatedType,
+      p_related_id:    notification.relatedId,
+      p_created_at:    notification.createdAt,
+    });
+  } catch {
+    // silent — local state is the fallback
+  }
+};
+
 export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedState> | null> => {
   if (!supabase) return null;
 

@@ -33,6 +33,7 @@
   body.portal-shell-active {
     height: 100%;
     overflow: hidden;
+    scrollbar-gutter: auto;
   }
 
   :root {

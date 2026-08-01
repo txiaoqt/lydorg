@@ -22,6 +22,7 @@ export default {
         heading: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
         segoe: ['"Segoe UI"', 'system-ui', 'sans-serif'],
+        mono: ['"Cascadia Code"', '"Cascadia Mono"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         'public-fs-hero': '36px',
