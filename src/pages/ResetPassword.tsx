@@ -90,10 +90,6 @@ const ResetPassword = () => {
 
     if (recovery.hasRecoveryCredentials) {
       void establishRecoverySession();
-    } else {
-      void supabase.auth.getSession().then(({ data }) => {
-        if (active && data.session) setMode("update");
-      });
     }
     return () => {
       active = false;
