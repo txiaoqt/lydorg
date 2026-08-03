@@ -652,7 +652,7 @@ const SignUp = () => {
               {/* Smooth reveal */}
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  isExistingOrganization ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
+                  isExistingOrganization ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
                 }`}
               >
                 <div className="space-y-1.5">
@@ -669,11 +669,8 @@ const SignUp = () => {
                   {touched.has("identifier") && isExistingOrganization && !isIdentifierValid && (
                     <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    LYDO / PCYDO will verify this number against its official registration record. You will not need to submit the six initial registration documents once the URN is confirmed.
+                  <p className="text-xs text-muted-foreground leading-relaxed pt-0.5">
+                    Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record. LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
                   </p>
                 </div>
               </div>

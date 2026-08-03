@@ -4,34 +4,35 @@
 
 - **Date**: August 3, 2026
 - **Feature / Component**: Authentication Module (Sign Up `SignUp.tsx`, Verification `VerifyEmail.tsx`, Reset Password `ResetPassword.tsx`, Shared Utility `password-policy.ts`)
-- **Primary Objective**: Refine the password visibility toggle (eye icon) background, enforce 5-criterion password validation, resolve URN field container height clipping & margin spacing, and correct six-digit verification code error message handling to accurately distinguish incorrect codes from expired codes.
+- **Primary Objective**: Refine the password visibility toggle (eye icon) background, enforce 5-criterion password validation, establish a consistent vertical spacing hierarchy for the URN field aligned with Organization Name, and correct six-digit verification code error message handling to accurately distinguish incorrect codes from expired codes.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
 - **Branch**: `feature/authentication`
 
 ---
 
-## 1. Sign Up URN Field Spacing & Margin Refinement (`SignUp.tsx`)
+## 1. Sign Up URN Field Vertical Spacing Hierarchy (`SignUp.tsx`)
 
-### Problem
-When the "We already have a Unique Registration Number (URN)" checkbox was selected on Step 1 of Sign Up, the smooth reveal container was constrained by `max-h-24` (96px). The container contents (label, input, optional error, and two help text paragraphs totaling ~144px) were clipped. Additionally, the container lacked top margin (`mt-3`), causing the URN input label to collide directly with the checkbox label above.
+### Problem & Analysis
+The Unique Registration Number (URN) section in Step 1 of Sign Up previously appeared visually misaligned compared to the Organization Name field due to inconsistent vertical spacing. Placing multiple separate `<p>` tags with stacked `space-y-1.5` gaps below the input created uncoordinated vertical white space, and an error message inserted above the helper text squeezed the field elements out of balance.
 
-### Solution
-- Expanded `max-h-24` -> `max-h-96` to allow full, unclipped expansion of the URN field and its help messages during smooth transition.
-- Added `mt-3` to provide clean, consistent vertical spacing between the checkbox and the URN input label, matching the standard `space-y-4` layout of all other form sections.
+### Layout & Hierarchy Refinement
+1. **Consistent Label-to-Input Gap**: `RequiredLabel` -> `Input` connected with standard `space-y-1.5` field spacing, matching Organization Name and all other form inputs.
+2. **Unified Helper Text Block**: Streamlined helper text into a single, cohesive paragraph (`text-xs text-muted-foreground leading-relaxed pt-0.5`) directly below the input/error message. All original guidance text ("Enter the URN exactly as it appears...", "LYDO / PCYDO will verify this number...", "You will not need to submit the six initial registration documents once the URN is confirmed.") is preserved.
+3. **Smooth Container Expansion**: Configured reveal container with `max-h-96 opacity-100 mt-4` to ensure unclipped expansion and clean vertical separation from the checkbox above.
 
 ---
 
 ## 2. Six-Digit Verification Code Error Handling (`VerifyEmail.tsx`)
 
 ### Problem
-When an incorrect 6-digit verification code was entered, Supabase Auth returned the error string `"Token has expired or is invalid"`. Previously, the code used `/expired/i.test(verifyError.message)`, which matched the word `"expired"` inside `"Token has expired or is invalid"` and incorrectly informed users that their code had expired when it was simply mistyped.
+When an incorrect 6-digit verification code was entered, Supabase Auth returned the error string `"Token has expired or is invalid"`. Previously, regex `/expired/i.test(verifyError.message)` matched `"expired"`, incorrectly telling users that their code had expired when it was simply mistyped.
 
 ### Solution
 Differentiated error conditions in `VerifyEmail.tsx`:
-- **Expired Code**: Only triggers when the error message explicitly contains `"expired"` without `"invalid"` (e.g., `"Token has expired"` or `"Otp has expired"`):
-  `"That verification code has expired. Please request a new code."`
-- **Incorrect/Invalid Code**: Triggers when the code is mistyped or invalid (including Supabase's default `"Token has expired or is invalid"` or `"Invalid OTP"`):
-  `"Incorrect verification code. Please check the code and try again."`
+- **Expired Code**: Only triggers when the error message explicitly contains `"expired"` without `"invalid"` (e.g., `"Token has expired"` or `"Otp has expired"`):  
+  👉 `"That verification code has expired. Please request a new code."`
+- **Incorrect/Invalid Code**: Triggers when the code is mistyped or invalid (including Supabase's default `"Token has expired or is invalid"` or `"Invalid OTP"`):  
+  👉 `"Incorrect verification code. Please check the code and try again."`
 
 ```ts
 if (verifyError) {
@@ -76,7 +77,7 @@ Enforces 5 mandatory complexity rules before password submission:
 
 | File Path | Component | Summary of Changes |
 | :--- | :--- | :--- |
-| `src/pages/SignUp.tsx` | `SignUp` | Adjusted URN reveal container `max-h-96 mt-3` for smooth expansion without clipping; integrated `password-policy` checks, `PasswordCriteriaChecklist`, confirm match feedback, paste prevention, and eye button styling. |
+| `src/pages/SignUp.tsx` | `SignUp` | Unified URN field vertical spacing hierarchy with Organization Name; integrated `password-policy` checks, `PasswordCriteriaChecklist`, confirm match feedback, paste prevention, and eye button styling. |
 | `src/pages/VerifyEmail.tsx` | `VerifyEmail` | Updated OTP error handling to accurately map incorrect vs expired verification code error messages. |
 | `src/pages/ResetPassword.tsx` | `ResetPassword` | Configured transparent eye toggle styling (`bg-transparent hover:bg-transparent active:bg-transparent hover:text-foreground`). |
 | `src/lib/password-policy.ts` | Shared Utility | Centralized `validatePasswordCriteria` and `isPasswordValid` functions. |
@@ -86,9 +87,9 @@ Enforces 5 mandatory complexity rules before password submission:
 
 ## Verification Performed
 
-- **URN Spacing**: Verified smooth reveal without height clipping and clean `mt-3` margin alignment with surrounding form fields.
+- **URN Spacing & Hierarchy**: Verified URN field vertical spacing aligns consistently with Organization Name.
 - **OTP Verification Error Handling**: Verified mistyped codes display `"Incorrect verification code. Please check the code and try again."` while expired codes display `"That verification code has expired. Please request a new code."`
 - **TypeScript Check**: `npx tsc --noEmit` passed with 0 errors.
-- **Production Build**: `npm run build` completed in 42.66s with 0 errors.
+- **Production Build**: `npm run build` completed in 52.88s with 0 errors.
 - **Automated Tests**: `npm test` passed with `24/24 test files` and `99/99 unit tests`.
 - **Git Branch**: `feature/authentication`.
