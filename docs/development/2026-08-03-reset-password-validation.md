@@ -4,21 +4,37 @@
 
 - **Date**: August 3, 2026
 - **Feature / Component**: Authentication Module (Sign Up `SignUp.tsx`, Verification `VerifyEmail.tsx`, Reset Password `ResetPassword.tsx`, Shared Utility `password-policy.ts`)
-- **Primary Objective**: Refine the password visibility toggle (eye icon) background, enforce 5-criterion password validation, establish a consistent vertical spacing hierarchy for the URN field aligned with Organization Name, and correct six-digit verification code error message handling to accurately distinguish incorrect codes from expired codes.
+- **Primary Objective**: Refine the password visibility toggle (eye icon) background, enforce 5-criterion password validation, conditionally hide helper description text when URN validation error is rendered, establish consistent vertical spacing hierarchy for the URN field aligned with Organization Name, and correct six-digit verification code error message handling to accurately distinguish incorrect codes from expired codes.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
-- **Branch**: `feature/authentication`
+- **Branch**: `feature/auth-validation`
 
 ---
 
-## 1. Sign Up URN Field Vertical Spacing Hierarchy (`SignUp.tsx`)
+## 1. Sign Up URN Field Layout & Conditional Helper Text Rendering (`SignUp.tsx`)
 
-### Problem & Analysis
-The Unique Registration Number (URN) section in Step 1 of Sign Up previously appeared visually misaligned compared to the Organization Name field due to inconsistent vertical spacing. Placing multiple separate `<p>` tags with stacked `space-y-1.5` gaps below the input created uncoordinated vertical white space, and an error message inserted above the helper text squeezed the field elements out of balance.
+### Problem & Requirement
+Previously, when a URN validation error occurred, the URN container rendered BOTH the validation error message (`FormMessage` / `urnError`) and the helper description text at the same time below the input. This created excessive vertical height and caused the URN field layout to feel misaligned compared to Organization Name and other standard form fields.
 
-### Layout & Hierarchy Refinement
-1. **Consistent Label-to-Input Gap**: `RequiredLabel` -> `Input` connected with standard `space-y-1.5` field spacing, matching Organization Name and all other form inputs.
-2. **Unified Helper Text Block**: Streamlined helper text into a single, cohesive paragraph (`text-xs text-muted-foreground leading-relaxed pt-0.5`) directly below the input/error message. All original guidance text ("Enter the URN exactly as it appears...", "LYDO / PCYDO will verify this number...", "You will not need to submit the six initial registration documents once the URN is confirmed.") is preserved.
-3. **Smooth Container Expansion**: Configured reveal container with `max-h-96 opacity-100 mt-4` to ensure unclipped expansion and clean vertical separation from the checkbox above.
+### Solution & Expected Behavior
+Implemented conditional rendering for the URN field's message container:
+- **When Validation Error Exists**:
+  - `Label`
+  - `Input`
+  - `Error Message` (`<p id="urn-error" className="text-xs text-destructive">{urnError}</p>`)
+- **When NO Validation Error Exists**:
+  - `Label`
+  - `Input`
+  - `Helper Description Text` (`<p id="urn-helper" className="text-xs text-muted-foreground leading-relaxed pt-0.5">...</p>`)
+
+```tsx
+{touched.has("identifier") && isExistingOrganization && !isIdentifierValid ? (
+  <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
+) : (
+  <p id="urn-helper" className="text-xs text-muted-foreground leading-relaxed pt-0.5">
+    Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record. LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
+  </p>
+)}
+```
 
 ---
 
@@ -77,7 +93,7 @@ Enforces 5 mandatory complexity rules before password submission:
 
 | File Path | Component | Summary of Changes |
 | :--- | :--- | :--- |
-| `src/pages/SignUp.tsx` | `SignUp` | Unified URN field vertical spacing hierarchy with Organization Name; integrated `password-policy` checks, `PasswordCriteriaChecklist`, confirm match feedback, paste prevention, and eye button styling. |
+| `src/pages/SignUp.tsx` | `SignUp` | Conditionally hide helper text when URN error is displayed; integrated `password-policy` checks, `PasswordCriteriaChecklist`, confirm match feedback, paste prevention, and eye button styling. |
 | `src/pages/VerifyEmail.tsx` | `VerifyEmail` | Updated OTP error handling to accurately map incorrect vs expired verification code error messages. |
 | `src/pages/ResetPassword.tsx` | `ResetPassword` | Configured transparent eye toggle styling (`bg-transparent hover:bg-transparent active:bg-transparent hover:text-foreground`). |
 | `src/lib/password-policy.ts` | Shared Utility | Centralized `validatePasswordCriteria` and `isPasswordValid` functions. |
@@ -87,9 +103,9 @@ Enforces 5 mandatory complexity rules before password submission:
 
 ## Verification Performed
 
-- **URN Spacing & Hierarchy**: Verified URN field vertical spacing aligns consistently with Organization Name.
-- **OTP Verification Error Handling**: Verified mistyped codes display `"Incorrect verification code. Please check the code and try again."` while expired codes display `"That verification code has expired. Please request a new code."`
+- **Conditional Rendering**: Verified helper text is hidden when URN validation error is active, matching Organization Name layout.
+- **OTP Error Handling**: Verified mistyped codes display `"Incorrect verification code. Please check the code and try again."` while expired codes display `"That verification code has expired. Please request a new code."`
 - **TypeScript Check**: `npx tsc --noEmit` passed with 0 errors.
-- **Production Build**: `npm run build` completed in 52.88s with 0 errors.
+- **Production Build**: `npm run build` completed in 64.08s with 0 errors.
 - **Automated Tests**: `npm test` passed with `24/24 test files` and `99/99 unit tests`.
-- **Git Branch**: `feature/authentication`.
+- **Git Branch**: `feature/auth-validation` (Not pushed to remote as instructed).

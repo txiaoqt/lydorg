@@ -666,12 +666,13 @@ const SignUp = () => {
                     required={isExistingOrganization}
                     tabIndex={isExistingOrganization ? 0 : -1}
                   />
-                  {touched.has("identifier") && isExistingOrganization && !isIdentifierValid && (
+                  {touched.has("identifier") && isExistingOrganization && !isIdentifierValid ? (
                     <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
+                  ) : (
+                    <p id="urn-helper" className="text-xs text-muted-foreground leading-relaxed pt-0.5">
+                      Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record. LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
+                    </p>
                   )}
-                  <p className="text-xs text-muted-foreground leading-relaxed pt-0.5">
-                    Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record. LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
-                  </p>
                 </div>
               </div>
             </FormSection>
