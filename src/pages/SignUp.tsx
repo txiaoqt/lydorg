@@ -19,7 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
-<<<<<<< HEAD
 import {
   URN_MAX_LENGTH,
   generateUniqueUrn,
@@ -29,10 +28,7 @@ import {
   urnReviewLabels,
   validateUrn,
 } from "@/lib/urn-registration";
-=======
-import { normalizeUrn, validateUrn } from "@/lib/urn-registration";
 import { isPasswordValid, validatePasswordCriteria } from "@/lib/password-policy";
->>>>>>> feature/authentication
 import {
   Dialog,
   DialogContent,
