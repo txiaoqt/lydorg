@@ -18,6 +18,7 @@ import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
+import { checkSignupEmail, type EmailAvailability } from "@/lib/email-validation";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 import {
   URN_MAX_LENGTH,
@@ -58,7 +59,6 @@ import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 
 type BarangayOption = { id: string; name: string };
 type PasigDistrict = "District I" | "District II";
-type EmailAvailability = "idle" | "checking" | "available" | "registered" | "error";
 type LegalPolicyType = "terms" | "privacy";
 type PolicyVersion = {
   title: string;
@@ -107,15 +107,6 @@ const pasigDistrictBarangays: Record<PasigDistrict, BarangayOption[]> = {
 
 const pasigDistrictOptions: PasigDistrict[] = ["District I", "District II"];
 const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
-
-const checkSignupEmail = async (email: string): Promise<Exclude<EmailAvailability, "idle" | "checking">> => {
-  if (!supabase) return "error";
-  const { data, error } = await supabase.rpc("is_signup_email_registered", {
-    _email: email.trim().toLowerCase(),
-  });
-  if (error) return "error";
-  return data === true ? "registered" : "available";
-};
 
 /** A labeled form section with a top border divider */
 const FormSection = ({ title, children, hidden = false }: { title: string; children: React.ReactNode; hidden?: boolean }) => (
