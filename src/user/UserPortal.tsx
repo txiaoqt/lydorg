@@ -5961,7 +5961,7 @@ export default function UserPortal({ section }: { section: string }) {
                                                             <MoreHorizontal className="h-4 w-4" />
                                                           </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
+                                                        <DropdownMenuContent align="end" className="w-auto min-w-[135px] p-1">
                                                           <DropdownMenuItem onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
                                                             <Eye className="mr-2 h-4 w-4" />
                                                             Open File

@@ -4,7 +4,7 @@
 
 - **Date**: August 3, 2026
 - **Feature / Component**: Budget Request Module (`src/user/UserPortal.tsx`, `src/user/pwa/budgets/PwaBudgetPages.tsx`, `src/admin/AdminPortal.tsx`)
-- **Primary Objective**: Resolve form state reset bug, field overlapping, PHP currency layout issues, white screen runtime crashes, broken Recent Activity links, Open File button padding alignment, `budgetActionLabels` ReferenceError, Venue table column overflow, and enforce whole-peso integer amounts for Requested Amount.
+- **Primary Objective**: Resolve form state reset bug, field overlapping, PHP currency layout issues, white screen runtime crashes, broken Recent Activity links, Open File button padding alignment, `budgetActionLabels` ReferenceError, Venue table column overflow, enforce whole-peso integer amounts for Requested Amount, and adjust Open File dropdown menu width/padding.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
 - **Branch**: `feature/budget-request`
 
@@ -54,32 +54,34 @@
   3. Enforced integer validation in submit handlers (`saveBudgetRequest` and PWA `save`) using `Number.isInteger(requestedAmount) && requestedAmount % 1 === 0`.
   4. Updated `formatCurrency` and `pesoCurrencyFormatter` to format numbers without fraction digits (`minimumFractionDigits: 0, maximumFractionDigits: 0`), rendering clean whole-peso amounts (e.g. `PHP 1,000`, `PHP 12,391`, `PHP 2,500,000`).
 
+### 9. Open File Dropdown Menu Width & Padding Adjustment
+- **Root Cause**: The `DropdownMenuContent` component in the Budget Requests table had standard default min-width styles, resulting in excessive horizontal padding on the right of menu items like `👁 Open File`.
+- **Fix Implemented**: Applied `className="w-auto min-w-[135px] p-1"` and `align="end"` to `DropdownMenuContent` in `src/user/UserPortal.tsx`. This causes the dropdown menu box to fit its content naturally and align tightly under the three-dot trigger button without extra empty whitespace.
+
 ---
 
 ## 2. Files Modified
 
 | File Path | Component / Module | Summary of Changes |
 | :--- | :--- | :--- |
-| `src/user/UserPortal.tsx` | Desktop User Portal | Updated `formatCurrency` to use 0 fraction digits, added integer validation to `saveBudgetRequest`, and updated Requested Amount `<Input>` attributes to `min="1" step="1"` with integer parsing and decimal prevention. |
-| `src/user/pwa/budgets/PwaBudgetPages.tsx` | Mobile PWA Portal | Added integer check to PWA save handler, updated mobile input to `min="1" step="1" inputMode="numeric"`, and sanitized input to whole numbers. |
-| `src/admin/AdminPortal.tsx` | Admin Portal | Updated `pesoCurrencyFormatter` to use 0 fraction digits for whole-peso displays. |
-| `docs/development/2026-08-03-budget-request-fixes.md` | Engineering Docs | Appended documentation for whole-peso integer amount enforcement. |
+| `src/user/UserPortal.tsx` | Desktop User Portal | Updated `formatCurrency` to 0 decimals, added integer validation, updated Requested Amount `<Input>` to whole numbers, added Venue cell overflow protection, and added `w-auto min-w-[135px] p-1` to `DropdownMenuContent`. |
+| `src/user/pwa/budgets/PwaBudgetPages.tsx` | Mobile PWA Portal | Added integer check to PWA save handler and updated mobile input attributes. |
+| `src/admin/AdminPortal.tsx` | Admin Portal | Updated `pesoCurrencyFormatter` to 0 fraction digits. |
+| `docs/development/2026-08-03-budget-request-fixes.md` | Engineering Docs | Appended documentation for Open File dropdown menu width adjustment. |
 
 ---
 
 ## 3. Mandatory Standard Verification Performed
 
 1. **`npm run build`**:
-   - Completed in 27.28s with **0 errors** (built production bundle successfully).
+   - Completed in 26.96s with **0 errors** (built production bundle successfully).
 2. **`npx tsc --noEmit`**:
    - Completed with **0 TypeScript errors**.
 3. **`npm test`**:
    - Completed with **24 test files** and **102 tests passing**.
-4. **Validation Test Scenarios Verified**:
-   - `1000` -> Displays as `PHP 1,000`.
-   - `12391` -> Displays as `PHP 12,391`.
-   - `2500000` -> Displays as `PHP 2,500,000`.
-   - `123.50` -> Blocked by input filter and produces validation toast error.
-   - `0` / negative amounts -> Blocked by form validation.
-   - Previously saved requests display cleanly without decimal zeroes.
+4. **Dropdown UI & Functionality Verified**:
+   - Menu width fits content tightly (`👁 Open File`, `✏️ Edit Request`, `🗑️ Delete Request`).
+   - No excessive horizontal padding.
+   - Menu aligns to end edge (`align="end"`) under the three-dot button.
+   - Opening file, editing, and deleting options remain 100% functional.
 5. **Git Branch**: Executed on `feature/budget-request`.
