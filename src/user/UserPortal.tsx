@@ -2125,7 +2125,7 @@ export default function UserPortal({ section }: { section: string }) {
       setProfileDraft(savedProfile);
       setIsProfileDraftDirty(false);
       notifyAdmin({
-        title: savedProfile.isExistingOrganization ? "Existing organization profile updated" : "Organization profile updated",
+        title: savedProfile.isExistingOrganization ? "Existing Organization profile updated" : "Organization profile updated",
         message: savedProfile.isExistingOrganization
           ? `${savedProfile.organizationName} updated its profile and submitted an existing organization identifier for admin verification.`
           : `${savedProfile.organizationName} updated its profile and sent it for admin review.`,
@@ -3235,7 +3235,7 @@ export default function UserPortal({ section }: { section: string }) {
         ] as const;
         const organizationDetailRows = [
           { label: "Organization Name", value: profile.organizationName || "Not set" },
-          { label: "Organization Type", value: profile.isExistingOrganization ? "Existing organization" : "New organization" },
+          { label: "Organization Type", value: profile.isExistingOrganization ? "Existing Organization" : "New Organization" },
           { label: "District", value: profile.district || "Not set" },
           { label: "Barangay", value: profile.barangay || "Not set" },
           {
@@ -3440,7 +3440,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     </div>
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
                                       <FieldGroup label="Organization Type">
-                                        <input value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
+                                        <input value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
                                       </FieldGroup>
                                       <FieldGroup label="Unique Registration Number (URN)">
                                         <input value={profileDraft.isExistingOrganization ? profileDraft.organizationIdentifierNumber : "Not required"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
@@ -3449,7 +3449,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
                                       <FieldGroup label="Major Classification" required>
                                         <select value={profileDraft.majorClassification} onChange={(event) => handleProfileFieldChange("majorClassification", event.target.value as OrganizationProfile["majorClassification"])} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary">
-                                          <option value="">Select major classification</option>
+                                          <option value="">Select Major Classification</option>
                                           {majorClassificationOptions.map((option) => (
                                             <option key={option} value={option}>{option}</option>
                                           ))}
@@ -3457,7 +3457,7 @@ export default function UserPortal({ section }: { section: string }) {
                                       </FieldGroup>
                                       <FieldGroup label="Sub Classification" required>
                                         <select value={profileDraft.subClassification} onChange={(event) => handleProfileFieldChange("subClassification", event.target.value as OrganizationProfile["subClassification"])} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary">
-                                          <option value="">Select sub classification</option>
+                                          <option value="">Select Sub Classification</option>
                                           {subClassificationOptions.map((option) => (
                                             <option key={option} value={option}>{formatSubClassificationLabel(option)}</option>
                                           ))}
@@ -3551,7 +3551,7 @@ export default function UserPortal({ section }: { section: string }) {
                           </FieldGroup>
                           <FieldGroup label="Organization Type">
                             <input
-                              value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"}
+                              value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"}
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                               readOnly
                             />
@@ -3575,7 +3575,7 @@ export default function UserPortal({ section }: { section: string }) {
                               }
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                             >
-                              <option value="">Select major classification</option>
+                              <option value="">Select Major Classification</option>
                               {majorClassificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                   {option}
@@ -3591,7 +3591,7 @@ export default function UserPortal({ section }: { section: string }) {
                               }
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                             >
-                              <option value="">Select sub classification</option>
+                              <option value="">Select Sub Classification</option>
                               {subClassificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                   {formatSubClassificationLabel(option)}
