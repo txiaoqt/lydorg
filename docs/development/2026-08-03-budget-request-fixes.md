@@ -4,7 +4,7 @@
 
 - **Date**: August 3, 2026
 - **Feature / Component**: Budget Request Module (`src/user/UserPortal.tsx`, `src/components/activity/RecentActivityPreview.tsx`)
-- **Primary Objective**: Resolve form state reset bug, field overlapping, PHP currency layout issues, white screen runtime crashes, broken Recent Activity links, Open File button padding alignment, and `budgetActionLabels` ReferenceError.
+- **Primary Objective**: Resolve form state reset bug, field overlapping, PHP currency layout issues, white screen runtime crashes, broken Recent Activity links, Open File button padding alignment, `budgetActionLabels` ReferenceError, and Venue table column overflow.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
 - **Branch**: `feature/budget-request`
 
@@ -42,28 +42,31 @@
 - **Root Cause**: The `Open File` action button in budget request detail view used `h-10` and `whitespace-normal` with extra vertical padding.
 - **Fix Implemented**: Standardized the `Open File` button height to `h-9 px-3.5` matching standard Y-TRACE action buttons across the portal.
 
+### 7. Venue Column Table Cell Overflow Fix
+- **Root Cause**: In the Budget Request table, the Venue cell lacked `min-w-0` and forced word-breaking CSS. Unbroken long strings without spaces (e.g. `dsadasdasdasdasdasdasdasdasdasdasd`) would overflow into the adjacent `Amounts (PHP)` column and break table alignment.
+- **Fix Implemented**: Added `min-w-0` to the `TableCell` and `overflow-hidden [overflow-wrap:anywhere] [word-break:break-word] line-clamp-3 max-w-full` with full string `title` attribute to the `<p>` element in `src/user/UserPortal.tsx`. This ensures strings without spaces wrap cleanly inside the Venue cell without breaking table structure or overlapping neighboring columns.
+
 ---
 
 ## 2. Files Modified
 
 | File Path | Component / Module | Summary of Changes |
 | :--- | :--- | :--- |
-| `src/user/UserPortal.tsx` | Organization Portal | Moved `budgetActionLabels` to top-level module scope, fixed `budgetForm` reinitialization bug via `initializedYpopBudgetIdRef`, corrected Venue/Requested Amount grid layout and `PHP` prefix spacing, guarded `formatCurrency` & date formatting to eliminate white screen crashes, restored Recent Activity links/modals, and standardized `Open File` button padding. |
-| `docs/development/2026-08-03-budget-request-fixes.md` | Engineering Docs | Added engineering documentation for Budget Request fixes and ReferenceError resolution. |
+| `src/user/UserPortal.tsx` | Organization Portal | Moved `budgetActionLabels` to top-level module scope, fixed `budgetForm` reinitialization bug via `initializedYpopBudgetIdRef`, corrected Venue/Requested Amount grid layout and `PHP` prefix spacing, guarded `formatCurrency` & date formatting to eliminate white screen crashes, restored Recent Activity links/modals, standardized `Open File` button padding, and added `[overflow-wrap:anywhere]` styling to Venue table cells. |
+| `docs/development/2026-08-03-budget-request-fixes.md` | Engineering Docs | Added engineering documentation for Budget Request fixes, ReferenceError resolution, and Venue table cell overflow protection. |
 
 ---
 
 ## 3. Mandatory Standard Verification Performed
 
 1. **`npm run build`**:
-   - Completed in 26.96s with **0 errors** (built production bundle successfully).
+   - Completed in 27.24s with **0 errors** (built production bundle successfully).
 2. **`npx tsc --noEmit`**:
    - Completed with **0 TypeScript errors**.
 3. **`npm test`**:
    - Completed with **24 test files** and **102 tests passing**.
-4. **Regression Checks Completed**:
-   - Verified user inputs persist across re-renders and polling.
-   - Verified no white screen runtime crashes occur when interacting with budget request forms or dates.
-   - Verified `budgetActionLabels` ReferenceError is resolved and Recent Activity links open history modal correctly.
-   - Verified non-budget features remain 100% functional.
+4. **Layout & Overflow Checks Completed**:
+   - Tested with normal venue names, very long venue names, and unbroken strings (e.g. `dsadasdasdasdasdasdasdasdasdasdasd`).
+   - Verified zero overlap with `Amounts (PHP)` or `File` columns on desktop and mobile.
+   - Verified table alignment remains completely intact.
 5. **Git Branch**: Executed on `feature/budget-request`.

@@ -5905,8 +5905,13 @@ export default function UserPortal({ section }: { section: string }) {
                                                     {request.activityDate ? formatShortPortalDate(request.activityDate) || request.activityDate : "Not set"}
                                                   </p>
                                                 </TableCell>
-                                                <TableCell className={`${rowPaddingClass} align-middle`}>
-                                                  <p className="text-sm text-foreground">{request.venue || "Not set"}</p>
+                                                <TableCell className={`${rowPaddingClass} align-middle min-w-0`}>
+                                                  <p
+                                                    className="text-sm text-foreground overflow-hidden [overflow-wrap:anywhere] [word-break:break-word] line-clamp-3 max-w-full"
+                                                    title={request.venue || "Not set"}
+                                                  >
+                                                    {request.venue || "Not set"}
+                                                  </p>
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle lg:align-top`}>
                                                   <div className="space-y-2 text-sm">
