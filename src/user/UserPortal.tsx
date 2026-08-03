@@ -204,9 +204,9 @@ const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
 const formatCurrency = (value: number | null | undefined) => {
-  const num = typeof value === "number" && !Number.isNaN(value) ? value : Number(value || 0);
+  const num = typeof value === "number" && !Number.isNaN(value) ? Math.round(value) : Math.round(Number(value || 0));
   const safeNum = Number.isNaN(num) ? 0 : num;
-  return `PHP ${safeNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `PHP ${safeNum.toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
   if (!request) return "";
@@ -2267,6 +2267,15 @@ export default function UserPortal({ section }: { section: string }) {
         title: "Complete the budget form",
         description:
           "Activity title, description, proposed date, venue, requested amount, purpose/category, and remarks are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!Number.isInteger(nextBudgetRequest.requestedAmount) || nextBudgetRequest.requestedAmount % 1 !== 0) {
+      toast({
+        title: "Whole peso amount required",
+        description: "Requested amount must be a whole peso number without decimals.",
         variant: "destructive",
       });
       return;
@@ -5141,15 +5150,21 @@ export default function UserPortal({ section }: { section: string }) {
                                     <Input
                                       id="budget-amount"
                                       type="number"
-                                      min="0.01"
-                                      step="0.01"
-                                      value={budgetForm.requestedAmount || ""}
-                                      onChange={(event) =>
+                                      min="1"
+                                      step="1"
+                                      value={budgetForm.requestedAmount ? String(budgetForm.requestedAmount) : ""}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "." || event.key === "," || event.key === "e" || event.key === "E" || event.key === "+" || event.key === "-") {
+                                          event.preventDefault();
+                                        }
+                                      }}
+                                      onChange={(event) => {
+                                        const raw = event.target.value.replace(/[^0-9]/g, "");
                                         setBudgetForm((current) => ({
                                           ...current,
-                                          requestedAmount: Number(event.target.value || 0),
-                                        }))
-                                      }
+                                          requestedAmount: raw ? parseInt(raw, 10) : 0,
+                                        }));
+                                      }}
                                       placeholder="15000"
                                       className="flex-1 min-w-0 border-0 shadow-none focus-visible:ring-0"
                                     />

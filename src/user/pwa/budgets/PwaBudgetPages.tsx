@@ -180,6 +180,10 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       toast({ title: "Complete the budget form", description: "All activity, amount, category, and remarks fields are required.", variant: "destructive" });
       return;
     }
+    if (!Number.isInteger(requestedAmount) || requestedAmount % 1 !== 0) {
+      toast({ title: "Whole peso amount required", description: "Requested amount must be a whole peso number without decimals.", variant: "destructive" });
+      return;
+    }
     if (!existingFile && !file) {
       toast({ title: "Attach the required document", description: "Upload the detailed budget PDF.", variant: "destructive" });
       return;
@@ -196,7 +200,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         activityDescription: draft.activityDescription.trim(),
         activityDate: draft.activityDate,
         venue: draft.venue.trim(),
-        requestedAmount,
+        requestedAmount: Math.round(requestedAmount),
         approvedAmount: existing?.approvedAmount ?? 0,
         releasedAmount: existing?.releasedAmount ?? 0,
         releaseDate: existing?.releaseDate ?? "",
@@ -240,7 +244,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       </section>
       <section className="pwa-card">
         <h2>Budget details</h2>
-        <label>Requested amount <span className="pwa-prefix-input"><span>PHP</span><input type="number" min="1" step="0.01" inputMode="decimal" value={draft.requestedAmount} onChange={(event) => update("requestedAmount", event.target.value)} required /></span></label>
+        <label>Requested amount <span className="pwa-prefix-input"><span>PHP</span><input type="number" min="1" step="1" inputMode="numeric" value={draft.requestedAmount} onKeyDown={(e) => { if (e.key === "." || e.key === "," || e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") e.preventDefault(); }} onChange={(event) => update("requestedAmount", event.target.value.replace(/[^0-9]/g, ""))} required /></span></label>
         <label>Purpose / category <input value={draft.purposeCategory} onChange={(event) => update("purposeCategory", event.target.value)} required /></label>
         <label>Remarks <textarea rows={3} value={draft.remarks} onChange={(event) => update("remarks", event.target.value)} required /></label>
       </section>

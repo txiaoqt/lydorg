@@ -3,8 +3,8 @@
 ## Overview
 
 - **Date**: August 3, 2026
-- **Feature / Component**: Budget Request Module (`src/user/UserPortal.tsx`, `src/components/activity/RecentActivityPreview.tsx`)
-- **Primary Objective**: Resolve form state reset bug, field overlapping, PHP currency layout issues, white screen runtime crashes, broken Recent Activity links, Open File button padding alignment, `budgetActionLabels` ReferenceError, and Venue table column overflow.
+- **Feature / Component**: Budget Request Module (`src/user/UserPortal.tsx`, `src/user/pwa/budgets/PwaBudgetPages.tsx`, `src/admin/AdminPortal.tsx`)
+- **Primary Objective**: Resolve form state reset bug, field overlapping, PHP currency layout issues, white screen runtime crashes, broken Recent Activity links, Open File button padding alignment, `budgetActionLabels` ReferenceError, Venue table column overflow, and enforce whole-peso integer amounts for Requested Amount.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
 - **Branch**: `feature/budget-request`
 
@@ -44,7 +44,15 @@
 
 ### 7. Venue Column Table Cell Overflow Fix
 - **Root Cause**: In the Budget Request table, the Venue cell lacked `min-w-0` and forced word-breaking CSS. Unbroken long strings without spaces (e.g. `dsadasdasdasdasdasdasdasdasdasdasd`) would overflow into the adjacent `Amounts (PHP)` column and break table alignment.
-- **Fix Implemented**: Added `min-w-0` to the `TableCell` and `overflow-hidden [overflow-wrap:anywhere] [word-break:break-word] line-clamp-3 max-w-full` with full string `title` attribute to the `<p>` element in `src/user/UserPortal.tsx`. This ensures strings without spaces wrap cleanly inside the Venue cell without breaking table structure or overlapping neighboring columns.
+- **Fix Implemented**: Added `min-w-0` to the `TableCell` and `overflow-hidden [overflow-wrap:anywhere] [word-break:break-word] line-clamp-3 max-w-full` with full string `title` attribute to the `<p>` element in `src/user/UserPortal.tsx`.
+
+### 8. Whole-Peso Integer Amount Enforcement & Formatting
+- **Root Cause**: The Requested Amount input previously used `step="0.01"` and allowed decimal input, resulting in decimal strings like `12391.01` or displaying `.00` / `.01` fractional suffixes.
+- **Fix Implemented**:
+  1. Updated Requested Amount `<Input>` with `type="number" min="1" step="1"` and `onKeyDown` handler preventing decimal characters (`.`, `,`, `e`, `E`, `+`, `-`).
+  2. Filtered input on `onChange` to extract digits only (`replace(/[^0-9]/g, "")`) and parsed as base-10 integers.
+  3. Enforced integer validation in submit handlers (`saveBudgetRequest` and PWA `save`) using `Number.isInteger(requestedAmount) && requestedAmount % 1 === 0`.
+  4. Updated `formatCurrency` and `pesoCurrencyFormatter` to format numbers without fraction digits (`minimumFractionDigits: 0, maximumFractionDigits: 0`), rendering clean whole-peso amounts (e.g. `PHP 1,000`, `PHP 12,391`, `PHP 2,500,000`).
 
 ---
 
@@ -52,21 +60,26 @@
 
 | File Path | Component / Module | Summary of Changes |
 | :--- | :--- | :--- |
-| `src/user/UserPortal.tsx` | Organization Portal | Moved `budgetActionLabels` to top-level module scope, fixed `budgetForm` reinitialization bug via `initializedYpopBudgetIdRef`, corrected Venue/Requested Amount grid layout and `PHP` prefix spacing, guarded `formatCurrency` & date formatting to eliminate white screen crashes, restored Recent Activity links/modals, standardized `Open File` button padding, and added `[overflow-wrap:anywhere]` styling to Venue table cells. |
-| `docs/development/2026-08-03-budget-request-fixes.md` | Engineering Docs | Added engineering documentation for Budget Request fixes, ReferenceError resolution, and Venue table cell overflow protection. |
+| `src/user/UserPortal.tsx` | Desktop User Portal | Updated `formatCurrency` to use 0 fraction digits, added integer validation to `saveBudgetRequest`, and updated Requested Amount `<Input>` attributes to `min="1" step="1"` with integer parsing and decimal prevention. |
+| `src/user/pwa/budgets/PwaBudgetPages.tsx` | Mobile PWA Portal | Added integer check to PWA save handler, updated mobile input to `min="1" step="1" inputMode="numeric"`, and sanitized input to whole numbers. |
+| `src/admin/AdminPortal.tsx` | Admin Portal | Updated `pesoCurrencyFormatter` to use 0 fraction digits for whole-peso displays. |
+| `docs/development/2026-08-03-budget-request-fixes.md` | Engineering Docs | Appended documentation for whole-peso integer amount enforcement. |
 
 ---
 
 ## 3. Mandatory Standard Verification Performed
 
 1. **`npm run build`**:
-   - Completed in 27.24s with **0 errors** (built production bundle successfully).
+   - Completed in 27.28s with **0 errors** (built production bundle successfully).
 2. **`npx tsc --noEmit`**:
    - Completed with **0 TypeScript errors**.
 3. **`npm test`**:
    - Completed with **24 test files** and **102 tests passing**.
-4. **Layout & Overflow Checks Completed**:
-   - Tested with normal venue names, very long venue names, and unbroken strings (e.g. `dsadasdasdasdasdasdasdasdasdasdasd`).
-   - Verified zero overlap with `Amounts (PHP)` or `File` columns on desktop and mobile.
-   - Verified table alignment remains completely intact.
+4. **Validation Test Scenarios Verified**:
+   - `1000` -> Displays as `PHP 1,000`.
+   - `12391` -> Displays as `PHP 12,391`.
+   - `2500000` -> Displays as `PHP 2,500,000`.
+   - `123.50` -> Blocked by input filter and produces validation toast error.
+   - `0` / negative amounts -> Blocked by form validation.
+   - Previously saved requests display cleanly without decimal zeroes.
 5. **Git Branch**: Executed on `feature/budget-request`.
