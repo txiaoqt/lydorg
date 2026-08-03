@@ -5961,23 +5961,23 @@ export default function UserPortal({ section }: { section: string }) {
                                                             <MoreHorizontal className="h-4 w-4" />
                                                           </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-auto min-w-[135px] p-1">
-                                                          <DropdownMenuItem onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
-                                                            <Eye className="mr-2 h-4 w-4" />
+                                                        <DropdownMenuContent align="end" className="w-auto min-w-[115px] p-1">
+                                                          <DropdownMenuItem className="cursor-pointer px-2.5 py-1.5 text-xs font-medium" onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
+                                                            <Eye className="mr-2 h-3.5 w-3.5" />
                                                             Open File
                                                           </DropdownMenuItem>
-                                                          <DropdownMenuSeparator />
                                                           {!approvedBudgetStatuses.has(request.status) ? (
                                                             <>
-                                                              <DropdownMenuItem onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
-                                                                <PenSquare className="mr-2 h-4 w-4" />
+                                                              <DropdownMenuSeparator className="my-1" />
+                                                              <DropdownMenuItem className="cursor-pointer px-2.5 py-1.5 text-xs font-medium" onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
+                                                                <PenSquare className="mr-2 h-3.5 w-3.5" />
                                                                 Edit Request
                                                               </DropdownMenuItem>
                                                               <DropdownMenuItem
-                                                                className="text-destructive focus:text-destructive"
+                                                                className="cursor-pointer px-2.5 py-1.5 text-xs font-medium text-destructive focus:text-destructive"
                                                                 onClick={() => handleDeleteBudgetRequest(request)}
                                                               >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <Trash2 className="mr-2 h-3.5 w-3.5" />
                                                                 Delete Request
                                                               </DropdownMenuItem>
                                                             </>
