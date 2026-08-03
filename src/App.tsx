@@ -295,6 +295,8 @@ const App = () => (
                       <Route path="/validation-review" element={<Navigate to="/document-submission" replace />} />
                       <Route path="/budget-request" element={<RequireUser><UserPortalEntry section="budget-request" /></RequireUser>} />
                       <Route path="/liquidation-reporting" element={<RequireUser><UserPortalEntry section="liquidation-reporting" /></RequireUser>} />
+                      <Route path="/portal-news-releases" element={<RequireUser><UserPortalEntry section="news-releases" /></RequireUser>} />
+                      <Route path="/organization-news-releases" element={<RequireUser><UserPortalEntry section="news-releases" /></RequireUser>} />
 
                       <Route path="/public-transparency" element={<RequireUser><UserPortalEntry section="public-transparency" /></RequireUser>} />
                       <Route path="/compliance-status" element={<RequireUser><UserPortalEntry section="compliance-status" /></RequireUser>} />
