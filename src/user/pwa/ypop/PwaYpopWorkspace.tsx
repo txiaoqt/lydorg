@@ -59,6 +59,7 @@ import {
   isPastYpopActivityDate,
   isYpopEntryEditable,
   isYpopPeriodOpen,
+  validateYpopSubmissionEligibility,
 } from "@/lib/ypop-event-eligibility";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PwaBackButton } from "../PwaBackButton";
@@ -254,22 +255,27 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
     }
   };
 
-  const pastJoinedWithoutProof = participations.filter((participation) =>
-    isPastYpopActivityDate(currentParticipationDate(participation)) && !participation.proofSubmittedAt,
-  );
-  const totalProofCount =
-    state.ypopEventFiles.filter((file) => participations.some((participation) => participation.id === file.participationId)).length +
-    state.ypopOrgActivityFiles.filter((file) => orgActivities.some((activity) => activity.id === file.orgActivityId)).length;
-  const submissionBlockReason = !entry
-    ? "Start a submission before sending it for validation."
-    : !editable
-      ? "This submission is read-only in its current state."
-      : pastJoinedWithoutProof.length
-        ? "Submit the required proof for every completed joined event."
-        : "";
+  const ypopEntryFiles = state.ypopFiles.filter((f) => entry && f.ypopEntryId === entry.id);
+  const submissionEligibility = validateYpopSubmissionEligibility({
+    entry,
+    participations,
+    eventFiles: state.ypopEventFiles,
+    entryFiles: ypopEntryFiles,
+    orgActivityFiles: state.ypopOrgActivityFiles,
+    profile: data.profile,
+  });
+  const submissionBlockReason = submissionEligibility.eligible ? "" : submissionEligibility.message;
 
   const submitEntry = async () => {
-    if (!entry || submissionBlockReason) return;
+    if (!entry) return;
+    if (!submissionEligibility.eligible) {
+      toast({
+        title: "Validation Request Blocked",
+        description: submissionEligibility.message,
+        variant: "destructive",
+      });
+      return;
+    }
     if (!await confirmAction({
       title: entry.status === "needs_revision" ? "Resubmit for city-led validation?" : "Submit for city-led validation?",
       description: `Your joined city-led activities and their proof files will be sent to the admin for validation.${note.trim() ? "\n\nYour message for the admin will be included." : ""}`,
