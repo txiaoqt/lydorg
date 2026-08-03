@@ -627,9 +627,8 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing organization" : "New organization"} readOnly /></EditorField>
                   <EditorField label="Unique Registration Number (URN)">
                     <Input
-                      value={draft.isExistingOrganization ? draft.organizationIdentifierNumber : "Not required"}
-                      onChange={(event) => setField("organizationIdentifierNumber", event.target.value)}
-                      readOnly={!draft.isExistingOrganization || !data.profile || !["needs_correction", "rejected"].includes(data.profile.urnReviewStatus)}
+                      value={draft.organizationIdentifierNumber || "Auto-generated upon registration"}
+                      readOnly
                     />
                   </EditorField>
                   <EditorField label="Major Classification" required>

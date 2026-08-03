@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import JSZip from "jszip";
 import {
@@ -3407,7 +3407,7 @@ export default function UserPortal({ section }: { section: string }) {
                                         <input value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
                                       </FieldGroup>
                                       <FieldGroup label="Unique Registration Number (URN)">
-                                        <input value={profileDraft.isExistingOrganization ? profileDraft.organizationIdentifierNumber : "Not required"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
+                                        <input value={profileDraft.organizationIdentifierNumber || "Auto-generated upon registration"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
                                       </FieldGroup>
                                     </div>
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
@@ -3522,7 +3522,7 @@ export default function UserPortal({ section }: { section: string }) {
                           </FieldGroup>
                           <FieldGroup label="Unique Registration Number (URN)">
                             <input
-                              value={profileDraft.isExistingOrganization ? profileDraft.organizationIdentifierNumber : "Not required"}
+                              value={profileDraft.organizationIdentifierNumber || "Auto-generated upon registration"}
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                               placeholder="Unique Registration Number (URN)"
                               readOnly
