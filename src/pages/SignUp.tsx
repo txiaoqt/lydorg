@@ -652,10 +652,10 @@ const SignUp = () => {
               {/* Smooth reveal */}
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  isExistingOrganization ? "max-h-24 opacity-100" : "max-h-0 opacity-0"
+                  isExistingOrganization ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
                 }`}
               >
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-1.5">
                   <RequiredLabel htmlFor="organizationIdentifierNumber">Unique Registration Number (URN)</RequiredLabel>
                   <Input
                     id="organizationIdentifierNumber"
