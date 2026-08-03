@@ -662,29 +662,7 @@ const SignUp = () => {
 
               {!isExistingOrganization ? (
                 <div className="space-y-1.5 pt-3">
-                  <div className="flex items-center gap-1.5">
-                    <Label className="text-sm font-medium text-foreground">Unique Registration Number (URN)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary p-0.5"
-                          aria-label="URN help guidance"
-                        >
-                          <HelpCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent side="top" align="start" className="w-80 p-3.5 text-xs space-y-2">
-                        <div className="font-semibold text-foreground flex items-center gap-1.5">
-                          <HelpCircle className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
-                          About Unique Registration Number (URN)
-                        </div>
-                        <p className="leading-relaxed text-muted-foreground">
-                          A Unique Registration Number (URN) will be automatically generated for new organizations upon registration.
-                        </p>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  <Label className="text-sm font-medium text-foreground">Unique Registration Number (URN)</Label>
                   <p className="text-xs text-muted-foreground bg-muted/40 border border-border/70 rounded-lg p-3">
                     A Unique Registration Number (URN) will be automatically generated after your organization is successfully registered.
                   </p>
