@@ -652,11 +652,13 @@ const SignUp = () => {
 
               {/* Smooth reveal */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  isExistingOrganization ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
+                className={`transition-all duration-300 ease-in-out ${
+                  isExistingOrganization
+                    ? "max-h-96 opacity-100 mt-4 overflow-visible"
+                    : "max-h-0 opacity-0 overflow-hidden"
                 }`}
               >
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 p-1 -m-1">
                   <div className="flex items-center gap-1.5">
                     <RequiredLabel htmlFor="organizationIdentifierNumber">Unique Registration Number (URN)</RequiredLabel>
                     <Popover>
