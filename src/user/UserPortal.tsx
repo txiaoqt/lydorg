@@ -8061,6 +8061,11 @@ export default function UserPortal({ section }: { section: string }) {
                       <p className="font-semibold leading-snug">{entry.semesterLabel}</p>
                       {deadline && (
                         <p className={`text-xs ${isDeadlinePast ? "text-destructive" : "text-muted-foreground"}`}>
+                          Validation {isDeadlinePast ? "closed" : "closes"} {deadline.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                   <PortalStatusBadge status={entry.status} />
                 </div>
 
