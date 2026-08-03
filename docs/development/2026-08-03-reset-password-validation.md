@@ -1,12 +1,12 @@
-# Authentication Password Validation, Eye Toggle UI & Sign Up URN Help Popover Engineering Documentation
+# Authentication Password Validation, Eye Toggle UI & Sign Up URN Contextual Help Popover Engineering Documentation
 
 ## Overview
 
 - **Date**: August 3, 2026
 - **Feature / Component**: Authentication Module (Sign Up `SignUp.tsx`, Verification `VerifyEmail.tsx`, Reset Password `ResetPassword.tsx`, Shared Utility `password-policy.ts`)
-- **Primary Objective**: Replace permanently visible helper text beneath the URN field with a contextual help icon (`HelpCircle` / `?`) beside the URN label, refine password visibility toggle icon backgrounds, enforce 5-criterion password validation, and correct six-digit verification code error message handling to accurately distinguish incorrect codes from expired codes.
+- **Primary Objective**: Enhance the Sign Up UX by replacing permanently visible helper text beneath the URN field with an interactive contextual help popover beside the URN label, refine password visibility toggle icon backgrounds, enforce 5-criterion password validation, and correct six-digit verification code error message handling to accurately distinguish incorrect codes from expired codes.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
-- **Branch**: `feature/auth-validation-urn-help`
+- **Branch**: `feature/authentication`
 
 ---
 
@@ -99,4 +99,4 @@ Enforces 5 mandatory complexity rules before password submission.
 - **TypeScript Check**: `npx tsc --noEmit` passed with 0 errors.
 - **Production Build**: `npm run build` completed in 53.64s with 0 errors.
 - **Automated Tests**: `npm test` passed with `24/24 test files` and `99/99 unit tests`.
-- **Git Branch**: `feature/auth-validation-urn-help`.
+- **Git Branch Workflow**: Executed on `feature/authentication`.
