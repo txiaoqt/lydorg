@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Check, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Check, CheckCircle2, Eye, EyeOff, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import BrandLogo from "@/components/BrandLogo";
 import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
@@ -656,7 +657,32 @@ const SignUp = () => {
                 }`}
               >
                 <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="organizationIdentifierNumber">Unique Registration Number (URN)</RequiredLabel>
+                  <div className="flex items-center gap-1.5">
+                    <RequiredLabel htmlFor="organizationIdentifierNumber">Unique Registration Number (URN)</RequiredLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary p-0.5"
+                          aria-label="URN help guidance"
+                        >
+                          <HelpCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="start" className="w-80 p-3.5 text-xs space-y-2">
+                        <div className="font-semibold text-foreground flex items-center gap-1.5">
+                          <HelpCircle className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                          About Unique Registration Number (URN)
+                        </div>
+                        <p className="leading-relaxed text-muted-foreground">
+                          Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record.
+                        </p>
+                        <p className="leading-relaxed text-muted-foreground">
+                          LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <Input
                     id="organizationIdentifierNumber"
                     placeholder="PCYDO-XXXX-XXXX"
@@ -666,12 +692,8 @@ const SignUp = () => {
                     required={isExistingOrganization}
                     tabIndex={isExistingOrganization ? 0 : -1}
                   />
-                  {touched.has("identifier") && isExistingOrganization && !isIdentifierValid ? (
+                  {touched.has("identifier") && isExistingOrganization && !isIdentifierValid && (
                     <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
-                  ) : (
-                    <p id="urn-helper" className="text-xs text-muted-foreground leading-relaxed pt-0.5">
-                      Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record. LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
-                    </p>
                   )}
                 </div>
               </div>
