@@ -5870,10 +5870,10 @@ export default function UserPortal({ section }: { section: string }) {
                                     })}
                                   </div>
                                   <div className="hidden overflow-x-auto lg:block">
-                                    <div className="min-w-[1080px] rounded-2xl border border-border/70 lg:w-full lg:min-w-0 lg:overflow-hidden">
+                                    <div className="min-w-[1080px] overflow-hidden rounded-2xl border border-border/80 bg-white shadow-sm lg:w-full lg:min-w-0">
                                       <Table className="budget-requests-table lg:w-full lg:table-fixed">
                                         <TableHeader>
-                                          <TableRow className="bg-muted/15 hover:bg-muted/15">
+                                          <TableRow className="border-b border-slate-200/80 bg-[#F8FAFC] hover:bg-[#F8FAFC]">
                                             <TableHead className="w-[22%] lg:w-[24%] lg:px-3.5 lg:py-3">Request</TableHead>
                                             <TableHead className="w-[14%] lg:w-[13%] lg:px-3.5 lg:py-3">Status</TableHead>
                                             <TableHead className="w-[12%] lg:w-[10%] lg:px-3.5 lg:py-3">Proposed Date</TableHead>
@@ -5892,7 +5892,7 @@ export default function UserPortal({ section }: { section: string }) {
                                             const additionalActivities = Math.max((request.revisionHistory?.length ?? 0) - 1, 0);
                                             const secondaryStatus = budgetStatusSecondaryMap[request.status] ?? formatStatusLabel(request.status);
                                             return (
-                                              <TableRow key={request.id} className="align-middle transition-colors lg:align-top lg:hover:bg-muted/20">
+                                              <TableRow key={request.id} className="align-top border-b border-slate-200/70 bg-white transition-colors even:bg-[#FAFBFD] hover:bg-[#EFF6FF]">
                                                 <TableCell className={`${rowPaddingClass} align-middle lg:align-top`}>
                                                   <div className="min-w-0 space-y-1">
                                                     <div className="flex flex-wrap items-center gap-2">
