@@ -109,10 +109,12 @@ const VerifyEmail = () => {
     setIsVerifying(false);
 
     if (verifyError) {
+      const lower = verifyError.message.toLowerCase();
+      const isExpired = lower.includes("expired") && !lower.includes("invalid");
       setError(
-        /expired/i.test(verifyError.message)
-          ? "That code has expired. Request a new code and try again."
-          : "The verification code is invalid. Check the email and try again.",
+        isExpired
+          ? "That verification code has expired. Please request a new code."
+          : "Incorrect verification code. Please check the code and try again.",
       );
       return;
     }
