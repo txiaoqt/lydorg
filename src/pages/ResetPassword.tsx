@@ -13,6 +13,53 @@ import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
 
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
+const validatePasswordCriteria = (value: string) => ({
+  length: value.length >= 8 && value.length <= 16,
+  uppercase: /[A-Z]/.test(value),
+  lowercase: /[a-z]/.test(value),
+  number: /[0-9]/.test(value),
+  special: /[!@#$%^&*()\-_+=\[\]{}|;:'",.<>?/\\~]/.test(value),
+});
+
+const isPasswordValid = (value: string) => {
+  const criteria = validatePasswordCriteria(value);
+  return Object.values(criteria).every(Boolean);
+};
+
+const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
+  const criteria = useMemo(() => validatePasswordCriteria(password), [password]);
+
+  const items = [
+    { key: "length", label: "8–16 characters", valid: criteria.length },
+    { key: "uppercase", label: "Contains an uppercase letter (A–Z)", valid: criteria.uppercase },
+    { key: "lowercase", label: "Contains a lowercase letter (a–z)", valid: criteria.lowercase },
+    { key: "number", label: "Contains a number (0–9)", valid: criteria.number },
+    { key: "special", label: "Contains a special character (!@#$%...)", valid: criteria.special },
+  ];
+
+  if (!password) return null;
+
+  return (
+    <div className="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
+      <p className="font-semibold text-muted-foreground">Password Requirements:</p>
+      <ul className="space-y-1">
+        {items.map((item) => (
+          <li key={item.key} className="flex items-center gap-2 transition-colors">
+            {item.valid ? (
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+            ) : (
+              <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-muted-foreground/40" />
+            )}
+            <span className={item.valid ? "font-medium text-foreground" : "text-muted-foreground"}>
+              {item.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const ResetPassword = () => {
   const { signOut, isPasswordRecoverySession } = useAuth();
   const navigate = useNavigate();
@@ -140,8 +187,26 @@ const ResetPassword = () => {
   const updatePassword = async (event: React.FormEvent) => {
     event.preventDefault();
     setInlineError("");
-    if (password.length < 8) {
-      setInlineError("Use at least 8 characters for your new password.");
+
+    const criteria = validatePasswordCriteria(password);
+    if (!criteria.length) {
+      setInlineError("Password must be between 8 and 16 characters long.");
+      return;
+    }
+    if (!criteria.uppercase) {
+      setInlineError("Password must contain at least one uppercase letter (A–Z).");
+      return;
+    }
+    if (!criteria.lowercase) {
+      setInlineError("Password must contain at least one lowercase letter (a–z).");
+      return;
+    }
+    if (!criteria.number) {
+      setInlineError("Password must contain at least one numeric digit (0–9).");
+      return;
+    }
+    if (!criteria.special) {
+      setInlineError("Password must contain at least one special character.");
       return;
     }
     if (password !== confirmPassword) {
@@ -173,6 +238,21 @@ const ResetPassword = () => {
     setEmail("");
     setMode("request");
   };
+
+  const confirmMatchHint = useMemo(() => {
+    if (!confirmPassword) return null;
+    if (password === confirmPassword && isPasswordValid(password)) {
+      return (
+        <p className="flex items-center gap-1 text-xs text-success">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match
+        </p>
+      );
+    }
+    if (password !== confirmPassword) {
+      return <p className="text-xs text-destructive">Passwords do not match</p>;
+    }
+    return null;
+  }, [password, confirmPassword]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground">
@@ -244,18 +324,35 @@ const ResetPassword = () => {
                 label="New password"
                 value={password}
                 visible={showPassword}
-                onChange={setPassword}
+                maxLength={16}
+                onChange={(val) => {
+                  setPassword(val);
+                  setInlineError("");
+                }}
                 onToggle={() => setShowPassword((current) => !current)}
               />
+
+              <PasswordCriteriaChecklist password={password} />
+
               <PasswordField
                 id="confirm-new-password"
                 label="Confirm new password"
                 value={confirmPassword}
                 visible={showConfirmPassword}
-                onChange={setConfirmPassword}
+                maxLength={16}
+                onChange={(val) => {
+                  setConfirmPassword(val);
+                  setInlineError("");
+                }}
                 onToggle={() => setShowConfirmPassword((current) => !current)}
+                onPaste={(event) => {
+                  event.preventDefault();
+                  setInlineError("For security, please manually retype your confirmation password.");
+                }}
+                hint={confirmMatchHint}
               />
-              <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
+
+              <Button type="submit" className="w-full font-semibold" disabled={isLoading || !isPasswordValid(password) || password !== confirmPassword}>
                 {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</> : "Update Password"}
               </Button>
             </form>
@@ -305,15 +402,21 @@ const PasswordField = ({
   label,
   value,
   visible,
+  maxLength,
   onChange,
   onToggle,
+  onPaste,
+  hint,
 }: {
   id: string;
   label: string;
   value: string;
   visible: boolean;
+  maxLength?: number;
   onChange: (value: string) => void;
   onToggle: () => void;
+  onPaste?: (event: React.ClipboardEvent<HTMLInputElement>) => void;
+  hint?: React.ReactNode;
 }) => (
   <div className="space-y-1.5">
     <Label htmlFor={id}>{label}</Label>
@@ -323,21 +426,24 @@ const PasswordField = ({
         type={visible ? "text" : "password"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onPaste={onPaste}
+        maxLength={maxLength}
         className="pr-11"
         autoComplete="new-password"
-        minLength={8}
         required
       />
       <button
         type="button"
         onClick={onToggle}
-        className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-transparent text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
       >
         {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
     </div>
+    {hint}
   </div>
 );
 
 export default ResetPassword;
+
