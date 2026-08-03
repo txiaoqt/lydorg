@@ -203,7 +203,11 @@ const normalizeText = (value?: string | null) => value?.trim() ?? "";
 const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
-const formatCurrency = (value: number) => `PHP ${value.toLocaleString()}`;
+const formatCurrency = (value: number | null | undefined) => {
+  const num = typeof value === "number" && !Number.isNaN(value) ? value : Number(value || 0);
+  const safeNum = Number.isNaN(num) ? 0 : num;
+  return `PHP ${safeNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
   if (!request) return "";
   const direct = request.adminRemarks?.trim();
@@ -681,23 +685,31 @@ export default function UserPortal({ section }: { section: string }) {
   const profileYpopRef = useRef<HTMLDivElement>(null);
   const profileActivityRef = useRef<HTMLDivElement>(null);
 
+  const initializedYpopBudgetIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (section === "budget-request") {
       const ypopEntryId = searchParams.get("ypopEntryId");
+      if (!ypopEntryId) {
+        initializedYpopBudgetIdRef.current = null;
+        return;
+      }
+      if (initializedYpopBudgetIdRef.current === ypopEntryId) {
+        return;
+      }
       const qualifiedYpopEntry =
-        ypopEntryId &&
-        budgetEligibility.eligible &&
-        budgetEligibility.entry?.id === ypopEntryId
+        budgetEligibility.eligible && budgetEligibility.entry?.id === ypopEntryId
           ? budgetEligibility.entry
           : null;
       if (qualifiedYpopEntry) {
+        initializedYpopBudgetIdRef.current = ypopEntryId;
         const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
         setBudgetForm({ ...blank, budgetRequestType: "ypop_incentive", ypopEntryId: qualifiedYpopEntry.id });
         setBudgetFileDraft(null);
         setShowBudgetForm(true);
-      } else {
-        setShowBudgetForm(false);
       }
+    } else {
+      initializedYpopBudgetIdRef.current = null;
     }
   }, [budgetEligibility, currentProfile?.id, section, searchParams, user?.id]);
 
@@ -2571,9 +2583,18 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const openBudgetRecentActivityModal = (request: BudgetRequest) => {
-    const entries = [...(request.revisionHistory ?? [])]
-      .filter((entry) => entry.changedAt)
-      .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime());
+    const history = request.revisionHistory ?? [];
+    const entries = history.length > 0
+      ? [...history]
+          .filter((entry) => entry.changedAt)
+          .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime())
+      : [
+          {
+            action: request.status,
+            adminRemarks: request.adminRemarks?.trim() || "",
+            changedAt: request.updatedAt || request.createdAt || new Date().toISOString(),
+          },
+        ];
 
     setBudgetRecentActivityModal({
       title: request.activityTitle || "Budget Request Activity",
@@ -5073,8 +5094,8 @@ export default function UserPortal({ section }: { section: string }) {
                                   className="min-h-24 resize-y"
                                 />
                               </div>
-                              <div className="budget-form-two-column grid gap-4 min-[600px]:grid-cols-2 lg:contents">
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                              <div className="budget-form-two-column grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-date">
                                     Proposed Date <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5086,7 +5107,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     required
                                   />
                                 </div>
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-venue">
                                     Venue <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5096,6 +5117,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     onChange={(event) => setBudgetForm((current) => ({ ...current, venue: event.target.value }))}
                                     placeholder="LYDO Hall"
                                     required
+                                    className="w-full min-w-0"
                                   />
                                 </div>
                               </div>
@@ -5109,13 +5131,13 @@ export default function UserPortal({ section }: { section: string }) {
                               <span className="h-px flex-1 bg-border" aria-hidden="true" />
                             </div>
                             <div className="budget-form-section-fields grid gap-4 lg:contents">
-                              <div className="budget-form-two-column grid gap-4 min-[600px]:grid-cols-2 lg:contents">
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                              <div className="budget-form-two-column grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-amount">
                                     Requested Amount <span className="ml-1 text-destructive">*</span>
                                   </Label>
-                                  <div className="flex overflow-hidden rounded-md border border-input bg-background">
-                                    <span className="inline-flex items-center border-r border-input px-3 text-sm font-medium text-muted-foreground">PHP</span>
+                                  <div className="flex overflow-hidden rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/20 focus-within:border-ring">
+                                    <span className="inline-flex shrink-0 items-center border-r border-input bg-muted/30 px-3 text-sm font-semibold text-muted-foreground select-none">PHP</span>
                                     <Input
                                       id="budget-amount"
                                       type="number"
@@ -5129,11 +5151,11 @@ export default function UserPortal({ section }: { section: string }) {
                                         }))
                                       }
                                       placeholder="15000"
-                                      className="border-0 shadow-none focus-visible:ring-0"
+                                      className="flex-1 min-w-0 border-0 shadow-none focus-visible:ring-0"
                                     />
                                   </div>
                                 </div>
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-category">
                                     Purpose and Category <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5143,6 +5165,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     onChange={(event) => setBudgetForm((current) => ({ ...current, purposeCategory: event.target.value }))}
                                     placeholder="Capacity building / training"
                                     required
+                                    className="w-full min-w-0"
                                   />
                                 </div>
                               </div>
@@ -5554,10 +5577,10 @@ export default function UserPortal({ section }: { section: string }) {
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
+                                        className="h-9 w-full min-w-0 px-3.5 text-sm"
                                         onClick={() => void openFile(selectedBudgetFile.fileUrl, selectedBudgetFile.fileName)}
                                       >
-                                        <Eye className="mr-2 h-4 w-4" />
+                                        <Eye className="mr-2 h-4 w-4 shrink-0" />
                                         Open File
                                       </Button>
                                     ) : null}
@@ -5879,9 +5902,7 @@ export default function UserPortal({ section }: { section: string }) {
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle`}>
                                                   <p className="text-sm text-foreground">
-                                                    {request.activityDate
-                                                      ? new Date(request.activityDate).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
-                                                      : "Not set"}
+                                                    {request.activityDate ? formatShortPortalDate(request.activityDate) || request.activityDate : "Not set"}
                                                   </p>
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle`}>
@@ -5955,23 +5976,28 @@ export default function UserPortal({ section }: { section: string }) {
                                                   )}
                                                 </TableCell>
                                                 <TableCell className={rowPaddingClass}>
-                                                  <div className="space-y-1">
-                                                    <p className="text-sm leading-snug text-foreground lg:line-clamp-2">
-                                                      {latestActivity ? (budgetActionLabels[latestActivity.action] ?? latestActivity.action) : secondaryStatus}
+                                                  <button
+                                                    type="button"
+                                                    className="group flex flex-col items-start text-left text-xs transition-colors hover:text-primary min-w-0 w-full"
+                                                    onClick={() => openBudgetRecentActivityModal(request)}
+                                                    title="View full activity log"
+                                                  >
+                                                    <p className="text-sm leading-snug font-medium text-foreground group-hover:text-primary group-hover:underline lg:line-clamp-2">
+                                                      {latestActivity ? (budgetActionLabels[latestActivity.action] ?? formatStatusLabel(latestActivity.action)) : secondaryStatus}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(request.updatedAt)}
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                      {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(request.updatedAt || request.createdAt)}
                                                     </p>
                                                     {additionalActivities > 0 ? (
-                                                      <button
-                                                        type="button"
-                                                        className="text-xs font-medium text-primary hover:underline"
-                                                        onClick={() => openBudgetRecentActivityModal(request)}
-                                                      >
+                                                      <span className="mt-1 text-xs font-semibold text-primary group-hover:underline">
                                                         +{additionalActivities} more
-                                                      </button>
-                                                    ) : null}
-                                                  </div>
+                                                      </span>
+                                                    ) : (
+                                                      <span className="mt-1 text-[11px] text-muted-foreground/80 group-hover:text-primary group-hover:underline">
+                                                        View log
+                                                      </span>
+                                                    )}
+                                                  </button>
                                                 </TableCell>
                                               </TableRow>
                                             );
