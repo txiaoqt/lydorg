@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeUrn, validateUrn } from "./urn-registration";
+import { generateUniqueUrn, normalizeUrn, validateUrn } from "./urn-registration";
 
 describe("URN registration", () => {
   it("normalizes case and accidental spacing without removing separators", () => {
@@ -24,6 +24,12 @@ describe("URN registration", () => {
 
   it("accepts only the complete required URN format", () => {
     expect(validateUrn("PCYDO-2025-0012")).toBeNull();
+  });
+
+  it("generates valid unique URNs matching the project format", () => {
+    const urn = generateUniqueUrn();
+    expect(urn).toMatch(/^PCYDO-\d{4}-[A-Z0-9]{4}$/);
+    expect(validateUrn(urn)).toBeNull();
   });
 });
 

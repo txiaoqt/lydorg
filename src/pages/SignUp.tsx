@@ -18,7 +18,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
-import { normalizeUrn, validateUrn } from "@/lib/urn-registration";
+import {
+  URN_MAX_LENGTH,
+  generateUniqueUrn,
+  isRegistrationVerified,
+  isUrnRegistration,
+  normalizeUrn,
+  urnReviewLabels,
+  validateUrn,
+} from "@/lib/urn-registration";
 import {
   Dialog,
   DialogContent,
@@ -167,7 +175,9 @@ const SignUp = () => {
   const districtBarangays = district ? pasigDistrictBarangays[district] : [];
   const selectedBarangayName = districtBarangays.find((b) => b.id === barangayId)?.name ?? "N/A";
   const selectedDistrictName = district || "N/A";
-  const normalizedIdentifierNumber = normalizeUrn(organizationIdentifierNumber);
+  const normalizedIdentifierNumber = isExistingOrganization
+    ? normalizeUrn(organizationIdentifierNumber)
+    : generateUniqueUrn();
   const urnError = isExistingOrganization ? validateUrn(organizationIdentifierNumber) : null;
   const isIdentifierValid = !urnError;
 
@@ -576,6 +586,12 @@ const SignUp = () => {
                   </p>
                 </div>
               </div>
+
+              {!isExistingOrganization ? (
+                <p className="mt-2 text-xs text-muted-foreground bg-muted/40 border border-border/70 rounded-lg p-2.5">
+                  A Unique Registration Number will be automatically generated after your organization is successfully created.
+                </p>
+              ) : null}
 
               {/* Smooth reveal */}
               <div

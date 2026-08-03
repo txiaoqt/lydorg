@@ -12,6 +12,12 @@ export type VerificationMethod = "documents" | "urn" | null;
 export const URN_MAX_LENGTH = 80;
 const URN_PATTERN = /^PCYDO-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
+export const generateUniqueUrn = (): string => {
+  const year = new Date().getFullYear();
+  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase().padStart(4, "X");
+  return `PCYDO-${year}-${randomPart}`;
+};
+
 export const normalizeUrn = (value: string) =>
   value.trim().replace(/[ \t]+/g, " ").toUpperCase();
 

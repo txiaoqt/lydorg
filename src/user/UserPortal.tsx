@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import JSZip from "jszip";
 import {
@@ -87,7 +87,7 @@ import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { cn } from "@/lib/utils";
 import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
-import { isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
+import { generateUniqueUrn, isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import { getOrganizationRenewalCountdown } from "@/lib/organization-renewal";
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
 import {
@@ -105,6 +105,8 @@ import {
   getOrganizationProfileCompletionCount,
   getOrganizationProfileCompletionTarget,
   isOrganizationProfileComplete,
+  isValidFacebookUrl,
+  isValidPersonName,
   organizationEmailPattern,
   philippineContactNumberPattern,
 } from "@/lib/organization-profile-domain";
@@ -2073,6 +2075,40 @@ export default function UserPortal({ section }: { section: string }) {
         variant: "destructive",
       });
       return;
+    }
+
+    if (trimmedProfile.representativeName && !isValidPersonName(trimmedProfile.representativeName)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Representative Name",
+        description: "Representative name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.). Numbers and special symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedProfile.adviserName && !isValidPersonName(trimmedProfile.adviserName)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Adviser Name",
+        description: "Adviser name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.). Numbers and special symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedProfile.facebookPageUrl && !isValidFacebookUrl(trimmedProfile.facebookPageUrl)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "contact-social"])));
+      toast({
+        title: "Invalid Facebook URL",
+        description: "Please enter a valid Facebook profile or page URL starting with https://facebook.com, https://www.facebook.com, or https://fb.com.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trimmedProfile.isExistingOrganization && !trimmedProfile.organizationIdentifierNumber) {
+      trimmedProfile.organizationIdentifierNumber = generateUniqueUrn();
     }
 
     setSavingProfile(true);

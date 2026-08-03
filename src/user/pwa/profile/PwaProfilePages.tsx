@@ -28,7 +28,13 @@ import {
   upsertOrganizationProfileInSupabase,
   resubmitOrganizationUrnInSupabase,
 } from "@/lib/lydo-connect-supabase";
-import { organizationEmailPattern, philippineContactNumberPattern } from "@/lib/organization-profile-domain";
+import {
+  organizationEmailPattern,
+  philippineContactNumberPattern,
+  isValidPersonName,
+  isValidFacebookUrl,
+} from "@/lib/organization-profile-domain";
+import { generateUniqueUrn } from "@/lib/urn-registration";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import { PwaBackButton } from "../PwaBackButton";
@@ -565,6 +571,21 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     if (!philippineContactNumberPattern.test(next.contactNumber)) {
       toast({ title: "Invalid contact number", description: "Enter an 11-digit Philippine mobile number starting with 09.", variant: "destructive" });
       return;
+    }
+    if (next.representativeName && !isValidPersonName(next.representativeName)) {
+      toast({ title: "Invalid Representative Name", description: "Representative name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.).", variant: "destructive" });
+      return;
+    }
+    if (next.adviserName && !isValidPersonName(next.adviserName)) {
+      toast({ title: "Invalid Adviser Name", description: "Adviser name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.).", variant: "destructive" });
+      return;
+    }
+    if (next.facebookPageUrl && !isValidFacebookUrl(next.facebookPageUrl)) {
+      toast({ title: "Invalid Facebook URL", description: "Enter a valid Facebook profile or page URL starting with https://facebook.com, https://www.facebook.com, or https://fb.com.", variant: "destructive" });
+      return;
+    }
+    if (!next.isExistingOrganization && !next.organizationIdentifierNumber) {
+      next.organizationIdentifierNumber = generateUniqueUrn();
     }
     setSaving(true);
     try {
