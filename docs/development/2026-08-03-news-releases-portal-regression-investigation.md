@@ -141,3 +141,66 @@ Before considering ANY future task complete, verify:
 | `src/user/UserPortal.tsx` | Contains portal-embedded News Releases view (NOT the cause) |
 | `src/user/UserPortalEntry.tsx` | Routes section prop to UserPortal (NOT the cause) |
 | `src/components/portal/UserPortalShell.tsx` | Sidebar click handler calls `onNavigate(item.id)` (NOT the cause) |
+
+---
+
+## Merge Conflict Resolution (August 3, 2026)
+
+### Problem
+
+A prior merge between `feature/authentication` and `feature/organization-portal` left unresolved Git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) in `src/pages/SignUp.tsx`, preventing the project from compiling.
+
+### Files With Merge Conflicts
+
+| File | Lines | Conflict Description |
+| :--- | :---: | :--- |
+| `src/pages/SignUp.tsx` | 22–35 | Import block conflict between `urn-registration` exports and `password-policy` exports |
+
+### How the Conflict Was Resolved
+
+The conflict was in the import section at the top of `SignUp.tsx`:
+
+- **HEAD side** (`feature/organization-portal`): Imported the full set of `urn-registration` exports (`URN_MAX_LENGTH`, `generateUniqueUrn`, `isRegistrationVerified`, `isUrnRegistration`, `normalizeUrn`, `urnReviewLabels`, `validateUrn`) needed for auto URN generation and organization profile features. Did NOT import `password-policy`.
+- **Incoming side** (`feature/authentication`): Imported minimal `urn-registration` exports (`normalizeUrn`, `validateUrn`) plus the `password-policy` exports (`isPasswordValid`, `validatePasswordCriteria`) needed for password validation criteria/checklist UI.
+
+**Resolution**: Combined BOTH sides — kept ALL `urn-registration` exports from HEAD (all are actively used in the file for auto URN generation) AND added the `password-policy` import from `feature/authentication` (actively used at lines 141, 235, 243, 348 for password criteria validation).
+
+### Why Each Implementation Was Preserved
+
+| Import | Used At | Feature |
+| :--- | :--- | :--- |
+| `URN_MAX_LENGTH` | Organization creation logic | URN auto-generation |
+| `generateUniqueUrn` | Line 220 | Auto-generate URN for new organizations |
+| `isRegistrationVerified` | Organization status checks | Registration verification flow |
+| `isUrnRegistration` | Organization type checks | URN registration detection |
+| `normalizeUrn` | URN input processing | Input normalization |
+| `urnReviewLabels` | URN status display | Review label mapping |
+| `validateUrn` | URN validation | Input validation |
+| `isPasswordValid` | Lines 235, 243 | Password strength gate |
+| `validatePasswordCriteria` | Lines 141, 348 | Password criteria checklist UI |
+
+### Verification Performed
+
+- **Conflict marker scan**: Zero occurrences of `<<<<<<<`, `=======`, `>>>>>>>` in source files
+- **TypeScript**: `npx tsc --noEmit` passed with 0 errors
+- **Unit tests**: `npm test` passed with 25 test files and 106 tests
+- **URN help icon**: Verified `HelpCircle` rendered at lines 674, 679, 703, 708
+- **Portal News Releases**: `userRouteMap["news-releases"]` = `"/portal-news-releases"` ✅
+- **PublicNewsReleasesGate**: Present in `App.tsx` at line 156 ✅
+- **Password validation**: `validatePasswordCriteria` used at lines 141, 348 ✅
+
+### Branch Workflow Rule (Going Forward)
+
+Do NOT merge feature branches into each other. The correct topology is:
+
+```
+main
+├── feature/authentication
+├── feature/organization-portal
+├── feature/signup-ui
+├── feature/organization-profile
+└── feature/public-pages
+```
+
+Each feature branch should only be merged INTO `main` (never into sibling branches) unless explicitly requested.
+
