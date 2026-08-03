@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Check, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 import { normalizeUrn, validateUrn } from "@/lib/urn-registration";
+import { isPasswordValid, validatePasswordCriteria } from "@/lib/password-policy";
 import {
   Dialog,
   DialogContent,
@@ -127,6 +128,40 @@ const RequiredLabel = ({ htmlFor, children }: { htmlFor: string; children: React
   </Label>
 );
 
+const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
+  const criteria = useMemo(() => validatePasswordCriteria(password), [password]);
+
+  const items = [
+    { key: "length", label: "8–16 characters", valid: criteria.length },
+    { key: "uppercase", label: "Contains an uppercase letter (A–Z)", valid: criteria.uppercase },
+    { key: "lowercase", label: "Contains a lowercase letter (a–z)", valid: criteria.lowercase },
+    { key: "number", label: "Contains a number (0–9)", valid: criteria.number },
+    { key: "special", label: "Contains a special character (!@#$%...)", valid: criteria.special },
+  ];
+
+  if (!password) return null;
+
+  return (
+    <div className="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
+      <p className="font-semibold text-muted-foreground">Password Requirements:</p>
+      <ul className="space-y-1">
+        {items.map((item) => (
+          <li key={item.key} className="flex items-center gap-2 transition-colors">
+            {item.valid ? (
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+            ) : (
+              <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-muted-foreground/40" />
+            )}
+            <span className={item.valid ? "font-medium text-foreground" : "text-muted-foreground"}>
+              {item.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
@@ -182,10 +217,26 @@ const SignUp = () => {
       barangayId &&
       isIdentifierValid &&
       password &&
+      isPasswordValid(password) &&
       confirmPassword &&
       passwordsMatch &&
       agreedToPolicies,
   );
+
+  const confirmMatchHint = useMemo(() => {
+    if (!confirmPassword) return null;
+    if (password === confirmPassword && isPasswordValid(password)) {
+      return (
+        <p className="flex items-center gap-1 text-xs text-success">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match
+        </p>
+      );
+    }
+    if (password !== confirmPassword) {
+      return <p className="text-xs text-destructive">Passwords do not match.</p>;
+    }
+    return null;
+  }, [password, confirmPassword]);
 
   // Reset barangay when district changes
   useEffect(() => {
@@ -281,6 +332,27 @@ const SignUp = () => {
     if (missingFields.length) {
       setTouched(new Set(["name", "email", "contactNumber", "district", "barangay", "identifier", "password", "confirmPassword", "policies"]));
       setInlineError(`Complete all required fields: ${missingFields.join(", ")}.`);
+      return;
+    }
+    const passwordCriteria = validatePasswordCriteria(password);
+    if (!passwordCriteria.length) {
+      setInlineError("Password must be between 8 and 16 characters long.");
+      return;
+    }
+    if (!passwordCriteria.uppercase) {
+      setInlineError("Password must contain at least one uppercase letter (A–Z).");
+      return;
+    }
+    if (!passwordCriteria.lowercase) {
+      setInlineError("Password must contain at least one lowercase letter (a–z).");
+      return;
+    }
+    if (!passwordCriteria.number) {
+      setInlineError("Password must contain at least one numeric digit (0–9).");
+      return;
+    }
+    if (!passwordCriteria.special) {
+      setInlineError("Password must contain at least one special character.");
       return;
     }
     if (!passwordsMatch) {
@@ -630,16 +702,20 @@ const SignUp = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setInlineError("");
+                    }}
                     onBlur={() => touch("password")}
                     className="pr-10"
                     autoComplete="new-password"
+                    maxLength={16}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -647,6 +723,8 @@ const SignUp = () => {
                 </div>
                 {touched.has("password") && !password ? <p className="text-xs text-destructive">Password is required.</p> : null}
               </div>
+
+              <PasswordCriteriaChecklist password={password} />
 
               <div className="space-y-1.5">
                 <RequiredLabel htmlFor="confirmPassword">Confirm Password</RequiredLabel>
@@ -656,16 +734,24 @@ const SignUp = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Re-enter your password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setInlineError("");
+                    }}
                     onBlur={() => touch("confirmPassword")}
+                    onPaste={(event) => {
+                      event.preventDefault();
+                      setInlineError("For security, please manually retype your confirmation password.");
+                    }}
                     className="pr-10"
                     autoComplete="new-password"
+                    maxLength={16}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -673,9 +759,7 @@ const SignUp = () => {
                 </div>
                 {touched.has("confirmPassword") && !confirmPassword ? (
                   <p className="text-xs text-destructive">Please confirm your password.</p>
-                ) : touched.has("confirmPassword") && !passwordsMatch ? (
-                  <p className="text-xs text-destructive">Passwords do not match.</p>
-                ) : null}
+                ) : confirmMatchHint}
               </div>
             </FormSection>
 
