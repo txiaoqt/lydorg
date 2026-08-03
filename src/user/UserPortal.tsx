@@ -282,6 +282,16 @@ const formatShortPortalDate = (value: string) => {
 };
 const budgetNativeSelectClass =
   "h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50";
+const budgetActionLabels: Record<string, string> = {
+  needs_revision: "Revision requested",
+  approved_for_ftf_green: "Submit Onsite",
+  hard_copy_submitted: "Hardcopy Submitted",
+  budget_released: "Budget released",
+  completed: "Completed",
+  submitted: "Submitted for review",
+  rejected_red: "Rejected",
+  draft: "Saved as draft",
+};
 const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
   "approved_for_ftf_green",
   "budget_released",
@@ -4985,16 +4995,6 @@ export default function UserPortal({ section }: { section: string }) {
           );
         }
         {
-          const budgetActionLabels: Record<string, string> = {
-            needs_revision: "Revision requested",
-            approved_for_ftf_green: "Submit Onsite",
-            hard_copy_submitted: "Hardcopy Submitted",
-            budget_released: "Budget released",
-            completed: "Completed",
-            submitted: "Submitted for review",
-            rejected_red: "Rejected",
-            draft: "Saved as draft",
-          };
           return (
             <div className="user-budget-requests-page space-y-6">
               <PortalSection
