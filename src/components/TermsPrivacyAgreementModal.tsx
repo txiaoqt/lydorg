@@ -97,7 +97,7 @@ export const TermsPrivacyAgreementModal = ({
 
           <div className="border-t border-border px-5 py-4 sm:px-6">
             <div className="mb-4 space-y-3">
-              <div className="flex min-h-11 items-start gap-2">
+              <div className="flex min-h-11 items-center gap-2">
                 <Checkbox
                   id="privacy-agreement"
                   checked={acceptedPrivacy}
@@ -105,10 +105,10 @@ export const TermsPrivacyAgreementModal = ({
                   disabled={saving}
                 />
                 <Label htmlFor="privacy-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
-                  I have read and acknowledge the Privacy Policy.
+                  I have read and acknowledge the Privacy Policy. <span className="text-destructive" aria-hidden="true">*</span>
                 </Label>
               </div>
-              <div className="flex min-h-11 items-start gap-2">
+              <div className="flex min-h-11 items-center gap-2">
                 <Checkbox
                   id="terms-agreement"
                   checked={acceptedTerms}
@@ -116,7 +116,7 @@ export const TermsPrivacyAgreementModal = ({
                   disabled={saving}
                 />
                 <Label htmlFor="terms-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
-                  I have read and agree to the Terms of Service.
+                  I have read and agree to the Terms of Service. <span className="text-destructive" aria-hidden="true">*</span>
                 </Label>
               </div>
             </div>
