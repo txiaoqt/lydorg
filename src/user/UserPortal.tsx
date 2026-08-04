@@ -114,6 +114,7 @@ import {
   getYpopEventJoinEligibility,
   isPastYpopActivityDate,
   parseYpopActivityDate,
+  validateYpopSubmissionEligibility,
 } from "@/lib/ypop-event-eligibility";
 import {
   type BudgetRequest,
@@ -7504,6 +7505,25 @@ export default function UserPortal({ section }: { section: string }) {
         const availableYpopActivities = ypopActivitiesSorted.filter((activity) => !ypopParticipationByActivityId.has(activity.id));
 
         const handleSubmitYpop = async (entry: YPOPEntry) => {
+          const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const eligibility = validateYpopSubmissionEligibility({
+            entry,
+            participations: joinedYpopEvents,
+            eventFiles: state.ypopEventFiles,
+            entryFiles: files,
+            orgActivityFiles: state.ypopOrgActivityFiles,
+            profile: currentProfile,
+          });
+
+          if (!eligibility.eligible) {
+            toast({
+              title: "Validation Request Blocked",
+              description: eligibility.message,
+              variant: "destructive",
+            });
+            return;
+          }
+
           const note = ypopNotesByEntryId[entry.id] ?? "";
           if (!await confirmAction({
             title: entry.status === "needs_revision" ? "Resubmit for city-led validation?" : "Submit for city-led validation?",
@@ -8044,6 +8064,14 @@ export default function UserPortal({ section }: { section: string }) {
 
         const renderEntryCard = (entry: YPOPEntry) => {
           const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const entryEligibility = validateYpopSubmissionEligibility({
+            entry,
+            participations: joinedYpopEvents,
+            eventFiles: state.ypopEventFiles,
+            entryFiles: files,
+            orgActivityFiles: state.ypopOrgActivityFiles,
+            profile: currentProfile,
+          });
           const isSubmitting = submittingYpopId === entry.id;
           const isUploading = ypopUploadingId === entry.id;
           const isDraft = entry.status === "draft";
@@ -8101,9 +8129,16 @@ export default function UserPortal({ section }: { section: string }) {
                   <PortalStatusBadge status={entry.status} />
                 </div>
 
-                {/* Draft / Needs Revision â€” step flow */}
+                {/* Draft / Needs Revision — step flow */}
                 {(isDraft || isNeedsRevision) && (
                   <>
+                    {!entryEligibility.eligible && (
+                      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span>{entryEligibility.message}</span>
+                      </div>
+                    )}
+
                     {isNeedsRevision && entry.adminRemarks.trim() && (
                       <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
                         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Revision Required</p>
@@ -8112,7 +8147,7 @@ export default function UserPortal({ section }: { section: string }) {
                     )}
 
                     <div className="space-y-4">
-                      {/* Step 1 â€” Attach files */}
+                      {/* Step 1 — Attach files */}
                       <div className="hidden" aria-hidden="true">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
                         <div className="flex-1 space-y-2">
@@ -8182,7 +8217,7 @@ export default function UserPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
-                      {/* Step 2 â€” Add message */}
+                      {/* Step 2 — Add message */}
                       <div className="flex gap-3">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
                         <div className="flex-1 space-y-2">
@@ -8202,7 +8237,7 @@ export default function UserPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
-                      {/* Step 3 â€” Submit */}
+                      {/* Step 3 — Submit */}
                       <div className="flex gap-3">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">2</div>
                         <div className="flex-1 space-y-1.5">
@@ -8210,7 +8245,8 @@ export default function UserPortal({ section }: { section: string }) {
                             type="button"
                             size="sm"
                             onClick={() => void handleSubmitYpop(entry)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !entryEligibility.eligible}
+                            title={!entryEligibility.eligible ? entryEligibility.message : undefined}
                           >
                             {isSubmitting ? (
                               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</>
