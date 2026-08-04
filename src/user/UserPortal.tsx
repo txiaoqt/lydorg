@@ -661,6 +661,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [batchUploadConfirmOpen, setBatchUploadConfirmOpen] = useState(false);
   const [batchUploadSubmitting, setBatchUploadSubmitting] = useState(false);
   const [downloadingAllTemplates, setDownloadingAllTemplates] = useState(false);
+  const [downloadingTemplateId, setDownloadingTemplateId] = useState("");
   const [batchUploadSubmitMode, setBatchUploadSubmitMode] = useState<"draft" | "review">("review");
   const [batchDroppedFiles, setBatchDroppedFiles] = useState<BatchDroppedDocumentFile[]>([]);
   const [batchUploadResult, setBatchUploadResult] = useState<BatchUploadResultSummary | null>(null);
@@ -1205,6 +1206,9 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (downloadingTemplateId === template.id) return;
+
+    setDownloadingTemplateId(template.id);
     try {
       const downloadName = getTemplateDownloadFileName(template);
       await downloadResolvedFile(template.templateFileUrl, downloadName);
@@ -1214,6 +1218,8 @@ export default function UserPortal({ section }: { section: string }) {
         description: error instanceof Error ? error.message : "The template could not be downloaded right now.",
         variant: "destructive",
       });
+    } finally {
+      setDownloadingTemplateId("");
     }
   };
 
@@ -3196,11 +3202,20 @@ export default function UserPortal({ section }: { section: string }) {
                         <Button
                           type="button"
                           className="w-full sm:flex-1"
-                          disabled={!template.templateFileUrl}
+                          disabled={!template.templateFileUrl || downloadingTemplateId === template.id}
                           onClick={() => void handleDownloadTemplate(template)}
                         >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
+                          {downloadingTemplateId === template.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardContent>
@@ -3253,11 +3268,20 @@ export default function UserPortal({ section }: { section: string }) {
                           <Button
                             type="button"
                             className="w-full sm:flex-1"
-                            disabled={!template.templateFileUrl}
+                            disabled={!template.templateFileUrl || downloadingTemplateId === template.id}
                             onClick={() => void handleDownloadTemplate(template)}
                           >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
+                            {downloadingTemplateId === template.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </>
+                            )}
                           </Button>
                         </div>
                       </CardContent>
