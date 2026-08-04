@@ -82,6 +82,8 @@ const legacyRouteMap: Array<[string, string]> = [
   ["/budget-request", PWA_ROUTES.budgets],
   ["/liquidation-reporting", PWA_ROUTES.liquidations],
   ["/news-releases", PWA_ROUTES.news],
+  ["/portal-news-releases", PWA_ROUTES.news],
+  ["/organization-news-releases", PWA_ROUTES.news],
   ["/public-transparency", PWA_ROUTES.transparency],
   ["/compliance-status", PWA_ROUTES.compliance],
   ["/notifications", PWA_ROUTES.notifications],

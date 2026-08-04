@@ -2,6 +2,34 @@ import type { OrganizationProfile } from "./lydo-connect-data";
 
 export const organizationEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const philippineContactNumberPattern = /^09\d{9}$/;
+export const personNamePattern = /^[a-zA-Z\s\-\'\.]*$/;
+
+export const isValidPersonName = (name: string): boolean => {
+  const trimmed = name.trim();
+  if (!trimmed) return true;
+  return personNamePattern.test(trimmed) && !/\d/.test(trimmed);
+};
+
+export const isValidFacebookUrl = (url: string): boolean => {
+  const trimmed = url.trim();
+  if (!trimmed) return true;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    const hostname = parsed.hostname.toLowerCase();
+    return (
+      hostname === "facebook.com" ||
+      hostname === "www.facebook.com" ||
+      hostname === "m.facebook.com" ||
+      hostname === "web.facebook.com" ||
+      hostname === "fb.com" ||
+      hostname === "www.fb.com" ||
+      hostname.endsWith(".facebook.com")
+    );
+  } catch {
+    return false;
+  }
+};
 
 export const getOrganizationProfileCompletionCount = (profile?: OrganizationProfile | null) =>
   [
