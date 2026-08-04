@@ -36,6 +36,22 @@
 .ytrace-pwa-app button, .ytrace-pwa-app a { -webkit-tap-highlight-color: transparent; }
 .ytrace-pwa-app button:focus-visible, .ytrace-pwa-app a:focus-visible { outline: 3px solid var(--pwa-focus-ring); outline-offset: 2px; }
 
+/* Standardized PWA Blue Focus Ring for all interactive form controls */
+.ytrace-pwa-app input:focus,
+.ytrace-pwa-app input:focus-visible,
+.ytrace-pwa-app textarea:focus,
+.ytrace-pwa-app textarea:focus-visible,
+.ytrace-pwa-app select:focus,
+.ytrace-pwa-app select:focus-visible,
+.ytrace-pwa-app [role="combobox"]:focus,
+.ytrace-pwa-app [role="combobox"]:focus-visible,
+.ytrace-pwa-app [role="listbox"]:focus,
+.ytrace-pwa-app [role="listbox"]:focus-visible {
+  outline: none !important;
+  border-color: var(--pwa-blue, #2460a7) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue, #2460a7) 30%, transparent) !important;
+}
+
 .ytrace-pwa-app .pwa-app-frame {
   width: min(100%, 600px);
   margin: 0 auto;
@@ -889,7 +905,7 @@
 .ytrace-pwa-app .pwa-profile-editor-intro h2 { margin: 0; font-size: 0.95rem; }
 .ytrace-pwa-app .pwa-profile-editor-intro p { margin: 0.2rem 0 0; color: var(--pwa-muted); font-size: 0.7rem; line-height: 1.4; }
 .ytrace-pwa-app .pwa-profile-editor-sections { display: grid; min-width: 0; max-width: 100%; gap: 0.65rem; }
-.ytrace-pwa-app .pwa-profile-editor-sections > div { min-width: 0; padding: 0 0.9rem; overflow: hidden; }
+.ytrace-pwa-app .pwa-profile-editor-sections > div { min-width: 0; padding: 0.15rem 0.9rem; overflow: visible; }
 .ytrace-pwa-app .pwa-profile-editor-sections [data-radix-collection-item] { min-height: 3.6rem; padding: 0; font-size: 0.78rem; text-decoration: none; }
 .ytrace-pwa-app .pwa-profile-editor-sections [data-radix-collection-item] > span:first-child { min-width: 0; text-align: left; }
 .ytrace-pwa-app .pwa-profile-editor-sections [data-radix-collection-item] small { display: block; margin-top: 0.18rem; color: var(--pwa-muted); font-size: 0.62rem; font-weight: 500; }
