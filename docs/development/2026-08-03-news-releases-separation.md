@@ -66,3 +66,43 @@
 - **Unit Test Suite**: `npm test` passed with 24 test files and 99 tests passing.
 - **Production Build**: `npm run build` completed in 31.81s with 0 errors.
 - **Git Branch Workflow**: Executed on `feature/organization-portal`.
+
+---
+
+## 6. Recurring Regression Investigation (August 3, 2026)
+
+### Problem
+
+The News Releases portal fix keeps reverting. After logging out and back in, or switching branches and restarting the dev server, clicking "News Releases" in the Organization Portal sidebar redirects to the Public Website page again.
+
+### Root Cause
+
+The fix was **never merged into `main`**. It exists only on `feature/organization-portal` and `feature/authentication` (which merged from `feature/organization-portal`).
+
+Every time work is done on `main` or a branch forked from `main` (e.g., `feature/organization-profile`, `feature/public-pages`, `chore/legacy-code-audit`), the workspace reverts to:
+
+- `userRouteMap["news-releases"]` → `"/news-releases"` (public route, not portal)
+- No `/portal-news-releases` route in `App.tsx`
+- No `PublicNewsReleasesGate` component
+
+### Branches Containing the Fix
+
+- `feature/organization-portal` ✅
+- `feature/authentication` ✅ (merged from above)
+
+### Branches Missing the Fix
+
+- `main` ❌
+- `feature/organization-profile` ❌
+- `feature/public-pages` ❌
+- `chore/legacy-code-audit` ❌
+- All other branches forked from `main` ❌
+
+### Resolution
+
+Merge `feature/organization-portal` into `main`, then rebase all active feature branches on `main`.
+
+### Detailed Investigation
+
+See: `docs/development/2026-08-03-news-releases-portal-regression-investigation.md`
+

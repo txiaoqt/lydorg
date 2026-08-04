@@ -16,7 +16,7 @@
   - The URN text input is omitted entirely from Step 1.
   - An informational guidance box is rendered below the URN label with contextual help:
     > *A Unique Registration Number (URN) will be automatically generated after your organization is successfully registered.*
-  - The help (`?`) icon popover is preserved beside the URN section label.
+  - The duplicate help (`?`) icon popover is omitted in this state to avoid redundant information.
 - **Existing Organizations (`isExistingOrganization = true`)**:
   - The URN label features the help (`?`) icon beside `Unique Registration Number (URN) *` that opens the contextual guidance Popover on click/tap.
   - The URN input is rendered using the standard `<div className="space-y-1.5 pt-3">` layout structure without wrapper hacks.
@@ -37,7 +37,7 @@
 
 | File Path | Component / Module | Summary of Changes |
 | :--- | :--- | :--- |
-| `src/pages/SignUp.tsx` | Sign Up Page | Preserved Help icon popover beside URN label and unified URN input styling with Organization Name input. |
+| `src/pages/SignUp.tsx` | Sign Up Page | Removed duplicate help (`?`) icon popover when URN checkbox is unchecked; preserved help icon popover, editable input, and validation when checked. |
 | `src/user/UserPortal.tsx` | Organization Profile | Updated URN read-only field value to display auto-generated URN with fallback text. |
 | `src/user/pwa/profile/PwaProfilePages.tsx` | PWA Profile Editor | Standardized URN field read-only rendering. |
 | `docs/development/2026-08-03-urn-field-ux-refinement.md` | Engineering Docs | Added documentation for URN UX refinement and regression prevention. |
@@ -66,8 +66,20 @@
 
 ---
 
-## 5. Verification Performed
+## 5. Onboarding UX Refinement (Eliminate Redundant Helper Content)
+
+- **Unchecked State (`isExistingOrganization = false`)**:
+  - Removed duplicate `?` help icon popover beside the URN section label.
+  - Retained the clean informational banner: *"A Unique Registration Number (URN) will be automatically generated after your organization is successfully registered."*
+- **Checked State (`isExistingOrganization = true`)**:
+  - Retained the `?` help icon popover beside the `Unique Registration Number (URN) *` label.
+  - Retained the popover guidance explaining URN verification against LYDO / PCYDO records.
+  - Retained the editable input field with standard validation logic.
+
+---
+
+## 6. Verification Performed
 
 - **TypeScript Type Check**: `npx tsc --noEmit` passed with 0 errors.
-- **Unit Test Suite**: `npm test` passed with 24 test files and 99 tests passing.
+- **Unit Test Suite**: `npm test` passed with 25 test files and 106 tests passing.
 - **Git Branch Workflow**: Executed on `feature/authentication`.

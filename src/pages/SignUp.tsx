@@ -18,6 +18,7 @@ import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
+import { checkSignupEmail, type EmailAvailability } from "@/lib/email-validation";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 import {
   URN_MAX_LENGTH,
@@ -58,7 +59,6 @@ import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 
 type BarangayOption = { id: string; name: string };
 type PasigDistrict = "District I" | "District II";
-type EmailAvailability = "idle" | "checking" | "available" | "registered" | "error";
 type LegalPolicyType = "terms" | "privacy";
 type PolicyVersion = {
   title: string;
@@ -107,15 +107,6 @@ const pasigDistrictBarangays: Record<PasigDistrict, BarangayOption[]> = {
 
 const pasigDistrictOptions: PasigDistrict[] = ["District I", "District II"];
 const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
-
-const checkSignupEmail = async (email: string): Promise<Exclude<EmailAvailability, "idle" | "checking">> => {
-  if (!supabase) return "error";
-  const { data, error } = await supabase.rpc("is_signup_email_registered", {
-    _email: email.trim().toLowerCase(),
-  });
-  if (error) return "error";
-  return data === true ? "registered" : "available";
-};
 
 /** A labeled form section with a top border divider */
 const FormSection = ({ title, children, hidden = false }: { title: string; children: React.ReactNode; hidden?: boolean }) => (
@@ -662,29 +653,7 @@ const SignUp = () => {
 
               {!isExistingOrganization ? (
                 <div className="space-y-1.5 pt-3">
-                  <div className="flex items-center gap-1.5">
-                    <Label className="text-sm font-medium text-foreground">Unique Registration Number (URN)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary p-0.5"
-                          aria-label="URN help guidance"
-                        >
-                          <HelpCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent side="top" align="start" className="w-80 p-3.5 text-xs space-y-2">
-                        <div className="font-semibold text-foreground flex items-center gap-1.5">
-                          <HelpCircle className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
-                          About Unique Registration Number (URN)
-                        </div>
-                        <p className="leading-relaxed text-muted-foreground">
-                          A Unique Registration Number (URN) will be automatically generated for new organizations upon registration.
-                        </p>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  <Label className="text-sm font-medium text-foreground">Unique Registration Number (URN)</Label>
                   <p className="text-xs text-muted-foreground bg-muted/40 border border-border/70 rounded-lg p-3">
                     A Unique Registration Number (URN) will be automatically generated after your organization is successfully registered.
                   </p>
