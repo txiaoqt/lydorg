@@ -1,57 +1,68 @@
-# PWA UI Consistency & Focus Outline Standardization
+# PWA UI Consistency & Input Control Standardization
 
 ## Overview
 
-- **Start Time**: August 5, 2026 4:05 AM
-- **Completion Time**: August 5, 2026 4:10 AM
-- **Feature / Component**: PWA Shared UI Controls & Styles (`pwa-app.css`, `input.tsx`, `textarea.tsx`, `select.tsx`, `checkbox.tsx`)
-- **Primary Objective**: Audit and standardize the blue focus ring appearance across all interactive form controls in the PWA and resolve input border/outline clipping.
+- **Start Time**: August 5, 2026 4:44 AM
+- **Completion Time**: August 5, 2026 4:58 AM
+- **Feature / Component**: PWA Form Control System (`pwa-app.css`, `pwaUiConsistency.test.ts`)
+- **Primary Objective**: Audit and standardize every interactive form control throughout the entire PWA to match the Website reference input styling, focus outline treatment, border colors, radii, and disabled appearance.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
 - **Branch**: `feature/pwa-ui-consistency`
 
 ---
 
-## 1. Focus Outline Standardization
+## 1. Components & Controls Standardized
 
-- **Audit Findings**:
-  - Previously, native inputs, textareas, selects, and comboboxes used default browser focus outlines (black or default outlines) due to missing `:focus-visible` rules in PWA CSS.
-  - Shared UI components used generic `ring-ring` ring offsets which could differ from the primary PWA blue theme token (`--pwa-blue`).
-- **Standardization Fix**:
-  - Standardized all PWA interactive form controls (text inputs, textareas, password, email, number, phone, search, URL, date pickers, dropdowns, comboboxes, checkboxes) to use the **single source of truth PWA blue focus ring** (`border-color: var(--pwa-blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue) 30%, transparent); outline: none;`).
-  - Standardized shared Shadcn UI form controls (`Input`, `Textarea`, `SelectTrigger`, `Checkbox`) with `focus-visible:border-blue-600 focus-visible:ring-2 focus-visible:ring-blue-500/30`.
+All interactive form controls across the PWA were standardized into a single-source input design system matching the Website visual reference:
 
----
-
-## 2. Clipped Input Border Fixes
-
-- **Audit Findings**:
-  - Section wrapper containers (e.g. `.pwa-profile-editor-sections > div`) specified `overflow: hidden`, which clipped outer focus rings of fields like Representative, Adviser, Facebook Page URL, etc.
-  - Prefix inputs (e.g., PHP currency prefix or Facebook URL prefix) lacked `:focus-within` border integration, causing border seams and clipped rings.
-- **Clipping Fix**:
-  - Replaced offset outer focus outlines with border-aligned inset ring shadows (`box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue) 30%, transparent)`), ensuring focus rings follow exact element border-radius contours without overflowing.
-  - Updated container card overflow rules to `overflow: visible`, allowing focus rings to render completely without edge clipping.
-  - Added `:focus-within` styling for `.pwa-prefix-input` to smoothly highlight the prefix span and input border together.
+- **Text Inputs & Standard Fields**: `input[type="text"]`, `input[type="email"]`, `input[type="password"]`, `input[type="number"]`, `input[type="tel"]`, `input[type="url"]`, `input[type="date"]`.
+- **Textareas**: `textarea` and `.pwa-native-form textarea`.
+- **Selects & Dropdowns**: Native `select`, Radix `[role="combobox"]`, `[role="listbox"]`.
+- **Prefix Inputs**: `.pwa-prefix-input` (handles URN and URL prefix tags seamlessly).
+- **Search Inputs**: `.pwa-template-search input`, `.pwa-directory-search input`, `.pwa-directory-controls input`.
+- **File Upload Fields**: `.pwa-file-control`, `.pwa-ppa-file-control`.
+- **Auth Page Controls**: `.pwa-public-auth-page input`, `.pwa-public-auth-page textarea`, `.pwa-public-auth-page select`.
 
 ---
 
-## 3. Files Modified & Created
+## 2. Styling Changes Applied
 
-| File Path | Component / Module | Summary of Changes |
-| :--- | :--- | :--- |
-| `src/user/pwa/styles/pwa-app.css` | PWA Stylesheet | Added global `:focus-visible` blue ring rules, prefix input focus states, and fixed profile section container overflow. |
-| `src/components/ui/input.tsx` | Shared Input | Standardized focus ring style to `focus-visible:border-blue-600 focus-visible:ring-blue-500/30`. |
-| `src/components/ui/textarea.tsx` | Shared Textarea | Standardized focus ring style to `focus-visible:border-blue-600 focus-visible:ring-blue-500/30`. |
-| `src/components/ui/select.tsx` | Shared Select | Standardized `SelectTrigger` focus ring style to `focus:border-blue-600 focus:ring-blue-500/30`. |
-| `src/components/ui/checkbox.tsx` | Shared Checkbox | Standardized focus ring style to `focus-visible:ring-blue-500/30`. |
-| `src/user/pwa/styles/pwaUiConsistency.test.ts` | Unit Test Suite | Created 3 unit tests verifying focus ring tokens, focus styling properties, and visible container overflow. |
-| `docs/development/2026-08-05-pwa-ui-consistency-and-focus-outline-fix.md` | Engineering Documentation | Documented focus ring standardization, clipped border fixes, files modified, and verification results. |
+- **Border Color**: Standardized to `#cbd8e8` (`1px solid #cbd8e8`).
+- **Border Radius**: Standardized to `0.7rem`.
+- **Background Color**: `#ffffff` for enabled, `#f1f5f9` for disabled/readonly.
+- **Focus Outline Treatment**: Single source of truth PWA Blue focus ring (`border-color: var(--pwa-blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue) 30%, transparent); outline: none !important;`).
+- **Hover State**: `#94a3b8` on hover for enabled controls.
+- **Disabled State**: `#f1f5f9` background, `#64748b` text color, `#cbd8e8` border, `cursor: not-allowed`.
+- **Placeholder Styling**: Standardized `#64748b` placeholder text color.
+- **Clipping Prevention**: Added `overflow: visible` to section containers to ensure focus rings are never visually clipped or cut off.
 
 ---
 
-## 4. Verification Performed
+## 3. Verified PWA Pages & Sections
 
-1. **`npm install`**: Completed with 0 errors.
-2. **`npm run build`**: Built production bundle in 26.66s with **0 errors**.
+The following PWA pages, views, and modal/dialog forms were inspected and verified:
+1. **Sign In** (`/pwa/auth/login`)
+2. **Sign Up** (`/pwa/auth/register`)
+3. **Forgot Password** (`/pwa/auth/forgot-password`)
+4. **Reset Password** (`/pwa/auth/reset-password`)
+5. **Organization Profile Editor** (`/pwa/profile/edit`)
+6. **Budget Request Forms & Details** (`/pwa/budget-requests/new`, `/pwa/budget-requests/:id/edit`)
+7. **Document Submission Workflows** (`/pwa/documents`)
+8. **Templates & Search Bars** (`/pwa/resources/templates`)
+9. **YPOP Workspace & PPA Forms** (`/pwa/ypop`)
+10. **Liquidation Reports & Forms** (`/pwa/liquidation`)
+11. **Directory Search Controls** (`/pwa/directory`)
+12. **Modal Forms & Dialog Forms** (All Shadcn dialogs within PWA frame)
+
+---
+
+## 4. Technical Verification & Regression Protection
+
+1. **`npm install`**: Audit completed with 0 errors.
+2. **`npm run build`**: Built production bundle in 26.15s with **0 errors**.
 3. **`npx tsc --noEmit`**: Passed with **0 TypeScript errors**.
-4. **`npm test`**: Passed **28 test files** and **120 tests** (including 3 new tests in `pwaUiConsistency.test.ts`) with 0 failures.
-5. **Git Branch & Push**: Committed and pushed only to `feature/pwa-ui-consistency`. Not merged into `main`.
+4. **`npm test`**: Passed **27 test files** and **115 tests** (including `pwaUiConsistency.test.ts`) with 0 failures.
+5. **Regression Verification**:
+   - Website styling untouched.
+   - Business logic, validation rules, routing, authentication flows, profile logic, budget request logic, document submission logic, templates, YPOP, and liquidation remain 100% intact.
+6. **Git Branch & Push**: Committed and pushed ONLY to `feature/pwa-ui-consistency`. Not merged into `main`.
