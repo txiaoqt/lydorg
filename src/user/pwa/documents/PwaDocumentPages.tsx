@@ -121,7 +121,7 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
   }
   const byType = new Map(data.documentFiles.map((file) => [file.documentTypeId, file]));
   const total = data.requiredTemplates.length;
-  const submissionLocked = data.submission?.status === "approved_green" || (data.submission?.status as string | undefined) === "approved";
+  const submissionLocked = Boolean(data.submission && !["draft", "needs_revision", "rejected_red"].includes(data.submission.status));
   const allApproved = total > 0 && data.approvedDocuments === total;
   const canManageDocuments = !submissionLocked && data.requiredTemplates.some((template) => {
     const file = byType.get(template.id);
@@ -504,7 +504,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
   const [downloadingZip, setDownloadingZip] = useState(false);
   const fileByType = useMemo(() => new Map(data.documentFiles.map((file) => [file.documentTypeId, file])), [data.documentFiles]);
   const assignedTypes = new Set(pending.map((item) => item.documentTypeId).filter(Boolean));
-  const submissionLocked = data.submission?.status === "approved_green" || (data.submission?.status as string | undefined) === "approved";
+  const submissionLocked = Boolean(data.submission && !["draft", "needs_revision", "rejected_red"].includes(data.submission.status));
 
   const appendFiles = (files: File[]) => {
     setPending((current) => [
@@ -641,8 +641,8 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
       >
         <UploadCloud aria-hidden="true" />
         <strong>Select or drop files</strong>
-        <small>PDF files; the members list also accepts XLS/XLSX.</small>
-        <input ref={inputRef} type="file" multiple accept=".pdf,.xls,.xlsx,application/pdf" onChange={(event) => {
+        <small>PDF files only.</small>
+        <input ref={inputRef} type="file" multiple accept=".pdf,application/pdf" disabled={submissionLocked} onChange={(event) => {
           appendFiles(Array.from(event.target.files ?? []));
           event.currentTarget.value = "";
         }} />
