@@ -199,6 +199,17 @@ import {
 
 const getReadiness = (filled: number, total: number) => (total === 0 ? 0 : Math.round((filled / total) * 100));
 const normalizeText = (value?: string | null) => value?.trim() ?? "";
+const isPdfFile = (file: File) => file.type === "application/pdf" && /\.pdf$/i.test(file.name);
+const validatePdfUpload = async (file: File) => {
+  if (!isPdfFile(file)) return "Only PDF files can be uploaded for this submission.";
+  if (!file.size) return "The selected PDF is empty.";
+
+  const signature = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  if (String.fromCharCode(...signature) !== "%PDF-") {
+    return "This file does not appear to be a valid PDF.";
+  }
+  return null;
+};
 const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
@@ -217,18 +228,14 @@ const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
 };
 const canInlinePreviewFile = (value: string) => /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(value);
 const isImagePreviewFile = (value: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(value);
-const getDocumentUploadAcceptValue = (documentTypeId: string) =>
-  documentTypeId === "yorp-members"
-    ? ".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-    : ".pdf,application/pdf";
-const getDocumentPrimaryFileTypeLabel = (documentTypeId: string) => (documentTypeId === "yorp-members" ? "PDF or XLSX" : "PDF");
-const getDocumentUploadHelpText = (documentTypeId: string) =>
-  documentTypeId === "yorp-members"
-    ? "Upload a PDF or XLSX file."
-    : "Upload a PDF file for submission.";
+const getDocumentUploadAcceptValue = (_documentTypeId: string) => ".pdf,application/pdf";
+const getDocumentPrimaryFileTypeLabel = (_documentTypeId: string) => "PDF";
+const getDocumentUploadHelpText = (_documentTypeId: string) => "Upload a PDF file for submission.";
 const isApprovedSubmissionFile = isApprovedRegistrationDocument;
 const isApprovedDocumentSubmission = (submission?: { status?: string } | null) =>
   submission?.status === "approved" || submission?.status === "approved_green";
+const isEditableDocumentSubmission = (submission?: { status?: string } | null) =>
+  !submission || ["draft", "needs_revision", "rejected_red"].includes(submission.status ?? "draft");
 const deriveOverallDocumentSubmissionStatus = (
   files: SubmissionFile[],
 ): "not_started" | "draft" | "under_admin_review" | "needs_revision" | "approved_green" => {
@@ -892,6 +899,7 @@ export default function UserPortal({ section }: { section: string }) {
   });
   const submission = state.documentSubmissions.find((s) => s.organizationId === (currentProfile?.id ?? "___")) ?? null;
   const isDocumentSubmissionApproved = isApprovedDocumentSubmission(submission);
+  const isDocumentSubmissionLocked = !isEditableDocumentSubmission(submission);
   const userNotifications = useMemo(
     () => state.notifications.filter((notification) => notification.userId === user?.id),
     [state.notifications, user?.id],
@@ -1380,8 +1388,8 @@ export default function UserPortal({ section }: { section: string }) {
     options?: { ignoreExistingApprovedFile?: boolean },
   ) => {
     if (!file) return "No file was selected.";
-    if (isDocumentSubmissionApproved) {
-      return "Approved submitted documents can no longer be changed or replaced.";
+    if (isDocumentSubmissionLocked) {
+      return "Submitted documents can no longer be changed or replaced until the admin requests a revision.";
     }
 
     const existingFile = documentFilesByTypeId.get(documentTypeId);
@@ -1389,13 +1397,8 @@ export default function UserPortal({ section }: { section: string }) {
       return "This approved document can no longer be changed or removed.";
     }
 
-    const isMembersList = documentTypeId === "yorp-members";
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-    const isSpreadsheet = /\.(xlsx|xls)$/i.test(file.name);
-    if (!isPdf && !(isMembersList && isSpreadsheet)) {
-      return isMembersList
-        ? "Please upload a PDF or XLSX file for the members list document slot."
-        : "Please upload a PDF file for document submission.";
+    if (!isPdfFile(file)) {
+      return "Please upload a PDF file for document submission.";
     }
 
     return null;
@@ -1467,10 +1470,10 @@ export default function UserPortal({ section }: { section: string }) {
 
   const openBatchUploadWorkspace = () => {
     if (!ensureCompletedOrganizationProfile()) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be changed or replaced.",
+        description: "Submitted documents can no longer be changed or replaced until the admin requests a revision.",
         variant: "destructive",
       });
       return;
@@ -1619,10 +1622,10 @@ export default function UserPortal({ section }: { section: string }) {
   const handleDocumentUpload = async (documentTypeName: string, file: File | null) => {
     if (!file) return;
     if (!ensureCompletedOrganizationProfile()) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be changed or replaced.",
+        description: "Submitted documents can no longer be changed or replaced until the admin requests a revision.",
         variant: "destructive",
       });
       return;
@@ -1717,10 +1720,10 @@ export default function UserPortal({ section }: { section: string }) {
 
   const confirmRemoveDocument = async () => {
     if (!pendingDocumentRemoval) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be removed.",
+        description: "Submitted documents can no longer be removed until the admin requests a revision.",
         variant: "destructive",
       });
       setPendingDocumentRemoval(null);
@@ -1754,10 +1757,10 @@ export default function UserPortal({ section }: { section: string }) {
 
   const saveAttachedDocumentChanges = async () => {
     if (!attachedDocumentEditor) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be changed or removed.",
+        description: "Submitted documents can no longer be changed or removed until the admin requests a revision.",
         variant: "destructive",
       });
       closeAttachedDocumentEditor();
@@ -2367,6 +2370,25 @@ export default function UserPortal({ section }: { section: string }) {
 
     try {
       const selectedFile = fileList[0];
+      const uploadError = await validatePdfUpload(selectedFile);
+      if (uploadError) {
+        toast({
+          title: "PDF required",
+          description: uploadError,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const canEditSubmission = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(report.status);
+      if (!canEditSubmission) {
+        toast({
+          title: "Submission locked",
+          description: "Files cannot be uploaded, replaced, or removed while this submission is under review.",
+          variant: "destructive",
+        });
+        return;
+      }
       const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
       const canReplaceExistingFiles =
         report.status === "needs_revision" || report.status === "rejected_red";
@@ -2413,6 +2435,17 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const handleDeleteLiquidationFile = async (file: LiquidationReportFile) => {
+    const report = liquidationReports.find((entry) => entry.id === file.liquidationReportId);
+    const canEditSubmission = report && ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(report.status);
+    if (!canEditSubmission) {
+      toast({
+        title: "Submission locked",
+        description: "Files cannot be removed while this submission is under review.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await deleteLiquidationReportFileInSupabase(file.id, file.fileUrl);
       const remoteSnapshot = await loadLydoConnectSupabaseState();
@@ -2457,7 +2490,8 @@ export default function UserPortal({ section }: { section: string }) {
 
   const handleSubmitLiquidation = async (report: LiquidationReport) => {
     const attachedFiles = liquidationFilesByReportId.get(report.id) ?? [];
-    if (attachedFiles.length === 0) {
+    const hasAttachedPdf = attachedFiles.some((file) => file.fileType === "application/pdf" && /\.pdf$/i.test(file.fileName));
+    if (!hasAttachedPdf) {
       toast({
         title: report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red"
           ? "Attachment required for resubmission"
@@ -4096,7 +4130,7 @@ export default function UserPortal({ section }: { section: string }) {
 
         // Document detail sub-view
         if (documentDetailMode && attachedDocumentEditor && detailDocumentType && detailFile) {
-          const detailFileLocked = isDocumentSubmissionApproved || isApprovedSubmissionFile(detailFile);
+          const detailFileLocked = isDocumentSubmissionLocked || isApprovedSubmissionFile(detailFile);
           const detailFileTypeLabel = getDocumentPrimaryFileTypeLabel(detailDocumentType.id);
           const detailActivityItems = detailFileTimeline.map((entry, index) => ({
             id: `${entry.date}-${index}`,
@@ -4681,6 +4715,7 @@ export default function UserPortal({ section }: { section: string }) {
                       <Button
                         type="button"
                         className="h-10 w-full sm:w-auto"
+                        disabled={isDocumentSubmissionLocked}
                         onClick={openBatchUploadWorkspace}
                       >
                         <FileUp className="mr-2 h-4 w-4" />
@@ -4781,6 +4816,7 @@ export default function UserPortal({ section }: { section: string }) {
                                   type="button"
                                   size="sm"
                                   className="h-10 w-full sm:w-auto"
+                                  disabled={isDocumentSubmissionLocked}
                                   onClick={openBatchUploadWorkspace}
                                 >
                                   <FileUp className="mr-2 h-4 w-4" />
@@ -6062,7 +6098,7 @@ export default function UserPortal({ section }: { section: string }) {
             <input
               ref={liquidationFileInputRef}
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+              accept=".pdf,application/pdf"
               className="sr-only"
               onChange={async (event) => {
                 const targetReport = liquidationReports.find((item) => item.id === liquidationUploadTargetId) ?? null;
@@ -6094,6 +6130,7 @@ export default function UserPortal({ section }: { section: string }) {
                     "rejected_red",
                   ]);
                   const liquidationLockedStatuses = new Set<LiquidationStatus>([
+                    "submitted",
                     "approved_for_ftf_green",
                     "hard_copy_submitted",
                     "completed_liquidated",
@@ -6257,6 +6294,7 @@ export default function UserPortal({ section }: { section: string }) {
                       selectedMobileReport.status === "overdue" ||
                       (selectedMobileReport.deadlineAt ? new Date(selectedMobileReport.deadlineAt) < new Date() : false);
                     const selectedIsSubmittable = liquidationSubmittableStatuses.has(selectedMobileReport.status);
+                    const selectedCanManageFiles = !liquidationLockedStatuses.has(selectedMobileReport.status);
                     const selectedCanRemoveSubmittedFile = !liquidationLockedStatuses.has(selectedMobileReport.status);
                     const selectedCanUploadReplacement =
                       selectedMobileReport.status === "needs_revision" || selectedMobileReport.status === "rejected_red";
@@ -6413,6 +6451,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     type="button"
                                     variant="outline"
                                     className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
+                                    disabled={!selectedCanManageFiles}
                                     onClick={() => {
                                       setLiquidationUploadTargetId(selectedMobileReport.id);
                                       liquidationFileInputRef.current?.click();
@@ -6436,11 +6475,12 @@ export default function UserPortal({ section }: { section: string }) {
                                     Upload Another Document
                                   </Button>
                                 ) : null}
-                                {selectedPrimaryFile && selectedCanRemoveSubmittedFile ? (
+                                {selectedPrimaryFile ? (
                                   <Button
                                     type="button"
                                     variant="outline"
                                     className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal border-destructive/30 text-destructive hover:border-destructive/40 hover:bg-destructive/5 hover:text-destructive"
+                                    disabled={!selectedCanRemoveSubmittedFile}
                                     onClick={() =>
                                       requestDeleteConfirmation({
                                         title: "Remove Submitted File",
@@ -6459,7 +6499,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
                                     onClick={() => setMobileLiquidationFormReportId(selectedMobileReport.id)}
                                   >
-                                    <Receipt className="mr-2 h-4 w-4" />
+                                    <PenSquare className="mr-2 h-4 w-4" />
                                     Submit Note
                                   </Button>
                                 ) : null}
@@ -6828,7 +6868,8 @@ export default function UserPortal({ section }: { section: string }) {
                                           report.remarks?.trim().length > 0 &&
                                           (report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red");
                                         const isSubmittable = liquidationSubmittableStatuses.has(report.status);
-                                        const canRemoveSubmittedFile = !liquidationLockedStatuses.has(report.status);
+                                        const canManageFiles = !liquidationLockedStatuses.has(report.status);
+                                        const canRemoveSubmittedFile = canManageFiles;
                                         const canUploadReplacement = report.status === "needs_revision" || report.status === "rejected_red";
                                         const isSubmitting = submittingLiquidationId === report.id;
                                         const hasAttachedFile = attachedFiles.length > 0;
@@ -6948,12 +6989,13 @@ export default function UserPortal({ section }: { section: string }) {
                                                     <DropdownMenuContent align="end" className="min-w-[210px]">
                                                       {isSubmittable ? (
                                                         <DropdownMenuItem onClick={() => setDesktopLiquidationFormReportId(report.id)}>
-                                                          <Receipt className="mr-2 h-4 w-4" />
+                                                          <PenSquare className="mr-2 h-4 w-4" />
                                                           Submit Note
                                                         </DropdownMenuItem>
                                                       ) : null}
                                                       {!primaryFile ? (
                                                         <DropdownMenuItem
+                                                          disabled={!canManageFiles}
                                                           onClick={() => {
                                                             setLiquidationUploadTargetId(report.id);
                                                             liquidationFileInputRef.current?.click();
@@ -6979,24 +7021,23 @@ export default function UserPortal({ section }: { section: string }) {
                                                               Upload Another Document
                                                             </DropdownMenuItem>
                                                           ) : null}
-                                                          {canRemoveSubmittedFile ? (
-                                                            <>
-                                                              <DropdownMenuSeparator />
-                                                              <DropdownMenuItem
-                                                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                                onClick={() =>
-                                                                  requestDeleteConfirmation({
-                                                                    title: "Remove Submitted File",
-                                                                    description: `Are you sure you want to delete "${primaryFile.fileName}"? This action cannot be undone.`,
-                                                                    action: () => handleDeleteLiquidationFile(primaryFile),
-                                                                  })
-                                                                }
-                                                              >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Remove Submitted File
-                                                              </DropdownMenuItem>
-                                                            </>
-                                                          ) : null}
+                                                          <>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                              disabled={!canRemoveSubmittedFile}
+                                                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                              onClick={() =>
+                                                                requestDeleteConfirmation({
+                                                                  title: "Remove Submitted File",
+                                                                  description: `Are you sure you want to delete "${primaryFile.fileName}"? This action cannot be undone.`,
+                                                                  action: () => handleDeleteLiquidationFile(primaryFile),
+                                                                })
+                                                              }
+                                                            >
+                                                              <Trash2 className="mr-2 h-4 w-4" />
+                                                              Remove Submitted File
+                                                            </DropdownMenuItem>
+                                                          </>
                                                         </>
                                                       )}
                                                     </DropdownMenuContent>
@@ -11081,9 +11122,9 @@ Validated {validatedDate}</p>
           }
         }}
       >
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[calc(100dvh-1rem)] overflow-x-hidden overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-lg sm:text-xl">{attachedDocumentPreviewTitle || "Attached File"}</DialogTitle>
+            <DialogTitle className="break-words text-lg sm:text-xl">{attachedDocumentPreviewTitle || "Attached File"}</DialogTitle>
             <DialogDescription className="text-sm">
               {isApprovedSubmissionFile(attachedDocumentEditor?.file)
                 ? "This approved file is now locked. You can review or open it, but you can no longer change or remove it."
@@ -11095,7 +11136,7 @@ Validated {validatedDate}</p>
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Attached file preview</p>
-                  <p className="break-all text-sm font-medium text-foreground sm:truncate">
+                  <p className="break-words text-sm font-medium text-foreground sm:truncate">
                     {attachedDocumentEditor?.file.fileName || "Uploaded file"}
                   </p>
                 </div>
@@ -11152,7 +11193,7 @@ Validated {validatedDate}</p>
               {/* File info */}
               <div>
                 <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Current file</p>
-                <p className="mt-1 break-all text-sm font-medium text-foreground">
+                <p className="mt-1 break-words text-sm font-medium text-foreground">
                   {attachedDocumentEditor?.file.fileName || "Uploaded file"}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
@@ -11164,7 +11205,7 @@ Validated {validatedDate}</p>
               <div className="h-px bg-border/40" />
               {attachedDocumentEditor?.file &&
               (attachedDocumentEditor.file.adminStatus === "needs_revision" || attachedDocumentEditor.file.adminStatus === "rejected_red") &&
-              !isDocumentSubmissionApproved &&
+              !isDocumentSubmissionLocked &&
               !isApprovedSubmissionFile(attachedDocumentEditor.file) ? (
                 <>
                   <input
@@ -11194,7 +11235,7 @@ Validated {validatedDate}</p>
                       Change File
                     </Button>
                     {attachedDocumentReplacementFile ? (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="break-words text-xs text-muted-foreground">
                         Replacement: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
                       </p>
                     ) : null}
