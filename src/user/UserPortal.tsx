@@ -676,6 +676,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [batchUploadConfirmOpen, setBatchUploadConfirmOpen] = useState(false);
   const [batchUploadSubmitting, setBatchUploadSubmitting] = useState(false);
   const [downloadingAllTemplates, setDownloadingAllTemplates] = useState(false);
+  const [downloadingTemplateId, setDownloadingTemplateId] = useState("");
   const [batchUploadSubmitMode, setBatchUploadSubmitMode] = useState<"draft" | "review">("review");
   const [batchDroppedFiles, setBatchDroppedFiles] = useState<BatchDroppedDocumentFile[]>([]);
   const [batchUploadResult, setBatchUploadResult] = useState<BatchUploadResultSummary | null>(null);
@@ -1204,7 +1205,21 @@ export default function UserPortal({ section }: { section: string }) {
     URL.revokeObjectURL(objectUrl);
   };
 
-  const handleDownloadTemplate = async (template: (typeof templateDocuments)[number]) => {
+  const getTemplateDownloadFileName = (template: { templateFileName?: string; templateFileUrl?: string; name: string }) => {
+    const storedName = template.templateFileName?.trim();
+    if (storedName && storedName.includes(".")) return storedName;
+
+    const urlSource = (template.templateFileUrl || "").split(/[?#]/)[0];
+    const urlFileName = urlSource.split("/").pop()?.trim();
+    if (urlFileName && urlFileName.includes(".")) return urlFileName;
+
+    const match = urlSource.match(/\.([a-z0-9]{1,8})$/i);
+    const ext = match ? match[1] : "";
+    const baseName = storedName || template.name;
+    return ext ? `${baseName}.${ext}` : baseName;
+  };
+
+  const handleDownloadTemplate = async (template: (typeof state.templates)[number]) => {
     if (!template.templateFileUrl) {
       toast({
         title: "Template currently unavailable",
@@ -1214,14 +1229,20 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (downloadingTemplateId === template.id) return;
+
+    setDownloadingTemplateId(template.id);
     try {
-      await downloadResolvedFile(template.templateFileUrl, template.templateFileName || template.name);
+      const downloadName = getTemplateDownloadFileName(template);
+      await downloadResolvedFile(template.templateFileUrl, downloadName);
     } catch (error) {
       toast({
         title: "Unable to download template",
         description: error instanceof Error ? error.message : "The template could not be downloaded right now.",
         variant: "destructive",
       });
+    } finally {
+      setDownloadingTemplateId("");
     }
   };
 
@@ -1250,7 +1271,7 @@ export default function UserPortal({ section }: { section: string }) {
             throw new Error(`Missing template: ${template.name}`);
           }
           const blob = await response.blob();
-          zip.file(template.templateFileName || `${template.name}.pdf`, blob);
+          zip.file(getTemplateDownloadFileName(template), blob);
         }),
       );
 
@@ -3222,11 +3243,20 @@ export default function UserPortal({ section }: { section: string }) {
                         <Button
                           type="button"
                           className="w-full sm:flex-1"
-                          disabled={!template.templateFileUrl}
+                          disabled={!template.templateFileUrl || downloadingTemplateId === template.id}
                           onClick={() => void handleDownloadTemplate(template)}
                         >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
+                          {downloadingTemplateId === template.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardContent>
@@ -3279,11 +3309,20 @@ export default function UserPortal({ section }: { section: string }) {
                           <Button
                             type="button"
                             className="w-full sm:flex-1"
-                            disabled={!template.templateFileUrl}
-                            onClick={() => void openFile(template.templateFileUrl, template.templateFileName || template.name)}
+                            disabled={!template.templateFileUrl || downloadingTemplateId === template.id}
+                            onClick={() => void handleDownloadTemplate(template)}
                           >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
+                            {downloadingTemplateId === template.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </>
+                            )}
                           </Button>
                         </div>
                       </CardContent>
