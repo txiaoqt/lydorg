@@ -28,7 +28,13 @@ import {
   upsertOrganizationProfileInSupabase,
   resubmitOrganizationUrnInSupabase,
 } from "@/lib/lydo-connect-supabase";
-import { organizationEmailPattern, philippineContactNumberPattern } from "@/lib/organization-profile-domain";
+import {
+  organizationEmailPattern,
+  philippineContactNumberPattern,
+  isValidPersonName,
+  isValidFacebookUrl,
+} from "@/lib/organization-profile-domain";
+import { generateUniqueUrn } from "@/lib/urn-registration";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import { PwaBackButton } from "../PwaBackButton";
@@ -347,7 +353,7 @@ function ProfileOverview({ data }: { data: PortalData }) {
       </ProfileSection>
       <ProfileSection title="Organization Snapshot">
         <dl className="pwa-profile-fields">
-          <ProfileField label="Organization Type" value={profile?.isExistingOrganization ? "Existing organization" : "New organization"} />
+          <ProfileField label="Organization Type" value={profile?.isExistingOrganization ? "Existing Organization" : "New Organization"} />
           <ProfileField label="Location" value={locationLabel(profile)} />
           <ProfileField label="Classification" value={classificationLabel(profile)} />
           <ProfileField label="Unique Registration Number (URN)" value={profile?.isExistingOrganization ? requiredValue(profile.organizationIdentifierNumber) : "Not required for this organization type"} />
@@ -380,7 +386,7 @@ function ProfileDetails({ data }: { data: PortalData }) {
   const groups = [
     ["Organization Information", [
       ["Organization Name", requiredValue(profile?.organizationName)],
-      ["Organization Type", profile?.isExistingOrganization ? "Existing organization" : "New organization"],
+      ["Organization Type", profile?.isExistingOrganization ? "Existing Organization" : "New Organization"],
       ["Unique Registration Number (URN)", profile?.isExistingOrganization ? requiredValue(profile.organizationIdentifierNumber) : "Not required for this organization type"],
     ]],
     ["Contact & Location", [
@@ -566,6 +572,21 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       toast({ title: "Invalid contact number", description: "Enter an 11-digit Philippine mobile number starting with 09.", variant: "destructive" });
       return;
     }
+    if (next.representativeName && !isValidPersonName(next.representativeName)) {
+      toast({ title: "Invalid Representative Name", description: "Representative name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.).", variant: "destructive" });
+      return;
+    }
+    if (next.adviserName && !isValidPersonName(next.adviserName)) {
+      toast({ title: "Invalid Adviser Name", description: "Adviser name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.).", variant: "destructive" });
+      return;
+    }
+    if (next.facebookPageUrl && !isValidFacebookUrl(next.facebookPageUrl)) {
+      toast({ title: "Invalid Facebook URL", description: "Enter a valid Facebook profile or page URL starting with https://facebook.com, https://www.facebook.com, or https://fb.com.", variant: "destructive" });
+      return;
+    }
+    if (!next.isExistingOrganization && !next.organizationIdentifierNumber) {
+      next.organizationIdentifierNumber = generateUniqueUrn();
+    }
     setSaving(true);
     try {
       if (
@@ -624,7 +645,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                 <div className="pwa-profile-editor-grid">
                   <EditorField label="District" required><Input value={draft.district} readOnly /></EditorField>
                   <EditorField label="Barangay" required><Input value={draft.barangay} readOnly /></EditorField>
-                  <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing organization" : "New organization"} readOnly /></EditorField>
+                  <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing Organization" : "New Organization"} readOnly /></EditorField>
                   <EditorField label="Unique Registration Number (URN)">
                     <Input
                       value={draft.organizationIdentifierNumber || "Auto-generated upon registration"}
@@ -633,13 +654,13 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   </EditorField>
                   <EditorField label="Major Classification" required>
                     <select value={draft.majorClassification} onChange={(event) => setField("majorClassification", event.target.value as OrganizationProfile["majorClassification"])}>
-                      <option value="">Select major classification</option>
+                      <option value="">Select Major Classification</option>
                       {majorClassificationOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                     </select>
                   </EditorField>
                   <EditorField label="Sub-classification" required>
                     <select value={draft.subClassification} onChange={(event) => setField("subClassification", event.target.value as OrganizationProfile["subClassification"])}>
-                      <option value="">Select sub-classification</option>
+                      <option value="">Select Sub Classification</option>
                       {subClassificationOptions.map((option) => <option key={option} value={option}>{formatSubClassificationLabel(option)}</option>)}
                     </select>
                   </EditorField>

@@ -4,6 +4,7 @@ import {
   getYpopEventEndAt,
   getYpopEventJoinEligibility,
   isPastYpopActivityDate,
+  validateYpopSubmissionEligibility,
   YPOP_TIME_ZONE,
 } from "./ypop-event-eligibility";
 
@@ -49,4 +50,31 @@ describe("YPOP event eligibility", () => {
       now: new Date("2026-06-30T09:00:00Z"),
     }).reason).toBe("period_closed");
   });
+
+  it("blocks YPOP validation request submission if no City-Led Activities are logged", () => {
+    const entry = { id: "e1", status: "draft" } as any;
+    const res = validateYpopSubmissionEligibility({ entry, participations: [], profile });
+    expect(res.eligible).toBe(false);
+    expect(res.reason).toBe("no_city_led_activities");
+    expect(res.message).toContain("You must log at least one City-Led Activity");
+  });
+
+  it("blocks YPOP validation request submission if supporting proof documents are missing", () => {
+    const entry = { id: "e1", status: "draft" } as any;
+    const participations = [{ id: "p1", activityId: "a1", proofSubmittedAt: "" }] as any;
+    const res = validateYpopSubmissionEligibility({ entry, participations, eventFiles: [], entryFiles: [], profile });
+    expect(res.eligible).toBe(false);
+    expect(res.reason).toBe("missing_supporting_documents");
+    expect(res.message).toContain("You must attach all required supporting proof documents");
+  });
+
+  it("allows YPOP validation request submission when at least one City-Led Activity is logged and proof documents are attached", () => {
+    const entry = { id: "e1", status: "draft" } as any;
+    const participations = [{ id: "p1", activityId: "a1", proofSubmittedAt: "2026-07-01T10:00:00Z" }] as any;
+    const eventFiles = [{ id: "f1", participationId: "p1" }] as any;
+    const res = validateYpopSubmissionEligibility({ entry, participations, eventFiles, profile });
+    expect(res.eligible).toBe(true);
+    expect(res.message).toBe("Ready for validation submission.");
+  });
 });
+

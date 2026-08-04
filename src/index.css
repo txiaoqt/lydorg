@@ -35,6 +35,17 @@
     overflow: hidden;
   }
 
+  input[readonly],
+  textarea[readonly],
+  select[disabled],
+  input[disabled],
+  textarea[disabled] {
+    background-color: hsl(var(--muted) / 0.7) !important;
+    color: hsl(var(--muted-foreground)) !important;
+    cursor: not-allowed !important;
+    border-color: hsl(var(--border) / 0.9) !important;
+  }
+
   :root {
     /* Shared Y-TRACE palette, aligned with the installed PWA. */
     --yt-bg: #f6f8fc;

@@ -413,6 +413,27 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 const sanitizeFileName = (value: string) => value.replace(/[^a-zA-Z0-9._-]/g, "-");
 
+const editableLiquidationStatuses = new Set<LiquidationReport["status"]>([
+  "pending_activity_completion",
+  "not_started",
+  "draft",
+  "needs_revision",
+  "overdue",
+  "rejected_red",
+]);
+
+const assertPdfUpload = async (file: File, label: string) => {
+  if (file.type !== "application/pdf" || !/\.pdf$/i.test(file.name)) {
+    throw new Error(`${label} must be a PDF file.`);
+  }
+  if (!file.size) throw new Error(`${label} cannot be empty.`);
+
+  const signature = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  if (String.fromCharCode(...signature) !== "%PDF-") {
+    throw new Error(`${label} does not appear to be a valid PDF.`);
+  }
+};
+
 const buildStorageUri = (bucket: string, path: string) => `${STORAGE_URI_PREFIX}${bucket}/${path}`;
 
 const parseStorageUri = (value: string) => {
@@ -1369,6 +1390,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   submitMode?: "draft" | "review";
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
+  await assertPdfUpload(params.file, "Document submission");
 
   const {
     data: { session },
@@ -1400,6 +1422,9 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   }
 
   const submission = await ensureDocumentSubmission(organizationProfile.id, session.user.id);
+  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status)) {
+    throw new Error("This document submission is locked while it is under admin review.");
+  }
   const { data: existingRows, error: existingRowsError } = await supabase!
     .from("document_submission_files")
     .select("id,file_url")
@@ -1488,6 +1513,7 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
   file: File;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
+  await assertPdfUpload(params.file, "Replacement document");
 
   const {
     data: { session },
@@ -1496,6 +1522,25 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
 
   const organizationProfile = await fetchOrganizationProfile(session.user.id);
   if (!organizationProfile) throw new Error("No organization profile was found for this account.");
+
+  const { data: existingFile, error: existingFileError } = await supabase
+    .from("document_submission_files")
+    .select("id,submission_id")
+    .eq("id", params.fileId)
+    .single();
+  if (existingFileError || !existingFile) {
+    throw new Error(existingFileError?.message ?? "The document to replace could not be found.");
+  }
+  const { data: submission, error: submissionError } = await supabase
+    .from("document_submissions")
+    .select("id,status")
+    .eq("id", existingFile.submission_id as string)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+  if (!["needs_revision", "rejected_red"].includes(submission.status as string)) {
+    throw new Error("A document can only be replaced after the admin requests a revision.");
+  }
 
   const documentTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
   const safeFileName = sanitizeFileName(params.file.name);
@@ -1529,6 +1574,46 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
     await removeStorageObjects([storageUri]).catch(() => undefined);
     throw error;
   }
+};
+
+const submitDocumentSubmissionForReview = async (submissionId: string) => {
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: submission, error: submissionError } = await supabase!
+    .from("document_submissions")
+    .select("id,status")
+    .eq("id", submissionId)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status as string)) {
+    throw new Error("This document submission is already under review.");
+  }
+
+  const { data: attachedFiles, error: filesQueryError } = await supabase!
+    .from("document_submission_files")
+    .select("id,file_name,file_type")
+    .eq("submission_id", submissionId);
+  if (filesQueryError) throw new Error(filesQueryError.message);
+  const hasPdfFile = ((attachedFiles as Array<{ file_name: string; file_type: string }> | null) ?? []).some(
+    (file) => file.file_type === "application/pdf" && /\.pdf$/i.test(file.file_name),
+  );
+  if (!hasPdfFile) {
+    throw new Error("Attach a PDF document before submitting documents for review.");
+  }
+
+  const submittedAt = new Date().toISOString();
+  const { error: filesError } = await supabase!
+    .from("document_submission_files")
+    .update({ admin_status: "under_admin_review", reviewed_at: null, updated_at: submittedAt })
+    .eq("submission_id", submissionId)
+    .eq("admin_status", "draft");
+  if (filesError) throw new Error(filesError.message);
+
+  const { error: updateError } = await supabase!
+    .from("document_submissions")
+    .update({ status: "under_admin_review", user_confirmed: true, submitted_at: submittedAt, updated_at: submittedAt })
+    .eq("id", submissionId);
+  if (updateError) throw new Error(updateError.message);
 };
 
 export const submitOrganizationDocumentsBatchToSupabase = async (params: {
@@ -1573,7 +1658,9 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
         validationStatus: document.validationStatus ?? "correct",
         adminRemarks: document.adminRemarks,
         ocrMetadata: document.ocrMetadata ?? null,
-        submitMode,
+        // Keep the parent submission mutable until every selected file has
+        // been stored. The final status transition happens atomically below.
+        submitMode: submitMode === "review" ? "draft" : submitMode,
       });
 
       results.push({
@@ -1592,6 +1679,23 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
         success: false,
         error: error instanceof Error ? error.message : "The document could not be uploaded.",
       });
+    }
+  }
+
+  if (submitMode === "review") {
+    const submissionIds = [...new Set(results.filter((result) => result.success && result.submissionId).map((result) => result.submissionId!))];
+    for (const submissionId of submissionIds) {
+      try {
+        await submitDocumentSubmissionForReview(submissionId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
+        results.forEach((result) => {
+          if (result.submissionId === submissionId && result.success) {
+            result.success = false;
+            result.error = message;
+          }
+        });
+      }
     }
   }
 
@@ -1651,7 +1755,7 @@ export const submitDocumentReviewBatchToSupabase = async (params: {
 export const removeOrganizationDocumentFromSupabase = async (fileId: string) => {
   if (!supabase) throw new Error("Supabase is not configured.");
 
-  await getAuthenticatedOrganizationContext();
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
 
   const { data: existingRow, error: existingError } = await supabase!
     .from("document_submission_files")
@@ -1660,6 +1764,17 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
     .single();
 
   if (existingError || !existingRow) throw new Error(existingError?.message ?? "The uploaded document could not be found.");
+
+  const { data: submission, error: submissionError } = await supabase
+    .from("document_submissions")
+    .select("id,status")
+    .eq("id", existingRow.submission_id as string)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status as string)) {
+    throw new Error("Documents cannot be removed while the submission is under admin review.");
+  }
 
   const submissionId = existingRow.submission_id as string;
   const fileUrl = existingRow.file_url as string;
@@ -2105,7 +2220,18 @@ export const createLiquidationReportFileInSupabase = async (params: {
   liquidationReportId: string;
   file: File;
 }) => {
-  await getAuthenticatedOrganizationContext();
+  await assertPdfUpload(params.file, "Liquidation attachment");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: report, error: reportError } = await supabase!
+    .from("liquidation_reports")
+    .select("id,status")
+    .eq("id", params.liquidationReportId)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
+  if (!editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+    throw new Error("Files cannot be uploaded while this liquidation submission is under review.");
+  }
   const fileUrl = await uploadFileToStorage(LIQUIDATION_REPORT_FILES_BUCKET, params.liquidationReportId, params.file);
 
   const { data, error } = await supabase!
@@ -2126,8 +2252,24 @@ export const createLiquidationReportFileInSupabase = async (params: {
 };
 
 export const deleteLiquidationReportFileInSupabase = async (fileId: string, fileUrl: string) => {
-  await getAuthenticatedOrganizationContext();
-  await removeStorageObjects([fileUrl]);
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: file, error: fileError } = await supabase!
+    .from("liquidation_report_files")
+    .select("id,liquidation_report_id")
+    .eq("id", fileId)
+    .single();
+  if (fileError || !file) throw new Error(fileError?.message ?? "The liquidation attachment could not be found.");
+
+  const { data: report, error: reportError } = await supabase!
+    .from("liquidation_reports")
+    .select("id,status")
+    .eq("id", file.liquidation_report_id as string)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (reportError || !report) throw new Error("The liquidation report could not be verified.");
+  if (!editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+    throw new Error("Files cannot be removed while this liquidation submission is under review.");
+  }
 
   const { error } = await supabase!
     .from("liquidation_report_files")
@@ -2135,6 +2277,7 @@ export const deleteLiquidationReportFileInSupabase = async (fileId: string, file
     .eq("id", fileId);
 
   if (error) throw new Error(error.message);
+  await removeStorageObjects([fileUrl]);
 };
 
 export const createNewsReleaseInSupabase = async (params: {
@@ -2321,7 +2464,30 @@ export const updateLiquidationReportInSupabase = async (
     return mapLiquidationReport(updatedRow as LiquidationReportRow);
   }
 
-  await getAuthenticatedOrganizationContext();
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  if (patch.status !== undefined) {
+    const { data: report, error: reportError } = await supabase
+      .from("liquidation_reports")
+      .select("id,status")
+      .eq("id", liquidationReportId)
+      .eq("organization_id", organizationProfile.id)
+      .single();
+    if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
+    if (patch.status !== "submitted" || !editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+      throw new Error("This liquidation status can only be changed by an administrator.");
+    }
+
+    const { data: files, error: filesError } = await supabase
+      .from("liquidation_report_files")
+      .select("file_name,file_type")
+      .eq("liquidation_report_id", liquidationReportId);
+    if (filesError) throw new Error(filesError.message);
+    const hasPdf = ((files as Array<{ file_name: string; file_type: string }> | null) ?? []).some(
+      (file) => file.file_type === "application/pdf" && /\.pdf$/i.test(file.file_name),
+    );
+    if (!hasPdf) throw new Error("Attach a PDF before submitting this liquidation report.");
+  }
 
   const payload: Record<string, unknown> = {};
   if (patch.status !== undefined) payload.status = patch.status;

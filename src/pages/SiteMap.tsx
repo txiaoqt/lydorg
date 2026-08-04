@@ -5,31 +5,34 @@ import Footer from "@/components/Footer";
 
 const siteMapSections: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [
   {
-    title: "Public Pages",
+    title: "Public Website",
     links: [
       { label: "Home", href: "/" },
       { label: "About", href: "/about" },
+      { label: "Forms & Templates", href: "/public-templates" },
+      { label: "News Releases", href: "/news-releases" },
       { label: "FAQs", href: "/faqs" },
       { label: "Contacts", href: "/contacts" },
-      { label: "Site Map", href: "/site-map" },
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms" },
+      { label: "Site Map", href: "/site-map" },
     ],
   },
   {
-    title: "User Portal",
+    title: "Organization Portal",
     links: [
       { label: "Sign In", href: "/signin" },
-      { label: "Sign Up", href: "/signup" },
+      { label: "Create Organization Account", href: "/signup" },
       { label: "Dashboard", href: "/dashboard" },
       { label: "Organization Profile", href: "/organization-profile" },
+      { label: "YPOP (Youth Participation Organization Passport)", href: "/ypop" },
       { label: "Document Submission", href: "/document-submission" },
-      { label: "Budget Request", href: "/budget-request" },
-      { label: "Liquidation and Reporting", href: "/liquidation-reporting" },
-      { label: "News Releases", href: "/news-releases" },
-      { label: "Public Transparency Posting", href: "/public-transparency" },
-      { label: "Compliance Status", href: "/compliance-status" },
+      { label: "Budget Requests", href: "/budget-request" },
+      { label: "Liquidation Reports", href: "/liquidation-reporting" },
+      { label: "News Releases", href: "/portal-news-releases" },
       { label: "Notifications", href: "/notifications" },
+      { label: "Inquiry / Support", href: "/contacts" },
+      { label: "Account Settings", href: "/organization-profile" },
     ],
   },
 ];
@@ -46,7 +49,7 @@ const SiteMap = () => {
               Site Map
             </h1>
             <p className="text-secondary-foreground/70 text-sm sm:text-base md:text-lg leading-relaxed">
-              Complete directory of the Y-TRACE public pages and user portal routes.
+              Complete directory of the Y-TRACE public website pages and Organization Portal workflows.
             </p>
           </div>
         </section>
@@ -58,8 +61,8 @@ const SiteMap = () => {
                 <article key={section.title} className="bg-card border border-border rounded-xl p-5 sm:p-6 card-shadow">
                   <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{section.title}</h2>
                   <ul className="space-y-2 text-sm">
-                    {section.links.map((link) => (
-                      <li key={link.href}>
+                    {section.links.map((link, index) => (
+                      <li key={`${link.href}-${index}`}>
                         <Link to={link.href} className="text-muted-foreground hover:text-primary transition-colors">
                           {link.label}
                         </Link>

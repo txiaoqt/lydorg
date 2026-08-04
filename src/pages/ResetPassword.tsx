@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandLogo from "@/components/BrandLogo";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
+import { checkSignupEmail } from "@/lib/email-validation";
 import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
@@ -173,6 +174,17 @@ const ResetPassword = () => {
     }
 
     setIsLoading(true);
+    const emailAvailability = await checkSignupEmail(normalizedEmail);
+    if (emailAvailability !== "registered") {
+      setIsLoading(false);
+      setInlineError(
+        emailAvailability === "available"
+          ? "No account is registered with this email address."
+          : "We could not verify this email right now. Please try again.",
+      );
+      return;
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: getPasswordResetUrl(),
     });
@@ -289,6 +301,11 @@ const ResetPassword = () => {
                   autoComplete="email"
                   required
                 />
+                {inlineError ? (
+                  <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {inlineError}
+                  </p>
+                ) : null}
               </div>
               <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
                 {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : "Send Reset Link"}
@@ -379,7 +396,7 @@ const ResetPassword = () => {
             </div>
           ) : null}
 
-          {inlineError ? (
+          {inlineError && mode !== "request" ? (
             <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {inlineError}
             </p>

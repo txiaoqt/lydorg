@@ -87,7 +87,7 @@ import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { cn } from "@/lib/utils";
 import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
-import { isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
+import { generateUniqueUrn, isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import { getOrganizationRenewalCountdown } from "@/lib/organization-renewal";
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
 import {
@@ -105,6 +105,8 @@ import {
   getOrganizationProfileCompletionCount,
   getOrganizationProfileCompletionTarget,
   isOrganizationProfileComplete,
+  isValidFacebookUrl,
+  isValidPersonName,
   organizationEmailPattern,
   philippineContactNumberPattern,
 } from "@/lib/organization-profile-domain";
@@ -112,6 +114,7 @@ import {
   getYpopEventJoinEligibility,
   isPastYpopActivityDate,
   parseYpopActivityDate,
+  validateYpopSubmissionEligibility,
 } from "@/lib/ypop-event-eligibility";
 import {
   type BudgetRequest,
@@ -197,10 +200,25 @@ import {
 
 const getReadiness = (filled: number, total: number) => (total === 0 ? 0 : Math.round((filled / total) * 100));
 const normalizeText = (value?: string | null) => value?.trim() ?? "";
+const isPdfFile = (file: File) => file.type === "application/pdf" && /\.pdf$/i.test(file.name);
+const validatePdfUpload = async (file: File) => {
+  if (!isPdfFile(file)) return "Only PDF files can be uploaded for this submission.";
+  if (!file.size) return "The selected PDF is empty.";
+
+  const signature = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  if (String.fromCharCode(...signature) !== "%PDF-") {
+    return "This file does not appear to be a valid PDF.";
+  }
+  return null;
+};
 const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
-const formatCurrency = (value: number) => `PHP ${value.toLocaleString()}`;
+const formatCurrency = (value: number | null | undefined) => {
+  const num = typeof value === "number" && !Number.isNaN(value) ? Math.round(value) : Math.round(Number(value || 0));
+  const safeNum = Number.isNaN(num) ? 0 : num;
+  return `PHP ${safeNum.toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+};
 const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
   if (!request) return "";
   const direct = request.adminRemarks?.trim();
@@ -215,18 +233,14 @@ const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
 };
 const canInlinePreviewFile = (value: string) => /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(value);
 const isImagePreviewFile = (value: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(value);
-const getDocumentUploadAcceptValue = (documentTypeId: string) =>
-  documentTypeId === "yorp-members"
-    ? ".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-    : ".pdf,application/pdf";
-const getDocumentPrimaryFileTypeLabel = (documentTypeId: string) => (documentTypeId === "yorp-members" ? "PDF or XLSX" : "PDF");
-const getDocumentUploadHelpText = (documentTypeId: string) =>
-  documentTypeId === "yorp-members"
-    ? "Upload a PDF or XLSX file."
-    : "Upload a PDF file for submission.";
+const getDocumentUploadAcceptValue = (_documentTypeId: string) => ".pdf,application/pdf";
+const getDocumentPrimaryFileTypeLabel = (_documentTypeId: string) => "PDF";
+const getDocumentUploadHelpText = (_documentTypeId: string) => "Upload a PDF file for submission.";
 const isApprovedSubmissionFile = isApprovedRegistrationDocument;
 const isApprovedDocumentSubmission = (submission?: { status?: string } | null) =>
   submission?.status === "approved" || submission?.status === "approved_green";
+const isEditableDocumentSubmission = (submission?: { status?: string } | null) =>
+  !submission || ["draft", "needs_revision", "rejected_red"].includes(submission.status ?? "draft");
 const deriveOverallDocumentSubmissionStatus = (
   files: SubmissionFile[],
 ): "not_started" | "draft" | "under_admin_review" | "needs_revision" | "approved_green" => {
@@ -275,6 +289,16 @@ const formatShortPortalDate = (value: string) => {
 };
 const budgetNativeSelectClass =
   "h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50";
+const budgetActionLabels: Record<string, string> = {
+  needs_revision: "Revision requested",
+  approved_for_ftf_green: "Submit Onsite",
+  hard_copy_submitted: "Hardcopy Submitted",
+  budget_released: "Budget released",
+  completed: "Completed",
+  submitted: "Submitted for review",
+  rejected_red: "Rejected",
+  draft: "Saved as draft",
+};
 const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
   "approved_for_ftf_green",
   "budget_released",
@@ -553,6 +577,8 @@ export default function UserPortal({ section }: { section: string }) {
     "overview" | "organization-details" | "classification" | "advocacy" | "contacts-socials" | "ypop-participation"
   >("overview");
   const [ocrPreviewOpen, setOcrPreviewOpen] = useState(false);
+  const [portalNewsSearch, setPortalNewsSearch] = useState("");
+  const [portalNewsCategoryFilter, setPortalNewsCategoryFilter] = useState("all");
   const [budgetReviewNote, setBudgetReviewNote] = useState<{ title: string; note: string; status: BudgetRequestStatus } | null>(null);
   const [budgetRecentActivityModal, setBudgetRecentActivityModal] = useState<{
     title: string;
@@ -650,6 +676,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [batchUploadConfirmOpen, setBatchUploadConfirmOpen] = useState(false);
   const [batchUploadSubmitting, setBatchUploadSubmitting] = useState(false);
   const [downloadingAllTemplates, setDownloadingAllTemplates] = useState(false);
+  const [downloadingTemplateId, setDownloadingTemplateId] = useState("");
   const [batchUploadSubmitMode, setBatchUploadSubmitMode] = useState<"draft" | "review">("review");
   const [batchDroppedFiles, setBatchDroppedFiles] = useState<BatchDroppedDocumentFile[]>([]);
   const [batchUploadResult, setBatchUploadResult] = useState<BatchUploadResultSummary | null>(null);
@@ -678,23 +705,31 @@ export default function UserPortal({ section }: { section: string }) {
   const profileYpopRef = useRef<HTMLDivElement>(null);
   const profileActivityRef = useRef<HTMLDivElement>(null);
 
+  const initializedYpopBudgetIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (section === "budget-request") {
       const ypopEntryId = searchParams.get("ypopEntryId");
+      if (!ypopEntryId) {
+        initializedYpopBudgetIdRef.current = null;
+        return;
+      }
+      if (initializedYpopBudgetIdRef.current === ypopEntryId) {
+        return;
+      }
       const qualifiedYpopEntry =
-        ypopEntryId &&
-        budgetEligibility.eligible &&
-        budgetEligibility.entry?.id === ypopEntryId
+        budgetEligibility.eligible && budgetEligibility.entry?.id === ypopEntryId
           ? budgetEligibility.entry
           : null;
       if (qualifiedYpopEntry) {
+        initializedYpopBudgetIdRef.current = ypopEntryId;
         const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
         setBudgetForm({ ...blank, budgetRequestType: "ypop_incentive", ypopEntryId: qualifiedYpopEntry.id });
         setBudgetFileDraft(null);
         setShowBudgetForm(true);
-      } else {
-        setShowBudgetForm(false);
       }
+    } else {
+      initializedYpopBudgetIdRef.current = null;
     }
   }, [budgetEligibility, currentProfile?.id, section, searchParams, user?.id]);
 
@@ -888,6 +923,7 @@ export default function UserPortal({ section }: { section: string }) {
   });
   const submission = state.documentSubmissions.find((s) => s.organizationId === (currentProfile?.id ?? "___")) ?? null;
   const isDocumentSubmissionApproved = isApprovedDocumentSubmission(submission);
+  const isDocumentSubmissionLocked = !isEditableDocumentSubmission(submission);
   const userNotifications = useMemo(
     () => state.notifications.filter((notification) => notification.userId === user?.id),
     [state.notifications, user?.id],
@@ -1169,7 +1205,21 @@ export default function UserPortal({ section }: { section: string }) {
     URL.revokeObjectURL(objectUrl);
   };
 
-  const handleDownloadTemplate = async (template: (typeof templateDocuments)[number]) => {
+  const getTemplateDownloadFileName = (template: { templateFileName?: string; templateFileUrl?: string; name: string }) => {
+    const storedName = template.templateFileName?.trim();
+    if (storedName && storedName.includes(".")) return storedName;
+
+    const urlSource = (template.templateFileUrl || "").split(/[?#]/)[0];
+    const urlFileName = urlSource.split("/").pop()?.trim();
+    if (urlFileName && urlFileName.includes(".")) return urlFileName;
+
+    const match = urlSource.match(/\.([a-z0-9]{1,8})$/i);
+    const ext = match ? match[1] : "";
+    const baseName = storedName || template.name;
+    return ext ? `${baseName}.${ext}` : baseName;
+  };
+
+  const handleDownloadTemplate = async (template: (typeof state.templates)[number]) => {
     if (!template.templateFileUrl) {
       toast({
         title: "Template currently unavailable",
@@ -1179,14 +1229,20 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (downloadingTemplateId === template.id) return;
+
+    setDownloadingTemplateId(template.id);
     try {
-      await downloadResolvedFile(template.templateFileUrl, template.templateFileName || template.name);
+      const downloadName = getTemplateDownloadFileName(template);
+      await downloadResolvedFile(template.templateFileUrl, downloadName);
     } catch (error) {
       toast({
         title: "Unable to download template",
         description: error instanceof Error ? error.message : "The template could not be downloaded right now.",
         variant: "destructive",
       });
+    } finally {
+      setDownloadingTemplateId("");
     }
   };
 
@@ -1215,7 +1271,7 @@ export default function UserPortal({ section }: { section: string }) {
             throw new Error(`Missing template: ${template.name}`);
           }
           const blob = await response.blob();
-          zip.file(template.templateFileName || `${template.name}.pdf`, blob);
+          zip.file(getTemplateDownloadFileName(template), blob);
         }),
       );
 
@@ -1376,8 +1432,8 @@ export default function UserPortal({ section }: { section: string }) {
     options?: { ignoreExistingApprovedFile?: boolean },
   ) => {
     if (!file) return "No file was selected.";
-    if (isDocumentSubmissionApproved) {
-      return "Approved submitted documents can no longer be changed or replaced.";
+    if (isDocumentSubmissionLocked) {
+      return "Submitted documents can no longer be changed or replaced until the admin requests a revision.";
     }
 
     const existingFile = documentFilesByTypeId.get(documentTypeId);
@@ -1385,13 +1441,8 @@ export default function UserPortal({ section }: { section: string }) {
       return "This approved document can no longer be changed or removed.";
     }
 
-    const isMembersList = documentTypeId === "yorp-members";
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-    const isSpreadsheet = /\.(xlsx|xls)$/i.test(file.name);
-    if (!isPdf && !(isMembersList && isSpreadsheet)) {
-      return isMembersList
-        ? "Please upload a PDF or XLSX file for the members list document slot."
-        : "Please upload a PDF file for document submission.";
+    if (!isPdfFile(file)) {
+      return "Please upload a PDF file for document submission.";
     }
 
     return null;
@@ -1463,10 +1514,10 @@ export default function UserPortal({ section }: { section: string }) {
 
   const openBatchUploadWorkspace = () => {
     if (!ensureCompletedOrganizationProfile()) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be changed or replaced.",
+        description: "Submitted documents can no longer be changed or replaced until the admin requests a revision.",
         variant: "destructive",
       });
       return;
@@ -1615,10 +1666,10 @@ export default function UserPortal({ section }: { section: string }) {
   const handleDocumentUpload = async (documentTypeName: string, file: File | null) => {
     if (!file) return;
     if (!ensureCompletedOrganizationProfile()) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be changed or replaced.",
+        description: "Submitted documents can no longer be changed or replaced until the admin requests a revision.",
         variant: "destructive",
       });
       return;
@@ -1713,10 +1764,10 @@ export default function UserPortal({ section }: { section: string }) {
 
   const confirmRemoveDocument = async () => {
     if (!pendingDocumentRemoval) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be removed.",
+        description: "Submitted documents can no longer be removed until the admin requests a revision.",
         variant: "destructive",
       });
       setPendingDocumentRemoval(null);
@@ -1750,10 +1801,10 @@ export default function UserPortal({ section }: { section: string }) {
 
   const saveAttachedDocumentChanges = async () => {
     if (!attachedDocumentEditor) return;
-    if (isDocumentSubmissionApproved) {
+    if (isDocumentSubmissionLocked) {
       toast({
         title: "Submission locked",
-        description: "Approved submitted documents can no longer be changed or removed.",
+        description: "Submitted documents can no longer be changed or removed until the admin requests a revision.",
         variant: "destructive",
       });
       closeAttachedDocumentEditor();
@@ -2075,6 +2126,40 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (trimmedProfile.representativeName && !isValidPersonName(trimmedProfile.representativeName)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Representative Name",
+        description: "Representative name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.). Numbers and special symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedProfile.adviserName && !isValidPersonName(trimmedProfile.adviserName)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Adviser Name",
+        description: "Adviser name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.). Numbers and special symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedProfile.facebookPageUrl && !isValidFacebookUrl(trimmedProfile.facebookPageUrl)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "contact-social"])));
+      toast({
+        title: "Invalid Facebook URL",
+        description: "Please enter a valid Facebook profile or page URL starting with https://facebook.com, https://www.facebook.com, or https://fb.com.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trimmedProfile.isExistingOrganization && !trimmedProfile.organizationIdentifierNumber) {
+      trimmedProfile.organizationIdentifierNumber = generateUniqueUrn();
+    }
+
     setSavingProfile(true);
     try {
       if (
@@ -2089,7 +2174,7 @@ export default function UserPortal({ section }: { section: string }) {
       setProfileDraft(savedProfile);
       setIsProfileDraftDirty(false);
       notifyAdmin({
-        title: savedProfile.isExistingOrganization ? "Existing organization profile updated" : "Organization profile updated",
+        title: savedProfile.isExistingOrganization ? "Existing Organization profile updated" : "Organization profile updated",
         message: savedProfile.isExistingOrganization
           ? `${savedProfile.organizationName} updated its profile and submitted an existing organization identifier for admin verification.`
           : `${savedProfile.organizationName} updated its profile and sent it for admin review.`,
@@ -2213,6 +2298,15 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (!Number.isInteger(nextBudgetRequest.requestedAmount) || nextBudgetRequest.requestedAmount % 1 !== 0) {
+      toast({
+        title: "Whole peso amount required",
+        description: "Requested amount must be a whole peso number without decimals.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const existingBudgetFile = budgetRequestFilesByBudgetId.get(nextBudgetRequest.id);
     if (!budgetFileDraft && !existingBudgetFile) {
       toast({
@@ -2329,6 +2423,25 @@ export default function UserPortal({ section }: { section: string }) {
 
     try {
       const selectedFile = fileList[0];
+      const uploadError = await validatePdfUpload(selectedFile);
+      if (uploadError) {
+        toast({
+          title: "PDF required",
+          description: uploadError,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const canEditSubmission = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(report.status);
+      if (!canEditSubmission) {
+        toast({
+          title: "Submission locked",
+          description: "Files cannot be uploaded, replaced, or removed while this submission is under review.",
+          variant: "destructive",
+        });
+        return;
+      }
       const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
       const canReplaceExistingFiles =
         report.status === "needs_revision" || report.status === "rejected_red";
@@ -2375,6 +2488,17 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const handleDeleteLiquidationFile = async (file: LiquidationReportFile) => {
+    const report = liquidationReports.find((entry) => entry.id === file.liquidationReportId);
+    const canEditSubmission = report && ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(report.status);
+    if (!canEditSubmission) {
+      toast({
+        title: "Submission locked",
+        description: "Files cannot be removed while this submission is under review.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await deleteLiquidationReportFileInSupabase(file.id, file.fileUrl);
       const remoteSnapshot = await loadLydoConnectSupabaseState();
@@ -2419,7 +2543,8 @@ export default function UserPortal({ section }: { section: string }) {
 
   const handleSubmitLiquidation = async (report: LiquidationReport) => {
     const attachedFiles = liquidationFilesByReportId.get(report.id) ?? [];
-    if (attachedFiles.length === 0) {
+    const hasAttachedPdf = attachedFiles.some((file) => file.fileType === "application/pdf" && /\.pdf$/i.test(file.fileName));
+    if (!hasAttachedPdf) {
       toast({
         title: report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red"
           ? "Attachment required for resubmission"
@@ -2534,9 +2659,18 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const openBudgetRecentActivityModal = (request: BudgetRequest) => {
-    const entries = [...(request.revisionHistory ?? [])]
-      .filter((entry) => entry.changedAt)
-      .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime());
+    const history = request.revisionHistory ?? [];
+    const entries = history.length > 0
+      ? [...history]
+          .filter((entry) => entry.changedAt)
+          .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime())
+      : [
+          {
+            action: request.status,
+            adminRemarks: request.adminRemarks?.trim() || "",
+            changedAt: request.updatedAt || request.createdAt || new Date().toISOString(),
+          },
+        ];
 
     setBudgetRecentActivityModal({
       title: request.activityTitle || "Budget Request Activity",
@@ -3109,11 +3243,20 @@ export default function UserPortal({ section }: { section: string }) {
                         <Button
                           type="button"
                           className="w-full sm:flex-1"
-                          disabled={!template.templateFileUrl}
+                          disabled={!template.templateFileUrl || downloadingTemplateId === template.id}
                           onClick={() => void handleDownloadTemplate(template)}
                         >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
+                          {downloadingTemplateId === template.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardContent>
@@ -3166,11 +3309,20 @@ export default function UserPortal({ section }: { section: string }) {
                           <Button
                             type="button"
                             className="w-full sm:flex-1"
-                            disabled={!template.templateFileUrl}
-                            onClick={() => void openFile(template.templateFileUrl, template.templateFileName || template.name)}
+                            disabled={!template.templateFileUrl || downloadingTemplateId === template.id}
+                            onClick={() => void handleDownloadTemplate(template)}
                           >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
+                            {downloadingTemplateId === template.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </>
+                            )}
                           </Button>
                         </div>
                       </CardContent>
@@ -3199,7 +3351,7 @@ export default function UserPortal({ section }: { section: string }) {
         ] as const;
         const organizationDetailRows = [
           { label: "Organization Name", value: profile.organizationName || "Not set" },
-          { label: "Organization Type", value: profile.isExistingOrganization ? "Existing organization" : "New organization" },
+          { label: "Organization Type", value: profile.isExistingOrganization ? "Existing Organization" : "New Organization" },
           { label: "District", value: profile.district || "Not set" },
           { label: "Barangay", value: profile.barangay || "Not set" },
           {
@@ -3404,7 +3556,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     </div>
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
                                       <FieldGroup label="Organization Type">
-                                        <input value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
+                                        <input value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
                                       </FieldGroup>
                                       <FieldGroup label="Unique Registration Number (URN)">
                                         <input value={profileDraft.organizationIdentifierNumber || "Auto-generated upon registration"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
@@ -3413,7 +3565,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
                                       <FieldGroup label="Major Classification" required>
                                         <select value={profileDraft.majorClassification} onChange={(event) => handleProfileFieldChange("majorClassification", event.target.value as OrganizationProfile["majorClassification"])} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary">
-                                          <option value="">Select major classification</option>
+                                          <option value="">Select Major Classification</option>
                                           {majorClassificationOptions.map((option) => (
                                             <option key={option} value={option}>{option}</option>
                                           ))}
@@ -3421,7 +3573,7 @@ export default function UserPortal({ section }: { section: string }) {
                                       </FieldGroup>
                                       <FieldGroup label="Sub Classification" required>
                                         <select value={profileDraft.subClassification} onChange={(event) => handleProfileFieldChange("subClassification", event.target.value as OrganizationProfile["subClassification"])} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary">
-                                          <option value="">Select sub classification</option>
+                                          <option value="">Select Sub Classification</option>
                                           {subClassificationOptions.map((option) => (
                                             <option key={option} value={option}>{formatSubClassificationLabel(option)}</option>
                                           ))}
@@ -3515,7 +3667,7 @@ export default function UserPortal({ section }: { section: string }) {
                           </FieldGroup>
                           <FieldGroup label="Organization Type">
                             <input
-                              value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"}
+                              value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"}
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                               readOnly
                             />
@@ -3539,7 +3691,7 @@ export default function UserPortal({ section }: { section: string }) {
                               }
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                             >
-                              <option value="">Select major classification</option>
+                              <option value="">Select Major Classification</option>
                               {majorClassificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                   {option}
@@ -3555,7 +3707,7 @@ export default function UserPortal({ section }: { section: string }) {
                               }
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                             >
-                              <option value="">Select sub classification</option>
+                              <option value="">Select Sub Classification</option>
                               {subClassificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                   {formatSubClassificationLabel(option)}
@@ -4058,7 +4210,7 @@ export default function UserPortal({ section }: { section: string }) {
 
         // Document detail sub-view
         if (documentDetailMode && attachedDocumentEditor && detailDocumentType && detailFile) {
-          const detailFileLocked = isDocumentSubmissionApproved || isApprovedSubmissionFile(detailFile);
+          const detailFileLocked = isDocumentSubmissionLocked || isApprovedSubmissionFile(detailFile);
           const detailFileTypeLabel = getDocumentPrimaryFileTypeLabel(detailDocumentType.id);
           const detailActivityItems = detailFileTimeline.map((entry, index) => ({
             id: `${entry.date}-${index}`,
@@ -4643,6 +4795,7 @@ export default function UserPortal({ section }: { section: string }) {
                       <Button
                         type="button"
                         className="h-10 w-full sm:w-auto"
+                        disabled={isDocumentSubmissionLocked}
                         onClick={openBatchUploadWorkspace}
                       >
                         <FileUp className="mr-2 h-4 w-4" />
@@ -4743,6 +4896,7 @@ export default function UserPortal({ section }: { section: string }) {
                                   type="button"
                                   size="sm"
                                   className="h-10 w-full sm:w-auto"
+                                  disabled={isDocumentSubmissionLocked}
                                   onClick={openBatchUploadWorkspace}
                                 >
                                   <FileUp className="mr-2 h-4 w-4" />
@@ -4927,16 +5081,6 @@ export default function UserPortal({ section }: { section: string }) {
           );
         }
         {
-          const budgetActionLabels: Record<string, string> = {
-            needs_revision: "Revision requested",
-            approved_for_ftf_green: "Submit Onsite",
-            hard_copy_submitted: "Hardcopy Submitted",
-            budget_released: "Budget released",
-            completed: "Completed",
-            submitted: "Submitted for review",
-            rejected_red: "Rejected",
-            draft: "Saved as draft",
-          };
           return (
             <div className="user-budget-requests-page space-y-6">
               <PortalSection
@@ -5036,8 +5180,8 @@ export default function UserPortal({ section }: { section: string }) {
                                   className="min-h-24 resize-y"
                                 />
                               </div>
-                              <div className="budget-form-two-column grid gap-4 min-[600px]:grid-cols-2 lg:contents">
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                              <div className="budget-form-two-column grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-date">
                                     Proposed Date <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5049,7 +5193,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     required
                                   />
                                 </div>
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-venue">
                                     Venue <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5059,6 +5203,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     onChange={(event) => setBudgetForm((current) => ({ ...current, venue: event.target.value }))}
                                     placeholder="LYDO Hall"
                                     required
+                                    className="w-full min-w-0"
                                   />
                                 </div>
                               </div>
@@ -5072,31 +5217,37 @@ export default function UserPortal({ section }: { section: string }) {
                               <span className="h-px flex-1 bg-border" aria-hidden="true" />
                             </div>
                             <div className="budget-form-section-fields grid gap-4 lg:contents">
-                              <div className="budget-form-two-column grid gap-4 min-[600px]:grid-cols-2 lg:contents">
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                              <div className="budget-form-two-column grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-amount">
                                     Requested Amount <span className="ml-1 text-destructive">*</span>
                                   </Label>
-                                  <div className="flex overflow-hidden rounded-md border border-input bg-background">
-                                    <span className="inline-flex items-center border-r border-input px-3 text-sm font-medium text-muted-foreground">PHP</span>
+                                  <div className="flex overflow-hidden rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/20 focus-within:border-ring">
+                                    <span className="inline-flex shrink-0 items-center border-r border-input bg-muted/30 px-3 text-sm font-semibold text-muted-foreground select-none">PHP</span>
                                     <Input
                                       id="budget-amount"
                                       type="number"
-                                      min="0.01"
-                                      step="0.01"
-                                      value={budgetForm.requestedAmount || ""}
-                                      onChange={(event) =>
+                                      min="1"
+                                      step="1"
+                                      value={budgetForm.requestedAmount ? String(budgetForm.requestedAmount) : ""}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "." || event.key === "," || event.key === "e" || event.key === "E" || event.key === "+" || event.key === "-") {
+                                          event.preventDefault();
+                                        }
+                                      }}
+                                      onChange={(event) => {
+                                        const raw = event.target.value.replace(/[^0-9]/g, "");
                                         setBudgetForm((current) => ({
                                           ...current,
-                                          requestedAmount: Number(event.target.value || 0),
-                                        }))
-                                      }
+                                          requestedAmount: raw ? parseInt(raw, 10) : 0,
+                                        }));
+                                      }}
                                       placeholder="15000"
-                                      className="border-0 shadow-none focus-visible:ring-0"
+                                      className="flex-1 min-w-0 border-0 shadow-none focus-visible:ring-0"
                                     />
                                   </div>
                                 </div>
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-category">
                                     Purpose and Category <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5106,6 +5257,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     onChange={(event) => setBudgetForm((current) => ({ ...current, purposeCategory: event.target.value }))}
                                     placeholder="Capacity building / training"
                                     required
+                                    className="w-full min-w-0"
                                   />
                                 </div>
                               </div>
@@ -5517,10 +5669,10 @@ export default function UserPortal({ section }: { section: string }) {
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
+                                        className="h-9 w-full min-w-0 px-3.5 text-sm"
                                         onClick={() => void openFile(selectedBudgetFile.fileUrl, selectedBudgetFile.fileName)}
                                       >
-                                        <Eye className="mr-2 h-4 w-4" />
+                                        <Eye className="mr-2 h-4 w-4 shrink-0" />
                                         Open File
                                       </Button>
                                     ) : null}
@@ -5795,10 +5947,10 @@ export default function UserPortal({ section }: { section: string }) {
                                     })}
                                   </div>
                                   <div className="hidden overflow-x-auto lg:block">
-                                    <div className="min-w-[1080px] rounded-2xl border border-border/70 lg:w-full lg:min-w-0 lg:overflow-hidden">
+                                    <div className="min-w-[1080px] overflow-hidden rounded-2xl border border-border/80 bg-white shadow-sm lg:w-full lg:min-w-0">
                                       <Table className="budget-requests-table lg:w-full lg:table-fixed">
                                         <TableHeader>
-                                          <TableRow className="bg-muted/15 hover:bg-muted/15">
+                                          <TableRow className="border-b border-slate-200/80 bg-[#F8FAFC] hover:bg-[#F8FAFC]">
                                             <TableHead className="w-[22%] lg:w-[24%] lg:px-3.5 lg:py-3">Request</TableHead>
                                             <TableHead className="w-[14%] lg:w-[13%] lg:px-3.5 lg:py-3">Status</TableHead>
                                             <TableHead className="w-[12%] lg:w-[10%] lg:px-3.5 lg:py-3">Proposed Date</TableHead>
@@ -5817,7 +5969,7 @@ export default function UserPortal({ section }: { section: string }) {
                                             const additionalActivities = Math.max((request.revisionHistory?.length ?? 0) - 1, 0);
                                             const secondaryStatus = budgetStatusSecondaryMap[request.status] ?? formatStatusLabel(request.status);
                                             return (
-                                              <TableRow key={request.id} className="align-middle transition-colors lg:align-top lg:hover:bg-muted/20">
+                                              <TableRow key={request.id} className="align-top border-b border-slate-200/70 bg-white transition-colors even:bg-[#FAFBFD] hover:bg-[#EFF6FF]">
                                                 <TableCell className={`${rowPaddingClass} align-middle lg:align-top`}>
                                                   <div className="min-w-0 space-y-1">
                                                     <div className="flex flex-wrap items-center gap-2">
@@ -5842,13 +5994,16 @@ export default function UserPortal({ section }: { section: string }) {
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle`}>
                                                   <p className="text-sm text-foreground">
-                                                    {request.activityDate
-                                                      ? new Date(request.activityDate).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
-                                                      : "Not set"}
+                                                    {request.activityDate ? formatShortPortalDate(request.activityDate) || request.activityDate : "Not set"}
                                                   </p>
                                                 </TableCell>
-                                                <TableCell className={`${rowPaddingClass} align-middle`}>
-                                                  <p className="text-sm text-foreground">{request.venue || "Not set"}</p>
+                                                <TableCell className={`${rowPaddingClass} align-middle min-w-0`}>
+                                                  <p
+                                                    className="text-sm text-foreground overflow-hidden [overflow-wrap:anywhere] [word-break:break-word] line-clamp-3 max-w-full"
+                                                    title={request.venue || "Not set"}
+                                                  >
+                                                    {request.venue || "Not set"}
+                                                  </p>
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle lg:align-top`}>
                                                   <div className="space-y-2 text-sm">
@@ -5883,23 +6038,23 @@ export default function UserPortal({ section }: { section: string }) {
                                                             <MoreHorizontal className="h-4 w-4" />
                                                           </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                          <DropdownMenuItem onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
-                                                            <Eye className="mr-2 h-4 w-4" />
+                                                        <DropdownMenuContent align="end" className="w-auto min-w-[115px] p-1">
+                                                          <DropdownMenuItem className="cursor-pointer px-2.5 py-1.5 text-xs font-medium" onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
+                                                            <Eye className="mr-2 h-3.5 w-3.5" />
                                                             Open File
                                                           </DropdownMenuItem>
-                                                          <DropdownMenuSeparator />
                                                           {!approvedBudgetStatuses.has(request.status) ? (
                                                             <>
-                                                              <DropdownMenuItem onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
-                                                                <PenSquare className="mr-2 h-4 w-4" />
+                                                              <DropdownMenuSeparator className="my-1" />
+                                                              <DropdownMenuItem className="cursor-pointer px-2.5 py-1.5 text-xs font-medium" onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
+                                                                <PenSquare className="mr-2 h-3.5 w-3.5" />
                                                                 Edit Request
                                                               </DropdownMenuItem>
                                                               <DropdownMenuItem
-                                                                className="text-destructive focus:text-destructive"
+                                                                className="cursor-pointer px-2.5 py-1.5 text-xs font-medium text-destructive focus:text-destructive"
                                                                 onClick={() => handleDeleteBudgetRequest(request)}
                                                               >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <Trash2 className="mr-2 h-3.5 w-3.5" />
                                                                 Delete Request
                                                               </DropdownMenuItem>
                                                             </>
@@ -5918,23 +6073,28 @@ export default function UserPortal({ section }: { section: string }) {
                                                   )}
                                                 </TableCell>
                                                 <TableCell className={rowPaddingClass}>
-                                                  <div className="space-y-1">
-                                                    <p className="text-sm leading-snug text-foreground lg:line-clamp-2">
-                                                      {latestActivity ? (budgetActionLabels[latestActivity.action] ?? latestActivity.action) : secondaryStatus}
+                                                  <button
+                                                    type="button"
+                                                    className="group flex flex-col items-start text-left text-xs transition-colors hover:text-primary min-w-0 w-full"
+                                                    onClick={() => openBudgetRecentActivityModal(request)}
+                                                    title="View full activity log"
+                                                  >
+                                                    <p className="text-sm leading-snug font-medium text-foreground group-hover:text-primary group-hover:underline lg:line-clamp-2">
+                                                      {latestActivity ? (budgetActionLabels[latestActivity.action] ?? formatStatusLabel(latestActivity.action)) : secondaryStatus}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(request.updatedAt)}
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                      {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(request.updatedAt || request.createdAt)}
                                                     </p>
                                                     {additionalActivities > 0 ? (
-                                                      <button
-                                                        type="button"
-                                                        className="text-xs font-medium text-primary hover:underline"
-                                                        onClick={() => openBudgetRecentActivityModal(request)}
-                                                      >
+                                                      <span className="mt-1 text-xs font-semibold text-primary group-hover:underline">
                                                         +{additionalActivities} more
-                                                      </button>
-                                                    ) : null}
-                                                  </div>
+                                                      </span>
+                                                    ) : (
+                                                      <span className="mt-1 text-[11px] text-muted-foreground/80 group-hover:text-primary group-hover:underline">
+                                                        View log
+                                                      </span>
+                                                    )}
+                                                  </button>
                                                 </TableCell>
                                               </TableRow>
                                             );
@@ -6024,7 +6184,7 @@ export default function UserPortal({ section }: { section: string }) {
             <input
               ref={liquidationFileInputRef}
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+              accept=".pdf,application/pdf"
               className="sr-only"
               onChange={async (event) => {
                 const targetReport = liquidationReports.find((item) => item.id === liquidationUploadTargetId) ?? null;
@@ -6056,6 +6216,7 @@ export default function UserPortal({ section }: { section: string }) {
                     "rejected_red",
                   ]);
                   const liquidationLockedStatuses = new Set<LiquidationStatus>([
+                    "submitted",
                     "approved_for_ftf_green",
                     "hard_copy_submitted",
                     "completed_liquidated",
@@ -6219,6 +6380,7 @@ export default function UserPortal({ section }: { section: string }) {
                       selectedMobileReport.status === "overdue" ||
                       (selectedMobileReport.deadlineAt ? new Date(selectedMobileReport.deadlineAt) < new Date() : false);
                     const selectedIsSubmittable = liquidationSubmittableStatuses.has(selectedMobileReport.status);
+                    const selectedCanManageFiles = !liquidationLockedStatuses.has(selectedMobileReport.status);
                     const selectedCanRemoveSubmittedFile = !liquidationLockedStatuses.has(selectedMobileReport.status);
                     const selectedCanUploadReplacement =
                       selectedMobileReport.status === "needs_revision" || selectedMobileReport.status === "rejected_red";
@@ -6375,6 +6537,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     type="button"
                                     variant="outline"
                                     className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
+                                    disabled={!selectedCanManageFiles}
                                     onClick={() => {
                                       setLiquidationUploadTargetId(selectedMobileReport.id);
                                       liquidationFileInputRef.current?.click();
@@ -6398,11 +6561,12 @@ export default function UserPortal({ section }: { section: string }) {
                                     Upload Another Document
                                   </Button>
                                 ) : null}
-                                {selectedPrimaryFile && selectedCanRemoveSubmittedFile ? (
+                                {selectedPrimaryFile ? (
                                   <Button
                                     type="button"
                                     variant="outline"
                                     className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal border-destructive/30 text-destructive hover:border-destructive/40 hover:bg-destructive/5 hover:text-destructive"
+                                    disabled={!selectedCanRemoveSubmittedFile}
                                     onClick={() =>
                                       requestDeleteConfirmation({
                                         title: "Remove Submitted File",
@@ -6421,7 +6585,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
                                     onClick={() => setMobileLiquidationFormReportId(selectedMobileReport.id)}
                                   >
-                                    <Receipt className="mr-2 h-4 w-4" />
+                                    <PenSquare className="mr-2 h-4 w-4" />
                                     Submit Note
                                   </Button>
                                 ) : null}
@@ -6790,7 +6954,8 @@ export default function UserPortal({ section }: { section: string }) {
                                           report.remarks?.trim().length > 0 &&
                                           (report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red");
                                         const isSubmittable = liquidationSubmittableStatuses.has(report.status);
-                                        const canRemoveSubmittedFile = !liquidationLockedStatuses.has(report.status);
+                                        const canManageFiles = !liquidationLockedStatuses.has(report.status);
+                                        const canRemoveSubmittedFile = canManageFiles;
                                         const canUploadReplacement = report.status === "needs_revision" || report.status === "rejected_red";
                                         const isSubmitting = submittingLiquidationId === report.id;
                                         const hasAttachedFile = attachedFiles.length > 0;
@@ -6910,12 +7075,13 @@ export default function UserPortal({ section }: { section: string }) {
                                                     <DropdownMenuContent align="end" className="min-w-[210px]">
                                                       {isSubmittable ? (
                                                         <DropdownMenuItem onClick={() => setDesktopLiquidationFormReportId(report.id)}>
-                                                          <Receipt className="mr-2 h-4 w-4" />
+                                                          <PenSquare className="mr-2 h-4 w-4" />
                                                           Submit Note
                                                         </DropdownMenuItem>
                                                       ) : null}
                                                       {!primaryFile ? (
                                                         <DropdownMenuItem
+                                                          disabled={!canManageFiles}
                                                           onClick={() => {
                                                             setLiquidationUploadTargetId(report.id);
                                                             liquidationFileInputRef.current?.click();
@@ -6941,24 +7107,23 @@ export default function UserPortal({ section }: { section: string }) {
                                                               Upload Another Document
                                                             </DropdownMenuItem>
                                                           ) : null}
-                                                          {canRemoveSubmittedFile ? (
-                                                            <>
-                                                              <DropdownMenuSeparator />
-                                                              <DropdownMenuItem
-                                                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                                onClick={() =>
-                                                                  requestDeleteConfirmation({
-                                                                    title: "Remove Submitted File",
-                                                                    description: `Are you sure you want to delete "${primaryFile.fileName}"? This action cannot be undone.`,
-                                                                    action: () => handleDeleteLiquidationFile(primaryFile),
-                                                                  })
-                                                                }
-                                                              >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Remove Submitted File
-                                                              </DropdownMenuItem>
-                                                            </>
-                                                          ) : null}
+                                                          <>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                              disabled={!canRemoveSubmittedFile}
+                                                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                              onClick={() =>
+                                                                requestDeleteConfirmation({
+                                                                  title: "Remove Submitted File",
+                                                                  description: `Are you sure you want to delete "${primaryFile.fileName}"? This action cannot be undone.`,
+                                                                  action: () => handleDeleteLiquidationFile(primaryFile),
+                                                                })
+                                                              }
+                                                            >
+                                                              <Trash2 className="mr-2 h-4 w-4" />
+                                                              Remove Submitted File
+                                                            </DropdownMenuItem>
+                                                          </>
                                                         </>
                                                       )}
                                                     </DropdownMenuContent>
@@ -7103,6 +7268,18 @@ export default function UserPortal({ section }: { section: string }) {
       }
       case "news-releases": {
         const publishedReleases = state.newsReleases.filter((n) => n.visibilityStatus === "published");
+        const availableCategories = Array.from(
+          new Set(publishedReleases.map((r) => r.category).filter((c): c is string => Boolean(c)))
+        ).sort();
+        const searchLower = portalNewsSearch.trim().toLowerCase();
+        const filteredReleases = publishedReleases.filter((news) => {
+          const matchesCategory = portalNewsCategoryFilter === "all" || news.category === portalNewsCategoryFilter;
+          const matchesQuery =
+            !searchLower ||
+            news.title.toLowerCase().includes(searchLower) ||
+            (news.description ?? "").toLowerCase().includes(searchLower);
+          return matchesCategory && matchesQuery;
+        });
         const isRecentRelease = (datePosted: string) => {
           const diffDays = (Date.now() - new Date(datePosted).getTime()) / (1000 * 60 * 60 * 24);
           return diffDays <= 30;
@@ -7120,59 +7297,120 @@ export default function UserPortal({ section }: { section: string }) {
               </Button>
             }
           >
-            {publishedReleases.length ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {publishedReleases.map((news) => {
-                  const facebookUrl = news.facebookPostUrl?.trim() || "";
-                  const hasFacebookUrl = Boolean(facebookUrl);
-                  const previewImageUrl = news.previewImageUrl?.trim() || "";
-                  const formattedDate = new Date(news.datePosted).toLocaleDateString("en-PH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  });
-                  const fallbackAccent = isRecentRelease(news.datePosted)
-                    ? "from-primary via-primary/85 to-sky-500"
-                    : "from-slate-700 via-primary/90 to-slate-800";
-
-                  return (
-                    <article
-                      key={news.id}
-                      className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={portalNewsSearch}
+                    onChange={(e) => setPortalNewsSearch(e.target.value)}
+                    placeholder="Search news releases..."
+                    className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary"
+                  />
+                </div>
+                {availableCategories.length ? (
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setPortalNewsCategoryFilter("all")}
+                      className={cn(
+                        "rounded-full px-3 py-1.5 font-medium transition-colors",
+                        portalNewsCategoryFilter === "all"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      )}
                     >
-                      <div className="border-b border-border/50 bg-muted/10 p-3 sm:p-4">
-                        {hasFacebookUrl ? (
-                          <a
-                            href={facebookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-                            aria-label={`Open ${news.title} on Facebook`}
-                          >
-                            <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-border/60 bg-muted">
-                              <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
-                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90 transition-transform duration-300 group-hover:scale-[1.03]" />
-                              <div className="absolute inset-x-0 bottom-0 p-4">
-                                <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
-                                  <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
-                                    {news.title}
-                                  </p>
+                      All
+                    </button>
+                    {availableCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setPortalNewsCategoryFilter(cat)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 font-medium transition-colors capitalize",
+                          portalNewsCategoryFilter === cat
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                        )}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {filteredReleases.length ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredReleases.map((news) => {
+                    const facebookUrl = news.facebookPostUrl?.trim() || "";
+                    const hasFacebookUrl = Boolean(facebookUrl);
+                    const previewImageUrl = news.previewImageUrl?.trim() || "";
+                    const formattedDate = new Date(news.datePosted).toLocaleDateString("en-PH", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    });
+                    const fallbackAccent = isRecentRelease(news.datePosted)
+                      ? "from-primary via-primary/85 to-sky-500"
+                      : "from-slate-700 via-primary/90 to-slate-800";
+
+                    return (
+                      <article
+                        key={news.id}
+                        className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+                      >
+                        <div className="border-b border-border/50 bg-muted/10 p-3 sm:p-4">
+                          {hasFacebookUrl ? (
+                            <a
+                              href={facebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
+                              aria-label={`Open ${news.title} on Facebook`}
+                            >
+                              <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-border/60 bg-muted">
+                                <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90 transition-transform duration-300 group-hover:scale-[1.03]" />
+                                <div className="absolute inset-x-0 bottom-0 p-4">
+                                  <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
+                                    <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
+                                      {news.title}
+                                    </p>
+                                  </div>
+                                </div>
+                                {previewImageUrl ? (
+                                  <img
+                                    src={previewImageUrl}
+                                    alt={`${news.title} preview`}
+                                    referrerPolicy="no-referrer"
+                                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                    onError={(event) => {
+                                      event.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-4">
+                                  <span className="inline-flex items-center rounded-full border border-white/20 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary shadow-sm">
+                                    News Release
+                                  </span>
+                                  {isRecentRelease(news.datePosted) ? (
+                                    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
+                                      New
+                                    </span>
+                                  ) : null}
                                 </div>
                               </div>
-                              {previewImageUrl ? (
-                                <img
-                                  src={previewImageUrl}
-                                  alt={`${news.title} preview`}
-                                  referrerPolicy="no-referrer"
-                                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                                  onError={(event) => {
-                                    event.currentTarget.style.display = "none";
-                                  }}
-                                />
-                              ) : null}
-                              <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-4">
-                                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary shadow-sm">
-                                  News Release
+                            </a>
+                          ) : (
+                            <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-muted">
+                              <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
+                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90" />
+                              <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+                                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
+                                  LYDO News
                                 </span>
                                 {isRecentRelease(news.datePosted) ? (
                                   <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
@@ -7180,65 +7418,50 @@ export default function UserPortal({ section }: { section: string }) {
                                   </span>
                                 ) : null}
                               </div>
-                            </div>
-                          </a>
-                        ) : (
-                          <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-muted">
-                            <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90" />
-                            <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-                              <span className="inline-flex items-center rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
-                                LYDO News
-                              </span>
-                              {isRecentRelease(news.datePosted) ? (
-                                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
-                                  New
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="absolute inset-x-0 bottom-0 p-4">
-                              <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
-                                <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
-                                  {news.title}
-                                </p>
+                              <div className="absolute inset-x-0 bottom-0 p-4">
+                                <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
+                                  <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
+                                    {news.title}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-1 flex-col p-4 sm:p-5">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-medium text-muted-foreground">{formattedDate}</p>
-                          {isRecentRelease(news.datePosted) ? (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                              New
-                            </span>
-                          ) : null}
+                          )}
                         </div>
-                        {hasFacebookUrl ? (
-                          <a
-                            href={facebookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 inline-flex items-start gap-1.5 text-left text-[1.02rem] font-semibold leading-snug text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-                          >
-                            <span className="line-clamp-2">{news.title}</span>
-                            <ExternalLink className="mt-0.5 h-4 w-4 shrink-0" />
-                          </a>
-                        ) : (
-                          <p className="mt-2 text-[1.02rem] font-semibold leading-snug text-foreground">{news.title}</p>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <PortalEmptyState
-                title="No announcements yet"
-                description="LYDO hasn't published any announcements yet. Check back soon for updates."
-              />
-            )}
+                        <div className="flex flex-1 flex-col p-4 sm:p-5">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">{formattedDate}</p>
+                            {isRecentRelease(news.datePosted) ? (
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                                New
+                              </span>
+                            ) : null}
+                          </div>
+                          {hasFacebookUrl ? (
+                            <a
+                              href={facebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 inline-flex items-start gap-1.5 text-left text-[1.02rem] font-semibold leading-snug text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
+                            >
+                              <span className="line-clamp-2">{news.title}</span>
+                              <ExternalLink className="mt-0.5 h-4 w-4 shrink-0" />
+                            </a>
+                          ) : (
+                            <p className="mt-2 text-[1.02rem] font-semibold leading-snug text-foreground">{news.title}</p>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <PortalEmptyState
+                  title="No announcements found"
+                  description="No news releases match your search criteria. Try clearing filters or check back later."
+                />
+              )}
+            </div>
           </PortalSection>
         );
       }
@@ -7408,6 +7631,25 @@ export default function UserPortal({ section }: { section: string }) {
         const availableYpopActivities = ypopActivitiesSorted.filter((activity) => !ypopParticipationByActivityId.has(activity.id));
 
         const handleSubmitYpop = async (entry: YPOPEntry) => {
+          const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const eligibility = validateYpopSubmissionEligibility({
+            entry,
+            participations: joinedYpopEvents,
+            eventFiles: state.ypopEventFiles,
+            entryFiles: files,
+            orgActivityFiles: state.ypopOrgActivityFiles,
+            profile: currentProfile,
+          });
+
+          if (!eligibility.eligible) {
+            toast({
+              title: "Validation Request Blocked",
+              description: eligibility.message,
+              variant: "destructive",
+            });
+            return;
+          }
+
           const note = ypopNotesByEntryId[entry.id] ?? "";
           if (!await confirmAction({
             title: entry.status === "needs_revision" ? "Resubmit for city-led validation?" : "Submit for city-led validation?",
@@ -7948,6 +8190,14 @@ export default function UserPortal({ section }: { section: string }) {
 
         const renderEntryCard = (entry: YPOPEntry) => {
           const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const entryEligibility = validateYpopSubmissionEligibility({
+            entry,
+            participations: joinedYpopEvents,
+            eventFiles: state.ypopEventFiles,
+            entryFiles: files,
+            orgActivityFiles: state.ypopOrgActivityFiles,
+            profile: currentProfile,
+          });
           const isSubmitting = submittingYpopId === entry.id;
           const isUploading = ypopUploadingId === entry.id;
           const isDraft = entry.status === "draft";
@@ -8005,9 +8255,16 @@ export default function UserPortal({ section }: { section: string }) {
                   <PortalStatusBadge status={entry.status} />
                 </div>
 
-                {/* Draft / Needs Revision â€” step flow */}
+                {/* Draft / Needs Revision — step flow */}
                 {(isDraft || isNeedsRevision) && (
                   <>
+                    {!entryEligibility.eligible && (
+                      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span>{entryEligibility.message}</span>
+                      </div>
+                    )}
+
                     {isNeedsRevision && entry.adminRemarks.trim() && (
                       <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
                         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Revision Required</p>
@@ -8016,7 +8273,7 @@ export default function UserPortal({ section }: { section: string }) {
                     )}
 
                     <div className="space-y-4">
-                      {/* Step 1 â€” Attach files */}
+                      {/* Step 1 — Attach files */}
                       <div className="hidden" aria-hidden="true">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
                         <div className="flex-1 space-y-2">
@@ -8086,7 +8343,7 @@ export default function UserPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
-                      {/* Step 2 â€” Add message */}
+                      {/* Step 2 — Add message */}
                       <div className="flex gap-3">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
                         <div className="flex-1 space-y-2">
@@ -8106,7 +8363,7 @@ export default function UserPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
-                      {/* Step 3 â€” Submit */}
+                      {/* Step 3 — Submit */}
                       <div className="flex gap-3">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">2</div>
                         <div className="flex-1 space-y-1.5">
@@ -8114,7 +8371,8 @@ export default function UserPortal({ section }: { section: string }) {
                             type="button"
                             size="sm"
                             onClick={() => void handleSubmitYpop(entry)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !entryEligibility.eligible}
+                            title={!entryEligibility.eligible ? entryEligibility.message : undefined}
                           >
                             {isSubmitting ? (
                               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</>
@@ -9545,11 +9803,13 @@ Validated {validatedDate}</p>
               </Dialog>
 
               <Dialog open={ypopOrgActivityModalOpen} onOpenChange={handleYpopOrgActivityModalChange}>
-                <DialogContent className="sm:max-w-xl">
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{editingYpopOrgActivityId ? "Edit Organization-Initiated Activity" : "Log Organization-Initiated Activity"}</DialogTitle>
                     <DialogDescription>
-                      Add the PPA details first, then attach photo documentation or supporting files after saving the draft.
+                      {editingYpopOrgActivityId
+                        ? "Update activity details and manage supporting proof documents for this PPA log."
+                        : "Enter the PPA activity details to create a draft. Supporting documents can be attached after saving."}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
@@ -9589,10 +9849,89 @@ Validated {validatedDate}</p>
                         value={ypopOrgActivityDraft.narrativeReport}
                         onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, narrativeReport: event.target.value }))}
                         placeholder="Summarize what happened, the objective, and the outcomes of the activity."
-                        rows={5}
+                        rows={4}
                         className="resize-none"
                       />
                     </div>
+
+                    {editingYpopOrgActivityId && (
+                      <div className="space-y-3 pt-3 border-t border-border/70">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <Label className="text-sm font-medium">Supporting Documents & Proof Files</Label>
+                            <p className="text-xs text-muted-foreground">Attach photo documentation, narrative report PDF, or supporting files.</p>
+                          </div>
+                          {(() => {
+                            const editingActivity = state.ypopOrgActivities.find((a) => a.id === editingYpopOrgActivityId);
+                            const isEditable = !editingActivity || editingActivity.status === "draft" || editingActivity.status === "needs_revision";
+                            if (!isEditable) return null;
+                            const isUploading = ypopOrgActivityUploadingId === editingYpopOrgActivityId;
+                            return (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={isUploading}
+                                onClick={() => promptUploadYpopOrgActivityFile(editingYpopOrgActivityId)}
+                              >
+                                {isUploading ? (
+                                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Uploading...</>
+                                ) : (
+                                  <><Upload className="mr-1.5 h-3.5 w-3.5" /> Attach File</>
+                                )}
+                              </Button>
+                            );
+                          })()}
+                        </div>
+
+                        {(() => {
+                          const currentFiles = ypopOrgActivityFilesByActivityId.get(editingYpopOrgActivityId) ?? [];
+                          const editingActivity = state.ypopOrgActivities.find((a) => a.id === editingYpopOrgActivityId);
+                          const isEditable = !editingActivity || editingActivity.status === "draft" || editingActivity.status === "needs_revision";
+
+                          if (currentFiles.length === 0) {
+                            return (
+                              <div className="rounded-lg border border-dashed border-border/80 bg-muted/20 p-3 text-center text-xs text-muted-foreground">
+                                No supporting documents attached yet. Click "Attach File" above to upload proof documents.
+                              </div>
+                            );
+                          }
+                          return (
+                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                              {currentFiles.map((f: YPOPOrgActivityFile) => (
+                                <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-xs">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="h-4 w-4 shrink-0 text-primary/80" />
+                                    <span className="truncate font-medium text-foreground">{f.fileName}</span>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-1">
+                                    {f.fileUrl && (
+                                      <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" asChild>
+                                        <a href={f.fileUrl} target="_blank" rel="noreferrer">
+                                          View
+                                        </a>
+                                      </Button>
+                                    )}
+                                    {isEditable && (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        onClick={() => handleDeleteYpopOrgActivityFile(f.id)}
+                                        title="Remove file"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => handleYpopOrgActivityModalChange(false)} disabled={savingYpopOrgActivity}>
@@ -10985,9 +11324,9 @@ Validated {validatedDate}</p>
           }
         }}
       >
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[calc(100dvh-1rem)] overflow-x-hidden overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-lg sm:text-xl">{attachedDocumentPreviewTitle || "Attached File"}</DialogTitle>
+            <DialogTitle className="break-words text-lg sm:text-xl">{attachedDocumentPreviewTitle || "Attached File"}</DialogTitle>
             <DialogDescription className="text-sm">
               {isApprovedSubmissionFile(attachedDocumentEditor?.file)
                 ? "This approved file is now locked. You can review or open it, but you can no longer change or remove it."
@@ -10999,7 +11338,7 @@ Validated {validatedDate}</p>
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Attached file preview</p>
-                  <p className="break-all text-sm font-medium text-foreground sm:truncate">
+                  <p className="break-words text-sm font-medium text-foreground sm:truncate">
                     {attachedDocumentEditor?.file.fileName || "Uploaded file"}
                   </p>
                 </div>
@@ -11056,7 +11395,7 @@ Validated {validatedDate}</p>
               {/* File info */}
               <div>
                 <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Current file</p>
-                <p className="mt-1 break-all text-sm font-medium text-foreground">
+                <p className="mt-1 break-words text-sm font-medium text-foreground">
                   {attachedDocumentEditor?.file.fileName || "Uploaded file"}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
@@ -11068,7 +11407,7 @@ Validated {validatedDate}</p>
               <div className="h-px bg-border/40" />
               {attachedDocumentEditor?.file &&
               (attachedDocumentEditor.file.adminStatus === "needs_revision" || attachedDocumentEditor.file.adminStatus === "rejected_red") &&
-              !isDocumentSubmissionApproved &&
+              !isDocumentSubmissionLocked &&
               !isApprovedSubmissionFile(attachedDocumentEditor.file) ? (
                 <>
                   <input
@@ -11098,7 +11437,7 @@ Validated {validatedDate}</p>
                       Change File
                     </Button>
                     {attachedDocumentReplacementFile ? (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="break-words text-xs text-muted-foreground">
                         Replacement: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
                       </p>
                     ) : null}
