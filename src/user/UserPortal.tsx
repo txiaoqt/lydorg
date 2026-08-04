@@ -114,6 +114,7 @@ import {
   getYpopEventJoinEligibility,
   isPastYpopActivityDate,
   parseYpopActivityDate,
+  validateYpopSubmissionEligibility,
 } from "@/lib/ypop-event-eligibility";
 import {
   type BudgetRequest,
@@ -213,7 +214,11 @@ const validatePdfUpload = async (file: File) => {
 const hasUploadedTemplateFile = (fileUrl?: string, fileName?: string) =>
   Boolean(fileName?.trim() && fileUrl?.trim() && !fileUrl.startsWith("#"));
 const formatStatusLabel = (status: string) => statusLabelMap[status] ?? status.replaceAll("_", " ");
-const formatCurrency = (value: number) => `PHP ${value.toLocaleString()}`;
+const formatCurrency = (value: number | null | undefined) => {
+  const num = typeof value === "number" && !Number.isNaN(value) ? Math.round(value) : Math.round(Number(value || 0));
+  const safeNum = Number.isNaN(num) ? 0 : num;
+  return `PHP ${safeNum.toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+};
 const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
   if (!request) return "";
   const direct = request.adminRemarks?.trim();
@@ -284,6 +289,16 @@ const formatShortPortalDate = (value: string) => {
 };
 const budgetNativeSelectClass =
   "h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50";
+const budgetActionLabels: Record<string, string> = {
+  needs_revision: "Revision requested",
+  approved_for_ftf_green: "Submit Onsite",
+  hard_copy_submitted: "Hardcopy Submitted",
+  budget_released: "Budget released",
+  completed: "Completed",
+  submitted: "Submitted for review",
+  rejected_red: "Rejected",
+  draft: "Saved as draft",
+};
 const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
   "approved_for_ftf_green",
   "budget_released",
@@ -690,23 +705,31 @@ export default function UserPortal({ section }: { section: string }) {
   const profileYpopRef = useRef<HTMLDivElement>(null);
   const profileActivityRef = useRef<HTMLDivElement>(null);
 
+  const initializedYpopBudgetIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (section === "budget-request") {
       const ypopEntryId = searchParams.get("ypopEntryId");
+      if (!ypopEntryId) {
+        initializedYpopBudgetIdRef.current = null;
+        return;
+      }
+      if (initializedYpopBudgetIdRef.current === ypopEntryId) {
+        return;
+      }
       const qualifiedYpopEntry =
-        ypopEntryId &&
-        budgetEligibility.eligible &&
-        budgetEligibility.entry?.id === ypopEntryId
+        budgetEligibility.eligible && budgetEligibility.entry?.id === ypopEntryId
           ? budgetEligibility.entry
           : null;
       if (qualifiedYpopEntry) {
+        initializedYpopBudgetIdRef.current = ypopEntryId;
         const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
         setBudgetForm({ ...blank, budgetRequestType: "ypop_incentive", ypopEntryId: qualifiedYpopEntry.id });
         setBudgetFileDraft(null);
         setShowBudgetForm(true);
-      } else {
-        setShowBudgetForm(false);
       }
+    } else {
+      initializedYpopBudgetIdRef.current = null;
     }
   }, [budgetEligibility, currentProfile?.id, section, searchParams, user?.id]);
 
@@ -2151,7 +2174,7 @@ export default function UserPortal({ section }: { section: string }) {
       setProfileDraft(savedProfile);
       setIsProfileDraftDirty(false);
       notifyAdmin({
-        title: savedProfile.isExistingOrganization ? "Existing organization profile updated" : "Organization profile updated",
+        title: savedProfile.isExistingOrganization ? "Existing Organization profile updated" : "Organization profile updated",
         message: savedProfile.isExistingOrganization
           ? `${savedProfile.organizationName} updated its profile and submitted an existing organization identifier for admin verification.`
           : `${savedProfile.organizationName} updated its profile and sent it for admin review.`,
@@ -2270,6 +2293,15 @@ export default function UserPortal({ section }: { section: string }) {
         title: "Complete the budget form",
         description:
           "Activity title, description, proposed date, venue, requested amount, purpose/category, and remarks are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!Number.isInteger(nextBudgetRequest.requestedAmount) || nextBudgetRequest.requestedAmount % 1 !== 0) {
+      toast({
+        title: "Whole peso amount required",
+        description: "Requested amount must be a whole peso number without decimals.",
         variant: "destructive",
       });
       return;
@@ -2627,9 +2659,18 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const openBudgetRecentActivityModal = (request: BudgetRequest) => {
-    const entries = [...(request.revisionHistory ?? [])]
-      .filter((entry) => entry.changedAt)
-      .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime());
+    const history = request.revisionHistory ?? [];
+    const entries = history.length > 0
+      ? [...history]
+          .filter((entry) => entry.changedAt)
+          .sort((left, right) => new Date(right.changedAt).getTime() - new Date(left.changedAt).getTime())
+      : [
+          {
+            action: request.status,
+            adminRemarks: request.adminRemarks?.trim() || "",
+            changedAt: request.updatedAt || request.createdAt || new Date().toISOString(),
+          },
+        ];
 
     setBudgetRecentActivityModal({
       title: request.activityTitle || "Budget Request Activity",
@@ -3310,7 +3351,7 @@ export default function UserPortal({ section }: { section: string }) {
         ] as const;
         const organizationDetailRows = [
           { label: "Organization Name", value: profile.organizationName || "Not set" },
-          { label: "Organization Type", value: profile.isExistingOrganization ? "Existing organization" : "New organization" },
+          { label: "Organization Type", value: profile.isExistingOrganization ? "Existing Organization" : "New Organization" },
           { label: "District", value: profile.district || "Not set" },
           { label: "Barangay", value: profile.barangay || "Not set" },
           {
@@ -3515,7 +3556,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     </div>
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
                                       <FieldGroup label="Organization Type">
-                                        <input value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
+                                        <input value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
                                       </FieldGroup>
                                       <FieldGroup label="Unique Registration Number (URN)">
                                         <input value={profileDraft.organizationIdentifierNumber || "Auto-generated upon registration"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
@@ -3524,7 +3565,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
                                       <FieldGroup label="Major Classification" required>
                                         <select value={profileDraft.majorClassification} onChange={(event) => handleProfileFieldChange("majorClassification", event.target.value as OrganizationProfile["majorClassification"])} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary">
-                                          <option value="">Select major classification</option>
+                                          <option value="">Select Major Classification</option>
                                           {majorClassificationOptions.map((option) => (
                                             <option key={option} value={option}>{option}</option>
                                           ))}
@@ -3532,7 +3573,7 @@ export default function UserPortal({ section }: { section: string }) {
                                       </FieldGroup>
                                       <FieldGroup label="Sub Classification" required>
                                         <select value={profileDraft.subClassification} onChange={(event) => handleProfileFieldChange("subClassification", event.target.value as OrganizationProfile["subClassification"])} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary">
-                                          <option value="">Select sub classification</option>
+                                          <option value="">Select Sub Classification</option>
                                           {subClassificationOptions.map((option) => (
                                             <option key={option} value={option}>{formatSubClassificationLabel(option)}</option>
                                           ))}
@@ -3626,7 +3667,7 @@ export default function UserPortal({ section }: { section: string }) {
                           </FieldGroup>
                           <FieldGroup label="Organization Type">
                             <input
-                              value={profileDraft.isExistingOrganization ? "Existing organization" : "New organization"}
+                              value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"}
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                               readOnly
                             />
@@ -3650,7 +3691,7 @@ export default function UserPortal({ section }: { section: string }) {
                               }
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                             >
-                              <option value="">Select major classification</option>
+                              <option value="">Select Major Classification</option>
                               {majorClassificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                   {option}
@@ -3666,7 +3707,7 @@ export default function UserPortal({ section }: { section: string }) {
                               }
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                             >
-                              <option value="">Select sub classification</option>
+                              <option value="">Select Sub Classification</option>
                               {subClassificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                   {formatSubClassificationLabel(option)}
@@ -5040,16 +5081,6 @@ export default function UserPortal({ section }: { section: string }) {
           );
         }
         {
-          const budgetActionLabels: Record<string, string> = {
-            needs_revision: "Revision requested",
-            approved_for_ftf_green: "Submit Onsite",
-            hard_copy_submitted: "Hardcopy Submitted",
-            budget_released: "Budget released",
-            completed: "Completed",
-            submitted: "Submitted for review",
-            rejected_red: "Rejected",
-            draft: "Saved as draft",
-          };
           return (
             <div className="user-budget-requests-page space-y-6">
               <PortalSection
@@ -5149,8 +5180,8 @@ export default function UserPortal({ section }: { section: string }) {
                                   className="min-h-24 resize-y"
                                 />
                               </div>
-                              <div className="budget-form-two-column grid gap-4 min-[600px]:grid-cols-2 lg:contents">
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                              <div className="budget-form-two-column grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-date">
                                     Proposed Date <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5162,7 +5193,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     required
                                   />
                                 </div>
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-venue">
                                     Venue <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5172,6 +5203,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     onChange={(event) => setBudgetForm((current) => ({ ...current, venue: event.target.value }))}
                                     placeholder="LYDO Hall"
                                     required
+                                    className="w-full min-w-0"
                                   />
                                 </div>
                               </div>
@@ -5185,31 +5217,37 @@ export default function UserPortal({ section }: { section: string }) {
                               <span className="h-px flex-1 bg-border" aria-hidden="true" />
                             </div>
                             <div className="budget-form-section-fields grid gap-4 lg:contents">
-                              <div className="budget-form-two-column grid gap-4 min-[600px]:grid-cols-2 lg:contents">
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                              <div className="budget-form-two-column grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-amount">
                                     Requested Amount <span className="ml-1 text-destructive">*</span>
                                   </Label>
-                                  <div className="flex overflow-hidden rounded-md border border-input bg-background">
-                                    <span className="inline-flex items-center border-r border-input px-3 text-sm font-medium text-muted-foreground">PHP</span>
+                                  <div className="flex overflow-hidden rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/20 focus-within:border-ring">
+                                    <span className="inline-flex shrink-0 items-center border-r border-input bg-muted/30 px-3 text-sm font-semibold text-muted-foreground select-none">PHP</span>
                                     <Input
                                       id="budget-amount"
                                       type="number"
-                                      min="0.01"
-                                      step="0.01"
-                                      value={budgetForm.requestedAmount || ""}
-                                      onChange={(event) =>
+                                      min="1"
+                                      step="1"
+                                      value={budgetForm.requestedAmount ? String(budgetForm.requestedAmount) : ""}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "." || event.key === "," || event.key === "e" || event.key === "E" || event.key === "+" || event.key === "-") {
+                                          event.preventDefault();
+                                        }
+                                      }}
+                                      onChange={(event) => {
+                                        const raw = event.target.value.replace(/[^0-9]/g, "");
                                         setBudgetForm((current) => ({
                                           ...current,
-                                          requestedAmount: Number(event.target.value || 0),
-                                        }))
-                                      }
+                                          requestedAmount: raw ? parseInt(raw, 10) : 0,
+                                        }));
+                                      }}
                                       placeholder="15000"
-                                      className="border-0 shadow-none focus-visible:ring-0"
+                                      className="flex-1 min-w-0 border-0 shadow-none focus-visible:ring-0"
                                     />
                                   </div>
                                 </div>
-                                <div className="budget-form-field space-y-1.5 lg:space-y-2">
+                                <div className="budget-form-field space-y-1.5 lg:space-y-2 min-w-0">
                                   <Label htmlFor="budget-category">
                                     Purpose and Category <span className="ml-1 text-destructive">*</span>
                                   </Label>
@@ -5219,6 +5257,7 @@ export default function UserPortal({ section }: { section: string }) {
                                     onChange={(event) => setBudgetForm((current) => ({ ...current, purposeCategory: event.target.value }))}
                                     placeholder="Capacity building / training"
                                     required
+                                    className="w-full min-w-0"
                                   />
                                 </div>
                               </div>
@@ -5630,10 +5669,10 @@ export default function UserPortal({ section }: { section: string }) {
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-10 w-full min-w-0 px-3 text-sm whitespace-normal"
+                                        className="h-9 w-full min-w-0 px-3.5 text-sm"
                                         onClick={() => void openFile(selectedBudgetFile.fileUrl, selectedBudgetFile.fileName)}
                                       >
-                                        <Eye className="mr-2 h-4 w-4" />
+                                        <Eye className="mr-2 h-4 w-4 shrink-0" />
                                         Open File
                                       </Button>
                                     ) : null}
@@ -5908,10 +5947,10 @@ export default function UserPortal({ section }: { section: string }) {
                                     })}
                                   </div>
                                   <div className="hidden overflow-x-auto lg:block">
-                                    <div className="min-w-[1080px] rounded-2xl border border-border/70 lg:w-full lg:min-w-0 lg:overflow-hidden">
+                                    <div className="min-w-[1080px] overflow-hidden rounded-2xl border border-border/80 bg-white shadow-sm lg:w-full lg:min-w-0">
                                       <Table className="budget-requests-table lg:w-full lg:table-fixed">
                                         <TableHeader>
-                                          <TableRow className="bg-muted/15 hover:bg-muted/15">
+                                          <TableRow className="border-b border-slate-200/80 bg-[#F8FAFC] hover:bg-[#F8FAFC]">
                                             <TableHead className="w-[22%] lg:w-[24%] lg:px-3.5 lg:py-3">Request</TableHead>
                                             <TableHead className="w-[14%] lg:w-[13%] lg:px-3.5 lg:py-3">Status</TableHead>
                                             <TableHead className="w-[12%] lg:w-[10%] lg:px-3.5 lg:py-3">Proposed Date</TableHead>
@@ -5930,7 +5969,7 @@ export default function UserPortal({ section }: { section: string }) {
                                             const additionalActivities = Math.max((request.revisionHistory?.length ?? 0) - 1, 0);
                                             const secondaryStatus = budgetStatusSecondaryMap[request.status] ?? formatStatusLabel(request.status);
                                             return (
-                                              <TableRow key={request.id} className="align-middle transition-colors lg:align-top lg:hover:bg-muted/20">
+                                              <TableRow key={request.id} className="align-top border-b border-slate-200/70 bg-white transition-colors even:bg-[#FAFBFD] hover:bg-[#EFF6FF]">
                                                 <TableCell className={`${rowPaddingClass} align-middle lg:align-top`}>
                                                   <div className="min-w-0 space-y-1">
                                                     <div className="flex flex-wrap items-center gap-2">
@@ -5955,13 +5994,16 @@ export default function UserPortal({ section }: { section: string }) {
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle`}>
                                                   <p className="text-sm text-foreground">
-                                                    {request.activityDate
-                                                      ? new Date(request.activityDate).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
-                                                      : "Not set"}
+                                                    {request.activityDate ? formatShortPortalDate(request.activityDate) || request.activityDate : "Not set"}
                                                   </p>
                                                 </TableCell>
-                                                <TableCell className={`${rowPaddingClass} align-middle`}>
-                                                  <p className="text-sm text-foreground">{request.venue || "Not set"}</p>
+                                                <TableCell className={`${rowPaddingClass} align-middle min-w-0`}>
+                                                  <p
+                                                    className="text-sm text-foreground overflow-hidden [overflow-wrap:anywhere] [word-break:break-word] line-clamp-3 max-w-full"
+                                                    title={request.venue || "Not set"}
+                                                  >
+                                                    {request.venue || "Not set"}
+                                                  </p>
                                                 </TableCell>
                                                 <TableCell className={`${rowPaddingClass} align-middle lg:align-top`}>
                                                   <div className="space-y-2 text-sm">
@@ -5996,23 +6038,23 @@ export default function UserPortal({ section }: { section: string }) {
                                                             <MoreHorizontal className="h-4 w-4" />
                                                           </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                          <DropdownMenuItem onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
-                                                            <Eye className="mr-2 h-4 w-4" />
+                                                        <DropdownMenuContent align="end" className="w-auto min-w-[115px] p-1">
+                                                          <DropdownMenuItem className="cursor-pointer px-2.5 py-1.5 text-xs font-medium" onClick={() => void openFile(attachedFile.fileUrl, attachedFile.fileName)}>
+                                                            <Eye className="mr-2 h-3.5 w-3.5" />
                                                             Open File
                                                           </DropdownMenuItem>
-                                                          <DropdownMenuSeparator />
                                                           {!approvedBudgetStatuses.has(request.status) ? (
                                                             <>
-                                                              <DropdownMenuItem onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
-                                                                <PenSquare className="mr-2 h-4 w-4" />
+                                                              <DropdownMenuSeparator className="my-1" />
+                                                              <DropdownMenuItem className="cursor-pointer px-2.5 py-1.5 text-xs font-medium" onClick={() => { startEditingBudgetRequest(request); setShowBudgetForm(true); }}>
+                                                                <PenSquare className="mr-2 h-3.5 w-3.5" />
                                                                 Edit Request
                                                               </DropdownMenuItem>
                                                               <DropdownMenuItem
-                                                                className="text-destructive focus:text-destructive"
+                                                                className="cursor-pointer px-2.5 py-1.5 text-xs font-medium text-destructive focus:text-destructive"
                                                                 onClick={() => handleDeleteBudgetRequest(request)}
                                                               >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <Trash2 className="mr-2 h-3.5 w-3.5" />
                                                                 Delete Request
                                                               </DropdownMenuItem>
                                                             </>
@@ -6031,23 +6073,28 @@ export default function UserPortal({ section }: { section: string }) {
                                                   )}
                                                 </TableCell>
                                                 <TableCell className={rowPaddingClass}>
-                                                  <div className="space-y-1">
-                                                    <p className="text-sm leading-snug text-foreground lg:line-clamp-2">
-                                                      {latestActivity ? (budgetActionLabels[latestActivity.action] ?? latestActivity.action) : secondaryStatus}
+                                                  <button
+                                                    type="button"
+                                                    className="group flex flex-col items-start text-left text-xs transition-colors hover:text-primary min-w-0 w-full"
+                                                    onClick={() => openBudgetRecentActivityModal(request)}
+                                                    title="View full activity log"
+                                                  >
+                                                    <p className="text-sm leading-snug font-medium text-foreground group-hover:text-primary group-hover:underline lg:line-clamp-2">
+                                                      {latestActivity ? (budgetActionLabels[latestActivity.action] ?? formatStatusLabel(latestActivity.action)) : secondaryStatus}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(request.updatedAt)}
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                      {latestActivity ? formatDateTimeLabel(latestActivity.changedAt) : formatDateTimeLabel(request.updatedAt || request.createdAt)}
                                                     </p>
                                                     {additionalActivities > 0 ? (
-                                                      <button
-                                                        type="button"
-                                                        className="text-xs font-medium text-primary hover:underline"
-                                                        onClick={() => openBudgetRecentActivityModal(request)}
-                                                      >
+                                                      <span className="mt-1 text-xs font-semibold text-primary group-hover:underline">
                                                         +{additionalActivities} more
-                                                      </button>
-                                                    ) : null}
-                                                  </div>
+                                                      </span>
+                                                    ) : (
+                                                      <span className="mt-1 text-[11px] text-muted-foreground/80 group-hover:text-primary group-hover:underline">
+                                                        View log
+                                                      </span>
+                                                    )}
+                                                  </button>
                                                 </TableCell>
                                               </TableRow>
                                             );
@@ -7584,6 +7631,25 @@ export default function UserPortal({ section }: { section: string }) {
         const availableYpopActivities = ypopActivitiesSorted.filter((activity) => !ypopParticipationByActivityId.has(activity.id));
 
         const handleSubmitYpop = async (entry: YPOPEntry) => {
+          const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const eligibility = validateYpopSubmissionEligibility({
+            entry,
+            participations: joinedYpopEvents,
+            eventFiles: state.ypopEventFiles,
+            entryFiles: files,
+            orgActivityFiles: state.ypopOrgActivityFiles,
+            profile: currentProfile,
+          });
+
+          if (!eligibility.eligible) {
+            toast({
+              title: "Validation Request Blocked",
+              description: eligibility.message,
+              variant: "destructive",
+            });
+            return;
+          }
+
           const note = ypopNotesByEntryId[entry.id] ?? "";
           if (!await confirmAction({
             title: entry.status === "needs_revision" ? "Resubmit for city-led validation?" : "Submit for city-led validation?",
@@ -8124,6 +8190,14 @@ export default function UserPortal({ section }: { section: string }) {
 
         const renderEntryCard = (entry: YPOPEntry) => {
           const files = ypopFilesByEntryId.get(entry.id) ?? [];
+          const entryEligibility = validateYpopSubmissionEligibility({
+            entry,
+            participations: joinedYpopEvents,
+            eventFiles: state.ypopEventFiles,
+            entryFiles: files,
+            orgActivityFiles: state.ypopOrgActivityFiles,
+            profile: currentProfile,
+          });
           const isSubmitting = submittingYpopId === entry.id;
           const isUploading = ypopUploadingId === entry.id;
           const isDraft = entry.status === "draft";
@@ -8181,9 +8255,16 @@ export default function UserPortal({ section }: { section: string }) {
                   <PortalStatusBadge status={entry.status} />
                 </div>
 
-                {/* Draft / Needs Revision â€” step flow */}
+                {/* Draft / Needs Revision — step flow */}
                 {(isDraft || isNeedsRevision) && (
                   <>
+                    {!entryEligibility.eligible && (
+                      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span>{entryEligibility.message}</span>
+                      </div>
+                    )}
+
                     {isNeedsRevision && entry.adminRemarks.trim() && (
                       <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 p-3">
                         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-600">Revision Required</p>
@@ -8192,7 +8273,7 @@ export default function UserPortal({ section }: { section: string }) {
                     )}
 
                     <div className="space-y-4">
-                      {/* Step 1 â€” Attach files */}
+                      {/* Step 1 — Attach files */}
                       <div className="hidden" aria-hidden="true">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
                         <div className="flex-1 space-y-2">
@@ -8262,7 +8343,7 @@ export default function UserPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
-                      {/* Step 2 â€” Add message */}
+                      {/* Step 2 — Add message */}
                       <div className="flex gap-3">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">1</div>
                         <div className="flex-1 space-y-2">
@@ -8282,7 +8363,7 @@ export default function UserPortal({ section }: { section: string }) {
                         </div>
                       </div>
 
-                      {/* Step 3 â€” Submit */}
+                      {/* Step 3 — Submit */}
                       <div className="flex gap-3">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">2</div>
                         <div className="flex-1 space-y-1.5">
@@ -8290,7 +8371,8 @@ export default function UserPortal({ section }: { section: string }) {
                             type="button"
                             size="sm"
                             onClick={() => void handleSubmitYpop(entry)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !entryEligibility.eligible}
+                            title={!entryEligibility.eligible ? entryEligibility.message : undefined}
                           >
                             {isSubmitting ? (
                               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</>
@@ -9721,11 +9803,13 @@ Validated {validatedDate}</p>
               </Dialog>
 
               <Dialog open={ypopOrgActivityModalOpen} onOpenChange={handleYpopOrgActivityModalChange}>
-                <DialogContent className="sm:max-w-xl">
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{editingYpopOrgActivityId ? "Edit Organization-Initiated Activity" : "Log Organization-Initiated Activity"}</DialogTitle>
                     <DialogDescription>
-                      Add the PPA details first, then attach photo documentation or supporting files after saving the draft.
+                      {editingYpopOrgActivityId
+                        ? "Update activity details and manage supporting proof documents for this PPA log."
+                        : "Enter the PPA activity details to create a draft. Supporting documents can be attached after saving."}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
@@ -9765,10 +9849,89 @@ Validated {validatedDate}</p>
                         value={ypopOrgActivityDraft.narrativeReport}
                         onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, narrativeReport: event.target.value }))}
                         placeholder="Summarize what happened, the objective, and the outcomes of the activity."
-                        rows={5}
+                        rows={4}
                         className="resize-none"
                       />
                     </div>
+
+                    {editingYpopOrgActivityId && (
+                      <div className="space-y-3 pt-3 border-t border-border/70">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <Label className="text-sm font-medium">Supporting Documents & Proof Files</Label>
+                            <p className="text-xs text-muted-foreground">Attach photo documentation, narrative report PDF, or supporting files.</p>
+                          </div>
+                          {(() => {
+                            const editingActivity = state.ypopOrgActivities.find((a) => a.id === editingYpopOrgActivityId);
+                            const isEditable = !editingActivity || editingActivity.status === "draft" || editingActivity.status === "needs_revision";
+                            if (!isEditable) return null;
+                            const isUploading = ypopOrgActivityUploadingId === editingYpopOrgActivityId;
+                            return (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={isUploading}
+                                onClick={() => promptUploadYpopOrgActivityFile(editingYpopOrgActivityId)}
+                              >
+                                {isUploading ? (
+                                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Uploading...</>
+                                ) : (
+                                  <><Upload className="mr-1.5 h-3.5 w-3.5" /> Attach File</>
+                                )}
+                              </Button>
+                            );
+                          })()}
+                        </div>
+
+                        {(() => {
+                          const currentFiles = ypopOrgActivityFilesByActivityId.get(editingYpopOrgActivityId) ?? [];
+                          const editingActivity = state.ypopOrgActivities.find((a) => a.id === editingYpopOrgActivityId);
+                          const isEditable = !editingActivity || editingActivity.status === "draft" || editingActivity.status === "needs_revision";
+
+                          if (currentFiles.length === 0) {
+                            return (
+                              <div className="rounded-lg border border-dashed border-border/80 bg-muted/20 p-3 text-center text-xs text-muted-foreground">
+                                No supporting documents attached yet. Click "Attach File" above to upload proof documents.
+                              </div>
+                            );
+                          }
+                          return (
+                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                              {currentFiles.map((f: YPOPOrgActivityFile) => (
+                                <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-xs">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="h-4 w-4 shrink-0 text-primary/80" />
+                                    <span className="truncate font-medium text-foreground">{f.fileName}</span>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-1">
+                                    {f.fileUrl && (
+                                      <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" asChild>
+                                        <a href={f.fileUrl} target="_blank" rel="noreferrer">
+                                          View
+                                        </a>
+                                      </Button>
+                                    )}
+                                    {isEditable && (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        onClick={() => handleDeleteYpopOrgActivityFile(f.id)}
+                                        title="Remove file"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => handleYpopOrgActivityModalChange(false)} disabled={savingYpopOrgActivity}>
