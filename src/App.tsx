@@ -153,6 +153,22 @@ const UserSurfaceRoot = () => {
   return usePwaUi ? <Navigate to={PWA_ENTRY_ROUTE} replace /> : <Index />;
 };
 
+const PublicNewsReleasesGate = () => {
+  const { isInitialized, isAuthenticated, role } = useAuth();
+  const usePwaUi = useInstalledUserPwa();
+
+  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <PublicPageLoader />;
+
+  if (isAuthenticated) {
+    if (role === "admin") {
+      return <Navigate to="/admin/news-releases" replace />;
+    }
+    return <Navigate to="/portal-news-releases" replace />;
+  }
+
+  return <NewsReleases />;
+};
+
 const ScrollToTopOnRouteChange = () => {
   const { pathname, search, hash } = useLocation();
 
@@ -276,7 +292,7 @@ const App = () => (
                       <Route path="/terms" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
                       <Route path="/privacy" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
                       <Route path="/advocacy" element={<Suspense fallback={<PublicPageLoader />}><About /></Suspense>} />
-                      <Route path="/news-releases" element={<Suspense fallback={<PublicPageLoader />}><NewsReleases /></Suspense>} />
+                      <Route path="/news-releases" element={<Suspense fallback={<PublicPageLoader />}><PublicNewsReleasesGate /></Suspense>} />
                       <Route path="/news-releases/:newsReleaseId" element={<Suspense fallback={<PublicPageLoader />}><NewsReleaseRecord /></Suspense>} />
                       <Route path={PWA_ENTRY_ROUTE} element={<PwaEntryGate />} />
                       <Route path={`${PWA_ENTRY_ROUTE}/help`} element={<PwaPublicResourceGate page="help" />} />
@@ -295,6 +311,8 @@ const App = () => (
                       <Route path="/validation-review" element={<Navigate to="/document-submission" replace />} />
                       <Route path="/budget-request" element={<RequireUser><UserPortalEntry section="budget-request" /></RequireUser>} />
                       <Route path="/liquidation-reporting" element={<RequireUser><UserPortalEntry section="liquidation-reporting" /></RequireUser>} />
+                      <Route path="/portal-news-releases" element={<RequireUser><UserPortalEntry section="news-releases" /></RequireUser>} />
+                      <Route path="/organization-news-releases" element={<RequireUser><UserPortalEntry section="news-releases" /></RequireUser>} />
 
                       <Route path="/public-transparency" element={<RequireUser><UserPortalEntry section="public-transparency" /></RequireUser>} />
                       <Route path="/compliance-status" element={<RequireUser><UserPortalEntry section="compliance-status" /></RequireUser>} />
