@@ -555,6 +555,8 @@ export default function UserPortal({ section }: { section: string }) {
     "overview" | "organization-details" | "classification" | "advocacy" | "contacts-socials" | "ypop-participation"
   >("overview");
   const [ocrPreviewOpen, setOcrPreviewOpen] = useState(false);
+  const [portalNewsSearch, setPortalNewsSearch] = useState("");
+  const [portalNewsCategoryFilter, setPortalNewsCategoryFilter] = useState("all");
   const [budgetReviewNote, setBudgetReviewNote] = useState<{ title: string; note: string; status: BudgetRequestStatus } | null>(null);
   const [budgetRecentActivityModal, setBudgetRecentActivityModal] = useState<{
     title: string;
@@ -3443,7 +3445,7 @@ export default function UserPortal({ section }: { section: string }) {
                                         <input value={profileDraft.isExistingOrganization ? "Existing Organization" : "New Organization"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" readOnly />
                                       </FieldGroup>
                                       <FieldGroup label="Unique Registration Number (URN)">
-                                        <input value={profileDraft.isExistingOrganization ? profileDraft.organizationIdentifierNumber : "Not required"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
+                                        <input value={profileDraft.organizationIdentifierNumber || "Auto-generated upon registration"} className="h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary" placeholder="Unique Registration Number (URN)" readOnly />
                                       </FieldGroup>
                                     </div>
                                     <div className="profile-editor-two-column grid gap-3 min-[600px]:grid-cols-2">
@@ -3558,7 +3560,7 @@ export default function UserPortal({ section }: { section: string }) {
                           </FieldGroup>
                           <FieldGroup label="Unique Registration Number (URN)">
                             <input
-                              value={profileDraft.isExistingOrganization ? profileDraft.organizationIdentifierNumber : "Not required"}
+                              value={profileDraft.organizationIdentifierNumber || "Auto-generated upon registration"}
                               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
                               placeholder="Unique Registration Number (URN)"
                               readOnly
@@ -7139,6 +7141,18 @@ export default function UserPortal({ section }: { section: string }) {
       }
       case "news-releases": {
         const publishedReleases = state.newsReleases.filter((n) => n.visibilityStatus === "published");
+        const availableCategories = Array.from(
+          new Set(publishedReleases.map((r) => r.category).filter((c): c is string => Boolean(c)))
+        ).sort();
+        const searchLower = portalNewsSearch.trim().toLowerCase();
+        const filteredReleases = publishedReleases.filter((news) => {
+          const matchesCategory = portalNewsCategoryFilter === "all" || news.category === portalNewsCategoryFilter;
+          const matchesQuery =
+            !searchLower ||
+            news.title.toLowerCase().includes(searchLower) ||
+            (news.description ?? "").toLowerCase().includes(searchLower);
+          return matchesCategory && matchesQuery;
+        });
         const isRecentRelease = (datePosted: string) => {
           const diffDays = (Date.now() - new Date(datePosted).getTime()) / (1000 * 60 * 60 * 24);
           return diffDays <= 30;
@@ -7156,59 +7170,120 @@ export default function UserPortal({ section }: { section: string }) {
               </Button>
             }
           >
-            {publishedReleases.length ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {publishedReleases.map((news) => {
-                  const facebookUrl = news.facebookPostUrl?.trim() || "";
-                  const hasFacebookUrl = Boolean(facebookUrl);
-                  const previewImageUrl = news.previewImageUrl?.trim() || "";
-                  const formattedDate = new Date(news.datePosted).toLocaleDateString("en-PH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  });
-                  const fallbackAccent = isRecentRelease(news.datePosted)
-                    ? "from-primary via-primary/85 to-sky-500"
-                    : "from-slate-700 via-primary/90 to-slate-800";
-
-                  return (
-                    <article
-                      key={news.id}
-                      className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={portalNewsSearch}
+                    onChange={(e) => setPortalNewsSearch(e.target.value)}
+                    placeholder="Search news releases..."
+                    className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary"
+                  />
+                </div>
+                {availableCategories.length ? (
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setPortalNewsCategoryFilter("all")}
+                      className={cn(
+                        "rounded-full px-3 py-1.5 font-medium transition-colors",
+                        portalNewsCategoryFilter === "all"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      )}
                     >
-                      <div className="border-b border-border/50 bg-muted/10 p-3 sm:p-4">
-                        {hasFacebookUrl ? (
-                          <a
-                            href={facebookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-                            aria-label={`Open ${news.title} on Facebook`}
-                          >
-                            <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-border/60 bg-muted">
-                              <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
-                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90 transition-transform duration-300 group-hover:scale-[1.03]" />
-                              <div className="absolute inset-x-0 bottom-0 p-4">
-                                <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
-                                  <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
-                                    {news.title}
-                                  </p>
+                      All
+                    </button>
+                    {availableCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setPortalNewsCategoryFilter(cat)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 font-medium transition-colors capitalize",
+                          portalNewsCategoryFilter === cat
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                        )}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {filteredReleases.length ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredReleases.map((news) => {
+                    const facebookUrl = news.facebookPostUrl?.trim() || "";
+                    const hasFacebookUrl = Boolean(facebookUrl);
+                    const previewImageUrl = news.previewImageUrl?.trim() || "";
+                    const formattedDate = new Date(news.datePosted).toLocaleDateString("en-PH", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    });
+                    const fallbackAccent = isRecentRelease(news.datePosted)
+                      ? "from-primary via-primary/85 to-sky-500"
+                      : "from-slate-700 via-primary/90 to-slate-800";
+
+                    return (
+                      <article
+                        key={news.id}
+                        className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+                      >
+                        <div className="border-b border-border/50 bg-muted/10 p-3 sm:p-4">
+                          {hasFacebookUrl ? (
+                            <a
+                              href={facebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
+                              aria-label={`Open ${news.title} on Facebook`}
+                            >
+                              <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-border/60 bg-muted">
+                                <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90 transition-transform duration-300 group-hover:scale-[1.03]" />
+                                <div className="absolute inset-x-0 bottom-0 p-4">
+                                  <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
+                                    <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
+                                      {news.title}
+                                    </p>
+                                  </div>
+                                </div>
+                                {previewImageUrl ? (
+                                  <img
+                                    src={previewImageUrl}
+                                    alt={`${news.title} preview`}
+                                    referrerPolicy="no-referrer"
+                                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                    onError={(event) => {
+                                      event.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-4">
+                                  <span className="inline-flex items-center rounded-full border border-white/20 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary shadow-sm">
+                                    News Release
+                                  </span>
+                                  {isRecentRelease(news.datePosted) ? (
+                                    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
+                                      New
+                                    </span>
+                                  ) : null}
                                 </div>
                               </div>
-                              {previewImageUrl ? (
-                                <img
-                                  src={previewImageUrl}
-                                  alt={`${news.title} preview`}
-                                  referrerPolicy="no-referrer"
-                                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                                  onError={(event) => {
-                                    event.currentTarget.style.display = "none";
-                                  }}
-                                />
-                              ) : null}
-                              <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-4">
-                                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary shadow-sm">
-                                  News Release
+                            </a>
+                          ) : (
+                            <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-muted">
+                              <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
+                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90" />
+                              <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+                                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
+                                  LYDO News
                                 </span>
                                 {isRecentRelease(news.datePosted) ? (
                                   <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
@@ -7216,65 +7291,50 @@ export default function UserPortal({ section }: { section: string }) {
                                   </span>
                                 ) : null}
                               </div>
-                            </div>
-                          </a>
-                        ) : (
-                          <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-muted">
-                            <div className={cn("absolute inset-0 bg-gradient-to-br", fallbackAccent)} />
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_32%),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px] opacity-90" />
-                            <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-                              <span className="inline-flex items-center rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
-                                LYDO News
-                              </span>
-                              {isRecentRelease(news.datePosted) ? (
-                                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
-                                  New
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="absolute inset-x-0 bottom-0 p-4">
-                              <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
-                                <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
-                                  {news.title}
-                                </p>
+                              <div className="absolute inset-x-0 bottom-0 p-4">
+                                <div className="rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-sm">
+                                  <p className="line-clamp-3 text-lg font-semibold leading-tight text-white">
+                                    {news.title}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-1 flex-col p-4 sm:p-5">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-medium text-muted-foreground">{formattedDate}</p>
-                          {isRecentRelease(news.datePosted) ? (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                              New
-                            </span>
-                          ) : null}
+                          )}
                         </div>
-                        {hasFacebookUrl ? (
-                          <a
-                            href={facebookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 inline-flex items-start gap-1.5 text-left text-[1.02rem] font-semibold leading-snug text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-                          >
-                            <span className="line-clamp-2">{news.title}</span>
-                            <ExternalLink className="mt-0.5 h-4 w-4 shrink-0" />
-                          </a>
-                        ) : (
-                          <p className="mt-2 text-[1.02rem] font-semibold leading-snug text-foreground">{news.title}</p>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <PortalEmptyState
-                title="No announcements yet"
-                description="LYDO hasn't published any announcements yet. Check back soon for updates."
-              />
-            )}
+                        <div className="flex flex-1 flex-col p-4 sm:p-5">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">{formattedDate}</p>
+                            {isRecentRelease(news.datePosted) ? (
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                                New
+                              </span>
+                            ) : null}
+                          </div>
+                          {hasFacebookUrl ? (
+                            <a
+                              href={facebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 inline-flex items-start gap-1.5 text-left text-[1.02rem] font-semibold leading-snug text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
+                            >
+                              <span className="line-clamp-2">{news.title}</span>
+                              <ExternalLink className="mt-0.5 h-4 w-4 shrink-0" />
+                            </a>
+                          ) : (
+                            <p className="mt-2 text-[1.02rem] font-semibold leading-snug text-foreground">{news.title}</p>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <PortalEmptyState
+                  title="No announcements found"
+                  description="No news releases match your search criteria. Try clearing filters or check back later."
+                />
+              )}
+            </div>
           </PortalSection>
         );
       }

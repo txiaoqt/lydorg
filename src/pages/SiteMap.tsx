@@ -29,7 +29,7 @@ const siteMapSections: Array<{ title: string; links: Array<{ label: string; href
       { label: "Document Submission", href: "/document-submission" },
       { label: "Budget Requests", href: "/budget-request" },
       { label: "Liquidation Reports", href: "/liquidation-reporting" },
-      { label: "News Releases", href: "/news-releases" },
+      { label: "News Releases", href: "/portal-news-releases" },
       { label: "Notifications", href: "/notifications" },
       { label: "Inquiry / Support", href: "/contacts" },
       { label: "Account Settings", href: "/organization-profile" },

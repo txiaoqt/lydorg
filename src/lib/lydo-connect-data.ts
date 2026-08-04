@@ -515,7 +515,7 @@ export const userRouteMap: Record<string, string> = {
   "document-submission": "/document-submission",
   "budget-request": "/budget-request",
   "liquidation-reporting": "/liquidation-reporting",
-  "news-releases": "/news-releases",
+  "news-releases": "/portal-news-releases",
   "compliance-status": "/compliance-status",
   notifications: "/notifications",
   ypop: "/ypop",
