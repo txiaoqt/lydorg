@@ -9677,11 +9677,13 @@ Validated {validatedDate}</p>
               </Dialog>
 
               <Dialog open={ypopOrgActivityModalOpen} onOpenChange={handleYpopOrgActivityModalChange}>
-                <DialogContent className="sm:max-w-xl">
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{editingYpopOrgActivityId ? "Edit Organization-Initiated Activity" : "Log Organization-Initiated Activity"}</DialogTitle>
                     <DialogDescription>
-                      Add the PPA details first, then attach photo documentation or supporting files after saving the draft.
+                      {editingYpopOrgActivityId
+                        ? "Update activity details and manage supporting proof documents for this PPA log."
+                        : "Enter the PPA activity details to create a draft. Supporting documents can be attached after saving."}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
@@ -9721,10 +9723,89 @@ Validated {validatedDate}</p>
                         value={ypopOrgActivityDraft.narrativeReport}
                         onChange={(event) => setYpopOrgActivityDraft((current) => ({ ...current, narrativeReport: event.target.value }))}
                         placeholder="Summarize what happened, the objective, and the outcomes of the activity."
-                        rows={5}
+                        rows={4}
                         className="resize-none"
                       />
                     </div>
+
+                    {editingYpopOrgActivityId && (
+                      <div className="space-y-3 pt-3 border-t border-border/70">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <Label className="text-sm font-medium">Supporting Documents & Proof Files</Label>
+                            <p className="text-xs text-muted-foreground">Attach photo documentation, narrative report PDF, or supporting files.</p>
+                          </div>
+                          {(() => {
+                            const editingActivity = state.ypopOrgActivities.find((a) => a.id === editingYpopOrgActivityId);
+                            const isEditable = !editingActivity || editingActivity.status === "draft" || editingActivity.status === "needs_revision";
+                            if (!isEditable) return null;
+                            const isUploading = ypopOrgActivityUploadingId === editingYpopOrgActivityId;
+                            return (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={isUploading}
+                                onClick={() => promptUploadYpopOrgActivityFile(editingYpopOrgActivityId)}
+                              >
+                                {isUploading ? (
+                                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Uploading...</>
+                                ) : (
+                                  <><Upload className="mr-1.5 h-3.5 w-3.5" /> Attach File</>
+                                )}
+                              </Button>
+                            );
+                          })()}
+                        </div>
+
+                        {(() => {
+                          const currentFiles = ypopOrgActivityFilesByActivityId.get(editingYpopOrgActivityId) ?? [];
+                          const editingActivity = state.ypopOrgActivities.find((a) => a.id === editingYpopOrgActivityId);
+                          const isEditable = !editingActivity || editingActivity.status === "draft" || editingActivity.status === "needs_revision";
+
+                          if (currentFiles.length === 0) {
+                            return (
+                              <div className="rounded-lg border border-dashed border-border/80 bg-muted/20 p-3 text-center text-xs text-muted-foreground">
+                                No supporting documents attached yet. Click "Attach File" above to upload proof documents.
+                              </div>
+                            );
+                          }
+                          return (
+                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                              {currentFiles.map((f: YPOPOrgActivityFile) => (
+                                <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-xs">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="h-4 w-4 shrink-0 text-primary/80" />
+                                    <span className="truncate font-medium text-foreground">{f.fileName}</span>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-1">
+                                    {f.fileUrl && (
+                                      <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" asChild>
+                                        <a href={f.fileUrl} target="_blank" rel="noreferrer">
+                                          View
+                                        </a>
+                                      </Button>
+                                    )}
+                                    {isEditable && (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        onClick={() => handleDeleteYpopOrgActivityFile(f.id)}
+                                        title="Remove file"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => handleYpopOrgActivityModalChange(false)} disabled={savingYpopOrgActivity}>
