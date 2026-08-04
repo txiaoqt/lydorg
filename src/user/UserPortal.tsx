@@ -1181,7 +1181,21 @@ export default function UserPortal({ section }: { section: string }) {
     URL.revokeObjectURL(objectUrl);
   };
 
-  const handleDownloadTemplate = async (template: (typeof templateDocuments)[number]) => {
+  const getTemplateDownloadFileName = (template: { templateFileName?: string; templateFileUrl?: string; name: string }) => {
+    const storedName = template.templateFileName?.trim();
+    if (storedName && storedName.includes(".")) return storedName;
+
+    const urlSource = (template.templateFileUrl || "").split(/[?#]/)[0];
+    const urlFileName = urlSource.split("/").pop()?.trim();
+    if (urlFileName && urlFileName.includes(".")) return urlFileName;
+
+    const match = urlSource.match(/\.([a-z0-9]{1,8})$/i);
+    const ext = match ? match[1] : "";
+    const baseName = storedName || template.name;
+    return ext ? `${baseName}.${ext}` : baseName;
+  };
+
+  const handleDownloadTemplate = async (template: (typeof state.templates)[number]) => {
     if (!template.templateFileUrl) {
       toast({
         title: "Template currently unavailable",
@@ -1192,7 +1206,8 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     try {
-      await downloadResolvedFile(template.templateFileUrl, template.templateFileName || template.name);
+      const downloadName = getTemplateDownloadFileName(template);
+      await downloadResolvedFile(template.templateFileUrl, downloadName);
     } catch (error) {
       toast({
         title: "Unable to download template",
@@ -1227,7 +1242,7 @@ export default function UserPortal({ section }: { section: string }) {
             throw new Error(`Missing template: ${template.name}`);
           }
           const blob = await response.blob();
-          zip.file(template.templateFileName || `${template.name}.pdf`, blob);
+          zip.file(getTemplateDownloadFileName(template), blob);
         }),
       );
 
@@ -3239,7 +3254,7 @@ export default function UserPortal({ section }: { section: string }) {
                             type="button"
                             className="w-full sm:flex-1"
                             disabled={!template.templateFileUrl}
-                            onClick={() => void openFile(template.templateFileUrl, template.templateFileName || template.name)}
+                            onClick={() => void handleDownloadTemplate(template)}
                           >
                             <Download className="mr-2 h-4 w-4" />
                             Download
