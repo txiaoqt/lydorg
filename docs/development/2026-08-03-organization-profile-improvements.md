@@ -9,6 +9,7 @@
   2. Strict Facebook page/profile URL validation.
   3. Automatic URN generation (`PCYDO-YYYY-XXXX`) for new organizations with read-only state and explanatory helper text.
   4. Person name validation for Representative and Adviser fields (restricting numeric and inappropriate special characters).
+  5. Organization Profile UI text consistency update for Organization Type, Major Classification, and Sub Classification labels/placeholders.
 - **Project**: Y-TRACE (LYDO Connect Organization Focused)
 - **Branch**: `feature/organization-profile`
 
@@ -72,7 +73,22 @@
 
 ---
 
-## 2. Database Changes & Supabase Migration
+## 2. UI Text Consistency Refinements
+
+- **Organization Type Display Values**:
+  - Updated `New organization` ➜ `New Organization`
+  - Updated `Existing organization` ➜ `Existing Organization`
+- **Major Classification Placeholder**:
+  - Updated `Select major classification` ➜ `Select Major Classification`
+- **Sub Classification Placeholder**:
+  - Updated `Select sub classification` / `Select sub-classification` ➜ `Select Sub Classification`
+- **Scope & Non-Regression**:
+  - Pure UI text consistency update.
+  - No changes were made to business logic, dropdown values, field validation, routing, authentication, or Supabase database schemas.
+
+---
+
+## 3. Database Changes & Supabase Migration
 
 - **Migration File**: [supabase/20260803_auto_generate_urn.sql](file:///c:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/20260803_auto_generate_urn.sql)
 - **Functions & Triggers**:
@@ -81,7 +97,7 @@
 
 ---
 
-## 3. Files Modified
+## 4. Files Modified
 
 | File Path | Summary of Changes |
 | :--- | :--- |
@@ -91,15 +107,16 @@
 | `src/lib/urn-registration.ts` | Added `generateUniqueUrn()` function producing `PCYDO-YYYY-XXXX` format URNs. |
 | `src/lib/urn-registration.test.ts` | Added unit test verifying `generateUniqueUrn()` produces valid URNs. |
 | `src/pages/SignUp.tsx` | Added helper text for auto URN generation on new orgs, and auto-populated URN on submission. |
-| `src/user/UserPortal.tsx` | Added field validation calls for Facebook URL and representative/adviser names, and auto URN fallback. |
-| `src/user/pwa/profile/PwaProfilePages.tsx` | Added field validation calls for PWA profile editor. |
+| `src/user/UserPortal.tsx` | Updated field validation calls, auto URN fallback, and updated Organization Type and Classification default option labels to Title Case (`New Organization`, `Existing Organization`, `Select Major Classification`, `Select Sub Classification`). |
+| `src/user/pwa/profile/PwaProfilePages.tsx` | Updated PWA profile view and editor labels to Title Case (`New Organization`, `Existing Organization`, `Select Major Classification`, `Select Sub Classification`). |
+| `src/admin/AdminPortal.tsx` | Updated Organization Type badge label to Title Case (`Existing Organization` / `New Organization`). |
 | `supabase/20260803_auto_generate_urn.sql` | Created database migration for auto URN generation trigger. |
+| `docs/development/2026-08-03-organization-profile-improvements.md` | Appended documentation for UI text consistency refinements. |
 
 ---
 
-## 4. Verification Performed
+## 5. Verification Performed
 
 - **TypeScript Type Check**: `npx tsc --noEmit` passed with 0 errors.
-- **Unit Test Suite**: `npm test` passed with 24 test files and 99 tests passing.
-- **Production Build**: `npm run build` completed in 32.22s with 0 errors.
+- **Unit Test Suite**: `npm test` passed with 25 test files and 106 tests passing.
 - **Git Branch**: `feature/organization-profile`.

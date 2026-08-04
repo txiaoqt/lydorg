@@ -353,7 +353,7 @@ function ProfileOverview({ data }: { data: PortalData }) {
       </ProfileSection>
       <ProfileSection title="Organization Snapshot">
         <dl className="pwa-profile-fields">
-          <ProfileField label="Organization Type" value={profile?.isExistingOrganization ? "Existing organization" : "New organization"} />
+          <ProfileField label="Organization Type" value={profile?.isExistingOrganization ? "Existing Organization" : "New Organization"} />
           <ProfileField label="Location" value={locationLabel(profile)} />
           <ProfileField label="Classification" value={classificationLabel(profile)} />
           <ProfileField label="Unique Registration Number (URN)" value={profile?.isExistingOrganization ? requiredValue(profile.organizationIdentifierNumber) : "Not required for this organization type"} />
@@ -386,7 +386,7 @@ function ProfileDetails({ data }: { data: PortalData }) {
   const groups = [
     ["Organization Information", [
       ["Organization Name", requiredValue(profile?.organizationName)],
-      ["Organization Type", profile?.isExistingOrganization ? "Existing organization" : "New organization"],
+      ["Organization Type", profile?.isExistingOrganization ? "Existing Organization" : "New Organization"],
       ["Unique Registration Number (URN)", profile?.isExistingOrganization ? requiredValue(profile.organizationIdentifierNumber) : "Not required for this organization type"],
     ]],
     ["Contact & Location", [
@@ -645,7 +645,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                 <div className="pwa-profile-editor-grid">
                   <EditorField label="District" required><Input value={draft.district} readOnly /></EditorField>
                   <EditorField label="Barangay" required><Input value={draft.barangay} readOnly /></EditorField>
-                  <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing organization" : "New organization"} readOnly /></EditorField>
+                  <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing Organization" : "New Organization"} readOnly /></EditorField>
                   <EditorField label="Unique Registration Number (URN)">
                     <Input
                       value={draft.organizationIdentifierNumber || "Auto-generated upon registration"}
@@ -654,13 +654,13 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   </EditorField>
                   <EditorField label="Major Classification" required>
                     <select value={draft.majorClassification} onChange={(event) => setField("majorClassification", event.target.value as OrganizationProfile["majorClassification"])}>
-                      <option value="">Select major classification</option>
+                      <option value="">Select Major Classification</option>
                       {majorClassificationOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                     </select>
                   </EditorField>
                   <EditorField label="Sub-classification" required>
                     <select value={draft.subClassification} onChange={(event) => setField("subClassification", event.target.value as OrganizationProfile["subClassification"])}>
-                      <option value="">Select sub-classification</option>
+                      <option value="">Select Sub Classification</option>
                       {subClassificationOptions.map((option) => <option key={option} value={option}>{formatSubClassificationLabel(option)}</option>)}
                     </select>
                   </EditorField>

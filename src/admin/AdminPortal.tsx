@@ -4536,7 +4536,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-medium ${selectedOrg.isExistingOrganization ? "border-sky-200 bg-sky-50 text-sky-700" : "border-primary/20 bg-primary-soft text-primary"}`}>
-                          {selectedOrg.isExistingOrganization ? "Existing organization" : "New organization"}
+                          {selectedOrg.isExistingOrganization ? "Existing Organization" : "New Organization"}
                         </span>
                         <span>&middot;</span>
                         <span>{approvedDocumentCount}/{templateDocuments.length} documents approved</span>
