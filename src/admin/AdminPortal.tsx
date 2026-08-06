@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
 import { UsersPage } from "./pages/Users";
 import { Roles } from "./pages/Roles";
-import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, Download, Eye, FileText, FolderOpen, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, TrendingUp, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, CornerUpLeft, Download, ExternalLink, Eye, FileText, FolderOpen, ListFilter, LogOut, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Search, Tag, Trash2, TrendingUp, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -670,11 +670,17 @@ export default function AdminPortal({ section }: { section: string }) {
   const [statusChangeRemarkDraft, setStatusChangeRemarkDraft] = useState("");
   const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
   const [inquirySearch, setInquirySearch] = useState("");
+  const [navCollapsed, setNavCollapsed] = useState(false);
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | InquiryRecord["status"]>("all");
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
   const [inquiryStatusDraft, setInquiryStatusDraft] = useState<InquiryRecord["status"]>("pending_review");
   const [inquiryAdminRemarksDraft, setInquiryAdminRemarksDraft] = useState("");
   const [savingInquiryStatus, setSavingInquiryStatus] = useState(false);
+  const [inquiryStatusDropdownOpen, setInquiryStatusDropdownOpen] = useState(false);
+  const inquiryStatusDropdownRef = useRef<HTMLDivElement>(null);
+  const [inquiryPage, setInquiryPage] = useState(1);
+  const [replyTargetInquiry, setReplyTargetInquiry] = useState<InquiryRecord | null>(null);
+  const [markingInquiryResponded, setMarkingInquiryResponded] = useState(false);
   const [expandedRegistrationIds, setExpandedRegistrationIds] = useState<string[]>([]);
   const [expandedDocumentFileIds, setExpandedDocumentFileIds] = useState<string[]>([]);
   const [documentReviewRemarksByFileId, setDocumentReviewRemarksByFileId] = useState<Record<string, string>>({});
@@ -965,14 +971,45 @@ export default function AdminPortal({ section }: { section: string }) {
     if (!value) return "Pending";
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return "Pending";
-    return new Intl.DateTimeFormat("en-PH", {
-      year: "numeric",
-      month: "short",
+    const date = new Intl.DateTimeFormat("en-GB", {
       day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(parsed);
+    const time = new Intl.DateTimeFormat("en-PH", {
       hour: "numeric",
       minute: "2-digit",
     }).format(parsed);
+    return `${date} · ${time}`;
   }
+  function getInquirySubtitle(description?: string | null): string {
+    if (!description) return "";
+    const firstSentence = description.split(/(?<=[.!?])\s+/)[0] ?? description;
+    return firstSentence.length > 120
+      ? `${firstSentence.slice(0, 120).trimEnd()}…`
+      : firstSentence;
+  }
+  function formatRelativeTime(value?: string | null): string {
+    if (!value) return "";
+    const diff = Date.now() - new Date(value).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  function getInquiryStatusBadge(status: string) {
+    switch (status) {
+      case "pending_review": return { label: "New",        Icon: Mail,          bg: "#FFFBEB", color: "#975102" };
+      case "reviewed":
+      case "in_review":      return { label: "In review",  Icon: Tag,           bg: "#DCEFFD", color: "#118DF0" };
+      case "responded":      return { label: "Responded",  Icon: CornerUpLeft,  bg: "#DCE4F0", color: "#0E2F66" };
+      case "resolved":       return { label: "Resolved",   Icon: CheckCircle2,  bg: "#EBFFEE", color: "#009951" };
+      default:               return { label: status,       Icon: Clock3,        bg: "#F5F5F5", color: "#757575" };
+    }
+  }
+
   const formatCompactDateParts = (value?: string | null) => {
     if (!value) {
       return { date: "Pending", time: "" };
@@ -1216,10 +1253,20 @@ export default function AdminPortal({ section }: { section: string }) {
       })
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }, [inquirySearch, inquiryStatusFilter, state.inquiries]);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (inquiryStatusDropdownRef.current && !inquiryStatusDropdownRef.current.contains(e.target as Node)) {
+        setInquiryStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const openInquiryDetails = (inquiry: InquiryRecord) => {
     setSelectedInquiry(inquiry);
     setInquiryStatusDraft(inquiry.status);
     setInquiryAdminRemarksDraft(inquiry.adminRemarks);
+    setInquiryStatusDropdownOpen(false);
   };
   const budgetMonitoringAnalysis = useMemo(() => {
     const totalApproved = budgetMonitoringEntries.reduce((sum, entry) => sum + entry.approvedAmount, 0);
@@ -1655,6 +1702,23 @@ export default function AdminPortal({ section }: { section: string }) {
     };
   }, [state]);
 
+  const budgetSnapshot = useMemo(() => {
+    const disbursed = state.budgetRequests
+      .filter((r) => r.status === "budget_released")
+      .reduce((sum, r) => sum + (r.releasedAmount ?? 0), 0);
+    const pending = state.budgetRequests
+      .filter((r) => r.status === "submitted" || r.status === "under_review")
+      .reduce((sum, r) => sum + (r.requestedAmount ?? 0), 0);
+    const available = state.budgetRequests
+      .filter((r) => r.status === "approved_for_ftf_green")
+      .reduce((sum, r) => sum + ((r.approvedAmount ?? 0) - (r.releasedAmount ?? 0)), 0);
+    const total = disbursed + pending + available;
+    const recentRequests = [...state.budgetRequests]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 2);
+    return { disbursed, pending, available, total, recentRequests };
+  }, [state.budgetRequests]);
+
   const navGroups = useMemo(() => {
     const counts: Record<string, number> = {
       registrations: overviewStats.pendingProfiles,
@@ -1991,6 +2055,35 @@ export default function AdminPortal({ section }: { section: string }) {
       });
     } finally {
       setSavingInquiryStatus(false);
+    }
+  };
+
+  const handleMarkInquiryResponded = async () => {
+    if (!replyTargetInquiry || markingInquiryResponded) return;
+    setMarkingInquiryResponded(true);
+    try {
+      const saved = await adminUpdateInquiryInSupabase(replyTargetInquiry.id, {
+        status: "responded",
+        adminRemarks: replyTargetInquiry.adminRemarks,
+      });
+      updateInquiry(saved.id, saved);
+      void appendAuditLog(
+        "update_inquiry_status",
+        "inquiry",
+        saved.id,
+        `Marked inquiry as responded.`,
+        saved.organizationId,
+      ).catch((err) => console.error("Unable to log mark-responded:", err));
+      toast({ title: "Inquiry marked as responded" });
+      setReplyTargetInquiry(null);
+    } catch (err) {
+      toast({
+        title: "Failed to update inquiry",
+        description: err instanceof Error ? err.message : "Could not update the inquiry.",
+        variant: "destructive",
+      });
+    } finally {
+      setMarkingInquiryResponded(false);
     }
   };
 
@@ -4100,13 +4193,13 @@ export default function AdminPortal({ section }: { section: string }) {
         };
 
         const taskItems = [
-          { count: overviewStats.pendingProfiles,    label: "Organization profile(s) pending review",  route: routeMap.registrations,             icon: Users,         iconBg: "#FFFBEB", iconColor: "#522504" },
-          { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",     route: routeMap.registrations,             icon: FileText,      iconBg: "#FFFBEB", iconColor: "#522504" },
-          { count: overviewStats.revisions,          label: "Document revision(s) need re-review",     route: routeMap.registrations,             icon: ClipboardList, iconBg: "#FFFBEB", iconColor: "#522504" },
-          { count: overviewStats.overdueLiquidation, label: "Liquidation report(s) overdue",           route: routeMap["liquidation-monitoring"], icon: ClipboardList, iconBg: "#DCEFFD", iconColor: "#118DF0" },
-          { count: overviewStats.pendingLiquidation, label: "Liquidation report(s) awaiting review",   route: routeMap["liquidation-monitoring"], icon: ClipboardList, iconBg: "#DCEFFD", iconColor: "#118DF0" },
-          { count: overviewStats.pendingInquiries,   label: "Inquiry(s) awaiting response",            route: routeMap.inquiries,                 icon: Mail,          iconBg: "#EBFFEE", iconColor: "#02542D" },
-          { count: overviewStats.nonCompliant,       label: "Organization(s) with compliance issues",  route: routeMap.users,                     icon: AlertTriangle, iconBg: "#FEE9E7", iconColor: "#C00F0C" },
+          { count: overviewStats.pendingProfiles,    label: "Organization profile(s) pending review",  route: routeMap.registrations,             icon: Users         },
+          { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",     route: routeMap.registrations,             icon: FileText      },
+          { count: overviewStats.revisions,          label: "Document revision(s) need re-review",     route: routeMap.registrations,             icon: ClipboardList },
+          { count: overviewStats.overdueLiquidation, label: "Liquidation report(s) overdue",           route: routeMap["liquidation-monitoring"], icon: ClipboardList },
+          { count: overviewStats.pendingLiquidation, label: "Liquidation report(s) awaiting review",   route: routeMap["liquidation-monitoring"], icon: ClipboardList },
+          { count: overviewStats.pendingInquiries,   label: "Inquiry(s) awaiting response",            route: routeMap.inquiries,                 icon: Mail          },
+          { count: overviewStats.nonCompliant,       label: "Organization(s) with compliance issues",  route: routeMap.users,                     icon: AlertTriangle },
         ].filter((item) => item.count > 0);
         const dashboardRecentActivities = state.activityLogs.map((log) => ({
           id: log.id,
@@ -4119,7 +4212,7 @@ export default function AdminPortal({ section }: { section: string }) {
         return (
           <div className="-m-3 sm:-m-6 lg:-m-8">
             {/* Breadcrumb bar */}
-            <div className="border-b border-[#E5E7EB] bg-white px-4 py-[6px]">
+            <div className="border-b border-[#E5E7EB] bg-white px-4 py-3">
               <nav className="flex items-center gap-[10px]" aria-label="Breadcrumb">
                 <span className="text-[14px] leading-[100%] text-[#B3B3B3]">Workspace</span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={2} />
@@ -4148,44 +4241,36 @@ export default function AdminPortal({ section }: { section: string }) {
                     label: "Registered Organizations",
                     value: overviewStats.organizations,
                     tag: overviewTags.orgs,
+                    tagType: "positive" as const,
                     description: "Total registered youth organizations.",
                     icon: Users,
-                    iconBg: "#DCE4F0",
-                    iconBorder: "#0E2F66",
-                    iconColor: "#0E2F66",
                     onClick: () => navigate(routeMap.registrations),
                   },
                   {
                     label: "Approved Documents",
                     value: overviewStats.approvedDocs,
                     tag: overviewTags.docs,
+                    tagType: "positive" as const,
                     description: "Documents with full compliance approval.",
                     icon: CheckCircle2,
-                    iconBg: "#EBFFEE",
-                    iconBorder: "#02542D",
-                    iconColor: "#02542D",
                     onClick: () => navigate(routeMap.registrations),
                   },
                   {
                     label: "Budget Released",
                     value: overviewStats.releasedBudget,
                     tag: overviewTags.budget,
+                    tagType: "positive" as const,
                     description: "Total budget requests released to date.",
                     icon: Banknote,
-                    iconBg: "#DCEFFD",
-                    iconBorder: "#118DF0",
-                    iconColor: "#118DF0",
                     onClick: () => navigate(routeMap["budget-utilization"]),
                   },
                   {
                     label: "Pending Inquiries",
                     value: overviewStats.pendingInquiries,
                     tag: overviewTags.inquiry,
+                    tagType: "oldest" as const,
                     description: "Inquiries awaiting admin response.",
                     icon: Mail,
-                    iconBg: "#FFFBEB",
-                    iconBorder: "#522504",
-                    iconColor: "#522504",
                     onClick: () => navigate(routeMap.inquiries),
                   },
                 ] as const
@@ -4196,18 +4281,15 @@ export default function AdminPortal({ section }: { section: string }) {
                     key={card.label}
                     type="button"
                     onClick={card.onClick}
-                    className="flex flex-col gap-2 rounded-lg border border-[#E5E7EB] bg-white p-4 text-left shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)] transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    className="flex flex-col gap-2 rounded-lg border border-[#E5E7EB] bg-white p-4 text-left shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)] transition-colors hover:border-[#2864C4] hover:shadow-[0px_0px_2px_1px_rgba(40,100,196,0.25)]"
                   >
                     {/* Title block */}
                     <div className="flex w-full items-center justify-between">
                       <span className="font-segoe text-[11px] font-semibold uppercase leading-[140%] text-[#757575]">
                         {card.label}
                       </span>
-                      <div
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[14px] p-2"
-                        style={{ background: card.iconBg }}
-                      >
-                        <Icon className="h-4 w-4" style={{ color: card.iconColor }} strokeWidth={1.6} />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-neutral-100 p-2">
+                        <Icon className="h-4 w-4 text-slate-500" strokeWidth={1.6} />
                       </div>
                     </div>
 
@@ -4217,9 +4299,19 @@ export default function AdminPortal({ section }: { section: string }) {
                         <span className="font-mono text-[32px] font-bold leading-[120%] tracking-[-0.02em] text-[#1E1E1E]">
                           {card.value}
                         </span>
-                        <div className="flex items-center gap-1 rounded-full bg-[#F1F6FD] px-[6px] py-[2px]">
-                          <TrendingUp className="h-[10px] w-[10px] text-[#444444]" strokeWidth={1} />
-                          <span className="font-mono text-[11px] font-semibold leading-[140%] text-[#444444]">
+                        <div className={`flex items-center gap-[3px] ${
+                          card.tag.startsWith("+") || card.tag === "None pending"
+                            ? "text-[#009951]"
+                            : card.tag === "No change" || card.tag === "None today" || card.tag.startsWith("₱")
+                            ? "text-slate-400"
+                            : card.tagType === "oldest"
+                            ? "text-[#975102]"
+                            : "text-[#009951]"
+                        }`}>
+                          {card.tag.startsWith("+") && (
+                            <TrendingUp className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+                          )}
+                          <span className="font-mono text-[11px] font-semibold leading-[140%]">
                             {card.tag}
                           </span>
                         </div>
@@ -4243,14 +4335,6 @@ export default function AdminPortal({ section }: { section: string }) {
                     Pending actions across all modules.
                   </span>
                 </div>
-                {taskItems.length > 0 && (
-                  <div className="flex items-center gap-2 rounded-full bg-[#FFFBEB] px-[10px] py-1">
-                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#975102]" />
-                    <span className="font-segoe text-[12px] font-semibold leading-[100%] text-[#975102]">
-                      {taskItems.length} pending
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Task rows */}
@@ -4271,11 +4355,8 @@ export default function AdminPortal({ section }: { section: string }) {
                         className="group flex w-full items-center justify-between border-b border-[#F0F1F3] px-5 py-3 text-left transition-colors last:border-b-0 hover:rounded-lg hover:bg-[#F5F7FA]"
                       >
                         <div className="flex items-center gap-3">
-                          <div
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[14px] p-2"
-                            style={{ background: item.iconBg }}
-                          >
-                            <Icon className="h-4 w-4 shrink-0" style={{ color: item.iconColor }} strokeWidth={1.6} />
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-neutral-100 p-2">
+                            <Icon className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.6} />
                           </div>
                           <span className="font-mono text-[14px] leading-[100%] text-[#1E1E1E] group-hover:text-[#0E2F66]">
                             {item.count}
@@ -4295,69 +4376,220 @@ export default function AdminPortal({ section }: { section: string }) {
               )}
             </div>
 
-            {/* Recent Activity card */}
-            <div className="w-full max-w-[549px] overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-[#F0F1F3] px-4 pb-3 pt-5">
-                <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
-                  Recent activity
-                </span>
-                {state.activityLogs.length > 0 && (
+            {/* Budget Snapshot + Recent Activity (side by side) */}
+            <div className="flex items-start gap-5">
+              {/* Budget Snapshot card */}
+              <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                {/* Header */}
+                <div className="flex items-start justify-between border-b border-[#F0F1F3] px-4 pb-3 pt-5">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">Budget Snapshot</span>
+                    <span className="font-segoe text-[13px] leading-[100%] text-slate-500">FY 2026 Youth Development Fund</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setRecentActivityDialogTitle("Recent Activity");
-                      setRecentActivityDialogEntries(
-                        state.activityLogs.map((log) => ({
-                          key: log.id,
-                          title: formatActionName(log.action),
-                          note: log.description,
-                          timestamp: formatDateTimeLabel(log.createdAt),
-                          dotClassName: "bg-primary",
-                        })),
-                      );
-                      setRecentActivityDialogOpen(true);
-                    }}
-                    className="font-segoe text-[13px] leading-[140%] text-[#0E2F66] hover:underline"
+                    onClick={() => navigate(routeMap["budget-utilization"])}
+                    className="font-segoe text-[13px] leading-[140%] text-[#0E2F66] transition-all duration-150 hover:font-medium hover:underline"
                   >
-                    View full log
+                    Manage requests
                   </button>
+                </div>
+
+                {/* Section group — allocation + bar + stat cards */}
+                <div className="flex flex-col gap-[10px] px-4 py-3">
+                  {/* Annual Allocation row */}
+                  <div className="flex items-center justify-between">
+                    <span className="font-segoe text-[13px] font-semibold leading-[100%] text-[#1E1E1E]">Annual Allocation</span>
+                    <span className="font-mono text-[13px] leading-[100%] text-slate-500">
+                      {formatPesoAmount(budgetSnapshot.total)}
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="relative h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
+                    {budgetSnapshot.total > 0 && (
+                      <div className="absolute inset-0 flex">
+                        <div
+                          className="h-full bg-[#14AE5C]"
+                          style={{
+                            width: `${(budgetSnapshot.disbursed / budgetSnapshot.total) * 100}%`,
+                            minWidth: budgetSnapshot.disbursed > 0 ? "6px" : undefined,
+                          }}
+                        />
+                        <div
+                          className="h-full bg-[#E5A000]"
+                          style={{
+                            width: `${(budgetSnapshot.pending / budgetSnapshot.total) * 100}%`,
+                            minWidth: budgetSnapshot.pending > 0 ? "6px" : undefined,
+                          }}
+                        />
+                        <div
+                          className="h-full bg-[#94A3B8]"
+                          style={{
+                            width: `${(budgetSnapshot.available / budgetSnapshot.total) * 100}%`,
+                            minWidth: budgetSnapshot.available > 0 ? "6px" : undefined,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stat cards */}
+                  <div className="grid grid-cols-3 gap-[10px]">
+                    {/* Disbursed */}
+                    <div className="flex flex-col items-center gap-2 rounded-lg border border-[#009951] bg-[#EBFFEE] px-4 py-3">
+                      <span className="font-segoe text-[11px] font-semibold uppercase leading-[140%] text-[#009951]">Disbursed</span>
+                      <div className="flex flex-col items-center gap-[10px]">
+                        <span className="font-mono text-[16px] font-bold leading-[120%] tracking-[-0.02em] text-[#009951]">
+                          {formatPesoAmount(budgetSnapshot.disbursed)}
+                        </span>
+                        <span className="font-segoe text-[10px] leading-[140%] text-[#009951]">
+                          {budgetSnapshot.total > 0 ? `${Math.round((budgetSnapshot.disbursed / budgetSnapshot.total) * 100)}% of total` : "—"}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Pending */}
+                    <div className="flex flex-col items-center gap-2 rounded-lg border border-[#975102] bg-amber-50 px-4 py-3">
+                      <span className="font-segoe text-[11px] font-semibold uppercase leading-[140%] text-[#975102]">Pending</span>
+                      <div className="flex flex-col items-center gap-[10px]">
+                        <span className="font-mono text-[16px] font-bold leading-[120%] tracking-[-0.02em] text-[#975102]">
+                          {formatPesoAmount(budgetSnapshot.pending)}
+                        </span>
+                        <span className="font-segoe text-[10px] leading-[140%] text-[#975102]">
+                          {budgetSnapshot.total > 0 ? `${Math.round((budgetSnapshot.pending / budgetSnapshot.total) * 100)}% under review` : "—"}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Available */}
+                    <div className="flex flex-col items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3">
+                      <span className="font-segoe text-[11px] font-semibold uppercase leading-[140%] text-slate-500">Available</span>
+                      <div className="flex flex-col items-center gap-[10px]">
+                        <span className="font-mono text-[16px] font-bold leading-[120%] tracking-[-0.02em] text-[#1E1E1E]">
+                          {formatPesoAmount(budgetSnapshot.available)}
+                        </span>
+                        <span className="font-segoe text-[10px] leading-[140%] text-slate-500">Approved, not released</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Budget request list */}
+                {budgetSnapshot.recentRequests.length === 0 ? (
+                  <div className="px-4 py-3 font-segoe text-[13px] text-slate-500">No budget requests yet.</div>
+                ) : (
+                  <div>
+                    {budgetSnapshot.recentRequests.map((req, i) => {
+                      const org = organizationProfileById.get(req.organizationId);
+                      const statusTag = (() => {
+                        switch (req.status) {
+                          case "budget_released":        return { label: "Budget Released", Icon: CheckCircle2, bg: "#EBFFEE", color: "#009951" };
+                          case "approved_for_ftf_green": return { label: "Approved",        Icon: CheckCircle2, bg: "#EBFFEE", color: "#009951" };
+                          case "under_review":           return { label: "Under Review",    Icon: Clock3,       bg: "#FFFBEB", color: "#975102" };
+                          case "submitted":              return { label: "Submitted",       Icon: Mail,         bg: "#F5F7FA", color: "#757575" };
+                          default:                       return { label: req.status,        Icon: Clock3,       bg: "#F5F7FA", color: "#757575" };
+                        }
+                      })();
+                      const StatusIcon = statusTag.Icon;
+                      return (
+                        <button
+                          key={req.id}
+                          type="button"
+                          onClick={() => navigate(routeMap["budget-utilization"])}
+                          className={`group flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:rounded-lg hover:bg-[#F5F7FA] ${i < budgetSnapshot.recentRequests.length - 1 ? "border-b border-[#F0F1F3]" : ""}`}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <span className="font-segoe text-[14px] leading-[120%] text-[#303030] group-hover:text-[#2864C4]">
+                              {req.activityTitle}
+                            </span>
+                            <span className="font-segoe text-[13px] leading-[100%] text-slate-500">
+                              {org?.organizationName ?? "Unknown Organization"} · {new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(req.createdAt))}
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="font-mono text-[14px] leading-[120%] text-[#303030]">
+                              {formatPesoAmount(req.requestedAmount)}
+                            </span>
+                            <div
+                              className="flex items-center gap-1.5 rounded-full px-2 py-1"
+                              style={{ background: statusTag.bg }}
+                            >
+                              <StatusIcon className="h-3 w-3 shrink-0" style={{ color: statusTag.color }} strokeWidth={1.6} />
+                              <span className="font-segoe text-[12px] font-semibold leading-[140%]" style={{ color: statusTag.color }}>
+                                {statusTag.label}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
-              {/* Log items */}
-              {state.activityLogs.length === 0 ? (
-                <div className="px-5 py-4 font-segoe text-[13px] text-[#757575]">
-                  No recent activity yet.
-                </div>
-              ) : (
-                <div className="pb-5">
-                  {state.activityLogs.slice(0, 3).map((log) => (
-                    <div
-                      key={log.id}
-                      className="flex items-start gap-4 border-b border-[#F0F1F3] px-5 py-3 last:border-b-0"
+              {/* Recent Activity card */}
+              <div className="flex-1 overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-[#F0F1F3] px-4 pb-3 pt-5">
+                  <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                    Recent activity
+                  </span>
+                  {state.activityLogs.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecentActivityDialogTitle("Recent Activity");
+                        setRecentActivityDialogEntries(
+                          state.activityLogs.map((log) => ({
+                            key: log.id,
+                            title: formatActionName(log.action),
+                            note: log.description,
+                            timestamp: formatDateTimeLabel(log.createdAt),
+                            dotClassName: "bg-primary",
+                          })),
+                        );
+                        setRecentActivityDialogOpen(true);
+                      }}
+                      className="font-segoe text-[13px] leading-[140%] text-[#0E2F66] transition-all duration-150 hover:font-medium hover:underline"
                     >
-                      <span
-                        className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ background: getActivityDotColor(log.action) }}
-                      />
-                      <div className="flex flex-col gap-1">
-                        <span className="font-segoe text-[14px] leading-[120%] text-[#1E1E1E]">
-                          {formatActionName(log.action)}
-                        </span>
-                        {log.description && (
-                          <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">
-                            {log.description}
-                          </span>
-                        )}
-                        <time className="font-mono text-[12px] leading-[140%] text-[#757575]">
-                          {formatDateTimeLabel(log.createdAt)}
-                        </time>
-                      </div>
-                    </div>
-                  ))}
+                      View full log
+                    </button>
+                  )}
                 </div>
-              )}
+
+                {/* Log items */}
+                {state.activityLogs.length === 0 ? (
+                  <div className="px-5 py-4 font-segoe text-[13px] text-[#757575]">
+                    No recent activity yet.
+                  </div>
+                ) : (
+                  <div className="pb-5">
+                    {state.activityLogs.slice(0, 3).map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-start gap-4 border-b border-[#F0F1F3] px-5 py-3 last:border-b-0"
+                      >
+                        <span
+                          className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ background: getActivityDotColor(log.action) }}
+                        />
+                        <div className="flex flex-col gap-1">
+                          <span className="font-segoe text-[14px] leading-[120%] text-[#1E1E1E]">
+                            {formatActionName(log.action)}
+                          </span>
+                          {log.description && (
+                            <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">
+                              {log.description}
+                            </span>
+                          )}
+                          <time className="font-mono text-[12px] leading-[140%] text-[#757575]">
+                            {formatDateTimeLabel(log.createdAt)}
+                          </time>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
               </div>
             </div>
@@ -4366,161 +4598,285 @@ export default function AdminPortal({ section }: { section: string }) {
       }
       case "inquiries": {
         return (
-          <div className="admin-inquiries-page">
-            <PortalSection
-              title="Inquiries"
-              description="Submitted inquiries from the user dashboard appear here in a consistent review format."
-            >
-              <div className="space-y-4">
-                <div className="inquiry-filters grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
-                  <Input
-                    value={inquirySearch}
-                    onChange={(event) => setInquirySearch(event.target.value)}
-                    placeholder="Search inquiries"
-                    aria-label="Search inquiries"
-                    className="h-11 lg:hidden"
-                  />
-                  <Input
-                    value={inquirySearch}
-                    onChange={(event) => setInquirySearch(event.target.value)}
-                    placeholder="Search name, organization, email, subject, or description"
-                    aria-label="Search inquiries"
-                    className="hidden h-11 lg:flex"
-                  />
-                  <Select value={inquiryStatusFilter} onValueChange={(value) => setInquiryStatusFilter(value as typeof inquiryStatusFilter)}>
-                    <SelectTrigger className="h-11" aria-label="Filter inquiries by status">
-                      <SelectValue placeholder="Filter status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="pending_review">Pending Review</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <div className="-m-3 sm:-m-6 lg:-m-8">
+            {/* Breadcrumb bar */}
+            <div className="border-b border-[#E5E7EB] bg-white px-4 py-3">
+              <nav className="flex items-center gap-[10px]" aria-label="Breadcrumb">
+                <span className="text-[14px] leading-[100%] text-[#B3B3B3]">Communication</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={2} />
+                <span className="text-[14px] leading-[100%] text-[#1E1E1E]">Inquiries</span>
+              </nav>
+            </div>
+
+            {/* Content area */}
+            <div className="flex flex-col gap-5 bg-[#F5F7FA] px-4 py-3">
+              {/* Title block */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <h1 className="font-segoe text-[24px] font-bold leading-[100%] tracking-[-0.03em] text-[#1E1E1E]">
+                    Inquiries
+                  </h1>
+                  <p className="font-segoe text-[14px] font-normal leading-[140%] text-[#757575]">
+                    Review and respond to submitted inquiries from registered organizations.
+                  </p>
                 </div>
-
-                <p className="inquiry-results-count">
-                  {filteredInquiries.length} {filteredInquiries.length === 1 ? "inquiry" : "inquiries"}
-                </p>
-
-                <div className="mobile-inquiries-list">
-                  {filteredInquiries.length ? (
-                    filteredInquiries.map((inquiry) => {
-                      const submittedParts = formatCompactDateParts(inquiry.createdAt);
-                      return (
-                        <MobileInquiryCard
-                          key={inquiry.id}
-                          inquiry={inquiry}
-                          submittedDate={submittedParts.date}
-                          submittedTime={submittedParts.time}
-                          onView={() => openInquiryDetails(inquiry)}
-                        />
-                      );
-                    })
-                  ) : (
-                    <PortalEmptyState
-                      title="No inquiries found"
-                      description="Try changing your search or status filter."
-                    />
-                  )}
-                </div>
-
-                {filteredInquiries.length ? (
-                  <div className="desktop-inquiries-table overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
-                  <Table className="min-w-[940px] table-fixed">
-                    <TableHeader>
-                      <TableRow className="border-border/70 bg-muted/35 hover:bg-muted/35">
-                        <TableHead className="h-11 w-[16%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Name / Organization
-                        </TableHead>
-                        <TableHead className="h-11 w-[21%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Email
-                        </TableHead>
-                        <TableHead className="h-11 w-[29%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Subject
-                        </TableHead>
-                        <TableHead className="h-11 w-[17%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Submitted
-                        </TableHead>
-                        <TableHead className="h-11 w-[11%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Status
-                        </TableHead>
-                        <TableHead className="h-11 w-[6%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Action
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInquiries.map((inquiry) => {
-                        const submittedParts = formatCompactDateParts(inquiry.createdAt);
-                        return (
-                          <TableRow key={inquiry.id} className="border-border/60 transition-colors hover:bg-muted/20">
-                            <TableCell className="px-4 py-3.5 align-middle">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-foreground">
-                                  {inquiry.submitterName || "Unnamed submitter"}
-                                </p>
-                                <p className="truncate text-xs text-muted-foreground">
-                                  {inquiry.organizationName || "No organization name provided"}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 align-middle">
-                              <p className="truncate text-sm text-foreground" title={inquiry.email}>
-                                {inquiry.email}
-                              </p>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 align-top">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium text-foreground" title={inquiry.subject}>
-                                  {inquiry.subject}
-                                </p>
-                                <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted-foreground" title={inquiry.description}>
-                                  {inquiry.description}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 text-center align-middle">
-                              <div className="space-y-0.5">
-                                <p className="text-sm font-medium text-foreground">{submittedParts.date}</p>
-                                <p className="text-xs text-muted-foreground">{submittedParts.time}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 text-center align-middle">
-                              <div className="flex justify-center">
-                                <PortalStatusBadge status={inquiry.status} />
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 text-center align-middle">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2.5 text-xs font-medium"
-                                aria-label={`View inquiry from ${inquiry.submitterName || inquiry.organizationName || inquiry.email}`}
-                                onClick={() => openInquiryDetails(inquiry)}
-                              >
-                                <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                View
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                  </div>
-                ) : (
-                  <div className="desktop-inquiries-table">
-                    <PortalEmptyState
-                      title="No inquiries yet"
-                      description="Once a user submits an inquiry from the dashboard, it will appear here."
-                    />
+                {overviewStats.pendingInquiries > 0 && (
+                  <div className="flex items-center gap-2 rounded-full bg-[#FFFBEB] px-[10px] py-1">
+                    <Mail className="h-4 w-4 shrink-0 text-[#975102]" strokeWidth={1.6} />
+                    <span className="font-segoe text-[12px] font-semibold leading-[140%] text-[#975102]">
+                      {overviewStats.pendingInquiries} new
+                    </span>
                   </div>
                 )}
               </div>
-            </PortalSection>
+
+              {/* Inquiries card */}
+              {(() => {
+                const INQUIRY_PAGE_SIZE = 10;
+                const inquiryTotalPages = Math.max(1, Math.ceil(filteredInquiries.length / INQUIRY_PAGE_SIZE));
+                const safePage = Math.min(inquiryPage, inquiryTotalPages);
+                const paginatedInquiries = filteredInquiries.slice(
+                  (safePage - 1) * INQUIRY_PAGE_SIZE,
+                  safePage * INQUIRY_PAGE_SIZE,
+                );
+                const inquiryStart = filteredInquiries.length === 0 ? 0 : (safePage - 1) * INQUIRY_PAGE_SIZE + 1;
+                const inquiryEnd = Math.min(safePage * INQUIRY_PAGE_SIZE, filteredInquiries.length);
+
+                return (
+                  <div className="overflow-x-auto rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                    <div className="min-w-[960px]">
+                    {/* Filter bar */}
+                    <div className="flex items-center border-b border-[#E5E7EB] px-4 py-4">
+                      {/* Status tabs */}
+                      <div className="flex items-center gap-[10px]">
+                        {(
+                          [
+                            { value: "all", label: "All" },
+                            { value: "pending_review", label: "New" },
+                            { value: "in_review", label: "In review" },
+                            { value: "responded", label: "Responded" },
+                            { value: "resolved", label: "Resolved" },
+                          ] as const
+                        ).map((tab) => {
+                          const count =
+                            tab.value === "all"
+                              ? state.inquiries.length
+                              : state.inquiries.filter((i) => i.status === tab.value).length;
+                          const isActive = inquiryStatusFilter === tab.value;
+                          return (
+                            <button
+                              key={tab.value}
+                              type="button"
+                              onClick={() => {
+                                setInquiryStatusFilter(tab.value);
+                                setInquiryPage(1);
+                              }}
+                              className={`flex h-[34px] items-center gap-2 rounded-full border px-[14px] font-segoe text-[14px] font-semibold leading-[100%] transition-colors ${
+                                isActive
+                                  ? "border-[#0E2F66] bg-[#0E2F66] text-[#F3F3F3]"
+                                  : "border-[#E5E7EB] bg-[#F1F6FD] text-[#303030]"
+                              }`}
+                            >
+                              {tab.label}
+                              <span
+                                className={`rounded-full px-1 font-mono text-[14px] leading-[100%] ${
+                                  isActive ? "bg-white/20 text-[#F3F3F3]" : "bg-white/40 text-[#1E1E1E]"
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Search */}
+                      <div className="ml-auto">
+                        <div className="relative flex items-center">
+                          <Search className="absolute left-[14px] h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                          <input
+                            value={inquirySearch}
+                            onChange={(e) => {
+                              setInquirySearch(e.target.value);
+                              setInquiryPage(1);
+                            }}
+                            placeholder="Search org or subject..."
+                            className="h-10 w-[280px] rounded-lg border border-[#D1D5DB] bg-white pl-10 pr-[14px] font-segoe text-[14px] leading-[140%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none lg:w-[401px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column headers */}
+                    <div className="grid grid-cols-[minmax(160px,1fr)_minmax(150px,1fr)_minmax(160px,1fr)_175px_120px_128px] border-b border-[#E5E7EB] bg-[#F5F5F5] px-4 py-[6px]">
+                      {(["ORGANIZATION", "EMAIL", "SUBJECT", "SUBMITTED", "STATUS", "ACTIONS"] as const).map((col) => (
+                        <span key={col} className="font-segoe text-[12px] font-semibold leading-[140%] text-[#1E1E1E]">
+                          {col}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Table body */}
+                    {filteredInquiries.length === 0 ? (
+                      <div className="px-4 py-8 text-center font-segoe text-[14px] text-[#757575]">
+                        No inquiries match the current filter.
+                      </div>
+                    ) : (
+                      <div>
+                        {paginatedInquiries.map((inquiry) => {
+                          const badge = getInquiryStatusBadge(inquiry.status);
+                          const BadgeIcon = badge.Icon;
+                          return (
+                            <div
+                              key={inquiry.id}
+                              className="grid grid-cols-[minmax(160px,1fr)_minmax(150px,1fr)_minmax(160px,1fr)_175px_120px_128px] items-center border-b border-[#F0F1F3] px-4 py-3 transition-colors hover:bg-[#F5F7FA] last:border-b-0"
+                            >
+                              {/* Organization */}
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0E2F66]">
+                                  <span className="font-segoe text-[16px] leading-[120%] text-[#F5F5F5]">
+                                    {(inquiry.submitterName || inquiry.organizationName).trim()[0]?.toUpperCase() ?? "?"}
+                                  </span>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                                    {inquiry.submitterName || "—"}
+                                  </p>
+                                  <p className="truncate font-segoe text-[13px] leading-[140%] text-[#757575]">
+                                    {inquiry.organizationName}
+                                  </p>
+                                </div>
+                              </div>
+                              {/* Email */}
+                              <p className="truncate font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">{inquiry.email}</p>
+                              {/* Subject */}
+                              <div className="min-w-0 pr-3">
+                                <p className="truncate font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                                  {inquiry.subject}
+                                </p>
+                                <p className="line-clamp-1 font-segoe text-[13px] leading-[140%] text-[#757575]">
+                                  {inquiry.description}
+                                </p>
+                              </div>
+                              {/* Submitted */}
+                              <div className="flex flex-col gap-[4px]">
+                                <p className="font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                                  {new Intl.DateTimeFormat("en-GB", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  }).format(new Date(inquiry.createdAt))}
+                                  {", "}
+                                  {new Intl.DateTimeFormat("en-PH", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  }).format(new Date(inquiry.createdAt))}
+                                </p>
+                                <div className="flex items-center gap-[4px]">
+                                  <Clock3 className="h-[13px] w-[13px] shrink-0 text-[#757575]" strokeWidth={1} />
+                                  <span className="font-segoe text-[12px] leading-[140%] text-[#757575]">
+                                    {formatRelativeTime(inquiry.createdAt)}
+                                  </span>
+                                </div>
+                              </div>
+                              {/* Status badge */}
+                              <div
+                                className="inline-flex w-fit items-center gap-[6px] rounded-full px-[8px] py-[4px]"
+                                style={{ background: badge.bg }}
+                              >
+                                <BadgeIcon
+                                  className="h-3 w-3 shrink-0"
+                                  strokeWidth={1.6}
+                                  style={{ color: badge.color }}
+                                />
+                                <span
+                                  className="font-segoe text-[12px] font-semibold leading-[140%]"
+                                  style={{ color: badge.color }}
+                                >
+                                  {badge.label}
+                                </span>
+                              </div>
+                              {/* Actions */}
+                              <div className="flex items-center gap-2">
+                                {inquiry.status !== "responded" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setReplyTargetInquiry(inquiry)}
+                                    aria-label="Quick reply"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9D9D9] bg-white text-[#2C2C2C] transition-colors hover:border-[#D1D5DB] hover:bg-[#F0F1F3]"
+                                  >
+                                    <Eye className="h-4 w-4" strokeWidth={1.6} />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => openInquiryDetails(inquiry)}
+                                  className="flex h-8 items-center gap-[6px] rounded-lg bg-[#0E2F66] px-3 py-[6px] font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959]"
+                                >
+                                  <CornerUpLeft className="h-4 w-4 shrink-0 text-[#F3F3F3]" strokeWidth={1.6} />
+                                  {inquiry.status === "responded" ? "Manage" : "Reply"}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between border-t border-[#D9D9D9] px-4 py-4">
+                      <p className="font-segoe text-[13px] leading-[100%]">
+                        <span className="text-[#757575]">Showing </span>
+                        <span className="text-[#1E1E1E]">{paginatedInquiries.length}</span>
+                        <span className="text-[#757575]"> of </span>
+                        <span className="text-[#1E1E1E]">{filteredInquiries.length}</span>
+                        <span className="text-[#757575]">
+                          {" "}
+                          {filteredInquiries.length === 1 ? "inquiry" : "inquiries"}
+                        </span>
+                      </p>
+                      {inquiryTotalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setInquiryPage((p) => Math.max(1, p - 1))}
+                            disabled={safePage === 1}
+                            className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#757575] transition-colors disabled:opacity-50"
+                          >
+                            <ArrowLeft className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                            Previous
+                          </button>
+                          <div className="flex items-center gap-2">
+                            {Array.from({ length: inquiryTotalPages }, (_, i) => i + 1).map((page) => (
+                              <button
+                                key={page}
+                                type="button"
+                                onClick={() => setInquiryPage(page)}
+                                className={`flex h-[29px] min-w-8 items-center justify-center rounded-lg px-3 font-segoe text-[13px] leading-[100%] transition-colors ${
+                                  page === safePage ? "bg-[#0E2F66] text-[#F3F3F3]" : "text-[#1E1E1E] hover:bg-[#F5F7FA]"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setInquiryPage((p) => Math.min(inquiryTotalPages, p + 1))}
+                            disabled={safePage === inquiryTotalPages}
+                            className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] transition-colors disabled:opacity-50"
+                          >
+                            Next
+                            <ArrowRight className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    </div>{/* end min-w */}
+                  </div>
+                );
+              })()}
+
+            </div>
           </div>
         );
       }
@@ -11484,6 +11840,8 @@ export default function AdminPortal({ section }: { section: string }) {
     adminUpdateYpopEntryInSupabase,
     adminUpdateYpopEventParticipationInSupabase,
     adminUpdateYpopOrgActivityInSupabase,
+    budgetSnapshot,
+    organizationProfileById,
   ]);
 
   const adminConfirmationCopy = getAdminConfirmationCopy();
@@ -11498,6 +11856,7 @@ export default function AdminPortal({ section }: { section: string }) {
         userProfile={{ name: user?.displayName ?? "Administrator", role: "Super Admin", email: user?.email ?? "" }}
         notifications={adminNotifications}
         onMarkAllNotificationsRead={() => markAllNotificationsRead()}
+        onSidebarCollapsedChange={setNavCollapsed}
       >
         {activeContent}
       </PortalShell>
@@ -11525,104 +11884,265 @@ export default function AdminPortal({ section }: { section: string }) {
       </Dialog>
       <Dialog
         open={Boolean(selectedInquiry)}
-        onOpenChange={(open) => (!open && !savingInquiryStatus ? setSelectedInquiry(null) : undefined)}
+        onOpenChange={(open) => {
+          if (!open && !savingInquiryStatus) {
+            setSelectedInquiry(null);
+            setInquiryStatusDropdownOpen(false);
+          }
+        }}
       >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{selectedInquiry?.subject || "Inquiry details"}</DialogTitle>
-            <DialogDescription>
-              Full inquiry details from the user dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedInquiry ? (
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Name / Organization</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {selectedInquiry.submitterName || "Unnamed submitter"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {selectedInquiry.organizationName || "No organization name provided"}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Email</p>
-                  <p className="mt-1 break-all text-sm font-medium text-foreground">{selectedInquiry.email}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Submitted</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">{formatDateTimeLabel(selectedInquiry.createdAt)}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Status</p>
-                  <div className="mt-1">
-                    <PortalStatusBadge status={selectedInquiry.status} />
-                  </div>
+        <DialogContent className="max-w-[560px] gap-0 border border-[#E5E7EB] p-0 [&>button:last-of-type]:hidden">
+          <DialogTitle className="sr-only">{selectedInquiry?.subject || "Inquiry details"}</DialogTitle>
+          <div className="flex flex-col gap-4 p-5">
+            {/* Title block */}
+            <div className="flex items-start justify-between border-b border-[#F0F1F3] pb-4">
+              <div className="flex flex-col gap-1">
+                <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                  {selectedInquiry?.subject || "Inquiry details"}
+                </span>
+                <span className="font-segoe text-[13px] leading-[130%] text-[#B3B3B3]">
+                  {getInquirySubtitle(selectedInquiry?.description)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => !savingInquiryStatus && setSelectedInquiry(null)}
+                className="text-[#D9D9D9] transition-colors hover:text-[#757575]"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" strokeWidth={2} />
+              </button>
+            </div>
+
+            {/* Info cards 2×2 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col justify-center rounded-lg border border-[#F0F1F3] bg-white p-4">
+                <div className="flex flex-col gap-[10px]">
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Organization</span>
+                  <span className="break-words font-segoe text-[13px] font-semibold leading-[100%] text-[#1E1E1E]">
+                    {selectedInquiry?.organizationName}
+                  </span>
                 </div>
               </div>
-              <div className="rounded-xl border border-border/70 bg-background p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Description</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{selectedInquiry.description}</p>
-              </div>
-              <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4">
-                <div className="space-y-2">
-                  <label htmlFor="inquiry-status" className="text-sm font-medium text-foreground">
-                    Change Status
-                  </label>
-                  <Select
-                    value={inquiryStatusDraft}
-                    onValueChange={(value) => setInquiryStatusDraft(value as InquiryRecord["status"])}
-                    disabled={savingInquiryStatus}
-                  >
-                    <SelectTrigger id="inquiry-status">
-                      <SelectValue placeholder="Select inquiry status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending_review">Pending Review</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="flex flex-col justify-center rounded-lg border border-[#F0F1F3] bg-white p-4">
+                <div className="flex flex-col gap-[10px]">
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Email</span>
+                  <span className="break-all font-segoe text-[13px] font-semibold leading-[100%] text-[#1E1E1E]">
+                    {selectedInquiry?.email}
+                  </span>
                 </div>
-                <div className="space-y-2">
-                  <label htmlFor="inquiry-admin-remarks" className="text-sm font-medium text-foreground">
-                    Admin Remarks <span className="font-normal text-muted-foreground">(optional)</span>
-                  </label>
-                  <Textarea
-                    id="inquiry-admin-remarks"
-                    value={inquiryAdminRemarksDraft}
-                    onChange={(event) => setInquiryAdminRemarksDraft(event.target.value)}
-                    placeholder="Add a note about this inquiry or status change."
-                    rows={3}
-                    disabled={savingInquiryStatus}
-                  />
+              </div>
+              <div className="flex flex-col justify-center rounded-lg border border-[#F0F1F3] bg-white p-4">
+                <div className="flex flex-col gap-[10px]">
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Submitted</span>
+                  <span className="font-segoe text-[13px] font-semibold leading-[100%] text-[#1E1E1E]">
+                    {formatDateTimeLabel(selectedInquiry?.createdAt)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col justify-center rounded-lg border border-[#F0F1F3] bg-white p-4">
+                <div className="flex flex-col gap-[10px]">
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Status</span>
+                  {(() => {
+                    const badge = getInquiryStatusBadge(selectedInquiry?.status ?? "");
+                    const BadgeIcon = badge.Icon;
+                    return (
+                      <span
+                        className="inline-flex items-center gap-[6px] self-start rounded-full px-[8px] py-[4px] font-segoe text-[12px] font-semibold leading-[100%]"
+                        style={{ background: badge.bg, color: badge.color }}
+                      >
+                        <BadgeIcon className="h-3 w-3" strokeWidth={1.6} />
+                        {badge.label}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
-          ) : null}
-          <DialogFooter>
-            <Button
+
+            {/* Description card */}
+            <div className="flex flex-col justify-center rounded-lg border border-[#F0F1F3] bg-white p-4">
+              <div className="flex flex-col gap-[10px]">
+                <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Description</span>
+                <span className="whitespace-pre-wrap font-segoe text-[13px] font-semibold leading-[140%] text-[#1E1E1E]">
+                  {selectedInquiry?.description}
+                </span>
+              </div>
+            </div>
+
+            {/* Update Status section */}
+            <div className="flex flex-col gap-4 rounded-lg border border-slate-300 bg-[#EEF1F5] p-6">
+              <div className="flex flex-col gap-2">
+                <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Update Status</span>
+                <div ref={inquiryStatusDropdownRef} className="relative">
+                  <button
+                    type="button"
+                    disabled={savingInquiryStatus}
+                    onClick={() => setInquiryStatusDropdownOpen((v) => !v)}
+                    className="flex h-8 w-full items-center justify-between rounded-lg border border-[#D1D5DB] bg-white px-[10px] font-segoe text-[13px] leading-[140%] text-[#1E1E1E] disabled:opacity-50"
+                  >
+                    <span>{getInquiryStatusBadge(inquiryStatusDraft).label}</span>
+                    <ChevronDown className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                  </button>
+                  {inquiryStatusDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm">
+                      {(["pending_review", "in_review", "responded", "resolved"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => { setInquiryStatusDraft(opt); setInquiryStatusDropdownOpen(false); }}
+                          className={`flex h-8 w-full items-center px-[10px] font-segoe text-[13px] leading-[140%] transition-colors ${
+                            inquiryStatusDraft === opt
+                              ? "bg-[#C0D4F5] text-[#0E2F66]"
+                              : "text-[#757575] hover:bg-[#F5F7FA]"
+                          }`}
+                        >
+                          {getInquiryStatusBadge(opt).label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">
+                  Admin Remarks <span className="text-[#B3B3B3]">(Optional)</span>
+                </span>
+                <textarea
+                  value={inquiryAdminRemarksDraft}
+                  onChange={(e) => setInquiryAdminRemarksDraft(e.target.value)}
+                  placeholder="Add a note about this inquiry or status change."
+                  disabled={savingInquiryStatus}
+                  rows={3}
+                  className="h-16 w-full resize-none rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] placeholder-[#B3B3B3] outline-none focus:border-[#118DF0] disabled:opacity-50"
+                />
+              </div>
+              <div className="flex justify-end gap-[10px]">
+                <button
+                  type="button"
+                  disabled={savingInquiryStatus}
+                  onClick={() => setSelectedInquiry(null)}
+                  className="flex h-11 items-center justify-center rounded-lg border border-[#D1D5DB] bg-white px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={
+                    !selectedInquiry ||
+                    savingInquiryStatus ||
+                    (inquiryStatusDraft === selectedInquiry?.status &&
+                      inquiryAdminRemarksDraft.trim() === selectedInquiry?.adminRemarks.trim())
+                  }
+                  onClick={() => void handleSaveInquiryStatus()}
+                  className="flex h-11 items-center justify-center rounded-lg bg-[#0E2F66] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959] disabled:bg-[#D9DEE6] disabled:text-[#8A94A3]"
+                >
+                  {savingInquiryStatus ? "Saving..." : "Save Status"}
+                </button>
+              </div>
+            </div>
+
+            {/* Reply via Email / View Email */}
+            <button
               type="button"
-              variant="outline"
-              disabled={savingInquiryStatus}
-              onClick={() => setSelectedInquiry(null)}
+              onClick={() => {
+                if (!selectedInquiry) return;
+                if (selectedInquiry.status === "responded") {
+                  window.open(`https://mail.google.com/mail/u/0/#search/${encodeURIComponent(selectedInquiry.email)}`, "_blank", "noopener,noreferrer");
+                } else {
+                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}&su=${encodeURIComponent(`Re: ${selectedInquiry.subject}`)}`;
+                  window.open(gmailUrl, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="flex h-11 w-full items-center justify-center gap-[10px] rounded-lg bg-[#0E2F66] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959]"
             >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={
-                !selectedInquiry ||
-                savingInquiryStatus ||
-                (inquiryStatusDraft === selectedInquiry.status &&
-                  inquiryAdminRemarksDraft.trim() === selectedInquiry.adminRemarks.trim())
-              }
-              onClick={() => void handleSaveInquiryStatus()}
-            >
-              {savingInquiryStatus ? "Saving..." : "Save Status"}
-            </Button>
-          </DialogFooter>
+              <Mail className="h-4 w-4 shrink-0 text-[#F3F3F3]" strokeWidth={1.6} />
+              {selectedInquiry?.status === "responded" ? "View Email" : "Reply via Email"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(replyTargetInquiry)}
+        onOpenChange={(open) => {
+          if (!open && !markingInquiryResponded) setReplyTargetInquiry(null);
+        }}
+      >
+        <DialogContent className="max-w-[500px] gap-0 border border-[#E5E7EB] p-0 [&>button:last-of-type]:hidden">
+          <DialogTitle className="sr-only">Reply to Inquiry</DialogTitle>
+          <div className="flex flex-col gap-4 p-3">
+            {/* Title block */}
+            <div className="flex items-start justify-between border-b border-[#F0F1F3] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#DCEFFD]">
+                  <Mail className="h-5 w-5 text-[#118DF0]" strokeWidth={1.6} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">Reply to Inquiry</span>
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#B3B3B3]">{replyTargetInquiry?.organizationName}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !markingInquiryResponded && setReplyTargetInquiry(null)}
+                className="text-[#D9D9D9] transition-colors hover:text-[#757575]"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" strokeWidth={2} />
+              </button>
+            </div>
+            {/* Content */}
+            <div className="flex flex-col gap-5">
+              <div className="rounded-lg border border-[#93C5FD] bg-[#E9F6FF] p-6 font-segoe text-[13px] leading-[120%]">
+                <span className="text-[#0E2F66]">This will open your email client to reply to </span>
+                <span className="font-semibold text-[#118DF0] underline">{replyTargetInquiry?.organizationName}</span>
+                <span className="text-[#0E2F66]">. Once sent, mark this inquiry as Responded.</span>
+              </div>
+              <div className="flex flex-col gap-0 rounded-lg border border-[#F0F1F3] bg-white p-6">
+                <div className="flex items-center justify-between border-b border-[#F0F1F3] py-3">
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">To:</span>
+                  <span className="font-segoe text-[13px] font-semibold leading-[100%] text-[#1E1E1E]">{replyTargetInquiry?.email}</span>
+                </div>
+                <div className="flex items-start justify-between gap-4 py-3">
+                  <span className="shrink-0 font-segoe text-[13px] leading-[140%] text-[#757575]">Subject:</span>
+                  <span className="break-words text-right font-segoe text-[13px] font-semibold leading-[140%] text-[#1E1E1E]">Re: {replyTargetInquiry?.subject}</span>
+                </div>
+              </div>
+            </div>
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={markingInquiryResponded}
+                onClick={() => {
+                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(replyTargetInquiry?.email ?? "")}&su=${encodeURIComponent(`Re: ${replyTargetInquiry?.subject ?? ""}`)}`;
+                  window.open(gmailUrl, "_blank", "noopener,noreferrer");
+                  void handleMarkInquiryResponded();
+                }}
+                className="flex h-11 w-full items-center justify-center gap-[6px] rounded-lg bg-[#0E2F66] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959] disabled:opacity-50"
+              >
+                <ExternalLink className="h-4 w-4 shrink-0 text-[#F3F3F3]" strokeWidth={1.6} />
+                Open Email Client & Mark Responded
+              </button>
+              <button
+                type="button"
+                disabled={markingInquiryResponded}
+                onClick={() => void handleMarkInquiryResponded()}
+                className="flex h-11 w-full items-center justify-center gap-[6px] rounded-lg border border-[#D1D5DB] bg-white px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA] disabled:opacity-50"
+              >
+                <Check className="h-4 w-4 shrink-0 text-[#009951]" strokeWidth={1.6} />
+                Mark as Responded Only
+              </button>
+              <button
+                type="button"
+                disabled={markingInquiryResponded}
+                onClick={() => setReplyTargetInquiry(null)}
+                className="flex h-11 w-full items-center justify-center rounded-lg border border-transparent px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#B3B3B3] transition-colors hover:border-slate-300 hover:bg-[#F8FAFC] hover:text-[#1E1E1E] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
@@ -11709,18 +12229,48 @@ export default function AdminPortal({ section }: { section: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sign out?</AlertDialogTitle>
-            <AlertDialogDescription>You will be returned to the login page.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void signOut()}>Sign Out</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
+        <DialogContent className="max-w-[420px] gap-6 border border-slate-300 p-6 shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)] [&>button]:top-5 [&>button]:right-5">
+          {/* Header */}
+          <div className="flex flex-col gap-1 pr-6">
+            <h2 className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+              Sign Out Confirmation
+            </h2>
+            <p className="font-segoe text-[13px] leading-[100%] text-slate-500">
+              Y-TRACE Admin Portal Session
+            </p>
+          </div>
+          {/* Body text */}
+          <p className="font-segoe text-[13px] leading-[120%] text-[#1E1E1E] text-justify">
+            Are you sure you want to sign out of your active administrative session? Any unsaved form drafts will be discarded.
+          </p>
+          {/* Note block */}
+          <div className="flex items-start gap-[10px] rounded-lg border border-[#975102] bg-amber-50 p-4">
+            <AlertTriangle className="mt-[1px] h-4 w-4 shrink-0 text-[#975102]" strokeWidth={1.6} />
+            <p className="font-segoe text-[13px] leading-[120%] text-[#975102] text-justify">
+              Are you sure you want to sign out of your active administrative session? Any unsaved form drafts will be discarded.
+            </p>
+          </div>
+          {/* Buttons */}
+          <div className="flex items-center justify-end gap-[10px]">
+            <button
+              type="button"
+              onClick={() => setSignOutConfirmOpen(false)}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-[10px] font-segoe text-[13px] leading-[140%] text-[#1E1E1E] transition-colors hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-[10px] font-segoe text-[13px] leading-[140%] text-[#FEE9E7] transition-colors hover:bg-[#C00F0C]"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.6} />
+              Sign-out
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <ExportReportDialog
         open={activeReportExport !== null}
         onOpenChange={(open) => {

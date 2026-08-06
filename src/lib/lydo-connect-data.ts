@@ -58,7 +58,7 @@ export type YPOPStatus =
   | "qualified"
   | "not_qualified";
 
-export type InquiryStatus = "pending_review" | "reviewed" | "closed";
+export type InquiryStatus = "pending_review" | "in_review" | "responded" | "resolved";
 
 const getReferenceDateSegment = (value?: string) => {
   const date = value ? new Date(value) : new Date();
@@ -1788,6 +1788,9 @@ export const statusToneMap: Record<string, "default" | "secondary" | "destructiv
   rejected: "destructive",
   reviewed: "default",
   closed: "outline",
+  in_review: "outline",
+  responded: "secondary",
+  resolved: "default",
 };
 
 export const statusLabelMap: Record<string, string> = {
@@ -1825,6 +1828,9 @@ export const statusLabelMap: Record<string, string> = {
   rejected: "Rejected",
   reviewed: "Reviewed",
   closed: "Closed",
+  in_review: "In review",
+  responded: "Responded",
+  resolved: "Resolved",
   open: "Open",
   upcoming: "Upcoming",
   ongoing: "Ongoing",

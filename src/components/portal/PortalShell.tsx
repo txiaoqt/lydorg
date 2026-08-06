@@ -24,6 +24,7 @@ type PortalShellProps = {
   userProfile?: { name: string; role: string; email?: string };
   notifications?: { id: string; title: string; message: string; isRead: boolean; createdAt: string }[];
   onMarkAllNotificationsRead?: () => void;
+  onSidebarCollapsedChange?: (collapsed: boolean) => void;
 };
 
 type SidebarContentProps = {
@@ -68,7 +69,7 @@ const SidebarContent = ({
     >
       {/* Logo row */}
       {collapsed ? (
-        <div className="flex h-[80px] shrink-0 items-center justify-end border-b border-[#D9D9D9] px-4">
+        <div className="flex h-[80px] shrink-0 items-center justify-center border-b border-[#D9D9D9]">
           <button
             type="button"
             onClick={onExpand}
@@ -169,7 +170,7 @@ const SidebarContent = ({
 
       {/* Profile row */}
       {collapsed ? (
-        <div className="flex h-[80px] shrink-0 items-center border-t border-[#E5E7EB] px-4">
+        <div className="flex h-[80px] shrink-0 items-center justify-center border-t border-[#E5E7EB]">
           {userProfile && (
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0E2F66]">
               <span className="text-[14px] font-normal text-[#F5F5F5]">{getInitials(userProfile.name)}</span>
@@ -196,7 +197,7 @@ const SidebarContent = ({
           <button
             type="button"
             onClick={onSignOut}
-            className="group flex h-[30px] w-[30px] items-center justify-center rounded-md p-[6px] hover:bg-gray-100"
+            className="group flex h-[30px] w-[30px] items-center justify-center rounded-md p-[6px]"
             aria-label="Sign out"
           >
             <LogOut className="h-[18px] w-[18px] text-[#757575] group-hover:text-[#C00F0C]" strokeWidth={1.6} />
@@ -226,6 +227,7 @@ export const PortalShell = ({
   userProfile,
   notifications,
   onMarkAllNotificationsRead,
+  onSidebarCollapsedChange,
 }: PortalShellProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -258,6 +260,10 @@ export const PortalShell = ({
   useEffect(() => {
     contentScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [activeId]);
+
+  useEffect(() => {
+    onSidebarCollapsedChange?.(sidebarCollapsed);
+  }, [sidebarCollapsed, onSidebarCollapsedChange]);
 
   // Ctrl+K global shortcut
   useEffect(() => {
@@ -354,7 +360,7 @@ export const PortalShell = ({
 
         {/* Main content */}
         <main className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
-          <div ref={contentScrollRef} className="flex-1 overflow-y-auto">
+          <div ref={contentScrollRef} className="flex-1 min-w-0 overflow-y-auto">
             {/* Header */}
             <header className="sticky top-0 z-30 flex h-[80px] shrink-0 items-center gap-4 border-b border-[#E5E7EB] bg-white px-4">
               {/* Mobile menu toggle — hidden on desktop */}
@@ -498,14 +504,14 @@ export const PortalShell = ({
                         </button>
                       </div>
 
-                      {/* Sign out — danger */}
+                      {/* Sign out — danger on hover */}
                       <button
                         type="button"
                         onClick={() => { setProfileOpen(false); onSignOut(); }}
-                        className="flex w-full items-center gap-2 bg-[#FEE9E7] px-3 py-3"
+                        className="group flex w-full items-center gap-2 px-3 py-3 hover:bg-[#FEE9E7]"
                       >
-                        <LogOut className="h-4 w-4 shrink-0 text-[#C00F0C]" strokeWidth={1.6} />
-                        <span className="text-[13px] font-normal leading-[100%] text-[#C00F0C]">Sign Out</span>
+                        <LogOut className="h-4 w-4 shrink-0 text-slate-500 group-hover:text-[#C00F0C]" strokeWidth={1.6} />
+                        <span className="text-[13px] font-normal leading-[100%] text-slate-700 group-hover:text-[#C00F0C]">Sign Out</span>
                       </button>
                     </div>
                   )}
@@ -513,7 +519,7 @@ export const PortalShell = ({
               </div>
             </header>
 
-            <div className="p-3 sm:p-6 lg:p-8">{children}</div>
+            <div className="min-w-0 p-3 sm:p-6 lg:p-8">{children}</div>
           </div>
         </main>
       </div>
