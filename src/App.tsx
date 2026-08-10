@@ -66,12 +66,12 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   if (!isInitialized) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
     if (isPublicPath) return <PublicPageLoader />;
-    return <FullScreenLoader />;
+    return <PublicPageLoader />;
   }
   if (shouldCheckPolicy && isChecking) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
     if (isPublicPath) return <PublicPageLoader />;
-    return <FullScreenLoader />;
+    return <PublicPageLoader />;
   }
 
   return (
@@ -98,16 +98,26 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
 };
 
 const RequireAdmin = ({ children }: { children: JSX.Element }) => {
-  const { isInitialized, role } = useAuth();
-  if (!isInitialized) return <FullScreenLoader />;
+  const { isInitialized, isPasswordRecoverySession, role } = useAuth();
+  const { pathname } = useLocation();
+  if (!isInitialized) return <PublicPageLoader />;
+  if (isPasswordRecoverySession) {
+    console.debug("[AuthDebug] RequireAdmin redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
   if (role !== "admin") return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
   return children;
 };
 
 const RequireUser = ({ children }: { children: JSX.Element }) => {
-  const { isInitialized, isAuthenticated, role } = useAuth();
+  const { isInitialized, isAuthenticated, isPasswordRecoverySession, role } = useAuth();
   const usePwaUi = useInstalledUserPwa();
-  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <FullScreenLoader />;
+  const { pathname } = useLocation();
+  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <PublicPageLoader />;
+  if (isPasswordRecoverySession) {
+    console.debug("[AuthDebug] RequireUser redirecting recovery session from", pathname, "to /reset-password");
+    return <Navigate to="/reset-password" replace />;
+  }
   if (role === "admin") return <Navigate to="/admin" replace />;
   if (!isAuthenticated) return <Navigate to={usePwaUi ? PWA_ENTRY_ROUTE : USER_SIGNIN_PATH} replace />;
   return children;
@@ -184,6 +194,7 @@ const App = () => (
                       <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                       <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
                       <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
+                      <Route path="/admin/roles-permissions" element={<RequireAdmin><AdminPortal section="roles-permissions" /></RequireAdmin>} />
                       <Route path="/" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="*" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                     </>
@@ -208,6 +219,7 @@ const App = () => (
                           <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                           <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
                           <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
+                          <Route path="/admin/roles-permissions" element={<RequireAdmin><AdminPortal section="roles-permissions" /></RequireAdmin>} />
                         </>
                       ) : (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />

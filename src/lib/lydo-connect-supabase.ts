@@ -47,6 +47,8 @@ type RequiredDocumentTypeRow = {
   is_required: boolean | null;
   is_active: boolean | null;
   template_scope?: "document_submission" | "other" | null;
+  template_category?: Array<"yorp" | "ypop" | "move" | "data_form"> | null;
+  template_file_size?: number | null;
   updated_at?: string | null;
 };
 
@@ -493,11 +495,15 @@ const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
     isRequired: row.is_required ?? localDocumentType?.isRequired ?? true,
     isActive: row.is_active ?? localDocumentType?.isActive ?? true,
     templateScope: row.template_scope ?? localDocumentType?.templateScope ?? "document_submission",
+    templateCategory: row.template_category ?? localDocumentType?.templateCategory ?? null,
     templateDescription: row.template_description ?? `Template for ${row.name}.`,
     templateActive: row.is_active ?? true,
     templateFileName: row.template_url ? getFileNameFromReference(row.template_url) : "",
     templateFileUrl: row.template_url ?? "",
-    templateFileType: "",
+    templateFileType: row.template_url
+      ? getFileNameFromReference(row.template_url).split(".").pop()?.toLowerCase() ?? ""
+      : "",
+    templateFileSize: row.template_file_size ?? null,
     templateUploadedAt: row.updated_at ?? "",
   };
 };
@@ -932,7 +938,7 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
 
   const { data: templateRows, error: templatesError } = await supabase!
     .from("required_document_types")
-    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,template_category,template_file_size,updated_at")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -1368,7 +1374,7 @@ const ensureDocumentSubmission = async (organizationId: string, userId: string) 
 const fetchRequiredDocumentTypeRowByName = async (name: string) => {
   const { data, error } = await supabase!
     .from("required_document_types")
-    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,template_category,template_file_size,updated_at")
     .eq("name", name)
     .maybeSingle();
 
@@ -1411,7 +1417,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
       ? resolveTemplateDatabaseId(params.documentTypeId, params.documentTypeName).then((resolvedId) =>
           supabase!
             .from("required_document_types")
-            .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+            .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,template_category,updated_at")
             .eq("id", resolvedId)
             .single()
             .then(({ data, error }) => {
@@ -2409,6 +2415,16 @@ export const uploadTemplateDocumentToSupabase = async (params: {
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template record.");
 
+  if (params.file.size) {
+    const { data: metaData } = await supabase.rpc("update_admin_template_metadata", {
+      _session_token: adminSession.sessionToken,
+      _template_id: documentTypeRow.id,
+      _template_file_size: params.file.size,
+    });
+    const metaRow = Array.isArray(metaData) ? metaData[0] : null;
+    if (metaRow) (updatedRow as RequiredDocumentTypeRow).template_file_size = (metaRow as RequiredDocumentTypeRow).template_file_size;
+  }
+
   const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
   if (!mappedTemplate) throw new Error("The uploaded template could not be mapped to the portal.");
 
@@ -2420,6 +2436,7 @@ export const createTemplateRecordInSupabase = async (params: {
   description: string;
   templateDescription: string;
   templateScope: "document_submission" | "other";
+  templateCategory?: Array<"yorp" | "ypop" | "move" | "data_form"> | null;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   const adminSession = readAdminSession();
@@ -2434,9 +2451,57 @@ export const createTemplateRecordInSupabase = async (params: {
   });
 
   const createdRow = Array.isArray(data) ? data[0] : null;
+
+  // If the RPC fails with a unique-key violation the name belongs to a soft-deleted record.
+  // Reactivate that record with the new fields so the name can be reused.
+  if ((error || !createdRow) && error?.message?.toLowerCase().includes("duplicate key")) {
+    const existingRow = await fetchRequiredDocumentTypeRowByName(params.name.trim()).catch(() => null);
+    if (existingRow && !existingRow.is_active) {
+      // Direct .update() is blocked by RLS (admin runs as anon). Use the SECURITY DEFINER
+      // RPC so is_active, description, and category are all set in one atomic call.
+      const { data: reactivateData, error: reactivateError } = await supabase.rpc(
+        "update_admin_template_metadata",
+        {
+          _session_token:        adminSession.sessionToken,
+          _template_id:          existingRow.id,
+          _is_active:            true,
+          _description:          params.description.trim(),
+          _template_description: params.templateDescription.trim(),
+          _template_scope:       params.templateScope,
+          _template_category:    params.templateCategory ?? null,
+        },
+      );
+      if (reactivateError) throw new Error(reactivateError.message);
+      const reactivatedRow = Array.isArray(reactivateData) ? reactivateData[0] : null;
+      if (!reactivatedRow) throw new Error("The template could not be reactivated.");
+      const mappedTemplate = mapTemplate(reactivatedRow as RequiredDocumentTypeRow);
+      if (!mappedTemplate) throw new Error("The reactivated template could not be mapped to the portal.");
+      return mappedTemplate;
+    }
+    throw new Error(`A template named "${params.name.trim()}" already exists.`);
+  }
+
   if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the template.");
 
-  const mappedTemplate = mapTemplate(createdRow as RequiredDocumentTypeRow);
+  // Fetch a fresh row so we have the guaranteed `id` UUID regardless of what the RPC returns
+  const freshRow = await fetchRequiredDocumentTypeRowByName(params.name.trim());
+
+  const { data: metaData } = await supabase.rpc("update_admin_template_metadata", {
+    _session_token:     adminSession.sessionToken,
+    _template_id:       freshRow.id,
+    _is_active:         true,
+    _template_category: params.templateCategory ?? null,
+  });
+  const metaRow = Array.isArray(metaData) ? metaData[0] : null;
+  if (metaRow) {
+    (freshRow as RequiredDocumentTypeRow).is_active = true;
+    (freshRow as RequiredDocumentTypeRow).template_category =
+      (metaRow as RequiredDocumentTypeRow).template_category ?? (freshRow as RequiredDocumentTypeRow).template_category;
+  } else if (params.templateCategory) {
+    (freshRow as RequiredDocumentTypeRow).template_category = params.templateCategory;
+  }
+
+  const mappedTemplate = mapTemplate(freshRow as RequiredDocumentTypeRow);
   if (!mappedTemplate) throw new Error("The new template could not be mapped to the portal.");
   return mappedTemplate;
 };
@@ -2448,6 +2513,7 @@ export const updateTemplateRecordInSupabase = async (params: {
   description: string;
   templateDescription: string;
   templateScope: "document_submission" | "other";
+  templateCategory?: Array<"yorp" | "ypop" | "move" | "data_form"> | null;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   const adminSession = readAdminSession();
@@ -2466,6 +2532,19 @@ export const updateTemplateRecordInSupabase = async (params: {
 
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template.");
+
+  if (params.templateCategory) {
+    const { data: metaData } = await supabase.rpc("update_admin_template_metadata", {
+      _session_token: adminSession.sessionToken,
+      _template_id: resolvedDatabaseId,
+      _template_category: params.templateCategory,
+    });
+    const metaRow = Array.isArray(metaData) ? metaData[0] : null;
+    (updatedRow as RequiredDocumentTypeRow).template_category =
+      metaRow ? (metaRow as RequiredDocumentTypeRow).template_category : params.templateCategory;
+  } else {
+    (updatedRow as RequiredDocumentTypeRow).template_category = null;
+  }
 
   const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
   if (!mappedTemplate) throw new Error("The updated template could not be mapped to the portal.");

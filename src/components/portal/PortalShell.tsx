@@ -140,14 +140,14 @@ const SidebarContent = ({
                         "group flex h-[40px] w-full items-center rounded-md transition-colors",
                         collapsed ? "justify-center" : "gap-3 px-5 py-[10px] text-left",
                         active
-                          ? "bg-[#F1F6FD] text-[#118DF0]"
-                          : "text-[#1E1E1E] hover:bg-[#F1F6FD] hover:text-[#118DF0]",
+                          ? "bg-[#F1F6FD] text-[#0E2F66]"
+                          : "text-[#1E1E1E] hover:bg-[#F1F6FD] hover:text-[#0E2F66]",
                       )}
                     >
                       <Icon
                         className={cn(
                           "h-[18px] w-[18px] shrink-0 transition-colors",
-                          active ? "text-[#118DF0]" : "text-[#757575] group-hover:text-[#118DF0]",
+                          active ? "text-[#0E2F66]" : "text-[#757575] group-hover:text-[#0E2F66]",
                         )}
                         strokeWidth={1.6}
                       />
@@ -381,9 +381,10 @@ export const PortalShell = ({
               >
                 <Search className="h-4 w-4 shrink-0 text-[#1E1E1E]" strokeWidth={1.6} />
                 <span className="flex-1 text-sm leading-[140%] text-[#B3B3B3]">
-                  Jump to a page, or search actions...
+                  <span className="hidden lg:inline">Jump to a page, or search actions...</span>
+                  <span className="lg:hidden">Search</span>
                 </span>
-                <kbd className="flex h-[22px] items-center rounded border-[0.6px] border-[#D1D5DB] bg-[#F5F5F5] px-[6px] text-[10px] leading-[140%] text-[#757575]">
+                <kbd className="hidden h-[22px] items-center rounded border-[0.6px] border-[#D1D5DB] bg-[#F5F5F5] px-[6px] text-[10px] leading-[140%] text-[#757575] lg:flex">
                   Ctrl+K
                 </kbd>
               </button>

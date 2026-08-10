@@ -282,6 +282,7 @@ export type RequiredDocumentType = {
   isRequired: boolean;
   isActive: boolean;
   templateScope: "document_submission" | "other";
+  templateCategory?: Array<"yorp" | "ypop" | "move" | "data_form"> | null;
 };
 
 export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"], string> = {
@@ -419,6 +420,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategory: ["yorp"],
   },
   {
     id: "yorp-form-b",
@@ -429,6 +431,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategory: ["yorp"],
   },
   {
     id: "yorp-officers-adviser",
@@ -439,6 +442,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategory: ["yorp"],
   },
   {
     id: "yorp-members",
@@ -449,6 +453,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategory: ["yorp"],
   },
   {
     id: "pcydo-form-a",
@@ -459,6 +464,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategory: ["yorp"],
   },
   {
     id: "pcydo-data-request",
@@ -469,6 +475,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategory: ["yorp"],
   },
 ];
 
@@ -846,6 +853,7 @@ export type TemplateRecord = RequiredDocumentType & {
   templateFileName: string;
   templateFileUrl: string;
   templateFileType: string;
+  templateFileSize?: number | null;
   templateUploadedAt: string;
 };
 

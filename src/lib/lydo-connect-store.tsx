@@ -431,10 +431,14 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles)
             : current.ypopOrgActivityFiles;
           const mergedInquiries = snapshot.inquiries ? mergeById(current.inquiries, snapshot.inquiries) : current.inquiries;
+          const mergedTemplates = snapshot.templates
+            ? mergeById(current.templates, snapshot.templates)
+            : current.templates;
 
           return {
             ...current,
             ...snapshot,
+            templates: mergedTemplates,
             notifications: mergedNotifications,
             ypopFiles: mergedYpopFiles,
             ypopEventFiles: mergedYpopEventFiles,

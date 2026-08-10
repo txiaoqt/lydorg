@@ -272,7 +272,7 @@ const buildPdfHeaderLayout = async <Row,>(
 
   const detailWidth = pageWidth - marginLeft - marginRight;
   const headerTopY = 28;
-  const reportTitleY = headerTopY + 42;
+  const reportTitleY = headerTopY + 54;
   let currentY = reportTitleY + 18;
 
   doc.setFont(options.config.pdfUseUnicodeFont ? PDF_FONT_REGULAR_NAME : "helvetica", "normal");
@@ -323,13 +323,13 @@ const renderPdfHeader = (doc: jsPDF, layout: PdfHeaderLayout) => {
 
   doc.setFont(boldFont, "bold");
   doc.setFontSize(15);
-  doc.text(layout.reportTitle, layout.marginLeft, headerTopY + 42);
+  doc.text(layout.reportTitle, layout.marginLeft, headerTopY + 54);
 
   doc.setFont(regularFont, "normal");
   doc.setFontSize(9);
   doc.setTextColor(...PDF_COLORS.muted);
 
-  let currentY = headerTopY + 60;
+  let currentY = headerTopY + 72;
   const detailWidth = layout.pageWidth - layout.marginLeft - layout.marginRight;
   layout.detailLines.forEach((line) => {
     const wrappedLines = doc.splitTextToSize(line, detailWidth) as string[];

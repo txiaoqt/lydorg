@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import "./admin-news-releases.css";
 import "./admin-inquiries.css";
 import "./admin-template-management.css";
@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
 import { UsersPage } from "./pages/Users";
 import { Roles } from "./pages/Roles";
-import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, CornerUpLeft, Download, ExternalLink, Eye, FileText, FolderOpen, ListFilter, LogOut, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Search, Tag, Trash2, TrendingUp, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, CornerUpLeft, Download, ExternalLink, Eye, FileSpreadsheet, FileText, FolderOpen, Globe, EyeOff, Image as ImageIcon, LayoutGrid, List, ListFilter, Loader2, LogOut, Mail, MapPin, Medal, Megaphone, Newspaper, MoreHorizontal, Pencil, Plus, Save, Search, Tag, Trash2, TrendingUp, Trophy, Upload, UserRound, Users, Wallet, X } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -628,7 +629,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateNameDraft, setTemplateNameDraft] = useState("");
   const [templateDescriptionDraft, setTemplateDescriptionDraft] = useState("");
-  const [templateScopeDraft, setTemplateScopeDraft] = useState<"document_submission" | "other">("document_submission");
+  const [templateScopeDraft, setTemplateScopeDraft] = useState<"yorp" | "ypop" | "move" | "data_form" | null>(null);
   const [templateFileDraft, setTemplateFileDraft] = useState<File | null>(null);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -651,10 +652,24 @@ export default function AdminPortal({ section }: { section: string }) {
   const [activityPage, setActivityPage] = useState(0);
   const [activityExporting, setActivityExporting] = useState<ExportFormat | null>(null);
   const [activityExportDialogOpen, setActivityExportDialogOpen] = useState(false);
+  const [activitySearchQuery, setActivitySearchQuery] = useState("");
+  const [activityTimeDropdownOpen, setActivityTimeDropdownOpen] = useState(false);
+  const activityTimeDropdownRef = useRef<HTMLDivElement>(null);
+  const [newsPage, setNewsPage] = useState(0);
+  const [newsView, setNewsView] = useState<"list" | "grid">("list");
+  const [templatePage, setTemplatePage] = useState(0);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState<"all" | "yorp" | "ypop" | "move" | "data_form">("all");
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
   const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
   const [savingNewsRelease, setSavingNewsRelease] = useState(false);
+  const [thumbnailMode, setThumbnailMode] = useState<"url" | "file">("url");
+  const [newsDatePickerOpen, setNewsDatePickerOpen] = useState(false);
+  const [newsCalendarViewDate, setNewsCalendarViewDate] = useState(new Date());
+  const [newsCategoryDropdownOpen, setNewsCategoryDropdownOpen] = useState(false);
+  const [newsVisibilityDropdownOpen, setNewsVisibilityDropdownOpen] = useState(false);
+  const [newsCalHeaderDropdown, setNewsCalHeaderDropdown] = useState<"month" | "year" | null>(null);
   const [transparencyModalMode, setTransparencyModalMode] = useState<"create" | "edit" | null>(null);
   const [editingTransparencyPostId, setEditingTransparencyPostId] = useState<string | null>(null);
   const [transparencyTitleDraft, setTransparencyTitleDraft] = useState("");
@@ -666,6 +681,21 @@ export default function AdminPortal({ section }: { section: string }) {
   const [savingTransparencyPost, setSavingTransparencyPost] = useState(false);
   const [pendingAdminConfirmation, setPendingAdminConfirmation] = useState<PendingAdminConfirmation | null>(null);
   const [pendingDeleteConfirmation, setPendingDeleteConfirmation] = useState<PendingDeleteConfirmation | null>(null);
+  const [newsDeletePending, setNewsDeletePending] = useState<{
+    id: string;
+    title: string;
+    category: string | null;
+    datePosted: string;
+  } | null>(null);
+  const [newsVisibilityConfirm, setNewsVisibilityConfirm] = useState<{
+    title: string;
+    category: string | null;
+    currentStatus: NewsRelease["visibilityStatus"];
+    targetStatus: "published" | "hidden";
+    releaseId?: string;
+  } | null>(null);
+  const [confirmingNewsVisibility, setConfirmingNewsVisibility] = useState(false);
+  const [newsPreviewRelease, setNewsPreviewRelease] = useState<NewsRelease | null>(null);
   const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
   const [statusChangeRemarkDraft, setStatusChangeRemarkDraft] = useState("");
   const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
@@ -678,6 +708,11 @@ export default function AdminPortal({ section }: { section: string }) {
   const [savingInquiryStatus, setSavingInquiryStatus] = useState(false);
   const [inquiryStatusDropdownOpen, setInquiryStatusDropdownOpen] = useState(false);
   const inquiryStatusDropdownRef = useRef<HTMLDivElement>(null);
+  const [templateScopeDropdownOpen, setTemplateScopeDropdownOpen] = useState(false);
+  const templateScopeDropdownRef = useRef<HTMLDivElement>(null);
+  const newsCategoryDropdownRef = useRef<HTMLDivElement>(null);
+  const newsVisibilityDropdownRef = useRef<HTMLDivElement>(null);
+  const newsDatePickerRef = useRef<HTMLDivElement>(null);
   const [inquiryPage, setInquiryPage] = useState(1);
   const [replyTargetInquiry, setReplyTargetInquiry] = useState<InquiryRecord | null>(null);
   const [markingInquiryResponded, setMarkingInquiryResponded] = useState(false);
@@ -1238,6 +1273,20 @@ export default function AdminPortal({ section }: { section: string }) {
       return matchesSearch && matchesVisibility;
     });
   }, [newsSearch, newsVisibilityFilter, newsReleases]);
+
+  const filteredTemplates = useMemo(() => {
+    return activeTemplates.filter((t) => {
+      const matchesCategory =
+        templateCategoryFilter === "all" ||
+        (t.templateCategory?.includes(templateCategoryFilter) ?? false);
+      const q = templateSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        t.name.toLowerCase().includes(q) ||
+        (t.description ?? "").toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
+    });
+  }, [activeTemplates, templateCategoryFilter, templateSearch]);
   const filteredInquiries = useMemo(() => {
     const query = inquirySearch.trim().toLowerCase();
     return [...state.inquiries]
@@ -1257,6 +1306,21 @@ export default function AdminPortal({ section }: { section: string }) {
     const handler = (e: MouseEvent) => {
       if (inquiryStatusDropdownRef.current && !inquiryStatusDropdownRef.current.contains(e.target as Node)) {
         setInquiryStatusDropdownOpen(false);
+      }
+      if (activityTimeDropdownRef.current && !activityTimeDropdownRef.current.contains(e.target as Node)) {
+        setActivityTimeDropdownOpen(false);
+      }
+      if (templateScopeDropdownRef.current && !templateScopeDropdownRef.current.contains(e.target as Node)) {
+        setTemplateScopeDropdownOpen(false);
+      }
+      if (newsCategoryDropdownRef.current && !newsCategoryDropdownRef.current.contains(e.target as Node)) {
+        setNewsCategoryDropdownOpen(false);
+      }
+      if (newsVisibilityDropdownRef.current && !newsVisibilityDropdownRef.current.contains(e.target as Node)) {
+        setNewsVisibilityDropdownOpen(false);
+      }
+      if (newsDatePickerRef.current && !newsDatePickerRef.current.contains(e.target as Node)) {
+        setNewsDatePickerOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -3584,8 +3648,9 @@ export default function AdminPortal({ section }: { section: string }) {
     setEditingTemplateId(null);
     setTemplateNameDraft("");
     setTemplateDescriptionDraft("");
-    setTemplateScopeDraft("document_submission");
+    setTemplateScopeDraft(null);
     setTemplateFileDraft(null);
+    setTemplateScopeDropdownOpen(false);
   };
 
   const resetNewsReleaseForm = () => {
@@ -3599,6 +3664,12 @@ export default function AdminPortal({ section }: { section: string }) {
     setNewsDatePostedDraft("");
     setNewsVisibilityDraft("draft");
     setNewsCategoryDraft("");
+    setThumbnailMode("url");
+    setNewsDatePickerOpen(false);
+    setNewsCalendarViewDate(new Date());
+    setNewsCategoryDropdownOpen(false);
+    setNewsVisibilityDropdownOpen(false);
+    setNewsCalHeaderDropdown(null);
   };
 
   const resetTransparencyForm = () => {
@@ -3619,7 +3690,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setEditingTemplateId(templateId);
     setTemplateNameDraft(template.name);
     setTemplateDescriptionDraft(template.description);
-    setTemplateScopeDraft(template.templateScope);
+    setTemplateScopeDraft(template.templateCategory?.[0] ?? "yorp");
     setTemplateFileDraft(null);
   };
 
@@ -3636,6 +3707,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setNewsDatePostedDraft(newsRelease.datePosted);
     setNewsVisibilityDraft(newsRelease.visibilityStatus);
     setNewsCategoryDraft(newsRelease.category ?? "");
+    setNewsCalendarViewDate(newsRelease.datePosted ? new Date(newsRelease.datePosted + "T00:00:00") : new Date());
   };
 
   const startEditingTransparencyPost = (postId: string) => {
@@ -3667,7 +3739,8 @@ export default function AdminPortal({ section }: { section: string }) {
         name: templateNameDraft,
         description: templateDescriptionDraft,
         templateDescription: templateDescriptionDraft || `Template for ${templateNameDraft.trim()}.`,
-        templateScope: templateScopeDraft,
+        templateScope: "document_submission",
+        templateCategory: templateScopeDraft ? [templateScopeDraft] : undefined,
       });
       createTemplate(newTemplate);
       if (templateFileDraft) {
@@ -3771,10 +3844,77 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
-  const handleDeleteNewsRelease = async (newsReleaseId: string) => {
+  const handleDeleteNewsRelease = (newsReleaseId: string) => {
     const newsRelease = newsReleases.find((entry) => entry.id === newsReleaseId);
     if (!newsRelease) return;
-    setPendingDeleteConfirmation({ kind: "news_release", id: newsReleaseId, title: newsRelease.title });
+    setNewsDeletePending({
+      id: newsReleaseId,
+      title: newsRelease.title,
+      category: newsRelease.category ?? null,
+      datePosted: newsRelease.datePosted,
+    });
+  };
+
+  const handleQuickNewsVisibility = (
+    releaseId: string,
+    targetStatus: "published" | "hidden"
+  ) => {
+    const release = newsReleases.find((r) => r.id === releaseId);
+    if (!release) return;
+    setNewsVisibilityConfirm({
+      releaseId,
+      title: release.title,
+      category: release.category ?? null,
+      currentStatus: release.visibilityStatus,
+      targetStatus,
+    });
+  };
+
+  const confirmNewsVisibilityChange = async () => {
+    const pending = newsVisibilityConfirm;
+    if (!pending || confirmingNewsVisibility) return;
+    setConfirmingNewsVisibility(true);
+    try {
+      if (pending.releaseId) {
+        updateNewsRelease(pending.releaseId, { visibilityStatus: pending.targetStatus });
+        await updateNewsReleaseInSupabase(pending.releaseId, { visibilityStatus: pending.targetStatus });
+        toast({
+          title: pending.targetStatus === "published" ? "News published" : "News hidden",
+          description: pending.targetStatus === "published"
+            ? `"${pending.title}" is now visible to the public.`
+            : `"${pending.title}" has been hidden from the portal.`,
+        });
+        setNewsVisibilityConfirm(null);
+      } else {
+        await handleSaveNewsRelease();
+        setNewsVisibilityConfirm(null);
+      }
+    } catch {
+      if (pending.releaseId) {
+        updateNewsRelease(pending.releaseId, { visibilityStatus: pending.currentStatus });
+      }
+      toast({ title: "Error", description: "Failed to update status.", variant: "destructive" });
+    } finally {
+      setConfirmingNewsVisibility(false);
+    }
+  };
+
+  const confirmDeleteNewsRelease = async () => {
+    const pending = newsDeletePending;
+    if (!pending) return;
+    setNewsDeletePending(null);
+    try {
+      const newsRelease = newsReleases.find((entry) => entry.id === pending.id);
+      if (!newsRelease) return;
+      await deleteNewsReleaseInSupabase(pending.id);
+      removeNewsRelease(pending.id);
+      await appendAuditLog("Deleted news release", "news_release", newsRelease.id, `Deleted news release "${newsRelease.title}".`);
+      await refreshAdminState();
+      if (editingNewsReleaseId === pending.id) resetNewsReleaseForm();
+      toast({ title: "News release deleted", description: `${newsRelease.title} was removed successfully.` });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete news release.", variant: "destructive" });
+    }
   };
 
   const handleDeleteTransparencyPost = async (postId: string) => {
@@ -3860,7 +4000,8 @@ export default function AdminPortal({ section }: { section: string }) {
         name: templateNameDraft,
         description: templateDescriptionDraft,
         templateDescription: templateDescriptionDraft || `Template for ${templateNameDraft.trim()}.`,
-        templateScope: templateScopeDraft,
+        templateScope: "document_submission",
+        templateCategory: templateScopeDraft ? [templateScopeDraft] : undefined,
       });
       updateTemplate(template.id, updatedTemplate);
       if (templateFileDraft) {
@@ -4674,7 +4815,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               className={`flex h-[34px] items-center gap-2 rounded-full border px-[14px] font-segoe text-[14px] font-semibold leading-[100%] transition-colors ${
                                 isActive
                                   ? "border-[#0E2F66] bg-[#0E2F66] text-[#F3F3F3]"
-                                  : "border-[#E5E7EB] bg-[#F1F6FD] text-[#303030]"
+                                  : "border-[#E5E7EB] bg-[#F1F6FD] text-[#303030] hover:border-[#0E2F66] hover:bg-[#EEF3FA]"
                               }`}
                             >
                               {tab.label}
@@ -4863,7 +5004,7 @@ export default function AdminPortal({ section }: { section: string }) {
                             type="button"
                             onClick={() => setInquiryPage((p) => Math.min(inquiryTotalPages, p + 1))}
                             disabled={safePage === inquiryTotalPages}
-                            className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] transition-colors disabled:opacity-50"
+                            className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA] disabled:opacity-50"
                           >
                             Next
                             <ArrowRight className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
@@ -7612,343 +7753,983 @@ export default function AdminPortal({ section }: { section: string }) {
             )}
           </PortalSection>
         );
-      case "news-releases":
+      case "news-releases": {
+        const publishedCount = newsReleases.filter(r => r.visibilityStatus === "published").length;
+        const draftCount = newsReleases.filter(r => r.visibilityStatus === "draft").length;
+        const hiddenCount = newsReleases.filter(r => r.visibilityStatus === "hidden").length;
+        const pagedNews = filteredNewsReleases.slice(newsPage * 10, (newsPage + 1) * 10);
+        const newsTotal = filteredNewsReleases.length;
+        const newsTotalPages = Math.ceil(newsTotal / 10);
+        const newsBadge = (status: NewsRelease["visibilityStatus"]) => {
+          if (status === "published")
+            return (
+              <div className="flex w-fit items-center gap-[6px] rounded-full bg-[#EBFFEE] px-2 py-1">
+                <Globe className="h-3 w-3 text-[#009951]" strokeWidth={1} />
+                <span className="font-segoe text-[12px] font-semibold leading-[140%] text-[#009951]">Published</span>
+              </div>
+            );
+          if (status === "draft")
+            return (
+              <div className="flex w-fit items-center gap-[6px] rounded-full bg-[#DCEFFD] px-2 py-1">
+                <Pencil className="h-3 w-3 text-[#118DF0]" strokeWidth={1} />
+                <span className="font-segoe text-[12px] font-semibold leading-[140%] text-[#118DF0]">Draft</span>
+              </div>
+            );
+          return (
+            <div className="flex w-fit items-center gap-[6px] rounded-full bg-[#F5F5F5] px-2 py-1">
+              <EyeOff className="h-3 w-3 text-[#757575]" strokeWidth={1} />
+              <span className="font-segoe text-[12px] font-semibold leading-[140%] text-[#757575]">Hidden</span>
+            </div>
+          );
+        };
         return (
-          <div className="admin-news-releases-page">
-            <PortalSection
-              title="News Releases"
-              description="Create and publish announcements visible to all organizations on the portal's news feed."
-              action={
-                <Button
+          <div className="-m-3 sm:-m-6 lg:-m-8">
+
+            {/* Breadcrumb */}
+            <div className="border-b border-[#E5E7EB] bg-white px-4 py-3">
+              <nav className="flex items-center gap-[10px]" aria-label="Breadcrumb">
+                <span className="text-[14px] leading-[100%] text-[#B3B3B3]">Content</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={2} />
+                <span className="text-[14px] leading-[100%] text-[#1E1E1E]">News</span>
+              </nav>
+            </div>
+
+            {/* Content area */}
+            <div className="flex flex-col gap-5 bg-[#F5F7FA] px-4 py-3">
+
+              {/* Title block */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-[10px]">
+                  <h1 className="font-segoe text-[24px] font-bold leading-[100%] tracking-[-0.03em] text-[#1E1E1E]">News Releases</h1>
+                  <p className="font-segoe text-[14px] font-normal leading-[140%] text-[#757575]">
+                    Create and publish announcements visible to all organizations on the portal.
+                  </p>
+                </div>
+                <button
                   type="button"
-                  className="w-full sm:w-auto"
                   onClick={() => {
                     setNewsModalMode("create");
-                    setEditingNewsReleaseId(null);
-                    setNewsTitleDraft("");
-                    setNewsDescriptionDraft("");
-                    setNewsFacebookPostUrlDraft("");
-                    setNewsPreviewImageUrlDraft("");
-                    setNewsDatePostedDraft(new Date().toISOString().slice(0, 10));
                     setNewsVisibilityDraft("draft");
                     setNewsCategoryDraft("");
                   }}
+                  className="flex h-10 w-fit items-center gap-2 rounded-lg bg-[#0E2F66] px-4 font-segoe text-[14px] leading-[100%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959]"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add News Release
-                </Button>
-              }
-            >
-              {newsReleases.length ? (
-                <div className="space-y-3">
-                  <div className="admin-news-toolbar grid gap-2 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-3">
-                    <Input
-                      className="lg:hidden"
-                      value={newsSearch}
-                      onChange={(event) => setNewsSearch(event.target.value)}
-                      placeholder="Search news releases"
-                    />
-                    <Input
-                      className="hidden lg:flex"
-                      value={newsSearch}
-                      onChange={(event) => setNewsSearch(event.target.value)}
-                      placeholder="Search by title, description, or Facebook link"
-                    />
-                    <Select value={newsVisibilityFilter} onValueChange={(value) => setNewsVisibilityFilter(value as "all" | NewsRelease["visibilityStatus"])}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All visibility" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Visibility</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="hidden">Hidden</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="news-results-count lg:hidden">
-                    {filteredNewsReleases.length} {filteredNewsReleases.length === 1 ? "news release" : "news releases"}
-                  </p>
-                  {filteredNewsReleases.length ? (
-                    <div className="news-releases-list grid gap-3 lg:grid-cols-2 lg:gap-4">
-                      {filteredNewsReleases.map((news) => {
-                        const dotColor =
-                          news.visibilityStatus === "published"
-                            ? "bg-emerald-500"
-                            : news.visibilityStatus === "hidden"
-                            ? "bg-slate-400"
-                            : "bg-amber-400";
-                        const formattedDate = news.datePosted
-                          ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(news.datePosted))
-                          : "?";
+                  <Plus className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  Create News
+                </button>
+              </div>
+
+              {/* Table card */}
+              <div className={newsView === "list" ? "overflow-x-auto rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]" : "flex flex-col gap-5"}>
+                <div className={newsView === "list" ? "min-w-[820px]" : "flex flex-col gap-5"}>
+
+                  {/* Filter bar */}
+                  <div className={`flex flex-wrap items-center gap-3 px-4 py-4 ${newsView === "list" ? "border-b border-[#E5E7EB]" : "rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]"}`}>
+                    <div className="flex items-center gap-[10px]">
+                      {([
+                        { value: "all"       as const, label: "All",       count: newsReleases.length },
+                        { value: "published" as const, label: "Published", count: publishedCount },
+                        { value: "draft"     as const, label: "Draft",     count: draftCount },
+                        { value: "hidden"    as const, label: "Hidden",    count: hiddenCount },
+                      ] as const).map(({ value, label, count }) => {
+                        const isActive = newsVisibilityFilter === value;
                         return (
-                          <Card key={news.id} className="news-release-card flex flex-col border-border/70 shadow-sm">
-                            <CardContent className="flex flex-1 flex-col gap-3 p-4 lg:p-5">
-                              <div className="news-card-thumbnail lg:hidden">
-                                {news.previewImageUrl ? (
-                                  <img src={news.previewImageUrl} alt="" />
-                                ) : (
-                                  <div className="news-card-thumbnail-placeholder">No thumbnail</div>
-                                )}
-                              </div>
-                              <div className="news-card-header flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-start gap-2">
-                                  <span className={`news-status-dot mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                                  <p className="news-card-title break-words font-semibold leading-snug text-foreground" title={news.title}>{news.title}</p>
-                                </div>
-                                <div className="shrink-0">
-                                  <PortalStatusBadge status={news.visibilityStatus} />
-                                </div>
-                              </div>
-                              <p className="news-card-description line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{news.description}</p>
-                              <div className="news-card-metadata space-y-0.5 pl-4">
-                                <p className="news-meta-item hidden text-xs text-muted-foreground lg:flex">
-                                  <span className="news-meta-label">Posted</span>
-                                  <span>{formattedDate}</span>
-                                </p>
-                                <p className="text-xs text-muted-foreground lg:hidden">
-                                  Posted {formattedDate}
-                                  {news.facebookPostUrl ? (
-                                    <>
-                                      {" · "}
-                                      <a href={news.facebookPostUrl} target="_blank" rel="noopener noreferrer">
-                                        Open Facebook Post ↗
-                                      </a>
-                                    </>
-                                  ) : null}
-                                </p>
-                                <p className="news-meta-item hidden text-xs text-muted-foreground/70 lg:flex">
-                                  <span className="news-meta-label">Facebook</span>
-                                  {news.facebookPostUrl ? (
-                                    <a href={news.facebookPostUrl} target="_blank" rel="noopener noreferrer" title={news.facebookPostUrl}>
-                                      Open Facebook Post <span aria-hidden="true">↗</span>
-                                    </a>
-                                  ) : <span>Link not added</span>}
-                                </p>
-                                {news.previewImageUrl ? (
-                                  <p className="news-meta-item hidden max-w-full text-xs text-muted-foreground/70 lg:flex">
-                                    <span className="news-meta-label">Thumbnail</span>
-                                    <span>Uploaded and ready for public preview</span>
-                                  </p>
-                                ) : (
-                                  <p className="news-meta-item hidden max-w-full text-xs text-muted-foreground/70 lg:flex">
-                                    <span className="news-meta-label">Thumbnail</span>
-                                    <span>Not uploaded</span>
-                                  </p>
-                                )}
-                              </div>
-                              <div className="news-card-actions mt-auto flex flex-col gap-2 pt-1 lg:flex-row lg:items-center lg:justify-between">
-                                <Button size="sm" variant="outline" className="w-full lg:w-auto" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
-                                  <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                  Preview
-                                </Button>
-                                <div className="news-card-secondary-actions flex items-center justify-end gap-1.5">
-                                  {news.visibilityStatus === "published" ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="hidden lg:inline-flex"
-                                      onClick={() => openAdminConfirmation({ kind: "news_release", action: "hide", id: news.id, title: news.title })}
-                                    >
-                                      Hide
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="hidden lg:inline-flex"
-                                      onClick={() => openAdminConfirmation({ kind: "news_release", action: "publish", id: news.id, title: news.title })}
-                                    >
-                                      Publish
-                                    </Button>
-                                  )}
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button size="sm" variant="ghost" className="news-card-more h-8 w-8 p-0">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">More actions</span>
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-36">
-                                      <DropdownMenuItem
-                                        className="lg:hidden"
-                                        onClick={() =>
-                                          openAdminConfirmation({
-                                            kind: "news_release",
-                                            action: news.visibilityStatus === "published" ? "hide" : "publish",
-                                            id: news.id,
-                                            title: news.title,
-                                          })
-                                        }
-                                      >
-                                        {news.visibilityStatus === "published" ? "Hide" : "Publish"}
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator className="lg:hidden" />
-                                      <DropdownMenuItem onClick={() => startEditingNewsRelease(news.id)}>
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        onClick={() => void handleDeleteNewsRelease(news.id)}
-                                      >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => { setNewsVisibilityFilter(value); setNewsPage(0); }}
+                            className={`flex h-[34px] items-center rounded-full border px-[14px] font-segoe text-[14px] font-semibold leading-[100%] transition-colors ${
+                              isActive
+                                ? "border-[#0E2F66] bg-[#0E2F66] text-[#F3F3F3]"
+                                : "border-[#E5E7EB] bg-[#F1F6FD] text-[#303030] hover:border-[#0E2F66] hover:bg-[#EEF3FA]"
+                            }`}
+                          >
+                            {label}
+                          </button>
                         );
                       })}
                     </div>
-                  ) : (
-                    <PortalEmptyState
-                      title="No matching news releases"
-                      description="Try adjusting the search or visibility filter."
-                    />
-                  )}
-                </div>
-              ) : (
-                <PortalEmptyState
-                  title="No news releases yet"
-                  description="Create the first news release so both admin and users can preview the source post."
-                />
-              )}
-            </PortalSection>
-            <Dialog open={newsModalMode === "create" || newsModalMode === "edit"} onOpenChange={(open) => (!open ? resetNewsReleaseForm() : undefined)}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{newsModalMode === "edit" ? "Edit News Release" : "Add News Release"}</DialogTitle>
-                  <DialogDescription>
-                    {newsModalMode === "edit"
-                      ? "Update the public news release details, source post link, and thumbnail image link."
-                      : "Create a news release record with a source post link and optional thumbnail image link."}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-title" className="text-sm font-medium">Title</label>
-                    <Input id="news-release-title" name="newsReleaseTitle" value={newsTitleDraft} onChange={(event) => setNewsTitleDraft(event.target.value)} placeholder="Enter news release title" />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-description" className="text-sm font-medium">Description</label>
-                    <Textarea
-                      id="news-release-description"
-                      name="newsReleaseDescription"
-                      value={newsDescriptionDraft}
-                      onChange={(event) => setNewsDescriptionDraft(event.target.value)}
-                      placeholder="Write the summary shown in the preview page."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-category" className="text-sm font-medium">Category</label>
-                    <Input
-                      id="news-release-category"
-                      name="newsReleaseCategory"
-                      value={newsCategoryDraft}
-                      onChange={(event) => setNewsCategoryDraft(event.target.value)}
-                      placeholder="e.g. YORP, YPOP, MOVE"
-                    />
-                    <p className="text-xs text-muted-foreground">Optional tag shown on public news release cards.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-facebook-url" className="text-sm font-medium">Facebook Post URL</label>
-                    <Input
-                      id="news-release-facebook-url"
-                      name="newsReleaseFacebookPostUrl"
-                      value={newsFacebookPostUrlDraft}
-                      onChange={(event) => setNewsFacebookPostUrlDraft(event.target.value)}
-                      placeholder="https://facebook.com/..."
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <label htmlFor="news-release-preview-image-file" className="text-sm font-medium">Thumbnail Image</label>
-                    <Input
-                      id="news-release-preview-image-file"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(event) => setNewsPreviewImageFileDraft(event.target.files?.[0] ?? null)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Recommended: upload a JPG, PNG, or WebP image. The file is copied to Y-TRACE Storage so Facebook link restrictions do not break it.
-                    </p>
-                    <label htmlFor="news-release-preview-image-url" className="text-xs font-medium text-muted-foreground">Existing or external image URL</label>
-                    <Input
-                      id="news-release-preview-image-url"
-                      name="newsReleasePreviewImageUrl"
-                      value={newsPreviewImageUrlDraft}
-                      onChange={(event) => setNewsPreviewImageUrlDraft(event.target.value)}
-                      placeholder="https://example.com/thumbnail.jpg"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      External URLs may expire or block image embedding. Uploading the image above is more reliable.
-                    </p>
-                    {newsPreviewImageFileDraft ? (
-                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-primary">
-                        Ready to upload: <strong>{newsPreviewImageFileDraft.name}</strong>
-                      </div>
-                    ) : newsPreviewImageUrlDraft.trim() ? (
-                      <div className="space-y-2 rounded-xl border border-border/70 bg-muted/10 p-3">
-                        <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                          Thumbnail Preview
-                        </p>
-                        <img
-                          src={newsPreviewImageUrlDraft}
-                          alt="News release thumbnail preview"
-                          referrerPolicy="no-referrer"
-                          onError={(event) => {
-                            event.currentTarget.style.display = "none";
-                          }}
-                          className="h-40 w-full rounded-lg border border-border/60 object-cover"
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <label htmlFor="news-release-date-posted" className="text-sm font-medium">Date Posted</label>
-                      <Input
-                        id="news-release-date-posted"
-                        name="newsReleaseDatePosted"
-                        type="date"
-                        value={newsDatePostedDraft}
-                        onChange={(event) => setNewsDatePostedDraft(event.target.value)}
+                    <div className="relative flex-1">
+                      <Search className="absolute left-[14px] top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-[#B3B3B3]" strokeWidth={1.6} />
+                      <input
+                        type="text"
+                        value={newsSearch}
+                        onChange={(e) => { setNewsSearch(e.target.value); setNewsPage(0); }}
+                        placeholder="Search by title, description, or Facebook link"
+                        className="h-10 w-full rounded-lg border border-[#D1D5DB] bg-white pl-10 pr-[14px] font-segoe text-[14px] leading-[140%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label htmlFor="news-release-visibility" className="text-sm font-medium">Visibility</label>
-                      <select
-                        id="news-release-visibility"
-                        name="newsReleaseVisibility"
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={newsVisibilityDraft}
-                        onChange={(event) => setNewsVisibilityDraft(event.target.value as NewsRelease["visibilityStatus"])}
+                    {/* View toggle */}
+                    <div className="flex h-[40px] w-[74px] shrink-0 items-center gap-[2px] rounded-lg border border-[#CBD5E1] bg-white px-1 py-[4px]">
+                      <button
+                        type="button"
+                        onClick={() => setNewsView("grid")}
+                        className={`group flex h-8 w-8 items-center justify-center rounded-[5px] transition-colors ${newsView === "grid" ? "bg-[#0E2F66]" : ""}`}
                       >
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="hidden">Hidden</option>
-                      </select>
+                        <LayoutGrid className={`h-5 w-5 transition-colors ${newsView === "grid" ? "text-[#F3F3F3]" : "text-[#B3B3B3] group-hover:text-[#0E2F66]"}`} strokeWidth={1.6} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewsView("list")}
+                        className={`group flex h-8 w-8 items-center justify-center rounded-[5px] transition-colors ${newsView === "list" ? "bg-[#0E2F66]" : ""}`}
+                      >
+                        <List className={`h-5 w-5 transition-colors ${newsView === "list" ? "text-[#F3F3F3]" : "text-[#B3B3B3] group-hover:text-[#0E2F66]"}`} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {newsView === "list" ? (
+                    <>
+                  {/* Column headers */}
+                  <div className="grid grid-cols-[minmax(200px,2fr)_minmax(140px,1fr)_180px_130px_100px] border-b border-[#E5E7EB] bg-[#F5F5F5] px-4 py-[6px]">
+                    {(["TITLE", "FACEBOOK LINK", "POSTED DATE", "STATUS", "ACTIONS"] as const).map((col) => (
+                      <span key={col} className="font-segoe text-[12px] font-semibold leading-[140%] text-[#1E1E1E]">{col}</span>
+                    ))}
+                  </div>
+
+                  {/* Empty state */}
+                  {pagedNews.length === 0 && (
+                    <div className="px-4 py-12 text-center font-segoe text-[14px] text-[#B3B3B3]">No news releases found.</div>
+                  )}
+
+                  {/* Rows */}
+                  {pagedNews.map((release) => (
+                    <div
+                      key={release.id}
+                      className="grid grid-cols-[minmax(200px,2fr)_minmax(140px,1fr)_180px_130px_100px] items-center border-b border-[#F0F1F3] px-4 py-3 transition-colors hover:bg-[#F5F7FA] last:border-b-0"
+                    >
+                      <div className="truncate pr-2 font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]" title={release.title}>
+                        {release.title}
+                      </div>
+                      <div>
+                        {release.facebookPostUrl ? (
+                          <a
+                            href={release.facebookPostUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 font-segoe text-[14px] leading-[140%] text-[#2864C4] hover:underline"
+                          >
+                            Facebook Link
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                          </a>
+                        ) : (
+                          <span className="font-segoe text-[14px] text-[#B3B3B3]">—</span>
+                        )}
+                      </div>
+                      <div className="font-segoe text-[14px] leading-[140%] text-[#1E1E1E]">
+                        {(() => {
+                          const d = new Date(release.datePosted);
+                          return `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })} ${d.getFullYear()}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`;
+                        })()}
+                      </div>
+                      <div>
+                        {newsBadge(release.visibilityStatus)}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setNewsPreviewRelease(release)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9D9D9] bg-white text-[#2C2C2C] transition-colors hover:border-[#D1D5DB] hover:bg-[#F0F1F3]"
+                          title="Open preview"
+                        >
+                          <Eye className="h-4 w-4" strokeWidth={1.6} />
+                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9D9D9] bg-white text-[#2C2C2C] transition-colors hover:border-[#D1D5DB] hover:bg-[#F0F1F3]"
+                            >
+                              <MoreHorizontal className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-[120px] p-1">
+                            <DropdownMenuItem
+                              className="cursor-pointer gap-2 rounded-md px-[10px] py-[10px] font-segoe text-[14px] leading-[100%] text-[#303030] focus:bg-[#F1F6FD] focus:text-[#303030]"
+                              onClick={() => startEditingNewsRelease(release.id)}
+                            >
+                              <Pencil className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer gap-2 rounded-md px-[10px] py-[10px] font-segoe text-[14px] leading-[100%] text-[#C00F0C] focus:bg-[#FEE9E7] focus:text-[#C00F0C]"
+                              onClick={() => handleDeleteNewsRelease(release.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-[#C00F0C]" strokeWidth={1.6} />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))}
+                    </>
+                  ) : (
+                    <>
+                      {pagedNews.length === 0 && (
+                        <div className="px-4 py-12 text-center font-segoe text-[14px] text-[#B3B3B3]">No news releases found.</div>
+                      )}
+                      <div className="grid grid-cols-2 gap-6">
+                        {pagedNews.map((release) => {
+                          const d = new Date(release.datePosted);
+                          const dateLabel = `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })} ${d.getFullYear()}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`;
+                          return (
+                            <div key={release.id} className="flex flex-col gap-3 rounded-lg border border-[#CBD5E1] bg-white p-6 shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                              {/* Header: category chip + status badge */}
+                              <div className="flex items-center justify-between">
+                                {release.category ? (
+                                  <div className="flex items-center gap-[6px] rounded-[4px] border border-[#A7D2F9] bg-[#EEF7FE] px-2 py-1">
+                                    <Tag className="h-3 w-3 text-[#2A6998]" strokeWidth={1.6} />
+                                    <span className="font-segoe text-[12px] font-semibold text-[#2A6998]">{release.category}</span>
+                                  </div>
+                                ) : <div />}
+                                {newsBadge(release.visibilityStatus)}
+                              </div>
+                              {/* Title + description */}
+                              <div className="flex flex-col gap-1">
+                                <span className="line-clamp-1 font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">{release.title}</span>
+                                <span className="line-clamp-2 font-segoe text-[13px] leading-[140%] text-[#64748B]">{release.description}</span>
+                              </div>
+                              {/* Info card */}
+                              <div className="flex flex-col gap-2 rounded-lg border border-[#C0D4F5] bg-[#F5F9FF] px-4 py-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="shrink-0 font-segoe text-[14px] font-semibold text-[#64748B]">Posted</span>
+                                  <span className="font-segoe text-[14px] text-[#1E1E1E]">{dateLabel}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="shrink-0 font-segoe text-[14px] font-semibold text-[#64748B]">Facebook</span>
+                                  {release.facebookPostUrl ? (
+                                    <a href={release.facebookPostUrl} target="_blank" rel="noopener noreferrer"
+                                       className="flex items-center gap-1 font-segoe text-[14px] text-[#2864C4]">
+                                      Open Facebook Page <ExternalLink className="h-3 w-3" strokeWidth={1.6} />
+                                    </a>
+                                  ) : <span className="font-segoe text-[14px] text-[#B3B3B3]">—</span>}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="shrink-0 font-segoe text-[14px] font-semibold text-[#64748B]">Thumbnail</span>
+                                  {release.previewImageUrl ? (
+                                    <div className="flex items-center gap-1">
+                                      <ImageIcon className="h-4 w-4 text-[#02542D]" strokeWidth={1} />
+                                      <span className="font-segoe text-[14px] text-[#02542D]">Uploaded and ready for public preview</span>
+                                    </div>
+                                  ) : <span className="font-segoe text-[14px] text-[#B3B3B3]">—</span>}
+                                </div>
+                              </div>
+                              {/* Button group */}
+                              <div className="mt-auto flex items-center justify-end gap-3 border-t border-[#F0F1F3] pt-3">
+                                <button type="button"
+                                  onClick={() => setNewsPreviewRelease(release)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9D9D9] bg-white transition-colors hover:bg-[#F0F1F3]">
+                                  <Eye className="h-4 w-4 text-[#2C2C2C]" strokeWidth={1.6} />
+                                </button>
+                                {release.visibilityStatus === "published" ? (
+                                  <button type="button" onClick={() => handleQuickNewsVisibility(release.id, "hidden")}
+                                    className="flex h-8 items-center gap-2 rounded-lg border border-[#D9D9D9] bg-white px-4 font-segoe text-[14px] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA]">
+                                    <EyeOff className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} /> Hide
+                                  </button>
+                                ) : (
+                                  <button type="button" onClick={() => handleQuickNewsVisibility(release.id, "published")}
+                                    className="flex h-8 items-center gap-2 rounded-lg bg-[#0E2F66] px-4 font-segoe text-[14px] text-[#F3F3F3] transition-colors hover:bg-[#0C2959]">
+                                    <Globe className="h-4 w-4 text-[#F3F3F3]" strokeWidth={1.6} /> Publish
+                                  </button>
+                                )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9D9D9] bg-white transition-colors hover:bg-[#F0F1F3]">
+                                      <MoreHorizontal className="h-4 w-4 text-[#2C2C2C]" strokeWidth={1.6} />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-[120px] p-1">
+                                    <DropdownMenuItem
+                                      className="cursor-pointer gap-2 rounded-md px-[10px] py-[10px] font-segoe text-[14px] leading-[100%] text-[#303030] focus:bg-[#F1F6FD] focus:text-[#303030]"
+                                      onClick={() => startEditingNewsRelease(release.id)}
+                                    >
+                                      <Pencil className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="cursor-pointer gap-2 rounded-md px-[10px] py-[10px] font-segoe text-[14px] leading-[100%] text-[#C00F0C] focus:bg-[#FEE9E7] focus:text-[#C00F0C]"
+                                      onClick={() => handleDeleteNewsRelease(release.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-[#C00F0C]" strokeWidth={1.6} />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {newsView === "list" && (
+                  <div className="flex items-center justify-between border-t border-[#D9D9D9] px-4 py-4">
+                    <p className="font-segoe text-[13px] leading-[100%]">
+                      <span className="text-[#757575]">Showing </span>
+                      <span className="text-[#1E1E1E]">{pagedNews.length}</span>
+                      <span className="text-[#757575]"> of </span>
+                      <span className="text-[#1E1E1E]">{newsTotal}</span>
+                      <span className="text-[#757575]"> {newsTotal === 1 ? "release" : "releases"}</span>
+                    </p>
+                    {newsTotalPages > 1 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setNewsPage((p) => Math.max(0, p - 1))}
+                          disabled={newsPage === 0}
+                          className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#757575] transition-colors disabled:opacity-50"
+                        >
+                          <ArrowLeft className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                          Previous
+                        </button>
+                        <div className="flex items-center gap-2">
+                          {Array.from({ length: newsTotalPages }, (_, i) => i).map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setNewsPage(p)}
+                              className={`flex h-[29px] min-w-8 items-center justify-center rounded-lg px-3 font-segoe text-[13px] leading-[100%] transition-colors ${
+                                p === newsPage ? "bg-[#0E2F66] text-[#F3F3F3]" : "text-[#1E1E1E] hover:bg-[#F5F7FA]"
+                              }`}
+                            >
+                              {p + 1}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setNewsPage((p) => Math.min(newsTotalPages - 1, p + 1))}
+                          disabled={newsPage === newsTotalPages - 1}
+                          className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] transition-colors disabled:opacity-50"
+                        >
+                          Next
+                          <ArrowRight className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  )}
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* Preview Dialog */}
+            <Dialog open={Boolean(newsPreviewRelease)} onOpenChange={(open) => { if (!open) setNewsPreviewRelease(null); }}>
+              <DialogContent
+                className="max-w-[560px] gap-6 border border-[#CBD5E1] p-6 shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]"
+                hideCloseButton
+              >
+                <DialogTitle className="sr-only">{newsPreviewRelease?.title}</DialogTitle>
+                <DialogDescription className="sr-only">Preview of this news release</DialogDescription>
+
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                    {newsPreviewRelease?.title}
+                  </span>
+                  <DialogClose className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#B3B3B3] transition-colors hover:text-[#757575] focus:outline-none">
+                    <X className="h-4 w-4" />
+                  </DialogClose>
+                </div>
+
+                {/* Content block */}
+                <div className="flex flex-col gap-4">
+                  {newsPreviewRelease?.previewImageUrl ? (
+                    <img
+                      src={newsPreviewRelease.previewImageUrl}
+                      alt={newsPreviewRelease.title}
+                      className="h-[320px] w-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-[320px] w-full items-center justify-center rounded-lg p-[10px]" style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}>
+                      <Megaphone className="h-[111px] w-[111px] text-[#F3F3F3]" strokeWidth={1} />
+                    </div>
+                  )}
+                  <div className="border-b border-[#CBD5E1] p-4">
+                    <p className="font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                      {newsPreviewRelease?.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between rounded-lg border border-[#CBD5E1] p-6">
+                  <span className="font-segoe text-[13px] leading-[100%] text-[#64748B]">
+                    Posted on {newsPreviewRelease ? (() => {
+                      const d = new Date(newsPreviewRelease.datePosted);
+                      return `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })} ${d.getFullYear()} · ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`;
+                    })() : "—"}
+                  </span>
+                  {newsPreviewRelease?.facebookPostUrl ? (
+                    <a
+                      href={newsPreviewRelease.facebookPostUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 font-segoe text-[13px] font-semibold leading-[100%] text-[#2864C4] hover:underline"
+                    >
+                      Facebook Link
+                      <ExternalLink className="h-4 w-4 text-[#2864C4]" strokeWidth={1.6} />
+                    </a>
+                  ) : (
+                    <span className="font-segoe text-[13px] text-[#B3B3B3]">No link available</span>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Visibility Confirm Dialog */}
+            <Dialog open={Boolean(newsVisibilityConfirm)} onOpenChange={(open) => { if (!open) setNewsVisibilityConfirm(null); }}>
+              <DialogContent
+                className="max-w-[420px] gap-6 border border-[#E5E7EB] p-6 shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]"
+                hideCloseButton
+              >
+                <DialogTitle className="sr-only">
+                  {newsVisibilityConfirm?.targetStatus === "published" ? "Publish News" : "Hide News"}
+                </DialogTitle>
+                <DialogDescription className="sr-only">Confirm visibility change for this news release</DialogDescription>
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4 border-b border-[#CBD5E1] pb-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF3FA]">
+                      {newsVisibilityConfirm?.targetStatus === "published"
+                        ? <Globe className="h-5 w-5 text-[#2864C4]" strokeWidth={1.6} />
+                        : <EyeOff className="h-5 w-5 text-[#2864C4]" strokeWidth={1.6} />}
+                    </div>
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                        {newsVisibilityConfirm?.targetStatus === "published" ? "Publish News" : "Hide News"}
+                      </span>
+                      <span className="font-segoe text-[13px] leading-[140%] text-[#757575]">
+                        Are you sure you want to {newsVisibilityConfirm?.targetStatus === "published" ? "publish" : "hide"}{" "}
+                        <span className="font-semibold text-[#1E1E1E]">{newsVisibilityConfirm?.title}</span>?
+                      </span>
+                    </div>
+                  </div>
+                  <DialogClose className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#B3B3B3] transition-colors hover:text-[#757575] focus:outline-none">
+                    <X className="h-4 w-4" />
+                  </DialogClose>
+                </div>
+                {/* Blue info card */}
+                <div className="flex flex-col gap-[10px] rounded-lg border border-[#93C5FD] bg-[#E9F6FF] p-6">
+                  <div className="flex items-center justify-between">
+                    <span className="font-segoe text-[13px] leading-[100%] text-[#0E2F66]">Category:</span>
+                    <span className="font-segoe text-[13px] font-semibold leading-[100%] text-[#2864C4]">
+                      {newsVisibilityConfirm?.category ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-segoe text-[13px] leading-[100%] text-[#0E2F66]">Current Status:</span>
+                    <span className={`font-segoe text-[13px] font-semibold leading-[100%] ${
+                      newsVisibilityConfirm?.currentStatus === "published" ? "text-[#009951]"
+                      : newsVisibilityConfirm?.currentStatus === "draft" ? "text-[#118DF0]"
+                      : "text-[#757575]"
+                    }`}>
+                      {newsVisibilityConfirm?.currentStatus === "published" ? "Published"
+                       : newsVisibilityConfirm?.currentStatus === "draft" ? "Draft"
+                       : "Hidden"}
+                    </span>
+                  </div>
+                  <div className="h-px bg-[#0E2F66] opacity-20" />
+                  <p className="font-segoe text-[13px] leading-[100%] text-[#0E2F66]">
+                    {newsVisibilityConfirm?.targetStatus === "published"
+                      ? "This article will become immediately visible to the public on the youth portal."
+                      : "This article will be hidden from the public portal. You can publish it again anytime."}
+                  </p>
+                </div>
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-[10px]">
+                  <DialogClose asChild>
+                    <button type="button" disabled={confirmingNewsVisibility} className="flex h-11 items-center rounded-lg border border-[#D9D9D9] bg-white px-4 font-segoe text-[14px] leading-[100%] text-[#303030] transition-colors hover:bg-[#F5F7FA] disabled:opacity-50">
+                      Cancel
+                    </button>
+                  </DialogClose>
+                  <button
+                    type="button"
+                    onClick={() => void confirmNewsVisibilityChange()}
+                    disabled={confirmingNewsVisibility}
+                    className="flex h-11 items-center gap-2 rounded-lg bg-[#0E2F66] px-4 font-segoe text-[14px] leading-[100%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959] disabled:opacity-70"
+                  >
+                    {confirmingNewsVisibility
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : newsVisibilityConfirm?.targetStatus === "published"
+                        ? <Globe className="h-4 w-4" strokeWidth={1.6} />
+                        : <EyeOff className="h-4 w-4" strokeWidth={1.6} />}
+                    {confirmingNewsVisibility
+                      ? "Confirming..."
+                      : newsVisibilityConfirm?.targetStatus === "published" ? "Confirm Publish" : "Confirm Hide"}
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Delete Dialog */}
+            <Dialog open={Boolean(newsDeletePending)} onOpenChange={(open) => { if (!open) setNewsDeletePending(null); }}>
+              <DialogContent
+                className="max-w-[420px] gap-6 border border-[#E5E7EB] p-6 shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]"
+                hideCloseButton
+              >
+                <DialogTitle className="sr-only">Delete News</DialogTitle>
+                <DialogDescription className="sr-only">Confirm deletion of this news release</DialogDescription>
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4 border-b border-[#CBD5E1] pb-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#FEE9E7]">
+                      <Trash2 className="h-5 w-5 text-[#C00F0C]" strokeWidth={1.6} />
+                    </div>
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">Delete News</span>
+                      <span className="font-segoe text-[13px] leading-[140%] text-[#757575]">
+                        Are you sure you want to delete{" "}
+                        <span className="font-semibold text-[#1E1E1E]">{newsDeletePending?.title}</span>?
+                      </span>
+                    </div>
+                  </div>
+                  <DialogClose className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#B3B3B3] transition-colors hover:text-[#757575] focus:outline-none">
+                    <X className="h-4 w-4" />
+                  </DialogClose>
+                </div>
+                {/* Info + warning card */}
+                <div className="flex flex-col gap-[10px] rounded-lg border border-[#C00F0C] bg-[#FEE9E7] p-6">
+                  <div className="flex items-center justify-between">
+                    <span className="font-segoe text-[13px] leading-[100%] text-[#C00F0C]">Category:</span>
+                    <span className="font-segoe text-[13px] leading-[100%] text-[#C00F0C]">
+                      {newsDeletePending?.category ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-segoe text-[13px] leading-[100%] text-[#C00F0C]">Posted Date:</span>
+                    <span className="font-segoe text-[13px] leading-[100%] text-[#C00F0C]">
+                      {newsDeletePending ? (() => {
+                        const d = new Date(newsDeletePending.datePosted);
+                        return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+                      })() : "—"}
+                    </span>
+                  </div>
+                  <div className="h-px bg-[#C00F0C] opacity-20" />
+                  <p className="font-segoe text-[13px] leading-[100%] text-[#C00F0C]">
+                    <span>Warning:</span>{" "}Once deleted, this news will be permanently removed from system records.
+                  </p>
+                </div>
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-[10px]">
+                  <DialogClose asChild>
+                    <button type="button" className="flex h-11 items-center rounded-lg border border-[#D9D9D9] bg-white px-4 font-segoe text-[14px] leading-[100%] text-[#303030] transition-colors hover:bg-[#F5F7FA]">
+                      Cancel
+                    </button>
+                  </DialogClose>
+                  <button
+                    type="button"
+                    onClick={() => void confirmDeleteNewsRelease()}
+                    className="flex h-11 items-center gap-2 rounded-lg bg-[#C00F0C] px-4 font-segoe text-[14px] leading-[100%] text-white transition-colors hover:bg-[#A00D0A]"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={1.6} />
+                    Delete News
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog */}
+                      <Dialog open={newsModalMode === "create" || newsModalMode === "edit"} onOpenChange={(open) => (!open ? resetNewsReleaseForm() : undefined)}>
+              <DialogContent
+                className="max-w-[560px] gap-6 border border-[#E5E7EB] p-6 shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]"
+                hideCloseButton
+              >
+                <DialogTitle className="sr-only">
+                  {newsModalMode === "edit" ? "Edit News" : "Create News"}
+                </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Publish a new official announcement, Facebook update, or event notice.
+                </DialogDescription>
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4 border-b border-[#CBD5E1] pb-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF3FA]">
+                      <Newspaper className="h-5 w-5 text-[#2864C4]" strokeWidth={1.6} />
+                    </div>
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                        {newsModalMode === "edit" ? "Edit News" : "Create News"}
+                      </span>
+                      <span className="font-segoe text-[13px] leading-[140%] text-[#757575]">
+                        Publish official announcements and updates.
+                      </span>
+                    </div>
+                  </div>
+                  <DialogClose className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#B3B3B3] transition-colors hover:text-[#757575] focus:outline-none">
+                    <X className="h-4 w-4" />
+                  </DialogClose>
+                </div>
+                {/* Content block */}
+                <div className="flex flex-col gap-4 rounded-lg border border-[#CBD5E1] bg-[#EEF1F5] p-6">
+                  {/* Title */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Title <span className="text-[#C00F0C]">*</span>
+                    </label>
+                    <input
+                      value={newsTitleDraft}
+                      onChange={(e) => setNewsTitleDraft(e.target.value)}
+                      placeholder="Enter news release title"
+                      className="h-[32px] w-full rounded-lg border border-[#CBD5E1] bg-white px-[10px] font-segoe text-[13px] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-1 focus:ring-[#CBD5E1]"
+                    />
+                  </div>
+                  {/* Description */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Description <span className="text-[#C00F0C]">*</span>
+                    </label>
+                    <textarea
+                      value={newsDescriptionDraft}
+                      onChange={(e) => setNewsDescriptionDraft(e.target.value)}
+                      placeholder="Write the summary shown in the preview page."
+                      className="h-[64px] w-full resize-none rounded-lg border border-[#CBD5E1] bg-white px-[8px] py-[6px] font-segoe text-[13px] leading-[100%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-1 focus:ring-[#CBD5E1]"
+                    />
+                  </div>
+                  {/* Category */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Category <span className="font-segoe text-[13px] text-[#B3B3B3]">(Optional)</span>
+                    </label>
+                    <div className="relative" ref={newsCategoryDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setNewsCategoryDropdownOpen((o) => !o)}
+                        className="flex h-8 w-full items-center justify-between rounded-lg border border-[#D1D5DB] bg-white px-[10px] font-segoe text-[13px] leading-[140%] text-[#1E1E1E]"
+                      >
+                        <span className={newsCategoryDraft ? "text-[#1E1E1E]" : "text-[#757575]"}>
+                          {newsCategoryDraft || "Select category"}
+                        </span>
+                        <ChevronDown className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                      </button>
+                      {newsCategoryDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm">
+                          {["", "YORP", "YPOP", "MOVE"].map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => { setNewsCategoryDraft(opt); setNewsCategoryDropdownOpen(false); }}
+                              className={`flex h-8 w-full items-center px-[10px] font-segoe text-[13px] leading-[140%] transition-colors ${newsCategoryDraft === opt ? "bg-[#C0D4F5] text-[#0E2F66]" : "text-[#757575] hover:bg-[#F5F7FA]"}`}
+                            >
+                              {opt || "None"}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <p className="font-segoe text-[11px] leading-[100%] text-[#64748B]">
+                      Optional tag shown on public news release cards.
+                    </p>
+                  </div>
+                  {/* Facebook Post URL */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Facebook Post URL <span className="font-segoe text-[13px] text-[#B3B3B3]">(Optional)</span>
+                    </label>
+                    <input
+                      value={newsFacebookPostUrlDraft}
+                      onChange={(e) => setNewsFacebookPostUrlDraft(e.target.value)}
+                      placeholder="https://facebook.com/..."
+                      className="h-[32px] w-full rounded-lg border border-[#CBD5E1] bg-white px-[10px] font-segoe text-[13px] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-1 focus:ring-[#CBD5E1]"
+                    />
+                  </div>
+                  {/* Thumbnail Image */}
+                  <div className="flex flex-col gap-[10px]">
+                    <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Thumbnail Image <span className="font-segoe text-[13px] text-[#B3B3B3]">(Optional)</span>
+                    </label>
+                    <div className="flex h-[40px] w-[162px] items-center rounded-lg border border-[#CBD5E1] bg-[#E2E7EE] p-1">
+                      <button
+                        type="button"
+                        onClick={() => setThumbnailMode("url")}
+                        className={`flex h-[32px] items-center whitespace-nowrap rounded-[6px] px-[8px] py-[6px] font-segoe text-[12px] font-semibold transition-colors ${thumbnailMode === "url" ? "bg-white text-[#0E2F66]" : "text-[#7A8798]"}`}
+                      >
+                        Paste URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setThumbnailMode("file")}
+                        className={`flex h-[32px] items-center whitespace-nowrap rounded-[6px] px-[8px] py-[6px] font-segoe text-[12px] font-semibold transition-colors ${thumbnailMode === "file" ? "bg-white text-[#0E2F66]" : "text-[#7A8798]"}`}
+                      >
+                        Upload File
+                      </button>
+                    </div>
+                    {thumbnailMode === "url" ? (
+                      <>
+                        <input
+                          value={newsPreviewImageUrlDraft}
+                          onChange={(e) => setNewsPreviewImageUrlDraft(e.target.value)}
+                          placeholder="https://example.com/thumbnail.jpg"
+                          className="h-[32px] w-full rounded-lg border border-[#CBD5E1] bg-white px-[10px] font-segoe text-[13px] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-1 focus:ring-[#CBD5E1]"
+                        />
+                        <p className="font-segoe text-[11px] leading-[100%] text-[#64748B]">
+                          External URLs may expire or block image embedding. Uploading the image is more reliable.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => setNewsPreviewImageFileDraft(e.target.files?.[0] ?? null)}
+                          className="w-full rounded-lg border border-[#CBD5E1] bg-white px-[10px] py-[6px] font-segoe text-[12px] text-[#1E1E1E] file:mr-2 file:rounded-md file:border-0 file:bg-[#EEF1F5] file:px-3 file:py-1 file:font-segoe file:text-[12px] file:text-[#0E2F66]"
+                        />
+                        <p className="font-segoe text-[11px] leading-[100%] text-[#64748B]">
+                          Recommended: upload a JPG, PNG, or WebP image. The file is copied to Y-TRACE Storage.
+                        </p>
+                      </>
+                    )}
+                    {(newsPreviewImageFileDraft || newsPreviewImageUrlDraft.trim()) && (
+                      <div className="h-[160px] w-full overflow-hidden rounded-lg bg-[#E2E7EE] p-[10px]">
+                        {newsPreviewImageFileDraft ? (
+                          <div className="flex h-full items-center justify-center rounded-lg bg-[#EEF1F5]">
+                            <p className="font-segoe text-[13px] text-[#64748B]">Ready to upload: <strong>{newsPreviewImageFileDraft.name}</strong></p>
+                          </div>
+                        ) : (
+                          <img
+                            src={newsPreviewImageUrlDraft}
+                            alt="Thumbnail preview"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            className="h-full w-full rounded-lg object-cover"
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Date + Visibility */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex flex-1 flex-col gap-2">
+                      <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                        Date Posted <span className="text-[#C00F0C]">*</span>
+                      </label>
+                      <div className="relative" ref={newsDatePickerRef}>
+                        <button
+                          type="button"
+                          onClick={() => setNewsDatePickerOpen((o) => !o)}
+                          className="flex h-[32px] w-full items-center justify-between rounded-lg border border-[#CBD5E1] bg-white px-[10px] font-segoe text-[13px]"
+                        >
+                          <span className={newsDatePostedDraft ? "text-[#1E1E1E]" : "text-[#B3B3B3]"}>
+                            {newsDatePostedDraft
+                              ? (() => { const d = new Date(newsDatePostedDraft + "T00:00:00"); return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`; })()
+                              : "DD/MM/YYYY"}
+                          </span>
+                          <CalendarDays className="h-4 w-4 text-[#B3B3B3]" strokeWidth={1.6} />
+                        </button>
+                        {newsDatePickerOpen && (() => {
+                          const calYear = newsCalendarViewDate.getFullYear();
+                          const calMonth = newsCalendarViewDate.getMonth();
+                          const firstDay = new Date(calYear, calMonth, 1).getDay();
+                          const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+                          const todayStr = new Date().toISOString().slice(0, 10);
+                          const CAL_MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                          const CAL_MONTHS_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+                          const CAL_YEARS = Array.from({ length: 11 }, (_: unknown, i: number) => calYear - 5 + i);
+                          const cells = Array.from({ length: 42 }, (_: unknown, i: number) => {
+                            const dayNum = i - firstDay + 1;
+                            return dayNum >= 1 && dayNum <= daysInMonth ? dayNum : null;
+                          });
+                          const pad = (n: number) => String(n).padStart(2, "0");
+                          return (
+                            <div className="absolute left-0 top-full z-50 mt-1 w-[260px] overflow-hidden rounded-lg border border-[#D1D5DB] bg-white shadow-sm">
+                              <div className="flex flex-col gap-3 p-4">
+                                {/* Header: < [Sep v] [2026 v] > */}
+                                <div className="flex items-center justify-between">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setNewsCalendarViewDate(new Date(calYear, calMonth - 1, 1)); setNewsCalHeaderDropdown(null); }}
+                                    className="flex h-6 w-6 items-center justify-center rounded text-[#757575] hover:bg-[#F5F7FA]"
+                                  >
+                                    <ArrowLeft className="h-3 w-3" strokeWidth={2} />
+                                  </button>
+                                  <div className="flex items-center gap-1">
+                                    {/* Month dropdown */}
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={() => setNewsCalHeaderDropdown(newsCalHeaderDropdown === "month" ? null : "month")}
+                                        className="flex items-center gap-[3px] rounded px-2 py-1 font-segoe text-[13px] font-semibold text-[#1E1E1E] hover:bg-[#F5F7FA]"
+                                      >
+                                        {CAL_MONTHS_SHORT[calMonth]}
+                                        <ChevronDown className="h-3 w-3 text-[#757575]" strokeWidth={2} />
+                                      </button>
+                                      {newsCalHeaderDropdown === "month" && (
+                                        <div className="absolute left-0 top-full z-[60] mt-1 max-h-[180px] overflow-y-auto rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm" style={{ minWidth: "130px" }}>
+                                          {CAL_MONTHS_FULL.map((m, idx) => (
+                                            <button
+                                              key={m}
+                                              type="button"
+                                              onClick={() => { setNewsCalendarViewDate(new Date(calYear, idx, 1)); setNewsCalHeaderDropdown(null); }}
+                                              className={`flex h-8 w-full items-center px-[10px] font-segoe text-[13px] leading-[140%] transition-colors ${calMonth === idx ? "bg-[#C0D4F5] text-[#0E2F66]" : "text-[#757575] hover:bg-[#F5F7FA]"}`}
+                                            >
+                                              {m}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                    {/* Year dropdown */}
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={() => setNewsCalHeaderDropdown(newsCalHeaderDropdown === "year" ? null : "year")}
+                                        className="flex items-center gap-[3px] rounded px-2 py-1 font-segoe text-[13px] font-semibold text-[#1E1E1E] hover:bg-[#F5F7FA]"
+                                      >
+                                        {calYear}
+                                        <ChevronDown className="h-3 w-3 text-[#757575]" strokeWidth={2} />
+                                      </button>
+                                      {newsCalHeaderDropdown === "year" && (
+                                        <div className="absolute left-0 top-full z-[60] mt-1 max-h-[180px] overflow-y-auto rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm" style={{ minWidth: "80px" }}>
+                                          {CAL_YEARS.map((yr) => (
+                                            <button
+                                              key={yr}
+                                              type="button"
+                                              onClick={() => { setNewsCalendarViewDate(new Date(yr, calMonth, 1)); setNewsCalHeaderDropdown(null); }}
+                                              className={`flex h-8 w-full items-center justify-center font-segoe text-[13px] leading-[140%] transition-colors ${calYear === yr ? "bg-[#C0D4F5] text-[#0E2F66]" : "text-[#757575] hover:bg-[#F5F7FA]"}`}
+                                            >
+                                              {yr}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setNewsCalendarViewDate(new Date(calYear, calMonth + 1, 1)); setNewsCalHeaderDropdown(null); }}
+                                    className="flex h-6 w-6 items-center justify-center rounded text-[#757575] hover:bg-[#F5F7FA]"
+                                  >
+                                    <ArrowRight className="h-3 w-3" strokeWidth={2} />
+                                  </button>
+                                </div>
+                                {/* Day headers */}
+                                <div className="grid grid-cols-7">
+                                  {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
+                                    <div key={d} className="flex h-8 w-full items-center justify-center font-segoe text-[11px] font-semibold text-[#B3B3B3]">{d}</div>
+                                  ))}
+                                </div>
+                                {/* Day grid */}
+                                <div className="grid grid-cols-7">
+                                  {cells.map((day, i) => {
+                                    if (!day) return <div key={i} className="h-8 w-full" />;
+                                    const dateStr = `${calYear}-${pad(calMonth + 1)}-${pad(day)}`;
+                                    const isSelected = dateStr === newsDatePostedDraft;
+                                    const isToday = dateStr === todayStr;
+                                    return (
+                                      <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => { setNewsDatePostedDraft(dateStr); setNewsDatePickerOpen(false); setNewsCalHeaderDropdown(null); }}
+                                        className={`flex h-8 w-full items-center justify-center rounded-full font-segoe text-[12px] transition-colors ${isSelected ? "bg-[#0E2F66] text-white" : isToday ? "bg-[#EEF1F5] text-[#1E1E1E]" : "text-[#303030] hover:bg-[#F5F7FA]"}`}
+                                      >
+                                        {day}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                {/* Clear | Today */}
+                                <div className="flex items-center justify-between border-t border-[#E5E7EB] pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setNewsDatePostedDraft(""); setNewsDatePickerOpen(false); setNewsCalHeaderDropdown(null); }}
+                                    className="font-segoe text-[12px] text-[#2864C4] hover:underline"
+                                  >
+                                    Clear
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setNewsDatePostedDraft(todayStr); setNewsCalendarViewDate(new Date()); setNewsDatePickerOpen(false); setNewsCalHeaderDropdown(null); }}
+                                    className="font-segoe text-[12px] text-[#2864C4] hover:underline"
+                                  >
+                                    Today
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-2">
+                      <label className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                        Visibility <span className="text-[#C00F0C]">*</span>
+                      </label>
+                      <div className="relative" ref={newsVisibilityDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setNewsVisibilityDropdownOpen((o) => !o)}
+                          className="flex h-8 w-full items-center justify-between rounded-lg border border-[#D1D5DB] bg-white px-[10px] font-segoe text-[13px] leading-[140%] text-[#1E1E1E]"
+                        >
+                          <span>{newsVisibilityDraft === "published" ? "Published" : newsVisibilityDraft === "hidden" ? "Hidden" : "Draft"}</span>
+                          <ChevronDown className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                        </button>
+                        {newsVisibilityDropdownOpen && (
+                          <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm">
+                            {(["draft", "published", "hidden"] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => { setNewsVisibilityDraft(opt); setNewsVisibilityDropdownOpen(false); }}
+                                className={`flex h-8 w-full items-center px-[10px] font-segoe text-[13px] leading-[140%] transition-colors ${newsVisibilityDraft === opt ? "bg-[#C0D4F5] text-[#0E2F66]" : "text-[#757575] hover:bg-[#F5F7FA]"}`}
+                              >
+                                {opt === "published" ? "Published" : opt === "hidden" ? "Hidden" : "Draft"}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetNewsReleaseForm}>
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-[10px]">
+                  <button
+                    type="button"
+                    onClick={resetNewsReleaseForm}
+                    disabled={savingNewsRelease}
+                    className="flex h-11 items-center rounded-lg border border-[#D9D9D9] bg-white px-4 font-segoe text-[14px] leading-[100%] text-[#303030] transition-colors hover:bg-[#F5F7FA] disabled:opacity-50"
+                  >
                     Cancel
-                  </Button>
-                  <Button type="button" className="w-full sm:w-auto" onClick={() => void handleSaveNewsRelease()} disabled={savingNewsRelease}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {savingNewsRelease ? "Saving..." : newsModalMode === "edit" ? "Save Changes" : "Create News Release"}
-                  </Button>
-                </DialogFooter>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const originalRelease = newsReleases.find((r) => r.id === editingNewsReleaseId);
+                      if (
+                        newsModalMode === "edit" &&
+                        originalRelease &&
+                        newsVisibilityDraft !== originalRelease.visibilityStatus &&
+                        (newsVisibilityDraft === "published" || newsVisibilityDraft === "hidden")
+                      ) {
+                        setNewsVisibilityConfirm({
+                          title: newsTitleDraft,
+                          category: newsCategoryDraft.trim() || null,
+                          currentStatus: originalRelease.visibilityStatus,
+                          targetStatus: newsVisibilityDraft,
+                        });
+                      } else {
+                        void handleSaveNewsRelease();
+                      }
+                    }}
+                    disabled={savingNewsRelease}
+                    className="flex h-11 items-center gap-2 rounded-lg bg-[#0E2F66] px-4 font-segoe text-[14px] leading-[100%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959] disabled:opacity-70"
+                  >
+                    {savingNewsRelease
+                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+                      : <>{newsModalMode === "edit" ? <Save className="h-4 w-4" strokeWidth={1.6} /> : <Plus className="h-4 w-4" strokeWidth={1.6} />} {newsModalMode === "edit" ? "Save Changes" : "Create News"}</>}
+                  </button>
+                </div>
               </DialogContent>
             </Dialog>
+
           </div>
         );
-      case "budget-monitoring":
+      }
+            case "budget-monitoring":
       case "public-transparency-posts":
         return (
           <Tabs
@@ -8914,330 +9695,549 @@ export default function AdminPortal({ section }: { section: string }) {
             </TabsContent>
           </Tabs>
         );
-      case "templates":
+      case "templates": {
+        const pagedTemplates = filteredTemplates.slice(templatePage * 10, (templatePage + 1) * 10);
+        const templateTotal = filteredTemplates.length;
+        const templateTotalPages = Math.ceil(templateTotal / 10);
+        const catCounts = {
+          yorp:      activeTemplates.filter(t => t.templateCategory?.includes("yorp")).length,
+          ypop:      activeTemplates.filter(t => t.templateCategory?.includes("ypop")).length,
+          move:      activeTemplates.filter(t => t.templateCategory?.includes("move")).length,
+          data_form: activeTemplates.filter(t => t.templateCategory?.includes("data_form")).length,
+        };
         return (
-          <div className="admin-template-management-page">
-            <PortalSection
-              title="Template Management"
-              description="Manage downloadable templates for document submissions and other user-side reference files."
-              action={
-                <Button
+          <div className="-m-3 sm:-m-6 lg:-m-8">
+
+            {/* Breadcrumb */}
+            <div className="border-b border-[#E5E7EB] bg-white px-4 py-3">
+              <nav className="flex items-center gap-[10px]" aria-label="Breadcrumb">
+                <span className="text-[14px] leading-[100%] text-[#B3B3B3]">Content</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={2} />
+                <span className="text-[14px] leading-[100%] text-[#1E1E1E]">Forms &amp; Templates</span>
+              </nav>
+            </div>
+
+            {/* Content area */}
+            <div className="flex flex-col gap-5 bg-[#F5F7FA] px-4 py-3">
+
+              {/* Title block */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-[10px]">
+                  <h1 className="font-segoe text-[24px] font-bold leading-[100%] tracking-[-0.03em] text-[#1E1E1E]">Forms &amp; Templates</h1>
+                  <p className="font-segoe text-[14px] font-normal leading-[140%] text-[#757575]">
+                    Manage downloadable templates for document submissions and other user-side reference files.
+                  </p>
+                </div>
+                <button
                   type="button"
-                  className="admin-news-header-add w-full sm:w-auto lg:hidden"
                   onClick={() => {
                     setTemplateModalMode("create");
                     setEditingTemplateId(null);
                     setTemplateNameDraft("");
                     setTemplateDescriptionDraft("");
-                    setTemplateScopeDraft("document_submission");
+                    setTemplateScopeDraft(null);
                     setTemplateFileDraft(null);
                   }}
+                  className="flex h-11 items-center gap-2 rounded-lg bg-[#0E2F66] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959]"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Template
-                </Button>
-              }
-            >
-              <div className="mobile-template-presentation">
-                {[
-                  {
-                    key: "document_submission" as const,
-                    title: "Document Submissions",
-                    description: "These templates appear inside the user document submissions page.",
-                    items: templateDocuments,
-                  },
-                  {
-                    key: "other" as const,
-                    title: "Other Templates",
-                    description: "These templates appear in the user Templates page for download and reference.",
-                    items: otherTemplates,
-                  },
-                ].map((group) => (
-                  <section key={group.key} className="mobile-template-section">
-                    <div className="mobile-template-section-header">
-                      <h2>{group.title}</h2>
-                      <span>{group.items.length} {group.items.length === 1 ? "template" : "templates"}</span>
-                    </div>
-                    <p className="mobile-template-section-description">{group.description}</p>
-                    {group.items.length ? (
-                      <div className="mobile-template-list">
-                        {group.items.map((template) => {
-                          const uploadedDate = template.templateUploadedAt
-                            ? new Intl.DateTimeFormat("en-PH", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }).format(new Date(template.templateUploadedAt))
-                            : null;
-                          const openEdit = () => startEditingTemplate(template.id);
-                          return (
-                            <MobileAdminTemplateCard
-                              key={template.id}
-                              template={template}
-                              updatedDate={uploadedDate}
-                              onPreview={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
-                              onEdit={openEdit}
-                              onReplace={openEdit}
-                              onDelete={() => {
-                                setEditingTemplateId(template.id);
-                                setTemplateModalMode("delete");
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="mobile-template-empty">
-                        <p>No {group.title.toLowerCase()} yet</p>
-                        <span>Templates assigned to {group.title} will appear here after they are added.</span>
-                      </div>
-                    )}
-                  </section>
-                ))}
+                  <Upload className="h-4 w-4 shrink-0 text-[#F3F3F3]" strokeWidth={1.6} />
+                  Upload Template
+                </button>
               </div>
 
-              <div className="desktop-template-presentation">
-              {activeTemplates.length === 0 ? (
-              <PortalEmptyState
-                title="No templates yet"
-                description="Upload a template file and assign where it should appear in the user portal."
-              />
-            ) : (
-              <div className="space-y-6">
-                {[
-                  {
-                    key: "document_submission" as const,
-                    title: "Document Submissions",
-                    description: "These templates appear inside the user document submissions page.",
-                    items: templateDocuments,
-                  },
-                  {
-                    key: "other" as const,
-                    title: "Other Templates",
-                    description: "These templates appear in the user Templates page for download and reference.",
-                    items: otherTemplates,
-                  },
-                ].map((group) => (
-                  <div key={group.key} className="space-y-3">
-                    <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-foreground">{group.title}</h3>
-                      <p className="text-sm text-muted-foreground">{group.description}</p>
+              {/* Table card */}
+              <div className="overflow-x-auto rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                <div className="min-w-[760px]">
+
+                  {/* Filter bar */}
+                  <div className="flex flex-wrap items-center gap-3 border-b border-[#E5E7EB] px-4 py-4">
+                    <div className="flex items-center gap-[10px]">
+                      {([
+                        { value: "all"       as const, label: "All",       count: activeTemplates.length },
+                        { value: "yorp"      as const, label: "YORP",      count: catCounts.yorp },
+                        { value: "ypop"      as const, label: "YPOP",      count: catCounts.ypop },
+                        { value: "move"      as const, label: "MOVE",      count: catCounts.move },
+                        { value: "data_form" as const, label: "DATA FORM", count: catCounts.data_form },
+                      ] as const).map(({ value, label, count }) => {
+                        const isActive = templateCategoryFilter === value;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => { setTemplateCategoryFilter(value); setTemplatePage(0); }}
+                            className={`flex h-[34px] items-center gap-2 rounded-full border px-[14px] font-segoe text-[14px] font-semibold leading-[100%] transition-colors ${
+                              isActive
+                                ? "border-[#0E2F66] bg-[#0E2F66] text-[#F3F3F3]"
+                                : "border-[#E5E7EB] bg-[#F1F6FD] text-[#303030] hover:border-[#0E2F66] hover:bg-[#EEF3FA]"
+                            }`}
+                          >
+                            {label}
+                            <span className={`rounded-full px-1 font-mono text-[14px] leading-[100%] ${
+                              isActive ? "bg-white/20 text-[#F3F3F3]" : "bg-white/40 text-[#1E1E1E]"
+                            }`}>
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                    {group.items.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
-                        No templates added for this section yet.
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-muted/35 hover:bg-muted/35">
-                              <TableHead className="min-w-[260px]">Template</TableHead>
-                              <TableHead className="min-w-[300px]">Description</TableHead>
-                              <TableHead className="min-w-[220px]">File</TableHead>
-                              <TableHead className="min-w-[150px]">Updated</TableHead>
-                              <TableHead className="w-[70px] text-right">Action</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {group.items.map((template) => {
-                              const hasFile = Boolean(template.templateFileName);
-                              const uploadedDate = template.templateUploadedAt
-                                ? new Intl.DateTimeFormat("en-PH", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  }).format(new Date(template.templateUploadedAt))
-                                : null;
-                              return (
-                                <TableRow key={template.id}>
-                                  <TableCell className="align-top">
-                                    <div className="flex items-start gap-2.5">
-                                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${hasFile ? "bg-emerald-500" : "bg-amber-400"}`} />
-                                      <div className="space-y-1">
-                                        <p className="font-semibold leading-snug text-foreground">{template.name}</p>
-                                        <p className="text-xs text-muted-foreground">{templateScopeLabelMap[template.templateScope]}</p>
-                                      </div>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="align-top">
-                                    <p className="text-sm leading-relaxed text-muted-foreground">{template.description || "No description provided."}</p>
-                                  </TableCell>
-                                  <TableCell className="align-top">
-                                    {hasFile ? (
-                                      <div className="space-y-1">
-                                        <div className="flex items-center gap-1.5">
-                                        <FileText className="h-3.5 w-3.5 shrink-0 text-red-500/80" />
-                                          <p className="break-all text-sm text-foreground">{template.templateFileName}</p>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">Ready for preview and download</p>
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-muted-foreground">No file uploaded yet</p>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="align-top">
-                                    <p className="text-sm text-foreground">{uploadedDate ?? "Not uploaded"}</p>
-                                  </TableCell>
-                                  <TableCell className="align-top text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        disabled={!template.templateFileUrl}
-                                        onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
-                                      >
-                                        <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                        Preview
-                                      </Button>
-                                      <DropdownMenu modal={false}>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">More actions</span>
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-36">
-                                          <DropdownMenuItem onClick={() => startEditingTemplate(template.id)}>
-                                            <Pencil className="mr-2 h-4 w-4" />
-                                            Edit
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
-                                            onClick={() => {
-                                              setEditingTemplateId(template.id);
-                                              setTemplateModalMode("delete");
-                                            }}
-                                          >
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Delete
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
+                    <div className="relative flex-1">
+                      <Search className="absolute left-[14px] top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-[#B3B3B3]" strokeWidth={1.6} />
+                      <input
+                        type="text"
+                        value={templateSearch}
+                        onChange={(e) => { setTemplateSearch(e.target.value); setTemplatePage(0); }}
+                        placeholder="Search templates..."
+                        className="h-10 w-full rounded-lg border border-[#D1D5DB] bg-white pl-10 pr-[14px] font-segoe text-[14px] leading-[140%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Column headers */}
+                  <div className="grid grid-cols-[minmax(160px,1.5fr)_minmax(140px,1fr)_minmax(160px,1fr)_120px_80px] border-b border-[#E5E7EB] bg-[#F5F5F5] px-4 py-[6px]">
+                    {(["TEMPLATE", "DESCRIPTION", "FILE", "UPDATED", "ACTIONS"] as const).map((col) => (
+                      <span key={col} className="font-segoe text-[12px] font-semibold leading-[140%] text-[#1E1E1E]">{col}</span>
+                    ))}
+                  </div>
+
+                  {/* Empty state */}
+                  {pagedTemplates.length === 0 && (
+                    <div className="px-4 py-12 text-center font-segoe text-[14px] text-[#B3B3B3]">No templates found.</div>
+                  )}
+
+                  {/* Rows */}
+                  {(() => {
+                    const CAT_ORDER = ["yorp", "ypop", "move", "data_form"] as const;
+                    const CAT_LABELS: Record<string, string> = { yorp: "YORP", ypop: "YPOP", move: "MOVE", data_form: "DATA FORM" };
+                    type RI = { type: "header"; catKey: string } | { type: "row"; template: typeof pagedTemplates[0] };
+                    const renderItems: RI[] = templateCategoryFilter === "all"
+                      ? CAT_ORDER.flatMap((key) => {
+                          const group = pagedTemplates.filter((t) => t.templateCategory?.includes(key));
+                          if (!group.length) return [];
+                          return [{ type: "header" as const, catKey: key }, ...group.map((t) => ({ type: "row" as const, template: t }))];
+                        })
+                      : pagedTemplates.map((t) => ({ type: "row" as const, template: t }));
+                    return renderItems.map((item, _idx) => {
+                      if (item.type === "header") {
+                        const groupCount = pagedTemplates.filter((t) => t.templateCategory?.includes(item.catKey)).length;
+                        return (
+                          <div key={"hdr-" + item.catKey} className="flex items-center gap-[10px] border-b border-[#CBD5E1] bg-[#FBFDFF] px-4 py-2">
+                            <span className="font-segoe text-[12px] font-semibold leading-[140%] text-[#2864C4]">{CAT_LABELS[item.catKey]}</span>
+                            <span className="font-segoe text-[12px] font-semibold leading-[140%] text-[#64748B]">({groupCount})</span>
+                          </div>
+                        );
+                      }
+                      const template = item.template;
+                      const d = template.templateUploadedAt ? new Date(template.templateUploadedAt) : null;
+                      const uploadedDate = d ? `${d.getDate()} ${d.toLocaleString("en-US", { month: "long" })} ${d.getFullYear()}` : null;
+                      const fileTypeLower = (template.templateFileType ?? "").toLowerCase();
+                      const isPdf = fileTypeLower.includes("pdf");
+                      const isXls = fileTypeLower.includes("xls") || fileTypeLower.includes("sheet");
+                      const fileSizeLabel = template.templateFileSize
+                        ? `${(template.templateFileSize / 1024 / 1024).toFixed(1)} MB`
+                        : null;
+                      const fileTypeLabel = (template.templateFileType ?? "").toUpperCase().split("/").pop() ?? "";
+                      return (
+                        <div
+                          key={template.id}
+                          className="grid grid-cols-[minmax(160px,1.5fr)_minmax(140px,1fr)_minmax(160px,1fr)_120px_80px] items-center border-b border-[#F0F1F3] px-4 py-3 transition-colors hover:bg-[#F5F7FA] last:border-b-0"
+                        >
+                          <div className="truncate pr-2 font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]" title={template.name}>
+                            {template.name}
+                          </div>
+                          <div className="truncate pr-2 font-segoe text-[14px] leading-[140%] text-[#757575]" title={template.description ?? ""}>
+                            {template.description || "—"}
+                          </div>
+                          <div className="flex items-center gap-2 pr-2">
+                            {isPdf ? (
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[#FEE9E7]">
+                                <FileText className="h-5 w-5 text-[#C00F0C]" strokeWidth={1.6} />
+                              </div>
+                            ) : isXls ? (
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[#EBFFEE]">
+                                <FileSpreadsheet className="h-5 w-5 text-[#009951]" strokeWidth={1.6} />
+                              </div>
+                            ) : (
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[#F1F5F9]">
+                                <FileText className="h-5 w-5 text-[#64748B]" strokeWidth={1.6} />
+                              </div>
+                            )}
+                            <div className="flex min-w-0 flex-col gap-1">
+                              <div className="truncate font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                                {template.templateFileName || "No file"}
+                              </div>
+                              <div className="font-mono text-[12px] font-normal leading-[140%] text-[#64748B]">
+                                {[fileTypeLabel || null, fileSizeLabel || null].filter(Boolean).join(" · ") || "—"}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                            {uploadedDate ?? "—"}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!template.templateFileUrl) return;
+                                void resolveSupabaseFileUrl(template.templateFileUrl)
+                                  .then((url) => { window.open(url, "_blank"); })
+                                  .catch(() => {});
+                              }}
+                              disabled={!template.templateFileUrl}
+                              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[#D9D9D9] bg-white text-[#2C2C2C] transition-colors hover:border-[#D1D5DB] hover:bg-[#F0F1F3] disabled:cursor-not-allowed disabled:opacity-40"
+                              title="Open file"
+                            >
+                              <Eye className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D9D9D9] bg-white text-[#2C2C2C] transition-colors hover:border-[#D1D5DB] hover:bg-[#F0F1F3]"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" strokeWidth={1.6} />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-[120px] p-1">
+                                <DropdownMenuItem
+                                  className="cursor-pointer gap-2 rounded-md px-[10px] py-[10px] font-segoe text-[14px] leading-[100%] text-[#303030] focus:bg-[#F1F6FD] focus:text-[#303030]"
+                                  onClick={() => startEditingTemplate(template.id)}
+                                >
+                                  <Pencil className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="cursor-pointer gap-2 rounded-md px-[10px] py-[10px] font-segoe text-[14px] leading-[100%] text-[#C00F0C] focus:bg-[#FEE9E7] focus:text-[#C00F0C]"
+                                  onClick={() => {
+                                    setEditingTemplateId(template.id);
+                                    setTemplateModalMode("delete");
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-[#C00F0C]" strokeWidth={1.6} />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+
+                  {/* Pagination footer */}
+                  <div className="flex items-center justify-between border-t border-[#D9D9D9] px-4 py-4">
+                    <p className="font-segoe text-[13px] leading-[100%]">
+                      <span className="text-[#757575]">Showing </span>
+                      <span className="text-[#1E1E1E]">{pagedTemplates.length}</span>
+                      <span className="text-[#757575]"> of </span>
+                      <span className="text-[#1E1E1E]">{templateTotal}</span>
+                      <span className="text-[#757575]"> {templateTotal === 1 ? "template" : "templates"}</span>
+                    </p>
+                    {templateTotalPages > 1 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTemplatePage((p) => Math.max(0, p - 1))}
+                          disabled={templatePage === 0}
+                          className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#757575] transition-colors hover:bg-[#F5F7FA] disabled:pointer-events-none disabled:opacity-50"
+                        >
+                          <ArrowLeft className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                          Previous
+                        </button>
+                        <div className="flex items-center gap-2">
+                          {Array.from({ length: templateTotalPages }, (_, i) => i).map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setTemplatePage(p)}
+                              className={`flex h-[29px] min-w-8 items-center justify-center rounded-lg px-3 font-segoe text-[13px] leading-[100%] transition-colors ${
+                                p === templatePage ? "bg-[#0E2F66] text-[#F3F3F3]" : "text-[#1E1E1E] hover:bg-[#F5F7FA]"
+                              }`}
+                            >
+                              {p + 1}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setTemplatePage((p) => Math.min(templateTotalPages - 1, p + 1))}
+                          disabled={templatePage === templateTotalPages - 1}
+                          className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA] disabled:pointer-events-none disabled:opacity-50"
+                        >
+                          Next
+                          <ArrowRight className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                        </button>
                       </div>
                     )}
                   </div>
-                ))}
+
+                </div>
               </div>
-              )}
-              </div>
-            <Dialog open={templateModalMode === "create" || templateModalMode === "edit"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{templateModalMode === "edit" ? "Edit Template" : "Add Template"}</DialogTitle>
-                  <DialogDescription>
-                    {templateModalMode === "edit"
-                      ? "Update the template details, category, and uploaded file if needed."
-                      : "Create a new template record, assign where it should appear, then upload the file users will access."}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-scope" className="text-sm font-medium">Template Section</label>
-                    <Select value={templateScopeDraft} onValueChange={(value) => setTemplateScopeDraft(value as "document_submission" | "other")}>
-                      <SelectTrigger id="template-document-scope">
-                        <SelectValue placeholder="Select where this template should appear" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="document_submission">Document Submissions</SelectItem>
-                        <SelectItem value="other">Other Templates</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+            </div>
+
+            {/* Dialogs */}
+                      <Dialog open={templateModalMode === "create" || templateModalMode === "edit"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
+              <DialogContent hideCloseButton className="sm:w-[560px] gap-6 border border-[#CBD5E1] bg-white p-6 rounded-lg shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                <DialogTitle className="sr-only">{templateModalMode === "edit" ? "Edit Template" : "Upload Template"}</DialogTitle>
+                {/* Header */}
+                <div className="flex items-start justify-between border-b border-[#CBD5E1] pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF3FA]">
+                      {templateModalMode === "edit"
+                        ? <Pencil className="h-5 w-5 text-[#2864C4]" strokeWidth={1.6} />
+                        : <Upload className="h-5 w-5 text-[#2864C4]" strokeWidth={1.6} />}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">
+                        {templateModalMode === "edit" ? "Edit Template" : "Upload Template"}
+                      </span>
+                      <p className="font-segoe text-[13px] leading-[140%] text-[#64748B]">
+                        {templateModalMode === "edit"
+                          ? "Edit details, category, or file for this template."
+                          : "Upload a new template for organizations to download."}
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-name" className="text-sm font-medium">Document Name</label>
-                    <Input
+                  <DialogClose className="group flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none">
+                    <X className="h-4 w-4 text-[#D9D9D9] transition-colors group-hover:text-[#757575]" />
+                    <span className="sr-only">Close</span>
+                  </DialogClose>
+                </div>
+                {/* Form */}
+                <div className="flex flex-col gap-4 rounded-lg border border-[#CBD5E1] bg-[#EEF1F5] p-6">
+                  {/* Template Section */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="template-document-scope" className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Template Section <span className="text-[#C00F0C]">*</span>
+                    </label>
+                    <div ref={templateScopeDropdownRef} className="relative">
+                      <button
+                        id="template-document-scope"
+                        type="button"
+                        onClick={() => setTemplateScopeDropdownOpen((v) => !v)}
+                        className="flex h-8 w-full items-center justify-between rounded-lg border border-[#CBD5E1] bg-white px-[10px] font-segoe text-[13px] leading-[140%] text-[#1E1E1E]"
+                      >
+                        <span className={templateScopeDraft === null ? "text-[#B3B3B3]" : ""}>{templateScopeDraft === null ? "Select section" : templateScopeDraft === "yorp" ? "YORP" : templateScopeDraft === "ypop" ? "YPOP" : templateScopeDraft === "move" ? "MOVE" : "Data Form"}</span>
+                        <ChevronDown className="h-4 w-4 text-[#757575]" strokeWidth={1.6} />
+                      </button>
+                      {templateScopeDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm">
+                          {(["yorp", "ypop", "move", "data_form"] as const).map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => { setTemplateScopeDraft(opt); setTemplateScopeDropdownOpen(false); }}
+                              className={`flex h-8 w-full items-center px-[10px] font-segoe text-[13px] leading-[140%] transition-colors ${
+                                templateScopeDraft === opt
+                                  ? "bg-[#C0D4F5] text-[#0E2F66]"
+                                  : "text-[#757575] hover:bg-[#F5F7FA]"
+                              }`}
+                            >
+                              {opt === "yorp" ? "YORP" : opt === "ypop" ? "YPOP" : opt === "move" ? "MOVE" : "Data Form"}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Document Name */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="template-document-name" className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Document Name <span className="text-[#C00F0C]">*</span>
+                    </label>
+                    <input
                       id="template-document-name"
                       name="templateDocumentName"
                       value={templateNameDraft}
-                      onChange={(event) => setTemplateNameDraft(event.target.value)}
-                      placeholder="Enter document name"
+                      onChange={(e) => setTemplateNameDraft(e.target.value)}
+                      placeholder={templateModalMode === "edit" ? "Enter document name" : "e.g. Constitution and By-Laws"}
+                      className="h-8 w-full rounded-lg border border-[#CBD5E1] bg-white px-[10px] py-2 font-segoe text-[13px] leading-[140%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-description" className="text-sm font-medium">Document Description</label>
-                    <Textarea
+                  {/* Description */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="template-document-description" className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Description <span className="text-[#C00F0C]">*</span>
+                    </label>
+                    <textarea
                       id="template-document-description"
                       name="templateDocumentDescription"
                       value={templateDescriptionDraft}
-                      onChange={(event) => setTemplateDescriptionDraft(event.target.value)}
+                      onChange={(e) => setTemplateDescriptionDraft(e.target.value)}
                       placeholder="Explain what the organization should upload for this document."
+                      rows={3}
+                      className="h-16 w-full resize-none rounded-lg border border-[#CBD5E1] bg-white px-2 py-[6px] font-segoe text-[13px] leading-[140%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-file" className="text-sm font-medium">
-                      {templateModalMode === "edit" ? "Replace Template File" : "Upload Template File"}
+                  {/* Template File */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="template-document-file" className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">
+                      Template File <span className="text-[#C00F0C]">*</span>
                     </label>
-                    <Input
+                    <div className="flex h-[41px] w-full items-center gap-2 rounded-lg border border-[#CBD5E1] bg-white px-[10px] py-2">
+                      <label
+                        htmlFor="template-document-file"
+                        className="flex h-[25px] w-[92px] shrink-0 cursor-pointer items-center justify-center gap-[6px] rounded-[6px] border border-[#CBD5E1] bg-[#E2E7EE] px-2 font-segoe text-[13px] leading-[100%] text-[#1E1E1E]"
+                      >
+                        Choose a file
+                      </label>
+                      {(() => {
+                        const existingName = templateModalMode === "edit"
+                          ? activeTemplates.find((t) => t.id === editingTemplateId)?.templateFileName
+                          : undefined;
+                        const raw = templateFileDraft?.name ?? existingName
+                          ?? (templateModalMode === "edit" ? "No new file chosen" : "No file chosen");
+                        const hasActualFile = !!(templateFileDraft?.name ?? existingName);
+                        const display = raw.length > 30 ? raw.slice(0, 30) + "…" : raw;
+                        return (
+                          <span className={`font-segoe text-[13px] leading-[140%] ${hasActualFile ? "text-[#1E1E1E]" : "text-[#B3B3B3]"}`}>
+                            {display}
+                          </span>
+                        );
+                      })()}
+                      {!!(templateFileDraft || (templateModalMode === "edit" && activeTemplates.find((t) => t.id === editingTemplateId)?.templateFileName)) && (
+                        <button
+                          type="button"
+                          onClick={() => setTemplateFileDraft(null)}
+                          className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[#F0F1F3]"
+                        >
+                          <X className="h-3.5 w-3.5 text-[#757575]" strokeWidth={1.6} />
+                        </button>
+                      )}
+                    </div>
+                    <input
                       id="template-document-file"
                       name="templateDocumentFile"
                       type="file"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                      onChange={(event) => setTemplateFileDraft(event.target.files?.[0] ?? null)}
+                      accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      onChange={(e) => setTemplateFileDraft(e.target.files?.[0] ?? null)}
+                      className="sr-only"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {templateModalMode === "edit"
-                        ? "Leave this empty if you only want to update the title or description."
-                        : "Upload a Word, PDF, XLS, or XLSX template file here so organization users can view and download it."}
+                    <p className="font-segoe text-[11px] leading-[100%] text-[#64748B]">
+                      Accepted file types:{" "}
+                      <span className="font-semibold text-[#2864C4]">PDF, XLSX</span>
+                      {" · "}Maximum file size: 10 MB
                     </p>
                   </div>
+                  {/* File Format Detection */}
+                  {(() => {
+                    const editingTpl = templateModalMode === "edit"
+                      ? activeTemplates.find((t) => t.id === editingTemplateId)
+                      : null;
+                    const hasFile = !!(templateFileDraft || editingTpl?.templateFileName);
+                    const ft = templateFileDraft
+                      ? templateFileDraft.type.toLowerCase()
+                      : (editingTpl?.templateFileType?.toLowerCase() ?? "");
+                    const fname = templateFileDraft?.name ?? editingTpl?.templateFileName ?? "";
+                    const isPdf = ft.includes("pdf") || fname.toLowerCase().endsWith(".pdf");
+                    const isXls = ft.includes("xls") || ft.includes("sheet") || fname.toLowerCase().endsWith(".xlsx") || fname.toLowerCase().endsWith(".xls");
+                    const label = isPdf ? "PDF" : isXls ? "XLSX" : (fname.split(".").pop()?.toUpperCase() ?? "FILE");
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">File Format</span>
+                          {hasFile && (
+                            <div className="flex items-center gap-1">
+                              <span className="font-segoe text-[11px] font-semibold leading-[100%] text-[#009951]">Auto-detected from uploaded file</span>
+                              <CircleHelp className="h-3.5 w-3.5 text-[#009951]" strokeWidth={1.6} />
+                            </div>
+                          )}
+                        </div>
+                        {hasFile ? (
+                          <div className="flex items-center justify-between rounded-lg border border-[#009951] bg-[#EBFFEE] px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded">
+                                {isPdf
+                                  ? <FileText className="h-5 w-5 text-[#009951]" strokeWidth={1.5} />
+                                  : <FileSpreadsheet className="h-5 w-5 text-[#009951]" strokeWidth={1.5} />}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-segoe text-[13px] font-semibold leading-[140%] text-[#009951]">{label}</span>
+                                <span className="font-segoe text-[11px] leading-[140%] text-[#009951]">Detected file format.</span>
+                              </div>
+                            </div>
+                            <CheckCircle2 className="h-5 w-5 shrink-0 text-[#009951]" strokeWidth={2} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-[12px] rounded-lg border border-[#CBD5E1] bg-[#E2E7EE] p-4">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded border-[1.5px] border-[#7A8798]">
+                              <FileText className="h-5 w-5 text-[#7A8798]" strokeWidth={1.5} />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <span className="font-segoe text-[13px] font-semibold leading-[140%] text-[#303030]">Not detected</span>
+                              <span className="font-segoe text-[11px] leading-[140%] text-[#7A8798]">File format will appear after you select a file.</span>
+                            </div>
+                          </div>
+                        )}
+                        <p className="font-segoe text-[11px] leading-[100%] text-[#64748B]">
+                          <span className="font-semibold">Note:</span>{" "}The file format is automatically detected when you select a file above.
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
+                {/* Footer */}
+                <div className="flex justify-end gap-[10px]">
+                  <button type="button" onClick={resetTemplateForm}
+                    className="h-11 w-[73px] rounded-lg border border-[#CBD5E1] bg-white px-4 py-3 font-segoe text-[14px] leading-[100%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA]">
                     Cancel
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     type="button"
-                    className="w-full sm:w-auto"
                     onClick={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
                     disabled={savingTemplate || uploadingTemplateId !== null}
+                    className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#0E2F66] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959] disabled:opacity-50"
                   >
-                    <Save className="mr-2 h-4 w-4" />
-                    {savingTemplate || uploadingTemplateId !== null
-                      ? "Saving..."
-                      : templateModalMode === "edit"
-                        ? "Save Changes"
-                        : "Create Template"}
-                  </Button>
-                </DialogFooter>
+                    {templateModalMode === "edit"
+                      ? <Save className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                      : <Upload className="h-4 w-4 shrink-0" strokeWidth={1.6} />}
+                    {savingTemplate || uploadingTemplateId !== null ? "Saving..." : templateModalMode === "edit" ? "Save Changes" : "Upload Template"}
+                  </button>
+                </div>
               </DialogContent>
             </Dialog>
             <Dialog open={templateModalMode === "delete"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Delete Template</DialogTitle>
-                  <DialogDescription>
-                    {selectedTemplate
-                      ? `Are you sure you want to delete ${selectedTemplate.name}?`
-                      : "Are you sure you want to delete this template?"}
-                  </DialogDescription>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground">
-                  This removes the template from the active user-side template list.
-                </p>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
+              <DialogContent hideCloseButton className="sm:w-[420px] gap-6 border border-[#E5E7EB] bg-white p-6 rounded-lg shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+                <DialogTitle className="sr-only">Delete Template</DialogTitle>
+                {/* Header */}
+                <div className="flex items-start justify-between border-b border-[#CBD5E1] pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#FEE9E7]">
+                      <Trash2 className="h-5 w-5 text-[#C00F0C]" strokeWidth={1.6} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-segoe text-[18px] font-semibold leading-[100%] text-[#1E1E1E]">Delete Template</span>
+                      <p className="font-segoe text-[13px] font-normal leading-[140%] text-[#64748B]">
+                        Are you sure you want to delete <strong>{selectedTemplate?.name}</strong>?
+                      </p>
+                    </div>
+                  </div>
+                  <DialogClose className="group flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors">
+                    <X className="h-4 w-4 text-[#D9D9D9] transition-colors group-hover:text-[#757575]" />
+                    <span className="sr-only">Close</span>
+                  </DialogClose>
+                </div>
+                {/* Warning */}
+                <div className="flex items-center gap-[10px] rounded-lg border border-[#C00F0C] bg-[#FEE9E7] p-4">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-[#C00F0C]" strokeWidth={1.6} />
+                  <p className="font-segoe text-[13px] leading-[120%] text-[#C00F0C]">
+                    This removes the template from the active user-side template list. This action cannot be undone.
+                  </p>
+                </div>
+                {/* Buttons */}
+                <div className="flex justify-end gap-[10px]">
+                  <button type="button" onClick={resetTemplateForm}
+                    className="h-11 w-[73px] rounded-lg border border-[#CBD5E1] bg-white px-4 py-3 font-segoe text-[14px] leading-[100%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA]">
                     Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="w-full sm:w-auto"
+                  </button>
+                  <button type="button"
                     onClick={() => void (editingTemplateId ? handleDeleteTemplate(editingTemplateId) : Promise.resolve())}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#EC221F] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#FEE9E7] transition-colors hover:bg-[#C00F0C]">
+                    <Trash2 className="h-4 w-4 shrink-0 text-[#FEE9E7]" strokeWidth={1.6} />
                     Delete Template
-                  </Button>
-                </DialogFooter>
+                  </button>
+                </div>
               </DialogContent>
             </Dialog>
             <Dialog
@@ -9305,10 +10305,11 @@ export default function AdminPortal({ section }: { section: string }) {
                 </div>
               </DialogContent>
             </Dialog>
-            </PortalSection>
+
           </div>
         );
-      case "notifications":
+      }
+            case "notifications":
         return (
           <PortalSection
             title="Notifications"
@@ -9356,36 +10357,15 @@ export default function AdminPortal({ section }: { section: string }) {
           </PortalSection>
         );
       case "activity-logs": {
-        const activityMeta: Record<string, { label: string; iconColor: string; bgColor: string }> = {
-          verify_organization_profile: { label: "Organization Verified",  iconColor: "text-emerald-600", bgColor: "bg-emerald-500/10" },
-          release_budget:              { label: "Budget Released",         iconColor: "text-blue-600",    bgColor: "bg-blue-500/10"    },
-          approve_document_submission: { label: "Document Approved",       iconColor: "text-emerald-600", bgColor: "bg-emerald-500/10" },
-          create_news_release:         { label: "News Release Published",  iconColor: "text-amber-600",   bgColor: "bg-amber-500/10"   },
-          reject_budget_request:       { label: "Budget Request Rejected", iconColor: "text-rose-600",    bgColor: "bg-rose-500/10"    },
-          review_liquidation_report:   { label: "Liquidation Reviewed",    iconColor: "text-slate-500",   bgColor: "bg-slate-500/10"   },
+        const ACTIVITY_LOG_ICON_MAP: Record<string, { icon: typeof Building2; bg: string; color: string; strokeWidth: number }> = {
+          organization_profile: { icon: Building2,     bg: "bg-[#DCE4F0]", color: "text-[#0E2F66]", strokeWidth: 1.6  },
+          budget_request:       { icon: Banknote,      bg: "bg-[#DCEFFD]", color: "text-[#118DF0]", strokeWidth: 1.33 },
+          liquidation_report:   { icon: ClipboardList, bg: "bg-[#EBFFEE]", color: "text-[#009951]", strokeWidth: 1.6  },
+          news_release:         { icon: Newspaper,     bg: "bg-[#FFFBEB]", color: "text-[#975102]", strokeWidth: 1.6  },
+          document_submission:  { icon: FileText,      bg: "bg-[#FEE9E7]", color: "text-[#C00F0C]", strokeWidth: 1.6  },
+          template:             { icon: FileText,      bg: "bg-[#FEE9E7]", color: "text-[#C00F0C]", strokeWidth: 1.6  },
+          default:              { icon: ClipboardList, bg: "bg-[#F1F5F9]", color: "text-[#64748B]", strokeWidth: 1.6  },
         };
-        const activityIconMap: Record<string, typeof CheckCircle2> = {
-          verify_organization_profile: CheckCircle2,
-          release_budget:              Banknote,
-          approve_document_submission: FileText,
-          create_news_release:         Pencil,
-          reject_budget_request:       AlertTriangle,
-          review_liquidation_report:   ClipboardList,
-        };
-        const relatedTypeLabel: Record<string, string> = {
-          organization_profile: "Organization",
-          budget_request:       "Budget",
-          document_submission:  "Document",
-          news_release:         "News Release",
-          liquidation_report:   "Liquidation",
-        };
-        const filterTypes = ["all", "organization_profile", "budget_request", "document_submission", "news_release", "liquidation_report"];
-        const mobileFilterTypes = [...new Set([
-          ...filterTypes,
-          ...state.activityLogs
-            .map((log) => log.relatedType)
-            .filter((type) => type && !filterTypes.includes(type)),
-        ])];
         const now = Date.now();
         const dateFilterDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
         const filteredLogs = state.activityLogs
@@ -9394,8 +10374,16 @@ export default function AdminPortal({ section }: { section: string }) {
             if (activityDateFilter === "all") return true;
             const days = dateFilterDays[activityDateFilter] ?? 0;
             return new Date(l.createdAt).getTime() >= now - days * 24 * 60 * 60 * 1000;
+          })
+          .filter((l) => {
+            if (!activitySearchQuery.trim()) return true;
+            const q = activitySearchQuery.toLowerCase();
+            return (
+              (l.action?.toLowerCase().includes(q) ?? false) ||
+              (l.description?.toLowerCase().includes(q) ?? false)
+            );
           });
-        const ACTIVITY_PAGE_SIZE = 20;
+        const ACTIVITY_PAGE_SIZE = 10;
         const totalActivityPages = Math.max(1, Math.ceil(filteredLogs.length / ACTIVITY_PAGE_SIZE));
         const pagedLogs = filteredLogs.slice(activityPage * ACTIVITY_PAGE_SIZE, (activityPage + 1) * ACTIVITY_PAGE_SIZE);
         const handleActivityExport = async (format: ExportFormat) => {
@@ -9414,229 +10402,279 @@ export default function AdminPortal({ section }: { section: string }) {
                 state.organizationProfiles.find((organization) => organization.id === log.organizationId)?.organizationName ?? "";
               return mapAuditLogToExportRow(log, {
                 actor: log.actorUserId ? "Administrator" : "System",
-                organization: organizationName,
+                organizationName,
               });
             });
             await exportReport(format, {
               config: activityLogExportConfig,
               rows,
-              metadataLines: [
-                "Generated by: Administrator",
-                `Records: ${rows.length}`,
-              ],
-              filterSummaryLines: [
-                `Category: ${activityLogFilter === "all" ? "All" : getFriendlyAuditCategory(activityLogFilter)}`,
-                `Time Range: ${
-                  activityDateFilter === "all"
-                    ? "All time"
-                    : `Last ${activityDateFilter.replace("d", "")} days`
-                }`,
-              ],
             });
-            toast({
-              title: "Export Ready",
-              description: `The activity log ${format.toUpperCase()} export has been downloaded.`,
-            });
-          } catch (error) {
-            console.error("Unable to export activity logs:", error);
-            toast({
-              title: "Export Failed",
-              description: "Unable to export activity logs. Please try again.",
-              variant: "destructive",
-            });
+            toast({ title: "Export successful" });
+          } catch (err) {
+            console.error("Export failed:", err);
+            toast({ title: "Export failed", description: String(err), variant: "destructive" });
           } finally {
             setActivityExporting(null);
           }
         };
         return (
-          <div className="admin-activity-logs-page">
-            <PortalSection title="Recent Activity" description="Audit trail of admin-side edits and review actions.">
-            <div className="mobile-activity-controls">
-              <Button
-                type="button"
-                variant="outline"
-                className="activity-export-trigger"
-                disabled={!filteredLogs.length || activityExporting !== null}
-                onClick={() => setActivityExportDialogOpen(true)}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
+          <div className="-m-3 sm:-m-6 lg:-m-8">
 
-              <div className="activity-category-filters" aria-label="Filter activity by category">
-                {mobileFilterTypes.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    className={`activity-filter-chip ${activityLogFilter === type ? "is-active" : ""}`}
-                    onClick={() => {
-                      setActivityLogFilter(type);
-                      setActivityPage(0);
-                    }}
-                  >
-                    {type === "all" ? "All" : getFriendlyAuditCategory(type)}
-                  </button>
-                ))}
-              </div>
-
-              <select
-                value={activityDateFilter}
-                onChange={(event) => {
-                  setActivityDateFilter(event.target.value as "all" | "7d" | "30d" | "90d");
-                  setActivityPage(0);
-                }}
-                className="activity-time-filter"
-                aria-label="Filter activity by time range"
-              >
-                <option value="all">All time</option>
-                <option value="90d">Last 90 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="7d">Last 7 days</option>
-              </select>
-              <p className="activity-result-count">
-                {filteredLogs.length} {filteredLogs.length === 1 ? "activity record" : "activity records"}
-              </p>
+            {/* Breadcrumb */}
+            <div className="border-b border-[#E5E7EB] bg-white px-4 py-3">
+              <nav className="flex items-center gap-[10px]" aria-label="Breadcrumb">
+                <span className="text-[14px] leading-[100%] text-[#B3B3B3]">Administration</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={2} />
+                <span className="text-[14px] leading-[100%] text-[#1E1E1E]">Activity Logs</span>
+              </nav>
             </div>
 
-            <div className="desktop-activity-controls mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
-                {filterTypes.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => { setActivityLogFilter(type); setActivityPage(0); }}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      activityLogFilter === type
-                        ? "bg-foreground text-background"
-                        : "border border-border/60 bg-muted/60 text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {type === "all" ? "All" : (relatedTypeLabel[type] ?? type)}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={activityDateFilter}
-                  onChange={(e) => { setActivityDateFilter(e.target.value as "all" | "7d" | "30d" | "90d"); setActivityPage(0); }}
-                  className="rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground focus:outline-none"
-                  aria-label="Filter activity by time range"
-                >
-                  <option value="all">All time</option>
-                  <option value="90d">Last 90 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="7d">Last 7 days</option>
-                </select>
-                <Button
+            {/* Content area */}
+            <div className="flex flex-col gap-5 bg-[#F5F7FA] px-4 py-3">
+
+              {/* Title block */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-[10px]">
+                  <h1 className="font-segoe text-[24px] font-bold leading-[100%] tracking-[-0.03em] text-[#1E1E1E]">
+                    Activity Logs
+                  </h1>
+                  <p className="font-segoe text-[14px] font-normal leading-[140%] text-[#757575]">
+                    Audit trail of admin-side edits and review actions.
+                  </p>
+                </div>
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!filteredLogs.length || activityExporting !== null}
                   onClick={() => setActivityExportDialogOpen(true)}
+                  disabled={!filteredLogs.length || activityExporting !== null}
+                  className="flex h-11 w-24 items-center justify-center gap-2 rounded-lg bg-[#0E2F66] px-4 py-3 font-segoe text-[14px] leading-[140%] text-[#F3F3F3] transition-colors hover:bg-[#0C2959] disabled:opacity-50"
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Upload className="h-4 w-4 shrink-0 text-[#F3F3F3]" strokeWidth={1.6} />
                   Export
-                </Button>
+                </button>
+              </div>
+
+              {/* Table card */}
+              <div className="overflow-x-auto rounded-lg border border-[#E5E7EB] bg-white shadow-[0px_1px_4px_0px_rgba(0,0,0,0.10)]">
+
+            {/* Filter Bar */}
+            <div className="flex flex-wrap items-center gap-[10px] border-b border-[#E5E7EB] px-4 py-4">
+              <div className="flex shrink-0 flex-wrap items-center gap-[10px]">
+                {([
+                  { value: "all",                  label: "All"          },
+                  { value: "organization_profile", label: "Organization" },
+                  { value: "budget_request",       label: "Budget"       },
+                  { value: "liquidation_report",   label: "Liquidation"  },
+                  { value: "news_release",         label: "News"         },
+                  { value: "document_submission",  label: "Document"     },
+                ] as const).map(({ value, label }) => {
+                  const isActive = activityLogFilter === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => { setActivityLogFilter(value); setActivityPage(0); }}
+                      className={`rounded-full border px-[14px] py-[6px] font-segoe text-[14px] font-semibold leading-[100%] transition-colors ${
+                        isActive
+                          ? "border-public-bg-brand bg-public-bg-brand text-public-text-neutral-on-neutral"
+                          : "border-slate-300 bg-[#F1F6FD] text-[#1E1E1E] hover:border-public-bg-brand hover:bg-[#EEF3FA]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative flex min-w-[80px] flex-1 items-center">
+                <Search className="absolute left-3 h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={1.6} />
+                <input
+                  type="text"
+                  value={activitySearchQuery}
+                  onChange={(e) => { setActivitySearchQuery(e.target.value); setActivityPage(0); }}
+                  placeholder="Search logs..."
+                  className="h-10 w-full rounded-lg border border-[#CBD5E1] bg-white pl-9 pr-3 font-segoe text-[14px] leading-[140%] text-[#1E1E1E] placeholder:text-[#B3B3B3] focus:outline-none"
+                />
+              </div>
+
+              <div ref={activityTimeDropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setActivityTimeDropdownOpen((v) => !v)}
+                  className="flex h-10 w-[128px] items-center justify-between gap-2 rounded-lg border border-[#CBD5E1] bg-white px-4 font-segoe text-[14px] leading-[140%] text-[#1E1E1E]"
+                >
+                  <span className="truncate">
+                    {activityDateFilter === "all" ? "All time" :
+                     activityDateFilter === "7d"  ? "Last 7d"  :
+                     activityDateFilter === "30d" ? "Last 30d" :
+                                                    "Last 90d" }
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-[#B3B3B3]" strokeWidth={1.6} />
+                </button>
+                {activityTimeDropdownOpen && (
+                  <div className="absolute right-0 top-[calc(100%+4px)] z-50 w-[140px] rounded-lg border border-[#D1D5DB] bg-white py-1 shadow-sm">
+                    {([
+                      { value: "all", label: "All time"     },
+                      { value: "90d", label: "Last 90 days" },
+                      { value: "30d", label: "Last 30 days" },
+                      { value: "7d",  label: "Last 7 days"  },
+                    ] as const).map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => { setActivityDateFilter(value); setActivityTimeDropdownOpen(false); setActivityPage(0); }}
+                        className={`flex h-8 w-full items-center px-[10px] font-segoe text-[13px] leading-[140%] transition-colors ${
+                          activityDateFilter === value
+                            ? "bg-[#C0D4F5] text-[#0E2F66]"
+                            : "text-[#757575] hover:bg-[#F5F7FA]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            {filteredLogs.length ? (
-              <>
-              <div className="desktop-activity-table overflow-hidden rounded-xl border border-border/70">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-44 text-xs">Date & Time</TableHead>
-                      <TableHead className="w-56 text-xs">Action</TableHead>
-                      <TableHead className="text-xs">Description</TableHead>
-                      <TableHead className="w-36 text-xs">Category</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pagedLogs.map((activity) => {
-                      const meta = activityMeta[activity.action] ?? { label: activity.action, iconColor: "text-muted-foreground", bgColor: "bg-muted/60" };
-                      const Icon = activityIconMap[activity.action] ?? ClipboardList;
-                      const formattedDate = new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(activity.createdAt));
-                      return (
-                        <TableRow key={activity.id}>
-                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formattedDate}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${meta.bgColor}`}>
-                                <Icon className={`h-3 w-3 ${meta.iconColor}`} />
-                              </div>
-                              <span className="text-sm font-medium text-foreground">{meta.label}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            <p className="line-clamp-2">{activity.description}</p>
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground">
-                              {relatedTypeLabel[activity.relatedType] ?? activity.relatedType}
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-[#F0F1F3] bg-[#F9FAFB]">
+                    <th className="px-4 py-3 text-left font-segoe text-[12px] font-semibold uppercase leading-[100%] tracking-[0.05em] text-[#64748B]">
+                      Date &amp; Time
+                    </th>
+                    <th className="px-4 py-3 text-left font-segoe text-[12px] font-semibold uppercase leading-[100%] tracking-[0.05em] text-[#64748B]">
+                      Action
+                    </th>
+                    <th className="px-4 py-3 text-left font-segoe text-[12px] font-semibold uppercase leading-[100%] tracking-[0.05em] text-[#64748B]">
+                      Description
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedLogs.map((log) => {
+                    const iconConfig = ACTIVITY_LOG_ICON_MAP[log.relatedType ?? ""] ?? ACTIVITY_LOG_ICON_MAP["default"];
+                    const IconComponent = iconConfig.icon;
+                    const logDate = new Date(log.createdAt);
+                    return (
+                      <tr key={log.id} className="border-b border-[#F0F1F3] transition-colors hover:bg-[#F9FAFB]">
+                        <td className="px-4 py-4 sm:px-6 lg:px-8">
+                          <div className="flex flex-col gap-[4px]">
+                            <span className="font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                              {logDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
                             </span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="mobile-activity-list">
-                {pagedLogs.map((activity) => (
-                  <MobileActivityLogItem
-                    key={activity.id}
-                    log={activity}
-                    actorLabel={activity.actorUserId ? "Administrator" : "System"}
-                  />
-                ))}
-              </div>
-              </>
-            ) : (
-              <>
-                <div className="desktop-activity-empty">
-                  <PortalEmptyState title="No activity found" description="No logs match the selected filter." />
-                </div>
-                <div className="mobile-activity-empty">
-                  <PortalEmptyState
-                    title="No activity records found"
-                    description="Try changing the selected category or time range."
-                  />
-                </div>
-              </>
-            )}
-            {filteredLogs.length > ACTIVITY_PAGE_SIZE && (
-              <>
-              <div className="desktop-activity-pagination mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  Showing {activityPage * ACTIVITY_PAGE_SIZE + 1}–{Math.min((activityPage + 1) * ACTIVITY_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
-                </span>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="sm" disabled={activityPage === 0} onClick={() => setActivityPage((p) => p - 1)}>
+                            <span className="font-segoe text-[12px] leading-[140%] text-[#64748B]">
+                              {`${logDate.getDate()} ${logDate.toLocaleString("en-US", { month: "long" })} ${logDate.getFullYear()}`}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[14px] border border-[#E5E7EB] ${iconConfig.bg}`}>
+                              <IconComponent className={`h-4 w-4 ${iconConfig.color}`} strokeWidth={iconConfig.strokeWidth} />
+                            </div>
+                            <div className="flex flex-col gap-[2px]">
+                              <span className="font-segoe text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+                                {log.action}
+                              </span>
+                              {log.actorUserId ? (
+                                <p className="font-segoe text-[12px] font-normal leading-[140%] text-[#64748B]">
+                                  {user?.displayName ?? "Administrator"}
+                                  <span className="mx-1">·</span>
+                                  {user?.email ?? ""}
+                                </p>
+                              ) : (
+                                <p className="font-segoe text-[12px] font-normal leading-[140%] text-[#64748B]">System</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="max-w-[320px] px-4 py-4">
+                          <span className="block truncate font-segoe text-[12px] leading-[100%] text-[#1E1E1E]" title={log.description ?? ""}>
+                            {log.description ?? "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {pagedLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-12 text-center font-segoe text-[14px] text-[#B3B3B3] sm:px-6 lg:px-8">
+                        No activity logs found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between border-t border-[#D9D9D9] px-4 py-4">
+              <p className="font-segoe text-[13px] leading-[100%]">
+                <span className="text-public-text-secondary">Showing </span>
+                <span className="text-[#1E1E1E]">{pagedLogs.length}</span>
+                <span className="text-public-text-secondary"> of </span>
+                <span className="text-[#1E1E1E]">{filteredLogs.length}</span>
+                <span className="text-public-text-secondary"> {filteredLogs.length === 1 ? "log" : "logs"}</span>
+              </p>
+              {totalActivityPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActivityPage((p) => Math.max(0, p - 1))}
+                    disabled={activityPage === 0}
+                    className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-public-text-secondary transition-colors hover:bg-[#F5F7FA] disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <ArrowLeft className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
                     Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled={activityPage >= totalActivityPages - 1} onClick={() => setActivityPage((p) => p + 1)}>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const show: number[] = [];
+                      const addPage = (p: number) => { if (p >= 0 && p < totalActivityPages && !show.includes(p)) show.push(p); };
+                      [0, 1, 2].forEach(addPage);
+                      [activityPage - 1, activityPage, activityPage + 1].forEach(addPage);
+                      [totalActivityPages - 3, totalActivityPages - 2, totalActivityPages - 1].forEach(addPage);
+                      show.sort((a, b) => a - b);
+                      const items: (number | string)[] = [];
+                      show.forEach((p, i) => { items.push(p); if (show[i + 1] !== undefined && show[i + 1] - p > 1) items.push("..."); });
+                      return items;
+                    })().map((item, idx) =>
+                      item === "..." ? (
+                        <span key={"e" + idx} className="flex h-[29px] items-center justify-center px-2 font-segoe text-[13px] leading-[100%] text-[#1E1E1E]">…</span>
+                      ) : (
+                        <button
+                          key={item as number}
+                          type="button"
+                          onClick={() => setActivityPage(item as number)}
+                          className={`flex h-[29px] min-w-8 items-center justify-center rounded-lg px-3 font-segoe text-[13px] leading-[100%] transition-colors ${
+                            item === activityPage
+                              ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                              : "text-[#1E1E1E] hover:bg-[#F5F7FA]"
+                          }`}
+                        >
+                          {(item as number) + 1}
+                        </button>
+                      )
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActivityPage((p) => Math.min(totalActivityPages - 1, p + 1))}
+                    disabled={activityPage === totalActivityPages - 1}
+                    className="flex h-8 items-center gap-2 rounded-lg px-3 font-segoe text-[13px] leading-[100%] text-[#1E1E1E] transition-colors hover:bg-[#F5F7FA] disabled:opacity-50"
+                  >
                     Next
-                  </Button>
+                    <ArrowRight className="h-4 w-4 text-[#1E1E1E]" strokeWidth={1.6} />
+                  </button>
                 </div>
+              )}
+            </div>
+
               </div>
-              <div className="mobile-activity-pagination">
-                <span>
-                  Showing {activityPage * ACTIVITY_PAGE_SIZE + 1}{"\u2013"}
-                  {Math.min((activityPage + 1) * ACTIVITY_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
-                </span>
-                <div className="mobile-activity-pagination-controls">
-                  <Button variant="outline" size="sm" disabled={activityPage === 0} onClick={() => setActivityPage((page) => page - 1)}>
-                    Previous
-                  </Button>
-                  <span>Page {activityPage + 1} of {totalActivityPages}</span>
-                  <Button variant="outline" size="sm" disabled={activityPage >= totalActivityPages - 1} onClick={() => setActivityPage((page) => page + 1)}>
-                    Next
-                  </Button>
-                </div>
-              </div>
-              </>
-            )}
-            </PortalSection>
+            </div>
+
             <ExportReportDialog
               open={activityExportDialogOpen}
               onOpenChange={setActivityExportDialogOpen}
@@ -9644,6 +10682,7 @@ export default function AdminPortal({ section }: { section: string }) {
               description="Export all activity records matching the current category and time-range filters."
               onExport={handleActivityExport}
             />
+
           </div>
         );
       }
@@ -11705,6 +12744,30 @@ export default function AdminPortal({ section }: { section: string }) {
     handleDeleteTemplate,
     handleDeleteNewsRelease,
     handleDeleteTransparencyPost,
+    handleQuickNewsVisibility,
+    newsDeletePending,
+    setNewsDeletePending,
+    confirmDeleteNewsRelease,
+    newsVisibilityConfirm,
+    setNewsVisibilityConfirm,
+    confirmNewsVisibilityChange,
+    confirmingNewsVisibility,
+    newsPreviewRelease,
+    setNewsPreviewRelease,
+    thumbnailMode,
+    setThumbnailMode,
+    newsDatePickerOpen,
+    setNewsDatePickerOpen,
+    newsCalendarViewDate,
+    setNewsCalendarViewDate,
+    newsCalHeaderDropdown,
+    setNewsCalHeaderDropdown,
+    newsCategoryDropdownOpen,
+    setNewsCategoryDropdownOpen,
+    newsVisibilityDropdownOpen,
+    setNewsVisibilityDropdownOpen,
+    newsView,
+    setNewsView,
     handleSaveNewsRelease,
     handleSaveTransparencyPost,
     mergeRemoteState,
@@ -11858,7 +12921,9 @@ export default function AdminPortal({ section }: { section: string }) {
         onMarkAllNotificationsRead={() => markAllNotificationsRead()}
         onSidebarCollapsedChange={setNavCollapsed}
       >
-        {activeContent}
+        <Fragment key={section}>
+          {activeContent}
+        </Fragment>
       </PortalShell>
       {confirmationDialog}
       <Dialog open={recentActivityDialogOpen} onOpenChange={setRecentActivityDialogOpen}>
@@ -11893,7 +12958,7 @@ export default function AdminPortal({ section }: { section: string }) {
       >
         <DialogContent className="max-w-[560px] gap-0 border border-[#E5E7EB] p-0 [&>button:last-of-type]:hidden">
           <DialogTitle className="sr-only">{selectedInquiry?.subject || "Inquiry details"}</DialogTitle>
-          <div className="flex flex-col gap-4 p-5">
+          <div className="flex flex-col gap-3 p-3">
             {/* Title block */}
             <div className="flex items-start justify-between border-b border-[#F0F1F3] pb-4">
               <div className="flex flex-col gap-1">
@@ -11971,7 +13036,7 @@ export default function AdminPortal({ section }: { section: string }) {
             </div>
 
             {/* Update Status section */}
-            <div className="flex flex-col gap-4 rounded-lg border border-slate-300 bg-[#EEF1F5] p-6">
+            <div className="flex flex-col gap-4 rounded-lg border border-slate-300 bg-[#EEF1F5] p-4">
               <div className="flex flex-col gap-2">
                 <span className="font-segoe text-[13px] leading-[100%] text-[#757575]">Update Status</span>
                 <div ref={inquiryStatusDropdownRef} className="relative">
