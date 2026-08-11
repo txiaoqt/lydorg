@@ -1,0 +1,730 @@
+.admin-ypop-validation-review-page .mobile-ypop-validation-review {
+  display: none;
+}
+
+.admin-ypop-validation-review-page .desktop-summary-card {
+  display: none;
+}
+
+.admin-ypop-validation-review-page .desktop-review-identity-card > small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--yt-text-muted);
+  font-size: 0.75rem;
+}
+
+.admin-ypop-validation-review-page .desktop-review-note {
+  margin-top: 0.875rem;
+  padding: 0.625rem 0.75rem;
+  border-left: 3px solid var(--yt-primary);
+  border-radius: 0.5rem;
+  background: var(--yt-primary-soft);
+}
+
+.admin-ypop-validation-review-page .desktop-review-note strong {
+  color: var(--yt-text-muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.admin-ypop-validation-review-page .desktop-review-note p {
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-ypop-validation-review-page .desktop-legacy-submission-note {
+    display: none;
+  }
+
+  .admin-ypop-validation-review-page .desktop-ppa-review {
+    display: none;
+  }
+
+  .admin-ypop-validation-review-page .desktop-org-activity-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-org-activity-summary > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--yt-border);
+    border-radius: 0.625rem;
+    background: var(--yt-surface-subtle);
+  }
+
+  .admin-ypop-validation-review-page .desktop-org-activity-summary span {
+    color: var(--yt-text-muted);
+    font-size: 0.6875rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-org-activity-summary strong {
+    font-size: 0.875rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-org-activity-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+.admin-ypop-validation-review-page .needs-revision-action {
+  border-color: var(--yt-warning-border);
+  background: var(--yt-warning-bg);
+  color: var(--yt-warning-text);
+}
+
+.admin-ypop-validation-review-page .needs-revision-action:hover {
+  background: color-mix(in srgb, var(--yt-warning-bg) 75%, var(--yt-warning-border));
+  color: var(--yt-warning-text);
+}
+
+@media (min-width: 1280px) {
+  .admin-ypop-validation-review-page .desktop-review-toolbar {
+    margin-bottom: -0.25rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-review-identity-card {
+    padding: 1rem 1.125rem;
+    border: 1px solid var(--yt-border);
+    border-radius: 0.875rem;
+    background: var(--yt-surface);
+    box-shadow: var(--yt-shadow-sm);
+  }
+
+  .admin-ypop-validation-review-page .desktop-review-identity-card h2 {
+    font-size: 1.125rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-ypop-validation-review {
+    grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.85fr);
+    align-items: start;
+  }
+
+  .admin-ypop-validation-review-page .desktop-review-workflow > div:first-child {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--yt-border);
+  }
+
+  .admin-ypop-validation-review-page .desktop-validation-summary {
+    display: none;
+  }
+
+  .admin-ypop-validation-review-page .desktop-review-support {
+    position: sticky;
+    top: 1rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-summary-card {
+    display: block;
+    border-color: color-mix(in srgb, var(--yt-primary) 24%, var(--yt-border));
+  }
+
+  .admin-ypop-validation-review-page .desktop-summary-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-summary-metrics > div {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.625rem;
+    border: 1px solid var(--yt-border);
+    border-radius: 0.625rem;
+    background: var(--yt-surface-subtle);
+  }
+
+  .admin-ypop-validation-review-page .desktop-summary-metrics span {
+    color: var(--yt-text-muted);
+    font-size: 0.6875rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-summary-metrics strong {
+    font-size: 0.9375rem;
+  }
+
+  .admin-ypop-validation-review-page .desktop-city-led-review,
+  .admin-ypop-validation-review-page .desktop-ppa-review,
+  .admin-ypop-validation-review-page .desktop-final-decision-fields {
+    padding: 0.25rem 0;
+  }
+
+  .admin-ypop-validation-review-page .desktop-final-decision-fields {
+    padding-top: 1rem;
+    border-top: 1px solid var(--yt-border);
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-ypop-validation-review-page {
+    --mobile-page-gap: 0.75rem;
+    --mobile-card-padding: 1rem;
+    --border-default: var(--yt-border);
+    --text-primary: var(--yt-text);
+    --text-secondary: var(--yt-text-muted);
+    --primary-blue: var(--yt-primary);
+    --primary-soft: var(--yt-primary-soft);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-ypop-validation-review-page,
+  .admin-ypop-validation-review-page * {
+    box-sizing: border-box;
+  }
+
+  .admin-ypop-validation-review-page .desktop-ypop-review-context,
+  .admin-ypop-validation-review-page .desktop-ypop-validation-review {
+    display: none;
+  }
+
+  .admin-ypop-validation-review-page .mobile-ypop-validation-review {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+    gap: var(--mobile-page-gap);
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-context { order: 1; }
+  .admin-ypop-validation-review-page .mobile-validation-summary { order: 2; }
+  .admin-ypop-validation-review-page .mobile-activity-validation { display: contents; }
+  .admin-ypop-validation-review-page .mobile-activity-validation > .mobile-section-heading {
+    order: 3;
+    margin: 0;
+    padding: var(--mobile-card-padding) var(--mobile-card-padding) 0.75rem;
+    border: 1px solid var(--border-default);
+    border-bottom: 0;
+    border-radius: 0.875rem 0.875rem 0 0;
+    background: var(--yt-surface);
+  }
+  .admin-ypop-validation-review-page .mobile-activity-validation > .mobile-activity-options,
+  .admin-ypop-validation-review-page .mobile-activity-validation > .mobile-review-empty {
+    order: 3;
+    margin: calc(var(--mobile-page-gap) * -1) 0 0;
+    padding: 0 var(--mobile-card-padding) var(--mobile-card-padding);
+    border: 1px solid var(--border-default);
+    border-top: 0;
+    border-radius: 0 0 0.875rem 0.875rem;
+    background: var(--yt-surface);
+    box-shadow: var(--yt-shadow-sm);
+  }
+  .admin-ypop-validation-review-page .mobile-proof-documents { order: 4; }
+  .admin-ypop-validation-review-page .mobile-org-activities {
+    order: 5;
+    margin: 0;
+    padding: var(--mobile-card-padding);
+    border: 1px solid var(--border-default);
+    border-radius: 0.875rem;
+    background: var(--yt-surface);
+    box-shadow: var(--yt-shadow-sm);
+  }
+  .admin-ypop-validation-review-page .mobile-final-decision { order: 6; border-color: var(--yt-border-strong); }
+  .admin-ypop-validation-review-page .mobile-review-activity { order: 7; }
+
+  .admin-ypop-validation-review-page .mobile-review-section {
+    min-width: 0;
+    max-width: 100%;
+    padding: var(--mobile-card-padding);
+    border: 1px solid var(--border-default);
+    border-radius: 0.875rem;
+    background: var(--yt-surface);
+    box-shadow: var(--yt-shadow-sm);
+  }
+
+  .admin-ypop-validation-review-page .review-context-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .review-context-top > button {
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-context h1 {
+    margin-top: 0.625rem;
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-context p,
+  .admin-ypop-validation-review-page .mobile-review-context small {
+    display: block;
+    margin-top: 0.1875rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-submission-note {
+    margin-top: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-left: 3px solid var(--primary-blue);
+    border-radius: 0.5rem;
+    background: var(--primary-soft);
+  }
+
+  .admin-ypop-validation-review-page .mobile-submission-note strong {
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .admin-ypop-validation-review-page .mobile-submission-note p {
+    margin-top: 0.25rem;
+    color: var(--text-primary);
+    line-height: 1.35;
+  }
+
+  .admin-ypop-validation-review-page .summary-heading,
+  .admin-ypop-validation-review-page .mobile-section-heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.625rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-heading h2,
+  .admin-ypop-validation-review-page .mobile-section-heading h2,
+  .admin-ypop-validation-review-page .mobile-org-activities h2,
+  .admin-ypop-validation-review-page .mobile-final-decision > h2,
+  .admin-ypop-validation-review-page .mobile-review-activity > h2 {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .admin-ypop-validation-review-page .summary-heading > span {
+    max-width: 7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .admin-ypop-validation-review-page .summary-heading .qualifies {
+    background: var(--yt-success-bg);
+    color: var(--yt-success-text);
+  }
+
+  .admin-ypop-validation-review-page .summary-heading .does-not-qualify {
+    background: var(--yt-danger-bg);
+    color: var(--yt-danger-text);
+  }
+
+  .admin-ypop-validation-review-page .summary-score {
+    display: grid;
+    margin-top: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-score strong {
+    font-size: 1.875rem;
+    line-height: 2rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-score span {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-progress {
+    position: relative;
+    height: 0.5rem;
+    margin-top: 0.625rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--yt-surface-subtle);
+  }
+
+  .admin-ypop-validation-review-page .summary-progress > div {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary-blue);
+  }
+
+  .admin-ypop-validation-review-page .summary-progress > span {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--yt-warning-text);
+  }
+
+  .admin-ypop-validation-review-page .summary-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-metrics div {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-metrics span {
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+  }
+
+  .admin-ypop-validation-review-page .summary-metrics strong {
+    font-size: 0.875rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-section-heading p {
+    margin-top: 0.25rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-section-heading > strong {
+    flex: none;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-activity-options {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-activity-option {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    align-items: start;
+    border: 1px solid var(--border-default);
+    border-radius: 0.625rem;
+    background: var(--yt-surface);
+  }
+
+  .admin-ypop-validation-review-page .mobile-activity-option.is-selected {
+    border-color: var(--yt-border-strong);
+    background: var(--primary-soft);
+  }
+
+  .admin-ypop-validation-review-page .mobile-activity-option input {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.125rem;
+    accent-color: var(--primary-blue);
+    opacity: 1;
+  }
+
+  .admin-ypop-validation-review-page .activity-option-content {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-ypop-validation-review-page .activity-option-content strong {
+    overflow-wrap: anywhere;
+    font-size: 0.8125rem;
+  }
+
+  .admin-ypop-validation-review-page .activity-option-content small,
+  .admin-ypop-validation-review-page .proof-trigger-content small,
+  .admin-ypop-validation-review-page .mobile-row-heading small {
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+  }
+
+  .admin-ypop-validation-review-page .points-badge {
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: var(--yt-surface-subtle);
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
+  .admin-ypop-validation-review-page .mobile-org-activities {
+    min-width: 0;
+  }
+
+  .admin-ypop-validation-review-page .org-activity-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.375rem 0.75rem;
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
+  }
+
+  .admin-ypop-validation-review-page .org-activity-summary span {
+    color: var(--text-secondary);
+  }
+
+  .admin-ypop-validation-review-page .mobile-org-activity-list {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-org-activity-row {
+    min-width: 0;
+    padding: 0.875rem;
+    border: 1px solid var(--border-default);
+    border-radius: 0.625rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-row-heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-row-heading > div {
+    display: grid;
+    min-width: 0;
+  }
+
+  .admin-ypop-validation-review-page .mobile-row-heading strong {
+    overflow-wrap: anywhere;
+    font-size: 0.8125rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-org-activity-row > p {
+    display: -webkit-box;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .admin-ypop-validation-review-page .mobile-org-review-controls {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-empty {
+    margin-top: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.3rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-proof-accordion {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .admin-ypop-validation-review-page .proof-accordion-item {
+    min-width: 0;
+    max-width: 100%;
+    border-color: var(--border-default);
+  }
+
+  .admin-ypop-validation-review-page .proof-accordion-item[data-state="open"] {
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.625rem;
+    background: var(--yt-surface-subtle);
+  }
+
+  .admin-ypop-validation-review-page .proof-accordion-trigger {
+    min-width: 0;
+    padding: 0.75rem 0;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  .admin-ypop-validation-review-page .proof-trigger-content {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .admin-ypop-validation-review-page .proof-trigger-content strong {
+    overflow-wrap: anywhere;
+    font-size: 0.8125rem;
+  }
+
+  .admin-ypop-validation-review-page .proof-accordion-trigger > span,
+  .admin-ypop-validation-review-page .review-context-top > span,
+  .admin-ypop-validation-review-page .mobile-row-heading > span {
+    width: fit-content;
+    max-width: 7rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .admin-ypop-validation-review-page .proof-accordion-content {
+    display: grid;
+    gap: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+
+  .admin-ypop-validation-review-page .proof-status-strip {
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    background: var(--yt-primary-soft);
+    color: var(--yt-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .admin-ypop-validation-review-page .proof-content-group {
+    display: grid;
+    min-width: 0;
+    gap: 0.5rem;
+  }
+
+  .admin-ypop-validation-review-page .proof-content-group h3,
+  .admin-ypop-validation-review-page .proof-content-group label,
+  .admin-ypop-validation-review-page .mobile-general-files h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .admin-ypop-validation-review-page .file-row {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .admin-ypop-validation-review-page .file-row > span,
+  .admin-ypop-validation-review-page .mobile-proof-file > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .proof-decision-actions {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .admin-ypop-validation-review-page .proof-decision-actions .verify-action {
+    grid-column: 1 / -1;
+  }
+
+  .admin-ypop-validation-review-page .proof-decision-actions button {
+    min-width: 0;
+    min-height: 2.5rem;
+    padding-inline: 0.5rem;
+    white-space: normal;
+  }
+
+  .admin-ypop-validation-review-page .mobile-general-files {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .admin-ypop-validation-review-page .mobile-proof-file {
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    gap: 0.5rem;
+    align-items: flex-start;
+    color: var(--primary-blue);
+    text-align: left;
+  }
+
+  .admin-ypop-validation-review-page .mobile-final-decision {
+    display: grid;
+    gap: 0.875rem;
+    padding-bottom: max(var(--mobile-card-padding), env(safe-area-inset-bottom));
+  }
+
+  .admin-ypop-validation-review-page .mobile-final-decision > div {
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-final-decision label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .admin-ypop-validation-review-page .mobile-final-decision small {
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-save-validation {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-activity {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-activity-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.625rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-activity-row > span {
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-top: 0.35rem;
+    border-radius: 999px;
+    background: var(--primary-blue);
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-activity-row > div {
+    display: grid;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-activity-row strong {
+    text-transform: capitalize;
+    font-size: 0.8125rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-review-activity-row small,
+  .admin-ypop-validation-review-page .mobile-review-activity-row p {
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+  }
+
+  .admin-ypop-validation-review-page .mobile-full-activity-log {
+    color: var(--primary-blue);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: left;
+  }
+}

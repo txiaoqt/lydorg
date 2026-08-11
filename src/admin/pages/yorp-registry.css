@@ -1,0 +1,800 @@
+.admin-organization-danger-zone {
+  display: flex;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  background: #fff7f7;
+}
+
+.admin-organization-danger-zone > div {
+  min-width: 0;
+}
+
+.admin-organization-danger-zone__eyebrow {
+  color: #b91c1c;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-organization-danger-zone h3 {
+  margin-top: 0.2rem;
+  color: #7f1d1d;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.admin-organization-danger-zone p:last-child {
+  max-width: 34rem;
+  margin-top: 0.3rem;
+  color: #7f1d1d;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.admin-organization-danger-zone > button {
+  flex: 0 0 auto;
+}
+
+.admin-organization-delete-dialog {
+  width: calc(100vw - 1.5rem);
+  max-width: 38rem;
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.admin-organization-delete-dialog__icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.25rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-organization-delete-dialog__icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.admin-organization-delete-dialog__summary {
+  padding: 0.85rem;
+  border: 1px solid var(--yt-border);
+  border-radius: 0.7rem;
+  background: var(--yt-surface-subtle);
+}
+
+.admin-organization-delete-dialog__summary-title {
+  color: var(--yt-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-organization-delete-dialog__summary ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+
+.admin-organization-delete-dialog__summary li {
+  min-width: 0;
+  color: var(--yt-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.admin-organization-delete-dialog__instruction {
+  color: var(--yt-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.admin-organization-delete-dialog__permanent-warning {
+  padding: 0.7rem 0.8rem;
+  border-left: 3px solid #dc2626;
+  border-radius: 0.35rem;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.admin-organization-delete-dialog__error {
+  padding: 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.65rem;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+@media (min-width: 1024px) {
+  .yorp-registry-details.mobile-yorp-details-modal {
+    display: block;
+    width: min(820px, calc(100vw - 48px));
+    max-width: 820px;
+    max-height: min(90dvh, 900px);
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .yorp-registry-details.mobile-yorp-details-modal > button {
+    top: 18px;
+    right: 18px;
+    z-index: 20;
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--yt-border);
+    border-radius: 10px;
+    background: var(--yt-surface);
+    color: var(--yt-text-muted);
+    opacity: 1;
+  }
+
+  .yorp-registry-details.mobile-yorp-details-modal > button:hover {
+    background: var(--yt-surface-subtle);
+    color: var(--yt-text);
+  }
+
+  .desktop-yorp-details {
+    min-height: 0;
+    max-height: min(90dvh, 900px);
+    flex-direction: column;
+    background: var(--yt-surface-subtle);
+  }
+
+  .desktop-yorp-summary {
+    display: grid !important;
+    min-height: 108px;
+    padding: 20px 76px 20px 24px;
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-rows: minmax(64px, auto);
+    gap: 16px;
+    align-items: center;
+    text-align: left;
+    border-bottom: 1px solid var(--yt-border);
+    background: var(--yt-surface);
+  }
+
+  .desktop-yorp-avatar {
+    display: grid;
+    min-width: 64px;
+    width: 64px;
+    min-height: 64px;
+    height: 64px;
+    align-self: center;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #c7dcfb;
+    border-radius: 16px;
+    background: #eaf2ff;
+    color: var(--yt-primary);
+    font-size: 1.35rem;
+    font-weight: 750;
+  }
+
+  .desktop-yorp-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .desktop-yorp-summary__copy {
+    min-width: 0;
+  }
+
+  .desktop-yorp-summary__title-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .desktop-yorp-summary__title-row h2 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--yt-text);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .desktop-yorp-summary__copy > p {
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+    color: var(--yt-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .desktop-yorp-details__scroll {
+    display: grid;
+    min-height: 0;
+    padding: 18px 24px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    gap: 14px;
+  }
+
+  .desktop-yorp-section {
+    padding: 16px;
+    border: 1px solid var(--yt-border);
+    border-radius: 12px;
+    background: var(--yt-surface);
+  }
+
+  .desktop-yorp-section__heading {
+    display: flex;
+    margin-bottom: 14px;
+    align-items: center;
+    gap: 8px;
+    color: var(--yt-text);
+  }
+
+  .desktop-yorp-section__heading svg {
+    width: 17px;
+    height: 17px;
+    color: var(--yt-primary);
+  }
+
+  .desktop-yorp-section__heading h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .desktop-yorp-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px 24px;
+  }
+
+  .desktop-yorp-field-grid--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .desktop-yorp-field {
+    min-width: 0;
+  }
+
+  .desktop-yorp-field--full {
+    grid-column: 1 / -1;
+  }
+
+  .desktop-yorp-field__label {
+    margin-bottom: 4px;
+    color: var(--yt-text-muted);
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .desktop-yorp-field > p:last-child {
+    overflow-wrap: anywhere;
+    color: var(--yt-text);
+    font-size: 0.82rem;
+    font-weight: 550;
+    line-height: 1.45;
+  }
+
+  .desktop-yorp-field > .desktop-yorp-field__missing {
+    color: var(--yt-text-muted);
+    font-style: italic;
+    font-weight: 450;
+  }
+
+  .desktop-yorp-advocacies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .desktop-yorp-advocacies > span {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    font-weight: 500;
+  }
+
+  .desktop-yorp-facebook {
+    display: inline-flex;
+    min-height: 42px;
+    padding: 0 14px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--yt-primary);
+    border-radius: 9px;
+    color: var(--yt-primary);
+    font-size: 0.78rem;
+    font-weight: 650;
+  }
+
+  .desktop-yorp-facebook:hover {
+    background: #eef5ff;
+  }
+
+  .desktop-yorp-facebook:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--yt-primary) 25%, transparent);
+    outline-offset: 2px;
+  }
+
+  .desktop-yorp-facebook svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .desktop-yorp-notes {
+    color: var(--yt-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .desktop-yorp-details__scroll > .admin-organization-danger-zone {
+    margin-top: 2px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .desktop-yorp-details__scroll > .admin-organization-danger-zone > button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .yorp-registry-details.mobile-yorp-details-modal {
+    display: grid;
+    width: calc(100vw - 24px);
+    max-width: 440px;
+    max-height: calc(100dvh - 24px);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--yt-surface);
+  }
+
+  .yorp-registry-details.mobile-yorp-details-modal,
+  .yorp-registry-details.mobile-yorp-details-modal * {
+    box-sizing: border-box;
+  }
+
+  .yorp-registry-details.mobile-yorp-details-modal > button {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    z-index: 30;
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--yt-border);
+    border-radius: 10px;
+    background: var(--yt-surface);
+    color: var(--yt-text-muted);
+    line-height: 1;
+    opacity: 1;
+    box-shadow: none;
+  }
+
+  .yorp-registry-details.mobile-yorp-details-modal > button:hover {
+    background: var(--yt-surface-subtle);
+    color: var(--yt-text);
+  }
+
+  .yorp-registry-details.mobile-yorp-details-modal > button svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
+
+  .yorp-registry-details .yorp-registry-details__body {
+    display: none;
+  }
+
+  .yorp-registry-details .mobile-yorp-modal-header,
+  .yorp-registry-details .mobile-yorp-section,
+  .yorp-registry-details .mobile-yorp-detail-grid {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .yorp-registry-details .mobile-yorp-modal-header {
+    position: relative;
+    z-index: 20;
+    padding:
+      max(18px, env(safe-area-inset-top))
+      max(68px, calc(56px + env(safe-area-inset-right)))
+      16px
+      max(16px, env(safe-area-inset-left));
+    border-bottom: 1px solid var(--yt-border);
+    background: var(--yt-surface);
+  }
+
+  .yorp-registry-details .organization-identity {
+    min-width: 0;
+  }
+
+  .yorp-registry-details .organization-identity h2 {
+    overflow-wrap: anywhere;
+    color: var(--yt-text);
+    font-size: 21px;
+    font-weight: 650;
+    line-height: 1.25;
+  }
+
+  .yorp-registry-details .organization-location {
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+    color: var(--yt-text-muted);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .yorp-registry-details .organization-meta-row {
+    display: flex;
+    min-width: 0;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 9px;
+  }
+
+  .yorp-registry-details .organization-classification {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--yt-text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .yorp-registry-details .mobile-yorp-details-scroll {
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .yorp-registry-details .mobile-yorp-details-body {
+    display: grid;
+    min-width: 0;
+    gap: 10px;
+    padding:
+      12px
+      max(12px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    background: var(--yt-surface-subtle);
+  }
+
+  .yorp-registry-details .admin-organization-danger-zone.is-mobile {
+    display: grid;
+    margin-top: 0;
+    padding: 14px;
+    gap: 0.85rem;
+  }
+
+  .yorp-registry-details .admin-organization-danger-zone.is-mobile > button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .admin-organization-delete-dialog [role="group"],
+  .admin-organization-delete-dialog > div:last-child {
+    width: 100%;
+  }
+
+  .admin-organization-delete-dialog button {
+    min-height: 48px;
+  }
+
+  .yorp-registry-details .mobile-yorp-section {
+    padding: 14px;
+    border: 1px solid var(--yt-border);
+    border-radius: 12px;
+    background: var(--yt-surface);
+  }
+
+  .yorp-registry-details .mobile-modal-section-heading {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .yorp-registry-details .mobile-modal-section-heading svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    color: var(--yt-primary);
+  }
+
+  .yorp-registry-details .mobile-modal-section-heading h3 {
+    color: var(--yt-text);
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.35;
+  }
+
+  .yorp-registry-details .mobile-yorp-section-content {
+    margin-top: 13px;
+  }
+
+  .yorp-registry-details .mobile-yorp-registration-grid,
+  .yorp-registry-details .mobile-yorp-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+  }
+
+  .yorp-registry-details .leadership-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .yorp-registry-details .details-field--full {
+    grid-column: 1 / -1;
+  }
+
+  .yorp-registry-details .mobile-yorp-detail-field {
+    min-width: 0;
+  }
+
+  .yorp-registry-details .mobile-yorp-detail-label {
+    color: var(--yt-text-muted);
+    font-size: 10px;
+    line-height: 1.3;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .yorp-registry-details .mobile-yorp-detail-value {
+    min-width: 0;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+    color: var(--yt-text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  .yorp-registry-details .mobile-yorp-detail-value a {
+    color: var(--yt-primary);
+    text-decoration: none;
+  }
+
+  .yorp-registry-details .mobile-yorp-detail-value a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .yorp-registry-details .mobile-yorp-advocacies {
+    min-width: 0;
+    margin-top: 14px;
+    padding-top: 13px;
+    border-top: 1px solid var(--yt-border);
+  }
+
+  .yorp-registry-details .advocacy-tags {
+    display: flex;
+    min-width: 0;
+    margin-top: 7px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .yorp-registry-details .advocacy-tag {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 4px 9px;
+    overflow-wrap: anywhere;
+    border: 1px solid var(--yt-border-strong);
+    border-radius: 999px;
+    background: var(--yt-surface-subtle);
+    color: var(--yt-text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  .admin-yorp-registry-page {
+    --surface-primary: var(--yt-surface);
+    --border-default: var(--yt-border);
+    --text-primary: var(--yt-text);
+    --text-secondary: var(--yt-text-muted);
+    --primary-blue: var(--yt-primary);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-yorp-registry-page,
+  .admin-yorp-registry-page * {
+    box-sizing: border-box;
+  }
+
+  .admin-yorp-registry-page .mobile-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .admin-yorp-registry-page .mobile-filter-grid > *,
+  .admin-yorp-registry-page .mobile-filter-grid [role="combobox"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-yorp-registry-page .mobile-filter-grid [role="combobox"] {
+    overflow: hidden;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-result-count {
+    margin-bottom: 0.625rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-list {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+    gap: 0.625rem;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-card {
+    min-width: 0;
+    max-width: 100%;
+    padding: 0.875rem;
+    border: 1px solid var(--border-default);
+    border-radius: 0.875rem;
+    background: var(--surface-primary);
+    box-shadow: var(--yt-shadow-sm);
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-card-header {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.625rem;
+    align-items: start;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-heading,
+  .admin-yorp-registry-page .mobile-yorp-summary {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-index {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-heading h3 {
+    margin-top: 0.125rem;
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.35rem;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-status {
+    width: fit-content;
+    max-width: 7rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--yt-warning-border);
+    border-radius: 999px;
+    background: var(--yt-warning-bg);
+    color: var(--yt-warning-text);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-status.status-verified {
+    border-color: var(--yt-success-border);
+    background: var(--yt-success-bg);
+    color: var(--yt-success-text);
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-status.status-needs-update,
+  .admin-yorp-registry-page .mobile-yorp-status.status-incomplete,
+  .admin-yorp-registry-page .mobile-yorp-status.status-expired,
+  .admin-yorp-registry-page .mobile-yorp-status.status-needs-renewal {
+    border-color: var(--yt-revision-border);
+    background: var(--yt-revision-bg);
+    color: var(--yt-revision-text);
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-status.status-suspended-inactive {
+    border-color: var(--yt-danger-border);
+    background: var(--yt-danger-bg);
+    color: var(--yt-danger-text);
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-summary {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-summary p:first-child,
+  .admin-yorp-registry-page .mobile-yorp-email {
+    color: var(--text-secondary);
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-email {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-yorp-registry-page .mobile-yorp-details-action {
+    display: flex;
+    width: 100%;
+    min-height: 2.625rem;
+    margin-top: 0.75rem;
+    padding: 0.625rem 0 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 0;
+    border-top: 1px solid var(--border-default);
+    background: transparent;
+    color: var(--primary-blue);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 1023px) {
+  .yorp-registry-details .leadership-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 340px) {
+  .yorp-registry-details .leadership-detail-grid,
+  .yorp-registry-details .classification-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-yorp-registry-page .mobile-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-yorp-registry-page .registry-search {
+    grid-column: auto;
+  }
+}

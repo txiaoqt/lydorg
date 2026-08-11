@@ -1,0 +1,3289 @@
+import type {
+  ActivityLog,
+  BudgetRequest,
+  BudgetRequestFile,
+  ComplianceRemark,
+  LiquidationReport,
+  LiquidationReportFile,
+  LydoSeedState,
+  InquiryRecord,
+  OrganizationProfile,
+  NewsRelease,
+  NotificationRecord,
+  SubmissionFile,
+  TemplateRecord,
+  TransparencyPost,
+  YPOPEntry,
+  YPOPEventFile,
+  YPOPEventParticipation,
+  YPOPFile,
+  YPOPOrgActivity,
+  YPOPOrgActivityFile,
+  YPOPPeriod,
+  YPOPCityActivity,
+  PublicOrganizationActivity,
+  PublicOrganizationDirectoryItem,
+} from "./lydo-connect-data";
+import { createTemplateLocalId, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
+import { readAdminSession } from "./admin-auth";
+import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
+import { supabase } from "./supabase";
+
+const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
+const TEMPLATE_FILES_BUCKET = "template-files";
+const BUDGET_REQUEST_FILES_BUCKET = "budget-request-files";
+const LIQUIDATION_REPORT_FILES_BUCKET = "liquidation-report-files";
+const YPOP_FILES_BUCKET = "ypop-files";
+const NEWS_RELEASE_IMAGES_BUCKET = "news-release-images";
+const STORAGE_URI_PREFIX = "storage://";
+
+type RequiredDocumentTypeRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  template_url: string | null;
+  template_description: string | null;
+  sort_order: number | null;
+  is_required: boolean | null;
+  is_active: boolean | null;
+  template_scope?: "document_submission" | "other" | null;
+  updated_at?: string | null;
+};
+
+type OrganizationProfileRow = {
+  id: string;
+  user_id: string;
+  organization_name: string;
+  organization_email: string;
+  contact_number: string;
+  district: string;
+  barangay: string;
+  is_existing_organization: boolean | null;
+  organization_identifier_number: string | null;
+  registration_type?: OrganizationProfile["registrationType"] | null;
+  urn?: string | null;
+  urn_normalized?: string | null;
+  urn_review_status?: OrganizationProfile["urnReviewStatus"] | null;
+  urn_admin_remarks?: string | null;
+  urn_reviewed_by?: string | null;
+  urn_reviewed_at?: string | null;
+  verification_method?: OrganizationProfile["verificationMethod"] | null;
+  major_classification: string | null;
+  sub_classification: string | null;
+  advocacies: string[] | null;
+  adviser_name: string | null;
+  representative_name: string | null;
+  address: string | null;
+  facebook_page_url: string | null;
+  profile_image_url?: string | null;
+  directory_visibility?: boolean | null;
+  directory_show_representative?: boolean | null;
+  directory_show_adviser?: boolean | null;
+  profile_status: OrganizationProfile["profileStatus"];
+  verified_at: string | null;
+  internal_notes: string | null;
+  yorp_registered_year: number | null;
+  yorp_renewed_year: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type DocumentSubmissionRow = {
+  id: string;
+  organization_id: string;
+  submitted_by: string;
+  status: LydoSeedState["documentSubmissions"][number]["status"];
+  user_confirmed: boolean;
+  submitted_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  overall_remarks: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type DocumentSubmissionFileRow = {
+  id: string;
+  submission_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  ocr_text: string | null;
+  ocr_status: SubmissionFile["ocrStatus"];
+  ocr_confidence: number | string | null;
+  validation_status: SubmissionFile["validationStatus"];
+  admin_status: SubmissionFile["adminStatus"];
+  admin_remarks: string | null;
+  ocr_metadata?: Record<string, unknown> | null;
+  revision_history?: SubmissionFile["revisionHistory"] | null;
+  uploaded_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  required_document_types?: {
+    id?: string | null;
+    name?: string | null;
+  } | Array<{ id?: string | null; name?: string | null }> | null;
+};
+
+type BudgetRequestRow = {
+  id: string;
+  organization_id: string;
+  submitted_by: string;
+  activity_title: string;
+  activity_description: string | null;
+  activity_date: string;
+  venue: string;
+  requested_amount: number | string;
+  approved_amount: number | string;
+  released_amount: number | string;
+  release_date: string | null;
+  purpose_category: string | null;
+  status: BudgetRequest["status"];
+  remarks: string | null;
+  admin_remarks: string | null;
+  go_signal_at: string | null;
+  hard_copy_submitted_at: string | null;
+  user_note: string | null;
+  revision_history: unknown[] | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type BudgetRequestFileRow = {
+  id: string;
+  budget_request_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size: number | string;
+  uploaded_at: string | null;
+  created_at: string;
+};
+
+type LiquidationReportRow = {
+  id: string;
+  budget_request_id: string;
+  organization_id: string;
+  submitted_by: string;
+  status: LiquidationReport["status"];
+  remarks: string | null;
+  go_signal_at: string | null;
+  deadline_at: string | null;
+  hard_copy_submitted_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type LiquidationReportFileRow = {
+  id: string;
+  liquidation_report_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size: number | string;
+  uploaded_at: string | null;
+  created_at: string;
+};
+
+type NewsReleaseRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  facebook_post_url: string;
+  preview_image_url: string | null;
+  date_posted: string;
+  visibility_status: NewsRelease["visibilityStatus"];
+  category: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type TransparencyPostRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  attachment_url: string | null;
+  visibility_status: TransparencyPost["visibilityStatus"];
+  post_date: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ComplianceRemarkRow = {
+  id: string;
+  organization_id: string;
+  related_type: string;
+  related_id: string;
+  remark_type: string | null;
+  consequence_type: string | null;
+  message: string;
+  status: string;
+  created_by: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type NotificationRow = {
+  id: string;
+  user_id: string;
+  organization_id: string | null;
+  title: string;
+  message: string;
+  type: string;
+  related_type: string;
+  related_id: string;
+  is_read: boolean;
+  created_at: string;
+};
+
+type ActivityLogRow = {
+  id: string;
+  actor_user_id: string | null;
+  organization_id: string | null;
+  action: string;
+  related_type: string;
+  related_id: string;
+  description: string;
+  created_at: string;
+};
+
+type YpopPeriodRow = {
+  id: string;
+  semester_key: string;
+  semester_label: string;
+  validation_deadline: string | null;
+  status: string;
+  org_led_tiers: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
+type YpopCityActivityRow = {
+  id: string;
+  semester_key: string;
+  name: string;
+  date: string | null;
+  venue: string | null;
+  category?: string | null;
+  points: number;
+  created_at: string;
+};
+
+type YpopEntryRow = {
+  id: string;
+  organization_id: string;
+  submitted_by: string | null;
+  semester: string;
+  semester_label: string;
+  points_earned: number;
+  points_required: number;
+  total_points: number;
+  status: string;
+  admin_remarks: string;
+  submission_note: string;
+  validation_deadline: string | null;
+  submitted_at: string | null;
+  validated_at: string | null;
+  revision_history: unknown[];
+  org_led_project_count: number;
+  city_led_attendance: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
+type YpopFileRow = {
+  id: string;
+  ypop_entry_id: string;
+  organization_id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  uploaded_at: string;
+};
+
+type YpopEventParticipationRow = {
+  id: string;
+  organization_id: string;
+  activity_id: string;
+  activity_name: string;
+  activity_date: string | null;
+  venue: string | null;
+  status: string;
+  admin_remarks: string;
+  joined_at: string | null;
+  proof_submitted_at: string | null;
+  verified_at: string | null;
+  revision_history: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
+type YpopEventFileRow = {
+  id: string;
+  participation_id: string;
+  organization_id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  uploaded_at: string;
+};
+
+type YpopOrgActivityRow = {
+  id: string;
+  ypop_entry_id: string;
+  organization_id: string;
+  submitted_by: string | null;
+  activity_name: string;
+  activity_date: string | null;
+  venue: string | null;
+  narrative_report: string | null;
+  status: string;
+  admin_remarks: string | null;
+  submitted_at: string | null;
+  approved_at: string | null;
+  revision_history: unknown[];
+  created_at: string;
+  updated_at: string;
+};
+
+type YpopOrgActivityFileRow = {
+  id: string;
+  org_activity_id: string;
+  organization_id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  uploaded_at: string;
+};
+
+type InquiryRow = {
+  id: string;
+  organization_id: string;
+  submitted_by: string;
+  submitter_name: string;
+  organization_name: string;
+  email: string;
+  subject: string;
+  description: string;
+  status: InquiryRecord["status"];
+  admin_remarks: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AdminPortalSnapshot = {
+  organization_profiles?: OrganizationProfileRow[];
+  document_submissions?: DocumentSubmissionRow[];
+  document_submission_files?: DocumentSubmissionFileRow[];
+  budget_requests?: BudgetRequestRow[];
+  budget_request_files?: BudgetRequestFileRow[];
+  liquidation_reports?: LiquidationReportRow[];
+  liquidation_report_files?: LiquidationReportFileRow[];
+  news_releases?: NewsReleaseRow[];
+  transparency_posts?: TransparencyPostRow[];
+  compliance_remarks?: ComplianceRemarkRow[];
+  notifications?: NotificationRow[];
+  activity_logs?: ActivityLogRow[];
+  templates?: RequiredDocumentTypeRow[];
+  ypop_periods?: YpopPeriodRow[];
+  ypop_city_activities?: YpopCityActivityRow[];
+  ypop_entries?: YpopEntryRow[];
+  ypop_files?: YpopFileRow[];
+  ypop_event_participations?: YpopEventParticipationRow[];
+  ypop_event_files?: YpopEventFileRow[];
+  ypop_org_activities?: YpopOrgActivityRow[];
+  ypop_org_activity_files?: YpopOrgActivityFileRow[];
+  inquiries?: InquiryRow[];
+};
+
+const localDocumentTypeByName = new Map(requiredDocumentTypes.map((documentType) => [documentType.name, documentType]));
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const sanitizeFileName = (value: string) => value.replace(/[^a-zA-Z0-9._-]/g, "-");
+
+const editableLiquidationStatuses = new Set<LiquidationReport["status"]>([
+  "pending_activity_completion",
+  "not_started",
+  "draft",
+  "needs_revision",
+  "overdue",
+  "rejected_red",
+]);
+
+const assertPdfUpload = async (file: File, label: string) => {
+  if (file.type !== "application/pdf" || !/\.pdf$/i.test(file.name)) {
+    throw new Error(`${label} must be a PDF file.`);
+  }
+  if (!file.size) throw new Error(`${label} cannot be empty.`);
+
+  const signature = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  if (String.fromCharCode(...signature) !== "%PDF-") {
+    throw new Error(`${label} does not appear to be a valid PDF.`);
+  }
+};
+
+const buildStorageUri = (bucket: string, path: string) => `${STORAGE_URI_PREFIX}${bucket}/${path}`;
+
+const parseStorageUri = (value: string) => {
+  if (!value.startsWith(STORAGE_URI_PREFIX)) return null;
+  const remainder = value.slice(STORAGE_URI_PREFIX.length);
+  const separatorIndex = remainder.indexOf("/");
+  if (separatorIndex < 0) return null;
+  return {
+    bucket: remainder.slice(0, separatorIndex),
+    path: remainder.slice(separatorIndex + 1),
+  };
+};
+
+const getFileNameFromReference = (value: string) => {
+  const source = parseStorageUri(value)?.path ?? value;
+  const segments = source.split("/");
+  return segments[segments.length - 1] || "";
+};
+
+const normalizeNumeric = (value: number | string | null | undefined) => Number(value ?? 0);
+
+const formatDateOnly = (value: string | null | undefined) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+};
+
+const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfile => ({
+  id: row.id,
+  userId: row.user_id,
+  organizationName: row.organization_name,
+  organizationEmail: row.organization_email,
+  contactNumber: row.contact_number,
+  district: row.district,
+  barangay: row.barangay,
+  isExistingOrganization: Boolean(row.is_existing_organization),
+  organizationIdentifierNumber: row.organization_identifier_number ?? "",
+  registrationType: row.registration_type ?? (row.is_existing_organization ? "existing_urn" : "new_organization"),
+  urn: row.urn ?? row.organization_identifier_number ?? "",
+  urnNormalized: row.urn_normalized ?? "",
+  urnReviewStatus: row.urn_review_status ?? (row.is_existing_organization ? "pending" : "not_applicable"),
+  urnAdminRemarks: row.urn_admin_remarks ?? "",
+  urnReviewedBy: row.urn_reviewed_by ?? "",
+  urnReviewedAt: row.urn_reviewed_at ?? "",
+  verificationMethod: row.verification_method ?? null,
+  majorClassification: (row.major_classification ?? "") as OrganizationProfile["majorClassification"],
+  subClassification: (row.sub_classification ?? "") as OrganizationProfile["subClassification"],
+  advocacies: (row.advocacies ?? []) as OrganizationProfile["advocacies"],
+  adviserName: row.adviser_name ?? "",
+  representativeName: row.representative_name ?? "",
+  address: row.address ?? "",
+  facebookPageUrl: row.facebook_page_url ?? "",
+  profileImageUrl: row.profile_image_url ?? "",
+  directoryVisibility: Boolean(row.directory_visibility),
+  directoryShowRepresentative: Boolean(row.directory_show_representative),
+  directoryShowAdviser: Boolean(row.directory_show_adviser),
+  profileStatus: row.profile_status,
+  verifiedAt: row.verified_at ?? "",
+  internalNotes: row.internal_notes ?? "",
+  yorpRegisteredYear: row.yorp_registered_year ?? null,
+  yorpRenewedYear: row.yorp_renewed_year ?? null,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
+  const localDocumentType = localDocumentTypeByName.get(row.name);
+  const localId = localDocumentType?.id ?? createTemplateLocalId(row.name);
+
+  return {
+    id: localId,
+    databaseId: row.id,
+    name: row.name,
+    description: row.description ?? localDocumentType?.description ?? "",
+    templateUrl: row.template_url ?? localDocumentType?.templateUrl ?? "",
+    sortOrder: row.sort_order ?? localDocumentType?.sortOrder ?? 0,
+    isRequired: row.is_required ?? localDocumentType?.isRequired ?? true,
+    isActive: row.is_active ?? localDocumentType?.isActive ?? true,
+    templateScope: row.template_scope ?? localDocumentType?.templateScope ?? "document_submission",
+    templateDescription: row.template_description ?? `Template for ${row.name}.`,
+    templateActive: row.is_active ?? true,
+    templateFileName: row.template_url ? getFileNameFromReference(row.template_url) : "",
+    templateFileUrl: row.template_url ?? "",
+    templateFileType: "",
+    templateUploadedAt: row.updated_at ?? "",
+  };
+};
+
+const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile | null => {
+  const related = Array.isArray(row.required_document_types) ? row.required_document_types[0] : row.required_document_types;
+  const documentName = related?.name ?? "";
+  const localDocumentType = localDocumentTypeByName.get(documentName);
+  const localDocumentTypeId = localDocumentType?.id ?? createTemplateLocalId(documentName);
+  if (!localDocumentTypeId) return null;
+
+  return {
+    id: row.id,
+    submissionId: row.submission_id,
+    documentTypeId: localDocumentTypeId,
+    fileName: row.file_name,
+    fileUrl: row.file_url,
+    fileType: row.file_type,
+    fileSize: row.file_size,
+    ocrText: row.ocr_text ?? "",
+    ocrStatus: row.ocr_status,
+    ocrConfidence: Number(row.ocr_confidence ?? 0),
+    validationStatus: row.validation_status,
+    adminStatus: row.admin_status,
+    adminRemarks: row.admin_remarks ?? "",
+    ocrMetadata: row.ocr_metadata ?? null,
+    revisionHistory: row.revision_history ?? [],
+    uploadedAt: row.uploaded_at ?? "",
+    reviewedAt: row.reviewed_at ?? "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by,
+  activityTitle: row.activity_title,
+  activityDescription: row.activity_description ?? "",
+  activityDate: formatDateOnly(row.activity_date),
+  venue: row.venue,
+  requestedAmount: normalizeNumeric(row.requested_amount),
+  approvedAmount: normalizeNumeric(row.approved_amount),
+  releasedAmount: normalizeNumeric(row.released_amount),
+  releaseDate: formatDateOnly(row.release_date),
+  purposeCategory: row.purpose_category ?? "",
+  status: row.status,
+  remarks: row.remarks ?? "",
+  adminRemarks: row.admin_remarks ?? "",
+  goSignalAt: row.go_signal_at ?? "",
+  hardCopySubmittedAt: row.hard_copy_submitted_at ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  userNote: row.user_note ?? "",
+  revisionHistory: (row.revision_history ?? []) as BudgetRequest["revisionHistory"],
+});
+
+const mapDocumentSubmission = (row: DocumentSubmissionRow) => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by,
+  status: row.status,
+  userConfirmed: row.user_confirmed,
+  submittedAt: row.submitted_at ?? "",
+  reviewedBy: row.reviewed_by ?? "",
+  reviewedAt: row.reviewed_at ?? "",
+  overallRemarks: row.overall_remarks ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapBudgetRequestFile = (row: BudgetRequestFileRow): BudgetRequestFile => ({
+  id: row.id,
+  budgetRequestId: row.budget_request_id,
+  fileName: row.file_name,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  fileSize: normalizeNumeric(row.file_size),
+  uploadedAt: row.uploaded_at ?? "",
+  createdAt: row.created_at,
+});
+
+const mapLiquidationReport = (row: LiquidationReportRow): LiquidationReport => ({
+  id: row.id,
+  budgetRequestId: row.budget_request_id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by,
+  status: row.status,
+  remarks: row.remarks ?? "",
+  goSignalAt: row.go_signal_at ?? "",
+  deadlineAt: row.deadline_at ?? "",
+  hardCopySubmittedAt: row.hard_copy_submitted_at ?? "",
+  completedAt: row.completed_at ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapLiquidationReportFile = (row: LiquidationReportFileRow): LiquidationReportFile => ({
+  id: row.id,
+  liquidationReportId: row.liquidation_report_id,
+  fileName: row.file_name,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  fileSize: normalizeNumeric(row.file_size),
+  uploadedAt: row.uploaded_at ?? "",
+  createdAt: row.created_at,
+});
+
+const mapNewsRelease = (row: NewsReleaseRow): NewsRelease => ({
+  id: row.id,
+  title: row.title,
+  description: row.description ?? "",
+  facebookPostUrl: row.facebook_post_url,
+  previewImageUrl: row.preview_image_url ?? "",
+  datePosted: formatDateOnly(row.date_posted),
+  visibilityStatus: row.visibility_status,
+  category: row.category ?? null,
+  createdBy: row.created_by ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapTransparencyPost = (row: TransparencyPostRow): TransparencyPost => ({
+  id: row.id,
+  title: row.title,
+  description: row.description ?? "",
+  category: row.category ?? "",
+  attachmentUrl: row.attachment_url ?? "",
+  visibilityStatus: row.visibility_status,
+  postDate: formatDateOnly(row.post_date),
+  createdBy: row.created_by ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapComplianceRemark = (row: ComplianceRemarkRow): ComplianceRemark => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  relatedType: row.related_type,
+  relatedId: row.related_id,
+  remarkType: row.remark_type ?? "",
+  consequenceType: row.consequence_type ?? "",
+  message: row.message,
+  status: row.status,
+  createdBy: row.created_by ?? "",
+  resolvedBy: row.resolved_by ?? "",
+  resolvedAt: row.resolved_at ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapNotification = (row: NotificationRow): NotificationRecord => ({
+  id: row.id,
+  userId: row.user_id,
+  organizationId: row.organization_id ?? "",
+  title: row.title,
+  message: row.message,
+  type: row.type,
+  relatedType: row.related_type,
+  relatedId: row.related_id,
+  isRead: row.is_read,
+  createdAt: row.created_at,
+});
+
+const mapActivityLog = (row: ActivityLogRow): ActivityLog => ({
+  id: row.id,
+  actorUserId: row.actor_user_id ?? "",
+  organizationId: row.organization_id ?? "",
+  action: row.action,
+  relatedType: row.related_type,
+  relatedId: row.related_id,
+  description: row.description,
+  createdAt: row.created_at,
+});
+
+const mapInquiry = (row: InquiryRow): InquiryRecord => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by,
+  submitterName: row.submitter_name,
+  organizationName: row.organization_name,
+  email: row.email,
+  subject: row.subject,
+  description: row.description,
+  status: row.status as InquiryRecord["status"],
+  adminRemarks: row.admin_remarks ?? "",
+  reviewedAt: row.reviewed_at ?? "",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopPeriod = (row: YpopPeriodRow): YPOPPeriod => ({
+  id: row.id,
+  semesterKey: row.semester_key,
+  semesterLabel: row.semester_label,
+  validationDeadline: row.validation_deadline ?? "",
+  status: row.status as YPOPPeriod["status"],
+  orgLedTiers: (row.org_led_tiers ?? []) as YPOPPeriod["orgLedTiers"],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopCityActivity = (row: YpopCityActivityRow): YPOPCityActivity => ({
+  id: row.id,
+  semesterKey: row.semester_key,
+  name: row.name,
+  date: row.date ?? "",
+  venue: row.venue ?? "",
+  category: resolveYpopCityLedCategory(row.category, row.points),
+  points: normalizeYpopCityLedPoints(row.points, row.category),
+  createdAt: row.created_at,
+});
+
+const mapYpopEntry = (row: YpopEntryRow): YPOPEntry => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by ?? "",
+  semester: row.semester,
+  semesterLabel: row.semester_label,
+  pointsEarned: row.points_earned,
+  pointsRequired: row.points_required,
+  totalPoints: row.total_points,
+  status: row.status as YPOPEntry["status"],
+  adminRemarks: row.admin_remarks,
+  submissionNote: row.submission_note,
+  validationDeadline: row.validation_deadline ?? "",
+  submittedAt: row.submitted_at ?? "",
+  validatedAt: row.validated_at ?? "",
+  revisionHistory: (row.revision_history ?? []) as YPOPEntry["revisionHistory"],
+  orgLedProjectCount: row.org_led_project_count,
+  cityLedAttendance: (row.city_led_attendance ?? []) as YPOPEntry["cityLedAttendance"],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopFile = (row: YpopFileRow): YPOPFile => ({
+  id: row.id,
+  ypopEntryId: row.ypop_entry_id,
+  organizationId: row.organization_id,
+  fileName: row.file_name,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  uploadedAt: row.uploaded_at,
+});
+
+const mapYpopEventParticipation = (row: YpopEventParticipationRow): YPOPEventParticipation => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  activityId: row.activity_id,
+  activityName: row.activity_name,
+  activityDate: row.activity_date ?? "",
+  venue: row.venue ?? "",
+  status: row.status as YPOPEventParticipation["status"],
+  adminRemarks: row.admin_remarks,
+  joinedAt: row.joined_at ?? "",
+  proofSubmittedAt: row.proof_submitted_at ?? "",
+  verifiedAt: row.verified_at ?? "",
+  revisionHistory: (row.revision_history ?? []) as YPOPEventParticipation["revisionHistory"],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopEventFile = (row: YpopEventFileRow): YPOPEventFile => ({
+  id: row.id,
+  participationId: row.participation_id,
+  organizationId: row.organization_id,
+  fileName: row.file_name,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  uploadedAt: row.uploaded_at,
+});
+
+const mapYpopOrgActivity = (row: YpopOrgActivityRow): YPOPOrgActivity => ({
+  id: row.id,
+  ypopEntryId: row.ypop_entry_id,
+  organizationId: row.organization_id,
+  submittedBy: row.submitted_by ?? "",
+  activityName: row.activity_name,
+  activityDate: row.activity_date ?? "",
+  venue: row.venue ?? "",
+  narrativeReport: row.narrative_report ?? "",
+  status: row.status as YPOPOrgActivity["status"],
+  adminRemarks: row.admin_remarks ?? "",
+  submittedAt: row.submitted_at ?? "",
+  approvedAt: row.approved_at ?? "",
+  revisionHistory: (row.revision_history ?? []) as YPOPOrgActivity["revisionHistory"],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapYpopOrgActivityFile = (row: YpopOrgActivityFileRow): YPOPOrgActivityFile => ({
+  id: row.id,
+  orgActivityId: row.org_activity_id,
+  organizationId: row.organization_id,
+  fileName: row.file_name,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  uploadedAt: row.uploaded_at,
+});
+
+const fetchOrganizationProfile = async (userId: string) => {
+  const { data, error } = await supabase!
+    .from("organization_profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return (data as OrganizationProfileRow | null) ?? null;
+};
+
+const fetchLatestSubmission = async (organizationId: string) => {
+  const { data, error } = await supabase!
+    .from("document_submissions")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) throw new Error(error.message);
+  return ((data as DocumentSubmissionRow[] | null) ?? [])[0] ?? null;
+};
+
+const fetchBudgetRequests = async (organizationId: string) => {
+  const { data, error } = await supabase!
+    .from("budget_requests")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as BudgetRequestRow[] | null) ?? [];
+};
+
+const fetchBudgetRequestFiles = async (budgetRequestIds: string[]) => {
+  if (!budgetRequestIds.length) return [];
+  const { data, error } = await supabase!
+    .from("budget_request_files")
+    .select("*")
+    .in("budget_request_id", budgetRequestIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as BudgetRequestFileRow[] | null) ?? [];
+};
+
+const fetchLiquidationReports = async (organizationId: string) => {
+  const { data, error } = await supabase!
+    .from("liquidation_reports")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as LiquidationReportRow[] | null) ?? [];
+};
+
+const fetchLiquidationReportFiles = async (liquidationReportIds: string[]) => {
+  if (!liquidationReportIds.length) return [];
+  const { data, error } = await supabase!
+    .from("liquidation_report_files")
+    .select("*")
+    .in("liquidation_report_id", liquidationReportIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as LiquidationReportFileRow[] | null) ?? [];
+};
+
+const fetchNewsReleases = async () => {
+  const { data, error } = await supabase!
+    .from("news_releases")
+    .select("*")
+    .order("date_posted", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as NewsReleaseRow[] | null) ?? [];
+};
+
+const fetchTransparencyPosts = async () => {
+  const { data, error } = await supabase!
+    .from("transparency_posts")
+    .select("*")
+    .order("post_date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as TransparencyPostRow[] | null) ?? [];
+};
+
+const fetchNotifications = async () => {
+  const { data, error } = await supabase!
+    .from("notifications")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as NotificationRow[] | null) ?? [];
+};
+
+const fetchInquiries = async (organizationId?: string) => {
+  let query = supabase!.from("inquiries").select("*").order("created_at", { ascending: false });
+  if (organizationId) {
+    query = query.eq("organization_id", organizationId);
+  }
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data as InquiryRow[] | null) ?? [];
+};
+
+const fetchActivityLogs = async (organizationId: string) => {
+  const { data, error } = await supabase!
+    .from("activity_logs")
+    .select("id,actor_user_id,organization_id,action,related_type,related_id,description,created_at")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as ActivityLogRow[] | null) ?? [];
+};
+
+export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) return null;
+
+  const { data: templateRows, error: templatesError } = await supabase!
+    .from("required_document_types")
+    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (templatesError) throw new Error(templatesError.message);
+
+  const mappedTemplates = ((templateRows as RequiredDocumentTypeRow[] | null) ?? [])
+    .map(mapTemplate)
+    .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
+  const [newsReleaseRows, transparencyPostRows, notificationRows] = await Promise.all([
+    fetchNewsReleases(),
+    fetchTransparencyPosts(),
+    fetchNotifications(),
+  ]);
+
+  const organizationProfile = await fetchOrganizationProfile(session.user.id);
+  const sharedState: Partial<LydoSeedState> = {
+    templates: mappedTemplates,
+    newsReleases: newsReleaseRows.map(mapNewsRelease),
+    transparencyPosts: transparencyPostRows.map(mapTransparencyPost),
+    notifications: notificationRows.map(mapNotification),
+  };
+
+  if (!organizationProfile) {
+    return sharedState;
+  }
+
+  const remoteState: Partial<LydoSeedState> = {
+    organizationProfiles: [mapOrganizationProfile(organizationProfile)],
+    ...sharedState,
+  };
+
+  const [latestSubmission, budgetRows, liquidationRows, ypopPeriodRows, ypopActivityRows, activityLogRows] = await Promise.all([
+    fetchLatestSubmission(organizationProfile.id),
+    fetchBudgetRequests(organizationProfile.id),
+    fetchLiquidationReports(organizationProfile.id),
+    supabase!.from("ypop_periods").select("*").order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_city_activities").select("*").order("created_at", { ascending: true }).then((r) => r.data ?? []),
+    fetchActivityLogs(organizationProfile.id),
+  ]);
+
+  remoteState.budgetRequests = budgetRows.map(mapBudgetRequest);
+  remoteState.liquidationReports = liquidationRows.map(mapLiquidationReport);
+  remoteState.ypopPeriods = (ypopPeriodRows as YpopPeriodRow[]).map(mapYpopPeriod);
+  remoteState.ypopCityActivities = (ypopActivityRows as YpopCityActivityRow[]).map(mapYpopCityActivity);
+  remoteState.activityLogs = activityLogRows.map(mapActivityLog);
+
+  const budgetRequestIds = budgetRows.map((row) => row.id);
+  const liquidationReportIds = liquidationRows.map((row) => row.id);
+  const [budgetFileRows, liquidationFileRows, ypopEntryRows, ypopFileRows, ypopEventParticipationRows, ypopEventFileRows, ypopOrgActivityRows, ypopOrgActivityFileRows, inquiryRows] = await Promise.all([
+    fetchBudgetRequestFiles(budgetRequestIds),
+    fetchLiquidationReportFiles(liquidationReportIds),
+    supabase!.from("ypop_entries").select("*").eq("organization_id", organizationProfile.id).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_files").select("*").eq("organization_id", organizationProfile.id).then((r) => r.data ?? []),
+    supabase!.from("ypop_event_participations").select("*").eq("organization_id", organizationProfile.id).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_event_files").select("*").eq("organization_id", organizationProfile.id).then((r) => r.data ?? []),
+    supabase!.from("ypop_org_activities").select("*").eq("organization_id", organizationProfile.id).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_org_activity_files").select("*").eq("organization_id", organizationProfile.id).order("uploaded_at", { ascending: false }).then((r) => r.data ?? []),
+    fetchInquiries(organizationProfile.id),
+  ]);
+
+  remoteState.budgetRequestFiles = budgetFileRows.map(mapBudgetRequestFile);
+  remoteState.liquidationReportFiles = liquidationFileRows.map(mapLiquidationReportFile);
+  remoteState.ypopEntries = (ypopEntryRows as YpopEntryRow[]).map(mapYpopEntry);
+  remoteState.ypopFiles = (ypopFileRows as YpopFileRow[]).map(mapYpopFile);
+  remoteState.ypopEventParticipations = (ypopEventParticipationRows as YpopEventParticipationRow[]).map(mapYpopEventParticipation);
+  remoteState.ypopEventFiles = (ypopEventFileRows as YpopEventFileRow[]).map(mapYpopEventFile);
+  remoteState.ypopOrgActivities = (ypopOrgActivityRows as YpopOrgActivityRow[]).map(mapYpopOrgActivity);
+  remoteState.ypopOrgActivityFiles = (ypopOrgActivityFileRows as YpopOrgActivityFileRow[]).map(mapYpopOrgActivityFile);
+  remoteState.inquiries = inquiryRows.map(mapInquiry);
+
+  remoteState.documentSubmissions = [];
+  remoteState.documentSubmissionFiles = [];
+
+  if (!latestSubmission) {
+    return remoteState;
+  }
+
+  remoteState.documentSubmissions = [mapDocumentSubmission(latestSubmission)];
+
+  const { data: fileRows, error: filesError } = await supabase!
+    .from("document_submission_files")
+    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .eq("submission_id", latestSubmission.id);
+
+  if (filesError) throw new Error(filesError.message);
+
+  remoteState.documentSubmissionFiles = ((fileRows as DocumentSubmissionFileRow[] | null) ?? [])
+    .map(mapDocumentFile)
+    .filter((file): file is SubmissionFile => Boolean(file));
+
+  return remoteState;
+};
+
+export const markNotificationReadInSupabase = async (notificationId: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const { error } = await supabase!
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", notificationId)
+    .eq("user_id", session.user.id);
+
+  if (error) throw new Error(error.message);
+};
+
+export const markAllNotificationsReadInSupabase = async () => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const { error } = await supabase!
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", session.user.id)
+    .eq("is_read", false);
+
+  if (error) throw new Error(error.message);
+};
+
+export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) return null;
+
+  const inquiriesPromise = supabase
+    .rpc("get_admin_inquiries", { _session_token: adminSession.sessionToken })
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn("Admin inquiries RPC failed; falling back to snapshot data.", error.message);
+        return [] as InquiryRow[];
+      }
+      return (data as InquiryRow[] | null) ?? [];
+    })
+    .catch((error: unknown) => {
+      console.warn("Admin inquiries RPC unavailable; falling back to snapshot data.", error);
+      return [] as InquiryRow[];
+    });
+
+  const { data, error } = await supabase.rpc("get_admin_portal_snapshot", {
+    _session_token: adminSession.sessionToken,
+  });
+
+  let remoteState: Partial<LydoSeedState> = {};
+  if (error) {
+    if (error.message?.includes("Admin account is not authorized")) {
+      return null;
+    }
+    console.warn("Admin portal snapshot RPC failed; loading inquiries only.", error.message);
+  } else if (data && typeof data === "object") {
+    const snapshot = data as AdminPortalSnapshot;
+    remoteState = {
+      organizationProfiles: (snapshot.organization_profiles ?? []).map(mapOrganizationProfile),
+      documentSubmissions: (snapshot.document_submissions ?? []).map(mapDocumentSubmission),
+      documentSubmissionFiles: (snapshot.document_submission_files ?? [])
+        .map(mapDocumentFile)
+        .filter((file): file is SubmissionFile => Boolean(file)),
+      budgetRequests: (snapshot.budget_requests ?? []).map(mapBudgetRequest),
+      budgetRequestFiles: (snapshot.budget_request_files ?? []).map(mapBudgetRequestFile),
+      liquidationReports: (snapshot.liquidation_reports ?? []).map(mapLiquidationReport),
+      liquidationReportFiles: (snapshot.liquidation_report_files ?? []).map(mapLiquidationReportFile),
+      newsReleases: (snapshot.news_releases ?? []).map(mapNewsRelease),
+      transparencyPosts: (snapshot.transparency_posts ?? []).map(mapTransparencyPost),
+      complianceRemarks: (snapshot.compliance_remarks ?? []).map(mapComplianceRemark),
+      notifications: (snapshot.notifications ?? []).map(mapNotification),
+      activityLogs: (snapshot.activity_logs ?? []).map(mapActivityLog),
+      templates: (snapshot.templates ?? [])
+        .map(mapTemplate)
+        .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name)),
+      ypopPeriods: (snapshot.ypop_periods ?? []).map(mapYpopPeriod),
+      ypopCityActivities: (snapshot.ypop_city_activities ?? []).map(mapYpopCityActivity),
+      ypopEntries: (snapshot.ypop_entries ?? []).map(mapYpopEntry),
+      ypopFiles: (snapshot.ypop_files ?? []).map(mapYpopFile),
+      ypopEventParticipations: (snapshot.ypop_event_participations ?? []).map(mapYpopEventParticipation),
+      ypopEventFiles: (snapshot.ypop_event_files ?? []).map(mapYpopEventFile),
+      ypopOrgActivities: (snapshot.ypop_org_activities ?? []).map(mapYpopOrgActivity),
+      ypopOrgActivityFiles: (snapshot.ypop_org_activity_files ?? []).map(mapYpopOrgActivityFile),
+      inquiries: (snapshot.inquiries ?? []).map(mapInquiry),
+    };
+  }
+
+  const inquiryRows = await inquiriesPromise;
+  if (inquiryRows.length > 0 || !remoteState.inquiries?.length) {
+    remoteState.inquiries = inquiryRows.map(mapInquiry);
+  }
+
+  return remoteState;
+};
+
+export const upsertOrganizationProfileInSupabase = async (profile: OrganizationProfile) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const payload = {
+    user_id: session.user.id,
+    organization_name: profile.organizationName.trim(),
+    organization_email: profile.organizationEmail.trim(),
+    contact_number: profile.contactNumber.trim(),
+    district: profile.district.trim(),
+    barangay: profile.barangay.trim(),
+    is_existing_organization: profile.isExistingOrganization,
+    organization_identifier_number: profile.isExistingOrganization ? profile.organizationIdentifierNumber.trim() : "",
+    registration_type: profile.registrationType,
+    urn: profile.registrationType === "existing_urn" ? profile.organizationIdentifierNumber.trim() : null,
+    major_classification: profile.majorClassification || null,
+    sub_classification: profile.subClassification || null,
+    advocacies: profile.advocacies,
+    adviser_name: profile.adviserName.trim() || null,
+    representative_name: profile.representativeName.trim() || null,
+    address: profile.address.trim() || null,
+    facebook_page_url: profile.facebookPageUrl.trim() || null,
+    profile_image_url: profile.profileImageUrl?.trim() || null,
+    directory_visibility: Boolean(profile.directoryVisibility),
+    directory_show_representative: Boolean(profile.directoryShowRepresentative),
+    directory_show_adviser: Boolean(profile.directoryShowAdviser),
+    profile_status: profile.profileStatus,
+    verified_at: profile.verifiedAt.trim() || null,
+    internal_notes: profile.internalNotes.trim() || null,
+  };
+
+  const { data, error } = await supabase
+    .from("organization_profiles")
+    .upsert(payload, { onConflict: "user_id" })
+    .select("id,user_id,organization_name,organization_email,contact_number,district,barangay,is_existing_organization,organization_identifier_number,registration_type,urn,urn_normalized,urn_review_status,urn_admin_remarks,urn_reviewed_by,urn_reviewed_at,verification_method,major_classification,sub_classification,advocacies,adviser_name,representative_name,address,facebook_page_url,profile_image_url,directory_visibility,directory_show_representative,directory_show_adviser,profile_status,verified_at,internal_notes,yorp_registered_year,yorp_renewed_year,created_at,updated_at")
+    .single();
+
+  if (error || !data) {
+    if (
+      error?.message?.includes("organization_profiles") &&
+      [
+        "advocacies",
+        "is_existing_organization",
+        "organization_identifier_number",
+        "major_classification",
+        "sub_classification",
+        "district",
+        "profile_image_url",
+        "profile_status",
+      ].some((columnName) => error.message.includes(columnName))
+    ) {
+      throw new Error(
+        "The database schema is outdated. Run supabase/repair_organization_profiles_schema.sql in Supabase, then try saving the organization profile again.",
+      );
+    }
+
+    throw new Error(error?.message ?? "Failed to save organization profile.");
+  }
+
+  return mapOrganizationProfile(data as OrganizationProfileRow);
+};
+
+export const updateOrganizationProfileReviewInSupabase = async (
+  organizationProfileId: string,
+  patch: Pick<OrganizationProfile, "profileStatus" | "verifiedAt">,
+) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("update_admin_organization_profile_review", {
+    _session_token: adminSession.sessionToken,
+    _organization_profile_id: organizationProfileId,
+    _profile_status: patch.profileStatus,
+    _verified_at: patch.verifiedAt || null,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the organization review status.");
+  return mapOrganizationProfile(updatedRow as OrganizationProfileRow);
+};
+
+export const updateDocumentSubmissionFileReviewInSupabase = async (params: {
+  fileId: string;
+  status: DocumentSubmission["status"];
+  adminRemarks?: string;
+}) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("update_admin_document_submission_file_review", {
+    _session_token: adminSession.sessionToken,
+    _file_id: params.fileId,
+    _status: params.status,
+    // An empty string deliberately clears stale submission placeholders for
+    // statuses that are not actionable admin feedback, including on databases
+    // running the earlier RPC.
+    _admin_remarks:
+      params.status === "needs_revision" || params.status === "rejected_red"
+        ? params.adminRemarks?.trim() || null
+        : "",
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the document file review.");
+  return mapDocumentFile(updatedRow as DocumentSubmissionFileRow);
+};
+
+export const reviewOrganizationUrnInSupabase = async (params: {
+  organizationId: string;
+  expectedUrn: string;
+  decision: "verified" | "needs_correction" | "rejected";
+  remarks?: string;
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase.rpc("review_organization_urn", {
+    _session_token: adminSession.sessionToken,
+    _organization_id: params.organizationId,
+    _expected_urn: params.expectedUrn,
+    _decision: params.decision,
+    _remarks: params.remarks?.trim() || null,
+  });
+  if (error || !data) throw new Error(error?.message ?? "The URN review could not be saved.");
+  return mapOrganizationProfile((Array.isArray(data) ? data[0] : data) as OrganizationProfileRow);
+};
+
+export const resubmitOrganizationUrnInSupabase = async (urn: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("resubmit_organization_urn", { _urn: urn });
+  if (error || !data) throw new Error(error?.message ?? "The corrected URN could not be submitted.");
+  return mapOrganizationProfile(data as OrganizationProfileRow);
+};
+
+const deriveDocumentSubmissionStatus = (
+  statuses: DocumentSubmission["status"][],
+  submitMode: "draft" | "review" = "review",
+): DocumentSubmission["status"] => {
+  if (!statuses.length) return submitMode === "draft" ? "draft" : "not_started";
+  if (statuses.includes("rejected_red")) return "rejected_red";
+  if (statuses.includes("needs_revision")) return "needs_revision";
+  if (statuses.every((status) => status === "approved_green")) return "approved_green";
+  if (statuses.some((status) => status === "under_admin_review" || status === "submitted" || status === "ready_for_review")) {
+    return "under_admin_review";
+  }
+  if (statuses.some((status) => status === "uploaded")) return "uploaded";
+  if (statuses.some((status) => status === "draft")) return "draft";
+  return submitMode === "draft" ? "draft" : "under_admin_review";
+};
+
+export type BatchOrganizationDocumentUploadInput = {
+  documentTypeId?: string;
+  documentTypeName: string;
+  file: File;
+  ocrText?: string;
+  ocrConfidence?: number;
+  validationStatus?: SubmissionFile["validationStatus"];
+  adminRemarks?: string;
+  ocrMetadata?: Record<string, unknown> | null;
+};
+
+export type BatchOrganizationDocumentUploadResult = {
+  documentTypeId: string;
+  documentTypeName: string;
+  fileName: string;
+  success: boolean;
+  submissionId?: string;
+  file?: SubmissionFile;
+  error?: string;
+};
+
+export type BatchDocumentReviewDecision = {
+  fileId: string;
+  status: DocumentSubmission["status"];
+  adminRemarks?: string;
+  expectedUpdatedAt?: string;
+};
+
+export type BatchDocumentReviewResult = {
+  fileId: string;
+  success: boolean;
+  file?: SubmissionFile;
+  error?: string;
+};
+
+const ensureDocumentSubmission = async (organizationId: string, userId: string) => {
+  const existingSubmission = await fetchLatestSubmission(organizationId);
+  if (existingSubmission) return existingSubmission;
+
+  const { data, error } = await supabase!
+    .from("document_submissions")
+    .insert({
+      organization_id: organizationId,
+      submitted_by: userId,
+      status: "draft",
+      user_confirmed: false,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to create document submission.");
+  return data as DocumentSubmissionRow;
+};
+
+const fetchRequiredDocumentTypeRowByName = async (name: string) => {
+  const { data, error } = await supabase!
+    .from("required_document_types")
+    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+    .eq("name", name)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error(`Required document type not found for ${name}.`);
+  return data as RequiredDocumentTypeRow;
+};
+
+const resolveTemplateDatabaseId = async (databaseId: string, name?: string) => {
+  if (UUID_PATTERN.test(databaseId)) return databaseId;
+  if (name?.trim()) {
+    const row = await fetchRequiredDocumentTypeRowByName(name.trim());
+    return row.id;
+  }
+  return databaseId;
+};
+
+export const submitOrganizationDocumentToSupabase = async (params: {
+  documentTypeId?: string;
+  documentTypeName: string;
+  file: File;
+  ocrText: string;
+  ocrConfidence: number;
+  validationStatus: SubmissionFile["validationStatus"];
+  adminRemarks?: string;
+  ocrMetadata?: Record<string, unknown> | null;
+  submitMode?: "draft" | "review";
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  await assertPdfUpload(params.file, "Document submission");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const [organizationProfile, documentTypeRow] = await Promise.all([
+    fetchOrganizationProfile(session.user.id),
+    params.documentTypeId
+      ? resolveTemplateDatabaseId(params.documentTypeId, params.documentTypeName).then((resolvedId) =>
+          supabase!
+            .from("required_document_types")
+            .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+            .eq("id", resolvedId)
+            .single()
+            .then(({ data, error }) => {
+              if (error || !data) {
+                throw new Error(error?.message ?? `Required document type not found for ${params.documentTypeName}.`);
+              }
+              return data as RequiredDocumentTypeRow;
+            }),
+        )
+      : fetchRequiredDocumentTypeRowByName(params.documentTypeName),
+  ]);
+
+  if (!organizationProfile) {
+    throw new Error("No organization profile was found for this account.");
+  }
+
+  const submission = await ensureDocumentSubmission(organizationProfile.id, session.user.id);
+  const { data: existingRows, error: existingRowsError } = await supabase!
+    .from("document_submission_files")
+    .select("id,file_url,admin_status")
+    .eq("submission_id", submission.id)
+    .eq("document_type_id", documentTypeRow.id);
+
+  if (existingRowsError) throw new Error(existingRowsError.message);
+
+  const existingTargetFile = existingRows?.[0];
+  if (existingTargetFile) {
+    const fileStatus = existingTargetFile.admin_status;
+    if (["under_admin_review", "submitted", "ready_for_review", "under_review"].includes(fileStatus)) {
+      throw new Error("This specific document is currently under admin review and cannot be modified until the review is complete.");
+    }
+    if (["approved", "approved_green"].includes(fileStatus)) {
+      throw new Error("This approved document is locked from modification.");
+    }
+  }
+
+  const safeFileName = sanitizeFileName(params.file.name);
+  const objectPath = `${organizationProfile.id}/${documentTypeRow.id}/${Date.now()}-${safeFileName}`;
+  const submitMode = params.submitMode ?? "review";
+
+  const { error: uploadError } = await supabase.storage
+    .from(ORGANIZATION_DOCUMENTS_BUCKET)
+    .upload(objectPath, params.file, {
+      upsert: true,
+      contentType: params.file.type || "application/octet-stream",
+    });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
+  const submittedAt = new Date().toISOString();
+
+  const { data, error } = await supabase!
+    .from("document_submission_files")
+    .upsert(
+      {
+        submission_id: submission.id,
+        document_type_id: documentTypeRow.id,
+        file_url: storageUri,
+        file_name: params.file.name,
+        file_type: params.file.type || "application/octet-stream",
+        file_size: params.file.size,
+        ocr_text: params.ocrText.trim(),
+        ocr_status: "completed",
+        ocr_confidence: params.ocrConfidence,
+        validation_status: params.validationStatus,
+        admin_status: submitMode === "draft" ? "draft" : "under_admin_review",
+        // This field is reserved for actual admin feedback. Pending/draft
+        // messaging is derived from the status in the UI.
+        admin_remarks: params.adminRemarks?.trim() || null,
+        ocr_metadata: params.ocrMetadata ?? null,
+        uploaded_at: submittedAt,
+        reviewed_at: null,
+      },
+      {
+        onConflict: "submission_id,document_type_id",
+      },
+    )
+    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded document.");
+
+  const existingFiles = ((existingRows as Array<{ id: string; file_url: string }> | null) ?? []).filter(
+    (entry) => entry.file_url && entry.file_url !== storageUri,
+  );
+  if (existingFiles.length) {
+    await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
+  }
+
+  await supabase
+    .from("document_submissions")
+    .update({
+      status: submitMode === "draft" ? "draft" : "under_admin_review",
+      user_confirmed: submitMode === "review",
+      submitted_at: submitMode === "review" ? submittedAt : null,
+      updated_at: submittedAt,
+    })
+    .eq("id", submission.id);
+
+  const mappedFile = mapDocumentFile(data as DocumentSubmissionFileRow);
+  if (!mappedFile) throw new Error("The uploaded document could not be mapped to the portal.");
+
+  return {
+    submissionId: submission.id,
+    file: mappedFile,
+  };
+};
+
+export const replaceOrganizationDocumentFileInSupabase = async (params: {
+  fileId: string;
+  documentTypeId: string;
+  expectedUpdatedAt: string;
+  file: File;
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  await assertPdfUpload(params.file, "Replacement document");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const organizationProfile = await fetchOrganizationProfile(session.user.id);
+  if (!organizationProfile) throw new Error("No organization profile was found for this account.");
+
+  const { data: existingFile, error: existingFileError } = await supabase
+    .from("document_submission_files")
+    .select("id,submission_id")
+    .eq("id", params.fileId)
+    .single();
+  if (existingFileError || !existingFile) {
+    throw new Error(existingFileError?.message ?? "The document to replace could not be found.");
+  }
+  const { data: submission, error: submissionError } = await supabase
+    .from("document_submissions")
+    .select("id,status")
+    .eq("id", existingFile.submission_id as string)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+  if (!["needs_revision", "rejected_red"].includes(submission.status as string)) {
+    throw new Error("A document can only be replaced after the admin requests a revision.");
+  }
+
+  const documentTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
+  const safeFileName = sanitizeFileName(params.file.name);
+  const objectPath = `${organizationProfile.id}/${documentTypeId}/revisions/${Date.now()}-${safeFileName}`;
+  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
+
+  const { error: uploadError } = await supabase.storage
+    .from(ORGANIZATION_DOCUMENTS_BUCKET)
+    .upload(objectPath, params.file, {
+      upsert: false,
+      contentType: params.file.type || "application/octet-stream",
+    });
+  if (uploadError) throw new Error(uploadError.message);
+
+  try {
+    const { data, error } = await supabase.rpc("replace_organization_document_file", {
+      _file_id: params.fileId,
+      _document_type_id: documentTypeId,
+      _expected_updated_at: params.expectedUpdatedAt,
+      _file_url: storageUri,
+      _file_name: params.file.name,
+      _file_type: params.file.type || "application/octet-stream",
+      _file_size: params.file.size,
+    });
+    if (error) throw new Error(error.message);
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) throw new Error("The corrected document was not saved.");
+    return row;
+  } catch (error) {
+    await removeStorageObjects([storageUri]).catch(() => undefined);
+    throw error;
+  }
+};
+
+export const submitDocumentSubmissionForReviewInSupabase = async (
+  submissionId: string,
+  targetFileIds?: string[]
+) => {
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: submission, error: submissionError } = await supabase!
+    .from("document_submissions")
+    .select("id,status")
+    .eq("id", submissionId)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+
+  const { data: attachedFiles, error: filesQueryError } = await supabase!
+    .from("document_submission_files")
+    .select("id,file_name,file_type")
+    .eq("submission_id", submissionId);
+  if (filesQueryError) throw new Error(filesQueryError.message);
+  const hasPdfFile = ((attachedFiles as Array<{ file_name: string; file_type: string }> | null) ?? []).some(
+    (file) => file.file_type === "application/pdf" && /\.pdf$/i.test(file.file_name),
+  );
+  if (!hasPdfFile) {
+    throw new Error("Attach a PDF document before submitting documents for review.");
+  }
+
+  const submittedAt = new Date().toISOString();
+  let filesQuery = supabase!
+    .from("document_submission_files")
+    .update({ admin_status: "under_admin_review", reviewed_at: null, updated_at: submittedAt })
+    .eq("submission_id", submissionId)
+    .eq("admin_status", "draft");
+
+  if (targetFileIds && targetFileIds.length > 0) {
+    filesQuery = filesQuery.in("id", targetFileIds);
+  }
+
+  const { error: filesError } = await filesQuery;
+  if (filesError) throw new Error(filesError.message);
+
+  const { error: updateError } = await supabase!
+    .from("document_submissions")
+    .update({ status: "under_admin_review", user_confirmed: true, submitted_at: submittedAt, updated_at: submittedAt })
+    .eq("id", submissionId);
+  if (updateError) throw new Error(updateError.message);
+};
+
+export const submitOrganizationDocumentsBatchToSupabase = async (params: {
+  documents: BatchOrganizationDocumentUploadInput[];
+  submitMode?: "draft" | "review";
+}) => {
+  const submitMode = params.submitMode ?? "review";
+  const seenDocumentKeys = new Set<string>();
+  const results: BatchOrganizationDocumentUploadResult[] = [];
+
+  for (const document of params.documents) {
+    const dedupeKey = document.documentTypeId?.trim() || document.documentTypeName.trim().toLowerCase();
+    if (!document.file) {
+      results.push({
+        documentTypeId: document.documentTypeId ?? "",
+        documentTypeName: document.documentTypeName,
+        fileName: "",
+        success: false,
+        error: "No file was selected.",
+      });
+      continue;
+    }
+    if (seenDocumentKeys.has(dedupeKey)) {
+      results.push({
+        documentTypeId: document.documentTypeId ?? "",
+        documentTypeName: document.documentTypeName,
+        fileName: document.file.name,
+        success: false,
+        error: "This document type was selected more than once in the same batch.",
+      });
+      continue;
+    }
+    seenDocumentKeys.add(dedupeKey);
+
+    try {
+      const uploadResult = await submitOrganizationDocumentToSupabase({
+        documentTypeId: document.documentTypeId,
+        documentTypeName: document.documentTypeName,
+        file: document.file,
+        ocrText: document.ocrText ?? "",
+        ocrConfidence: document.ocrConfidence ?? 0,
+        validationStatus: document.validationStatus ?? "correct",
+        adminRemarks: document.adminRemarks,
+        ocrMetadata: document.ocrMetadata ?? null,
+        // Keep the parent submission mutable until every selected file has
+        // been stored. The final status transition happens atomically below.
+        submitMode: submitMode === "review" ? "draft" : submitMode,
+      });
+
+      results.push({
+        documentTypeId: uploadResult.file.documentTypeId,
+        documentTypeName: document.documentTypeName,
+        fileName: document.file.name,
+        success: true,
+        submissionId: uploadResult.submissionId,
+        file: uploadResult.file,
+      });
+    } catch (error) {
+      results.push({
+        documentTypeId: document.documentTypeId ?? "",
+        documentTypeName: document.documentTypeName,
+        fileName: document.file.name,
+        success: false,
+        error: error instanceof Error ? error.message : "The document could not be uploaded.",
+      });
+    }
+  }
+
+  if (submitMode === "review") {
+    const successfulUploadedFileIds = results
+      .filter((result) => result.success && result.file?.id)
+      .map((result) => result.file!.id);
+    const submissionIds = [...new Set(results.filter((result) => result.success && result.submissionId).map((result) => result.submissionId!))];
+    for (const submissionId of submissionIds) {
+      try {
+        await submitDocumentSubmissionForReviewInSupabase(submissionId, successfulUploadedFileIds);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
+        results.forEach((result) => {
+          if (result.submissionId === submissionId && result.success) {
+            result.success = false;
+            result.error = message;
+          }
+        });
+      }
+    }
+  }
+
+  return {
+    submitMode,
+    results,
+    successCount: results.filter((result) => result.success).length,
+    failureCount: results.filter((result) => !result.success).length,
+  };
+};
+
+export const submitDocumentReviewBatchToSupabase = async (params: {
+  decisions: BatchDocumentReviewDecision[];
+}) => {
+  const decisions = params.decisions.filter((decision) => decision.fileId.trim());
+  if (!decisions.length) {
+    return {
+      results: [] as BatchDocumentReviewResult[],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  const results: BatchDocumentReviewResult[] = [];
+  for (const decision of decisions) {
+    try {
+      // Admins authenticate with the custom admin session token rather than a
+      // Supabase Auth user. Reading these rows directly is therefore blocked by
+      // RLS in production. The security-definer RPC validates the admin token,
+      // updates the file, and derives the parent submission status atomically.
+      const updatedFile = await updateDocumentSubmissionFileReviewInSupabase({
+        fileId: decision.fileId,
+        status: decision.status,
+        adminRemarks: decision.adminRemarks,
+      });
+      results.push({
+        fileId: decision.fileId,
+        success: true,
+        file: updatedFile,
+      });
+    } catch (error) {
+      results.push({
+        fileId: decision.fileId,
+        success: false,
+        error: error instanceof Error ? error.message : "The review decision could not be saved.",
+      });
+    }
+  }
+
+  return {
+    results,
+    successCount: results.filter((result) => result.success).length,
+    failureCount: results.filter((result) => !result.success).length,
+  };
+};
+
+export const removeOrganizationDocumentFromSupabase = async (fileId: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data: existingRow, error: existingError } = await supabase!
+    .from("document_submission_files")
+    .select("id,submission_id,file_url")
+    .eq("id", fileId)
+    .single();
+
+  if (existingError || !existingRow) throw new Error(existingError?.message ?? "The uploaded document could not be found.");
+
+  const { data: submission, error: submissionError } = await supabase
+    .from("document_submissions")
+    .select("id,status")
+    .eq("id", existingRow.submission_id as string)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status as string)) {
+    throw new Error("Documents cannot be removed while the submission is under admin review.");
+  }
+
+  const submissionId = existingRow.submission_id as string;
+  const fileUrl = existingRow.file_url as string;
+
+  const { error: deleteError } = await supabase!.from("document_submission_files").delete().eq("id", fileId);
+  if (deleteError) throw new Error(deleteError.message);
+
+  if (fileUrl) {
+    await removeStorageObjects([fileUrl]);
+  }
+
+  const { data: remainingRows, error: remainingError } = await supabase!
+    .from("document_submission_files")
+    .select("admin_status")
+    .eq("submission_id", submissionId);
+
+  if (remainingError) throw new Error(remainingError.message);
+
+  const remainingStatuses = ((remainingRows as Array<{ admin_status: SubmissionFile["adminStatus"] }> | null) ?? []).map(
+    (row) => row.admin_status,
+  );
+
+  const nextStatus: DocumentSubmission["status"] = deriveDocumentSubmissionStatus(remainingStatuses, "draft");
+
+  const submissionUpdatePayload: Record<string, unknown> = {
+    status: nextStatus,
+    user_confirmed: remainingStatuses.length > 0,
+    overall_remarks: remainingStatuses.length ? null : "",
+    updated_at: new Date().toISOString(),
+  };
+  if (!remainingStatuses.length) {
+    submissionUpdatePayload.reviewed_at = null;
+  }
+
+  const { error: submissionUpdateError } = await supabase!
+    .from("document_submissions")
+    .update(submissionUpdatePayload)
+    .eq("id", submissionId);
+
+  if (submissionUpdateError) throw new Error(submissionUpdateError.message);
+};
+
+const getAuthenticatedOrganizationContext = async () => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const organizationProfile = await fetchOrganizationProfile(session.user.id);
+  if (!organizationProfile) throw new Error("No organization profile was found for this account.");
+
+  return { session, organizationProfile };
+};
+
+export const getAuthenticatedBudgetEligibilityInSupabase = async (): Promise<BudgetEligibility> => {
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: periodRows, error: periodError } = await supabase!
+    .from("ypop_periods")
+    .select("*")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (periodError) throw new Error(periodError.message);
+  const periods = ((periodRows as YpopPeriodRow[] | null) ?? []).map(mapYpopPeriod);
+  const activePeriod = periods[0] ?? null;
+  if (!activePeriod) {
+    return resolveBudgetEligibility({
+      organizationId: organizationProfile.id,
+      periods: [],
+      entries: [],
+    });
+  }
+
+  const { data: entryRows, error: entryError } = await supabase!
+    .from("ypop_entries")
+    .select("*")
+    .eq("organization_id", organizationProfile.id)
+    .eq("semester", activePeriod.semesterKey)
+    .order("updated_at", { ascending: false });
+
+  if (entryError) throw new Error(entryError.message);
+  return resolveBudgetEligibility({
+    organizationId: organizationProfile.id,
+    periods,
+    entries: ((entryRows as YpopEntryRow[] | null) ?? []).map(mapYpopEntry),
+  });
+};
+
+const getAuthenticatedAdminSession = () => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+  return adminSession;
+};
+
+const uploadFileToStorage = async (bucket: string, pathPrefix: string, file: File) => {
+  const safeFileName = sanitizeFileName(file.name);
+  const objectPath = `${pathPrefix}/${Date.now()}-${safeFileName}`;
+  const { error: uploadError } = await supabase!.storage.from(bucket).upload(objectPath, file, {
+    upsert: true,
+    contentType: file.type || "application/octet-stream",
+  });
+
+  if (uploadError) throw new Error(uploadError.message);
+  return buildStorageUri(bucket, objectPath);
+};
+
+const removeStorageObjects = async (values: string[]) => {
+  const parsed = values.map(parseStorageUri).filter((item): item is { bucket: string; path: string } => Boolean(item));
+  for (const bucket of new Set(parsed.map((item) => item.bucket))) {
+    const paths = parsed.filter((item) => item.bucket === bucket).map((item) => item.path);
+    if (!paths.length) continue;
+    await supabase!.storage.from(bucket).remove(paths);
+  }
+};
+
+export const ORGANIZATION_PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+export const ORGANIZATION_PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+export const uploadOrganizationProfileImageInSupabase = async (file: File) => {
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+  if (!ORGANIZATION_PROFILE_IMAGE_TYPES.has(file.type)) {
+    throw new Error("Choose a JPG, PNG, or WebP image.");
+  }
+  if (file.size <= 0 || file.size > ORGANIZATION_PROFILE_IMAGE_MAX_BYTES) {
+    throw new Error("The profile image must be smaller than 5 MB.");
+  }
+
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const objectPath = `${organizationProfile.id}/profile/${Date.now()}-profile.${extension}`;
+  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
+  const { error: uploadError } = await supabase!.storage
+    .from(ORGANIZATION_DOCUMENTS_BUCKET)
+    .upload(objectPath, file, { contentType: file.type, upsert: false });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data, error } = await supabase!
+    .from("organization_profiles")
+    .update({ profile_image_url: storageUri })
+    .eq("id", organizationProfile.id)
+    .eq("user_id", session.user.id)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    await removeStorageObjects([storageUri]);
+    if (error?.message.includes("profile_image_url")) {
+      throw new Error("Profile images are not enabled yet. Run supabase/repair_organization_profile_image.sql, then try again.");
+    }
+    throw new Error(error?.message ?? "The profile image could not be saved.");
+  }
+
+  const previousImage = organizationProfile.profileImageUrl?.trim();
+  if (previousImage && previousImage !== storageUri) {
+    try {
+      await removeStorageObjects([previousImage]);
+    } catch {
+      // The database already points to the new image. Old-object cleanup can
+      // safely be retried by an administrator without hiding the saved image.
+    }
+  }
+  return mapOrganizationProfile(data as OrganizationProfileRow);
+};
+
+export const removeOrganizationProfileImageInSupabase = async () => {
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+  const previousImage = organizationProfile.profileImageUrl?.trim();
+  const { data, error } = await supabase!
+    .from("organization_profiles")
+    .update({ profile_image_url: null })
+    .eq("id", organizationProfile.id)
+    .eq("user_id", session.user.id)
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "The profile image could not be removed.");
+  if (previousImage) {
+    try {
+      await removeStorageObjects([previousImage]);
+    } catch {
+      // The profile no longer references the object, so storage cleanup may be retried later.
+    }
+  }
+  return mapOrganizationProfile(data as OrganizationProfileRow);
+};
+
+export const createBudgetRequestInSupabase = async (params: {
+  budgetRequest: Omit<BudgetRequest, "id" | "createdAt" | "updatedAt" | "organizationId" | "submittedBy">;
+  file?: File | null;
+}) => {
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+  const eligibility = await getAuthenticatedBudgetEligibilityInSupabase();
+  if (!eligibility.eligible) {
+    throw new Error("A qualified YPOP validation in the active period is required before creating a budget request.");
+  }
+
+  const payload = {
+    organization_id: organizationProfile.id,
+    submitted_by: session.user.id,
+    activity_title: params.budgetRequest.activityTitle.trim(),
+    activity_description: params.budgetRequest.activityDescription.trim(),
+    activity_date: params.budgetRequest.activityDate,
+    venue: params.budgetRequest.venue.trim(),
+    requested_amount: params.budgetRequest.requestedAmount,
+    approved_amount: params.budgetRequest.approvedAmount,
+    released_amount: params.budgetRequest.releasedAmount,
+    release_date: params.budgetRequest.releaseDate || null,
+    purpose_category: params.budgetRequest.purposeCategory.trim(),
+    status: params.budgetRequest.status,
+    remarks: params.budgetRequest.remarks.trim() || null,
+    admin_remarks: params.budgetRequest.adminRemarks?.trim() || "",
+    go_signal_at: params.budgetRequest.goSignalAt || null,
+    hard_copy_submitted_at: params.budgetRequest.hardCopySubmittedAt || null,
+    user_note: params.budgetRequest.userNote?.trim() || "",
+    revision_history: params.budgetRequest.revisionHistory ?? [],
+  };
+
+  const { data, error } = await supabase!
+    .from("budget_requests")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to create the budget request.");
+
+  const createdBudget = mapBudgetRequest(data as BudgetRequestRow);
+  if (params.file) {
+    await replaceBudgetRequestFileInSupabase(createdBudget.id, params.file);
+  }
+
+  return createdBudget;
+};
+
+export const updateBudgetRequestInSupabase = async (
+  budgetRequestId: string,
+  patch: Partial<Omit<BudgetRequest, "id" | "createdAt" | "updatedAt" | "organizationId" | "submittedBy">>,
+) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const normalizedAdminRemarks =
+    patch.adminRemarks !== undefined
+      ? patch.adminRemarks.trim()
+      : undefined;
+  const normalizedUserNote =
+    patch.userNote !== undefined
+      ? patch.userNote.trim()
+      : undefined;
+
+  const adminSession = readAdminSession();
+  if (adminSession?.sessionToken) {
+    const { data, error } = await supabase.rpc("update_admin_budget_request", {
+      _session_token: adminSession.sessionToken,
+      _budget_request_id: budgetRequestId,
+      _status: patch.status ?? null,
+      _approved_amount: patch.approvedAmount ?? null,
+      _released_amount: patch.releasedAmount ?? null,
+      _release_date: patch.releaseDate || null,
+      _remarks: patch.remarks?.trim() || null,
+      _admin_remarks: normalizedAdminRemarks ?? null,
+      _go_signal_at: patch.goSignalAt || null,
+      _hard_copy_submitted_at: patch.hardCopySubmittedAt || null,
+      _user_note: normalizedUserNote ?? null,
+      _revision_history: patch.revisionHistory ?? null,
+    });
+
+    const updatedRow = Array.isArray(data) ? data[0] : null;
+    if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the budget request.");
+    return mapBudgetRequest(updatedRow as BudgetRequestRow);
+  }
+
+  await getAuthenticatedOrganizationContext();
+
+  const payload: Record<string, unknown> = {};
+  if (patch.activityTitle !== undefined) payload.activity_title = patch.activityTitle.trim();
+  if (patch.activityDescription !== undefined) payload.activity_description = patch.activityDescription.trim();
+  if (patch.activityDate !== undefined) payload.activity_date = patch.activityDate;
+  if (patch.venue !== undefined) payload.venue = patch.venue.trim();
+  if (patch.requestedAmount !== undefined) payload.requested_amount = patch.requestedAmount;
+  if (patch.approvedAmount !== undefined) payload.approved_amount = patch.approvedAmount;
+  if (patch.releasedAmount !== undefined) payload.released_amount = patch.releasedAmount;
+  if (patch.releaseDate !== undefined) payload.release_date = patch.releaseDate || null;
+  if (patch.purposeCategory !== undefined) payload.purpose_category = patch.purposeCategory.trim();
+  if (patch.status !== undefined) payload.status = patch.status;
+  if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
+  if (patch.adminRemarks !== undefined) payload.admin_remarks = normalizedAdminRemarks ?? "";
+  if (patch.goSignalAt !== undefined) payload.go_signal_at = patch.goSignalAt || null;
+  if (patch.hardCopySubmittedAt !== undefined) payload.hard_copy_submitted_at = patch.hardCopySubmittedAt || null;
+  if (patch.userNote !== undefined) payload.user_note = normalizedUserNote ?? "";
+  if (patch.revisionHistory !== undefined) payload.revision_history = patch.revisionHistory;
+
+  const { data, error } = await supabase!
+    .from("budget_requests")
+    .update(payload)
+    .eq("id", budgetRequestId)
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to update the budget request.");
+  return mapBudgetRequest(data as BudgetRequestRow);
+};
+
+export const deleteBudgetRequestInSupabase = async (budgetRequestId: string) => {
+  await getAuthenticatedOrganizationContext();
+  const { data: fileRows, error: fileRowsError } = await supabase!
+    .from("budget_request_files")
+    .select("*")
+    .eq("budget_request_id", budgetRequestId);
+
+  if (fileRowsError) throw new Error(fileRowsError.message);
+
+  const { error } = await supabase!.from("budget_requests").delete().eq("id", budgetRequestId);
+  if (error) throw new Error(error.message);
+
+  const existingFiles = (fileRows as BudgetRequestFileRow[] | null) ?? [];
+  if (existingFiles.length) {
+    await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
+  }
+};
+
+const extractPublicStoragePath = (value: string, bucket: string) => {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
+    return decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+  } catch {
+    return null;
+  }
+};
+
+export const uploadNewsReleasePreviewImageToSupabase = async (file: File) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  getAuthenticatedAdminSession();
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Choose a JPG, PNG, or WebP thumbnail image.");
+  }
+  if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+    throw new Error("The thumbnail image must be smaller than 5 MB.");
+  }
+
+  const safeFileName = sanitizeFileName(file.name);
+  const objectPath = `news-releases/${Date.now()}-${safeFileName}`;
+  const { error: uploadError } = await supabase.storage.from(NEWS_RELEASE_IMAGES_BUCKET).upload(objectPath, file, {
+    upsert: true,
+    contentType: file.type || "application/octet-stream",
+  });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data } = supabase.storage.from(NEWS_RELEASE_IMAGES_BUCKET).getPublicUrl(objectPath);
+  if (!data?.publicUrl) throw new Error("Failed to create the news release image URL.");
+  return data.publicUrl;
+};
+
+export const deleteNewsReleasePreviewImageFromSupabase = async (value: string) => {
+  if (!supabase || !value) return;
+  getAuthenticatedAdminSession();
+
+  const publicPath = extractPublicStoragePath(value, NEWS_RELEASE_IMAGES_BUCKET);
+  if (publicPath) {
+    await supabase.storage.from(NEWS_RELEASE_IMAGES_BUCKET).remove([publicPath]);
+    return;
+  }
+
+  await removeStorageObjects([value]);
+};
+
+export const createInquiryInSupabase = async (params: {
+  submitterName: string;
+  organizationName: string;
+  email: string;
+  subject: string;
+  description: string;
+}): Promise<InquiryRecord> => {
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data, error } = await supabase!
+    .from("inquiries")
+    .insert({
+      organization_id: organizationProfile.id,
+      submitted_by: session.user.id,
+      submitter_name: params.submitterName.trim(),
+      organization_name: params.organizationName.trim(),
+      email: params.email.trim(),
+      subject: params.subject.trim(),
+      description: params.description.trim(),
+      status: "pending_review",
+      admin_remarks: "",
+      reviewed_at: null,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to submit the inquiry.");
+  return mapInquiry(data as InquiryRow);
+};
+
+const replaceBudgetRequestFileInSupabase = async (budgetRequestId: string, file: File) => {
+  await getAuthenticatedOrganizationContext();
+  const { data: existingRows, error: existingError } = await supabase!
+    .from("budget_request_files")
+    .select("*")
+    .eq("budget_request_id", budgetRequestId);
+
+  if (existingError) throw new Error(existingError.message);
+  const existingFiles = (existingRows as BudgetRequestFileRow[] | null) ?? [];
+  const fileUrl = await uploadFileToStorage(BUDGET_REQUEST_FILES_BUCKET, budgetRequestId, file);
+  const { data, error } = await supabase!
+    .from("budget_request_files")
+    .insert({
+      budget_request_id: budgetRequestId,
+      file_url: fileUrl,
+      file_name: file.name,
+      file_type: file.type || "application/octet-stream",
+      file_size: file.size,
+      uploaded_at: new Date().toISOString(),
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to save the budget request file.");
+
+  if (existingFiles.length) {
+    await supabase!.from("budget_request_files").delete().in(
+      "id",
+      existingFiles.map((entry) => entry.id),
+    );
+    await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
+  }
+
+  return mapBudgetRequestFile(data as BudgetRequestFileRow);
+};
+
+export const uploadBudgetRequestFileToSupabase = replaceBudgetRequestFileInSupabase;
+
+export const createLiquidationReportFileInSupabase = async (params: {
+  liquidationReportId: string;
+  file: File;
+}) => {
+  await assertPdfUpload(params.file, "Liquidation attachment");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: report, error: reportError } = await supabase!
+    .from("liquidation_reports")
+    .select("id,status")
+    .eq("id", params.liquidationReportId)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
+  if (!editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+    throw new Error("Files cannot be uploaded while this liquidation submission is under review.");
+  }
+  const fileUrl = await uploadFileToStorage(LIQUIDATION_REPORT_FILES_BUCKET, params.liquidationReportId, params.file);
+
+  const { data, error } = await supabase!
+    .from("liquidation_report_files")
+    .insert({
+      liquidation_report_id: params.liquidationReportId,
+      file_url: fileUrl,
+      file_name: params.file.name,
+      file_type: params.file.type || "application/octet-stream",
+      file_size: params.file.size,
+      uploaded_at: new Date().toISOString(),
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to save the liquidation file.");
+  return mapLiquidationReportFile(data as LiquidationReportFileRow);
+};
+
+export const deleteLiquidationReportFileInSupabase = async (fileId: string, fileUrl: string) => {
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: file, error: fileError } = await supabase!
+    .from("liquidation_report_files")
+    .select("id,liquidation_report_id")
+    .eq("id", fileId)
+    .single();
+  if (fileError || !file) throw new Error(fileError?.message ?? "The liquidation attachment could not be found.");
+
+  const { data: report, error: reportError } = await supabase!
+    .from("liquidation_reports")
+    .select("id,status")
+    .eq("id", file.liquidation_report_id as string)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (reportError || !report) throw new Error("The liquidation report could not be verified.");
+  if (!editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+    throw new Error("Files cannot be removed while this liquidation submission is under review.");
+  }
+
+  const { error } = await supabase!
+    .from("liquidation_report_files")
+    .delete()
+    .eq("id", fileId);
+
+  if (error) throw new Error(error.message);
+  await removeStorageObjects([fileUrl]);
+};
+
+export const createNewsReleaseInSupabase = async (params: {
+  title: string;
+  description: string;
+  facebookPostUrl: string;
+  previewImageUrl?: string;
+  datePosted: string;
+  visibilityStatus: NewsRelease["visibilityStatus"];
+  category?: string;
+}) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("create_admin_news_release", {
+    _session_token: adminSession.sessionToken,
+    _title: params.title.trim(),
+    _description: params.description.trim(),
+    _facebook_post_url: params.facebookPostUrl.trim(),
+    _preview_image_url: params.previewImageUrl?.trim() ?? "",
+    _date_posted: params.datePosted,
+    _visibility_status: params.visibilityStatus,
+    _category: params.category?.trim() || null,
+  });
+
+  const createdRow = Array.isArray(data) ? data[0] : null;
+  if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the news release.");
+  return mapNewsRelease(createdRow as NewsReleaseRow);
+};
+
+export const updateNewsReleaseInSupabase = async (
+  newsReleaseId: string,
+  patch: Partial<Pick<NewsRelease, "title" | "description" | "facebookPostUrl" | "previewImageUrl" | "datePosted" | "visibilityStatus" | "category">>,
+) => {
+  const adminSession = getAuthenticatedAdminSession();
+
+  const payload: Record<string, unknown> = {};
+  if (patch.title !== undefined) payload.title = patch.title.trim();
+  if (patch.description !== undefined) payload.description = patch.description.trim();
+  if (patch.facebookPostUrl !== undefined) payload.facebook_post_url = patch.facebookPostUrl.trim();
+  if (patch.previewImageUrl !== undefined) payload.preview_image_url = patch.previewImageUrl.trim();
+  if (patch.datePosted !== undefined) payload.date_posted = patch.datePosted;
+  if (patch.visibilityStatus !== undefined) payload.visibility_status = patch.visibilityStatus;
+  if (patch.category !== undefined) payload.category = patch.category?.trim() || null;
+
+  const { data, error } = await supabase!.rpc("update_admin_news_release", {
+    _session_token: adminSession.sessionToken,
+    _news_release_id: newsReleaseId,
+    _title: payload.title ?? null,
+    _description: payload.description ?? null,
+    _facebook_post_url: payload.facebook_post_url ?? null,
+    _preview_image_url: payload.preview_image_url ?? null,
+    _date_posted: payload.date_posted ?? null,
+    _visibility_status: payload.visibility_status ?? null,
+    _category: payload.category ?? null,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the news release.");
+  return mapNewsRelease(updatedRow as NewsReleaseRow);
+};
+
+export const deleteNewsReleaseInSupabase = async (newsReleaseId: string) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("delete_admin_news_release", {
+    _session_token: adminSession.sessionToken,
+    _news_release_id: newsReleaseId,
+  });
+  if (error) throw new Error(error.message);
+};
+
+export const createTransparencyPostInSupabase = async (params: {
+  title: string;
+  description: string;
+  category: string;
+  attachmentUrl: string;
+  postDate: string;
+  visibilityStatus: TransparencyPost["visibilityStatus"];
+}) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("create_admin_transparency_post", {
+    _session_token: adminSession.sessionToken,
+    _title: params.title.trim(),
+    _description: params.description.trim(),
+    _category: params.category.trim(),
+    _attachment_url: params.attachmentUrl.trim(),
+    _post_date: params.postDate,
+    _visibility_status: params.visibilityStatus,
+  });
+
+  const createdRow = Array.isArray(data) ? data[0] : null;
+  if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the transparency post.");
+  return mapTransparencyPost(createdRow as TransparencyPostRow);
+};
+
+export const updateTransparencyPostInSupabase = async (
+  postId: string,
+  patch: Partial<Pick<TransparencyPost, "title" | "description" | "category" | "attachmentUrl" | "postDate" | "visibilityStatus">>,
+) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("update_admin_transparency_post", {
+    _session_token: adminSession.sessionToken,
+    _post_id: postId,
+    _title: patch.title?.trim() ?? null,
+    _description: patch.description?.trim() ?? null,
+    _category: patch.category?.trim() ?? null,
+    _attachment_url: patch.attachmentUrl?.trim() ?? null,
+    _post_date: patch.postDate ?? null,
+    _visibility_status: patch.visibilityStatus ?? null,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the transparency post.");
+  return mapTransparencyPost(updatedRow as TransparencyPostRow);
+};
+
+export const deleteTransparencyPostInSupabase = async (postId: string) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("delete_admin_transparency_post", {
+    _session_token: adminSession.sessionToken,
+    _post_id: postId,
+  });
+  if (error) throw new Error(error.message);
+};
+
+export const createAdminActivityLogInSupabase = async (params: {
+  organizationId?: string;
+  action: string;
+  relatedType: string;
+  relatedId?: string;
+  description: string;
+}) => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("create_admin_activity_log", {
+    _session_token: adminSession.sessionToken,
+    _organization_id: params.organizationId || null,
+    _action: params.action.trim(),
+    _related_type: params.relatedType.trim(),
+    _related_id: params.relatedId || null,
+    _description: params.description.trim(),
+  });
+
+  const createdRow = Array.isArray(data) ? data[0] : null;
+  if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the activity log.");
+  return mapActivityLog(createdRow as ActivityLogRow);
+};
+
+export const adminUpdateInquiryInSupabase = async (
+  inquiryId: string,
+  patch: Pick<InquiryRecord, "status" | "adminRemarks">,
+): Promise<InquiryRecord> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_inquiry", {
+    _session_token: adminSession.sessionToken,
+    _inquiry_id: inquiryId,
+    _status: patch.status,
+    _admin_remarks: patch.adminRemarks,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the inquiry.");
+  return mapInquiry(updatedRow as InquiryRow);
+};
+
+export const updateLiquidationReportInSupabase = async (
+  liquidationReportId: string,
+  patch: Partial<Omit<LiquidationReport, "id" | "createdAt" | "updatedAt" | "organizationId" | "submittedBy" | "budgetRequestId">>,
+) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const adminSession = readAdminSession();
+  if (adminSession?.sessionToken) {
+    const { data, error } = await supabase.rpc("update_admin_liquidation_report", {
+      _session_token: adminSession.sessionToken,
+      _liquidation_report_id: liquidationReportId,
+      _status: patch.status ?? null,
+      _remarks: patch.remarks?.trim() || null,
+      _go_signal_at: patch.goSignalAt || null,
+      _deadline_at: patch.deadlineAt || null,
+      _hard_copy_submitted_at: patch.hardCopySubmittedAt || null,
+      _completed_at: patch.completedAt || null,
+    });
+
+    const updatedRow = Array.isArray(data) ? data[0] : null;
+    if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the liquidation report.");
+    return mapLiquidationReport(updatedRow as LiquidationReportRow);
+  }
+
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  if (patch.status !== undefined) {
+    const { data: report, error: reportError } = await supabase
+      .from("liquidation_reports")
+      .select("id,status")
+      .eq("id", liquidationReportId)
+      .eq("organization_id", organizationProfile.id)
+      .single();
+    if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
+    if (patch.status !== "submitted" || !editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+      throw new Error("This liquidation status can only be changed by an administrator.");
+    }
+
+    const { data: files, error: filesError } = await supabase
+      .from("liquidation_report_files")
+      .select("file_name,file_type")
+      .eq("liquidation_report_id", liquidationReportId);
+    if (filesError) throw new Error(filesError.message);
+    const hasPdf = ((files as Array<{ file_name: string; file_type: string }> | null) ?? []).some(
+      (file) => file.file_type === "application/pdf" && /\.pdf$/i.test(file.file_name),
+    );
+    if (!hasPdf) throw new Error("Attach a PDF before submitting this liquidation report.");
+  }
+
+  const payload: Record<string, unknown> = {};
+  if (patch.status !== undefined) payload.status = patch.status;
+  if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
+  if (patch.goSignalAt !== undefined) payload.go_signal_at = patch.goSignalAt || null;
+  if (patch.deadlineAt !== undefined) payload.deadline_at = patch.deadlineAt || null;
+  if (patch.hardCopySubmittedAt !== undefined) payload.hard_copy_submitted_at = patch.hardCopySubmittedAt || null;
+  if (patch.completedAt !== undefined) payload.completed_at = patch.completedAt || null;
+
+  const { data, error } = await supabase!
+    .from("liquidation_reports")
+    .update(payload)
+    .eq("id", liquidationReportId)
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to update the liquidation report.");
+  return mapLiquidationReport(data as LiquidationReportRow);
+};
+
+export const uploadOrganizationDocumentToSupabase = submitOrganizationDocumentToSupabase;
+
+export const uploadTemplateDocumentToSupabase = async (params: {
+  databaseId?: string;
+  documentTypeName: string;
+  file: File;
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const documentTypeRow = params.databaseId
+    ? ({
+        id: await resolveTemplateDatabaseId(params.databaseId, params.documentTypeName),
+      } as RequiredDocumentTypeRow)
+    : await fetchRequiredDocumentTypeRowByName(params.documentTypeName);
+  const safeFileName = sanitizeFileName(params.file.name);
+  const objectPath = `${documentTypeRow.id}/${Date.now()}-${safeFileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(TEMPLATE_FILES_BUCKET)
+    .upload(objectPath, params.file, {
+      upsert: true,
+      contentType: params.file.type || "application/octet-stream",
+    });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const templateStorageUri = buildStorageUri(TEMPLATE_FILES_BUCKET, objectPath);
+  const { data, error } = await supabase.rpc("update_admin_template_file_url", {
+    _session_token: adminSession.sessionToken,
+    _template_id: documentTypeRow.id,
+    _template_url: templateStorageUri,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template record.");
+
+  const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The uploaded template could not be mapped to the portal.");
+
+  return mappedTemplate;
+};
+
+export const createTemplateRecordInSupabase = async (params: {
+  name: string;
+  description: string;
+  templateDescription: string;
+  templateScope: "document_submission" | "other";
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("create_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _name: params.name.trim(),
+    _description: params.description.trim(),
+    _template_description: params.templateDescription.trim(),
+    _template_scope: params.templateScope,
+  });
+
+  const createdRow = Array.isArray(data) ? data[0] : null;
+  if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the template.");
+
+  const mappedTemplate = mapTemplate(createdRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The new template could not be mapped to the portal.");
+  return mappedTemplate;
+};
+
+export const updateTemplateRecordInSupabase = async (params: {
+  databaseId: string;
+  lookupName: string;
+  name: string;
+  description: string;
+  templateDescription: string;
+  templateScope: "document_submission" | "other";
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(params.databaseId, params.lookupName);
+
+  const { data, error } = await supabase.rpc("update_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+    _name: params.name.trim(),
+    _description: params.description.trim(),
+    _template_description: params.templateDescription.trim(),
+    _template_scope: params.templateScope,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template.");
+
+  const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The updated template could not be mapped to the portal.");
+  return mappedTemplate;
+};
+
+export const deleteTemplateRecordInSupabase = async (databaseId: string, name?: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { error } = await supabase.rpc("deactivate_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+  });
+
+  if (error) throw new Error(error.message);
+};
+
+export const resolveSupabaseFileUrl = async (value: string) => {
+  if (!supabase || !value) return value;
+
+  const parsed = parseStorageUri(value);
+  if (!parsed) return value;
+
+  const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
+  if (error || !data?.signedUrl) throw new Error(error?.message ?? "Failed to create a file URL.");
+  return data.signedUrl;
+};
+
+// ─── YPOP Org-side mutations ──────────────────────────────────
+
+export const createYpopEntryInSupabase = async (
+  params: Omit<YPOPEntry, "id" | "createdAt" | "updatedAt">,
+): Promise<YPOPEntry> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data, error } = await supabase
+    .from("ypop_entries")
+    .insert({
+      organization_id: organizationProfile.id,
+      submitted_by: session.user.id,
+      semester: params.semester,
+      semester_label: params.semesterLabel,
+      points_earned: params.pointsEarned ?? 0,
+      points_required: params.pointsRequired ?? 70,
+      total_points: params.totalPoints ?? 100,
+      status: params.status ?? "draft",
+      admin_remarks: params.adminRemarks ?? "",
+      submission_note: params.submissionNote ?? "",
+      validation_deadline: params.validationDeadline || null,
+      submitted_at: params.submittedAt || null,
+      validated_at: params.validatedAt || null,
+      revision_history: params.revisionHistory ?? [],
+      org_led_project_count: params.orgLedProjectCount ?? 0,
+      city_led_attendance: params.cityLedAttendance ?? [],
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopEntry(data as YpopEntryRow);
+};
+
+export const updateYpopEntryInSupabase = async (
+  entryId: string,
+  patch: Partial<Omit<YPOPEntry, "id" | "createdAt" | "updatedAt">>,
+): Promise<YPOPEntry> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const dbPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.semester !== undefined) dbPatch.semester = patch.semester;
+  if (patch.semesterLabel !== undefined) dbPatch.semester_label = patch.semesterLabel;
+  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.submissionNote !== undefined) dbPatch.submission_note = patch.submissionNote;
+  if (patch.submittedAt !== undefined) dbPatch.submitted_at = patch.submittedAt || null;
+  if (patch.pointsEarned !== undefined) dbPatch.points_earned = patch.pointsEarned;
+  if (patch.orgLedProjectCount !== undefined) dbPatch.org_led_project_count = patch.orgLedProjectCount;
+  if (patch.cityLedAttendance !== undefined) dbPatch.city_led_attendance = patch.cityLedAttendance;
+  if (patch.revisionHistory !== undefined) dbPatch.revision_history = patch.revisionHistory;
+
+  const { data, error } = await supabase
+    .from("ypop_entries")
+    .update(dbPatch)
+    .eq("id", entryId)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopEntry(data as YpopEntryRow);
+};
+
+export const deleteYpopEntryFromSupabase = async (entryId: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const { error } = await supabase.from("ypop_entries").delete().eq("id", entryId);
+  if (error) throw new Error(error.message);
+};
+
+export const uploadYpopFileToSupabase = async (params: {
+  entryId: string;
+  organizationId: string;
+  file: File;
+}): Promise<YPOPFile> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const storageUri = await uploadFileToStorage(YPOP_FILES_BUCKET, params.entryId, params.file);
+
+  const { data, error } = await supabase
+    .from("ypop_files")
+    .insert({
+      ypop_entry_id: params.entryId,
+      organization_id: params.organizationId,
+      file_name: params.file.name,
+      file_url: storageUri,
+      file_type: params.file.type || "",
+      file_size: params.file.size,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopFile(data as YpopFileRow);
+};
+
+export const deleteYpopFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  await removeStorageObjects([fileUrl]);
+  const { error } = await supabase.from("ypop_files").delete().eq("id", fileId);
+  if (error) throw new Error(error.message);
+};
+
+export const createYpopEventParticipationInSupabase = async (
+  params: Omit<YPOPEventParticipation, "id" | "createdAt" | "updatedAt" | "revisionHistory" | "verifiedAt" | "proofSubmittedAt">,
+): Promise<YPOPEventParticipation> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  await getAuthenticatedOrganizationContext();
+
+  const { data, error } = await supabase.rpc("join_ypop_city_activity", {
+    _activity_id: params.activityId,
+  });
+  const row = Array.isArray(data) ? data[0] : null;
+  if (error || !row) throw new Error(error?.message ?? "The YPOP event could not be joined.");
+  return mapYpopEventParticipation(row as YpopEventParticipationRow);
+};
+
+export const updateYpopEventParticipationInSupabase = async (
+  participationId: string,
+  patch: Partial<Omit<YPOPEventParticipation, "id" | "organizationId" | "createdAt" | "updatedAt">>,
+): Promise<YPOPEventParticipation> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const dbPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.activityName !== undefined) dbPatch.activity_name = patch.activityName;
+  if (patch.activityDate !== undefined) dbPatch.activity_date = patch.activityDate || null;
+  if (patch.venue !== undefined) dbPatch.venue = patch.venue || null;
+  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.adminRemarks !== undefined) dbPatch.admin_remarks = patch.adminRemarks;
+  if (patch.joinedAt !== undefined) dbPatch.joined_at = patch.joinedAt || null;
+  if (patch.proofSubmittedAt !== undefined) dbPatch.proof_submitted_at = patch.proofSubmittedAt || null;
+  if (patch.verifiedAt !== undefined) dbPatch.verified_at = patch.verifiedAt || null;
+  if (patch.revisionHistory !== undefined) dbPatch.revision_history = patch.revisionHistory;
+
+  const { data, error } = await supabase
+    .from("ypop_event_participations")
+    .update(dbPatch)
+    .eq("id", participationId)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopEventParticipation(data as YpopEventParticipationRow);
+};
+
+export const uploadYpopEventFileToSupabase = async (params: {
+  participationId: string;
+  organizationId: string;
+  file: File;
+}): Promise<YPOPEventFile> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const storageUri = await uploadFileToStorage(YPOP_FILES_BUCKET, params.participationId, params.file);
+  const { data, error } = await supabase
+    .from("ypop_event_files")
+    .insert({
+      participation_id: params.participationId,
+      organization_id: params.organizationId,
+      file_name: params.file.name,
+      file_url: storageUri,
+      file_type: params.file.type || "",
+      file_size: params.file.size,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopEventFile(data as YpopEventFileRow);
+};
+
+export const deleteYpopEventFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  await removeStorageObjects([fileUrl]);
+  const { error } = await supabase.from("ypop_event_files").delete().eq("id", fileId);
+  if (error) throw new Error(error.message);
+};
+
+export const createYpopOrgActivityInSupabase = async (
+  params: Omit<YPOPOrgActivity, "id" | "createdAt" | "updatedAt" | "approvedAt" | "revisionHistory">,
+): Promise<YPOPOrgActivity> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: qualifiedEntry, error: entryError } = await supabase
+    .from("ypop_entries")
+    .select("id,status")
+    .eq("id", params.ypopEntryId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (entryError) throw new Error(entryError.message);
+  if (qualifiedEntry?.status !== "qualified") {
+    throw new Error("PPA logging becomes available only after this YPOP semester is marked qualified.");
+  }
+
+  const initialStatus = params.status ?? "draft";
+  const now = new Date().toISOString();
+  const submittedAt =
+    initialStatus === "draft"
+      ? ""
+      : params.submittedAt || now;
+  const { data, error } = await supabase
+    .from("ypop_org_activities")
+    .insert({
+      ypop_entry_id: params.ypopEntryId,
+      organization_id: organizationProfile.id,
+      submitted_by: session.user.id,
+      activity_name: params.activityName,
+      activity_date: params.activityDate || null,
+      venue: params.venue || null,
+      narrative_report: params.narrativeReport ?? "",
+      status: initialStatus,
+      admin_remarks: params.adminRemarks ?? "",
+      submitted_at: submittedAt || null,
+      approved_at: null,
+      revision_history: [
+        {
+          action: initialStatus,
+          adminRemarks:
+            params.adminRemarks ??
+            (initialStatus === "draft"
+              ? "Organization created an organization-initiated activity draft."
+              : "Organization submitted an organization-initiated activity log."),
+          changedAt: submittedAt || now,
+        },
+      ],
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopOrgActivity(data as YpopOrgActivityRow);
+};
+
+export const updateYpopOrgActivityInSupabase = async (
+  activityId: string,
+  patch: Partial<Omit<YPOPOrgActivity, "id" | "organizationId" | "createdAt" | "updatedAt">>,
+): Promise<YPOPOrgActivity> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: activity, error: activityError } = await supabase
+    .from("ypop_org_activities")
+    .select("id,ypop_entry_id,status")
+    .eq("id", activityId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (activityError) throw new Error(activityError.message);
+  if (!activity) throw new Error("PPA submission not found.");
+  if (activity.status !== "draft" && activity.status !== "needs_revision") {
+    throw new Error("This PPA is locked while it is under review or after a final decision.");
+  }
+  const { data: qualifiedEntry, error: entryError } = await supabase
+    .from("ypop_entries")
+    .select("status")
+    .eq("id", activity.ypop_entry_id)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (entryError) throw new Error(entryError.message);
+  if (qualifiedEntry?.status !== "qualified") {
+    throw new Error("PPA submissions can be edited only after this YPOP semester is marked qualified.");
+  }
+
+  const dbPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.activityName !== undefined) dbPatch.activity_name = patch.activityName;
+  if (patch.activityDate !== undefined) dbPatch.activity_date = patch.activityDate || null;
+  if (patch.venue !== undefined) dbPatch.venue = patch.venue || null;
+  if (patch.narrativeReport !== undefined) dbPatch.narrative_report = patch.narrativeReport;
+  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.adminRemarks !== undefined) dbPatch.admin_remarks = patch.adminRemarks;
+  if (patch.submittedAt !== undefined) dbPatch.submitted_at = patch.submittedAt || null;
+  if (patch.approvedAt !== undefined) dbPatch.approved_at = patch.approvedAt || null;
+  if (patch.revisionHistory !== undefined) dbPatch.revision_history = patch.revisionHistory;
+
+  const { data, error } = await supabase
+    .from("ypop_org_activities")
+    .update(dbPatch)
+    .eq("id", activityId)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopOrgActivity(data as YpopOrgActivityRow);
+};
+
+export const deleteYpopOrgActivityFromSupabase = async (activityId: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: activity, error: activityLoadError } = await supabase
+    .from("ypop_org_activities")
+    .select("id,ypop_entry_id,status")
+    .eq("id", activityId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (activityLoadError) throw new Error(activityLoadError.message);
+  if (!activity || !["draft", "needs_revision"].includes(activity.status)) {
+    throw new Error("This PPA can no longer be deleted.");
+  }
+  const { data: qualifiedEntry, error: entryError } = await supabase
+    .from("ypop_entries")
+    .select("status")
+    .eq("id", activity.ypop_entry_id)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (entryError) throw new Error(entryError.message);
+  if (qualifiedEntry?.status !== "qualified") {
+    throw new Error("PPA submissions unlock only after this YPOP semester is marked qualified.");
+  }
+  const { error } = await supabase.from("ypop_org_activities").delete().eq("id", activityId);
+  if (error) throw new Error(error.message);
+};
+
+export const uploadYpopOrgActivityFileToSupabase = async (params: {
+  orgActivityId: string;
+  organizationId: string;
+  file: File;
+}): Promise<YPOPOrgActivityFile> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: activity, error: activityError } = await supabase
+    .from("ypop_org_activities")
+    .select("id,ypop_entry_id,status")
+    .eq("id", params.orgActivityId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (activityError) throw new Error(activityError.message);
+  if (!activity || !["draft", "needs_revision"].includes(activity.status)) {
+    throw new Error("This PPA no longer accepts file changes.");
+  }
+  const { data: qualifiedEntry, error: entryError } = await supabase
+    .from("ypop_entries")
+    .select("status")
+    .eq("id", activity.ypop_entry_id)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (entryError) throw new Error(entryError.message);
+  if (qualifiedEntry?.status !== "qualified") {
+    throw new Error("PPA attachments unlock only after this YPOP semester is marked qualified.");
+  }
+
+  const storageUri = await uploadFileToStorage(YPOP_FILES_BUCKET, params.orgActivityId, params.file);
+  const { data, error } = await supabase
+    .from("ypop_org_activity_files")
+    .insert({
+      org_activity_id: params.orgActivityId,
+      organization_id: params.organizationId,
+      file_name: params.file.name,
+      file_url: storageUri,
+      file_type: params.file.type || "",
+      file_size: params.file.size,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapYpopOrgActivityFile(data as YpopOrgActivityFileRow);
+};
+
+export const deleteYpopOrgActivityFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: file, error: fileError } = await supabase
+    .from("ypop_org_activity_files")
+    .select("id,org_activity_id")
+    .eq("id", fileId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (fileError) throw new Error(fileError.message);
+  const { data: activity, error: activityError } = file
+    ? await supabase
+      .from("ypop_org_activities")
+      .select("status,ypop_entry_id")
+      .eq("id", file.org_activity_id)
+      .eq("organization_id", organizationProfile.id)
+      .maybeSingle()
+    : { data: null, error: null };
+  if (activityError) throw new Error(activityError.message);
+  if (!file || !activity || !["draft", "needs_revision"].includes(activity.status)) {
+    throw new Error("This PPA attachment can no longer be removed.");
+  }
+  const { data: qualifiedEntry, error: entryError } = await supabase
+    .from("ypop_entries")
+    .select("status")
+    .eq("id", activity.ypop_entry_id)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+  if (entryError) throw new Error(entryError.message);
+  if (qualifiedEntry?.status !== "qualified") {
+    throw new Error("PPA attachments unlock only after this YPOP semester is marked qualified.");
+  }
+
+  await removeStorageObjects([fileUrl]);
+  const { error } = await supabase.from("ypop_org_activity_files").delete().eq("id", fileId);
+  if (error) throw new Error(error.message);
+};
+
+// ─── YPOP Admin mutations (SECURITY DEFINER RPCs) ────────────
+
+export const adminCreateYpopPeriodInSupabase = async (
+  period: Omit<YPOPPeriod, "id" | "createdAt" | "updatedAt">,
+): Promise<YPOPPeriod> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_create_ypop_period", {
+    _session_token: adminSession.sessionToken,
+    _semester_key: period.semesterKey,
+    _semester_label: period.semesterLabel,
+    _validation_deadline: period.validationDeadline || null,
+    _status: period.status,
+    _org_led_tiers: period.orgLedTiers ?? [],
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_create_ypop_period.");
+  return mapYpopPeriod(row as YpopPeriodRow);
+};
+
+export const adminUpdateYpopPeriodInSupabase = async (
+  id: string,
+  patch: Partial<YPOPPeriod>,
+): Promise<YPOPPeriod> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_period", {
+    _session_token: adminSession.sessionToken,
+    _period_id: id,
+    _semester_label: patch.semesterLabel ?? null,
+    _validation_deadline: patch.validationDeadline || null,
+    _status: patch.status ?? null,
+    _org_led_tiers: patch.orgLedTiers ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_period.");
+  return mapYpopPeriod(row as YpopPeriodRow);
+};
+
+export const adminDeleteYpopPeriodFromSupabase = async (id: string): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("admin_delete_ypop_period", {
+    _session_token: adminSession.sessionToken,
+    _period_id: id,
+  });
+  if (error) throw new Error(error.message);
+};
+
+export const adminCreateYpopCityActivityInSupabase = async (
+  activity: Omit<YPOPCityActivity, "id" | "createdAt">,
+): Promise<YPOPCityActivity> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_create_ypop_city_activity", {
+    _session_token: adminSession.sessionToken,
+    _semester_key: activity.semesterKey,
+    _name: activity.name,
+    _date: activity.date || null,
+    _venue: activity.venue || null,
+    _points: activity.points,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_create_ypop_city_activity.");
+  return mapYpopCityActivity(row as YpopCityActivityRow);
+};
+
+export const adminUpdateYpopCityActivityInSupabase = async (
+  id: string,
+  patch: Partial<YPOPCityActivity>,
+): Promise<YPOPCityActivity> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_city_activity", {
+    _session_token: adminSession.sessionToken,
+    _activity_id: id,
+    _name: patch.name ?? null,
+    _date: patch.date ?? null,
+    _venue: patch.venue ?? null,
+    _points: patch.points ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_city_activity.");
+  return mapYpopCityActivity(row as YpopCityActivityRow);
+};
+
+export const adminDeleteYpopCityActivityFromSupabase = async (id: string): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("admin_delete_ypop_city_activity", {
+    _session_token: adminSession.sessionToken,
+    _activity_id: id,
+  });
+  if (error) throw new Error(error.message);
+};
+
+export const adminUpdateYpopEntryInSupabase = async (
+  id: string,
+  patch: Partial<YPOPEntry>,
+): Promise<YPOPEntry> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_entry", {
+    _session_token: adminSession.sessionToken,
+    _entry_id: id,
+    _status: patch.status ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+    _points_earned: patch.pointsEarned ?? null,
+    _org_led_project_count: patch.orgLedProjectCount ?? null,
+    _city_led_attendance: patch.cityLedAttendance ?? null,
+    _revision_history: patch.revisionHistory ?? null,
+    _validated_at: patch.validatedAt || null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_entry.");
+  return mapYpopEntry(row as YpopEntryRow);
+};
+
+export const adminUpdateYpopEventParticipationInSupabase = async (
+  id: string,
+  patch: Partial<YPOPEventParticipation>,
+): Promise<YPOPEventParticipation> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_event_participation", {
+    _session_token: adminSession.sessionToken,
+    _participation_id: id,
+    _status: patch.status ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+    _proof_submitted_at: patch.proofSubmittedAt || null,
+    _verified_at: patch.verifiedAt || null,
+    _revision_history: patch.revisionHistory ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_event_participation.");
+  return mapYpopEventParticipation(row as YpopEventParticipationRow);
+};
+
+export const adminUpdateYpopOrgActivityInSupabase = async (
+  id: string,
+  patch: Partial<YPOPOrgActivity>,
+): Promise<YPOPOrgActivity> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_ypop_org_activity", {
+    _session_token: adminSession.sessionToken,
+    _activity_id: id,
+    _status: patch.status ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+    _approved_at: patch.approvedAt || null,
+    _revision_history: patch.revisionHistory ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_ypop_org_activity.");
+  return mapYpopOrgActivity(row as YpopOrgActivityRow);
+};
+
+// ─── Org YORP fields (admin) ─────────────────────────────────
+
+export const adminUpdateOrgYorpFieldsInSupabase = async (
+  orgId: string,
+  registeredYear: number | null,
+  renewedYear: number | null,
+): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase!.rpc("admin_update_org_yorp_fields", {
+    _session_token: adminSession.sessionToken,
+    _org_id: orgId,
+    _registered_year: registeredYear,
+    _renewed_year: renewedYear,
+  });
+  if (error) throw new Error(error.message);
+};
+
+type PublicOrganizationRow = {
+  organization_id: string;
+  organization_name: string;
+  profile_image_url: string | null;
+  major_classification: string | null;
+  sub_classification: string | null;
+  district: string | null;
+  barangay: string | null;
+  advocacies: string[] | null;
+  facebook_page_url: string | null;
+  verified_at: string | null;
+  yorp_registered_year: number | null;
+  representative_name: string | null;
+  adviser_name: string | null;
+};
+
+const mapPublicOrganization = (row: PublicOrganizationRow): PublicOrganizationDirectoryItem => ({
+  organizationId: row.organization_id,
+  organizationName: row.organization_name,
+  profileImageUrl: row.profile_image_url ?? "",
+  majorClassification: row.major_classification ?? "",
+  subClassification: row.sub_classification ?? "",
+  district: row.district ?? "",
+  barangay: row.barangay ?? "",
+  advocacies: row.advocacies ?? [],
+  facebookPageUrl: row.facebook_page_url ?? "",
+  verifiedAt: row.verified_at ?? "",
+  yorpRegisteredYear: row.yorp_registered_year ?? null,
+  representativeName: row.representative_name ?? "",
+  adviserName: row.adviser_name ?? "",
+});
+
+export const fetchPublicOrganizationDirectory = async (): Promise<PublicOrganizationDirectoryItem[]> => {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("search_public_organizations");
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as PublicOrganizationRow[]).map(mapPublicOrganization);
+};
+
+export const fetchPublicOrganizationProfile = async (organizationId: string): Promise<{
+  organization: PublicOrganizationDirectoryItem;
+  activities: PublicOrganizationActivity[];
+} | null> => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("get_public_organization_profile", {
+    _organization_id: organizationId,
+  });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : null) as (PublicOrganizationRow & { activities?: PublicOrganizationActivity[] | null }) | null;
+  if (!row) return null;
+  return { organization: mapPublicOrganization(row), activities: row.activities ?? [] };
+};
+
+export const updateOrganizationDirectoryPreferences = async (preferences: {
+  visible: boolean;
+  showRepresentative: boolean;
+  showAdviser: boolean;
+}): Promise<OrganizationProfile> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("update_organization_directory_preferences", {
+    _visible: preferences.visible,
+    _show_representative: preferences.showRepresentative,
+    _show_adviser: preferences.showAdviser,
+  });
+  const row = Array.isArray(data) ? data[0] : null;
+  if (error || !row) throw new Error(error?.message ?? "Directory preferences could not be saved.");
+  return mapOrganizationProfile(row as OrganizationProfileRow);
+};
