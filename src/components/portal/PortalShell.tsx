@@ -52,11 +52,16 @@ export const PortalShell = ({
   }, []);
 
   useEffect(() => {
-    contentScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [activeId]);
+    if (!mobileOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [mobileOpen]);
 
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={cn("flex h-full flex-col", mobile ? "w-full min-w-0" : "w-[18rem] min-w-[18rem]")}>
+    <div className={cn("flex h-full flex-col", mobile ? "w-full min-w-0 safe-area-bottom" : "w-[18rem] min-w-[18rem]")}>
       {/* Sidebar header: logo + collapse/close button */}
       <div className="flex items-center justify-between gap-3 border-b border-border/70 p-4">
         <BrandLogo showText={false} className="min-w-0" />

@@ -1,8 +1,22 @@
-import { ClipboardList, Download, Eye, FileText, type LucideIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import {
+  FileText,
+  Download,
+  Eye,
+  Search,
+  ChevronDown,
+  Filter,
+  CheckCircle2,
+  FolderArchive,
+  ExternalLink,
+  ClipboardList
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type FilterId = "all" | "document_submission" | "other";
 
@@ -11,49 +25,13 @@ type PublicTemplatesCatalogProps = {
   searchTerm?: string;
 };
 
-const filterTabs: { id: FilterId; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "document_submission", label: "Document Submission" },
-  { id: "other", label: "Other Templates" },
-];
-
-const categoryDefs: {
-  id: "document_submission" | "other";
-  icon: LucideIcon;
-  title: string;
-  subtitle: string;
-  fallback: string;
-  empty: string;
-}[] = [
-  {
-    id: "document_submission",
-    icon: FileText,
-    title: "Document Submission Templates",
-    subtitle: "Official forms and compliance documents published by the admin.",
-    fallback: "Shared compliance form ready for preview and download.",
-    empty: "No document submission templates are available right now.",
-  },
-  {
-    id: "other",
-    icon: ClipboardList,
-    title: "Other Templates",
-    subtitle: "Additional downloadable references that the admin has made available to organizations.",
-    fallback: "Shared reference template ready for preview and download.",
-    empty: "No other templates are available right now.",
-  },
-];
-
-const getFileType = (url: string | null | undefined): string => {
-  if (!url) return "FILE";
-  const ext = url.split(".").pop()?.split("?")[0].toUpperCase() ?? "FILE";
-  return ext.length <= 5 ? ext : "FILE";
-};
-
-const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: PublicTemplatesCatalogProps) => {
+export default function PublicTemplatesCatalog({ compactHeader = false, searchTerm = "" }: PublicTemplatesCatalogProps) {
   const { state } = useLydoConnect();
   const [openingTemplateId, setOpeningTemplateId] = useState<string | null>(null);
   const [downloadingTemplateId, setDownloadingTemplateId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
+  const [requiredOpen, setRequiredOpen] = useState(true);
+  const [otherOpen, setOtherOpen] = useState(true);
 
   const query = searchTerm.trim().toLowerCase();
 
@@ -81,6 +59,9 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
         (t.description ?? "").toLowerCase().includes(query),
     );
   };
+
+  const filteredDocTemplates = applySearch(publicDocumentTemplates);
+  const filteredOtherTemplates = applySearch(publicOtherTemplates);
 
   const openTemplate = async (fileUrl: string, fileName: string) => {
     if (!fileUrl) return;
@@ -126,139 +107,221 @@ const PublicTemplatesCatalog = ({ compactHeader = false, searchTerm = "" }: Publ
     }
   };
 
-  const renderTemplateCard = (
-    template: (typeof state.templates)[number],
-    fallbackDescription: string,
-  ) => {
-    const fileType = getFileType(template.templateFileUrl);
-    const formattedDate = template.templateUploadedAt
-      ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
-      : "Upload date unavailable";
-    const isOpening = openingTemplateId === template.name;
-    const isDownloading = downloadingTemplateId === template.name;
-    const viewDisabled = !template.templateFileUrl || isOpening;
-    const downloadDisabled = !template.templateFileUrl || isDownloading;
+  return (
+    <div className="space-y-6 font-sans">
+      {/* Filter Tabs Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setActiveFilter("all")}
+            className={cn(
+              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all",
+              activeFilter === "all"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            )}
+          >
+            All Templates ({publicDocumentTemplates.length + publicOtherTemplates.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilter("document_submission")}
+            className={cn(
+              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all",
+              activeFilter === "document_submission"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            )}
+          >
+            Required Documents ({publicDocumentTemplates.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilter("other")}
+            className={cn(
+              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all",
+              activeFilter === "other"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            )}
+          >
+            Other References ({publicOtherTemplates.length})
+          </button>
+        </div>
 
-    return (
-      <div
-        key={template.id}
-        className="group flex h-full flex-col justify-between rounded-xl border border-public-border-default bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-public-border-brand/50 hover:shadow-md sm:p-6"
-      >
-        <div className="flex flex-1 flex-col gap-3">
-          {/* Header row: File Type Badge + Upload Date */}
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-public-bg-tertiary-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-public-text-brand border border-public-border-brand/20">
-              <FileText className="h-3.5 w-3.5 shrink-0" />
-              {fileType}
-            </span>
-            <span className="font-segoe text-xs text-public-text-secondary">
-              {formattedDate}
-            </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            [...publicDocumentTemplates, ...publicOtherTemplates].forEach((t) => {
+              if (t.templateFileUrl) void openTemplate(t.templateFileUrl, t.name);
+            });
+          }}
+          className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0"
+        >
+          <FolderArchive className="h-3.5 w-3.5 text-primary" /> Download All
+        </Button>
+      </div>
+
+      {/* Section 1: Required Document Templates Explorer Table */}
+      {(activeFilter === "all" || activeFilter === "document_submission") && (
+        <Card className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs space-y-0">
+          <div
+            onClick={() => setRequiredOpen(!requiredOpen)}
+            className="p-4 bg-muted/20 border-b border-border/60 flex items-center justify-between cursor-pointer hover:bg-muted/40 transition-colors"
+          >
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !requiredOpen && "-rotate-90")} />
+              Document Submission Templates ({filteredDocTemplates.length})
+            </h3>
+            <span className="text-[11px] text-muted-foreground font-semibold">Mandatory Registration Files</span>
           </div>
 
-          {/* Title */}
-          <h3 className="font-segoe text-lg font-bold leading-snug tracking-tight text-public-text-brand group-hover:text-primary transition-colors">
-            {template.name}
-          </h3>
-
-          {/* Description */}
-          <p className="font-segoe text-sm leading-relaxed text-public-text-neutral-default line-clamp-3">
-            {template.description || fallbackDescription}
-          </p>
-        </div>
-
-        {/* Divider + Actions */}
-        <div className="mt-5 border-t border-public-border-default pt-4 flex gap-2.5">
-          <button
-            type="button"
-            disabled={viewDisabled}
-            onClick={() => void openTemplate(template.templateFileUrl, template.name)}
-            className="flex-1 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-public-border-brand bg-white px-3 font-segoe text-xs font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-          >
-            <Eye className="h-4 w-4 shrink-0" />
-            <span>{isOpening ? "Opening…" : "View"}</span>
-          </button>
-          <button
-            type="button"
-            disabled={downloadDisabled}
-            onClick={() => void downloadTemplate(template.templateFileUrl, template.name)}
-            className="flex-1 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-public-bg-brand px-3 font-segoe text-xs font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-          >
-            <Download className="h-4 w-4 shrink-0" />
-            <span>{isDownloading ? "Downloading…" : "Download"}</span>
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const templatesByCategory = {
-    document_submission: applySearch(publicDocumentTemplates),
-    other: applySearch(publicOtherTemplates),
-  };
-
-  return (
-    <div className="flex flex-col gap-8">
-
-      {/* Filter tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 sm:justify-center">
-        {filterTabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveFilter(tab.id)}
-            className={
-              activeFilter === tab.id
-                ? "shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-5 py-2 font-segoe text-xs font-semibold text-public-text-on-brand shadow-sm transition-all"
-                : "shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-5 py-2 font-segoe text-xs font-medium text-public-text-neutral-default hover:bg-muted/50 transition-all"
-            }
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Category sections */}
-      {categoryDefs
-        .filter((cat) => activeFilter === "all" || activeFilter === cat.id)
-        .map((cat) => {
-          const Icon = cat.icon;
-          const templates = templatesByCategory[cat.id];
-          return (
-            <div key={cat.id} className="flex flex-col gap-4">
-
-              {/* Category header */}
-              <div className="flex items-start gap-3.5 border-b border-public-border-default/60 pb-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-public-bg-tertiary-100 p-2 text-public-text-brand">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <h2 className="font-segoe text-xl font-bold text-public-text-brand tracking-tight">
-                    {cat.title}
-                  </h2>
-                  <p className="font-segoe text-xs sm:text-sm text-public-text-secondary leading-relaxed">
-                    {cat.subtitle}
-                  </p>
-                </div>
-              </div>
-
-              {/* Cards or empty state */}
-              {templates.length > 0 ? (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
-                  {templates.map((t) => renderTemplateCard(t, cat.fallback))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-public-border-default bg-white/60 p-8 text-center font-segoe text-sm text-public-text-secondary">
-                  {cat.empty}
-                </div>
-              )}
-
+          {requiredOpen && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                  <tr className="border-b border-border/70 bg-muted/10 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <th className="py-3 px-5">Document</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {filteredDocTemplates.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">No required templates found.</td>
+                    </tr>
+                  ) : (
+                    filteredDocTemplates.map((tpl) => (
+                      <tr key={tpl.id} className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group">
+                        <td className="py-3 px-5">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                            <div className="space-y-0.5">
+                              <p className="text-xs font-bold text-foreground truncate max-w-[320px]">{tpl.name}</p>
+                              <p className="text-[11px] text-muted-foreground truncate max-w-[320px]">{tpl.description || "Official template"}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                            <CheckCircle2 className="h-3 w-3" /> Approved Standard
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
+                          Registration Form
+                        </td>
+                        <td className="py-3 px-5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => void openTemplate(tpl.templateFileUrl, tpl.name)}
+                            className="h-7 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg"
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" /> View
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void downloadTemplate(tpl.templateFileUrl, tpl.name)}
+                            className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground"
+                          >
+                            <Download className="mr-1 h-3.5 w-3.5" /> Download
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          );
-        })}
+          )}
+        </Card>
+      )}
 
+      {/* Section 2: Other Templates Explorer Table */}
+      {(activeFilter === "all" || activeFilter === "other") && (
+        <Card className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs space-y-0">
+          <div
+            onClick={() => setOtherOpen(!otherOpen)}
+            className="p-4 bg-muted/20 border-b border-border/60 flex items-center justify-between cursor-pointer hover:bg-muted/40 transition-colors"
+          >
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !otherOpen && "-rotate-90")} />
+              Other Reference Templates ({filteredOtherTemplates.length})
+            </h3>
+            <span className="text-[11px] text-muted-foreground font-semibold">Supplementary Files</span>
+          </div>
+
+          {otherOpen && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                  <tr className="border-b border-border/70 bg-muted/10 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <th className="py-3 px-5">Document</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {filteredOtherTemplates.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">No other templates found.</td>
+                    </tr>
+                  ) : (
+                    filteredOtherTemplates.map((tpl) => (
+                      <tr key={tpl.id} className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group">
+                        <td className="py-3 px-5">
+                          <div className="flex items-center gap-3">
+                            <ClipboardList className="h-5 w-5 text-primary shrink-0" />
+                            <div className="space-y-0.5">
+                              <p className="text-xs font-bold text-foreground truncate max-w-[320px]">{tpl.name}</p>
+                              <p className="text-[11px] text-muted-foreground truncate max-w-[320px]">{tpl.description || "Reference template"}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full border border-border/60">
+                            Reference
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
+                          Reference Guide
+                        </td>
+                        <td className="py-3 px-5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => void openTemplate(tpl.templateFileUrl, tpl.name)}
+                            className="h-7 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg"
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" /> View
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void downloadTemplate(tpl.templateFileUrl, tpl.name)}
+                            className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground"
+                          >
+                            <Download className="mr-1 h-3.5 w-3.5" /> Download
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
-};
-
-export default PublicTemplatesCatalog;
+}

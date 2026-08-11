@@ -5,10 +5,10 @@ import { StatusBadge } from "@/components/portal/StatusBadge";
 const portalIconToneMap = {
   primary: "border-primary/15 bg-primary-soft text-primary",
   sky: "border-primary/15 bg-primary-soft text-primary",
-  emerald: "border-emerald-500/15 bg-emerald-500/10 text-emerald-600",
-  amber: "border-amber-500/15 bg-amber-500/10 text-amber-600",
-  orange: "border-orange-500/15 bg-orange-500/10 text-orange-600",
-  red: "border-red-500/15 bg-red-500/10 text-red-600",
+  emerald: "border-emerald-500/15 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  amber: "border-amber-500/15 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  orange: "border-orange-500/15 bg-orange-500/10 text-orange-600 dark:text-orange-400",
+  red: "border-red-500/15 bg-red-500/10 text-red-600 dark:text-red-400",
   violet: "border-primary/15 bg-primary-soft text-primary",
 } as const;
 

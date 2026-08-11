@@ -36,65 +36,6 @@
 .ytrace-pwa-app button, .ytrace-pwa-app a { -webkit-tap-highlight-color: transparent; }
 .ytrace-pwa-app button:focus-visible, .ytrace-pwa-app a:focus-visible { outline: 3px solid var(--pwa-focus-ring); outline-offset: 2px; }
 
-/* Standardized PWA Blue Focus Ring & Single-Source Form Control Styling for all PWA controls */
-.ytrace-pwa-app input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
-.ytrace-pwa-app textarea,
-.ytrace-pwa-app select,
-.ytrace-pwa-app [role="combobox"],
-.ytrace-pwa-app .pwa-native-form input,
-.ytrace-pwa-app .pwa-native-form textarea,
-.ytrace-pwa-app .pwa-native-form select,
-.ytrace-pwa-app .pwa-profile-editor-field input,
-.ytrace-pwa-app .pwa-profile-editor-field textarea,
-.ytrace-pwa-app .pwa-profile-editor-field select {
-  border: 1px solid #cbd8e8;
-  border-radius: 0.7rem;
-  background-color: #ffffff;
-  color: var(--pwa-ink, #172033);
-  font-family: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.ytrace-pwa-app input:hover:not(:disabled):not([readonly]),
-.ytrace-pwa-app textarea:hover:not(:disabled):not([readonly]),
-.ytrace-pwa-app select:hover:not(:disabled):not([readonly]),
-.ytrace-pwa-app [role="combobox"]:hover:not(:disabled) {
-  border-color: #94a3b8;
-}
-
-.ytrace-pwa-app input:focus,
-.ytrace-pwa-app input:focus-visible,
-.ytrace-pwa-app textarea:focus,
-.ytrace-pwa-app textarea:focus-visible,
-.ytrace-pwa-app select:focus,
-.ytrace-pwa-app select:focus-visible,
-.ytrace-pwa-app [role="combobox"]:focus,
-.ytrace-pwa-app [role="combobox"]:focus-visible,
-.ytrace-pwa-app [role="listbox"]:focus,
-.ytrace-pwa-app [role="listbox"]:focus-visible {
-  outline: none !important;
-  border-color: var(--pwa-blue, #2460a7) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue, #2460a7) 30%, transparent) !important;
-}
-
-.ytrace-pwa-app input:disabled,
-.ytrace-pwa-app textarea:disabled,
-.ytrace-pwa-app select:disabled,
-.ytrace-pwa-app input[readonly],
-.ytrace-pwa-app textarea[readonly] {
-  background-color: #f1f5f9 !important;
-  color: #64748b !important;
-  border-color: #cbd8e8 !important;
-  cursor: not-allowed !important;
-  opacity: 1 !important;
-}
-
-.ytrace-pwa-app input::placeholder,
-.ytrace-pwa-app textarea::placeholder {
-  color: #64748b;
-  opacity: 1;
-}
-
 .ytrace-pwa-app .pwa-app-frame {
   width: min(100%, 600px);
   margin: 0 auto;
@@ -948,7 +889,7 @@
 .ytrace-pwa-app .pwa-profile-editor-intro h2 { margin: 0; font-size: 0.95rem; }
 .ytrace-pwa-app .pwa-profile-editor-intro p { margin: 0.2rem 0 0; color: var(--pwa-muted); font-size: 0.7rem; line-height: 1.4; }
 .ytrace-pwa-app .pwa-profile-editor-sections { display: grid; min-width: 0; max-width: 100%; gap: 0.65rem; }
-.ytrace-pwa-app .pwa-profile-editor-sections > div { min-width: 0; padding: 0.15rem 0.9rem; overflow: visible; }
+.ytrace-pwa-app .pwa-profile-editor-sections > div { min-width: 0; padding: 0 0.9rem; overflow: hidden; }
 .ytrace-pwa-app .pwa-profile-editor-sections [data-radix-collection-item] { min-height: 3.6rem; padding: 0; font-size: 0.78rem; text-decoration: none; }
 .ytrace-pwa-app .pwa-profile-editor-sections [data-radix-collection-item] > span:first-child { min-width: 0; text-align: left; }
 .ytrace-pwa-app .pwa-profile-editor-sections [data-radix-collection-item] small { display: block; margin-top: 0.18rem; color: var(--pwa-muted); font-size: 0.62rem; font-weight: 500; }
@@ -1141,19 +1082,8 @@ html.ytrace-pwa-reduce-motion .ytrace-pwa-app *, html.ytrace-pwa-reduce-motion .
 .ytrace-pwa-app.pwa-public-auth-page .bg-primary { background-color: var(--pwa-accent) !important; }
 .ytrace-pwa-app.pwa-public-auth-page .bg-primary\/15 { background-color: color-mix(in srgb, var(--pwa-accent) 15%, transparent) !important; }
 .ytrace-pwa-app.pwa-public-auth-page .text-primary { color: var(--pwa-accent) !important; }
-.ytrace-pwa-app.pwa-public-auth-page input:focus,
-.ytrace-pwa-app.pwa-public-auth-page input:focus-visible,
-.ytrace-pwa-app.pwa-public-auth-page textarea:focus,
-.ytrace-pwa-app.pwa-public-auth-page textarea:focus-visible,
-.ytrace-pwa-app.pwa-public-auth-page select:focus,
-.ytrace-pwa-app.pwa-public-auth-page select:focus-visible,
-.ytrace-pwa-app.pwa-public-auth-page [role="combobox"]:focus,
-.ytrace-pwa-app.pwa-public-auth-page [role="combobox"]:focus-visible,
-.ytrace-pwa-app.pwa-public-auth-page .focus-visible\:ring-ring:focus-visible {
-  outline: none !important;
-  border-color: var(--pwa-blue, #2460a7) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue, #2460a7) 30%, transparent) !important;
-}
+.ytrace-pwa-app.pwa-public-auth-page .border-primary { border-color: var(--pwa-accent) !important; }
+.ytrace-pwa-app.pwa-public-auth-page .focus-visible\:ring-ring:focus-visible { --tw-ring-color: var(--pwa-focus-ring) !important; }
 
 @media (max-width: 340px) {
   .ytrace-pwa-app .pwa-theme-grid { grid-template-columns: minmax(0,1fr); }

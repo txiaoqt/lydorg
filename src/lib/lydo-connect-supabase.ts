@@ -1422,16 +1422,24 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   }
 
   const submission = await ensureDocumentSubmission(organizationProfile.id, session.user.id);
-  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status)) {
-    throw new Error("This document submission is locked while it is under admin review.");
-  }
   const { data: existingRows, error: existingRowsError } = await supabase!
     .from("document_submission_files")
-    .select("id,file_url")
+    .select("id,file_url,admin_status")
     .eq("submission_id", submission.id)
     .eq("document_type_id", documentTypeRow.id);
 
   if (existingRowsError) throw new Error(existingRowsError.message);
+
+  const existingTargetFile = existingRows?.[0];
+  if (existingTargetFile) {
+    const fileStatus = existingTargetFile.admin_status;
+    if (["under_admin_review", "submitted", "ready_for_review", "under_review"].includes(fileStatus)) {
+      throw new Error("This specific document is currently under admin review and cannot be modified until the review is complete.");
+    }
+    if (["approved", "approved_green"].includes(fileStatus)) {
+      throw new Error("This approved document is locked from modification.");
+    }
+  }
 
   const safeFileName = sanitizeFileName(params.file.name);
   const objectPath = `${organizationProfile.id}/${documentTypeRow.id}/${Date.now()}-${safeFileName}`;
@@ -1576,7 +1584,10 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
   }
 };
 
-const submitDocumentSubmissionForReview = async (submissionId: string) => {
+export const submitDocumentSubmissionForReviewInSupabase = async (
+  submissionId: string,
+  targetFileIds?: string[]
+) => {
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: submission, error: submissionError } = await supabase!
     .from("document_submissions")
@@ -1585,9 +1596,6 @@ const submitDocumentSubmissionForReview = async (submissionId: string) => {
     .eq("organization_id", organizationProfile.id)
     .single();
   if (submissionError || !submission) throw new Error("The document submission could not be verified.");
-  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status as string)) {
-    throw new Error("This document submission is already under review.");
-  }
 
   const { data: attachedFiles, error: filesQueryError } = await supabase!
     .from("document_submission_files")
@@ -1602,11 +1610,17 @@ const submitDocumentSubmissionForReview = async (submissionId: string) => {
   }
 
   const submittedAt = new Date().toISOString();
-  const { error: filesError } = await supabase!
+  let filesQuery = supabase!
     .from("document_submission_files")
     .update({ admin_status: "under_admin_review", reviewed_at: null, updated_at: submittedAt })
     .eq("submission_id", submissionId)
     .eq("admin_status", "draft");
+
+  if (targetFileIds && targetFileIds.length > 0) {
+    filesQuery = filesQuery.in("id", targetFileIds);
+  }
+
+  const { error: filesError } = await filesQuery;
   if (filesError) throw new Error(filesError.message);
 
   const { error: updateError } = await supabase!
@@ -1683,10 +1697,13 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
   }
 
   if (submitMode === "review") {
+    const successfulUploadedFileIds = results
+      .filter((result) => result.success && result.file?.id)
+      .map((result) => result.file!.id);
     const submissionIds = [...new Set(results.filter((result) => result.success && result.submissionId).map((result) => result.submissionId!))];
     for (const submissionId of submissionIds) {
       try {
-        await submitDocumentSubmissionForReview(submissionId);
+        await submitDocumentSubmissionForReviewInSupabase(submissionId, successfulUploadedFileIds);
       } catch (error) {
         const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
         results.forEach((result) => {

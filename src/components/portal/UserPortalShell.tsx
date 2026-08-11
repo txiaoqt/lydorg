@@ -1,7 +1,23 @@
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown, LogOut, Menu, User } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  LogOut,
+  Menu,
+  User,
+  Sun,
+  Moon,
+  LayoutGrid,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  Layers,
+  ShieldCheck,
+  FileText
+} from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +68,8 @@ type UserPortalShellProps = {
   activeId: string;
   onNavigate: (id: string) => void;
   onSignOut: () => void;
+  useClassicView?: boolean;
+  onToggleClassicView?: () => void;
   children: React.ReactNode;
 };
 
@@ -69,9 +87,24 @@ export const UserPortalShell = ({
   activeId,
   onNavigate,
   onSignOut,
+  useClassicView = false,
+  onToggleClassicView,
   children,
 }: UserPortalShellProps) => {
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("theme-mode");
+      if (saved === "dark") return true;
+      if (saved === "light") return false;
+      return (
+        document.documentElement.classList.contains("dark") ||
+        document.body.classList.contains("dark")
+      );
+    }
+    return false;
+  });
+
   const activeItem = flattenItems(groups).find((item) => item.id === activeId) ?? flattenItems(groups)[0];
   const initials = userDisplayName
     ? userDisplayName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
@@ -79,67 +112,67 @@ export const UserPortalShell = ({
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
   const recentNotifications = [...(notifications ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
 
+  // Sync global document theme class
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      document.body.classList.add("dark");
+      localStorage.setItem("theme-mode", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark");
+      localStorage.setItem("theme-mode", "light");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [activeId]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl">
-        <div className="container mx-auto flex h-14 items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
-          {/* Left — logo */}
-          <div className="flex flex-1 min-w-0 items-center gap-3">
+    <div className="min-h-screen bg-background text-foreground font-sans">
+      {/* Sticky Integrated Glassmorphic Navbar (Height ~60px, max-w-[1440px]) */}
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 dark:bg-background/80 backdrop-blur-2xl transition-colors">
+        <div className="max-w-[1440px] mx-auto flex h-15 sm:h-16 items-center justify-between gap-3 px-3 sm:px-6">
+          {/* Left — Logo & Mobile Trigger */}
+          <div className="flex items-center gap-3 min-w-0">
             <Sheet>
               <SheetTrigger asChild>
-                <Button type="button" variant="outline" size="icon" className="lg:hidden shrink-0">
+                <Button type="button" variant="outline" size="icon" className="lg:hidden shrink-0 h-9 w-9 rounded-xl border-border">
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[min(20rem,88vw)] overflow-y-auto">
+              <SheetContent side="left" className="w-[min(20rem,88vw)] overflow-y-auto bg-card border-border safe-area-bottom">
                 <SheetHeader className="pr-8">
                   <BrandLogo showText={false} className="min-w-0" />
-                  <SheetTitle>{title}</SheetTitle>
-                  <SheetDescription>{subtitle}</SheetDescription>
+                  <SheetTitle className="text-base font-bold text-foreground mt-2">{title}</SheetTitle>
+                  <SheetDescription className="text-xs text-muted-foreground">{subtitle}</SheetDescription>
                 </SheetHeader>
+
+                {/* Mobile User Profile Button */}
                 {(userDisplayName || userEmail) && (
                   <SheetClose asChild>
                     <button
                       type="button"
                       onClick={() => onNavigate("organization-profile")}
                       aria-label="Open My Profile"
-                      className="mt-3 w-full rounded-xl border border-border/50 bg-muted/30 px-3 py-2.5 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="mt-3 w-full rounded-2xl border border-border/70 bg-accent/30 p-3 text-left transition-all hover:bg-accent focus-visible:outline-none"
                     >
-                      {userDisplayName && <p className="text-sm font-medium">{userDisplayName}</p>}
-                      {userEmail && <p className="mt-0.5 text-xs text-muted-foreground">{userEmail}</p>}
+                      {userDisplayName && <p className="text-xs font-bold text-foreground">{userDisplayName}</p>}
+                      {userEmail && <p className="mt-0.5 text-[11px] text-muted-foreground">{userEmail}</p>}
                     </button>
                   </SheetClose>
                 )}
-                <div className="mt-6 space-y-5">
-                  <div>
-                    <p className="px-1 pb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/75">
-                      Account
-                    </p>
-                    <div className="space-y-1">
-                      <SheetClose asChild>
-                        <button
-                          type="button"
-                          onClick={() => onNavigate("organization-profile")}
-                          className={cn(
-                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                            activeId === "organization-profile"
-                              ? "bg-primary/10 text-primary ring-1 ring-primary/10"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                          )}
-                        >
-                          <UserFeatureIcon icon={User} size="compact" />
-                          <span>My Profile</span>
-                        </button>
-                      </SheetClose>
-                    </div>
-                  </div>
+
+                {/* Mobile Nav Links */}
+                <div className="mt-5 space-y-4">
                   {groups.map((group) => (
-                    <div key={group.id}>
-                      <p className="px-1 pb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/75">
+                    <div key={group.id} className="space-y-1">
+                      <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         {group.label}
                       </p>
                       <div className="space-y-1">
@@ -152,13 +185,13 @@ export const UserPortalShell = ({
                                 type="button"
                                 onClick={() => onNavigate(item.id)}
                                 className={cn(
-                                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                                  "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-medium transition-colors",
                                   active
-                                    ? "bg-primary/10 text-primary ring-1 ring-primary/10"
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                    ? "bg-primary/10 text-primary font-semibold"
+                                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                 )}
                               >
-                                <UserFeatureIcon icon={Icon} size="compact" />
+                                <Icon className="h-4 w-4" />
                                 <span>{item.label}</span>
                               </button>
                             </SheetClose>
@@ -167,8 +200,49 @@ export const UserPortalShell = ({
                       </div>
                     </div>
                   ))}
+
+                  {/* Mobile Toggles */}
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <p className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preferences</p>
+                    {onToggleClassicView && (
+                      <SheetClose asChild>
+                        <button
+                          type="button"
+                          onClick={onToggleClassicView}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
+                        >
+                          <LayoutGrid className="h-4 w-4 text-primary" />
+                          <span>{useClassicView ? "✨ Switch to SaaS View" : "🗂 Switch to Classic"}</span>
+                        </button>
+                      </SheetClose>
+                    )}
+                    <button
+                      type="button"
+                      onClick={toggleDarkMode}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
+                    >
+                      {isDarkMode ? (
+                        <>
+                          <Sun className="h-4 w-4 text-amber-400" />
+                          <span>Switch to Light Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="h-4 w-4 text-indigo-500" />
+                          <span>Switch to Dark Mode</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Mobile Sign Out */}
                   <SheetClose asChild>
-                    <Button type="button" variant="outline" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => setSignOutConfirmOpen(true)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start text-destructive hover:text-destructive rounded-xl text-xs h-10 mt-2 touch-target"
+                      onClick={() => setSignOutConfirmOpen(true)}
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </Button>
@@ -176,58 +250,67 @@ export const UserPortalShell = ({
                 </div>
               </SheetContent>
             </Sheet>
-            <button type="button" onClick={() => onNavigate("dashboard")} className="inline-flex min-w-0 focus-visible:outline-none">
-              <BrandLogo showText={false} className="min-w-0" />
+
+            <button type="button" onClick={() => onNavigate("dashboard")} className="inline-flex items-center focus-visible:outline-none group cursor-pointer">
+              <BrandLogo showText={false} className="min-w-0 transition-transform group-hover:scale-105" />
             </button>
           </div>
 
-          {/* Center — nav group dropdowns */}
-          <nav className="hidden items-center gap-2 lg:flex">
+          {/* Center — Horizontal Navigation Items with Modern Rounded Full Pills */}
+          <nav className="hidden lg:flex items-center gap-1.5 bg-accent/30 p-1 rounded-full border border-border/50 shadow-2xs">
             {groups.map((group) => {
               const isGroupActive = group.items.some((item) => item.id === activeId);
               if (group.items.length === 1) {
                 return (
-                  <Button
+                  <button
                     key={group.id}
                     type="button"
-                    variant="ghost"
                     className={cn(
-                      "rounded-lg px-4 text-sm font-medium",
-                      isGroupActive && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+                      "rounded-full px-3.5 py-1 text-xs transition-all",
+                      isGroupActive
+                        ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/80 font-medium"
                     )}
                     onClick={() => onNavigate(group.items[0].id)}
                   >
                     {group.items[0].label}
-                  </Button>
+                  </button>
                 );
               }
+
               return (
                 <DropdownMenu key={group.id} modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
                       className={cn(
-                        "gap-2 rounded-lg px-4 text-sm font-medium",
-                        isGroupActive && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+                        "flex items-center gap-1 rounded-full px-3.5 py-1 text-xs transition-all",
+                        isGroupActive
+                          ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-background/80 font-medium"
                       )}
                     >
-                      {group.label}
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
+                      <span>{group.label}</span>
+                      <ChevronDown className="h-3 w-3 opacity-70" />
+                    </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="min-w-[240px]">
+                  <DropdownMenuContent align="center" className="min-w-[220px] p-2 rounded-2xl bg-card border-border/80 shadow-xl space-y-1">
                     {group.items.map((item) => {
                       const Icon = item.icon;
                       const active = item.id === activeId;
                       return (
                         <DropdownMenuItem
                           key={item.id}
-                          className={cn("gap-2 py-2", active && "bg-primary/10 text-primary focus:bg-primary/10 focus:text-primary")}
+                          className={cn(
+                            "gap-2.5 p-2 rounded-xl text-xs cursor-pointer transition-colors",
+                            active ? "bg-primary/10 text-primary font-semibold" : "hover:bg-accent"
+                          )}
                           onClick={() => onNavigate(item.id)}
                         >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.label}</span>
+                          <Icon className="h-4 w-4 text-primary shrink-0" />
+                          <div>
+                            <p className="font-semibold text-xs leading-none">{item.label}</p>
+                          </div>
                         </DropdownMenuItem>
                       );
                     })}
@@ -237,86 +320,128 @@ export const UserPortalShell = ({
             })}
           </nav>
 
-          {/* Right — bell + avatar dropdown */}
-          <div className="flex flex-1 hidden items-center justify-end gap-1 lg:flex">
+          {/* Right — Twin Control Pills (Classic View & Dark Mode) + Bell + User Menu */}
+          <div className="flex items-center gap-2">
+            {/* Global Twin Pill: Classic / SaaS Toggle */}
+            {onToggleClassicView && (
+              <button
+                type="button"
+                onClick={onToggleClassicView}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-accent px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs"
+              >
+                <LayoutGrid className="h-3.5 w-3.5 text-primary" />
+                <span>{useClassicView ? "✨ SaaS View" : "🗂 Classic"}</span>
+              </button>
+            )}
+
+            {/* Global Twin Pill: Dark / Light Mode */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-accent px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs"
+            >
+              {isDarkMode ? (
+                <>
+                  <Sun className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>Dark</span>
+                </>
+              )}
+            </button>
+
+            {/* Notification Bell Dropdown */}
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="relative flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none"
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/80 hover:bg-accent transition-all focus-visible:outline-none shadow-2xs"
                   aria-label="Notifications"
                 >
-                  <Bell className="h-4 w-4" />
+                  <Bell className="h-4 w-4 text-foreground" />
                   {unreadCount > 0 && (
-                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
                   )}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <div className="flex items-center justify-between px-3 py-2">
-                  <p className="text-sm font-semibold">Notifications</p>
+              <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-80 max-w-80 p-3 rounded-2xl bg-card border-border/80 shadow-xl space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-xs font-bold text-foreground">Notifications</p>
                   {unreadCount > 0 && onMarkAllRead && (
-                    <button type="button" onClick={onMarkAllRead} className="text-xs text-primary hover:underline">
-                      Mark all as read
+                    <button type="button" onClick={onMarkAllRead} className="text-[11px] font-semibold text-primary hover:underline">
+                      Mark all read
                     </button>
                   )}
                 </div>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-1" />
                 {recentNotifications.length === 0 ? (
-                  <div className="px-3 py-6 text-center text-sm text-muted-foreground">No notifications yet.</div>
+                  <div className="px-3 py-4 text-center text-xs text-muted-foreground">No notifications yet.</div>
                 ) : (
-                  <div>
+                  <div className="space-y-1.5">
+                    <p className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recent</p>
                     {recentNotifications.map((n) => (
-                      <div key={n.id} className="flex gap-2.5 border-b border-border/40 px-3 py-2.5 last:border-0">
-                        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.isRead ? "bg-transparent" : "bg-primary"}`} />
+                      <div key={n.id} className="flex items-start gap-2 p-2 rounded-xl hover:bg-accent/50 transition-colors">
+                        <span className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full", n.isRead ? "bg-transparent" : "bg-primary")} />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm leading-tight ${n.isRead ? "font-normal text-muted-foreground" : "font-medium text-foreground"}`}>
+                          <div className="flex items-baseline justify-between gap-1">
+                            <p className={cn("text-xs leading-tight", n.isRead ? "font-normal text-muted-foreground" : "font-semibold text-foreground")}>
                               {n.title}
                             </p>
-                            <p className="shrink-0 text-[10px] text-muted-foreground/60">
+                            <span className="shrink-0 text-[10px] text-muted-foreground">
                               {new Date(n.createdAt).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
-                            </p>
+                            </span>
                           </div>
-                          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{n.message}</p>
+                          <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{n.message}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate("notifications")} className="justify-center text-sm text-primary hover:bg-primary hover:text-white focus:bg-primary focus:text-white">
-                  View all notifications
+                <DropdownMenuSeparator className="my-1" />
+                <DropdownMenuItem
+                  onClick={() => onNavigate("notifications")}
+                  className="justify-center text-xs font-semibold text-primary cursor-pointer hover:bg-primary/10 rounded-xl py-1.5"
+                >
+                  View All Notifications →
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* User Account Avatar Dropdown */}
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground ring-2 ring-primary/20 transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold ring-2 ring-primary/20 transition-transform hover:scale-105 focus-visible:outline-none"
                   aria-label="Account menu"
                 >
                   {initials || <User className="h-4 w-4" />}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium leading-tight">{userDisplayName ?? "Organization"}</p>
-                  {userEmail && <p className="mt-0.5 text-xs text-muted-foreground">{userEmail}</p>}
+              <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl bg-card border-border/80 shadow-xl space-y-1">
+                <div className="px-2 py-2">
+                  <p className="text-xs font-extrabold text-foreground leading-tight">{userDisplayName ?? "Organization"}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mt-0.5">Organization User</p>
+                  {userEmail && <p className="mt-0.5 text-[11px] text-muted-foreground/80 truncate">{userEmail}</p>}
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate("organization-profile")} className="cursor-pointer gap-2">
-                  <User className="h-4 w-4" />
-                  My Profile
+                <DropdownMenuItem
+                  onClick={() => onNavigate("organization-profile")}
+                  className="cursor-pointer gap-2.5 p-2 rounded-xl text-xs font-medium hover:bg-accent"
+                >
+                  <User className="h-3.5 w-3.5 text-primary" />
+                  <span>My Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => setSignOutConfirmOpen(true)}
-                  className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  className="cursor-pointer gap-2.5 p-2 rounded-xl text-xs font-semibold text-destructive focus:bg-destructive/10 focus:text-destructive"
                 >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -324,7 +449,8 @@ export const UserPortalShell = ({
         </div>
       </header>
 
-      <main className="container mx-auto px-3 py-3 sm:px-4 sm:py-8">
+      {/* Main Content Area */}
+      <main className={cn("container mx-auto px-3 sm:px-4", hidePageBanner ? "pt-3 pb-8" : "py-3 sm:py-6")}>
         {!hidePageBanner ? (
           <section className="mb-4 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 sm:mb-6 sm:px-5 sm:py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -341,20 +467,28 @@ export const UserPortalShell = ({
           </section>
         ) : null}
 
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto w-full max-w-[1440px]">
           {children}
         </div>
       </main>
 
+      {/* Sign Out Confirmation Dialog */}
       <AlertDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
-        <AlertDialogContent className="max-w-sm">
+        <AlertDialogContent className="max-w-sm rounded-2xl bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Sign out?</AlertDialogTitle>
-            <AlertDialogDescription>You will be returned to the login page.</AlertDialogDescription>
+            <AlertDialogTitle className="text-base font-bold text-foreground">Sign Out</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              Are you sure you want to sign out of your organization account?
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onSignOut}>Sign Out</AlertDialogAction>
+          <AlertDialogFooter className="pt-2">
+            <AlertDialogCancel className="rounded-xl text-xs h-8">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-semibold h-8"
+              onClick={onSignOut}
+            >
+              Sign Out
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

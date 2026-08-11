@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import JSZip from "jszip";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowLeft,
   BadgeCheck,
@@ -11,6 +12,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  Clock,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -26,6 +28,7 @@ import {
   FileUp,
   Filter,
   Gauge,
+  Layers,
   MapPin,
   Loader2,
   Medal,
@@ -38,6 +41,7 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  UploadCloud,
   UserRound,
   User,
 } from "lucide-react";
@@ -77,10 +81,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { RecentActivityList, RecentActivityPreview, type RecentActivityItem } from "@/components/activity/RecentActivityPreview";
+import { RecentActivityList, RecentActivityPreview, type RecentActivityItem, formatActivityActionLabel, formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
 import { PortalEmptyState, PortalIconBadge, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
 import { UserFeatureIcon } from "@/components/portal/UserFeatureIcon";
 import { UserPortalShell } from "@/components/portal/UserPortalShell";
+import { UserPortalRedesignView } from "@/components/portal/UserPortalRedesignView";
+import { UserPortalDocumentWorkspaceView } from "@/components/portal/UserPortalDocumentWorkspaceView";
+import { UserPortalLiquidationWorkspaceView } from "@/components/portal/UserPortalLiquidationWorkspaceView";
+import { UserPortalBudgetWorkspaceView } from "@/components/portal/UserPortalBudgetWorkspaceView";
+import { UserPortalYPOPWorkspaceView } from "@/components/portal/UserPortalYPOPWorkspaceView";
+import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortalTemplatesWorkspaceView";
+import { UserPortalNewsWorkspaceView } from "@/components/portal/UserPortalNewsWorkspaceView";
+import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
+import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
+import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -102,6 +116,7 @@ import {
   resolveRegistrationDocumentAccess,
 } from "@/lib/document-file-access";
 import {
+  getMissingEditableProfileRequirements,
   getOrganizationProfileCompletionCount,
   getOrganizationProfileCompletionTarget,
   isOrganizationProfileComplete,
@@ -164,6 +179,7 @@ import {
   resubmitOrganizationUrnInSupabase,
   removeOrganizationDocumentFromSupabase,
   submitOrganizationDocumentToSupabase,
+  submitDocumentSubmissionForReviewInSupabase,
   submitOrganizationDocumentsBatchToSupabase,
   updateLiquidationReportInSupabase,
   createYpopEntryInSupabase,
@@ -231,7 +247,11 @@ const getLatestBudgetAdminFeedback = (request?: BudgetRequest | null) => {
       ?.adminRemarks?.trim() ?? ""
   );
 };
-const canInlinePreviewFile = (value: string) => /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(value);
+const canInlinePreviewFile = (value: string) => {
+  if (!value) return false;
+  const cleanPath = value.split("?")[0].split("#")[0];
+  return /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(cleanPath) || /\.(pdf|png|jpe?g|gif|webp|svg)/i.test(value);
+};
 const isImagePreviewFile = (value: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(value);
 const getDocumentUploadAcceptValue = (_documentTypeId: string) => ".pdf,application/pdf";
 const getDocumentPrimaryFileTypeLabel = (_documentTypeId: string) => "PDF";
@@ -566,6 +586,7 @@ export default function UserPortal({ section }: { section: string }) {
   );
   const [savingProfile, setSavingProfile] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [useClassicDashboard, setUseClassicDashboard] = useState(false);
   const [profilePreviewOpen, setProfilePreviewOpen] = useState(false);
   const [showProfileEditSection, setShowProfileEditSection] = useState(false);
   const [profileActivityModalOpen, setProfileActivityModalOpen] = useState(false);
@@ -923,7 +944,6 @@ export default function UserPortal({ section }: { section: string }) {
   });
   const submission = state.documentSubmissions.find((s) => s.organizationId === (currentProfile?.id ?? "___")) ?? null;
   const isDocumentSubmissionApproved = isApprovedDocumentSubmission(submission);
-  const isDocumentSubmissionLocked = !isEditableDocumentSubmission(submission);
   const userNotifications = useMemo(
     () => state.notifications.filter((notification) => notification.userId === user?.id),
     [state.notifications, user?.id],
@@ -951,11 +971,21 @@ export default function UserPortal({ section }: { section: string }) {
   const docFiles = state.documentSubmissionFiles.filter(
     (file) => file.submissionId === submissionId && validDocumentTypeIds.has(file.documentTypeId),
   );
+
+  const isUnderReviewSubmissionFile = (file?: SubmissionFile | null) => {
+    if (!file) return false;
+    const status = file.adminStatus;
+    return status === "under_admin_review" || status === "submitted" || status === "ready_for_review" || status === "under_review";
+  };
+
   const uploadableTemplateDocuments = useMemo(
     () =>
       templateDocuments.filter((documentType) => {
         const file = docFiles.find((entry) => entry.documentTypeId === documentType.id);
-        return !isApprovedSubmissionFile(file);
+        if (!file) return true;
+        if (isApprovedSubmissionFile(file)) return false;
+        if (isUnderReviewSubmissionFile(file)) return false;
+        return true;
       }),
     [docFiles, templateDocuments],
   );
@@ -1079,6 +1109,7 @@ export default function UserPortal({ section }: { section: string }) {
     getOrganizationProfileCompletionTarget(profileDraft),
   );
   const profileComplete = isOrganizationProfileComplete(profile);
+  const isDocumentSubmissionLocked = !profileComplete || (templateDocuments.length > 0 && uploadableTemplateDocuments.length === 0);
   const renewalCountdown = useMemo(
     () => getOrganizationRenewalCountdown(currentProfile),
     [currentProfile],
@@ -1162,14 +1193,7 @@ export default function UserPortal({ section }: { section: string }) {
       }
 
       if (downloadName) {
-        const link = document.createElement("a");
-        link.href = resolvedUrl;
-        link.download = downloadName;
-        link.target = "_blank";
-        link.rel = "noreferrer";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        await downloadResolvedFile(fileUrl, downloadName);
         return;
       }
 
@@ -1314,7 +1338,15 @@ export default function UserPortal({ section }: { section: string }) {
       setPreviewUrl(resolvedUrl);
       setPreviewTitle(title);
       setPreviewEmptyMessage("");
-      setPreviewCanInline(canInlinePreviewFile(title) || canInlinePreviewFile(resolvedUrl));
+      setPreviewCanInline(
+        canInlinePreviewFile(title) ||
+        canInlinePreviewFile(fileUrl) ||
+        canInlinePreviewFile(resolvedUrl) ||
+        resolvedUrl.includes("application/pdf") ||
+        fileUrl.toLowerCase().includes("template") ||
+        fileUrl.toLowerCase().endsWith(".pdf") ||
+        resolvedUrl.toLowerCase().includes(".pdf")
+      );
       setPreviewModalOpen(true);
     } catch (error) {
       toast({
@@ -1469,6 +1501,13 @@ export default function UserPortal({ section }: { section: string }) {
     const mappedDocumentTypeIds = new Set<string>();
 
     batchSelectedItems.forEach((entry) => {
+      const existingFile = documentFilesByTypeId.get(entry.documentType.id);
+      if (isUnderReviewSubmissionFile(existingFile)) {
+        issues.push(`${entry.documentType.name}: This document is currently under admin review and cannot be re-uploaded.`);
+      }
+      if (isApprovedSubmissionFile(existingFile)) {
+        issues.push(`${entry.documentType.name}: This document is approved and locked.`);
+      }
       const validationError = getDocumentUploadValidationError(entry.documentType.id, entry.file);
       if (validationError) {
         issues.push(`${entry.documentType.name}: ${validationError}`);
@@ -2097,10 +2136,13 @@ export default function UserPortal({ section }: { section: string }) {
       trimmedProfile.advocacies.length === 0
     ) {
       setProfileEditorOpenSections((current) => Array.from(new Set([...current, "basic-information", "location-classification", "advocacy-focus-areas"])));
+      const missingEditable = getMissingEditableProfileRequirements(trimmedProfile);
       toast({
-        title: "Complete the profile",
+        title: "Complete your organization profile",
         description:
-          "Please fill in the required organization details, district, barangay, classifications, and at least one advocacy. Previously registered organizations also need a Unique Registration Number (URN).",
+          missingEditable.length > 0
+            ? `Your organization profile is not yet complete. Please complete the remaining editable requirements: ${missingEditable.join(", ")}.`
+            : "Your organization profile is missing required information. Please complete all required sections before continuing.",
         variant: "destructive",
       });
       return;
@@ -2703,30 +2745,13 @@ export default function UserPortal({ section }: { section: string }) {
         const dashboardDocumentHelper = templateDocuments.length > 0
           ? `${approvedDashboardDocuments} of ${templateDocuments.length} approved`
           : "No requirements";
-        const budgetOverviewLabel =
-          latestBudget?.status === "budget_released"
-            ? "Released"
-            : latestBudget?.status === "approved_for_ftf_green"
-              ? "Approved"
-              : latestBudget?.status === "hard_copy_submitted"
-                ? "Submitted"
-                : latestBudget?.status === "needs_revision"
-                  ? "Needs Revision"
-                  : latestBudget?.status === "submitted"
-                    ? "Submitted"
-                    : latestBudget?.status === "draft"
-                      ? "Draft"
-                      : latestBudget
-                        ? formatStatusLabel(latestBudget.status)
-                        : "Draft";
-        const liquidationOverviewLabel =
-          latestLiquidation?.status === "pending_activity_completion"
-            ? "Pending"
-            : latestLiquidation?.status === "completed_liquidated"
-              ? "Completed"
-              : latestLiquidation
-                ? formatStatusLabel(latestLiquidation.status)
-                : "Pending";
+        const budgetMetrics = computeBudgetWorkflowMetrics(budgetRequests);
+        const budgetPercent = budgetMetrics.completionPercent;
+        const budgetOverviewLabel = budgetMetrics.overviewLabel;
+
+        const liquidationMetrics = computeLiquidationWorkflowMetrics(liquidationReports);
+        const liquidationPercent = liquidationMetrics.completionPercent;
+        const liquidationOverviewLabel = liquidationMetrics.overviewLabel;
         const dashboardTasks: Array<{
           key: string;
           title: string;
@@ -2852,8 +2877,79 @@ export default function UserPortal({ section }: { section: string }) {
             tone: "bg-primary/10 text-primary",
           });
         }
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalRedesignView
+              profile={profile}
+              currentProfile={currentProfile}
+              isVerified={isVerified}
+              isProfileSaved={isProfileSaved}
+              hasSubmittedDocuments={hasSubmittedDocuments}
+              stepsCompleted={stepsCompleted}
+              profilePercent={profilePercent}
+              dashboardDocumentPercent={dashboardDocumentPercent}
+              dashboardDocumentHelper={dashboardDocumentHelper}
+              budgetPercent={budgetPercent}
+              budgetOverviewLabel={budgetOverviewLabel}
+              liquidationPercent={liquidationPercent}
+              liquidationOverviewLabel={liquidationOverviewLabel}
+              renewalCountdown={renewalCountdown}
+              dashboardTasks={dashboardTasks}
+              recentActivities={profileActivityLogEntries.map((log) => ({
+                id: log.id,
+                description: log.description,
+                createdAt: log.createdAt,
+              }))}
+              inquiries={inquiryHistory}
+              inquiryForm={inquiryForm}
+              setInquiryForm={setInquiryForm}
+              submittingInquiry={savingInquiry}
+              handleSendInquiry={handleConfirmInquirySubmit}
+              onViewAllInquiries={() => setInquiryListModalOpen(true)}
+              onViewAllActivities={() => setProfileActivityModalOpen(true)}
+              publicTemplates={[
+                ...templateDocuments.map((t) => ({
+                  id: t.id,
+                  title: t.name,
+                  description: t.description,
+                  fileUrl: t.templateFileUrl,
+                  fileSize: (t as any).fileSize ?? (t as any).file_size ?? (t as any).size ?? null,
+                  category: (t as any).category || "Registration Form",
+                  isRequired: true,
+                  updatedAt: (t as any).updatedAt ?? (t as any).updated_at ?? (t as any).templateUploadedAt ?? null,
+                })),
+                ...otherTemplates.map((t) => ({
+                  id: t.id,
+                  title: t.name,
+                  description: t.description,
+                  fileUrl: t.templateFileUrl,
+                  fileSize: (t as any).fileSize ?? (t as any).file_size ?? (t as any).size ?? null,
+                  category: (t as any).category || "Reference Guide",
+                  isRequired: false,
+                  updatedAt: (t as any).updatedAt ?? (t as any).updated_at ?? (t as any).templateUploadedAt ?? null,
+                })),
+              ]}
+              openPreview={openPreview}
+              navigate={navigate}
+              userRouteMap={userRouteMap}
+              onSwitchToClassic={() => setUseClassicDashboard(true)}
+            />
+          );
+        }
         return (
           <div className="user-dashboard-page mx-auto max-w-5xl space-y-4 lg:max-w-7xl lg:space-y-[18px]">
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setUseClassicDashboard(false)}
+                className="gap-1.5 rounded-xl border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100 text-xs font-semibold"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Switch to Prodify Redesign
+              </Button>
+            </div>
             {!isVerified ? null : !verifiedBannerDismissed ? (
               <Card className="border-green-500/20 bg-green-500/5">
                 <CardContent className="flex items-start justify-between gap-4 p-5 sm:p-6">
@@ -3189,6 +3285,38 @@ export default function UserPortal({ section }: { section: string }) {
         );
       }
       case "templates":
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalTemplatesWorkspaceView
+              publicTemplates={[
+                ...templateDocuments.map((t) => ({
+                  id: t.id,
+                  title: t.name,
+                  description: t.description,
+                  fileUrl: t.templateFileUrl,
+                  fileSize: (t as any).fileSize ?? (t as any).file_size ?? (t as any).size ?? null,
+                  category: (t as any).category || "Registration Form",
+                  isRequired: true,
+                  updatedAt: (t as any).updatedAt ?? (t as any).updated_at ?? (t as any).templateUploadedAt ?? null,
+                })),
+                ...otherTemplates.map((t) => ({
+                  id: t.id,
+                  title: t.name,
+                  description: t.description,
+                  fileUrl: t.templateFileUrl,
+                  fileSize: (t as any).fileSize ?? (t as any).file_size ?? (t as any).size ?? null,
+                  category: (t as any).category || "Reference Guide",
+                  isRequired: false,
+                  updatedAt: (t as any).updatedAt ?? (t as any).updated_at ?? (t as any).templateUploadedAt ?? null,
+                })),
+              ]}
+              openPreview={openPreview}
+              openFile={openFile}
+              formatShortPortalDate={formatShortPortalDate}
+            />
+          );
+        }
+
         return (
           <div className="space-y-6">
             <PortalSection
@@ -3334,6 +3462,39 @@ export default function UserPortal({ section }: { section: string }) {
           </div>
         );
       case "organization-profile": {
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalOrganizationProfileWorkspaceView
+              profile={profile}
+              currentProfile={currentProfile}
+              profileDraft={profileDraft}
+              setProfileDraft={setProfileDraft}
+              handleProfileFieldChange={handleProfileFieldChange}
+              toggleAdvocacy={toggleAdvocacy}
+              saveOrganizationProfile={saveOrganizationProfile}
+              savingProfile={savingProfile}
+              profilePercent={profilePercent}
+              activeProfileTab={activeProfileTab}
+              setActiveProfileTab={setActiveProfileTab}
+              showProfileEditSection={showProfileEditSection}
+              setShowProfileEditSection={setShowProfileEditSection}
+              profilePreviewOpen={profilePreviewOpen}
+              setProfilePreviewOpen={setProfilePreviewOpen}
+              advocacyOptions={advocacyOptions}
+              subClassificationOptions={subClassificationOptions}
+              joinedYpopEvents={ypopEventParticipations}
+              activityLogs={profileActivityLogEntries}
+              onViewAllActivities={() => setProfileActivityModalOpen(true)}
+              formatShortPortalDate={formatShortPortalDate}
+              formatDateTimeLabel={formatDateTimeLabel}
+              formatSubClassificationLabel={formatSubClassificationLabel}
+              openFile={openFile}
+              navigate={navigate}
+              userRouteMap={userRouteMap}
+            />
+          );
+        }
+
         const profileStatus = currentProfile?.profileStatus ?? profileDraft.profileStatus;
         const profileName = currentProfile?.organizationName?.trim() || profile.organizationName || "Organization Profile";
         const profileSubClassification = formatSubClassificationLabel(profile.subClassification) || "N/A";
@@ -3356,7 +3517,10 @@ export default function UserPortal({ section }: { section: string }) {
           { label: "Barangay", value: profile.barangay || "Not set" },
           {
             label: "Unique Registration Number (URN)",
-            value: profile.isExistingOrganization ? profile.organizationIdentifierNumber || "Not set" : "Not required",
+            value:
+              currentProfile?.organizationIdentifierNumber?.trim() ||
+              profile.organizationIdentifierNumber?.trim() ||
+              (profile.isExistingOrganization ? "Not set" : "Not required"),
           },
         ];
         const shouldShowOverviewSidebar = activeProfileTab === "overview";
@@ -4114,7 +4278,7 @@ export default function UserPortal({ section }: { section: string }) {
         );
       }
       case "document-submission": {
-        if (!registrationPrerequisites.canAccessDocuments) {
+        if (useClassicDashboard && !registrationPrerequisites.canAccessDocuments) {
           return (
             <div className="w-full space-y-4">
               <PortalSection
@@ -4267,44 +4431,57 @@ export default function UserPortal({ section }: { section: string }) {
                   </div>
                 </header>
 
-                <div className="attachment-workspace grid grid-cols-[minmax(0,3fr)_minmax(290px,1fr)] items-start gap-4">
+                <div className="attachment-workspace max-w-[1200px] mx-auto space-y-4">
                   <section className="document-viewer-card min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
-                    <div className="document-viewer-toolbar flex min-h-16 min-w-0 items-center justify-between gap-4 border-b border-border/70 px-4 py-3">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <UserFeatureIcon icon={FileText} size="compact" className="mt-0.5" />
+                    <div className="document-viewer-toolbar flex min-h-14 items-center justify-between gap-4 border-b border-border/70 px-5 py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+                          <FileText className="h-5 w-5" />
+                        </div>
                         <div className="min-w-0">
-                          <p
-                            className="line-clamp-2 overflow-hidden text-sm font-semibold leading-snug text-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
-                            title={detailFile.fileName}
-                          >
-                            {detailFile.fileName}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {detailFileTypeLabel} · {detailFile.uploadedAt ? `Uploaded ${formatDateTimeLabel(detailFile.uploadedAt)}` : "Uploaded recently"}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-bold text-foreground leading-snug truncate" title={detailFile.fileName}>
+                              {detailDocumentType.name}
+                            </p>
+                            {detailFileBadgeStatus ? <PortalStatusBadge status={detailFileBadgeStatus} /> : null}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {detailFile.fileName} • {detailFileTypeLabel} • {detailFile.uploadedAt ? `Uploaded ${formatDateTimeLabel(detailFile.uploadedAt)}` : "Uploaded recently"}
                           </p>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 shrink-0"
-                        aria-label={`Open ${detailDocumentType.name} file`}
-                        onClick={() => void openFile(detailFile.fileUrl, detailFile.fileName)}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Open File
-                      </Button>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 rounded-xl border-border text-xs font-medium"
+                          onClick={() => void openFile(detailFile.fileUrl, detailFile.fileName)}
+                        >
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          Open in New Tab
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold"
+                          onClick={() => void openFile(detailFile.fileUrl, detailFile.fileName)}
+                        >
+                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                          Download
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="pdf-viewer-frame h-[clamp(580px,calc(100vh-260px),780px)] w-full overflow-auto bg-background">
+                    <div className="pdf-viewer-frame h-[clamp(650px,calc(80vh-140px),850px)] w-full overflow-auto bg-background">
                       {attachedDocumentPreviewUrl && attachedDocumentPreviewCanInline ? (
                         isImagePreviewFile(attachedDocumentPreviewTitle) || isImagePreviewFile(detailFile.fileUrl) ? (
                           <div className="flex min-h-full items-center justify-center p-4">
                             <img
                               src={attachedDocumentPreviewUrl}
                               alt={attachedDocumentPreviewTitle || `Preview of ${detailDocumentType.name}`}
-                              className="max-h-[calc(clamp(580px,calc(100vh-260px),780px)-2rem)] w-full object-contain"
+                              className="max-h-[calc(clamp(650px,calc(80vh-140px),850px)-2rem)] w-full object-contain"
                             />
                           </div>
                         ) : (
@@ -4314,180 +4491,16 @@ export default function UserPortal({ section }: { section: string }) {
                             className="h-full w-full border-0"
                           />
                         )
-                      ) : attachedDocumentPreviewUrl ? (
-                        <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
-                          <div className="space-y-2">
-                            <p className="text-base font-medium text-foreground">Preview not available in the browser</p>
-                            <p className="max-w-md text-sm text-muted-foreground">
-                              This file type cannot be displayed inline. Use the Open File button to view it.
-                            </p>
-                          </div>
-                        </div>
                       ) : (
                         <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
                           <p className="text-sm font-medium text-foreground">No preview available</p>
                           <p className="max-w-md text-sm text-muted-foreground">
-                            {attachedDocumentPreviewEmptyMessage || "The uploaded file could not be previewed."}
+                            {attachedDocumentPreviewEmptyMessage || "The uploaded file could not be previewed inline. Use Open in New Tab or Download above."}
                           </p>
                         </div>
                       )}
                     </div>
                   </section>
-
-                  <aside className="attachment-details-panel w-full max-w-[380px] justify-self-end rounded-2xl border border-border/70 bg-card p-4 shadow-sm xl:sticky xl:top-20">
-                    <section>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Document Status</p>
-                      <div className="mt-2">
-                        {detailFileBadgeStatus ? <PortalStatusBadge status={detailFileBadgeStatus} /> : null}
-                      </div>
-                      <p className="mt-2 text-sm leading-5 text-muted-foreground">{detailStatusDescription}</p>
-                    </section>
-
-                    {detailHasAdminFeedback ? (
-                      <section className="mt-3.5 border-t border-border/60 pt-3.5">
-                        <div className="flex items-center gap-1.5">
-                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">Admin Feedback</p>
-                        </div>
-                        <p className="mt-2 text-sm leading-5 text-amber-800">
-                          {detailFile.adminRemarks?.trim() || "No comment was provided."}
-                        </p>
-                      </section>
-                    ) : null}
-
-                    <section className="mt-3.5 border-t border-border/60 pt-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">File Details</p>
-                      <dl className="mt-2.5 space-y-2.5 text-sm">
-                        <div>
-                          <dt className="text-xs text-muted-foreground">File name</dt>
-                          <dd className="mt-0.5 break-words font-medium leading-5 text-foreground" title={detailFile.fileName}>
-                            {detailFile.fileName}
-                          </dd>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <dt className="text-xs text-muted-foreground">File type</dt>
-                            <dd className="mt-0.5 font-medium text-foreground">{detailFileTypeLabel}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs text-muted-foreground">Uploaded</dt>
-                            <dd className="mt-0.5 font-medium tabular-nums text-foreground">
-                              {detailFile.uploadedAt ? formatDateTimeLabel(detailFile.uploadedAt) : "Recently"}
-                            </dd>
-                          </div>
-                        </div>
-                      </dl>
-                    </section>
-
-                    <section className="mt-3.5 border-t border-border/60 pt-3.5">
-                      <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recent Activity</p>
-                      <RecentActivityPreview
-                        title=""
-                        activities={detailActivityItems}
-                        maxItems={3}
-                        onViewAll={openDocumentActivityLog}
-                        emptyDescription="Document review updates will appear here once the file has been processed."
-                        className="rounded-none border-0 bg-transparent p-0 shadow-none"
-                        headerClassName="mb-0"
-                        itemClassName="py-2.5"
-                      />
-                    </section>
-
-                    <section className="mt-3.5 border-t border-border/60 pt-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Manage Document</p>
-                      {detailHasAdminFeedback && !detailFileLocked ? (
-                        <div className="mt-2.5 space-y-3">
-                          <p className="text-sm leading-5 text-muted-foreground">
-                            Update this returned file here, or use the bulk document manager for multiple files.
-                          </p>
-                          <div className="space-y-1.5">
-                            <p className="text-xs font-medium text-foreground/70">
-                              Message with resubmission <span className="font-normal text-muted-foreground">(optional)</span>
-                            </p>
-                            <Textarea
-                              placeholder="Briefly describe what you changed or clarify anything for the admin."
-                              value={userRemarkDraftsByFileId[detailFile.id] ?? detailFile.userRemarks ?? ""}
-                              onChange={(event) => {
-                                setUserRemarkDraftsByFileId((prev) => ({ ...prev, [detailFile.id]: event.target.value }));
-                                updateDocumentFile(detailFile.id, { userRemarks: event.target.value });
-                              }}
-                              className="min-h-[4.5rem] resize-none text-sm"
-                            />
-                          </div>
-                          <input
-                            ref={attachedDocumentInputRef}
-                            type="file"
-                            accept={getDocumentUploadAcceptValue(detailFile.documentTypeId)}
-                            className="hidden"
-                            onChange={(event) => {
-                              const nextFile = event.target.files?.[0] ?? null;
-                              setAttachedDocumentReplacementFile(nextFile);
-                              setAttachedDocumentMarkedForRemoval(false);
-                            }}
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="h-10"
-                              onClick={() => attachedDocumentInputRef.current?.click()}
-                              disabled={Boolean(savingAttachedDocument)}
-                            >
-                              <FileUp className="mr-1.5 h-4 w-4" />
-                              Change File
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={attachedDocumentMarkedForRemoval ? "secondary" : "destructive"}
-                              className="h-10"
-                              onClick={() => {
-                                setAttachedDocumentMarkedForRemoval((current) => !current);
-                                setAttachedDocumentReplacementFile(null);
-                                if (attachedDocumentInputRef.current) attachedDocumentInputRef.current.value = "";
-                              }}
-                              disabled={Boolean(savingAttachedDocument)}
-                            >
-                              <Trash2 className="mr-1.5 h-4 w-4" />
-                              {attachedDocumentMarkedForRemoval ? "Undo" : "Remove"}
-                            </Button>
-                          </div>
-                          {attachedDocumentReplacementFile ? (
-                            <p className="text-xs leading-5 text-muted-foreground">
-                              Replacement: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
-                            </p>
-                          ) : null}
-                          {attachedDocumentMarkedForRemoval ? (
-                            <p className="text-xs text-destructive">This file will be removed when you save.</p>
-                          ) : null}
-                          <Button
-                            type="button"
-                            className="h-10 w-full"
-                            onClick={() => void saveAttachedDocumentChanges()}
-                            disabled={Boolean(savingAttachedDocument)}
-                          >
-                            {savingAttachedDocument ? "Saving..." : "Save Changes"}
-                          </Button>
-                          <Button type="button" variant="ghost" className="h-9 w-full" onClick={handleOpenDocumentManager}>
-                            Manage Multiple Documents
-                          </Button>
-                        </div>
-                      ) : detailFileLocked ? (
-                        <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                          This approved document is locked and can no longer be changed through the normal submission flow.
-                        </p>
-                      ) : (
-                        <div className="mt-2.5 space-y-3">
-                          <p className="text-sm leading-5 text-muted-foreground">
-                            Use the bulk document manager to replace or update eligible files.
-                          </p>
-                          <Button type="button" variant="outline" className="h-10 w-full" onClick={handleOpenDocumentManager}>
-                            <FileUp className="mr-2 h-4 w-4" />
-                            Manage Documents
-                          </Button>
-                        </div>
-                      )}
-                    </section>
-                  </aside>
                 </div>
               </div>
 
@@ -4773,6 +4786,47 @@ export default function UserPortal({ section }: { section: string }) {
                   ? "Some documents are still waiting for admin review."
                   : "Upload the required files to begin the review process.";
 
+        if (!useClassicDashboard && !documentDetailMode) {
+          return (
+            <UserPortalDocumentWorkspaceView
+              registrationPrerequisites={registrationPrerequisites}
+              currentProfile={currentProfile}
+              templateDocuments={templateDocuments}
+              docFiles={docFiles}
+              templatesById={templatesById}
+              submissionLogs={submissionLogs}
+              isDocumentSubmissionLocked={isDocumentSubmissionLocked}
+              isDocumentSubmissionApproved={isDocumentSubmissionApproved}
+              downloadingAllTemplates={downloadingAllTemplates}
+              handleDownloadAllTemplates={handleDownloadAllTemplates}
+              openBatchUploadWorkspace={openBatchUploadWorkspace}
+              openPreview={openPreview}
+              openFile={openFile}
+              openAttachedDocumentEditor={openAttachedDocumentEditor}
+              openDocumentRecentActivityModal={() => {
+                setDocumentRecentActivityModal({
+                  title: "Document Activity History",
+                  description: "Complete log of document submissions and review updates.",
+                  activities: (submissionLogs || []).map((log: any) => ({
+                    id: log.id,
+                    message: formatActivityActionLabel(log.action || log.description),
+                    note: log.adminRemarks || log.remarks || undefined,
+                    timestamp: log.createdAt,
+                    timestampLabel: formatFullActivityTimestamp(log.createdAt),
+                  })),
+                });
+              }}
+              navigate={navigate}
+              userRouteMap={userRouteMap}
+              formatDateTimeLabel={formatDateTimeLabel}
+              getDocumentPrimaryFileTypeLabel={getDocumentPrimaryFileTypeLabel}
+              deriveOverallDocumentSubmissionStatus={deriveOverallDocumentSubmissionStatus}
+              formatStatusLabel={formatStatusLabel}
+              resolveRegistrationDocumentAccess={resolveRegistrationDocumentAccess}
+            />
+          );
+        }
+
         return (
           <div className="space-y-4 lg:mx-auto lg:max-w-6xl lg:space-y-5">
             <PortalSection
@@ -5054,6 +5108,51 @@ export default function UserPortal({ section }: { section: string }) {
         );
       }
       case "budget-request":
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalBudgetWorkspaceView
+              budgetWorkflowEligibility={budgetWorkflowEligibility}
+              budgetRequests={budgetRequests}
+              budgetFilesByRequestId={budgetRequestFilesByBudgetId}
+              budgetNotesByRequestId={{}}
+              submittingBudgetId={savingBudgetRequest ? budgetForm.id : null}
+              showBudgetForm={showBudgetForm}
+              setShowBudgetForm={setShowBudgetForm}
+              editingBudgetRequest={budgetRequests.find((r) => r.id === budgetForm.id) || null}
+              startEditingBudgetRequest={startEditingBudgetRequest}
+              handleDeleteBudgetRequest={handleDeleteBudgetRequest}
+              openPreview={openPreview}
+              openFile={openFile}
+              navigate={navigate}
+              searchParams={searchParams}
+              userRouteMap={userRouteMap}
+              buildPublicRecordCode={buildPublicRecordCode}
+              formatCurrency={formatCurrency}
+              formatShortPortalDate={formatShortPortalDate}
+              formatDateTimeLabel={formatDateTimeLabel}
+              formatStatusLabel={formatStatusLabel}
+              newActivityTitle={budgetForm.activityTitle}
+              setNewActivityTitle={(val) => setBudgetForm((c) => ({ ...c, activityTitle: val }))}
+              newActivityDescription={budgetForm.activityDescription}
+              setNewActivityDescription={(val) => setBudgetForm((c) => ({ ...c, activityDescription: val }))}
+              newPurposeCategory={budgetForm.purposeCategory}
+              setNewPurposeCategory={(val) => setBudgetForm((c) => ({ ...c, purposeCategory: val }))}
+              newActivityDate={budgetForm.activityDate}
+              setNewActivityDate={(val) => setBudgetForm((c) => ({ ...c, activityDate: val }))}
+              newVenue={budgetForm.venue}
+              setNewVenue={(val) => setBudgetForm((c) => ({ ...c, venue: val }))}
+              newRequestedAmount={budgetForm.requestedAmount}
+              setNewRequestedAmount={(val) => setBudgetForm((c) => ({ ...c, requestedAmount: val }))}
+              newRemarks={budgetForm.remarks}
+              setNewRemarks={(val) => setBudgetForm((c) => ({ ...c, remarks: val }))}
+              handleCreateOrUpdateBudgetRequest={async (e, isDraft) => {
+                e.preventDefault();
+                await saveBudgetRequest(isDraft ? "draft" : "submitted");
+              }}
+            />
+          );
+        }
+
         if (!budgetWorkflowEligibility.eligible && !budgetRequests.length) {
           const nextBudgetStep = !budgetWorkflowEligibility.profileComplete
             ? { label: "Complete Profile", route: userRouteMap["organization-profile"] }
@@ -5947,20 +6046,21 @@ export default function UserPortal({ section }: { section: string }) {
                                     })}
                                   </div>
                                   <div className="hidden overflow-x-auto lg:block">
-                                    <div className="min-w-[1080px] overflow-hidden rounded-2xl border border-border/80 bg-white shadow-sm lg:w-full lg:min-w-0">
-                                      <Table className="budget-requests-table lg:w-full lg:table-fixed">
-                                        <TableHeader>
-                                          <TableRow className="border-b border-slate-200/80 bg-[#F8FAFC] hover:bg-[#F8FAFC]">
-                                            <TableHead className="w-[22%] lg:w-[24%] lg:px-3.5 lg:py-3">Request</TableHead>
-                                            <TableHead className="w-[14%] lg:w-[13%] lg:px-3.5 lg:py-3">Status</TableHead>
-                                            <TableHead className="w-[12%] lg:w-[10%] lg:px-3.5 lg:py-3">Proposed Date</TableHead>
-                                            <TableHead className="w-[12%] lg:w-[10%] lg:px-3.5 lg:py-3">Venue</TableHead>
-                                            <TableHead className="w-[16%] lg:w-[17%] lg:px-3.5 lg:py-3">Amounts (PHP)</TableHead>
-                                            <TableHead className="w-[14%] lg:w-[16%] lg:px-3.5 lg:py-3">File</TableHead>
-                                            <TableHead className="w-[10%] lg:w-[10%] lg:px-3.5 lg:py-3">Recent Activity</TableHead>
+                                    <div className="min-w-[1080px] overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm lg:w-full lg:min-w-0">
+                                      <Table className="w-full border-collapse">
+                                        <TableHeader className="bg-muted/30">
+                                          <TableRow className="border-b border-border/80">
+                                            <TableHead className="w-[140px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Code &amp; Category</TableHead>
+                                            <TableHead className="w-[200px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Activity</TableHead>
+                                            <TableHead className="w-[140px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Financial Status</TableHead>
+                                            <TableHead className="w-[120px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Amounts</TableHead>
+                                            <TableHead className="w-[140px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Schedule &amp; Venue</TableHead>
+                                            <TableHead className="w-[170px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Proposal File</TableHead>
+                                            <TableHead className="w-[160px] px-3.5 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Last Activity</TableHead>
+                                            <TableHead className="w-[100px] px-3.5 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
                                           </TableRow>
                                         </TableHeader>
-                                        <TableBody>
+                                        <TableBody className="divide-y divide-border/40">
                                           {paginatedRequests.map((request) => {
                                             const attachedFile = budgetRequestFilesByBudgetId.get(request.id);
                                             const latestActivity = request.revisionHistory?.length
@@ -6165,6 +6265,37 @@ export default function UserPortal({ section }: { section: string }) {
           );
       }
       case "liquidation-reporting": {
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalLiquidationWorkspaceView
+              liquidationWorkflowEligibility={liquidationWorkflowEligibility}
+              budgetWorkflowEligibility={budgetWorkflowEligibility}
+              liquidationReports={liquidationReports}
+              budgetRequests={budgetRequests}
+              liquidationFilesByReportId={liquidationFilesByReportId}
+              liquidationNotesByReportId={liquidationNotesByReportId}
+              setLiquidationNotesByReportId={setLiquidationNotesByReportId}
+              submittingLiquidationId={submittingLiquidationId}
+              liquidationFileInputRef={liquidationFileInputRef}
+              liquidationUploadTargetId={liquidationUploadTargetId}
+              setLiquidationUploadTargetId={setLiquidationUploadTargetId}
+              handleLiquidationFileUpload={handleLiquidationFileUpload}
+              handleSubmitLiquidation={handleSubmitLiquidation}
+              handleDeleteLiquidationFile={handleDeleteLiquidationFile}
+              openPreview={openPreview}
+              openFile={openFile}
+              navigate={navigate}
+              searchParams={searchParams}
+              userRouteMap={userRouteMap}
+              buildPublicRecordCode={buildPublicRecordCode}
+              formatCurrency={formatCurrency}
+              formatShortPortalDate={formatShortPortalDate}
+              formatDateTimeLabel={formatDateTimeLabel}
+              formatStatusLabel={formatStatusLabel}
+            />
+          );
+        }
+
         return (
           <div className="user-liquidation-reports-page">
             <PortalSection
@@ -6181,21 +6312,21 @@ export default function UserPortal({ section }: { section: string }) {
               }
               headerClassName="max-lg:gap-1 max-lg:px-3.5 max-lg:pb-2 max-lg:pt-3.5"
             >
-            <input
-              ref={liquidationFileInputRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              className="sr-only"
-              onChange={async (event) => {
-                const targetReport = liquidationReports.find((item) => item.id === liquidationUploadTargetId) ?? null;
-                if (targetReport) {
-                  await handleLiquidationFileUpload(targetReport, event.target.files);
-                }
-                event.currentTarget.value = "";
-                setLiquidationUploadTargetId(null);
-              }}
-            />
-            {liquidationReports.length ? (
+              <input
+                ref={liquidationFileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="sr-only"
+                onChange={async (event) => {
+                  const targetReport = liquidationReports.find((item) => item.id === liquidationUploadTargetId) ?? null;
+                  if (targetReport) {
+                    await handleLiquidationFileUpload(targetReport, event.target.files);
+                  }
+                  event.currentTarget.value = "";
+                  setLiquidationUploadTargetId(null);
+                }}
+              />
+              {liquidationReports.length ? (
               <div className="space-y-4">
                 {(() => {
                   const liquidationActionLabels: Record<string, string> = {
@@ -7267,6 +7398,16 @@ export default function UserPortal({ section }: { section: string }) {
         );
       }
       case "news-releases": {
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalNewsWorkspaceView
+              newsReleases={state.newsReleases}
+              formatShortPortalDate={formatShortPortalDate}
+              LYDO_FACEBOOK_PAGE_URL={LYDO_FACEBOOK_PAGE_URL}
+            />
+          );
+        }
+
         const publishedReleases = state.newsReleases.filter((n) => n.visibilityStatus === "published");
         const availableCategories = Array.from(
           new Set(publishedReleases.map((r) => r.category).filter((c): c is string => Boolean(c)))
@@ -7603,6 +7744,28 @@ export default function UserPortal({ section }: { section: string }) {
         );
       }
       case "ypop": {
+        if (!useClassicDashboard) {
+          return (
+            <UserPortalYPOPWorkspaceView
+              ypopWorkflowEligibility={ypopWorkflowEligibility}
+              currentProfile={currentProfile}
+              ypopEntries={state.ypopEntries}
+              ypopCityActivities={state.ypopCityActivities}
+              ypopEventParticipations={ypopEventParticipations}
+              ypopEventFiles={state.ypopEventFiles}
+              ypopFiles={state.ypopFiles}
+              ypopOrgActivityFiles={state.ypopOrgActivityFiles}
+              activeEntry={state.ypopEntries.find((e) => e.organizationId === (currentProfile?.id ?? "")) ?? null}
+              navigate={navigate}
+              userRouteMap={userRouteMap}
+              openFile={openFile}
+              formatDateTimeLabel={formatDateTimeLabel}
+              formatShortPortalDate={formatShortPortalDate}
+              setYpopOrgActivityModalOpen={setYpopOrgActivityModalOpen}
+            />
+          );
+        }
+
         const availableYpopSemesterKeys = new Set(
           state.ypopPeriods.map((period) => period.semesterKey),
         );
@@ -10376,10 +10539,12 @@ Validated {validatedDate}</p>
         activeId={section}
         onNavigate={(id) => navigate(userRouteMap[id] ?? userRouteMap.dashboard)}
         onSignOut={() => void signOut()}
+        useClassicView={useClassicDashboard}
+        onToggleClassicView={() => setUseClassicDashboard((prev) => !prev)}
       >
         {activeContent}
       </UserPortalShell>
-      <Dialog
+      <PortalDocumentPreviewModal
         open={previewModalOpen}
         onOpenChange={(open) => {
           setPreviewModalOpen(open);
@@ -10390,56 +10555,15 @@ Validated {validatedDate}</p>
             setPreviewCanInline(false);
           }
         }}
-      >
-        <DialogContent className="h-[100dvh] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-w-5xl sm:rounded-xl sm:border">
-          <div className="flex h-full flex-col sm:h-auto sm:max-h-[90vh]">
-            <div className="border-b border-border/70 px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
-              <DialogHeader>
-                <DialogTitle className="max-w-[calc(100vw-5rem)] break-words text-lg leading-tight sm:max-w-none sm:text-xl">
-                  {previewTitle || "Template Preview"}
-                </DialogTitle>
-                <DialogDescription className="text-sm">
-                  Preview the uploaded template file here.
-                </DialogDescription>
-              </DialogHeader>
-            </div>
-            <div className="flex-1 overflow-hidden p-4 sm:p-6">
-              <div className="h-[calc(100dvh-11rem)] overflow-hidden rounded-md border border-border/70 bg-muted/20 sm:h-[70vh]">
-                {previewUrl && previewCanInline ? (
-                  <iframe
-                    src={previewUrl}
-                    title={previewTitle || "Template preview"}
-                    className="h-full w-full"
-                  />
-                ) : previewUrl ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
-                    <div className="space-y-2">
-                      <p className="text-base font-medium text-foreground">Preview not available in the browser</p>
-                      <p className="max-w-md text-sm text-muted-foreground">
-                        This template file type cannot be shown inside the portal preview. Open or download the file to view it in Excel, Word, or another compatible app.
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Button type="button" variant="outline" onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Open File
-                      </Button>
-                      <Button type="button" onClick={() => void openFile(previewUrl, previewTitle || "template-file")}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download File
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground">
-                    {previewEmptyMessage || "No file uploaded yet."}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        previewUrl={previewUrl}
+        previewTitle={previewTitle}
+        previewCanInline={previewCanInline}
+        previewEmptyMessage={previewEmptyMessage}
+        organizationName={currentProfile?.organizationName || "Pasig City Organization"}
+        onDownloadFile={async (url, name) => {
+          await downloadResolvedFile(url, name);
+        }}
+      />
       <Dialog
         open={false}
         onOpenChange={(open) => {
@@ -10995,17 +11119,29 @@ Validated {validatedDate}</p>
           }
         }}
       >
-        <DialogContent className="grid w-[calc(100vw-24px)] max-w-[520px] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-2xl p-0 sm:max-w-4xl lg:max-w-3xl max-h-[calc(100dvh-24px)]">
-          <DialogHeader className="shrink-0 border-b border-border/70 px-4 py-4 sm:px-5">
-            <DialogTitle>Upload Required Documents</DialogTitle>
-            <DialogDescription>
-              Select files, assign each type, then submit when ready.
-            </DialogDescription>
+        <DialogContent className="grid w-[calc(100vw-24px)] max-w-[520px] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-3xl border border-border/80 bg-card p-0 shadow-2xl sm:max-w-4xl lg:max-w-3xl max-h-[calc(100dvh-24px)]">
+          {/* Header */}
+          <DialogHeader className="shrink-0 border-b border-border/60 bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-5 sm:p-6 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5 min-w-0">
+              <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs">
+                <UploadCloud className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <DialogTitle className="text-xl font-black tracking-tight text-foreground">
+                  Upload Documents
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground font-medium">
+                  Upload one or multiple required registration documents for review.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="min-h-0 overflow-y-auto px-4 py-4 overscroll-contain sm:px-5">
-            <div className="grid gap-4 pb-6">
+
+          {/* Main Body */}
+          <div className="min-h-0 overflow-y-auto p-5 sm:p-6 space-y-6 overscroll-contain">
+            {/* Modern Dropzone */}
             <div
-              className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-5 text-center"
+              className="group relative rounded-2xl border-2 border-dashed border-primary/30 dark:border-primary/40 hover:border-primary/60 bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 p-7 sm:p-8 text-center transition-all duration-200 cursor-pointer shadow-2xs"
               onDragOver={(event) => {
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "copy";
@@ -11015,8 +11151,15 @@ Validated {validatedDate}</p>
                 handleBatchDroppedFiles(event.dataTransfer.files);
               }}
             >
-              <p className="text-sm font-medium text-foreground">Drag and drop PDF files here</p>
-              <p className="mt-1 text-sm text-muted-foreground">or browse files and map them to the correct required document.</p>
+              <div className="h-12 w-12 rounded-2xl bg-card border border-border/60 text-primary flex items-center justify-center mx-auto mb-3.5 shadow-2xs group-hover:scale-105 group-hover:border-primary/40 transition-all duration-200">
+                <UploadCloud className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-bold text-foreground">
+                Drag & drop your PDF files
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground font-medium">
+                or browse your computer to upload multiple registration documents.
+              </p>
               <label className="mt-4 inline-flex cursor-pointer">
                 <input
                   type="file"
@@ -11028,20 +11171,27 @@ Validated {validatedDate}</p>
                     event.currentTarget.value = "";
                   }}
                 />
-                <span className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium text-foreground">
-                  Browse Files
+                <span className="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-2xs gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <FileUp className="h-4 w-4" /> Browse Files
                 </span>
               </label>
+              <p className="mt-3 text-[11px] text-muted-foreground/70 font-medium">
+                Accepted format: PDF (.pdf) • Maximum 10MB per file
+              </p>
             </div>
 
-            {batchDroppedFiles.length ? (
-              <div className="space-y-3 rounded-2xl border border-border/70 bg-background p-4">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Dropped Files</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Confirm which required document each dropped file belongs to.
-                  </p>
-                </div>
+            {/* Upload Queue Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" /> Files Ready
+                </h3>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                  {batchDroppedFiles.length} File{batchDroppedFiles.length === 1 ? "" : "s"}
+                </span>
+              </div>
+
+              {batchDroppedFiles.length ? (
                 <div className="space-y-3">
                   {batchDroppedFiles.map((entry) => {
                     const duplicateAssignment = Boolean(
@@ -11053,14 +11203,66 @@ Validated {validatedDate}</p>
                     const validationError = entry.mappedDocumentTypeId
                       ? getDocumentUploadValidationError(entry.mappedDocumentTypeId, entry.file)
                       : null;
+                    const isMapped = Boolean(entry.mappedDocumentTypeId);
+                    const hasError = duplicateAssignment || Boolean(validationError);
+                    const mappedTemplate = templateDocuments.find((t) => t.id === entry.mappedDocumentTypeId);
+
                     return (
-                      <div key={entry.id} className="grid gap-3 rounded-xl border border-border/60 p-3">
-                        <div className="min-w-0">
-                          <p className="break-words text-sm font-medium text-foreground" title={entry.file.name}>{entry.file.name}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">{Math.max(1, Math.round(entry.file.size / 1024))} KB</p>
+                      <div
+                        key={entry.id}
+                        className="rounded-2xl border border-border/70 bg-card p-4 space-y-3 shadow-2xs hover:border-border transition-all duration-200"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-10 w-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 space-y-0.5">
+                              <p className="text-sm font-bold text-foreground truncate" title={entry.file.name}>
+                                {entry.file.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground font-medium">
+                                {Math.max(1, Math.round(entry.file.size / 1024))} KB
+                                {mappedTemplate ? (
+                                  <span className="text-primary font-semibold"> · Mapped to: {mappedTemplate.name}</span>
+                                ) : null}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {hasError ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-full">
+                                <AlertCircle className="h-3 w-3" /> Error
+                              </span>
+                            ) : isMapped ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                                <CheckCircle2 className="h-3 w-3" /> Ready
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+                                <Clock className="h-3 w-3" /> Needs Type
+                              </span>
+                            )}
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+                              onClick={() => setBatchDroppedFiles((current) => current.filter((item) => item.id !== entry.id))}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Remove file</span>
+                            </Button>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Document type</p>
+
+                        {/* Document Type Mapping Selector */}
+                        <div className="space-y-1.5 pt-1 border-t border-border/40">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Assign Required Document Type
+                          </label>
                           <Select
                             value={entry.mappedDocumentTypeId || "__unassigned__"}
                             onValueChange={(value) =>
@@ -11073,75 +11275,95 @@ Validated {validatedDate}</p>
                               )
                             }
                           >
-                            <SelectTrigger className="h-10 w-full">
+                            <SelectTrigger className="h-9 w-full rounded-xl bg-background border-border text-xs font-medium">
                               <SelectValue placeholder="Select document type" />
                             </SelectTrigger>
-                            <SelectContent className="max-h-[260px]">
+                            <SelectContent className="max-h-[260px] rounded-xl">
                               <SelectItem value="__unassigned__">Select document type</SelectItem>
                               {templateDocuments.map((documentType) => {
                                 const existingFile = documentFilesByTypeId.get(documentType.id);
                                 const isApproved = isApprovedSubmissionFile(existingFile);
+                                const isUnderReview = isUnderReviewSubmissionFile(existingFile);
                                 const assignedToOther = batchDroppedFiles.some(
                                   (other) =>
                                     other.id !== entry.id &&
                                     other.mappedDocumentTypeId &&
                                     other.mappedDocumentTypeId === documentType.id,
                                 );
+                                const isDisabled = isApproved || isUnderReview || assignedToOther;
                                 return (
                                   <SelectItem
                                     key={documentType.id}
                                     value={documentType.id}
-                                    disabled={isApproved || assignedToOther}
+                                    disabled={isDisabled}
                                   >
-                                    {isApproved ? `${documentType.name} — Approved` : documentType.name}
+                                    {isApproved
+                                      ? `${documentType.name} — Approved`
+                                      : isUnderReview
+                                      ? `${documentType.name} — Under Review`
+                                      : assignedToOther
+                                      ? `${documentType.name} — Assigned`
+                                      : documentType.name}
                                   </SelectItem>
                                 );
                               })}
                             </SelectContent>
                           </Select>
                         </div>
+
+                        {/* Inline Error Alerts */}
                         {duplicateAssignment ? (
-                          <p className="text-xs text-destructive">This document type has already been assigned to another file.</p>
+                          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive flex items-center gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                            <span>This document type has already been assigned to another file in the queue.</span>
+                          </div>
                         ) : null}
                         {validationError ? (
-                          <p className="text-xs text-destructive">{validationError}</p>
+                          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive flex items-center gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                            <span>{validationError}</span>
+                          </div>
                         ) : null}
-                        <div className="flex justify-start">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-3"
-                            onClick={() => setBatchDroppedFiles((current) => current.filter((item) => item.id !== entry.id))}
-                          >
-                            Remove
-                          </Button>
-                        </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            ) : null}
-
-          </div>
-          </div>
-          <DialogFooter className="shrink-0 border-t border-border/70 bg-background px-4 py-3 sm:px-5">
-            <div className="flex w-full flex-col gap-3 sm:gap-2">
-              <div className="text-sm text-muted-foreground">
-                <p>{batchAssignmentCounts.validReadyCount} file{batchAssignmentCounts.validReadyCount === 1 ? "" : "s"} ready</p>
-                {(batchAssignmentCounts.unassignedCount > 0 || batchAssignmentCounts.duplicateTypeCount > 0) ? (
-                  <p className="mt-1">
-                    {batchAssignmentCounts.unassignedCount} file{batchAssignmentCounts.unassignedCount === 1 ? "" : "s"} still need a document type
-                    {batchAssignmentCounts.duplicateTypeCount > 0 ? ` · ${batchAssignmentCounts.duplicateTypeCount} duplicate assignment${batchAssignmentCounts.duplicateTypeCount === 1 ? "" : "s"}` : ""}
+              ) : (
+                /* Empty State */
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-8 text-center space-y-2">
+                  <div className="h-10 w-10 rounded-xl bg-card border border-border/60 text-muted-foreground flex items-center justify-center mx-auto shadow-2xs">
+                    <UploadCloud className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs font-bold text-foreground">No files selected yet</p>
+                  <p className="text-xs text-muted-foreground">
+                    Drag PDFs here or click Browse Files to begin.
                   </p>
-                ) : null}
-              </div>
-              <div className="grid w-full gap-2 sm:grid-cols-2">
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Bar Footer */}
+          <DialogFooter className="shrink-0 border-t border-border/80 bg-card/95 backdrop-blur-md p-4 px-5 sm:px-6 rounded-b-3xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg z-20">
+            <div className="text-xs text-muted-foreground font-medium">
+              <p className="font-bold text-foreground">
+                {batchAssignmentCounts.validReadyCount} file{batchAssignmentCounts.validReadyCount === 1 ? "" : "s"} ready
+              </p>
+              {batchAssignmentCounts.unassignedCount > 0 || batchAssignmentCounts.duplicateTypeCount > 0 ? (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+                  {batchAssignmentCounts.unassignedCount} file{batchAssignmentCounts.unassignedCount === 1 ? "" : "s"} need a document type
+                  {batchAssignmentCounts.duplicateTypeCount > 0
+                    ? ` · ${batchAssignmentCounts.duplicateTypeCount} duplicate assignment${batchAssignmentCounts.duplicateTypeCount === 1 ? "" : "s"}`
+                    : ""}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 w-full"
+                className="h-9 flex-1 sm:flex-initial rounded-xl border-border text-xs font-semibold hover:bg-accent"
                 disabled={!batchDroppedFiles.length}
                 onClick={() => void handleSubmitBatchUpload("draft")}
               >
@@ -11149,13 +11371,12 @@ Validated {validatedDate}</p>
               </Button>
               <Button
                 type="button"
-                className="h-10 w-full"
+                className="h-9 flex-1 sm:flex-initial rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-2xs gap-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 disabled={!batchDroppedFiles.length || getBatchUploadIssues().length > 0}
                 onClick={() => void handleSubmitBatchUpload("review")}
               >
-                Submit Selected for Review
+                <FileUp className="h-3.5 w-3.5" /> Submit Selected for Review
               </Button>
-            </div>
             </div>
           </DialogFooter>
         </DialogContent>
@@ -11214,37 +11435,71 @@ Validated {validatedDate}</p>
           }
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{batchUploadResult?.submitMode === "draft" ? "Draft Saved" : "Batch Upload Result"}</DialogTitle>
-            <DialogDescription>
-              {batchUploadResult
-                ? `${batchUploadResult.successCount} document${batchUploadResult.successCount === 1 ? "" : "s"} processed successfully.`
-                : "Review the result of your batch upload."}
-            </DialogDescription>
-          </DialogHeader>
-          {batchUploadResult ? (
-            <div className="space-y-3">
-              <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
-                {batchUploadResult.failureCount > 0
-                  ? `${batchUploadResult.failureCount} document${batchUploadResult.failureCount === 1 ? "" : "s"} still need attention.`
-                  : "All selected documents were processed successfully."}
+        <DialogContent className="rounded-2xl border border-border/80 bg-card shadow-2xl p-5 sm:p-6 space-y-4 max-w-md lg:max-w-lg">
+          <DialogHeader className="space-y-1 text-left">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary/10 text-primary shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
               </div>
-              <div className="space-y-2">
+              <div>
+                <DialogTitle className="text-lg font-black text-foreground">
+                  {batchUploadResult?.submitMode === "draft" ? "Draft Saved" : "Submitted for Review"}
+                </DialogTitle>
+                <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5">
+                  {batchUploadResult
+                    ? `${batchUploadResult.successCount} document${batchUploadResult.successCount === 1 ? "" : "s"} ${batchUploadResult.submitMode === "draft" ? "saved as drafts" : "submitted for admin review"}.`
+                    : "Review the result of your batch upload."}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {batchUploadResult ? (
+            <div className="space-y-3 pt-1">
+              <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
                 {batchUploadResult.results.map((entry) => (
-                  <div key={`${entry.documentTypeName}-${entry.fileName}`} className="rounded-xl border border-border/60 px-3 py-3 text-sm">
-                    <p className="font-medium text-foreground">{entry.documentTypeName}</p>
-                    <p className="mt-1 text-muted-foreground">{entry.fileName}</p>
-                    <p className={cn("mt-1 text-xs", entry.success ? "text-emerald-700" : "text-destructive")}>
-                      {entry.success ? "Processed successfully" : entry.error || "Unable to process this file."}
-                    </p>
+                  <div
+                    key={`${entry.documentTypeName}-${entry.fileName}`}
+                    className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-1.5 transition-all hover:border-primary/40"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-xs font-bold text-foreground leading-snug truncate max-w-[260px]">
+                        {entry.documentTypeName}
+                      </h4>
+                      <span className={cn(
+                        "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0",
+                        !entry.success
+                          ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                          : batchUploadResult.submitMode === "draft"
+                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                          : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                      )}>
+                        {!entry.success
+                          ? "Failed"
+                          : batchUploadResult.submitMode === "draft"
+                          ? "Draft Saved"
+                          : "Under Review"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
+                      <span className="truncate max-w-[240px] font-medium">{entry.fileName || entry.documentTypeName}</span>
+                      <span className="shrink-0">{formatDateTimeLabel(new Date().toISOString())}</span>
+                    </div>
+                    {!entry.success && entry.error && (
+                      <p className="text-[11px] text-destructive font-medium pt-0.5">{entry.error}</p>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           ) : null}
-          <DialogFooter>
-            <Button type="button" className="w-full sm:w-auto" onClick={() => setBatchUploadResult(null)}>
+
+          <DialogFooter className="pt-2">
+            <Button
+              type="button"
+              className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs h-9 shadow-2xs cursor-pointer"
+              onClick={() => setBatchUploadResult(null)}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -11324,181 +11579,270 @@ Validated {validatedDate}</p>
           }
         }}
       >
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[calc(100dvh-1rem)] overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="break-words text-lg sm:text-xl">{attachedDocumentPreviewTitle || "Attached File"}</DialogTitle>
-            <DialogDescription className="text-sm">
-              {isApprovedSubmissionFile(attachedDocumentEditor?.file)
-                ? "This approved file is now locked. You can review or open it, but you can no longer change or remove it."
-                : "Review the uploaded file here. Use Upload Multiple Documents from the main page for any future eligible replacements."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:items-start">
-            <div className="min-w-0 rounded-xl border border-border/70 bg-muted/20 p-3 sm:p-4">
-              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Attached file preview</p>
-                  <p className="break-words text-sm font-medium text-foreground sm:truncate">
-                    {attachedDocumentEditor?.file.fileName || "Uploaded file"}
-                  </p>
+        <DialogContent className="w-[92vw] max-w-[1400px] h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200">
+          <DialogDescription className="sr-only">
+            Attached document viewer for {attachedDocumentEditor?.documentTypeName || "Document"}
+          </DialogDescription>
+          {/* INFORMATION HEADER BAR - Matches View Template Modal */}
+          <div className="px-5 py-3.5 border-b border-border/70 bg-card flex items-center justify-between shrink-0 gap-4">
+            {/* Left: Icon, Title, Clean Text Badge, Metadata */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 space-y-0.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <DialogTitle className="text-base font-bold text-foreground leading-snug truncate max-w-[450px]" title={attachedDocumentEditor?.documentTypeName}>
+                    {attachedDocumentEditor?.documentTypeName || "Attached Document"}
+                  </DialogTitle>
+                  {attachedDocumentEditor?.file ? (
+                    <span className={cn(
+                      "text-[11px] font-semibold px-2.5 py-0.5 rounded-full border",
+                      isApprovedSubmissionFile(attachedDocumentEditor.file)
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : attachedDocumentEditor.file.adminStatus === "draft"
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                        : attachedDocumentEditor.file.adminStatus === "needs_revision"
+                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                        : attachedDocumentEditor.file.adminStatus === "rejected" || attachedDocumentEditor.file.adminStatus === "rejected_red"
+                        ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                    )}>
+                      {isApprovedSubmissionFile(attachedDocumentEditor.file)
+                        ? "Approved"
+                        : attachedDocumentEditor.file.adminStatus === "draft"
+                        ? "Draft Saved"
+                        : attachedDocumentEditor.file.adminStatus === "needs_revision"
+                        ? "Needs Revision"
+                        : attachedDocumentEditor.file.adminStatus === "rejected" || attachedDocumentEditor.file.adminStatus === "rejected_red"
+                        ? "Rejected"
+                        : "Under Review"}
+                    </span>
+                  ) : null}
                 </div>
-                {attachedDocumentEditor ? (
+                <p className="text-xs text-muted-foreground truncate font-medium">
+                  {attachedDocumentEditor?.file.fileName || "Uploaded file"} • {attachedDocumentEditor?.file.uploadedAt ? `Uploaded ${formatDateTimeLabel(attachedDocumentEditor.file.uploadedAt)}` : "Uploaded recently"}
+                </p>
+              </div>
+            </div>
+
+            {/* Right Top Actions - Clean Compact Grouping */}
+            <div className="flex items-center gap-2 shrink-0">
+              {attachedDocumentEditor ? (
+                <>
+                  {attachedDocumentEditor.file.adminStatus === "draft" ? (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={savingAttachedDocument}
+                        className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs"
+                        onClick={async () => {
+                          if (!attachedDocumentEditor?.file?.submissionId) return;
+                          setSavingAttachedDocument(true);
+                          try {
+                            await submitDocumentSubmissionForReviewInSupabase(attachedDocumentEditor.file.submissionId, [attachedDocumentEditor.file.id]);
+                            const remoteSnapshot = await loadLydoConnectSupabaseState();
+                            if (remoteSnapshot) {
+                              mergeRemoteState(remoteSnapshot);
+                            }
+                            notifyAdmin({
+                              title: "Document submission",
+                              message: `${attachedDocumentEditor.documentTypeName} submitted for review by ${profile.organizationName || "an organization"}.`,
+                              relatedType: "document_submission",
+                              relatedId: attachedDocumentEditor.file.submissionId,
+                              organizationId: profile.id,
+                            });
+                            toast({
+                              title: "Documents submitted successfully",
+                              description: `${attachedDocumentEditor.documentTypeName} is now under review.`,
+                            });
+                            closeAttachedDocumentEditor();
+                          } catch (error) {
+                            toast({
+                              title: "Submission failed",
+                              description: error instanceof Error ? error.message : "The document could not be submitted.",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setSavingAttachedDocument(false);
+                          }
+                        }}
+                      >
+                        <FileUp className="h-3.5 w-3.5" /> Submit for Review
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={savingAttachedDocument}
+                        className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent"
+                        onClick={() => {
+                          closeAttachedDocumentEditor();
+                          openBatchUploadWorkspace();
+                        }}
+                      >
+                        <FileUp className="h-3.5 w-3.5" /> Replace File
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={savingAttachedDocument}
+                        className="h-8 px-3 rounded-xl text-destructive hover:bg-destructive/10 text-xs font-semibold gap-1.5 cursor-pointer"
+                        onClick={async () => {
+                          if (!attachedDocumentEditor?.file?.id) return;
+                          setSavingAttachedDocument(true);
+                          try {
+                            await removeOrganizationDocumentFromSupabase(attachedDocumentEditor.file.id);
+                            const remoteSnapshot = await loadLydoConnectSupabaseState();
+                            if (remoteSnapshot) {
+                              mergeRemoteState(remoteSnapshot);
+                            }
+                            toast({
+                              title: "Draft deleted",
+                              description: `Draft for ${attachedDocumentEditor.documentTypeName} was deleted.`,
+                            });
+                            closeAttachedDocumentEditor();
+                          } catch (error) {
+                            toast({
+                              title: "Delete failed",
+                              description: error instanceof Error ? error.message : "Unable to delete draft.",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setSavingAttachedDocument(false);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete Draft
+                      </Button>
+                    </>
+                  ) : attachedDocumentEditor.file.adminStatus === "needs_revision" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={savingAttachedDocument}
+                      className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent"
+                      onClick={() => {
+                        closeAttachedDocumentEditor();
+                        openBatchUploadWorkspace();
+                      }}
+                    >
+                      <FileUp className="h-3.5 w-3.5" /> Replace File
+                    </Button>
+                  ) : (attachedDocumentEditor.file.adminStatus === "under_admin_review" || attachedDocumentEditor.file.adminStatus === "submitted" || attachedDocumentEditor.file.adminStatus === "under_review") ? (
+                    <span className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-500/10 px-3 py-1 rounded-xl border border-purple-500/20">
+                      Waiting for Admin Review
+                    </span>
+                  ) : null}
+
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="w-full sm:w-auto"
+                    className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent"
                     onClick={() => void openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName)}
                   >
-                    <Eye className="mr-2 h-4 w-4" />
-                    Open File
+                    <Eye className="h-3.5 w-3.5" />
+                    Open in New Tab
                   </Button>
-                ) : null}
-              </div>
-              <div className="h-[min(52vh,28rem)] overflow-auto rounded-lg border border-border/70 bg-background sm:h-[min(60vh,34rem)]">
-                {attachedDocumentPreviewUrl && attachedDocumentPreviewCanInline ? (
-                  isImagePreviewFile(attachedDocumentPreviewTitle) || isImagePreviewFile(attachedDocumentEditor?.file.fileUrl ?? "") ? (
-                    <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
-                      <img
-                        src={attachedDocumentPreviewUrl}
-                        alt={attachedDocumentPreviewTitle || "Attached file preview"}
-                        className="max-h-[calc(52vh-1.5rem)] w-full rounded-md object-contain sm:max-h-[calc(34rem-2rem)]"
-                      />
-                    </div>
-                  ) : (
-                    <iframe
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs"
+                    onClick={() => void openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName)}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download
+                  </Button>
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          {/* PDF VIEWER AREA WITH SOFT GRAY BACKGROUND (#F8FAFC) - Matches View Template Modal */}
+          <div className="flex-1 overflow-hidden relative bg-[#F8FAFC] dark:bg-slate-950 p-2.5 sm:p-3">
+            <div className="w-full h-full rounded-xl overflow-hidden border border-border/60 bg-background relative shadow-inner">
+              {attachedDocumentPreviewUrl && attachedDocumentPreviewCanInline ? (
+                isImagePreviewFile(attachedDocumentPreviewTitle) || isImagePreviewFile(attachedDocumentEditor?.file.fileUrl ?? "") ? (
+                  <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
+                    <img
                       src={attachedDocumentPreviewUrl}
-                      title={attachedDocumentPreviewTitle || "Attached file preview"}
-                      className="h-[min(52vh,28rem)] w-full border-0 sm:h-[min(60vh,34rem)]"
+                      alt={attachedDocumentPreviewTitle || "Attached file preview"}
+                      className="max-h-[calc(clamp(650px,calc(80vh-120px),850px)-1.5rem)] w-full rounded-md object-contain"
                     />
-                  )
-                ) : attachedDocumentPreviewUrl ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center sm:p-6">
-                    <div className="space-y-2">
-                      <p className="text-base font-medium text-foreground">Preview not available in the browser</p>
-                      <p className="max-w-md text-sm text-muted-foreground">
-                        This file type cannot be displayed inline. You can still open the file in a new tab from this modal.
-                      </p>
-                    </div>
                   </div>
                 ) : (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center sm:p-6">
-                    <p className="text-sm font-medium text-foreground">No preview available</p>
-                    <p className="max-w-md text-sm text-muted-foreground">
-                      {attachedDocumentPreviewEmptyMessage || "The uploaded file could not be previewed."}
+                  <iframe
+                    src={attachedDocumentPreviewUrl}
+                    title={attachedDocumentPreviewTitle || "Attached file preview"}
+                    className="w-full h-full border-0"
+                  />
+                )
+              ) : attachedDocumentPreviewUrl ? (
+                <div className="flex h-full flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto">
+                  <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="text-base font-bold text-foreground">Unable to preview document</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This file format cannot be displayed inline in the browser. Use Open in New Tab or Download to view it.
                     </p>
                   </div>
-                )}
-              </div>
-            </div>
-            <div className="space-y-4 rounded-xl border border-border/70 bg-card p-4 sm:p-5">
-              {/* File info */}
-              <div>
-                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Current file</p>
-                <p className="mt-1 break-words text-sm font-medium text-foreground">
-                  {attachedDocumentEditor?.file.fileName || "Uploaded file"}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {attachedDocumentEditor?.file.uploadedAt
-                    ? `Uploaded ${formatDateTimeLabel(attachedDocumentEditor.file.uploadedAt)}`
-                    : "Uploaded recently"}
-                </p>
-              </div>
-              <div className="h-px bg-border/40" />
-              {attachedDocumentEditor?.file &&
-              (attachedDocumentEditor.file.adminStatus === "needs_revision" || attachedDocumentEditor.file.adminStatus === "rejected_red") &&
-              !isDocumentSubmissionLocked &&
-              !isApprovedSubmissionFile(attachedDocumentEditor.file) ? (
-                <>
-                  <input
-                    ref={attachedDocumentInputRef}
-                    type="file"
-                    accept={
-                      attachedDocumentEditor
-                        ? getDocumentUploadAcceptValue(attachedDocumentEditor.file.documentTypeId)
-                        : ".pdf,application/pdf"
-                    }
-                    className="hidden"
-                    onChange={(event) => {
-                      const nextFile = event.target.files?.[0] ?? null;
-                      setAttachedDocumentReplacementFile(nextFile);
-                      setAttachedDocumentMarkedForRemoval(false);
-                    }}
-                  />
-                  <div className="space-y-2">
+                  <div className="flex items-center gap-2 pt-2">
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => attachedDocumentInputRef.current?.click()}
-                      disabled={Boolean(savingAttachedDocument)}
+                      size="sm"
+                      onClick={() => void openFile(attachedDocumentEditor?.file.fileUrl ?? "", attachedDocumentEditor?.file.fileName ?? "")}
+                      className="h-8 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer"
                     >
-                      <FileUp className="mr-2 h-4 w-4" />
-                      Change File
-                    </Button>
-                    {attachedDocumentReplacementFile ? (
-                      <p className="break-words text-xs text-muted-foreground">
-                        Replacement: <span className="font-medium text-foreground">{attachedDocumentReplacementFile.name}</span>
-                      </p>
-                    ) : null}
-                    <Button
-                      type="button"
-                      variant={attachedDocumentMarkedForRemoval ? "secondary" : "destructive"}
-                      className="w-full justify-start"
-                      onClick={() => {
-                        setAttachedDocumentMarkedForRemoval((current) => !current);
-                        setAttachedDocumentReplacementFile(null);
-                        if (attachedDocumentInputRef.current) {
-                          attachedDocumentInputRef.current.value = "";
-                        }
-                      }}
-                      disabled={Boolean(savingAttachedDocument)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {attachedDocumentMarkedForRemoval ? "Undo Remove" : "Remove Document"}
-                    </Button>
-                    {attachedDocumentMarkedForRemoval ? (
-                      <p className="text-xs text-destructive">This file will be removed when you save.</p>
-                    ) : null}
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      type="button"
-                      className="flex-1"
-                      onClick={() => void saveAttachedDocumentChanges()}
-                      disabled={Boolean(savingAttachedDocument)}
-                    >
-                      {savingAttachedDocument ? "Saving..." : "Save Changes"}
+                      <Eye className="h-3.5 w-3.5" /> Open in New Tab
                     </Button>
                     <Button
                       type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={closeAttachedDocumentEditor}
-                      disabled={Boolean(savingAttachedDocument)}
+                      size="sm"
+                      onClick={() => void openFile(attachedDocumentEditor?.file.fileUrl ?? "", attachedDocumentEditor?.file.fileName ?? "")}
+                      className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer"
                     >
-                      Cancel
+                      <Download className="h-3.5 w-3.5" /> Download File
                     </Button>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-sm text-muted-foreground">
-                    Return to the main Document Submissions page and use Upload Multiple Documents for normal submissions.
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={closeAttachedDocumentEditor}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </>
+                <div className="flex h-full flex-col items-center justify-center p-8 text-center space-y-2 text-muted-foreground">
+                  <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+                  <p className="text-xs font-medium">{attachedDocumentPreviewEmptyMessage || "No file available to preview."}</p>
+                </div>
               )}
             </div>
+          </div>
+
+          {/* SIMPLIFIED 56px FOOTER - Matches View Template Modal */}
+          <div className="h-14 py-2.5 px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+            <p className="text-xs text-muted-foreground font-medium">
+              {isApprovedSubmissionFile(attachedDocumentEditor?.file)
+                ? "Approved document • Locked from modification"
+                : attachedDocumentEditor?.file?.adminStatus === "draft"
+                ? "Draft Saved • Ready for Submission"
+                : attachedDocumentEditor?.file?.adminStatus === "under_admin_review" || attachedDocumentEditor?.file?.adminStatus === "submitted" || attachedDocumentEditor?.file?.adminStatus === "under_review"
+                ? "Waiting for Admin Review"
+                : "Attached Document • Y-TRACE Compliance"}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={closeAttachedDocumentEditor}
+              className="h-8 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer"
+            >
+              Close Preview
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -11551,109 +11895,144 @@ Validated {validatedDate}</p>
       <Dialog open={profileRequiredModalOpen} onOpenChange={setProfileRequiredModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Complete the Organization Profile First</DialogTitle>
+            <DialogTitle>Complete Your Organization Profile</DialogTitle>
             <DialogDescription>
-              Finish filling up the organization profile first before uploading documents or submitting them for review.
+              Your organization profile is not yet complete. Please complete the remaining editable requirements before continuing.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
-            Required fields like the organization details, classifications, advocacies, adviser, representative, and address must be completed and saved first.
-          </div>
+          {getMissingEditableProfileRequirements(currentProfile).length > 0 ? (
+            <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 p-4 text-xs text-amber-950 space-y-2">
+              <span className="font-bold text-amber-900 block">Remaining requirements to complete:</span>
+              <ul className="list-disc pl-4 space-y-1 text-amber-900/90 font-medium">
+                {getMissingEditableProfileRequirements(currentProfile).map((req) => (
+                  <li key={req}>{req}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-xs text-muted-foreground">
+              Please ensure all profile sections are filled out and saved.
+            </div>
+          )}
           <DialogFooter>
-            <Button type="button" className="w-full sm:w-auto" onClick={() => setProfileRequiredModalOpen(false)}>
-              Okay
+            <Button
+              type="button"
+              className="w-full sm:w-auto font-bold rounded-xl"
+              onClick={() => {
+                setProfileRequiredModalOpen(false);
+                navigate(userRouteMap["organization-profile"]);
+              }}
+            >
+              Go to Profile Editor
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={profilePreviewOpen} onOpenChange={setProfilePreviewOpen}>
-        <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Public Profile Preview</DialogTitle>
-            <DialogDescription>
-              This preview reflects the profile details currently saved on the portal.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-3xl border border-border/70 bg-muted/20 p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xl font-semibold text-foreground">{profile.organizationName || "Organization Profile"}</p>
-                    <PortalStatusBadge status={currentProfile?.profileStatus ?? "incomplete"} />
+      {useClassicDashboard && (
+        <Dialog open={profilePreviewOpen} onOpenChange={setProfilePreviewOpen}>
+          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 overflow-hidden rounded-3xl bg-card border-border shadow-2xl">
+            <div className="p-6 sm:p-7 space-y-6 max-h-[85vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-border/60 pb-4">
+                <div className="space-y-0.5">
+                  <DialogTitle className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-primary" /> Public Profile Preview
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    This preview reflects the profile details currently saved on the portal.
+                  </DialogDescription>
+                </div>
+              </div>
+
+              {/* Identity Banner Card */}
+              <div className="bg-gradient-to-br from-primary/10 via-accent/30 to-indigo-500/10 p-5 rounded-2xl border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="h-14 w-14 rounded-2xl bg-card border border-border/80 flex items-center justify-center shrink-0 shadow-2xs text-primary">
+                    <Building2 className="h-7 w-7" />
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {profile.majorClassification || "Classification pending"}
-                    {profile.subClassification ? ` · ${formatSubClassificationLabel(profile.subClassification)}` : ""}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {profileLocation || "District and barangay not set"}
-                  </p>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-black text-lg text-foreground truncate">{profile.organizationName || "Organization Profile"}</span>
+                      <PortalStatusBadge status={currentProfile?.profileStatus ?? "incomplete"} />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {profile.majorClassification || "Youth Organization"}
+                      {profile.subClassification ? ` • ${formatSubClassificationLabel(profile.subClassification)}` : ""}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {profileLocation || "District and barangay not set"}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-border/70 bg-background px-4 py-3 text-center">
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Profile Complete</p>
-                  <p className="mt-1 text-2xl font-semibold text-primary">{profilePercent}%</p>
+
+                <div className="bg-card/90 backdrop-blur-xs p-3 px-4 rounded-xl border border-border/60 text-center shrink-0 shadow-2xs">
+                  <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Profile Complete</span>
+                  <span className="text-lg font-black text-primary">{profilePercent}%</span>
                 </div>
               </div>
-            </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border/70 bg-background p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Representative</p>
-                <p className="mt-1 text-sm font-medium">{profile.representativeName || "N/A"}</p>
+              {/* Leadership & Representatives */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="bg-accent/30 p-3.5 rounded-xl border border-border/60 space-y-1">
+                  <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Representative</span>
+                  <p className="font-bold text-foreground text-sm">{profile.representativeName || "N/A"}</p>
+                </div>
+                <div className="bg-accent/30 p-3.5 rounded-xl border border-border/60 space-y-1">
+                  <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Adviser</span>
+                  <p className="font-bold text-foreground text-sm">{profile.adviserName || "N/A"}</p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-border/70 bg-background p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Adviser</p>
-                <p className="mt-1 text-sm font-medium">{profile.adviserName || "N/A"}</p>
-              </div>
-              <div className="rounded-2xl border border-border/70 bg-background p-4 sm:col-span-2">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Facebook Page</p>
-                <p className="mt-1 break-all text-sm font-medium">
-                  {profile.facebookPageUrl ? (
-                    <a href={profile.facebookPageUrl} target="_blank" rel="noreferrer" className="text-primary underline-offset-4 hover:underline">
-                      {profile.facebookPageUrl}
-                    </a>
-                  ) : (
-                    "N/A"
-                  )}
-                </p>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Recent City-Led Activities</p>
-              {profileRecentYpopEvents.length ? (
-                <div className="space-y-2">
-                  {profileRecentYpopEvents.slice(0, 3).map((participation) => (
-                    <div key={participation.id} className="rounded-2xl border border-border/70 bg-background p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{participation.activityName}</p>
-    
-                      <p className="text-[11px] leading-snug text-muted-foreground">
-{formatDateTimeLabel(participation.joinedAt)}</p>
+              {/* Facebook Page */}
+              <div className="bg-accent/30 p-3.5 rounded-xl border border-border/60 space-y-1 text-xs">
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Facebook Page</span>
+                {profile.facebookPageUrl ? (
+                  <a
+                    href={profile.facebookPageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-primary truncate block hover:underline flex items-center gap-1 text-xs pt-0.5"
+                  >
+                    {profile.facebookPageUrl} <ExternalLink className="h-3 w-3 shrink-0" />
+                  </a>
+                ) : (
+                  <p className="text-muted-foreground italic">N/A</p>
+                )}
+              </div>
+
+              {/* Recent City-Led Activities */}
+              <div className="space-y-3 pt-2 border-t border-border/60">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent City-Led Activities</span>
+                {profileRecentYpopEvents.length ? (
+                  <div className="space-y-2">
+                    {profileRecentYpopEvents.slice(0, 3).map((participation) => (
+                      <div key={participation.id} className="p-3 rounded-xl border border-border/60 bg-muted/20 flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <p className="font-bold text-foreground">{participation.activityName}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {formatDateTimeLabel(participation.joinedAt)}
+                          </p>
                         </div>
                         <PortalStatusBadge status={participation.status} />
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <PortalEmptyState
-                  title="No joined activities yet"
-                  description="The preview will show joined city-led activities once the organization participates in one."
-                />
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <PortalEmptyState
+                    title="No joined activities yet"
+                    description="The preview will show joined city-led activities once the organization participates in one."
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
       <Dialog open={profileActivityModalOpen} onOpenChange={setProfileActivityModalOpen}>
         <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Full Activity Log</DialogTitle>
-            <DialogDescription>
-              All profile-related actions are listed here with date and time for transparency.
+            <DialogTitle className="text-base font-bold text-foreground">Organization Activity History</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Complete timeline of document uploads, approvals, budget requests, liquidation updates, and inquiries for your organization.
             </DialogDescription>
           </DialogHeader>
           <RecentActivityList

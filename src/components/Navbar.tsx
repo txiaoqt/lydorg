@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
@@ -18,6 +18,33 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, signOut, role } = useAuth();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [mobileOpen]);
 
   const handleSignOut = () => {
     signOut();
@@ -43,8 +70,8 @@ const Navbar = () => {
           <BrandLogo showText={false} />
         </Link>
 
-        {/* Desktop nav links */}
-        <div className="hidden h-[42px] items-center gap-[10px] bg-public-nav-bg px-[10px] xl:flex">
+        {/* Desktop nav links — visible at lg and above */}
+        <div className="hidden h-[42px] items-center gap-[10px] bg-public-nav-bg px-[10px] lg:flex">
           {!isAuthenticated
             ? navItems.map((item) => (
                 <Link
@@ -62,8 +89,8 @@ const Navbar = () => {
             : null}
         </div>
 
-        {/* Desktop right actions */}
-        <div className="hidden h-[40px] items-center gap-[16px] xl:flex">
+        {/* Desktop right actions — visible at lg and above */}
+        <div className="hidden h-[40px] items-center gap-[16px] lg:flex">
           {isAuthenticated ? (
             <>
               <Link
@@ -98,20 +125,29 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger — visible below lg */}
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
-          className="shrink-0 p-2 text-foreground xl:hidden"
+          className="shrink-0 p-2 text-foreground lg:hidden touch-target"
           aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
         >
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
+      {/* Mobile backdrop overlay */}
+      {mobileOpen ? (
+        <div
+          className="mobile-nav-backdrop lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      ) : null}
+
       {/* Mobile menu */}
       {mobileOpen ? (
-        <div className="border-b border-primary/15 bg-public-nav-bg px-5 pb-4 sm:px-10 xl:hidden">
+        <div className="fixed left-0 right-0 top-[calc(40px+5rem)] z-50 max-h-[calc(100dvh-40px-5rem)] overflow-y-auto border-b border-primary/15 bg-public-nav-bg px-5 pb-4 sm:px-10 lg:hidden safe-area-bottom">
           {!isAuthenticated ? (
             <>
               <div className="space-y-0.5 py-3">
@@ -120,7 +156,7 @@ const Navbar = () => {
                     key={item.href}
                     to={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`block border-b py-2.5 pl-1 pr-4 text-public-fs-body-sm font-normal leading-[140%] transition-colors ${
+                    className={`block border-b py-3 pl-1 pr-4 text-public-fs-body-sm font-normal leading-[140%] transition-colors touch-target ${
                       isNavItemActive(item.href)
                         ? "border-public-border-brand text-public-text-brand"
                         : "border-transparent text-public-text-secondary hover:text-public-text-brand"
@@ -130,36 +166,36 @@ const Navbar = () => {
                   </Link>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-[16px] pt-1">
+              <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2 sm:gap-4">
                 <Link
                   to="/signin"
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-[40px] items-center justify-center rounded-[8px] border border-public-border-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand"
+                  className="flex h-[44px] items-center justify-center rounded-[8px] border border-public-border-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand"
                 >
                   Sign in
                 </Link>
                 <Link
                   to="/signup"
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-[40px] items-center justify-center rounded-[8px] bg-public-bg-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand"
+                  className="flex h-[44px] items-center justify-center rounded-[8px] bg-public-bg-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand"
                 >
                   Create an Account
                 </Link>
               </div>
             </>
           ) : (
-            <div className="flex flex-col gap-[16px] py-3">
+            <div className="flex flex-col gap-3 py-3">
               <Link
                 to={portalHref}
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[40px] items-center justify-center rounded-[8px] border border-public-border-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand"
+                className="flex h-[44px] items-center justify-center rounded-[8px] border border-public-border-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand"
               >
                 {portalLabel}
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex h-[40px] items-center justify-center rounded-[8px] bg-public-bg-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand"
+                className="flex h-[44px] items-center justify-center rounded-[8px] bg-public-bg-brand font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand"
               >
                 Sign Out
               </button>

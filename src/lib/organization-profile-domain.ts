@@ -58,3 +58,34 @@ export const getOrganizationProfileCompletionPercent = (profile?: OrganizationPr
 
 export const isOrganizationProfileComplete = (profile?: OrganizationProfile | null) =>
   getOrganizationProfileCompletionCount(profile) === getOrganizationProfileCompletionTarget(profile);
+
+export const getMissingEditableProfileRequirements = (profile?: Partial<OrganizationProfile> | null): string[] => {
+  if (!profile) {
+    return [
+      "Select Major and Sub Classification",
+      "Select at least one Advocacy Focus Area",
+      "Add Official Representative Name",
+      "Add Official Adviser Name",
+      "Add Complete Address",
+    ];
+  }
+  const missing: string[] = [];
+
+  if (!profile.majorClassification?.trim() || !profile.subClassification?.trim()) {
+    missing.push("Select Major and Sub Classification");
+  }
+  if (!profile.advocacies?.length) {
+    missing.push("Select at least one Advocacy Focus Area");
+  }
+  if (!profile.representativeName?.trim()) {
+    missing.push("Add Official Representative Name");
+  }
+  if (!profile.adviserName?.trim()) {
+    missing.push("Add Official Adviser Name");
+  }
+  if (!profile.address?.trim()) {
+    missing.push("Add Complete Address");
+  }
+
+  return missing;
+};

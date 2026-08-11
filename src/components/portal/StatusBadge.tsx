@@ -3,14 +3,14 @@ import { statusLabelMap } from "@/lib/lydo-connect-data";
 import { cn } from "@/lib/utils";
 
 export const statusBadgeToneClasses = {
-  success: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-  info: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50",
-  progress: "border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-50",
-  warning: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50",
-  action: "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-50",
-  danger: "border-red-200 bg-red-50 text-red-700 hover:bg-red-50",
-  neutral: "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-50",
-  special: "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-50",
+  success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/50 dark:border-emerald-800/60 hover:bg-emerald-500/15",
+  info: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-300 dark:bg-blue-950/50 dark:border-blue-800/60 hover:bg-blue-500/15",
+  progress: "border-teal-500/20 bg-teal-500/10 text-teal-700 dark:text-teal-300 dark:bg-teal-950/50 dark:border-teal-800/60 hover:bg-teal-500/15",
+  warning: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300 dark:bg-amber-950/50 dark:border-amber-800/60 hover:bg-amber-500/15",
+  action: "border-orange-500/20 bg-orange-500/10 text-orange-700 dark:text-orange-300 dark:bg-orange-950/50 dark:border-orange-800/60 hover:bg-orange-500/15",
+  danger: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300 dark:bg-red-950/50 dark:border-red-800/60 hover:bg-red-500/15",
+  neutral: "border-border bg-muted/50 text-muted-foreground hover:bg-muted",
+  special: "border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300 dark:bg-violet-950/50 dark:border-violet-800/60 hover:bg-violet-500/15",
 } as const;
 
 export type StatusBadgeTone = keyof typeof statusBadgeToneClasses;

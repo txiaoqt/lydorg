@@ -252,26 +252,31 @@
     --glow-primary: 0 0 20px hsl(var(--brand-mid-blue) / 0.24);
   }
 
-  .dark {
-    --background: 210 50% 6%;
-    --foreground: 210 20% 94%;
-    --card: 210 50% 10%;
-    --card-foreground: 210 20% 94%;
-    --popover: 210 50% 10%;
-    --popover-foreground: 210 20% 94%;
-    --primary: 204 62% 40%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 22%;
-    --secondary-foreground: 210 20% 94%;
-    --muted: 210 40% 15%;
-    --muted-foreground: 210 15% 55%;
-    --accent: 145 63% 52%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 40% 18%;
-    --input: 210 40% 18%;
-    --ring: 204 62% 40%;
+  .dark,
+  html.dark,
+  body.dark,
+  html.dark body,
+  html.dark body.public-shell,
+  body.dark.public-shell {
+    --background: 222 47% 11%;
+    --foreground: 210 20% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 20% 98%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 22.5%;
+    --input: 217.2 32.6% 22.5%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -390,3 +395,98 @@
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Responsive Foundation ───────────────────────────────── */
+
+/* iOS safe-area support for standalone / notch devices */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top { padding-top: env(safe-area-inset-top); }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Prevent h-dvh jumps on mobile Safari */
+@supports (-webkit-touch-callout: none) {
+  .portal-shell-active {
+    height: -webkit-fill-available;
+  }
+}
+
+@layer utilities {
+  /* Touch-friendly minimum tap targets (44px per WCAG) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile-friendly horizontally scrollable container (no visible scrollbar) */
+  .scroll-tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scroll-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Mobile card list (hidden on desktop, shown on mobile) */
+  .mobile-cards { display: block; }
+  .desktop-table { display: none; }
+
+  @media (min-width: 768px) {
+    .mobile-cards { display: none; }
+    .desktop-table { display: block; }
+  }
+
+  /* Pull-to-refresh indicator */
+  .pull-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.2s ease;
+  }
+  .pull-indicator.active {
+    height: 48px;
+  }
+}
+
+/* Mobile toast positioning */
+@media (max-width: 639px) {
+  [data-sonner-toaster],
+  [data-radix-toast-viewport] {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    width: calc(100vw - 2rem) !important;
+    max-width: 420px !important;
+  }
+}
+
+/* Mobile-specific backdrop for navigation */
+.mobile-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(12px); }
+}
+

@@ -28,14 +28,14 @@ const PublicTemplates = () => {
           </div>
 
           {/* Search bar */}
-          <div className="flex h-[52px] w-full max-w-[792px] items-center gap-[8px] rounded-full border border-public-border-default bg-white px-[16px]">
-            <Search className="h-4 w-4 shrink-0 text-public-text-secondary" />
+          <div className="flex h-[52px] w-full max-w-[792px] items-center gap-[8px] rounded-full border border-border bg-card shadow-xs px-[16px]">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search forms and templates..."
-              className="flex-1 bg-transparent font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default outline-none placeholder:text-public-text-secondary"
+              className="flex-1 bg-transparent font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-foreground outline-none placeholder:text-muted-foreground"
             />
           </div>
 
@@ -43,7 +43,7 @@ const PublicTemplates = () => {
       </section>
 
       {/* Catalog */}
-      <section className="bg-public-bg-section px-5 pb-[32px] pt-[48px] sm:px-6 lg:px-[64px]">
+      <section className="bg-background px-5 pb-[32px] pt-[48px] sm:px-6 lg:px-[64px]">
         <div className="mx-auto w-full max-w-7xl">
           <PublicTemplatesCatalog compactHeader searchTerm={searchTerm} />
         </div>
