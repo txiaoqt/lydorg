@@ -690,7 +690,7 @@ const SignUp = () => {
                     id="organizationIdentifierNumber"
                     placeholder="PCYDO-XXXX-XXXX"
                     value={organizationIdentifierNumber}
-                    onChange={(e) => setOrganizationIdentifierNumber(e.target.value)}
+                    onChange={(e) => setOrganizationIdentifierNumber(e.target.value.toUpperCase())}
                     onBlur={() => touch("identifier")}
                     required
                   />

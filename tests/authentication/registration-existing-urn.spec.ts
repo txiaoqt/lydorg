@@ -108,7 +108,7 @@ test.describe('Registration Existing Urn', () => {
       await page.locator('#existing-organization').check();
     });
     await test.step('2. Click the help icon next to the URN field label.', async () => {
-      await page.locator('button:has(svg.lucide-help-circle)').click();
+      await page.getByRole('button', { name: /urn help guidance/i }).click();
     });
     await test.step('3. Observe the popover content.', async () => {
       await expect(page.getByText(/about unique registration number/i)).toBeVisible();
