@@ -1085,6 +1085,35 @@ html.ytrace-pwa-reduce-motion .ytrace-pwa-app *, html.ytrace-pwa-reduce-motion .
 .ytrace-pwa-app.pwa-public-auth-page .border-primary { border-color: var(--pwa-accent) !important; }
 .ytrace-pwa-app.pwa-public-auth-page .focus-visible\:ring-ring:focus-visible { --tw-ring-color: var(--pwa-focus-ring) !important; }
 
+/* PWA Form Controls Focus & Clipping Consistency */
+.ytrace-pwa-app input:not([type="checkbox"]):not([type="radio"]),
+.ytrace-pwa-app textarea,
+.ytrace-pwa-app select,
+.ytrace-pwa-app [role="combobox"] {
+  border: 1px solid #cbd8e8;
+  border-radius: 0.7rem;
+  background-color: #ffffff;
+}
+
+.ytrace-pwa-app input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+.ytrace-pwa-app textarea:focus-visible,
+.ytrace-pwa-app select:focus-visible,
+.ytrace-pwa-app [role="combobox"]:focus-visible {
+  border-color: var(--pwa-blue, #2460a7) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pwa-blue, #2460a7) 30%, transparent) !important;
+  outline: none !important;
+}
+
+.ytrace-pwa-app input::placeholder,
+.ytrace-pwa-app textarea::placeholder {
+  color: #64748b !important;
+}
+
+.ytrace-pwa-app .pwa-profile-section,
+.ytrace-pwa-app .pwa-profile-editor-card {
+  overflow: visible;
+}
+
 @media (max-width: 340px) {
   .ytrace-pwa-app .pwa-theme-grid { grid-template-columns: minmax(0,1fr); }
   .ytrace-pwa-app.is-welcome .pwa-public-main { gap: 1rem; padding-inline: 1rem; }
