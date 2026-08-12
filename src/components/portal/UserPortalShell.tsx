@@ -68,8 +68,6 @@ type UserPortalShellProps = {
   activeId: string;
   onNavigate: (id: string) => void;
   onSignOut: () => void;
-  useClassicView?: boolean;
-  onToggleClassicView?: () => void;
   children: React.ReactNode;
 };
 
@@ -87,8 +85,6 @@ export const UserPortalShell = ({
   activeId,
   onNavigate,
   onSignOut,
-  useClassicView = false,
-  onToggleClassicView,
   children,
 }: UserPortalShellProps) => {
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
@@ -204,18 +200,6 @@ export const UserPortalShell = ({
                   {/* Mobile Toggles */}
                   <div className="space-y-2 pt-2 border-t border-border/40">
                     <p className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preferences</p>
-                    {onToggleClassicView && (
-                      <SheetClose asChild>
-                        <button
-                          type="button"
-                          onClick={onToggleClassicView}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
-                        >
-                          <LayoutGrid className="h-4 w-4 text-primary" />
-                          <span>{useClassicView ? "✨ Switch to SaaS View" : "🗂 Switch to Classic"}</span>
-                        </button>
-                      </SheetClose>
-                    )}
                     <button
                       type="button"
                       onClick={toggleDarkMode}
@@ -320,19 +304,8 @@ export const UserPortalShell = ({
             })}
           </nav>
 
-          {/* Right — Twin Control Pills (Classic View & Dark Mode) + Bell + User Menu */}
+          {/* Right — Dark Mode + Bell + User Menu */}
           <div className="flex items-center gap-2">
-            {/* Global Twin Pill: Classic / SaaS Toggle */}
-            {onToggleClassicView && (
-              <button
-                type="button"
-                onClick={onToggleClassicView}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-accent px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs"
-              >
-                <LayoutGrid className="h-3.5 w-3.5 text-primary" />
-                <span>{useClassicView ? "✨ SaaS View" : "🗂 Classic"}</span>
-              </button>
-            )}
 
             {/* Global Twin Pill: Dark / Light Mode */}
             <button

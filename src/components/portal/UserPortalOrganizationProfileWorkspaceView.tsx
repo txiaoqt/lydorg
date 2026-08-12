@@ -132,23 +132,25 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
   return (
     <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-6 max-w-[1440px] mx-auto py-2">
-      {/* 1. SaaS Hero Workspace Section (Refined Composition, Slim 4px Progress Bar & Radial Avatar Highlight) */}
-      <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-5 sm:p-6 rounded-2xl border border-border/60 shadow-xs transition-all duration-200">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(240px,280px)] items-center gap-6 lg:gap-8">
+      {/* 1. SaaS Hero Workspace Section (Refined Composition & Fully Responsive Header) */}
+      <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs transition-all duration-200">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(260px,290px)] items-start lg:items-center gap-5 sm:gap-6 lg:gap-8">
           {/* Left: Identity Group */}
-          <div className="flex items-start gap-4 sm:gap-4.5 min-w-0">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-4.5 min-w-0 flex-1">
             {/* Tinted Radial Highlight Avatar Container */}
             <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary/20 via-indigo-500/15 to-primary/10 dark:from-primary/30 dark:via-indigo-950/40 dark:to-primary/15 text-primary border border-primary/30 flex items-center justify-center shrink-0 shadow-2xs hover:scale-[1.03] transition-all duration-200 ease-in-out">
               <CircleUserRound className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
             </div>
 
-            <div className="space-y-1.5 min-w-0">
+            <div className="space-y-2 min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
               {/* Org Title + Status Badge Tucked Directly Beside/Underneath */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate max-w-full sm:max-w-[480px]">
+              <div className="flex flex-wrap items-start sm:items-center gap-2.5 min-w-0">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-foreground leading-tight break-words [overflow-wrap:anywhere] max-w-full">
                   {profileName}
                 </h1>
-                <PortalStatusBadge status={profileStatus} />
+                <div className="shrink-0 mt-0.5 sm:mt-0">
+                  <PortalStatusBadge status={profileStatus} />
+                </div>
               </div>
 
               <p className="text-xs sm:text-sm text-muted-foreground font-semibold flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -158,14 +160,14 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
               </p>
 
               {/* Clean Location Metadata */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-0.5 font-medium">
+              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-muted-foreground pt-0.5 font-medium">
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span>{profile.district || "District I"} • {profile.barangay || "Pasig City"}</span>
                 </span>
                 {profile.representativeName && (
                   <>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span className="inline-flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 text-primary shrink-0" />
                       <span>{profile.representativeName}</span>
@@ -177,7 +179,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
           </div>
 
           {/* Right: Cohesive Action & Slim 4px Completion Panel */}
-          <div className="flex flex-col items-stretch gap-3 bg-card/80 backdrop-blur-xs p-3.5 px-4 rounded-xl border border-border/60 shadow-2xs w-full">
+          <div className="flex flex-col items-stretch gap-3 bg-card/80 backdrop-blur-xs p-3.5 px-4 rounded-xl border border-border/60 shadow-2xs w-full lg:w-auto">
             {/* Completion Header & Slim 4px Progress Bar */}
             <div className="w-full space-y-1.5 border-b border-border/40 pb-2.5">
               <div className="flex items-center justify-between text-xs">
@@ -194,14 +196,14 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
 
             {/* Grouped Action Buttons */}
-            <div className="flex items-center gap-2 w-full pt-0.5">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full pt-0.5">
               <Button
                 type="button"
                 onClick={() => {
                   setActiveProfileTab("organization-details");
                   setShowProfileEditSection(true);
                 }}
-                className="flex-1 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 h-8.5 text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full sm:flex-1 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 min-h-[38px] sm:min-h-0 h-9 text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <PenSquare className="h-3.5 w-3.5" /> Edit Profile
               </Button>
@@ -209,7 +211,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 type="button"
                 variant="outline"
                 onClick={() => setProfilePreviewOpen(true)}
-                className="flex-1 rounded-xl border-border bg-card text-foreground hover:bg-accent shadow-2xs gap-1.5 h-8.5 text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full sm:flex-1 rounded-xl border-border bg-card text-foreground hover:bg-accent shadow-2xs gap-1.5 min-h-[38px] sm:min-h-0 h-9 text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Eye className="h-3.5 w-3.5" /> View Public
               </Button>

@@ -138,9 +138,16 @@ export default function Profile() {
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={settings.email} onChange={(e) => setSettings({ ...settings, email: e.target.value })} />
                 </div>
-                <div>
                   <Label htmlFor="contactNumber">Phone Number</Label>
-                  <Input id="contactNumber" value={settings.contactNumber} onChange={(e) => setSettings({ ...settings, contactNumber: e.target.value })} />
+                  <Input
+                    id="contactNumber"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    maxLength={11}
+                    value={settings.contactNumber}
+                    onChange={(e) => setSettings({ ...settings, contactNumber: e.target.value.replace(/\D/g, "").slice(0, 11) })}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="municipality">Municipality</Label>

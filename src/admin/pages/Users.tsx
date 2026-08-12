@@ -1,4 +1,4 @@
-﻿import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { Filter, Mail, Phone, Search, User } from "lucide-react";
 import { DataTable } from "../components/DataTable";
 import { UserProfile } from "../types";
@@ -570,8 +570,13 @@ export const UsersPage = () => {
                 <Label htmlFor="user-contact">Contact Number</Label>
                 <Input
                   id="user-contact"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={11}
+                  placeholder="09XXXXXXXXX"
                   value={form.contactNumber}
-                  onChange={(e) => setForm((prev) => ({ ...prev, contactNumber: e.target.value }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, contactNumber: e.target.value.replace(/\D/g, "").slice(0, 11) }))}
                 />
               </div>
               <div className="space-y-2">

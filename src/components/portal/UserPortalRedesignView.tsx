@@ -6,7 +6,6 @@ import {
   CalendarDays,
   CheckCircle2,
   Building2,
-  Sparkles,
   Send,
   ChevronRight,
   Sun,
@@ -103,7 +102,6 @@ export interface UserPortalRedesignViewProps {
   onViewAllActivities?: () => void;
   navigate: (path: string) => void;
   userRouteMap: Record<string, string>;
-  onSwitchToClassic: () => void;
 }
 
 // Human Readable Inquiry Status Formatter
@@ -145,7 +143,6 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   onViewAllActivities,
   navigate,
   userRouteMap,
-  onSwitchToClassic,
 }) => {
   const [aiQuickModalOpen, setAiQuickModalOpen] = useState(false);
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
@@ -176,7 +173,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   return (
     <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-10 max-w-[1440px] mx-auto py-2">
       {/* Hero Section: Perfectly Balanced Left/Right with Ultra-Soft Ambient Gradient */}
-      <div className="bg-gradient-to-r from-white via-indigo-50/30 to-blue-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-6 sm:p-8 rounded-2xl border border-slate-200/90 dark:border-border/60 shadow-xs sm:shadow-sm dark:shadow-xs space-y-6 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-white via-indigo-50/30 to-blue-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-6 sm:p-8 rounded-2xl border border-slate-200/90 dark:border-border/60 shadow-xs sm:shadow-sm dark:shadow-xs relative overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
           {/* Left Side (7 Cols): Greeting & Subtitle */}
           <div className="md:col-span-7 space-y-2">
@@ -221,55 +218,6 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
               <span className="font-medium text-foreground">Today • 8:31 AM</span>
             </div>
           </div>
-        </div>
-
-        {/* Quick Access Floating Pill Strip */}
-        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-slate-200/80 dark:border-border/40">
-          <span className="text-xs font-semibold text-muted-foreground mr-1">Quick Access:</span>
-          <Button
-            type="button"
-            onClick={() => setAiQuickModalOpen(true)}
-            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 h-8 px-3.5 text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            Ask AI Assistant
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(userRouteMap["document-submission"])}
-            className="rounded-full bg-card border-border/80 hover:bg-accent text-foreground shadow-2xs h-8 px-3 text-xs font-medium hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Submit Docs
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(userRouteMap["budget-request"])}
-            className="rounded-full bg-card border-border/80 hover:bg-accent text-foreground shadow-2xs h-8 px-3 text-xs font-medium hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Budget Request
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(userRouteMap["templates"])}
-            className="rounded-full bg-card border-border/80 hover:bg-accent text-foreground shadow-2xs h-8 px-3 text-xs font-medium hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Templates
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setInquiryModalOpen(true)}
-            className="rounded-full bg-card border-border/80 hover:bg-accent text-foreground shadow-2xs h-8 px-3 text-xs font-medium hover:scale-[1.02] active:scale-[0.98] transition-all sm:ml-auto cursor-pointer"
-          >
-            Create Inquiry
-          </Button>
         </div>
       </div>
 

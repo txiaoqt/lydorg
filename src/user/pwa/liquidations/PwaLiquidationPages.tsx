@@ -59,7 +59,7 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
             <span className="pwa-settings-hero-icon"><ReceiptText aria-hidden="true" /></span>
             <div>
               <h2>No liquidation report is available yet</h2>
-              <p>Liquidation becomes available after an eligible budget is approved, released, and reaches the applicable post-activity stage.</p>
+              <p>Liquidation becomes available after an eligible budget is approved and released.</p>
             </div>
             <ul className="pwa-requirement-list">
               {data.liquidationWorkflowEligibility.requirements.map((item) => <li key={item.id} className={item.met ? "is-complete" : ""}>{item.met ? <Check /> : <Circle />}<span>{item.label}</span></li>)}

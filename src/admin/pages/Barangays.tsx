@@ -789,8 +789,13 @@ export const Barangays = () => {
                 <Label htmlFor="resident-contact">Contact Number</Label>
                 <Input
                   id="resident-contact"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={11}
+                  placeholder="09XXXXXXXXX"
                   value={residentForm.contactNumber}
-                  onChange={(e) => setResidentForm((prev) => ({ ...prev, contactNumber: e.target.value }))}
+                  onChange={(e) => setResidentForm((prev) => ({ ...prev, contactNumber: e.target.value.replace(/\D/g, "").slice(0, 11) }))}
                 />
               </div>
               <div className="space-y-2">
