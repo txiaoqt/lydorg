@@ -29,6 +29,8 @@ import {
   urnReviewLabels,
   validateUrn,
 } from "@/lib/urn-registration";
+import { sanitizeContactNumber } from "@/lib/organization-profile-domain";
+import { DUPLICATE_URN_ERROR_MESSAGE, checkSignupUrn, type UrnAvailability } from "@/lib/urn-validation";
 import { isPasswordValid, validatePasswordCriteria } from "@/lib/password-policy";
 import {
   Dialog,
@@ -180,6 +182,7 @@ const SignUp = () => {
   const [agreedToPolicies, setAgreedToPolicies] = useState(false);
   const [inlineError, setInlineError] = useState("");
   const [emailAvailability, setEmailAvailability] = useState<EmailAvailability>("idle");
+  const [urnAvailability, setUrnAvailability] = useState<UrnAvailability>("idle");
   const [legalPolicyType, setLegalPolicyType] = useState<LegalPolicyType | null>(null);
   const [activePolicy, setActivePolicy] = useState<PolicyVersion | null>(null);
 
@@ -206,11 +209,12 @@ const SignUp = () => {
     ? normalizeUrn(organizationIdentifierNumber)
     : generateUniqueUrn();
   const urnError = isExistingOrganization ? validateUrn(organizationIdentifierNumber) : null;
-  const isIdentifierValid = !urnError;
+  const isIdentifierValid = !urnError && urnAvailability !== "registered";
 
   const canSubmit = Boolean(
     useSupabaseAuth &&
       name.trim() &&
+      name.trim().length <= 100 &&
       email.trim() &&
       isGmailEmail &&
       (emailAvailability === "available" || emailAvailability === "error") &&
@@ -249,7 +253,10 @@ const SignUp = () => {
 
   // Clear identifier when existing-org is unchecked
   useEffect(() => {
-    if (!isExistingOrganization) setOrganizationIdentifierNumber("");
+    if (!isExistingOrganization) {
+      setOrganizationIdentifierNumber("");
+      setUrnAvailability("idle");
+    }
   }, [isExistingOrganization]);
 
   useEffect(() => {
@@ -274,6 +281,26 @@ const SignUp = () => {
   }, [email, isGmailEmail]);
 
   useEffect(() => {
+    if (!isExistingOrganization || urnError) {
+      setUrnAvailability("idle");
+      return;
+    }
+
+    let active = true;
+    setUrnAvailability("checking");
+    const timeoutId = window.setTimeout(() => {
+      void checkSignupUrn(organizationIdentifierNumber).then((result) => {
+        if (active) setUrnAvailability(result);
+      });
+    }, 500);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [isExistingOrganization, organizationIdentifierNumber, urnError]);
+
+  useEffect(() => {
     if (new URLSearchParams(location.search).get("pwa") === "1") beginPwaAuthFlow();
   }, [location.search]);
 
@@ -296,16 +323,28 @@ const SignUp = () => {
 
   const displayPolicy = resolveDisplayPolicy(activePolicy);
 
-  const continueToAccount = () => {
+  const continueToAccount = async () => {
     setInlineError("");
     setTouched((previous) => new Set([...previous, "name", "identifier"]));
     if (!name.trim()) {
       setInlineError("Enter your organization name to continue.");
       return;
     }
-    if (isExistingOrganization && urnError) {
-      setInlineError(urnError);
+    if (name.trim().length > 100) {
+      setInlineError("Organization name must not exceed 100 characters.");
       return;
+    }
+    if (isExistingOrganization) {
+      if (urnError) {
+        setInlineError(urnError);
+        return;
+      }
+      const urnStatus = await checkSignupUrn(organizationIdentifierNumber);
+      if (urnStatus === "registered") {
+        setUrnAvailability("registered");
+        setInlineError(DUPLICATE_URN_ERROR_MESSAGE);
+        return;
+      }
     }
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -314,19 +353,24 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (currentStep === 1) {
-      continueToAccount();
+      void continueToAccount();
       return;
     }
     setInlineError("");
 
+    if (name.trim().length > 100) {
+      setInlineError("Organization name must not exceed 100 characters.");
+      return;
+    }
+
     const missingFields = [
-      !name.trim() ? "organization name" : "",
+      !name.trim() ? "Organization Name" : "",
       !email.trim() ? "Email Address" : "",
       !normalizedContactNumber ? "Contact Number" : "",
-      !district ? "district" : "",
+      !district ? "District" : "",
       !barangayId ? "Barangay" : "",
       isExistingOrganization && !normalizedIdentifierNumber ? "Unique Registration Number (URN)" : "",
-      !password ? "password" : "",
+      !password ? "Password" : "",
       !confirmPassword ? "Confirm Password" : "",
       !agreedToPolicies ? "Privacy Policy & Terms of Service agreement" : "",
     ].filter(Boolean);
@@ -377,9 +421,17 @@ const SignUp = () => {
       setInlineError("Contact Number must be 11 digits starting with 09.");
       return;
     }
-    if (isExistingOrganization && urnError) {
-      setInlineError(urnError);
-      return;
+    if (isExistingOrganization) {
+      if (urnError) {
+        setInlineError(urnError);
+        return;
+      }
+      const urnStatus = await checkSignupUrn(organizationIdentifierNumber);
+      if (urnStatus === "registered") {
+        setUrnAvailability("registered");
+        setInlineError(DUPLICATE_URN_ERROR_MESSAGE);
+        return;
+      }
     }
 
     setEmailAvailability("checking");
@@ -394,11 +446,33 @@ const SignUp = () => {
   };
 
   const proceedCreateAccount = async () => {
+    if (name.trim().length > 100) {
+      setIsConfirmOpen(false);
+      setInlineError("Organization name must not exceed 100 characters.");
+      return;
+    }
+    if (isExistingOrganization) {
+      const urnStatus = await checkSignupUrn(organizationIdentifierNumber);
+      if (urnStatus === "registered") {
+        setIsConfirmOpen(false);
+        setIsCreating(false);
+        setUrnAvailability("registered");
+        setInlineError(DUPLICATE_URN_ERROR_MESSAGE);
+        toast({
+          title: "URN already registered",
+          description: DUPLICATE_URN_ERROR_MESSAGE,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     if (!canSubmit) {
       setIsConfirmOpen(false);
       setInlineError("Some required details are missing or invalid. Review every field before creating the account.");
       return;
     }
+
     setIsCreating(true);
     const result = await signUp({
       email: email.trim().toLowerCase(),
@@ -416,7 +490,13 @@ const SignUp = () => {
 
     if (result.error) {
       setIsConfirmOpen(false);
-      setInlineError(result.error);
+      const isDuplicateUrn = /duplicate|unique|urn|organization_identifier_number/i.test(result.error);
+      setInlineError(isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : result.error);
+      toast({
+        title: isDuplicateUrn ? "URN already registered" : "Registration Error",
+        description: isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : result.error,
+        variant: "destructive",
+      });
       return;
     }
 
@@ -510,16 +590,27 @@ const SignUp = () => {
             {/* ── Section 1: Organization details ── */}
             <FormSection title="Organization details" hidden={currentStep !== 1}>
               <div className="space-y-1.5">
-                <RequiredLabel htmlFor="name">Organization Name</RequiredLabel>
+                <div className="flex items-center justify-between">
+                  <RequiredLabel htmlFor="name">Organization Name</RequiredLabel>
+                  <span className="text-[11px] text-muted-foreground">{name.length} / 100</span>
+                </div>
                 <Input
                   id="name"
                   placeholder="e.g. Kapitolyo Youth Council"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setInlineError("");
+                  }}
                   onBlur={() => touch("name")}
+                  maxLength={100}
                   required
                 />
-                {touched.has("name") && !name.trim() ? <p className="text-xs text-destructive">Organization name is required.</p> : null}
+                {touched.has("name") && !name.trim() ? (
+                  <p className="text-xs text-destructive">Organization name is required.</p>
+                ) : name.trim().length > 100 ? (
+                  <p className="text-xs text-destructive">Organization name must not exceed 100 characters.</p>
+                ) : null}
               </div>
             </FormSection>
 
@@ -571,11 +662,13 @@ const SignUp = () => {
                 <RequiredLabel htmlFor="contactNumber">Contact Number</RequiredLabel>
                 <Input
                   id="contactNumber"
+                  type="tel"
                   placeholder="09XXXXXXXXX"
                   value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
+                  onChange={(e) => setContactNumber(sanitizeContactNumber(e.target.value))}
                   onBlur={() => touch("contactNumber")}
                   inputMode="numeric"
+                  autoComplete="tel"
                   maxLength={11}
                   required
                 />
@@ -694,9 +787,16 @@ const SignUp = () => {
                     onBlur={() => touch("identifier")}
                     required
                   />
-                  {touched.has("identifier") && !isIdentifierValid && (
+                  {touched.has("identifier") && urnError ? (
                     <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
-                  )}
+                  ) : urnAvailability === "registered" ? (
+                    <p id="urn-error" className="text-xs text-destructive">{DUPLICATE_URN_ERROR_MESSAGE}</p>
+                  ) : urnAvailability === "checking" ? (
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                      Checking URN availability...
+                    </p>
+                  ) : null}
                 </div>
               )}
             </FormSection>

@@ -63,7 +63,7 @@ export interface UserPortalLiquidationWorkspaceViewProps {
   openPreview?: (fileUrl: string, fileName: string) => void;
   openFile: (url: string, name?: string) => void;
   navigate: (path: string) => void;
-  searchParams: URLSearchParams;
+  searchParams?: URLSearchParams;
   userRouteMap: Record<string, string>;
   buildPublicRecordCode: (prefix: string, item: any, list: any[]) => string;
   formatCurrency: (amount: number) => string;
@@ -90,7 +90,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   openPreview,
   openFile,
   navigate,
-  searchParams,
+  searchParams = new URLSearchParams(),
   userRouteMap,
   buildPublicRecordCode,
   formatCurrency,
@@ -266,7 +266,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
   const isLiquidationEligible = Boolean(
     liquidationWorkflowEligibility
-      ? liquidationWorkflowEligibility.eligible && liquidationWorkflowEligibility.releasedBudget
+      ? liquidationWorkflowEligibility.eligible
       : true
   );
 
@@ -292,7 +292,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
     <FeatureGate
       canAccess={isLiquidationEligible}
       title="No liquidation report is available yet"
-      description="Liquidation becomes available after an eligible budget is approved, released, and reaches the applicable post-activity stage."
+      description="Liquidation becomes available after an eligible budget is approved and released."
       requirements={liquidationWorkflowEligibility?.requirements || []}
       actionLabel={nextLiquidationStepAction}
       onAction={() => navigate(nextLiquidationStepRoute)}

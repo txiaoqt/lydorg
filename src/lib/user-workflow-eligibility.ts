@@ -131,18 +131,18 @@ export function resolveLiquidationWorkflowEligibility({
   });
   const releasedBudget = budgetRequests.find((request) => releasedBudgetStatuses.has(request.status)) ?? null;
   const completedActivityBudget = budgetRequests.find((request) => request.status === "completed") ?? null;
+  const isLiquidationAvailable = hasLiquidation || Boolean(releasedBudget);
   const requirements: WorkflowRequirement[] = [
     { id: "profile", label: "Complete organization profile", met: registration.profileComplete },
     { id: "registration", label: "Organization verified", met: registration.registrationVerified },
     { id: "budget_released", label: "Budget approved and released", met: Boolean(releasedBudget) },
-    { id: "activity_completed", label: "Activity completed", met: Boolean(completedActivityBudget) },
-    { id: "liquidation", label: "Liquidation available", met: hasLiquidation },
+    { id: "liquidation", label: "Liquidation report available", met: isLiquidationAvailable },
   ];
   return {
     ...registration,
     requirements,
     releasedBudget,
     completedActivityBudget,
-    eligible: requirements.slice(0, -1).every((requirement) => requirement.met),
+    eligible: registration.profileComplete && registration.registrationVerified && Boolean(releasedBudget),
   };
 }

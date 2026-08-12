@@ -1,8 +1,22 @@
 import type { OrganizationProfile } from "./lydo-connect-data";
 
+export const ORGANIZATION_NAME_MAX_LENGTH = 100;
+export const ORGANIZATION_NAME_MAX_LENGTH_ERROR = "Organization name must not exceed 100 characters.";
+
 export const organizationEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const philippineContactNumberPattern = /^09\d{9}$/;
 export const personNamePattern = /^[a-zA-Z\s\-\'\.]*$/;
+
+export const sanitizeContactNumber = (val: string): string => {
+  return val.replace(/\D/g, "").slice(0, 11);
+};
+
+export const validateOrganizationName = (name: string): string | null => {
+  const trimmed = name.trim();
+  if (!trimmed) return "Organization name is required.";
+  if (trimmed.length > ORGANIZATION_NAME_MAX_LENGTH) return ORGANIZATION_NAME_MAX_LENGTH_ERROR;
+  return null;
+};
 
 export const isValidPersonName = (name: string): boolean => {
   const trimmed = name.trim();

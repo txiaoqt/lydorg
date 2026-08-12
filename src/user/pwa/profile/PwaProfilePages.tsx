@@ -28,6 +28,7 @@ import {
   upsertOrganizationProfileInSupabase,
   resubmitOrganizationUrnInSupabase,
 } from "@/lib/lydo-connect-supabase";
+import { DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
 import {
   organizationEmailPattern,
   philippineContactNumberPattern,
@@ -602,7 +603,13 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       toast({ title: "Profile saved", description: "Your profile was updated and sent for admin review." });
       go(PWA_ROUTES.profile, { replace: true });
     } catch (error) {
-      toast({ title: "Save failed", description: error instanceof Error ? error.message : "The profile could not be saved.", variant: "destructive" });
+      const message = error instanceof Error ? error.message : "The profile could not be saved.";
+      const isDuplicateUrn = /duplicate|unique|urn|organization_identifier_number/i.test(message);
+      toast({
+        title: isDuplicateUrn ? "URN already registered" : "Save failed",
+        description: isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : message,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
