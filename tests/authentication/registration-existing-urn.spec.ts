@@ -17,7 +17,7 @@ test.describe('Registration Existing Urn', () => {
     });
     await test.step('5. Click "Continue to account details".', async () => {
       await page.getByRole('button', { name: /continue to account details/i }).click();
-      await expect(page.getByText(/account details|contact number/i)).toBeVisible();
+      await expect(page.locator('#email')).toBeVisible();
     });
   });
 
@@ -95,10 +95,12 @@ test.describe('Registration Existing Urn', () => {
     });
     await test.step('3. Enter a valid URN in lowercase: "pcydo-ab12-cd34".', async () => {
       await page.locator('#organizationIdentifierNumber').fill('pcydo-ab12-cd34');
+      await page.locator('#organizationIdentifierNumber').blur();
+      await expect(page.locator('#organizationIdentifierNumber')).toHaveValue('PCYDO-AB12-CD34');
     });
     await test.step('4. Click "Continue to account details".', async () => {
       await page.getByRole('button', { name: /continue to account details/i }).click();
-      await expect(page.locator('#organizationIdentifierNumber')).toHaveValue('PCYDO-AB12-CD34');
+      await expect(page.locator('#email')).toBeVisible();
     });
   });
 
