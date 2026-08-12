@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:build/assets/About-C2Rj-Xt7.js
-import{o as l,u as g,j as e,A as f,N as h,L as a,p as y,q as p,G as j,c as w,F as v,U as o,k as r,v as x,w as N,C as c,B as C,l as k,x as O,y as d,z as P}from"./index-DERVNaT6.js";/**
-========
-import{o as a,u,j as e,A as f,N as h,L as l,p as x,G as y,c as j,F as w,U as r,k as o,q as p,v,C as c,B as N,l as k,w as C,x as d,y as O}from"./index-CXfIwP3C.js";/**
->>>>>>>> user-ui/main:build/assets/About-DMZF3lR8.js
+import{o as a,u,j as e,A as f,N as h,L as l,p as x,G as y,c as j,F as w,U as r,k as o,q as p,v,C as c,B as N,l as k,w as C,x as d,y as O}from"./index-RWSk_HA-.js";/**
  * @license lucide-react v0.462.0 - ISC
  *
  * This source code is licensed under the ISC license.

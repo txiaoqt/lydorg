@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:build/assets/facebook-BeFiaq44.js
-import{o}from"./index-DERVNaT6.js";/**
-========
-import{o}from"./index-CXfIwP3C.js";/**
->>>>>>>> user-ui/main:build/assets/facebook-CiVUrcDl.js
+import{o}from"./index-RWSk_HA-.js";/**
  * @license lucide-react v0.462.0 - ISC
  *
  * This source code is licensed under the ISC license.
