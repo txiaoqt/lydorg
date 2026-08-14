@@ -14,7 +14,7 @@ export default function BrandLogo({
   textClassName,
 }: BrandLogoProps) {
   return (
-    <div className={cn("flex h-[49px] w-[129px] items-center gap-[10px] px-[10px] py-0", className)}>
+    <div className={cn("flex items-center gap-[10px]", showText ? "h-[49px] w-[129px] px-[10px] py-0" : "h-auto w-auto", className)}>
       <img
         src="/y-trace-logo.svg"
         alt="Y-TRACE logo"

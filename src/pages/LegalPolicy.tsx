@@ -47,37 +47,37 @@ const LegalPolicy = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-5 pt-[120px] sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex min-h-[285px] w-full max-w-7xl flex-col justify-center gap-[16px] py-[48px]">
-          <h1 className="font-segoe font-bold leading-[100%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-public-fs-hero">
+      <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col justify-center gap-2 py-4 sm:gap-[16px] sm:py-[48px] sm:min-h-[285px]">
+          <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[26px] sm:text-public-fs-hero">
             Legal Policies
           </h1>
-          <p className="font-segoe font-normal leading-[120%] text-public-text-neutral-on-neutral text-public-fs-subtitle-sm">
+          <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-xs sm:text-public-fs-subtitle-sm max-w-xl">
             Review how Y-TRACE handles your data and the terms for using the platform.
           </p>
         </div>
       </section>
 
       {/* Tab bar */}
-      <section className="bg-public-bg-section px-5 pb-[32px] pt-[48px] sm:px-6 lg:px-[64px]">
+      <section className="bg-public-bg-section px-4 pb-3 pt-4 sm:px-6 sm:pb-[32px] sm:pt-[48px] lg:px-[64px]">
         <div className="mx-auto w-full max-w-7xl">
-          <div className="flex gap-[10px] rounded-[16px] border border-public-border-default bg-white p-[16px] shadow-public-nav">
+          <div className="flex gap-2 sm:gap-[10px] rounded-xl sm:rounded-[16px] border border-public-border-default bg-white p-2 sm:p-[16px] shadow-2xs sm:shadow-public-nav">
             <Link
               to="/privacy"
-              className={`flex h-[48px] flex-1 items-center justify-center rounded-[8px] px-[16px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] transition-colors ${
+              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
                 !isTerms
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                  : "text-public-text-brand hover:bg-public-bg-section"
+                  : "text-public-text-brand hover:bg-slate-50"
               }`}
             >
               Privacy Policy
             </Link>
             <Link
               to="/terms"
-              className={`flex h-[48px] flex-1 items-center justify-center rounded-[8px] px-[16px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] transition-colors ${
+              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
                 isTerms
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                  : "text-public-text-brand hover:bg-public-bg-section"
+                  : "text-public-text-brand hover:bg-slate-50"
               }`}
             >
               Terms of Service
@@ -87,7 +87,7 @@ const LegalPolicy = () => {
       </section>
 
       {/* Policy content */}
-      <section className="bg-public-bg-section px-5 pb-[64px] sm:px-6 lg:px-[64px]">
+      <section className="bg-public-bg-section px-4 pb-12 sm:px-6 sm:pb-[64px] lg:px-[64px]">
         <div className="mx-auto w-full max-w-7xl">
           <LegalPolicyView type={isTerms ? "terms" : "privacy"} policy={displayPolicy} />
         </div>
