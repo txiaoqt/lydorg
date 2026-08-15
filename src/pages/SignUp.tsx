@@ -217,7 +217,8 @@ const SignUp = () => {
       name.trim().length <= 100 &&
       email.trim() &&
       isGmailEmail &&
-      (emailAvailability === "available" || emailAvailability === "error") &&
+      emailAvailability !== "registered" &&
+      emailAvailability !== "checking" &&
       isContactNumberValid &&
       district &&
       barangayId &&
@@ -645,6 +646,11 @@ const SignUp = () => {
                   {isGmailEmail && emailAvailability === "registered" ? (
                     <p className="text-xs text-destructive">
                       This email is already registered. <Link to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"} className="font-medium underline">Sign in instead.</Link>
+                    </p>
+                  ) : null}
+                  {isGmailEmail && emailAvailability === "unconfirmed" ? (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      Pending verification. Continue registration to receive a new code.
                     </p>
                   ) : null}
                   {isGmailEmail && emailAvailability === "available" ? (

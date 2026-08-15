@@ -73,7 +73,9 @@ const ResetPassword = () => {
     () => parsePasswordRecoveryUrl(typeof window === "undefined" ? "/reset-password" : window.location.href),
     [],
   );
-  const [mode, setMode] = useState<ResetMode>(recovery.hasRecoveryCredentials ? "verifying" : "request");
+  const [mode, setMode] = useState<ResetMode>(() =>
+    recovery.hasRecoveryError ? "invalid" : recovery.hasRecoveryCredentials ? "verifying" : "request",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -142,6 +144,11 @@ const ResetPassword = () => {
       setMode("invalid");
     };
 
+    if (recovery.hasRecoveryError) {
+      setMode("invalid");
+      return;
+    }
+
     if (recovery.hasRecoveryCredentials) {
       void establishRecoverySession();
     } else if (isPasswordRecoverySession) {
@@ -180,6 +187,8 @@ const ResetPassword = () => {
       setInlineError(
         emailAvailability === "available"
           ? "No account is registered with this email address."
+          : emailAvailability === "unconfirmed"
+          ? "This account has not finished email verification yet. Please complete verification first."
           : "We could not verify this email right now. Please try again.",
       );
       return;
@@ -396,7 +405,7 @@ const ResetPassword = () => {
             </div>
           ) : null}
 
-          {inlineError && mode !== "request" ? (
+          {inlineError && mode !== "request" && mode !== "invalid" ? (
             <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {inlineError}
             </p>

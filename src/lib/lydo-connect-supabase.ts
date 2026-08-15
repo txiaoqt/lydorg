@@ -24,7 +24,7 @@ import type {
   PublicOrganizationActivity,
   PublicOrganizationDirectoryItem,
 } from "./lydo-connect-data";
-import { createTemplateLocalId, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
+import { createTemplateLocalId, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, otherDocumentTypes, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { supabase } from "./supabase";
@@ -408,7 +408,21 @@ type AdminPortalSnapshot = {
   inquiries?: InquiryRow[];
 };
 
-const localDocumentTypeByName = new Map(requiredDocumentTypes.map((documentType) => [documentType.name, documentType]));
+const normalizeTemplateLookupKey = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/^202[0-9]\s+/, "")
+    .replace(/[^a-z0-9]/g, "");
+
+const localDocumentTypes = [...requiredDocumentTypes, ...otherDocumentTypes];
+const localDocumentTypeByName = new Map<string, (typeof localDocumentTypes)[number]>();
+localDocumentTypes.forEach((docType) => {
+  localDocumentTypeByName.set(docType.name, docType);
+  localDocumentTypeByName.set(docType.name.replace(/^202[0-9]\s+/, ""), docType);
+  localDocumentTypeByName.set(normalizeTemplateLookupKey(docType.name), docType);
+  localDocumentTypeByName.set(docType.id, docType);
+});
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const sanitizeFileName = (value: string) => value.replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -501,7 +515,11 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
 });
 
 const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
-  const localDocumentType = localDocumentTypeByName.get(row.name);
+  const localDocumentType =
+    localDocumentTypeByName.get(row.name) ??
+    localDocumentTypeByName.get(row.name.replace(/^202[0-9]\s+/, "")) ??
+    localDocumentTypeByName.get(normalizeTemplateLookupKey(row.name)) ??
+    localDocumentTypeByName.get(row.id);
   const localId = localDocumentType?.id ?? createTemplateLocalId(row.name);
 
   return {
@@ -511,14 +529,14 @@ const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
     description: row.description ?? localDocumentType?.description ?? "",
     templateUrl: row.template_url ?? localDocumentType?.templateUrl ?? "",
     sortOrder: row.sort_order ?? localDocumentType?.sortOrder ?? 0,
-    isRequired: row.is_required ?? localDocumentType?.isRequired ?? true,
+    isRequired: row.is_required ?? localDocumentType?.isRequired ?? (row.sort_order ? row.sort_order < 10 : true),
     isActive: row.is_active ?? localDocumentType?.isActive ?? true,
-    templateScope: row.template_scope ?? localDocumentType?.templateScope ?? "document_submission",
+    templateScope: row.template_scope ?? localDocumentType?.templateScope ?? (row.sort_order && row.sort_order >= 10 ? "other" : "document_submission"),
     templateDescription: row.template_description ?? `Template for ${row.name}.`,
     templateActive: row.is_active ?? true,
     templateFileName: row.template_url ? getFileNameFromReference(row.template_url) : "",
     templateFileUrl: row.template_url ?? "",
-    templateFileType: "",
+    templateFileType: row.template_url?.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf",
     templateUploadedAt: row.updated_at ?? "",
   };
 };
@@ -949,8 +967,6 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session?.user) return null;
-
   const { data: templateRows, error: templatesError } = await supabase!
     .from("required_document_types")
     .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
@@ -965,10 +981,9 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
   const [newsReleaseRows, transparencyPostRows, notificationRows] = await Promise.all([
     fetchNewsReleases(),
     fetchTransparencyPosts(),
-    fetchNotifications(),
+    session?.user ? fetchNotifications() : Promise.resolve([]),
   ]);
 
-  const organizationProfile = await fetchOrganizationProfile(session.user.id);
   const sharedState: Partial<LydoSeedState> = {
     templates: mappedTemplates,
     newsReleases: newsReleaseRows.map(mapNewsRelease),
@@ -976,6 +991,11 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
     notifications: notificationRows.map(mapNotification),
   };
 
+  if (!session?.user) {
+    return sharedState;
+  }
+
+  const organizationProfile = await fetchOrganizationProfile(session.user.id);
   if (!organizationProfile) {
     return sharedState;
   }

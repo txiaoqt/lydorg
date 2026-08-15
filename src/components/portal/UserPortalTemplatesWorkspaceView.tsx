@@ -186,10 +186,11 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
       });
 
       const zip = new JSZip();
+      let addedCount = 0;
 
       await Promise.all(
         templatesToZip.map(async (tpl, index) => {
-          if (!tpl.fileUrl) return;
+          if (!tpl.fileUrl || tpl.fileUrl.startsWith("#")) return;
           try {
             const resolvedUrl = await resolveSupabaseFileUrl(tpl.fileUrl);
             if (!resolvedUrl) return;
@@ -199,20 +200,31 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
 
             const blob = await response.blob();
             const urlPath = tpl.fileUrl.split("?")[0];
-            const ext = urlPath.split(".").pop() || "pdf";
+            let ext = urlPath.split(".").pop() || "pdf";
+            if (ext.length > 5 || ext === urlPath) {
+              if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) ext = "pdf";
+              else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) ext = "docx";
+              else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet")) ext = "xlsx";
+              else ext = "pdf";
+            }
             const safeName = (tpl.title || `Template-${index + 1}`).replace(/[\\/:*?"<>|]/g, "_");
             const fileName = safeName.endsWith(`.${ext}`) ? safeName : `${safeName}.${ext}`;
 
             zip.file(fileName, blob);
+            addedCount++;
           } catch (err) {
             console.error(`Failed to add template ${tpl.title} to ZIP:`, err);
           }
         })
       );
 
+      if (addedCount === 0) {
+        throw new Error("Unable to retrieve any template files for the ZIP archive.");
+      }
+
       toast({
         title: "ZIP ready.",
-        description: "Download starting now.",
+        description: `Successfully packaged ${addedCount} template file${addedCount > 1 ? "s" : ""}. Download starting now.`,
       });
 
       const content = await zip.generateAsync({ type: "blob" });
@@ -228,7 +240,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
       console.error("ZIP creation error:", err);
       toast({
         title: "Download error",
-        description: "Unable to generate ZIP archive right now.",
+        description: err instanceof Error ? err.message : "Unable to generate ZIP archive right now.",
         variant: "destructive",
       });
     } finally {
@@ -238,7 +250,14 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
 
   // Authentic Blob-Fetch Direct Download for Individual Template File
   const handleDownloadSingleTemplate = async (tpl: any) => {
-    if (!tpl.fileUrl) return;
+    if (!tpl.fileUrl || tpl.fileUrl.startsWith("#")) {
+      toast({
+        title: "Download unavailable",
+        description: "No file is available for download yet.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       setDownloadingSingleId(tpl.id);
       const resolvedUrl = await resolveSupabaseFileUrl(tpl.fileUrl);
@@ -248,10 +267,24 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
       if (!response.ok) throw new Error("Fetch failed");
 
       const blob = await response.blob();
+      let targetFileName = (tpl.title || "template-document").trim().replace(/[/\\?%*:|"<>]/g, "-");
+      const hasExt = /\.(pdf|docx?|xlsx?|pptx?|zip|png|jpe?g|txt|csv)$/i.test(targetFileName);
+      if (!hasExt) {
+        if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) {
+          targetFileName += ".pdf";
+        } else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) {
+          targetFileName += ".docx";
+        } else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet") || blob.type.includes("excel")) {
+          targetFileName += ".xlsx";
+        } else {
+          targetFileName += ".pdf";
+        }
+      }
+
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = objectUrl;
-      link.download = tpl.title || "template-document.pdf";
+      link.download = targetFileName;
       document.body.appendChild(link);
       link.click();
       link.remove();

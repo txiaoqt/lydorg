@@ -69,10 +69,10 @@ const NewsReleases = () => {
       <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[24px] sm:text-public-fs-hero">
+            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               News Releases
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-xs sm:text-public-fs-subtitle-sm max-w-xl">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
               Official announcements and updates from the Pasig City Local Youth Development Office.
             </p>
           </div>
@@ -105,7 +105,7 @@ const NewsReleases = () => {
                 placeholder="Search news title, summary, keyword..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-xs rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
+                className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
               />
             </div>
 
@@ -118,7 +118,7 @@ const NewsReleases = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8 flex-1 rounded-xl border-border/80 bg-background text-xs font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
+                    className="h-8 flex-1 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
                   >
                     <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate">
@@ -162,10 +162,10 @@ const NewsReleases = () => {
                 href={LYDO_FACEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-8 flex-1 rounded-xl border border-border/80 bg-background text-xs font-semibold inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 transition-colors"
+                className="h-8 flex-1 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 transition-colors"
               >
-                <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="truncate">Visit Facebook Page</span>
+                <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="truncate">Visit Facebook</span>
               </a>
             </div>
           </div>
@@ -251,7 +251,7 @@ const NewsReleases = () => {
                     <div className="relative flex h-[160px] items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] p-[10px] sm:h-[309px]">
                       {news.category && (
                         <div className="absolute left-2.5 top-2.5 z-10 rounded-full border border-[#DCF0FD] bg-white px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] shadow-2xs">
-                          <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-bold sm:font-semibold leading-none text-public-text-brand">
+                          <span className="font-segoe text-xs sm:text-public-fs-body-sm font-bold sm:font-semibold leading-none text-public-text-brand">
                             {news.category}
                           </span>
                         </div>
@@ -272,14 +272,14 @@ const NewsReleases = () => {
 
                     {/* Card bottom */}
                     <div className="flex flex-col gap-2.5 sm:gap-[16px] p-3.5 sm:px-[24px] sm:pb-[24px] sm:pt-[20px]">
-                      <h3 className="font-segoe text-xs sm:text-public-fs-subtitle-sm font-semibold leading-[130%] sm:leading-[120%] tracking-[-0.02em] text-public-text-brand line-clamp-2">
+                      <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[130%] sm:leading-[120%] tracking-[-0.02em] text-public-text-brand line-clamp-2">
                         {news.title}
                       </h3>
                       <hr className="border-border/60" />
                       <div className="flex items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5 shrink-0 text-public-text-secondary" />
-                          <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
+                          <span className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
                             {formattedDate}
                           </span>
                         </div>
@@ -287,7 +287,7 @@ const NewsReleases = () => {
                           href={news.facebook_post_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-1.5 py-1 font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none text-public-text-brand transition-colors hover:underline shrink-0"
+                          className="flex items-center gap-1 px-1.5 py-1 font-segoe text-xs sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none text-public-text-brand transition-colors hover:underline shrink-0"
                         >
                           <span>Facebook</span>
                           <ExternalLink className="h-3 w-3 shrink-0" />

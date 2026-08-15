@@ -89,7 +89,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-[42px] w-full items-center justify-between gap-2 rounded-xl border border-public-border-default bg-white px-3.5 shadow-2xs font-segoe text-xs font-semibold text-public-text-brand hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="flex h-[42px] w-full items-center justify-between gap-2 rounded-xl border border-public-border-default bg-white px-3.5 shadow-2xs font-segoe text-sm font-semibold text-public-text-brand hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <span className="flex items-center gap-2 truncate">
                     <List className="h-4 w-4 text-public-text-brand shrink-0" />
@@ -103,7 +103,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
                 onCloseAutoFocus={(e) => e.preventDefault()}
                 className="w-[calc(100vw-32px)] max-w-md max-h-[360px] overflow-y-auto p-1.5 rounded-xl bg-white border border-public-border-default shadow-lg z-50"
               >
-                <div className="px-2.5 py-1.5 font-segoe text-[11px] font-bold uppercase tracking-wider text-public-text-secondary border-b border-border/50 mb-1">
+                <div className="px-2.5 py-1.5 font-segoe text-xs font-bold uppercase tracking-wider text-public-text-secondary border-b border-border/50 mb-1">
                   Table of Contents
                 </div>
                 {sections.map((section) => (
@@ -115,7 +115,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
                         scrollToSection(section.id);
                       });
                     }}
-                    className="text-xs font-medium text-public-text-brand rounded-lg cursor-pointer py-2 px-2.5 hover:bg-primary/10 hover:text-primary transition-colors break-words w-full"
+                    className="text-sm font-medium text-public-text-brand rounded-lg cursor-pointer py-2 px-2.5 hover:bg-primary/10 hover:text-primary transition-colors break-words w-full"
                   >
                     <a
                       href={`#${section.id}`}
@@ -135,7 +135,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
 
           {/* Title frame */}
           <div className="flex flex-col gap-1 sm:gap-[10px] border-b border-public-border-default pb-2 sm:pb-[10px]">
-            <h2 className="font-segoe text-xl sm:text-[24px] font-bold leading-snug sm:leading-[120%] text-public-text-brand">
+            <h2 className="font-segoe text-[22px] sm:text-[24px] font-bold leading-snug sm:leading-[120%] text-public-text-brand">
               {title}
             </h2>
             <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary">
@@ -161,7 +161,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
         <button
           type="button"
           onClick={backToTop}
-          className="flex h-[40px] items-center justify-center gap-1.5 rounded-full bg-[#0E2F66] px-4 font-segoe text-xs font-semibold text-white shadow-lg border border-white/20 hover:bg-[#0A234D] transition-colors cursor-pointer"
+          className="flex h-[40px] items-center justify-center gap-1.5 rounded-full bg-[#0E2F66] px-4 font-segoe text-sm font-semibold text-white shadow-lg border border-white/20 hover:bg-[#0A234D] transition-colors cursor-pointer"
           aria-label="Back to top"
         >
           <ArrowUp className="h-3.5 w-3.5 text-white" aria-hidden="true" />

@@ -123,10 +123,10 @@ const Faqs = () => {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-4 pt-4 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
 
           <div className="flex flex-col items-center gap-2 text-center sm:items-start sm:text-left sm:gap-[16px]">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[24px] sm:text-public-fs-hero">
+            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Frequently Asked Questions
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-xs sm:text-public-fs-subtitle-sm max-w-xl">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
               Quick answers about using Y-TRACE and navigating the compliance workflow.
             </p>
           </div>
@@ -160,7 +160,7 @@ const Faqs = () => {
                 placeholder="Search questions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-xs rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
+                className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
               />
             </div>
 
@@ -172,7 +172,7 @@ const Faqs = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8 w-full rounded-xl border-border/80 bg-background text-xs font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
+                    className="h-8 w-full rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
                   >
                     <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate">Category: {activeFilterLabel}</span>
@@ -226,7 +226,7 @@ const Faqs = () => {
                 <div key={group.id} className="flex flex-col gap-2 sm:gap-[16px] px-0 sm:px-[24px] pb-1 sm:pb-[24px]">
                   <h2 className="font-segoe text-xs sm:text-public-fs-subheading-sm font-bold uppercase tracking-wider text-public-text-brand flex items-center gap-1.5">
                     <span>{group.title}</span>
-                    <span className="text-[11px] sm:text-public-fs-subheading-sm font-semibold text-public-text-secondary">({group.items.length})</span>
+                    <span className="text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-secondary">({group.items.length})</span>
                   </h2>
                   <div className="flex flex-col gap-2 sm:gap-[16px]">
                     {group.items.map((faq) => {
@@ -241,7 +241,7 @@ const Faqs = () => {
                             onClick={() => setOpenId(isOpen ? null : faq.question)}
                             className="flex w-full items-center gap-2.5 sm:gap-[8px] text-left cursor-pointer"
                           >
-                            <span className="flex-1 font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-snug sm:leading-[140%] text-public-text-brand">
+                            <span className="flex-1 font-segoe text-base sm:text-public-fs-subheading-sm font-semibold leading-snug sm:leading-[140%] text-public-text-brand">
                               {faq.question}
                             </span>
                             {isOpen ? (
@@ -254,7 +254,7 @@ const Faqs = () => {
                           </button>
                           {isOpen && (
                             <div className="mt-2.5 sm:mt-[24px] border-t border-public-border-default/70 pt-2.5 sm:pt-[24px]">
-                              <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[160%] text-public-text-neutral-default">
+                              <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[160%] text-public-text-neutral-default">
                                 {faq.answer}
                               </p>
                             </div>
@@ -278,10 +278,10 @@ const Faqs = () => {
               <CircleHelp className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
             </div>
             <div className="flex flex-col gap-1 sm:gap-[10px] px-1 sm:px-[10px]">
-              <h3 className="font-segoe text-sm sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
                 Still Need Help?
               </h3>
-              <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary max-w-md">
+              <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary max-w-md">
                 Can't find the answer you're looking for? Reach out to the PCYDO office directly
                 and we'll get back to you as soon as possible.
               </p>
@@ -290,7 +290,7 @@ const Faqs = () => {
               href="https://mail.google.com/mail/?view=cm&fs=1&to=lydo@pasigcity.gov.ph"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-public-bg-brand px-4 py-2 sm:px-[20px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-2xs mt-1 sm:mt-0"
+              className="inline-flex items-center gap-1.5 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-public-bg-brand px-4 py-2 sm:px-[20px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-2xs mt-1 sm:mt-0"
             >
               <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
               Send an Email

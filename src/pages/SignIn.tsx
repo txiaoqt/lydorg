@@ -88,7 +88,13 @@ const SignIn = ({ forcedMode }: SignInProps) => {
     setIsLoading(false);
 
     if (result.error) {
-      setInlineError(result.error);
+      if (/email not confirmed|unconfirmed/i.test(result.error)) {
+        setInlineError(
+          "Your email address is not verified yet. Please complete verification before signing in.",
+        );
+      } else {
+        setInlineError(result.error);
+      }
       return;
     }
 
@@ -261,9 +267,20 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
             {/* Inline error */}
             {inlineError && (
-              <p className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive">
-                {inlineError}
-              </p>
+              <div className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive space-y-1">
+                <p>{inlineError}</p>
+                {inlineError.toLowerCase().includes("not verified yet") && (
+                  <p>
+                    <Link
+                      to={pwaFlow ? pwaAuthRoute("/verify-email") : "/verify-email"}
+                      state={{ email: email.trim().toLowerCase() }}
+                      className="font-medium underline hover:text-destructive/80"
+                    >
+                      Enter verification code →
+                    </Link>
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </form>

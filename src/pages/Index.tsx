@@ -95,7 +95,10 @@ const Index = () => {
   }, []);
 
   const openTemplate = async (fileUrl: string, fileName: string) => {
-    if (!fileUrl) return;
+    if (!fileUrl || fileUrl.startsWith("#")) {
+      toast({ title: "Preview unavailable", description: "No file is available for preview yet.", variant: "destructive" });
+      return;
+    }
     setOpeningTemplateId(fileName);
     try {
       const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
@@ -108,17 +111,35 @@ const Index = () => {
   };
 
   const downloadTemplate = async (fileUrl: string, fileName: string) => {
-    if (!fileUrl) return;
+    if (!fileUrl || fileUrl.startsWith("#")) {
+      toast({ title: "Download unavailable", description: "No file is available for download yet.", variant: "destructive" });
+      return;
+    }
     setDownloadingTemplateId(fileName);
     try {
       const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
       const response = await fetch(resolvedUrl);
       if (!response.ok) throw new Error("Failed to fetch file");
       const blob = await response.blob();
+
+      let targetFileName = fileName.trim().replace(/[/\\?%*:|"<>]/g, "-");
+      const hasExt = /\.(pdf|docx?|xlsx?|pptx?|zip|png|jpe?g|txt|csv)$/i.test(targetFileName);
+      if (!hasExt) {
+        if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) {
+          targetFileName += ".pdf";
+        } else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) {
+          targetFileName += ".docx";
+        } else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet") || blob.type.includes("excel")) {
+          targetFileName += ".xlsx";
+        } else {
+          targetFileName += ".pdf";
+        }
+      }
+
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = fileName;
+      a.download = targetFileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -159,42 +180,45 @@ const Index = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="hero-section public-hero-gradient relative flex min-h-0 sm:min-h-[758px] flex-col justify-center overflow-x-clip pt-[88px] sm:pt-[104px] lg:pt-[120px]">
-        <div className="container mx-auto relative z-10 w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-[64px] lg:py-0">
-          <div className="flex flex-col-reverse items-center gap-5 sm:gap-6 lg:flex-row lg:items-center lg:gap-[40px]">
-            {/* Left column */}
-            <div className="animate-fade-up flex w-full flex-col items-center gap-5 sm:gap-6 lg:gap-[32px] py-1 sm:py-[10px] text-center lg:max-w-[440px] lg:items-start lg:shrink-0 lg:text-left xl:max-w-[510px]">
-              <div className="flex flex-col items-center gap-3 sm:gap-[16px] lg:items-start">
-                <div className="inline-flex max-w-full overflow-hidden items-center gap-1.5 sm:gap-[8px] rounded-full border border-[rgba(220,228,240,0.4)] bg-white/15 px-3 py-1.5 sm:px-[20px] sm:py-[10px] backdrop-blur-[4px]">
+      <section className="hero-section public-hero-gradient relative flex min-h-0 sm:min-h-[758px] flex-col justify-center overflow-x-clip pt-[116px] sm:pt-[108px] lg:pt-[120px] pb-4 sm:pb-0">
+        <div className="container mx-auto relative z-10 w-full max-w-7xl px-3.5 xs:px-4 sm:px-6 lg:px-[64px] py-0 sm:py-10 lg:py-0">
+          <div className="flex flex-col-reverse items-center gap-4 sm:gap-6 lg:flex-row lg:items-center lg:gap-[40px]">
+            {/* Left column (Text & Actions) */}
+            <div className="animate-fade-up flex w-full flex-col items-center gap-3.5 sm:gap-6 lg:gap-[32px] text-center lg:max-w-[440px] lg:items-start lg:shrink-0 lg:text-left xl:max-w-[510px]">
+              <div className="flex w-full flex-col items-center gap-2 sm:gap-4 lg:gap-[16px] lg:items-start">
+                
+                {/* Portal Badge */}
+                <div className="inline-flex w-fit max-w-full items-center gap-2 sm:gap-[8px] rounded-full border border-white/30 bg-white/15 px-3.5 py-1.5 sm:px-[20px] sm:py-[10px] backdrop-blur-[4px]">
                   <Shield className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-white" />
-                  <span className="truncate font-segoe text-[10px] sm:text-public-fs-scale-01 font-semibold leading-[140%] text-white">
+                  <span className="whitespace-nowrap font-segoe text-[9.5px] xs:text-[10px] sm:text-public-fs-scale-01 font-bold leading-none sm:leading-[140%] tracking-wide sm:tracking-normal text-white">
                     OFFICIAL PASIG CITY LOCAL YOUTH DEVELOPMENT OFFICE PORTAL
                   </span>
                 </div>
 
-                <h1 className="hero-title font-segoe font-bold leading-tight sm:leading-none tracking-[-0.03em] text-public-text-neutral-on-neutral text-[22px] sm:text-public-fs-hero lg:text-[30px] xl:text-public-fs-hero">
-                  Your youth organization's
-                  <br className="hidden sm:block lg:hidden" />
-                  {" "}compliance, simplified.
+                {/* Main Heading */}
+                <h1 className="hero-title w-full max-w-[390px] xs:max-w-[400px] sm:max-w-none font-segoe font-bold leading-[1.2] sm:leading-none tracking-tight sm:tracking-[-0.02em] text-white text-[21.5px] xs:text-[22px] sm:text-public-fs-hero lg:text-[30px] xl:text-public-fs-hero">
+                  Your youth organization's compliance,<br className="sm:hidden" /> simplified.
                 </h1>
 
-                <p className="hero-description font-segoe font-normal leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-center text-white/95 text-xs sm:text-public-fs-body-md sm:max-w-[500px] lg:max-w-none lg:text-justify">
+                {/* Description */}
+                <p className="hero-description w-full max-w-[342px] sm:max-w-[480px] lg:max-w-none font-segoe font-normal leading-[1.35] sm:leading-[130%] tracking-normal sm:tracking-[-0.02em] text-center text-white/90 text-[12px] sm:text-public-fs-body-md lg:text-justify">
                   Register, submit compliance documents, request activity budgets, and track liquidation deadlines - all in one place with PCYDO.
                 </p>
               </div>
 
-              <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px]">
+              {/* Action Buttons */}
+              <div className="flex w-full max-w-[382px] sm:max-w-none flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px]">
                 <Link
                   to={isAuthenticated ? portalHref : "/signin"}
-                  className="flex items-center justify-center gap-2 rounded-[8px] border border-public-bg-brand-subtle px-4 py-2.5 sm:px-[24px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-body-sm font-medium text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
+                  className="flex h-[44px] sm:h-auto items-center justify-center gap-2 rounded-xl sm:rounded-[8px] border border-white/40 bg-transparent px-5 py-2.5 sm:px-[24px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-white/10"
                 >
                   {isAuthenticated ? "Open Portal" : "Sign In"}
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
                 {!isAuthenticated && (
                   <Link
                     to="/signup"
-                    className="flex items-center justify-center rounded-[8px] bg-white px-4 py-2.5 sm:px-[24px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle shadow-xs"
+                    className="flex h-[44px] sm:h-auto items-center justify-center rounded-xl sm:rounded-[8px] bg-white px-5 py-2.5 sm:px-[24px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-bold text-[#0E2F66] transition-colors hover:bg-slate-100 shadow-xs"
                   >
                     Create an Account
                   </Link>
@@ -203,7 +227,7 @@ const Index = () => {
             </div>
 
             {/* Right column — hero image with floating stat cards */}
-            <div className="animate-float relative min-w-0 flex-1 bg-transparent">
+            <div className="animate-float relative min-w-0 flex-1 bg-transparent w-full max-w-[382px] sm:max-w-[500px] lg:max-w-none">
               {/* Floating card — top right */}
               <div className="absolute -right-4 -top-6 z-10 hidden h-[48px] w-auto min-w-[152px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card sm:flex">
                 <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-public-bg-brand-subtle p-[6px]">
@@ -220,7 +244,7 @@ const Index = () => {
               <img
                 src={heroImage}
                 alt="Youth organization members at a PCYDO event"
-                className="block h-auto w-full rounded-xl sm:rounded-[8px] border border-public-bg-brand-subtle shadow-public-card object-cover"
+                className="block h-auto w-full rounded-2xl sm:rounded-[8px] border border-white/70 sm:border-public-bg-brand-subtle shadow-md sm:shadow-public-card object-cover"
               />
 
               {/* Floating card — bottom left */}
@@ -246,14 +270,14 @@ const Index = () => {
           {/* Title block */}
           <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
             <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 QUICK LINKS
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xl sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Explore the Portal
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Access the portal's key sections — from compliance forms and official news releases to FAQs and information about PCYDO.
             </p>
           </div>
@@ -270,10 +294,10 @@ const Index = () => {
                   <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-white" />
                 </div>
                 <div className="flex flex-col gap-1.5 sm:gap-2 lg:gap-[8px]">
-                  <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-sm sm:text-base lg:text-public-fs-subtitle-sm">
+                  <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-base sm:text-base lg:text-public-fs-subtitle-sm">
                     {title}
                   </h3>
-                  <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+                  <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
                     {description}
                   </p>
                 </div>
@@ -302,14 +326,14 @@ const Index = () => {
             {/* Title block */}
             <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
               <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                   OVERVIEW
                 </span>
               </div>
-              <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xl sm:text-2xl lg:text-public-fs-title-page">
+              <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
                 What is Y-TRACE?
               </h2>
-              <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+              <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
                 Y-TRACE is the official online portal of PCYDO Pasig City for managing youth organization compliance, registrations, and activity processes — all in one place.
               </p>
             </div>
@@ -321,10 +345,10 @@ const Index = () => {
                   <div className="flex h-8 w-8 sm:h-9 sm:w-9 lg:h-[40px] lg:w-[40px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-public-text-brand" />
                   </div>
-                  <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+                  <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-base sm:text-sm lg:text-public-fs-subheading-sm">
                     {title}
                   </h3>
-                  <p className="font-segoe font-normal leading-relaxed sm:leading-[140%] text-public-text-secondary text-[11px] sm:text-xs lg:text-public-fs-body-sm">
+                  <p className="font-segoe font-normal leading-relaxed sm:leading-[140%] text-public-text-secondary text-sm sm:text-xs lg:text-public-fs-body-sm">
                     {description}
                   </p>
                 </div>
@@ -335,13 +359,13 @@ const Index = () => {
             <div className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-[16px]">
               <Link
                 to="/about"
-                className="flex items-center justify-center gap-2 rounded-[8px] bg-public-bg-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+                className="flex items-center justify-center gap-2 rounded-[8px] bg-public-bg-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
               >
                 Learn More <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 to="/public-templates"
-                className="flex items-center justify-center rounded-[8px] border border-public-border-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex items-center justify-center rounded-[8px] border border-public-border-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
               >
                 Browse Forms & Templates
               </Link>
@@ -359,14 +383,14 @@ const Index = () => {
           {/* Title group */}
           <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
             <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 LATEST NEWS
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xl sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Stay Updated
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Stay informed with the latest announcements, events, and updates from the Pasig City Local Youth Development Office.
             </p>
           </div>
@@ -376,7 +400,7 @@ const Index = () => {
             <div className="hidden justify-end sm:flex">
               <Link
                 to="/news-releases"
-                className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
               >
                 View all <ArrowRight className="h-4 w-4" />
               </Link>
@@ -400,7 +424,7 @@ const Index = () => {
                       <div className="relative flex h-[140px] sm:h-[200px] lg:h-[260px] items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] p-2 sm:p-[10px]">
                         {news.category && (
                           <div className="absolute left-2.5 top-2.5 sm:left-[10px] sm:top-[10px] z-10 inline-flex w-fit items-center rounded-full border border-[#DCF0FD] bg-white px-2.5 py-0.5 sm:px-[10px] sm:py-[4px]">
-                            <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
+                            <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
                               {news.category}
                             </span>
                           </div>
@@ -419,14 +443,14 @@ const Index = () => {
 
                       {/* Details */}
                       <div className="flex flex-col gap-2.5 sm:gap-3 lg:gap-[16px] p-3.5 sm:p-5 lg:px-[24px] lg:py-[20px]">
-                        <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-sm sm:text-base lg:text-public-fs-subtitle-sm line-clamp-2">
+                        <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-base sm:text-base lg:text-public-fs-subtitle-sm line-clamp-2">
                           {news.title}
                         </h3>
                         <hr className="border-public-border-neutral-tertiary" />
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 sm:gap-[8px] py-0.5 sm:py-[4px]">
                             <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-public-text-secondary" />
-                            <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
+                            <span className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
                               {formattedDate}
                             </span>
                           </div>
@@ -434,7 +458,7 @@ const Index = () => {
                             href={news.facebook_post_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 sm:gap-[8px] font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:underline"
+                            className="flex items-center gap-1.5 sm:gap-[8px] font-segoe text-xs sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:underline"
                           >
                             View on Facebook <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </a>
@@ -449,7 +473,7 @@ const Index = () => {
             <div className="flex pt-1.5 sm:hidden">
               <Link
                 to="/news-releases"
-                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
               >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -468,14 +492,14 @@ const Index = () => {
           {/* Title group */}
           <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
             <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 RESOURCES
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xl sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Forms & Templates
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Download official forms and document templates required for your organization's compliance with PCYDO.
             </p>
           </div>
@@ -485,7 +509,7 @@ const Index = () => {
             <div className="hidden justify-end sm:flex">
               <Link
                 to="/public-templates"
-                className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
               >
                 View all <ArrowRight className="h-4 w-4" />
               </Link>
@@ -509,7 +533,7 @@ const Index = () => {
                     >
                       {/* File type pill — visible on desktop/tablet, hidden on mobile */}
                       <div className="absolute right-3.5 top-3.5 sm:right-[24px] sm:top-[24px] hidden sm:block rounded-full bg-public-bg-secondary-subtle px-2 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                        <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
+                        <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
                           {fileType}
                         </span>
                       </div>
@@ -520,17 +544,17 @@ const Index = () => {
                           <FileText className="h-4 w-4 text-[#0E2F66]" />
                         </div>
                         <div className="min-w-0 flex-1 flex flex-col gap-0.5 sm:gap-[10px] sm:pr-[60px]">
-                          <h3 className="font-segoe font-bold sm:font-semibold leading-snug sm:leading-[120%] tracking-[-0.02em] text-[#0E2F66] sm:text-public-text-brand text-xs sm:text-base lg:text-public-fs-subtitle-sm break-words">
+                          <h3 className="font-segoe font-bold sm:font-semibold leading-snug sm:leading-[120%] tracking-[-0.02em] text-[#0E2F66] sm:text-public-text-brand text-base sm:text-base lg:text-public-fs-subtitle-sm break-words">
                             {template.name}
                           </h3>
-                          <p className="hidden sm:block font-segoe font-normal leading-[100%] text-public-text-secondary text-[11px] sm:text-xs lg:text-public-fs-subheading-sm">
+                          <p className="hidden sm:block font-segoe font-normal leading-[100%] text-public-text-secondary text-xs sm:text-xs lg:text-public-fs-subheading-sm">
                             {formattedDate}
                           </p>
                         </div>
                       </div>
 
                       {/* Description */}
-                      <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-[#64748B] sm:text-public-text-neutral-default text-[11px] sm:text-sm lg:text-public-fs-subheading-sm line-clamp-2 sm:line-clamp-none break-words">
+                      <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-[#64748B] sm:text-public-text-neutral-default text-sm sm:text-sm lg:text-public-fs-subheading-sm line-clamp-2 sm:line-clamp-none break-words">
                         {template.description || "Official template published by PCYDO Pasig City."}
                       </p>
 
@@ -540,7 +564,7 @@ const Index = () => {
                           type="button"
                           disabled={viewDisabled}
                           onClick={() => void openTemplate(template.templateFileUrl, template.name)}
-                          className="h-8 sm:h-auto flex flex-1 items-center justify-center gap-1 sm:gap-[8px] rounded-lg sm:rounded-[8px] border border-[#0E2F66] sm:border-public-border-brand bg-white px-2 py-1.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-[#0E2F66] sm:text-public-text-brand transition-colors hover:bg-slate-50 sm:hover:bg-public-bg-brand-subtle disabled:opacity-50 cursor-pointer shadow-2xs sm:shadow-none"
+                          className="h-8 sm:h-auto flex flex-1 items-center justify-center gap-1 sm:gap-[8px] rounded-lg sm:rounded-[8px] border border-[#0E2F66] sm:border-public-border-brand bg-white px-2 py-1.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-[#0E2F66] sm:text-public-text-brand transition-colors hover:bg-slate-50 sm:hover:bg-public-bg-brand-subtle disabled:opacity-50 cursor-pointer shadow-2xs sm:shadow-none"
                         >
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0E2F66]" /> {isOpening ? "Opening…" : "View"}
                         </button>
@@ -548,7 +572,7 @@ const Index = () => {
                           type="button"
                           disabled={dlDisabled}
                           onClick={() => void downloadTemplate(template.templateFileUrl, template.name)}
-                          className="h-8 sm:h-auto flex flex-1 items-center justify-center gap-1 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-[#0E2F66] sm:bg-public-bg-brand px-2 py-1.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-white sm:text-public-text-on-brand transition-colors hover:bg-[#0A234D] sm:hover:bg-public-bg-brand-hover disabled:opacity-50 cursor-pointer shadow-2xs sm:shadow-none"
+                          className="h-8 sm:h-auto flex flex-1 items-center justify-center gap-1 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-[#0E2F66] sm:bg-public-bg-brand px-2 py-1.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-white sm:text-public-text-on-brand transition-colors hover:bg-[#0A234D] sm:hover:bg-public-bg-brand-hover disabled:opacity-50 cursor-pointer shadow-2xs sm:shadow-none"
                         >
                           <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" /> {isDownloading ? "Downloading…" : "Download"}
                         </button>
@@ -562,7 +586,7 @@ const Index = () => {
             <div className="flex pt-1.5 sm:hidden">
               <Link
                 to="/public-templates"
-                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
               >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -579,14 +603,14 @@ const Index = () => {
           {/* Left column */}
           <div className="flex w-full flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px] xl:w-[564px] xl:shrink-0">
             <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 HELP CENTER
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xl sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Frequently Asked Questions
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Quick answers to the most common questions about using the PCYDO portal.
             </p>
           </div>
@@ -600,7 +624,7 @@ const Index = () => {
                   onClick={() => setOpenFaq(openFaq === id ? null : id)}
                   className="flex w-full items-center justify-between gap-2 sm:gap-[8px] text-left"
                 >
-                  <span className="font-segoe text-xs sm:text-sm lg:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
+                  <span className="font-segoe text-sm sm:text-sm lg:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
                     {question}
                   </span>
                   <ChevronDown
@@ -608,7 +632,7 @@ const Index = () => {
                   />
                 </button>
                 {openFaq === id && (
-                  <p className="mt-2.5 sm:mt-[16px] font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-secondary">
+                  <p className="mt-2.5 sm:mt-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-secondary">
                     {answer}
                   </p>
                 )}
@@ -625,12 +649,12 @@ const Index = () => {
 
           {/* Title group */}
           <div className="flex w-full flex-col items-center gap-2.5 sm:gap-4 lg:gap-[24px] p-1 sm:p-[10px] text-center">
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-xl sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Ready to get started
               <br className="sm:hidden" />
               {" "}with PCYDO?
             </h2>
-            <p className="font-segoe font-medium sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-xs sm:text-sm lg:text-public-fs-subtitle-sm">
+            <p className="font-segoe font-medium sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-sm sm:text-sm lg:text-public-fs-subtitle-sm">
               Join the growing community of youth organizations in Pasig City.
             </p>
           </div>
@@ -639,13 +663,13 @@ const Index = () => {
           <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px]">
             <Link
               to="/signup"
-              className="flex items-center justify-center rounded-[8px] bg-white px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-xs sm:text-public-fs-body-md font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle shadow-xs"
+              className="flex items-center justify-center rounded-[8px] bg-white px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-md font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle shadow-xs"
             >
               Create an Account
             </Link>
             <Link
               to="/public-templates"
-              className="flex items-center justify-center rounded-[8px] border border-public-bg-brand-subtle px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
+              className="flex items-center justify-center rounded-[8px] border border-public-bg-brand-subtle px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-white/10"
             >
               Browse Forms &amp; Templates
             </Link>
@@ -656,19 +680,19 @@ const Index = () => {
 
       {/* Contact */}
       <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-2.5 sm:gap-[10px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
 
-          {/* Title frame — centered */}
-          <div className="flex w-full flex-col items-center gap-1.5 sm:gap-[10px] p-1 sm:p-[10px] text-center">
+          {/* Title group */}
+          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
             <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[10px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 CONTACT
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-xl sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Get in Touch with PCYDO
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-xs sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Reach us through any of the following contact information.
             </p>
           </div>
@@ -677,14 +701,14 @@ const Index = () => {
           <div className="mx-auto flex w-full max-w-[975px] flex-col gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px]">
 
             {/* Address card — capped at 723px */}
-            <div className="mx-auto flex w-full max-w-[723px] flex-col gap-2.5 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav">
+            <div className="mx-auto flex w-full max-w-[723px] flex-col items-center gap-2 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav text-center">
               <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
                 <MapPin className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
               </div>
-              <p className="font-segoe text-[10px] sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
+              <p className="font-segoe text-xs sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
                 Office Address
               </p>
-              <p className="font-segoe text-xs sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+              <p className="font-segoe text-sm sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
                 3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City
               </p>
             </div>
@@ -697,10 +721,10 @@ const Index = () => {
                 <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
                   <Phone className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
                 </div>
-                <p className="font-segoe text-[10px] sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
+                <p className="font-segoe text-xs sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
                   Contact Numbers
                 </p>
-                <p className="font-segoe text-xs sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                <p className="font-segoe text-sm sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   (02) 8643-7632
                 </p>
               </div>
@@ -710,14 +734,14 @@ const Index = () => {
                 <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
                   <Mail className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
                 </div>
-                <p className="font-segoe text-[10px] sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
+                <p className="font-segoe text-xs sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
                   Official Email
                 </p>
                 <a
                   href="https://mail.google.com/mail/?view=cm&fs=1&to=lydo@pasigcity.gov.ph"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-segoe text-xs sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand hover:underline"
+                  className="font-segoe text-sm sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand hover:underline"
                 >
                   lydo@pasigcity.gov.ph
                 </a>
@@ -728,10 +752,10 @@ const Index = () => {
                 <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
                   <Clock className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
                 </div>
-                <p className="font-segoe text-[10px] sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
+                <p className="font-segoe text-xs sm:text-xs lg:text-public-fs-subheading-sm font-semibold uppercase leading-none text-public-text-secondary">
                   Office Hours
                 </p>
-                <p className="font-segoe text-xs sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                <p className="font-segoe text-sm sm:text-sm lg:text-public-fs-subtitle-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   Monday–Friday<br />7:00 AM – 4:00 PM
                 </p>
               </div>
@@ -742,7 +766,7 @@ const Index = () => {
             <div className="flex justify-center pt-1 sm:pt-0">
               <Link
                 to="/contacts"
-                className="flex items-center rounded-[8px] bg-public-bg-brand px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-xs sm:text-public-fs-body-md font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-xs"
+                className="flex items-center rounded-[8px] bg-public-bg-brand px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-md font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-xs"
               >
                 View Contact Page
               </Link>

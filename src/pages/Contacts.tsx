@@ -29,10 +29,10 @@ const Contacts = () => {
       {/* Hero */}
       <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-2 py-4 text-center sm:items-start sm:text-left sm:gap-[16px] sm:py-[48px] sm:min-h-[285px]">
-          <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[26px] sm:text-public-fs-hero">
+          <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
             Contact Us
           </h1>
-          <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-xs sm:text-public-fs-subtitle-sm max-w-md">
+          <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-md">
             Get in touch with the PCYDO office in Pasig City.
           </p>
         </div>
@@ -73,10 +73,10 @@ const Contacts = () => {
               <MapPin className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
             </div>
             <div className="flex flex-col gap-1 sm:gap-[6px] min-w-0">
-              <p className="font-segoe text-[11px] sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
+              <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
                 Office Address
               </p>
-              <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-snug text-public-text-brand break-words">
+              <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-snug text-public-text-brand break-words">
                 {address}
               </p>
             </div>
@@ -94,10 +94,10 @@ const Contacts = () => {
                   <Phone className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
                 </div>
                 <div className="flex flex-col gap-1 sm:gap-[6px]">
-                  <p className="font-segoe text-[11px] sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
+                  <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
                     Telephone
                   </p>
-                  <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-snug text-public-text-brand">
+                  <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-snug text-public-text-brand">
                     {phone}
                   </p>
                 </div>
@@ -109,14 +109,14 @@ const Contacts = () => {
                   <Mail className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
                 </div>
                 <div className="flex flex-col gap-1 sm:gap-[6px]">
-                  <p className="font-segoe text-[11px] sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
+                  <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
                     Email
                   </p>
                   <a
                     href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-snug text-public-text-brand hover:underline break-all"
+                    className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-snug text-public-text-brand hover:underline break-all"
                   >
                     {email}
                   </a>
@@ -127,30 +127,30 @@ const Contacts = () => {
 
             {/* Right: Office Hours */}
             <div className="flex flex-1 flex-col gap-2.5 sm:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-2xs sm:shadow-public-nav justify-center">
-              <p className="font-segoe text-[11px] sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
+              <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-tight text-public-text-neutral-default">
                 Office Hours
               </p>
               <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-[12px]">
-                <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand">
+                <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand">
                   Monday - Friday
                 </span>
-                <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-brand">
+                <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand">
                   8:00 AM – 5:00 PM
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-[12px]">
-                <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
+                <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
                   Saturday
                 </span>
-                <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
+                <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
                   Closed
                 </span>
               </div>
               <div className="flex justify-between items-center pb-0.5 sm:pb-0">
-                <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
+                <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
                   Sunday
                 </span>
-                <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
+                <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal text-public-text-secondary">
                   Closed
                 </span>
               </div>
@@ -164,10 +164,10 @@ const Contacts = () => {
               <CircleHelp className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
             </div>
             <div className="flex flex-col gap-1 sm:gap-[10px] px-1 sm:px-[10px]">
-              <h3 className="font-segoe text-sm sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
                 Still Need Help?
               </h3>
-              <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary max-w-md">
+              <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary max-w-md">
                 Can't find the answer you're looking for? Reach out to the PCYDO office directly
                 and we'll get back to you as soon as possible.
               </p>
@@ -176,7 +176,7 @@ const Contacts = () => {
               href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-public-bg-brand px-4 py-2 sm:px-[20px] sm:py-[12px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-2xs mt-1 sm:mt-0"
+              className="inline-flex items-center gap-1.5 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-public-bg-brand px-4 py-2 sm:px-[20px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-2xs mt-1 sm:mt-0"
             >
               <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
               Send an Email

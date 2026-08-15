@@ -1,9 +1,11 @@
 export type PasswordRecoveryParams = {
   hasRecoveryCredentials: boolean;
+  hasRecoveryError: boolean;
   code: string;
   tokenHash: string;
   accessToken: string;
   refreshToken: string;
+  errorCode: string;
   errorMessage: string;
 };
 
@@ -16,6 +18,7 @@ export const parsePasswordRecoveryUrl = (href: string): PasswordRecoveryParams =
   const tokenHash = query.get("token_hash") || "";
   const accessToken = hash.get("access_token") || query.get("access_token") || "";
   const refreshToken = hash.get("refresh_token") || query.get("refresh_token") || "";
+  const errorCode = query.get("error_code") || hash.get("error_code") || "";
   const errorMessage =
     query.get("error_description") ||
     hash.get("error_description") ||
@@ -23,12 +26,18 @@ export const parsePasswordRecoveryUrl = (href: string): PasswordRecoveryParams =
     hash.get("error") ||
     "";
 
+  const hasRecoveryError = Boolean(errorCode || errorMessage);
+  const hasRecoveryCredentials =
+    !hasRecoveryError && (type === "recovery" || Boolean(code || tokenHash || (accessToken && refreshToken)));
+
   return {
-    hasRecoveryCredentials: type === "recovery" || Boolean(code || tokenHash || (accessToken && refreshToken)),
+    hasRecoveryCredentials,
+    hasRecoveryError,
     code,
     tokenHash,
     accessToken,
     refreshToken,
+    errorCode,
     errorMessage: errorMessage.replace(/\+/g, " "),
   };
 };

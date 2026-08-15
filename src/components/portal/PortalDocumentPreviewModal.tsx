@@ -252,10 +252,10 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
               <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div className="min-w-0 space-y-0.5">
-              <DialogTitle className="text-xs sm:text-base font-bold text-foreground leading-snug break-words" title={previewTitle}>
+              <DialogTitle className="text-sm sm:text-base font-bold text-foreground leading-snug break-words" title={previewTitle}>
                 {previewTitle || "Document Preview"}
               </DialogTitle>
-              <p className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <p className="text-xs sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                 <span>PDF</span>
                 <span>•</span>
                 <span>{fileSize || "PDF Document"}</span>

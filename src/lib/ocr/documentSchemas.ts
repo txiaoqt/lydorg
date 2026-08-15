@@ -505,7 +505,12 @@ export const DOCUMENT_SCHEMAS: Record<DocumentSchemaId, DocumentSchema> = {
 
 export const DOCUMENT_SCHEMA_BY_SLOT_NAME = Object.values(DOCUMENT_SCHEMAS).reduce<Record<string, DocumentSchema>>((lookup, schema) => {
   lookup[schema.slotName] = schema;
+  const stripped = schema.slotName.replace(/^202[0-9]\s+/, "");
+  lookup[stripped] = schema;
   return lookup;
 }, {});
 
-export const getDocumentSchemaForSlot = (slotName: string) => DOCUMENT_SCHEMA_BY_SLOT_NAME[slotName] ?? null;
+export const getDocumentSchemaForSlot = (slotName: string) =>
+  DOCUMENT_SCHEMA_BY_SLOT_NAME[slotName] ??
+  DOCUMENT_SCHEMA_BY_SLOT_NAME[slotName.replace(/^202[0-9]\s+/, "")] ??
+  null;

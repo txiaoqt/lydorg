@@ -17,6 +17,7 @@ import {
 } from "@/user/pwa/pwaAuthFlow";
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
+import { getVerificationErrorMessage } from "@/lib/verification-error";
 
 const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -34,18 +35,35 @@ const VerifyEmail = () => {
   const pwaFlow = isPwaAuthFlow(location.search);
   const pwaTheme = readPwaPreferences().accentTheme;
   const email = useMemo(() => {
+    const searchEmail = new URLSearchParams(location.search).get("email");
     const stateEmail = (location.state as VerifyEmailLocationState | null)?.email;
     const storedEmail =
       typeof window !== "undefined"
         ? window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY)
         : null;
-    return (stateEmail || storedEmail || "").trim().toLowerCase();
-  }, [location.state]);
+    return (searchEmail || stateEmail || storedEmail || "").trim().toLowerCase();
+  }, [location.search, location.state]);
+
+  const isReloaded = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const navEntries = window.performance?.getEntriesByType?.("navigation") as
+      | PerformanceNavigationTiming[]
+      | undefined;
+    if (navEntries && navEntries.length > 0) {
+      return navEntries[0].type === "reload";
+    }
+    return (
+      (window.performance as unknown as { navigation?: { type?: number } })?.navigation
+        ?.type === 1
+    );
+  }, []);
 
   const [code, setCode] = useState("");
-  const [password, setPassword] = useState(
-    () => (location.state as VerifyEmailLocationState | null)?.password || "",
-  );
+  const [password, setPassword] = useState(() => {
+    if (isReloaded) return "";
+    return (location.state as VerifyEmailLocationState | null)?.password || "";
+  });
+  const showPasswordField = isReloaded || !((location.state as VerifyEmailLocationState | null)?.password);
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -109,13 +127,7 @@ const VerifyEmail = () => {
     setIsVerifying(false);
 
     if (verifyError) {
-      const lower = verifyError.message.toLowerCase();
-      const isExpired = lower.includes("expired") && !lower.includes("invalid");
-      setError(
-        isExpired
-          ? "That verification code has expired. Please request a new code."
-          : "Incorrect verification code. Please check the code and try again.",
-      );
+      setError(getVerificationErrorMessage(verifyError));
       return;
     }
     if (!data.session) {
@@ -241,7 +253,7 @@ const VerifyEmail = () => {
               </InputOTP>
             </div>
 
-            {!((location.state as VerifyEmailLocationState | null)?.password) ? (
+            {showPasswordField ? (
               <div className="space-y-1.5">
                 <Label htmlFor="verification-password">Account password</Label>
                 <Input
