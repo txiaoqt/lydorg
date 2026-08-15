@@ -134,46 +134,31 @@ const About = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="about-hero-gradient flex min-h-[420px] items-center px-4 pt-[96px] pb-8 sm:min-h-[758px] sm:px-6 sm:pt-[120px] sm:pb-0 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col-reverse items-center gap-6 py-6 sm:gap-[40px] sm:py-[64px] xl:flex-row xl:items-center xl:justify-between xl:py-[160px]">
+      <section className="about-hero-gradient flex min-h-0 sm:min-h-[758px] flex-col justify-center px-4 pt-[96px] pb-2 sm:px-6 sm:pt-[120px] sm:pb-0 lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col-reverse items-center gap-5 pt-2 pb-0 sm:gap-[40px] sm:py-[64px] xl:flex-row xl:items-center xl:justify-between xl:py-[160px]">
 
           {/* Left column */}
-          <div className="flex w-full flex-col items-center gap-5 py-1 text-center sm:gap-[32px] sm:py-[10px] xl:max-w-[573px] xl:items-start xl:text-left">
+          <div className="flex w-full flex-col items-center gap-4 py-0 text-center sm:gap-[32px] sm:py-[10px] xl:max-w-[573px] xl:items-start xl:text-left">
             <div className="flex w-full flex-col items-center gap-3 sm:gap-[16px] xl:items-start">
-              <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-brand text-[24px] sm:text-public-fs-hero">
+              <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-brand text-[28px] sm:text-public-fs-hero">
                 Empowering Youth Organizations in Pasig City
               </h1>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-center text-[#1e1e1e] text-xs sm:text-public-fs-subtitle-sm xl:text-justify">
+              <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-center text-[#1e1e1e] text-sm sm:text-public-fs-subtitle-sm xl:text-justify">
                 The Pasig City Local Youth Development Office (PCYDO) is mandated to support, develop, and monitor registered youth organizations across the city. Y-TRACE is our official digital portal — simplifying compliance, registration, document submission, and activity reporting for both organizations and PCYDO staff.
               </p>
             </div>
 
             {/* Button group */}
-            <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px] xl:w-auto">
-              {isAuthenticated ? (
+            {isAuthenticated ? (
+              <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px] xl:w-auto">
                 <Link
                   to={portalHref}
-                  className="flex h-10 items-center justify-center rounded-[8px] bg-public-bg-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-xs sm:text-public-fs-body-md font-semibold sm:font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-public-bg-brand-hover shadow-xs sm:shadow-none"
+                  className="flex h-10 items-center justify-center rounded-[8px] bg-public-bg-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-md font-semibold sm:font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-public-bg-brand-hover shadow-xs sm:shadow-none"
                 >
                   Open Portal
                 </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/signin"
-                    className="flex h-10 items-center justify-center rounded-[8px] border border-public-border-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="flex h-10 items-center justify-center rounded-[8px] bg-public-bg-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-xs sm:text-public-fs-body-md font-semibold sm:font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-public-bg-brand-hover shadow-xs sm:shadow-none"
-                  >
-                    Create an Account
-                  </Link>
-                </>
-              )}
-            </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Right column — image card */}
@@ -189,7 +174,7 @@ const About = () => {
       </section>
 
       {/* Portal Overview */}
-      <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+      <section className="bg-public-bg-section px-4 pt-4 pb-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-[24px] xl:flex-row xl:items-center">
 
           {/* Left column — gradient card */}
@@ -230,14 +215,14 @@ const About = () => {
             {/* Overview header */}
             <div className="flex flex-col gap-2 sm:gap-[10px] py-1 sm:py-[10px]">
               <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                   OVERVIEW
                 </span>
               </div>
-              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[20px] sm:text-public-fs-title-page">
+              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
                 What is Y-TRACE?
               </h2>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-xs sm:text-public-fs-subheading-sm">
+              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
                 Y-TRACE is the official online portal of PCYDO Pasig City for managing youth organization compliance, registrations, and activity processes — all in one place.
               </p>
             </div>
@@ -252,10 +237,10 @@ const About = () => {
                   <div className="flex h-8 w-8 sm:h-[40px] sm:w-[40px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
                     <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-public-text-brand" />
                   </div>
-                  <h3 className="font-segoe text-xs sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                  <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                     {title}
                   </h3>
-                  <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                  <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                     {description}
                   </p>
                 </div>
@@ -276,21 +261,21 @@ const About = () => {
               <Globe className="h-6 w-6 sm:h-12 sm:w-12 text-white" />
             </div>
             <div className="flex flex-col gap-1 sm:gap-[4px]">
-              <h3 className="font-segoe text-sm sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-[#1e1e1e]">
+              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-[#1e1e1e]">
                 Pasig City Local Youth Development Office
               </h3>
-              <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
+              <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
                 PCYDO
               </span>
             </div>
-            <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-public-text-secondary">
+            <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-public-text-secondary">
               The Pasig City Local Youth Development Office oversees youth welfare programs, supports registered youth organizations, and enforces compliance with national and local youth development policies.
             </p>
             <div className="flex flex-wrap gap-1.5 sm:gap-[12px]">
               {["Youth Development", "Compliance", "Registration"].map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-[11px] sm:text-public-fs-subheading-sm font-normal leading-[100%] text-[#1e1e1e]"
+                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-[100%] text-[#1e1e1e]"
                 >
                   {tag}
                 </span>
@@ -302,14 +287,14 @@ const About = () => {
           <div className="flex w-full flex-1 flex-col gap-4 sm:gap-[24px] xl:px-[24px]">
             <div className="flex flex-col gap-2 sm:gap-[10px] py-1 sm:py-[10px]">
               <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                   ABOUT PCYDO
                 </span>
               </div>
-              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[20px] sm:text-public-fs-title-page">
+              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
                 The office behind the portal
               </h2>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-xs sm:text-public-fs-subheading-sm">
+              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
                 PCYDO Pasig City is the government office mandated to coordinate, monitor, and support all youth-related programs and organizations across the city's barangays.
               </p>
             </div>
@@ -323,10 +308,10 @@ const About = () => {
                     <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
                   </div>
                   <div className="flex flex-col gap-1 sm:gap-[6px]">
-                    <h3 className="font-segoe text-xs sm:text-public-fs-subtitle-sm font-semibold leading-[120%] text-public-text-brand">
+                    <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] text-public-text-brand">
                       {title}
                     </h3>
-                    <p className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-neutral-default">
+                    <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-neutral-default">
                       {description}
                     </p>
                   </div>
@@ -342,17 +327,17 @@ const About = () => {
       <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 sm:gap-[10px]">
 
-          {/* Header — centered */}
-          <div className="flex flex-col items-center gap-2 sm:gap-[10px] py-1 sm:py-[10px] text-center">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+          {/* Header — left-aligned */}
+          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
+            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 SUPPORTED PROGRAMS
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[20px] sm:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Programs We Support
             </h2>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-xs sm:text-public-fs-subheading-sm max-w-xl">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Discover the flagship government programs that Y-TRACE helps youth organizations access, comply with, and participate in.
             </p>
           </div>
@@ -375,10 +360,10 @@ const About = () => {
                     </span>
                   </div>
                 </div>
-                <h3 className="font-segoe text-xs sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                   {description}
                 </p>
               </div>
@@ -392,17 +377,17 @@ const About = () => {
       <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 sm:gap-[10px]">
 
-          {/* Header — centered */}
-          <div className="flex flex-col items-center gap-2 sm:gap-[10px] py-1 sm:py-[10px] text-center">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+          {/* Header — left-aligned */}
+          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
+            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 FEATURES
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[20px] sm:text-public-fs-title-page">
-              Everything Your<br className="sm:hidden" /> Organization Needs
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
+              Everything Your Organization Needs
             </h2>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-xs sm:text-public-fs-subheading-sm max-w-xl">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Y-TRACE provides all the digital tools your youth organization needs to stay compliant and connected with PCYDO.
             </p>
           </div>
@@ -417,10 +402,10 @@ const About = () => {
                 <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
                   <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
                 </div>
-                <h3 className="font-segoe text-xs sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                   {description}
                 </p>
               </div>
@@ -434,17 +419,17 @@ const About = () => {
       <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 sm:gap-[10px]">
 
-          {/* Header — centered */}
-          <div className="flex flex-col items-center gap-2 sm:gap-[10px] py-1 sm:py-[10px] text-center">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+          {/* Header — left-aligned */}
+          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
+            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 POLICIES
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[20px] sm:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
               Our Policies
             </h2>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-xs sm:text-public-fs-subheading-sm max-w-xl">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
               Read about our commitments to transparency, data protection, and responsible use of the Y-TRACE platform.
             </p>
           </div>
@@ -459,15 +444,15 @@ const About = () => {
                 <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
                   <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
                 </div>
-                <h3 className="font-segoe text-xs sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+                <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                   {description}
                 </p>
                 <Link
                   to={href}
-                  className="flex items-center gap-1.5 sm:gap-[8px] py-1 sm:py-[4px] font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-[100%] text-public-text-brand transition-colors hover:underline"
+                  className="flex items-center gap-1.5 sm:gap-[8px] py-1 sm:py-[4px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-[100%] text-public-text-brand transition-colors hover:underline"
                 >
                   View Policy
                   <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />

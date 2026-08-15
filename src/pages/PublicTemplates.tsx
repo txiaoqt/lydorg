@@ -19,10 +19,10 @@ const PublicTemplates = () => {
 
           {/* Title block */}
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[24px] sm:text-public-fs-hero">
+            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Forms &amp; Templates
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-xs sm:text-public-fs-subtitle-sm max-w-xl">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
               Browse and download official forms, compliance templates, and document references from PCYDO Pasig City.
             </p>
           </div>

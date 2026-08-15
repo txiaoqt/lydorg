@@ -180,18 +180,18 @@ const Navbar = () => {
               <Link
                 to="/signin"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-segoe text-xs sm:text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
+                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-segoe text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-segoe text-xs sm:text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
+                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-segoe text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
               >
                 Create an Account
               </Link>
-              <p className="text-center text-[10px] text-slate-400 font-medium pt-0.5">
+              <p className="text-center text-xs text-slate-400 font-medium pt-0.5">
                 Official Pasig City LYDO Portal
               </p>
             </div>
@@ -200,14 +200,14 @@ const Navbar = () => {
               <Link
                 to={portalHref}
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-segoe text-xs sm:text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
+                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-segoe text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
               >
                 {portalLabel}
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-segoe text-xs sm:text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
+                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-segoe text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
               >
                 Sign Out
               </button>

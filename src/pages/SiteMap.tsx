@@ -49,10 +49,10 @@ const SiteMap = () => {
       {/* Hero */}
       <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-2 py-4 text-center sm:items-start sm:text-left sm:gap-[16px] sm:py-[48px] sm:min-h-[285px]">
-          <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[26px] sm:text-public-fs-hero">
+          <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
             Site Map
           </h1>
-          <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-xs sm:text-public-fs-subtitle-sm max-w-xl">
+          <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
             Complete directory of the Y-TRACE public website pages and Organization Portal workflows.
           </p>
         </div>
@@ -74,13 +74,13 @@ const SiteMap = () => {
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEF7FE] p-1 shrink-0">
                       <Icon className="h-4 w-4 text-public-text-brand" />
                     </div>
-                    <h2 className="font-segoe text-sm sm:text-base font-bold text-public-text-brand">
+                    <h2 className="font-segoe text-base sm:text-base font-bold text-public-text-brand">
                       {section.title}
                     </h2>
                   </div>
 
                   {/* Navigation Rows */}
-                  <ul className="divide-y divide-border/40 text-xs sm:text-sm">
+                  <ul className="divide-y divide-border/40 text-sm sm:text-sm">
                     {section.links.map((link, index) => (
                       <li key={`${link.href}-${index}`}>
                         <Link

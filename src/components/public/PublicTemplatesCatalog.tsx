@@ -95,7 +95,10 @@ export default function PublicTemplatesCatalog({
   }, [activeFilter, publicDocumentTemplates, publicOtherTemplates]);
 
   const categoryDownloadableTemplates = useMemo(() => {
-    return categoryTemplates.filter((t) => Boolean(t.templateFileUrl || t.templateUrl));
+    return categoryTemplates.filter((t) => {
+      const url = t.templateFileUrl || t.templateUrl;
+      return Boolean(url && url.trim() && !url.startsWith("#"));
+    });
   }, [categoryTemplates]);
 
   const categoryDownloadableCount = categoryDownloadableTemplates.length;
@@ -213,9 +216,9 @@ export default function PublicTemplatesCatalog({
       setPreviewEmptyMessage("");
       setPreviewCanInline(
         resolvedUrl.includes("application/pdf") ||
-        fileUrl.toLowerCase().includes("template") ||
         fileUrl.toLowerCase().endsWith(".pdf") ||
-        resolvedUrl.toLowerCase().includes(".pdf")
+        resolvedUrl.toLowerCase().includes(".pdf") ||
+        (!fileUrl.toLowerCase().endsWith(".xlsx") && !fileUrl.toLowerCase().endsWith(".docx"))
       );
       setPreviewModalOpen(true);
     } catch (error) {
@@ -230,17 +233,39 @@ export default function PublicTemplatesCatalog({
   };
 
   const downloadTemplate = async (fileUrl: string | undefined, fileName: string) => {
-    if (!fileUrl) return;
+    if (!fileUrl || !fileUrl.trim() || fileUrl.startsWith("#")) {
+      toast({
+        title: "Download unavailable",
+        description: "No file is available for download yet.",
+        variant: "destructive",
+      });
+      return;
+    }
     setDownloadingTemplateId(fileName);
     try {
       const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
       const response = await fetch(resolvedUrl);
       if (!response.ok) throw new Error("Failed to fetch file");
       const blob = await response.blob();
+
+      let targetFileName = fileName.trim().replace(/[/\\?%*:|"<>]/g, "-");
+      const hasExt = /\.(pdf|docx?|xlsx?|pptx?|zip|png|jpe?g|txt|csv)$/i.test(targetFileName);
+      if (!hasExt) {
+        if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) {
+          targetFileName += ".pdf";
+        } else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) {
+          targetFileName += ".docx";
+        } else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet") || blob.type.includes("excel")) {
+          targetFileName += ".xlsx";
+        } else {
+          targetFileName += ".pdf";
+        }
+      }
+
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = fileName;
+      a.download = targetFileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -268,7 +293,7 @@ export default function PublicTemplatesCatalog({
             placeholder="Search templates by title, description, category..."
             value={currentSearchTerm}
             onChange={(e) => handleSearchInputChange(e.target.value)}
-            className="h-9 pl-9 pr-3 text-xs rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
+            className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
           />
         </div>
 
@@ -281,7 +306,7 @@ export default function PublicTemplatesCatalog({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 flex-1 rounded-xl border-border/80 bg-background text-xs font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
+                className="h-8 flex-1 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
               >
                 <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="truncate">
@@ -335,7 +360,7 @@ export default function PublicTemplatesCatalog({
             size="sm"
             disabled={isGeneratingZip || categoryDownloadableCount === 0}
             onClick={downloadCategoryZip}
-            className="h-8 flex-1 rounded-xl border-border/80 bg-background text-xs font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 disabled:opacity-50"
+            className="h-8 flex-1 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 disabled:opacity-50"
           >
             {isGeneratingZip ? (
               <>
@@ -509,10 +534,10 @@ export default function PublicTemplatesCatalog({
                           <FileText className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1 space-y-0.5">
-                          <h4 className="text-xs font-bold text-foreground leading-snug break-words">
+                          <h4 className="text-base sm:text-base font-bold text-foreground leading-snug break-words">
                             {tpl.name}
                           </h4>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed break-words">
+                          <p className="text-sm sm:text-sm text-muted-foreground leading-relaxed break-words">
                             {tpl.description || "Official template"}
                           </p>
                         </div>
@@ -525,7 +550,7 @@ export default function PublicTemplatesCatalog({
                           variant="outline"
                           size="sm"
                           onClick={() => void openTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-xs font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs"
+                          className="h-8 text-sm font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs"
                         >
                           <Eye className="mr-1 h-3.5 w-3.5" /> View
                         </Button>
@@ -533,7 +558,7 @@ export default function PublicTemplatesCatalog({
                           type="button"
                           size="sm"
                           onClick={() => void downloadTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-xs font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer"
+                          className="h-8 text-sm font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer"
                         >
                           <Download className="mr-1 h-3.5 w-3.5" /> Download
                         </Button>
@@ -641,10 +666,10 @@ export default function PublicTemplatesCatalog({
                           <ClipboardList className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1 space-y-0.5">
-                          <h4 className="text-xs font-bold text-foreground leading-snug break-words">
+                          <h4 className="text-base sm:text-base font-bold text-foreground leading-snug break-words">
                             {tpl.name}
                           </h4>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed break-words">
+                          <p className="text-sm sm:text-sm text-muted-foreground leading-relaxed break-words">
                             {tpl.description || "Reference template"}
                           </p>
                         </div>
@@ -657,7 +682,7 @@ export default function PublicTemplatesCatalog({
                           variant="outline"
                           size="sm"
                           onClick={() => void openTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-xs font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs"
+                          className="h-8 text-sm font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs"
                         >
                           <Eye className="mr-1 h-3.5 w-3.5" /> View
                         </Button>
@@ -665,7 +690,7 @@ export default function PublicTemplatesCatalog({
                           type="button"
                           size="sm"
                           onClick={() => void downloadTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-xs font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer"
+                          className="h-8 text-sm font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer"
                         >
                           <Download className="mr-1 h-3.5 w-3.5" /> Download
                         </Button>
