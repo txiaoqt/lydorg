@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandLogo from "@/components/BrandLogo";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
-import { checkSignupEmail } from "@/lib/email-validation";
 import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
+
+import { checkRecoveryEmail, type RecoveryEmailStatus } from "@/lib/email-validation";
 
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
@@ -77,12 +78,39 @@ const ResetPassword = () => {
     recovery.hasRecoveryError ? "invalid" : recovery.hasRecoveryCredentials ? "verifying" : "request",
   );
   const [email, setEmail] = useState("");
+  const [emailStatus, setEmailStatus] = useState<RecoveryEmailStatus>("idle");
+  const [touchedEmail, setTouchedEmail] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [inlineError, setInlineError] = useState("");
+
+  const isEmailValid = useMemo(() => {
+    return /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email.trim());
+  }, [email]);
+
+  useEffect(() => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!isEmailValid || !supabase) {
+      setEmailStatus("idle");
+      return;
+    }
+
+    let active = true;
+    setEmailStatus("checking");
+    const timeoutId = window.setTimeout(() => {
+      void checkRecoveryEmail(normalizedEmail).then((result) => {
+        if (active) setEmailStatus(result);
+      });
+    }, 500);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [email, isEmailValid]);
 
   useEffect(() => {
     endPwaAuthFlow();
@@ -171,7 +199,7 @@ const ResetPassword = () => {
     event.preventDefault();
     setInlineError("");
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+    if (!normalizedEmail || !isEmailValid) {
       setInlineError("Please enter a valid email address.");
       return;
     }
@@ -180,26 +208,29 @@ const ResetPassword = () => {
       return;
     }
 
-    setIsLoading(true);
-    const emailAvailability = await checkSignupEmail(normalizedEmail);
-    if (emailAvailability !== "registered") {
-      setIsLoading(false);
-      setInlineError(
-        emailAvailability === "available"
-          ? "No account is registered with this email address."
-          : emailAvailability === "unconfirmed"
-          ? "This account has not finished email verification yet. Please complete verification first."
-          : "We could not verify this email right now. Please try again.",
-      );
-      return;
+    let currentStatus = emailStatus;
+    if (currentStatus !== "registered") {
+      setIsLoading(true);
+      currentStatus = await checkRecoveryEmail(normalizedEmail);
+      setEmailStatus(currentStatus);
+      if (currentStatus !== "registered") {
+        setIsLoading(false);
+        setInlineError("We couldn't process this email. Please check the address and try again.");
+        return;
+      }
     }
 
+    setIsLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: getPasswordResetUrl(),
     });
     setIsLoading(false);
     if (error) {
-      setInlineError(error.message);
+      if (/rate limit|too many/i.test(error.message)) {
+        setInlineError("Too many requests. Please wait a few moments before trying again.");
+      } else {
+        setInlineError("We couldn't process this email. Please check the address and try again.");
+      }
       return;
     }
     setMode("verifying");
@@ -257,6 +288,8 @@ const ResetPassword = () => {
     window.history.replaceState({}, document.title, "/reset-password");
     setInlineError("");
     setEmail("");
+    setEmailStatus("idle");
+    setTouchedEmail(false);
     setMode("request");
   };
 
@@ -306,18 +339,63 @@ const ResetPassword = () => {
                     setEmail(event.target.value);
                     setInlineError("");
                   }}
+                  onBlur={() => setTouchedEmail(true)}
                   placeholder="you@gmail.com"
                   autoComplete="email"
+                  disabled={isLoading}
                   required
                 />
+                {touchedEmail && !email.trim() ? (
+                  <p className="text-xs text-destructive">Email address is required.</p>
+                ) : null}
+                {touchedEmail && email && !isEmailValid ? (
+                  <p className="text-xs text-destructive">Please enter a valid email address.</p>
+                ) : null}
+                {isEmailValid && emailStatus === "checking" ? (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                    Checking email...
+                  </p>
+                ) : null}
+                {isEmailValid && emailStatus === "registered" ? (
+                  <p className="text-xs text-success">
+                    This email is valid. Click Send Reset Link to continue.
+                  </p>
+                ) : null}
+                {isEmailValid && emailStatus === "not_found" ? (
+                  <p className="text-xs text-destructive">
+                    We couldn&apos;t process this email. Please check the address and try again.
+                  </p>
+                ) : null}
+                {isEmailValid && emailStatus === "error" ? (
+                  <p className="text-xs text-muted-foreground">
+                    We could not verify this email right now.
+                  </p>
+                ) : null}
                 {inlineError ? (
                   <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                     {inlineError}
                   </p>
                 ) : null}
               </div>
-              <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : "Send Reset Link"}
+              <Button
+                type="submit"
+                className="w-full font-semibold"
+                disabled={isLoading || !isEmailValid || emailStatus !== "registered"}
+              >
+                {emailStatus === "checking" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Checking email...
+                  </>
+                ) : isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Reset Link"
+                )}
               </Button>
             </form>
           ) : null}

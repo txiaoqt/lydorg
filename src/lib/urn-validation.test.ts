@@ -17,9 +17,7 @@ describe("URN Validation & Uniqueness Domain Logic", () => {
   });
 
   it("provides user-friendly error message for duplicate URNs", () => {
-    expect(DUPLICATE_URN_ERROR_MESSAGE).toBe(
-      "This Unique Registration Number is already registered to another organization. Please verify the URN and try again.",
-    );
+    expect(DUPLICATE_URN_ERROR_MESSAGE).toBe("URN is unavailable.");
   });
 
   it("returns available for empty or idle URNs", async () => {

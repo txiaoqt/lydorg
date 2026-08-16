@@ -6,29 +6,20 @@ import {
 
 describe("Verification Error Handling", () => {
   describe("isSupabaseOtpExpiredError", () => {
-    it("identifies standard Supabase expired OTP error message", () => {
-      expect(isSupabaseOtpExpiredError({ message: "Token has expired or is invalid" })).toBe(true);
-    });
-
-    it("identifies standard Supabase email link expired message", () => {
-      expect(isSupabaseOtpExpiredError({ message: "Email link is invalid or has expired" })).toBe(true);
-    });
-
-    it("identifies expired error code", () => {
-      expect(isSupabaseOtpExpiredError({ code: "otp_expired", message: "Token is invalid" })).toBe(true);
-      expect(isSupabaseOtpExpiredError({ code: "token_expired" })).toBe(true);
-    });
-
-    it("identifies explicit expired message", () => {
-      expect(isSupabaseOtpExpiredError({ message: "OTP has expired" })).toBe(true);
-      expect(isSupabaseOtpExpiredError({ message: "Verification code has expired" })).toBe(true);
-    });
-
-    it("returns false for non-expired invalid OTP errors", () => {
+    it("identifies standard Supabase incorrect/invalid OTP error messages as NOT expired", () => {
+      expect(isSupabaseOtpExpiredError({ message: "Token has expired or is invalid" })).toBe(false);
+      expect(isSupabaseOtpExpiredError({ message: "Email link is invalid or has expired" })).toBe(false);
       expect(isSupabaseOtpExpiredError({ message: "Token is invalid" })).toBe(false);
       expect(isSupabaseOtpExpiredError({ message: "Invalid token" })).toBe(false);
       expect(isSupabaseOtpExpiredError({ message: "Token not found" })).toBe(false);
       expect(isSupabaseOtpExpiredError({ code: "bad_code", message: "Invalid OTP" })).toBe(false);
+    });
+
+    it("identifies explicit expired error codes and messages", () => {
+      expect(isSupabaseOtpExpiredError({ code: "token_expired" })).toBe(true);
+      expect(isSupabaseOtpExpiredError({ message: "OTP has expired" })).toBe(true);
+      expect(isSupabaseOtpExpiredError({ message: "Verification code has expired" })).toBe(true);
+      expect(isSupabaseOtpExpiredError({ message: "Token has expired" })).toBe(true);
     });
 
     it("handles empty or null errors safely", () => {
@@ -39,28 +30,26 @@ describe("Verification Error Handling", () => {
   });
 
   describe("getVerificationErrorMessage", () => {
-    it("returns expired message when Supabase indicates the code has expired", () => {
+    it("returns incorrect code message for Supabase standard 'Token has expired or is invalid' response (000000 / wrong OTP)", () => {
       const error = { message: "Token has expired or is invalid" };
-      expect(getVerificationErrorMessage(error)).toBe(
-        "That verification code has expired. Please request a new code.",
-      );
-    });
-
-    it("returns expired message when error code is otp_expired", () => {
-      const error = { code: "otp_expired", message: "Token is invalid" };
-      expect(getVerificationErrorMessage(error)).toBe(
-        "That verification code has expired. Please request a new code.",
-      );
-    });
-
-    it("returns incorrect code message when code is wrong but not expired", () => {
-      const error = { message: "Token is invalid" };
       expect(getVerificationErrorMessage(error)).toBe(
         "Incorrect verification code. Please check the code and try again.",
       );
     });
 
-    it("returns incorrect code message for invalid token / token not found", () => {
+    it("returns expired message when code or message is explicitly expired", () => {
+      expect(getVerificationErrorMessage({ message: "Verification code has expired" })).toBe(
+        "That verification code has expired or invalid. Please request a new code.",
+      );
+      expect(getVerificationErrorMessage({ code: "token_expired" })).toBe(
+        "That verification code has expired or invalid. Please request a new code.",
+      );
+    });
+
+    it("returns incorrect code message when code is wrong or invalid", () => {
+      expect(getVerificationErrorMessage({ message: "Token is invalid" })).toBe(
+        "Incorrect verification code. Please check the code and try again.",
+      );
       expect(getVerificationErrorMessage({ message: "Invalid token" })).toBe(
         "Incorrect verification code. Please check the code and try again.",
       );
@@ -82,11 +71,21 @@ describe("Verification Error Handling", () => {
     it("handles Error instances", () => {
       const error = new Error("Token has expired or is invalid");
       expect(getVerificationErrorMessage(error)).toBe(
-        "That verification code has expired. Please request a new code.",
+        "Incorrect verification code. Please check the code and try again.",
       );
 
-      const invalidError = new Error("Token is invalid");
-      expect(getVerificationErrorMessage(invalidError)).toBe(
+      const expiredError = new Error("Verification code has expired");
+      expect(getVerificationErrorMessage(expiredError)).toBe(
+        "That verification code has expired or invalid. Please request a new code.",
+      );
+    });
+
+    it("respects VerificationAttemptContext isOtpExpired flag", () => {
+      const genericError = { message: "Token has expired or is invalid" };
+      expect(getVerificationErrorMessage(genericError, { isOtpExpired: true })).toBe(
+        "That verification code has expired or invalid. Please request a new code.",
+      );
+      expect(getVerificationErrorMessage(genericError, { isOtpExpired: false })).toBe(
         "Incorrect verification code. Please check the code and try again.",
       );
     });

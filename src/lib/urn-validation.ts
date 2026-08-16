@@ -3,8 +3,7 @@ import { normalizeUrn } from "./urn-registration";
 
 export type UrnAvailability = "idle" | "checking" | "available" | "registered" | "error";
 
-export const DUPLICATE_URN_ERROR_MESSAGE =
-  "This Unique Registration Number is already registered to another organization. Please verify the URN and try again.";
+export const DUPLICATE_URN_ERROR_MESSAGE = "URN is unavailable.";
 
 /**
  * Checks whether a given URN is already registered to an organization in Supabase.

@@ -17,15 +17,19 @@ import {
 } from "@/user/pwa/pwaAuthFlow";
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
-import { getVerificationErrorMessage } from "@/lib/verification-error";
+import {
+  getVerificationErrorMessage,
+  OTP_ISSUED_AT_KEY,
+} from "@/lib/verification-error";
+import { PENDING_SIGNUP_EMAIL_KEY, VERIFY_FRESH_NAV_KEY } from "@/lib/email-validation";
 
-const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
 const RESEND_COOLDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 
 type VerifyEmailLocationState = {
   email?: string;
   password?: string;
+  fromSignup?: boolean;
 };
 
 const VerifyEmail = () => {
@@ -44,31 +48,54 @@ const VerifyEmail = () => {
     return (searchEmail || stateEmail || storedEmail || "").trim().toLowerCase();
   }, [location.search, location.state]);
 
-  const isReloaded = useMemo(() => {
+  const [isReloaded] = useState(() => {
     if (typeof window === "undefined") return false;
+
+    // 1. If navigated fresh from registration, consume the one-time token and do not show password
+    const isFreshNav = window.sessionStorage.getItem(VERIFY_FRESH_NAV_KEY) === "true";
+    if (isFreshNav) {
+      window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
+      window.sessionStorage.setItem("ytrace_verify_active", "true");
+      return false;
+    }
+
+    // 2. If the page was already active in this tab or browser reloaded, show password field
+    const wasActive = window.sessionStorage.getItem("ytrace_verify_active") === "true";
     const navEntries = window.performance?.getEntriesByType?.("navigation") as
       | PerformanceNavigationTiming[]
       | undefined;
-    if (navEntries && navEntries.length > 0) {
-      return navEntries[0].type === "reload";
+    const isPerformanceReload =
+      (navEntries && navEntries.length > 0 && navEntries[0].type === "reload") ||
+      (window.performance as unknown as { navigation?: { type?: number } })?.navigation?.type === 1;
+
+    if (wasActive || isPerformanceReload) {
+      return true;
     }
-    return (
-      (window.performance as unknown as { navigation?: { type?: number } })?.navigation
-        ?.type === 1
-    );
-  }, []);
+
+    return false;
+  });
 
   const [code, setCode] = useState("");
-  const [password, setPassword] = useState(() => {
-    if (isReloaded) return "";
-    return (location.state as VerifyEmailLocationState | null)?.password || "";
-  });
-  const showPasswordField = isReloaded || !((location.state as VerifyEmailLocationState | null)?.password);
+  const [password, setPassword] = useState("");
+  const showPasswordField = isReloaded;
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(() => {
+    if (typeof window === "undefined") return RESEND_COOLDOWN_SECONDS;
+    const storedIssuedAt = window.sessionStorage.getItem(OTP_ISSUED_AT_KEY);
+    if (storedIssuedAt) {
+      const issuedAt = Number(storedIssuedAt);
+      if (!Number.isNaN(issuedAt) && issuedAt > 0) {
+        const elapsedSeconds = Math.floor((Date.now() - issuedAt) / 1000);
+        return Math.max(0, RESEND_COOLDOWN_SECONDS - elapsedSeconds);
+      }
+    }
+    const now = Date.now();
+    window.sessionStorage.setItem(OTP_ISSUED_AT_KEY, String(now));
+    return RESEND_COOLDOWN_SECONDS;
+  });
 
   useEffect(() => {
     if (new URLSearchParams(location.search).get("pwa") === "1") beginPwaAuthFlow();
@@ -83,11 +110,14 @@ const VerifyEmail = () => {
     const hasPendingSignup =
       typeof window !== "undefined" &&
       Boolean(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY));
-    if (!isVerified && password && hasPendingSignup) return;
+    if (!isVerified && hasPendingSignup) return;
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
+    window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
+    window.sessionStorage.removeItem("ytrace_verify_active");
+    window.sessionStorage.removeItem(OTP_ISSUED_AT_KEY);
     if (pwaFlow) endPwaAuthFlow();
     navigate(pwaFlow ? "/app" : "/dashboard", { replace: true });
-  }, [isAuthenticated, isInitialized, isPasswordRecoverySession, isVerified, navigate, password, pwaFlow]);
+  }, [isAuthenticated, isInitialized, isPasswordRecoverySession, isVerified, navigate, pwaFlow]);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -113,7 +143,7 @@ const VerifyEmail = () => {
       setError("Enter the complete six-digit verification code.");
       return;
     }
-    if (password.length < 8) {
+    if (showPasswordField && password.length < 8) {
       setError("Enter a password with at least eight characters.");
       return;
     }
@@ -127,7 +157,8 @@ const VerifyEmail = () => {
     setIsVerifying(false);
 
     if (verifyError) {
-      setError(getVerificationErrorMessage(verifyError));
+      const isOtpExpired = resendCooldown <= 0;
+      setError(getVerificationErrorMessage(verifyError, { isOtpExpired }));
       return;
     }
     if (!data.session) {
@@ -135,13 +166,18 @@ const VerifyEmail = () => {
       return;
     }
 
-    const { error: passwordError } = await supabase.auth.updateUser({ password });
-    if (passwordError) {
-      setError(`Your email was verified, but your password could not be saved: ${passwordError.message}`);
-      return;
+    if (showPasswordField && password) {
+      const { error: passwordError } = await supabase.auth.updateUser({ password });
+      if (passwordError) {
+        setError(`Your email was verified, but your password could not be saved: ${passwordError.message}`);
+        return;
+      }
     }
 
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
+    window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
+    window.sessionStorage.removeItem("ytrace_verify_active");
+    window.sessionStorage.removeItem(OTP_ISSUED_AT_KEY);
     setIsVerified(true);
   };
 
@@ -160,6 +196,10 @@ const VerifyEmail = () => {
       setError(resendError.message);
       return;
     }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(OTP_ISSUED_AT_KEY, String(Date.now()));
+    }
+    setError("");
     setCode("");
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
   };
@@ -232,7 +272,7 @@ const VerifyEmail = () => {
           </div>
 
           <form onSubmit={verifyCode} className="space-y-5">
-            <div className="flex justify-center">
+            <div className="flex w-full justify-center">
               <InputOTP
                 maxLength={OTP_LENGTH}
                 value={code}
@@ -244,10 +284,15 @@ const VerifyEmail = () => {
                 autoFocus
                 disabled={isVerifying || !email}
                 aria-label="Six-digit email verification code"
+                containerClassName="justify-center"
               >
-                <InputOTPGroup>
+                <InputOTPGroup className="justify-center">
                   {Array.from({ length: OTP_LENGTH }, (_, index) => (
-                    <InputOTPSlot key={index} index={index} className="h-11 w-9 text-base sm:h-12 sm:w-11 sm:text-lg" />
+                    <InputOTPSlot
+                      key={index}
+                      index={index}
+                      className="h-11 w-9 shrink-0 text-base sm:h-12 sm:w-11 sm:text-lg"
+                    />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
@@ -281,7 +326,17 @@ const VerifyEmail = () => {
               </p>
             ) : null}
 
-            <Button type="submit" className="w-full font-semibold" disabled={isVerifying || isVerified || code.length !== OTP_LENGTH || password.length < 8 || !email}>
+            <Button
+              type="submit"
+              className="w-full font-semibold"
+              disabled={
+                isVerifying ||
+                isVerified ||
+                code.length !== OTP_LENGTH ||
+                (showPasswordField && password.length < 8) ||
+                !email
+              }
+            >
               {isVerifying || isVerified ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

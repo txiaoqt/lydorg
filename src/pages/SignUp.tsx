@@ -18,7 +18,8 @@ import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
-import { checkSignupEmail, type EmailAvailability } from "@/lib/email-validation";
+import { checkSignupEmail, PENDING_SIGNUP_EMAIL_KEY, VERIFY_FRESH_NAV_KEY, type EmailAvailability } from "@/lib/email-validation";
+import { OTP_ISSUED_AT_KEY } from "@/lib/verification-error";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 import {
   URN_MAX_LENGTH,
@@ -108,7 +109,6 @@ const pasigDistrictBarangays: Record<PasigDistrict, BarangayOption[]> = {
 };
 
 const pasigDistrictOptions: PasigDistrict[] = ["District I", "District II"];
-const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
 
 /** A labeled form section with a top border divider */
 const FormSection = ({ title, children, hidden = false }: { title: string; children: React.ReactNode; hidden?: boolean }) => (
@@ -415,7 +415,7 @@ const SignUp = () => {
       return;
     }
     if (emailAvailability === "registered") {
-      setInlineError("This email is already registered. Please sign in instead.");
+      setInlineError("This email cannot be used. Please try a different email address.");
       return;
     }
     if (!isContactNumberValid) {
@@ -439,7 +439,7 @@ const SignUp = () => {
     const latestAvailability = await checkSignupEmail(email);
     setEmailAvailability(latestAvailability);
     if (latestAvailability === "registered") {
-      setInlineError("This email is already registered. Please sign in instead.");
+      setInlineError("This email cannot be used. Please try a different email address.");
       return;
     }
 
@@ -505,12 +505,14 @@ const SignUp = () => {
     if (result.needsEmailConfirmation) {
       const normalizedEmail = email.trim().toLowerCase();
       window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, normalizedEmail);
+      window.sessionStorage.setItem(VERIFY_FRESH_NAV_KEY, "true");
+      window.sessionStorage.setItem(OTP_ISSUED_AT_KEY, String(Date.now()));
       toast({
         title: "Verification code sent",
         description: "Enter the six-digit code from your email to finish creating your account.",
       });
       navigate(pwaFlow ? pwaAuthRoute("/verify-email") : "/verify-email", {
-        state: { email: normalizedEmail, password },
+        state: { email: normalizedEmail, fromSignup: true },
       });
       return;
     }
@@ -645,7 +647,7 @@ const SignUp = () => {
                   ) : null}
                   {isGmailEmail && emailAvailability === "registered" ? (
                     <p className="text-xs text-destructive">
-                      This email is already registered. <Link to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"} className="font-medium underline">Sign in instead.</Link>
+                      This email cannot be used. Please try a different email address.
                     </p>
                   ) : null}
                   {isGmailEmail && emailAvailability === "unconfirmed" ? (
@@ -797,12 +799,14 @@ const SignUp = () => {
                   {touched.has("identifier") && urnError ? (
                     <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
                   ) : urnAvailability === "registered" ? (
-                    <p id="urn-error" className="text-xs text-destructive">{DUPLICATE_URN_ERROR_MESSAGE}</p>
+                    <p id="urn-error" className="text-xs text-destructive">URN is unavailable.</p>
                   ) : urnAvailability === "checking" ? (
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                       Checking URN availability...
                     </p>
+                  ) : !urnError && organizationIdentifierNumber.trim() && urnAvailability === "available" ? (
+                    <p id="urn-success" className="text-xs text-success">URN is acceptable.</p>
                   ) : null}
                 </div>
               )}

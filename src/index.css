@@ -35,15 +35,28 @@
     overflow: hidden;
   }
 
-  input[readonly],
+  input[readonly]:not([data-input-otp]),
   textarea[readonly],
   select[disabled],
-  input[disabled],
+  input[disabled]:not([data-input-otp]),
   textarea[disabled] {
     background-color: hsl(var(--muted) / 0.7) !important;
     color: hsl(var(--muted-foreground)) !important;
     cursor: not-allowed !important;
     border-color: hsl(var(--border) / 0.9) !important;
+  }
+
+  [data-input-otp],
+  [data-input-otp]:disabled,
+  [data-input-otp][disabled] {
+    background-color: transparent !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    caret-color: transparent !important;
+    border-color: transparent !important;
+    border-width: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
   }
 
   :root {

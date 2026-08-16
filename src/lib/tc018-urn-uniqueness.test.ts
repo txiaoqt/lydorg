@@ -10,9 +10,7 @@ describe("TC018: Persistent URN Ownership, Normalization & Uniqueness Verificati
     const availability = await checkSignupUrn(existingOrgUrn);
     // Availability function normalizes input and checks persistence
     expect(normalizeUrn(existingOrgUrn)).toBe("PCYDO-AB12-CD34");
-    expect(DUPLICATE_URN_ERROR_MESSAGE).toBe(
-      "This Unique Registration Number is already registered to another organization. Please verify the URN and try again.",
-    );
+    expect(DUPLICATE_URN_ERROR_MESSAGE).toBe("URN is unavailable.");
   });
 
   it("Scenario A: Allows signup for new unique URN format", () => {
