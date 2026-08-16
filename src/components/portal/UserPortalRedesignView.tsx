@@ -199,7 +199,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                   "px-2.5 py-0.5 rounded-full text-[11px] font-bold border",
                   isVerified
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                    : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
+                    : "bg-primary/10 text-primary border-primary/20"
                 )}
               >
                 {isVerified ? "Verified Org" : `${Math.round((stepsCompleted / 3) * 100)}% Complete`}
@@ -362,7 +362,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                       "text-[10px] font-bold px-2 py-0.5 rounded-full border",
                       dashboardDocumentPercent >= 100
                         ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                        : "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20"
+                        : "text-primary bg-primary/10 border-primary/20"
                     )}
                   >
                     {dashboardDocumentPercent >= 100 ? "✓ Approved" : "In Review"}
@@ -546,7 +546,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                 {/* 3. RESOURCES (3 Columns Desktop) */}
                 <div className="md:col-span-3 p-4 rounded-xl bg-accent/20 border border-border/40 flex flex-col justify-between space-y-3 shadow-2xs hover:-translate-y-0.5 transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
                       Resources
                     </span>
                   </div>
@@ -626,7 +626,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                               : isRevision
                               ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                              : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
+                              : "bg-primary/10 text-primary border-primary/20"
                           )}
                         >
                           {isApproved ? (

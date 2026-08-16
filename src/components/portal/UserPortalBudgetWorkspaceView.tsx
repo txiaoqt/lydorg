@@ -19,7 +19,9 @@ import {
   Sparkles,
   Trophy,
   ArrowRight,
-  Download
+  Download,
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
@@ -41,12 +43,41 @@ import {
   SheetDescription,
   SheetClose,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 
 import { computeBudgetWorkflowMetrics } from "@/lib/workflow-metrics";
 import { WebsiteWorkflowNotice } from "./WebsiteWorkflowNotice";
 import { FeatureGate } from "./FeatureGate";
+import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
+
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches);
+    };
+    setIsDesktop(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+};
 
 export interface UserPortalBudgetWorkspaceViewProps {
   budgetWorkflowEligibility?: any;
@@ -126,6 +157,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   setNewRemarks,
   handleCreateOrUpdateBudgetRequest,
 }) => {
+  const isDesktop = useIsDesktop();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "approved" | "review" | "revision">("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "amount">("newest");
@@ -337,7 +369,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
       actionLabel={nextBudgetStepAction}
       onAction={() => navigate(nextBudgetStepRoute)}
       heroSection={
-        <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-5 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
+        <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -356,15 +388,15 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
         </div>
       }
     >
-      <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-6 max-w-[1440px] mx-auto py-2">
+      <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-4 sm:space-y-6 max-w-[1440px] mx-auto pt-0 pb-2 sm:py-2">
       
       {/* ------------------------------------------------------------- */}
       {/* MODE A: SECTIONED FORM VIEW (If showBudgetForm is true)       */}
       {/* ------------------------------------------------------------- */}
       {showBudgetForm ? (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
           {/* Form Hero Banner */}
-          <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-6 rounded-2xl border border-border/60 shadow-xs space-y-1">
+          <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary">Budget Workspace</span>
               <span className="text-muted-foreground/30">•</span>
@@ -541,9 +573,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
         /* ------------------------------------------------------------- */
         /* MODE B: RICH DATA TABLE WORKSPACE VIEW                       */
         /* ------------------------------------------------------------- */
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Hero Header Banner */}
-          <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-5 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
+          <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -605,81 +637,81 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
           )}
 
           {/* Synchronized 4-Grid Modern SaaS Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="rounded-2xl border border-border/60 bg-card p-4 space-y-2 shadow-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <Card className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4 space-y-1.5 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Requests</span>
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <DollarSign className="h-4 w-4" />
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">Total Requests</span>
+                <div className="p-1.5 sm:p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+                  <DollarSign className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <h3 className="text-2xl font-black text-foreground">{totalRequests}</h3>
-                <p className="text-[11px] text-muted-foreground">Total financial proposals filed</p>
+              <div className="space-y-0.5 min-w-0">
+                <h3 className="text-xl sm:text-2xl font-black text-foreground">{totalRequests}</h3>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">Total financial proposals filed</p>
               </div>
             </Card>
 
-            <Card className="rounded-2xl border border-border/60 bg-card p-4 space-y-2 shadow-xs">
+            <Card className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4 space-y-1.5 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Pending Review</span>
-                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                  <Clock className="h-4 w-4" />
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">Pending Review</span>
+                <div className="p-1.5 sm:p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+                  <Clock className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <h3 className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{underReviewCount}</h3>
-                <p className="text-[11px] text-muted-foreground">Awaiting admin validation</p>
+              <div className="space-y-0.5 min-w-0">
+                <h3 className="text-xl sm:text-2xl font-black text-primary">{underReviewCount}</h3>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">Awaiting admin validation</p>
               </div>
             </Card>
 
-            <Card className="rounded-2xl border border-border/60 bg-card p-4 space-y-2 shadow-xs">
+            <Card className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4 space-y-1.5 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Approved / Released</span>
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" />
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">Approved / Released</span>
+                <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <CheckCircle2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{approvedCount}</h3>
-                <p className="text-[11px] text-muted-foreground">Successfully approved grant requests</p>
+              <div className="space-y-0.5 min-w-0">
+                <h3 className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{approvedCount}</h3>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">Successfully approved grant requests</p>
               </div>
             </Card>
 
-            <Card className="rounded-2xl border border-border/60 bg-card p-4 space-y-2 shadow-xs">
+            <Card className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4 space-y-1.5 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Released Funds</span>
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <Sparkles className="h-4 w-4" />
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">Total Released Funds</span>
+                <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <Sparkles className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <h3 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(totalReleasedAmount)}</h3>
-                <p className="text-[11px] text-muted-foreground">Disbursed to organization</p>
+              <div className="space-y-0.5 min-w-0">
+                <h3 className="text-base sm:text-xl font-black text-emerald-600 dark:text-emerald-400 truncate">{formatCurrency(totalReleasedAmount)}</h3>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">Disbursed to organization</p>
               </div>
             </Card>
           </div>
 
           {/* Synchronized Progress Bar Summary Card */}
-          <Card className="rounded-2xl border border-border/60 bg-card p-5 space-y-3.5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-3 sm:space-y-3.5 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
               <div>
-                <h3 className="text-sm font-bold text-foreground">
+                <h3 className="text-xs sm:text-sm font-bold text-foreground">
                   {approvedCount} of {totalRequests} Budget Requests Approved ({completionPercent}%)
                 </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                   Overview of all financial grant proposals submitted for organization activities.
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-medium">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium">
                 <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <CheckCircle2 className="h-4 w-4" /> {approvedCount} Approved
+                  <CheckCircle2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" /> {approvedCount} Approved
                 </span>
-                <span className={cn("flex items-center gap-1.5 font-semibold", underReviewCount === 0 ? "text-muted-foreground/50" : "text-indigo-600 dark:text-indigo-400")}>
-                  <Clock className="h-4 w-4" /> {underReviewCount} Review
+                <span className={cn("flex items-center gap-1.5 font-semibold", underReviewCount === 0 ? "text-muted-foreground/50" : "text-primary")}>
+                  <Clock className="h-3.5 sm:h-4 w-3.5 sm:w-4" /> {underReviewCount} Review
                 </span>
                 <span className={cn("flex items-center gap-1.5 font-semibold", needsRevisionCount === 0 ? "text-muted-foreground/50" : "text-amber-600 dark:text-amber-400")}>
-                  <AlertTriangle className="h-4 w-4" /> {needsRevisionCount} Revision
+                  <AlertTriangle className="h-3.5 sm:h-4 w-3.5 sm:w-4" /> {needsRevisionCount} Revision
                 </span>
               </div>
             </div>
@@ -688,8 +720,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
           </Card>
 
           {/* Smart Filter Toolbar + Filter Tabs */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
               <button
                 type="button"
                 onClick={() => setFilterTab("all")}
@@ -775,8 +807,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             </div>
           </div>
 
-          {/* Mobile Cards List */}
-          <div className="mobile-cards flex flex-col gap-4">
+          {/* Mobile Cards List (block lg:hidden) */}
+          <div className="mobile-cards flex flex-col gap-3 block lg:hidden">
             {filteredRequests.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground text-xs space-y-1 rounded-2xl border border-border/60 bg-card">
                 <p className="font-bold text-foreground">No budget requests found</p>
@@ -784,358 +816,597 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </div>
             ) : (
               filteredRequests.map((req) => (
-                <div key={req.id} className="rounded-2xl border border-border/60 bg-card p-4 space-y-2 shadow-xs flex flex-col">
-                  <div className="flex justify-between items-start gap-2">
-                    <p className="font-bold text-sm text-foreground line-clamp-2">{req.activityTitle || "Proposal Activity"}</p>
-                    <div className="shrink-0">
+                <Card
+                  key={req.id}
+                  onClick={() => openBudgetDetail(req.id)}
+                  className="rounded-2xl border border-border/60 bg-card p-4 space-y-3 shadow-xs flex flex-col hover:border-primary/40 transition-all cursor-pointer"
+                >
+                  {/* Top: Title & Status directly below */}
+                  <div className="space-y-1.5 min-w-0">
+                    <p className="font-bold text-sm text-foreground leading-snug break-words" title={req.activityTitle}>
+                      {req.activityTitle || "Proposal Activity"}
+                    </p>
+                    <div className="pt-0.5">
                       <PortalStatusBadge status={req.status} />
                     </div>
                   </div>
                   
-                  <div className="text-xs space-y-1 pt-1 pb-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground font-semibold">Amount:</span>
-                      <span className="font-bold text-foreground">{formatCurrency(req.requestedAmount || 0)}</span>
+                  {/* Summary: Amount & Target Date in 2 columns */}
+                  <div className="grid grid-cols-2 gap-3 text-xs py-2 px-3 rounded-xl bg-accent/30 border border-border/40">
+                    <div className="min-w-0">
+                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Amount</span>
+                      <span className="font-bold text-foreground text-xs sm:text-sm truncate block">
+                        {formatCurrency(req.requestedAmount || 0)}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground font-semibold">Target Date:</span>
-                      <span className="font-semibold text-foreground">{req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}</span>
+                    <div className="min-w-0">
+                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Target Date</span>
+                      <span className="font-semibold text-foreground text-xs sm:text-sm truncate block">
+                        {req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}
+                      </span>
                     </div>
                   </div>
                   
-                  <Button 
-                    type="button" 
-                    onClick={() => openBudgetDetail(req.id)}
-                    className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    Open →
-                  </Button>
-                </div>
+                  {/* Primary Action Button */}
+                  <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+                    <Button 
+                      type="button" 
+                      onClick={() => openBudgetDetail(req.id)}
+                      className="w-full h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-xs cursor-pointer justify-center"
+                    >
+                      Open →
+                    </Button>
+                  </div>
+                </Card>
               ))
             )}
           </div>
 
-          {/* Rich Modern SaaS Data Table */}
-          <div className="desktop-table">
+          {/* Rich Modern SaaS Data Table (hidden lg:block - EXACT DESKTOP SOURCE OF TRUTH) */}
+          <div className="desktop-table hidden lg:block">
             <Card className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[900px]">
-                <thead>
-                  <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                    <th className="py-3 px-5">Activity Proposal</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Requested / Approved Amount</th>
-                    <th className="py-3 px-4">Schedule & Venue</th>
-                    <th className="py-3 px-4">Attachment</th>
-                    <th className="py-3 px-4">Last Activity</th>
-                    <th className="py-3 px-5 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {filteredRequests.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-12 text-center text-muted-foreground text-xs space-y-1">
-                        <p className="font-bold text-foreground">No budget requests found</p>
-                        <p className="text-xs">Try adjusting your search or status filter.</p>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[900px]">
+                  <thead>
+                    <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <th className="py-3 px-5">Activity Proposal</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Requested / Approved Amount</th>
+                      <th className="py-3 px-4">Schedule & Venue</th>
+                      <th className="py-3 px-4">Attachment</th>
+                      <th className="py-3 px-4">Last Activity</th>
+                      <th className="py-3 px-5 text-right">Action</th>
                     </tr>
-                  ) : (
-                    filteredRequests.map((req) => {
-                      const rawFile = budgetFilesByRequestId.get(req.id);
-                      const primaryFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
-                      const recordCode = buildPublicRecordCode("BR", req, budgetRequests);
-                      const isApproved = isBudgetApproved(req.status);
-                      const isUnderReview = isBudgetPending(req.status);
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {filteredRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-muted-foreground text-xs space-y-1">
+                          <p className="font-bold text-foreground">No budget requests found</p>
+                          <p className="text-xs">Try adjusting your search or status filter.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredRequests.map((req) => {
+                        const rawFile = budgetFilesByRequestId.get(req.id);
+                        const primaryFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
+                        const recordCode = buildPublicRecordCode("BR", req, budgetRequests);
+                        const isApproved = isBudgetApproved(req.status);
+                        const isUnderReview = isBudgetPending(req.status);
 
-                      return (
-                        <tr
-                          key={req.id}
-                          onClick={() => openBudgetDetail(req.id)}
-                          className="h-[88px] hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors duration-150 cursor-pointer group"
-                        >
-                          {/* Column 1: Activity Proposal */}
-                          <td className="py-3.5 px-5">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                <DollarSign className="h-5 w-5" />
-                              </div>
-                              <div className="space-y-1 min-w-0">
-                                <p className="text-sm font-bold text-foreground leading-tight truncate max-w-[240px]" title={req.activityTitle}>
-                                  {req.activityTitle || "Proposal Activity"}
-                                </p>
-                                <div className="flex items-center gap-2 text-xs">
-                                  <span className="font-mono font-semibold text-muted-foreground bg-accent px-2 py-0.5 rounded-md text-[10px]">
-                                    {recordCode}
-                                  </span>
-                                  <span className="text-muted-foreground/60">•</span>
-                                  <span className="text-muted-foreground text-[11px] truncate max-w-[140px]">
-                                    {req.purposeCategory || "General Purpose"}
-                                  </span>
+                        return (
+                          <tr
+                            key={req.id}
+                            onClick={() => openBudgetDetail(req.id)}
+                            className="h-[88px] hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors duration-150 cursor-pointer group"
+                          >
+                            {/* Column 1: Activity Proposal */}
+                            <td className="py-3.5 px-5">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                  <DollarSign className="h-5 w-5" />
                                 </div>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Column 2: Status Badge */}
-                          <td className="py-3.5 px-4">
-                            <PortalStatusBadge status={req.status} />
-                          </td>
-
-                          {/* Column 3: Amounts */}
-                          <td className="py-3.5 px-4">
-                            <div className="space-y-0.5 text-xs">
-                              <div>
-                                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Requested: </span>
-                                <span className="font-bold text-foreground">{formatCurrency(req.requestedAmount || 0)}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Approved: </span>
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                                  {req.approvedAmount ? formatCurrency(req.approvedAmount) : req.releasedAmount ? formatCurrency(req.releasedAmount) : "—"}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Column 4: Schedule & Venue */}
-                          <td className="py-3.5 px-4">
-                            <div className="space-y-0.5 text-xs">
-                              <p className="font-semibold text-foreground">
-                                {req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground truncate max-w-[140px]" title={req.venue}>
-                                {req.venue || "Pasig City"}
-                              </p>
-                            </div>
-                          </td>
-
-                          {/* Column 5: Attachment (Opens In-App Preview Modal) */}
-                          <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
-                            {primaryFile ? (
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-primary shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-foreground truncate max-w-[130px]" title={primaryFile.fileName}>
-                                    {primaryFile.fileName}
+                                <div className="space-y-1 min-w-0">
+                                  <p className="text-sm font-bold text-foreground leading-tight truncate max-w-[240px]" title={req.activityTitle}>
+                                    {req.activityTitle || "Proposal Activity"}
                                   </p>
-                                  <p className="text-[10px] text-muted-foreground">PDF Document</p>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="font-mono font-semibold text-muted-foreground bg-accent px-2 py-0.5 rounded-md text-[10px]">
+                                      {recordCode}
+                                    </span>
+                                    <span className="text-muted-foreground/60">•</span>
+                                    <span className="text-muted-foreground text-[11px] truncate max-w-[140px]">
+                                      {req.purposeCategory || "General Purpose"}
+                                    </span>
+                                  </div>
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (openPreview) {
-                                      void openPreview(primaryFile.fileUrl, primaryFile.fileName);
-                                    } else {
-                                      void openFile(primaryFile.fileUrl, primaryFile.fileName);
-                                    }
-                                  }}
-                                  className="h-7 px-2.5 text-[11px] font-semibold text-primary hover:bg-primary/10 shrink-0 cursor-pointer"
-                                >
-                                  View
-                                </Button>
                               </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">No file attached</span>
-                            )}
-                          </td>
+                            </td>
 
-                          {/* Column 6: Last Activity */}
-                          <td className="py-3.5 px-4">
-                            <div className="space-y-0.5 text-xs">
-                              <p className="font-semibold text-foreground">
-                                {isApproved ? "Budget Released" : isUnderReview ? "Awaiting Review" : "Updated"}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {formatShortPortalDate(req.updatedAt || req.createdAt)}
-                              </p>
-                            </div>
-                          </td>
+                            {/* Column 2: Status Badge */}
+                            <td className="py-3.5 px-4">
+                              <PortalStatusBadge status={req.status} />
+                            </td>
 
-                          {/* Column 7: Primary Action */}
-                          <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() => openBudgetDetail(req.id)}
-                              className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold px-4 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
-                            >
-                              Open →
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                            {/* Column 3: Amounts */}
+                            <td className="py-3.5 px-4">
+                              <div className="space-y-0.5 text-xs">
+                                <div>
+                                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Requested: </span>
+                                  <span className="font-bold text-foreground">{formatCurrency(req.requestedAmount || 0)}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Approved: </span>
+                                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                    {req.approvedAmount ? formatCurrency(req.approvedAmount) : req.releasedAmount ? formatCurrency(req.releasedAmount) : "—"}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Column 4: Schedule & Venue */}
+                            <td className="py-3.5 px-4">
+                              <div className="space-y-0.5 text-xs">
+                                <p className="font-semibold text-foreground">
+                                  {req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground truncate max-w-[140px]" title={req.venue}>
+                                  {req.venue || "Pasig City"}
+                                </p>
+                              </div>
+                            </td>
+
+                            {/* Column 5: Attachment (Opens In-App Preview Modal) */}
+                            <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+                              {primaryFile ? (
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-semibold text-foreground truncate max-w-[130px]" title={primaryFile.fileName}>
+                                      {primaryFile.fileName}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">PDF Document</p>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (openPreview) {
+                                        void openPreview(primaryFile.fileUrl, primaryFile.fileName);
+                                      } else {
+                                        void openFile(primaryFile.fileUrl, primaryFile.fileName);
+                                      }
+                                    }}
+                                    className="h-7 px-2.5 text-[11px] font-semibold text-primary hover:bg-primary/10 shrink-0 cursor-pointer"
+                                  >
+                                    View
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic">No file attached</span>
+                              )}
+                            </td>
+
+                            {/* Column 6: Last Activity */}
+                            <td className="py-3.5 px-4">
+                              <div className="space-y-0.5 text-xs">
+                                <p className="font-semibold text-foreground">
+                                  {isApproved ? "Budget Released" : isUnderReview ? "Awaiting Review" : "Updated"}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {formatShortPortalDate(req.updatedAt || req.createdAt)}
+                                </p>
+                              </div>
+                            </td>
+
+                            {/* Column 7: Primary Action */}
+                            <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => openBudgetDetail(req.id)}
+                                className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold px-4 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
+                              >
+                                Open →
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
           </div>
         </div>
       )}
 
-      {/* Right Drawer for Budget Details (Consistent with Liquidation Reports Drawer) */}
-      <Sheet open={Boolean(selectedRequest)} onOpenChange={(open) => { if (!open) closeBudgetDetail(); }}>
-        <SheetContent side="right" className="w-[min(38rem,95vw)] sm:w-[520px] overflow-y-auto bg-card border-border p-6 sm:p-7 space-y-6">
-          {selectedRequest && (() => {
-            const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
-            const primaryFile = Array.isArray(rawDrawerFile) ? rawDrawerFile[0] : rawDrawerFile;
-            const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
+      {/* ------------------------------------------------------------- */}
+      {/* 6. Desktop Details Drawer (isDesktop ONLY - Canonical Baseline) */}
+      {/* ------------------------------------------------------------- */}
+      {isDesktop && (
+        <Sheet open={Boolean(selectedRequest)} onOpenChange={(open) => { if (!open) closeBudgetDetail(); }}>
+          <SheetContent side="right" className="w-[min(38rem,95vw)] sm:w-[520px] overflow-y-auto bg-card border-border p-6 sm:p-7 space-y-6">
+            {selectedRequest && (() => {
+              const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
+              const primaryFile = Array.isArray(rawDrawerFile) ? rawDrawerFile[0] : rawDrawerFile;
+              const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
 
-            // Stable resolved URL or fallback URL
-            const activePreviewUrl = resolvedDrawerPreviewUrl || primaryFile?.fileUrl || "";
-            const canPreviewInline = primaryFile && isPreviewableFileType(primaryFile.fileName, activePreviewUrl);
+              // Stable resolved URL or fallback URL
+              const activePreviewUrl = resolvedDrawerPreviewUrl || primaryFile?.fileUrl || "";
+              const canPreviewInline = primaryFile && isPreviewableFileType(primaryFile.fileName, activePreviewUrl);
 
-            return (
-              <div className="space-y-6">
-                <SheetHeader className="space-y-2 border-b border-border/60 pb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
-                      {recordCode}
-                    </span>
-                    <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                      {formatCurrency(selectedRequest.requestedAmount || 0)}
-                    </span>
-                  </div>
-                  <SheetTitle className="text-xl font-bold text-foreground leading-snug truncate" title={selectedRequest.activityTitle}>
-                    {selectedRequest.activityTitle || "Budget Request"}
-                  </SheetTitle>
-                  <SheetDescription className="text-xs text-muted-foreground">
-                    {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
-                  </SheetDescription>
-                </SheetHeader>
-
-                {/* Budget Summary Card */}
-                <div className="bg-accent/30 p-4 rounded-2xl border border-border/60 space-y-3">
-                  <p className="text-xs font-bold text-foreground">Financial Breakdown</p>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Requested Amount</span>
-                      <span className="font-bold text-foreground">{formatCurrency(selectedRequest.requestedAmount || 0)}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Approved Released</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {selectedRequest.approvedAmount ? formatCurrency(selectedRequest.approvedAmount) : selectedRequest.releasedAmount ? formatCurrency(selectedRequest.releasedAmount) : "Pending"}
+              return (
+                <div className="space-y-6">
+                  <SheetHeader className="space-y-2 border-b border-border/60 pb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
+                        {recordCode}
+                      </span>
+                      <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                        {formatCurrency(selectedRequest.requestedAmount || 0)}
                       </span>
                     </div>
-                  </div>
-                </div>
+                    <SheetTitle className="text-xl font-bold text-foreground leading-snug truncate" title={selectedRequest.activityTitle}>
+                      {selectedRequest.activityTitle || "Budget Request"}
+                    </SheetTitle>
+                    <SheetDescription className="text-xs text-muted-foreground">
+                      {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
+                    </SheetDescription>
+                  </SheetHeader>
 
-                {/* Schedule & Location */}
-                <div className="bg-background border border-border/60 p-4 rounded-2xl space-y-2">
-                  <p className="text-xs font-bold text-foreground">Schedule & Location</p>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Target Date</span>
-                      <span className="font-semibold text-foreground">
-                        {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Venue</span>
-                      <span className="font-semibold text-foreground">{selectedRequest.venue || "Pasig City"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Proposal Document Attached File Viewer & Automatic Embedded Preview */}
-                <div className="space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-foreground">Proposal Document</p>
-                    {primaryFile && (
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        {primaryFile.fileSize ? `${Math.max(1, Math.round(primaryFile.fileSize / 1024))} KB` : "Attached"}
-                      </span>
-                    )}
-                  </div>
-
-                  {primaryFile ? (
-                    <div className="bg-background border border-border/80 p-4 rounded-2xl space-y-4 shadow-2xs">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <FileText className="h-5 w-5 text-primary shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-foreground truncate max-w-[220px]" title={primaryFile.fileName}>
-                              {primaryFile.fileName}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              PDF • Proposal Document
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Direct Blob-Fetch Download File Button */}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={downloadingFileId === primaryFile.id}
-                          onClick={() => void handleDownloadBudgetFile(activePreviewUrl, primaryFile.fileName, primaryFile.id)}
-                          className="h-8 text-xs font-medium rounded-xl border-border shrink-0 cursor-pointer gap-1.5"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          {downloadingFileId === primaryFile.id ? "Downloading..." : "Download File"}
-                        </Button>
+                  {/* Budget Summary Card */}
+                  <div className="bg-accent/30 p-4 rounded-2xl border border-border/60 space-y-3">
+                    <p className="text-xs font-bold text-foreground">Financial Breakdown</p>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Requested Amount</span>
+                        <span className="font-bold text-foreground">{formatCurrency(selectedRequest.requestedAmount || 0)}</span>
                       </div>
+                      <div>
+                        <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Approved Released</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                          {selectedRequest.approvedAmount ? formatCurrency(selectedRequest.approvedAmount) : selectedRequest.releasedAmount ? formatCurrency(selectedRequest.releasedAmount) : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                      {/* Stable Single-Render Embedded Preview Area */}
-                      {isResolvingPreview ? (
-                        <div className="h-[340px] rounded-xl border border-border/70 bg-muted/10 flex flex-col items-center justify-center p-4 text-center space-y-2.5">
-                          <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          <p className="text-xs text-muted-foreground font-medium">Loading document preview...</p>
-                        </div>
-                      ) : canPreviewInline && activePreviewUrl ? (
-                        <div className="h-[340px] rounded-xl border border-border/70 overflow-hidden bg-muted/10 relative">
-                          <iframe
-                            src={activePreviewUrl}
-                            title={primaryFile.fileName}
-                            className="h-full w-full border-0 rounded-xl"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-[180px] rounded-xl border border-border/70 bg-muted/20 flex flex-col items-center justify-center p-4 text-center space-y-2.5">
-                          <FileText className="h-8 w-8 text-muted-foreground/60" />
-                          <p className="text-xs text-muted-foreground font-medium">
-                            Preview not available for this file type.
-                          </p>
+                  {/* Schedule & Location */}
+                  <div className="bg-background border border-border/60 p-4 rounded-2xl space-y-2">
+                    <p className="text-xs font-bold text-foreground">Schedule & Location</p>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Target Date</span>
+                        <span className="font-semibold text-foreground">
+                          {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Venue</span>
+                        <span className="font-semibold text-foreground">{selectedRequest.venue || "Pasig City"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Proposal Document Attached File Viewer & Automatic Embedded Preview */}
+                  <div className="space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-foreground">Proposal Document</p>
+                      {primaryFile && (
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {primaryFile.fileSize ? `${Math.max(1, Math.round(primaryFile.fileSize / 1024))} KB` : "Attached"}
+                        </span>
+                      )}
+                    </div>
+
+                    {primaryFile ? (
+                      <div className="bg-background border border-border/80 p-4 rounded-2xl space-y-4 shadow-2xs">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-foreground truncate max-w-[220px]" title={primaryFile.fileName}>
+                                {primaryFile.fileName}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                PDF • Proposal Document
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Direct Blob-Fetch Download File Button */}
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             disabled={downloadingFileId === primaryFile.id}
                             onClick={() => void handleDownloadBudgetFile(activePreviewUrl, primaryFile.fileName, primaryFile.id)}
-                            className="h-8 text-xs font-semibold rounded-xl border-border gap-1.5 cursor-pointer"
+                            className="h-8 text-xs font-medium rounded-xl border-border shrink-0 cursor-pointer gap-1.5"
                           >
                             <Download className="h-3.5 w-3.5" />
                             {downloadingFileId === primaryFile.id ? "Downloading..." : "Download File"}
                           </Button>
                         </div>
+
+                        {/* Stable Single-Render Embedded Preview Area */}
+                        {isResolvingPreview ? (
+                          <div className="h-[340px] rounded-xl border border-border/70 bg-muted/10 flex flex-col items-center justify-center p-4 text-center space-y-2.5">
+                            <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            <p className="text-xs text-muted-foreground font-medium">Loading document preview...</p>
+                          </div>
+                        ) : canPreviewInline && activePreviewUrl ? (
+                          <div className="h-[340px] rounded-xl border border-border/70 overflow-hidden bg-muted/10 relative">
+                            <iframe
+                              src={activePreviewUrl}
+                              title={primaryFile.fileName}
+                              className="h-full w-full border-0 rounded-xl"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-[180px] rounded-xl border border-border/70 bg-muted/20 flex flex-col items-center justify-center p-4 text-center space-y-2.5">
+                            <FileText className="h-8 w-8 text-muted-foreground/60" />
+                            <p className="text-xs text-muted-foreground font-medium">
+                              Preview not available for this file type.
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={downloadingFileId === primaryFile.id}
+                              onClick={() => void handleDownloadBudgetFile(activePreviewUrl, primaryFile.fileName, primaryFile.id)}
+                              className="h-8 text-xs font-semibold rounded-xl border-border gap-1.5 cursor-pointer"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              {downloadingFileId === primaryFile.id ? "Downloading..." : "Download File"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-border/80 p-6 rounded-2xl text-center space-y-2">
+                        <FileText className="h-8 w-8 text-muted-foreground/60 mx-auto" />
+                        <p className="text-xs font-bold text-foreground">No proposal file attached</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t border-border/40">
+                    <SheetClose asChild>
+                      <Button type="button" variant="outline" className="w-full h-9 text-xs font-semibold rounded-xl cursor-pointer">
+                        Close Drawer
+                      </Button>
+                    </SheetClose>
+                  </div>
+                </div>
+              );
+            })()}
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* 7. Mobile Budget Request Modal (!isDesktop ONLY)               */}
+      {/* ------------------------------------------------------------- */}
+      {!isDesktop && (
+        <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => { if (!open) closeBudgetDetail(); }}>
+          <DialogContent
+            hideCloseButton={true}
+            className="w-[calc(100vw-1.5rem)] max-w-lg max-h-[90vh] p-0 rounded-3xl bg-card border-border shadow-2xl flex flex-col overflow-hidden mx-auto focus:outline-hidden"
+          >
+            {selectedRequest && (() => {
+              const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
+              const primaryFile = Array.isArray(rawDrawerFile) ? rawDrawerFile[0] : rawDrawerFile;
+              const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
+              const activePreviewUrl = resolvedDrawerPreviewUrl || primaryFile?.fileUrl || "";
+
+              return (
+                <>
+                  {/* STICKY MODAL HEADER */}
+                  <div className="p-4 sm:p-5 border-b border-border/70 bg-card space-y-2 shrink-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-[11px] font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md shrink-0">
+                          {recordCode}
+                        </span>
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 truncate shrink-0">
+                          {formatCurrency(selectedRequest.requestedAmount || 0)}
+                        </span>
+                      </div>
+
+                      {/* Protected Close Button */}
+                      <button
+                        type="button"
+                        aria-label="Close modal"
+                        onClick={() => closeBudgetDetail()}
+                        className="h-8 w-8 rounded-full bg-accent/60 hover:bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-1">
+                      <DialogTitle className="text-base sm:text-lg font-bold text-foreground leading-snug break-words">
+                        {selectedRequest.activityTitle || "Budget Request"}
+                      </DialogTitle>
+                      <div className="pt-0.5">
+                        <PortalStatusBadge status={selectedRequest.status} />
+                      </div>
+                      <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground font-medium pt-0.5">
+                        {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
+                      </DialogDescription>
+                    </div>
+                  </div>
+
+                  {/* MODAL SCROLLABLE BODY */}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-background/50">
+                    {/* Financial Breakdown Card */}
+                    <div className="bg-card p-3.5 sm:p-4 rounded-2xl border border-border/70 shadow-xs space-y-2">
+                      <p className="text-xs font-bold text-foreground">Financial Breakdown</p>
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Requested Amount</span>
+                          <span className="font-bold text-foreground text-xs sm:text-sm">
+                            {formatCurrency(selectedRequest.requestedAmount || 0)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Approved / Released</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm">
+                            {selectedRequest.approvedAmount
+                              ? formatCurrency(selectedRequest.approvedAmount)
+                              : selectedRequest.releasedAmount
+                              ? formatCurrency(selectedRequest.releasedAmount)
+                              : "Pending"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Schedule & Location Card */}
+                    <div className="bg-card p-3.5 sm:p-4 rounded-2xl border border-border/70 shadow-xs space-y-2">
+                      <p className="text-xs font-bold text-foreground">Schedule & Location</p>
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Target Date</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm">
+                            {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Venue</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm truncate block" title={selectedRequest.venue}>
+                            {selectedRequest.venue || "Pasig City"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Activity Description & Remarks (if present) */}
+                    {(selectedRequest.activityDescription || selectedRequest.remarks || selectedRequest.description) && (
+                      <div className="bg-card p-3.5 sm:p-4 rounded-2xl border border-border/70 shadow-xs space-y-2">
+                        <p className="text-xs font-bold text-foreground">Activity Details & Remarks</p>
+                        <div className="space-y-1.5 text-xs pt-1.5 border-t border-border/40 text-muted-foreground">
+                          {selectedRequest.activityDescription && (
+                            <p className="leading-relaxed">{selectedRequest.activityDescription}</p>
+                          )}
+                          {selectedRequest.remarks && (
+                            <p className="leading-relaxed italic text-[11px] text-muted-foreground/90">
+                              <span className="font-semibold not-italic">Remarks:</span> {selectedRequest.remarks}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* REPORT ACTIONS ROW (Outside and ABOVE Document Preview - 44px Height) */}
+                    {primaryFile && (
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const targetUrl = activePreviewUrl;
+                            if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+                          }}
+                          className="h-11 rounded-xl border-border/80 text-xs font-bold gap-2 cursor-pointer hover:bg-accent text-foreground justify-center truncate px-3 shadow-xs hover:border-primary/40 transition-all"
+                        >
+                          <ExternalLink className="h-4 w-4 text-primary shrink-0" />
+                          <span className="truncate">Open in New Tab</span>
+                        </Button>
+
+                        <Button
+                          type="button"
+                          disabled={downloadingFileId === primaryFile.id}
+                          onClick={() => void handleDownloadBudgetFile(activePreviewUrl, primaryFile.fileName, primaryFile.id)}
+                          className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-2 cursor-pointer shadow-xs justify-center truncate px-3 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                        >
+                          {downloadingFileId === primaryFile.id ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                              <span className="truncate">Downloading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4 shrink-0" />
+                              <span className="truncate">Download File</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Proposal Document Section */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-foreground">Proposal Document</p>
+                        {primaryFile && (
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            {primaryFile.fileSize ? `${Math.max(1, Math.round(primaryFile.fileSize / 1024))} KB` : "PDF Document"}
+                          </span>
+                        )}
+                      </div>
+
+                      {primaryFile ? (
+                        <div className="bg-card border border-border/80 p-3.5 sm:p-4 rounded-2xl space-y-3.5 shadow-2xs">
+                          {/* File Info */}
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
+                              <FileText className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <p className="text-xs font-bold text-foreground truncate max-w-[240px] sm:max-w-[400px]" title={primaryFile.fileName}>
+                                {primaryFile.fileName}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                PDF • Proposal Document
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Reusable Embedded Document Renderer */}
+                          <PortalDocumentViewer
+                            previewUrl={activePreviewUrl}
+                            previewTitle={primaryFile.fileName}
+                            previewCanInline={true}
+                            onDownloadFile={async (url, name) => {
+                              await handleDownloadBudgetFile(url, name, primaryFile.id);
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-border/80 p-6 rounded-2xl text-center space-y-2 bg-muted/10">
+                          <FileText className="h-8 w-8 text-muted-foreground/50 mx-auto" />
+                          <p className="text-xs font-bold text-foreground">No proposal file attached</p>
+                        </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-border/80 p-6 rounded-2xl text-center space-y-2">
-                      <FileText className="h-8 w-8 text-muted-foreground/60 mx-auto" />
-                      <p className="text-xs font-bold text-foreground">No proposal file attached</p>
-                    </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="pt-4 border-t border-border/40">
-                  <SheetClose asChild>
-                    <Button type="button" variant="outline" className="w-full h-9 text-xs font-semibold rounded-xl cursor-pointer">
-                      Close Drawer
+                  {/* STICKY MODAL FOOTER */}
+                  <div className="h-14 py-2.5 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+                    <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                      Budget Request • LYDO Pasig City
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => closeBudgetDetail()}
+                      className="h-8 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                    >
+                      Close
                     </Button>
-                  </SheetClose>
-                </div>
-              </div>
-            );
-          })()}
-        </SheetContent>
-      </Sheet>
+                  </div>
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
     </FeatureGate>
   );

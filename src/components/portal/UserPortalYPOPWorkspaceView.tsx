@@ -97,7 +97,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
       actionLabel={nextYpopStepAction}
       onAction={() => navigate(nextYpopStepRoute)}
       heroSection={
-        <div className="bg-gradient-to-r from-card via-amber-50/10 to-slate-50/40 dark:from-card dark:via-amber-950/10 dark:to-slate-900/40 p-6 sm:p-7 rounded-2xl border border-border/60 shadow-xs space-y-3">
+        <div className="bg-gradient-to-r from-card via-amber-50/10 to-slate-50/40 dark:from-card dark:via-amber-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -116,71 +116,126 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
         </div>
       }
     >
-      <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-6 max-w-[1440px] mx-auto py-2">
-      {/* Hero Workspace Header */}
-      <div className="bg-gradient-to-r from-card via-amber-50/10 to-slate-50/40 dark:from-card dark:via-amber-950/10 dark:to-slate-900/40 p-6 sm:p-7 rounded-2xl border border-border/60 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">YPOP Workspace</span>
-              <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">{currentProfile?.organizationName || "LYDO Pasig City"}</span>
+      <div className="bg-background text-foreground transition-colors duration-200 font-sans max-w-[1440px] mx-auto pt-0 pb-2 sm:py-2">
+        {/* ============================================================= */}
+        {/* 1. MOBILE-ONLY LAYOUT (block lg:hidden)                        */}
+        {/* ============================================================= */}
+        <div className="mobile-layout block lg:hidden space-y-4">
+          {/* Mobile Hero Header */}
+          <div className="bg-gradient-to-r from-card via-amber-50/10 to-slate-50/40 dark:from-card dark:via-amber-950/10 dark:to-slate-900/40 p-4 rounded-2xl border border-border/60 shadow-xs space-y-3">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="font-semibold text-amber-600 dark:text-amber-400">YPOP Workspace</span>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="text-muted-foreground truncate">{currentProfile?.organizationName || "LYDO Pasig City"}</span>
+              </div>
+              <h1 className="text-xl font-black tracking-tight text-foreground leading-snug break-words">
+                Youth Participation Organization Passport (YPOP)
+              </h1>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Track qualification progress, submit PPA organization activities, and monitor incentive tiers.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-              Youth Participation Organization Passport (YPOP)
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Track qualification progress, submit PPA organization activities, and monitor incentive tiers.
-            </p>
+
+            <div className="pt-0.5">
+              <Button
+                type="button"
+                onClick={() => setYpopOrgActivityModalOpen(true)}
+                className="w-full h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 text-xs font-bold transition-all justify-center cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" /> Log PPA Activity
+              </Button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <Button
-              type="button"
-              onClick={() => setYpopOrgActivityModalOpen(true)}
-              className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 h-8 px-4 text-xs font-bold"
-            >
-              <Plus className="h-3.5 w-3.5" /> Log PPA Activity
-            </Button>
-          </div>
-        </div>
-      </div>
+          {/* SINGLE GLOBAL QUALIFICATION SUMMARY CARD (Mobile Only - One Canonical Location) */}
+          <Card className="rounded-2xl border border-amber-500/30 bg-card p-4 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Qualification</span>
+              {isQualified ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <CheckCircle2 className="h-3 w-3" /> Qualified
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                  <Clock className="h-3 w-3" /> In Progress
+                </span>
+              )}
+            </div>
 
-      {/* 2-Column Grid: Left 70% Activities & PPA, Right 30% Sticky Qualification Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (70% - 8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Module Tabs */}
-          <div className="flex items-center gap-1 bg-card border border-border/60 p-1.5 rounded-2xl w-full sm:w-fit shadow-xs scroll-tabs">
+            {/* Score Meter */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-foreground">Overall YPOP Score</span>
+                <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{currentPoints}%</span>
+              </div>
+              <Progress value={currentPoints} className="h-2 bg-muted" />
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-0.5">
+                <span>Threshold: {threshold}%</span>
+                <span>Max: 100%</span>
+              </div>
+            </div>
+
+            {/* Score Breakdown Sub-Card */}
+            <div className="bg-accent/40 p-3 rounded-xl border border-border/60 space-y-1.5 text-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Score Breakdown</span>
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-muted-foreground font-medium">City-Led Score:</span>
+                <span className="font-bold text-foreground">{activeEntry?.cityLedPoints ?? currentPoints}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Organization Bonus:</span>
+                <span className="font-bold text-foreground">{activeEntry?.orgBonusPoints ?? 0}%</span>
+              </div>
+            </div>
+
+            {/* Project Grant Eligibility & CTA */}
+            <div className="border-t border-border/60 pt-2.5 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground font-semibold">Project Grant (PPA):</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">Eligible</span>
+              </div>
+              <Button
+                type="button"
+                onClick={() => navigate(userRouteMap["budget-request"] || "/financial-grant")}
+                className="w-full h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs transition-all justify-center cursor-pointer"
+              >
+                Submit Budget Request →
+              </Button>
+            </div>
+          </Card>
+
+          {/* Mobile Module Tabs */}
+          <div className="flex items-center gap-1 bg-card border border-border/60 p-1.5 rounded-2xl w-full shadow-xs overflow-x-auto no-scrollbar">
             <button
               type="button"
               onClick={() => setActiveTab("activities")}
               className={cn(
-                "rounded-xl px-4 py-1.5 text-xs font-bold transition-all",
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer flex-1 text-center truncate",
                 activeTab === "activities"
                   ? "bg-primary text-primary-foreground shadow-2xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent"
               )}
             >
-              City-Led Activities ({ypopCityActivities.length})
+              City-Led ({ypopCityActivities.length})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("ppa")}
               className={cn(
-                "rounded-xl px-4 py-1.5 text-xs font-bold transition-all",
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer flex-1 text-center truncate",
                 activeTab === "ppa"
                   ? "bg-primary text-primary-foreground shadow-2xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent"
               )}
             >
-              Organization PPA Logs
+              Org PPA Logs
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("history")}
               className={cn(
-                "rounded-xl px-4 py-1.5 text-xs font-bold transition-all",
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer flex-1 text-center truncate",
                 activeTab === "history"
                   ? "bg-primary text-primary-foreground shadow-2xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -190,12 +245,14 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
             </button>
           </div>
 
-          {/* Tab 1: City-Led Activities */}
+          {/* Mobile Tab 1: City-Led Activities */}
           {activeTab === "activities" && (
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Available & Participated Activities</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-0.5">
+                Available & Participated Activities
+              </h3>
               {ypopCityActivities.length === 0 ? (
-                <Card className="p-8 text-center rounded-2xl border border-border/60 text-xs text-muted-foreground">
+                <Card className="p-8 text-center rounded-2xl border border-border/60 text-xs text-muted-foreground bg-card">
                   No city-led YPOP activities currently listed for this validation period.
                 </Card>
               ) : (
@@ -207,27 +264,29 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
                     <Card key={act.id} className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs">
                       <div
                         onClick={() => setExpandedActivityId(isExpanded ? null : act.id)}
-                        className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-primary/5 transition-colors"
+                        className="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-primary/5 transition-colors"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
                           <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                             <Award className="h-4.5 w-4.5" />
                           </div>
                           <div className="min-w-0 space-y-0.5">
-                            <p className="text-sm font-bold text-foreground truncate">{act.title}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs font-bold text-foreground truncate max-w-[170px] sm:max-w-[280px]" title={act.title}>
+                              {act.title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
                               {act.date ? formatShortPortalDate(act.date) : "TBA"} • {act.venue || "Pasig City"}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           {participation ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                               <CheckCircle2 className="h-3 w-3" /> Attended
                             </span>
                           ) : (
-                            <span className="text-[11px] font-semibold text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full">
+                            <span className="text-[10px] font-semibold text-muted-foreground bg-accent px-2 py-0.5 rounded-full">
                               Available
                             </span>
                           )}
@@ -237,11 +296,11 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
 
                       {/* Collapsible Details */}
                       {isExpanded && (
-                        <div className="border-t border-border/60 bg-muted/20 p-4 space-y-3 text-xs">
-                          <p className="text-foreground">{act.description || "Official PCYDO youth activity."}</p>
-                          <div className="flex items-center justify-between pt-2">
-                            <span className="text-muted-foreground font-semibold">Points Weight: {act.points || 10} Points</span>
-                            <Button type="button" size="sm" className="h-7 text-xs rounded-lg bg-primary font-semibold">
+                        <div className="border-t border-border/60 bg-muted/20 p-3.5 space-y-2.5 text-xs">
+                          <p className="text-foreground text-xs leading-relaxed">{act.description || "Official PCYDO youth activity."}</p>
+                          <div className="flex items-center justify-between pt-1.5">
+                            <span className="text-muted-foreground font-semibold text-[11px]">Points Weight: {act.points || 10} Points</span>
+                            <Button type="button" size="sm" className="h-7 px-3 text-[11px] rounded-lg bg-primary text-primary-foreground font-semibold cursor-pointer">
                               View Event Proof →
                             </Button>
                           </div>
@@ -254,41 +313,43 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
             </div>
           )}
 
-          {/* Tab 2: Organization PPA Logs */}
+          {/* Mobile Tab 2: Organization PPA Logs */}
           {activeTab === "ppa" && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between px-0.5">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Organization-Initiated Activities</h3>
-                <Button type="button" size="sm" onClick={() => setYpopOrgActivityModalOpen(true)} className="h-7 text-xs rounded-xl gap-1">
+                <Button type="button" size="sm" onClick={() => setYpopOrgActivityModalOpen(true)} className="h-7 text-xs rounded-xl gap-1 bg-primary text-primary-foreground font-bold cursor-pointer">
                   <Plus className="h-3 w-3" /> Add PPA Activity
                 </Button>
               </div>
 
-              <Card className="p-8 text-center rounded-2xl border border-border/60 text-xs text-muted-foreground space-y-3">
+              <Card className="p-6 text-center rounded-2xl border border-border/60 bg-card text-xs text-muted-foreground space-y-3 shadow-xs">
                 <FileText className="h-8 w-8 text-muted-foreground mx-auto" />
-                <p className="font-bold text-foreground">Log your organization's PPA initiatives</p>
-                <p>Submit narrative reports and attendance files for YPOP qualification evaluation.</p>
-                <Button type="button" onClick={() => setYpopOrgActivityModalOpen(true)} className="h-8 text-xs font-bold rounded-xl">
+                <p className="font-bold text-foreground text-sm">Log your organization's PPA initiatives</p>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                  Submit narrative reports and attendance files for YPOP qualification evaluation.
+                </p>
+                <Button type="button" onClick={() => setYpopOrgActivityModalOpen(true)} className="h-9 px-4 text-xs font-bold rounded-xl bg-primary text-primary-foreground cursor-pointer">
                   Log PPA Activity Now
                 </Button>
               </Card>
             </div>
           )}
 
-          {/* Tab 3: History Timeline */}
+          {/* Mobile Tab 3: History Timeline */}
           {activeTab === "history" && (
-            <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
+            <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 space-y-3.5 shadow-xs">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity History Timeline</h3>
-              <div className="space-y-4 border-l border-border/60 pl-6 relative">
+              <div className="space-y-3.5 border-l border-border/60 pl-5 ml-2 relative">
                 {ypopEventParticipations.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic">No YPOP activity history recorded yet.</p>
                 ) : (
                   ypopEventParticipations.map((item, idx) => (
                     <div key={item.id || idx} className="space-y-1 relative">
-                      <span className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-primary border-2 border-background" />
-                      <p className="font-bold text-foreground text-xs">{item.title || "City-Led Event Attended"}</p>
+                      <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full bg-primary border-2 border-background" />
+                      <p className="font-bold text-foreground text-xs leading-snug">{item.title || "City-Led Event Attended"}</p>
                       <p className="text-[11px] text-muted-foreground">{item.description || "Organized by PCYDO Pasig City"}</p>
-                      <span className="text-[10px] text-muted-foreground/70 font-medium">{item.date ? formatShortPortalDate(item.date) : "Recorded"}</span>
+                      <span className="text-[10px] text-muted-foreground/70 font-medium block">{item.date ? formatShortPortalDate(item.date) : "Recorded"}</span>
                     </div>
                   ))
                 )}
@@ -297,66 +358,251 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
           )}
         </div>
 
-        {/* Right Column (30% - 4 cols): Intelligent Sticky Sidebar */}
-        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-6">
-          <Card className="rounded-2xl border border-amber-500/30 bg-card p-5 space-y-4 shadow-xs">
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Qualification Status</span>
-              {isQualified ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Qualified
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                  <Clock className="h-3.5 w-3.5" /> In Progress
-                </span>
+        {/* ============================================================= */}
+        {/* 2. DESKTOP-ONLY LAYOUT (hidden lg:block - EXACT SOURCE OF TRUTH) */}
+        {/* ============================================================= */}
+        <div className="desktop-layout hidden lg:block space-y-6">
+          {/* Desktop Hero Workspace Header */}
+          <div className="bg-gradient-to-r from-card via-amber-50/10 to-slate-50/40 dark:from-card dark:via-amber-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">YPOP Workspace</span>
+                  <span className="text-muted-foreground/30">•</span>
+                  <span className="text-xs text-muted-foreground">{currentProfile?.organizationName || "LYDO Pasig City"}</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                  Youth Participation Organization Passport (YPOP)
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Track qualification progress, submit PPA organization activities, and monitor incentive tiers.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <Button
+                  type="button"
+                  onClick={() => setYpopOrgActivityModalOpen(true)}
+                  className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 h-8 px-4 text-xs font-bold"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Log PPA Activity
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop 2-Column Grid: Left 70% Activities & PPA, Right 30% Sticky Qualification Sidebar */}
+          <div className="grid grid-cols-12 gap-6 items-start">
+            {/* Left Column (70% - 8 cols) */}
+            <div className="col-span-8 space-y-6">
+              {/* Module Tabs */}
+              <div className="flex items-center gap-1 bg-card border border-border/60 p-1.5 rounded-2xl w-full sm:w-fit shadow-xs scroll-tabs">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("activities")}
+                  className={cn(
+                    "rounded-xl px-4 py-1.5 text-xs font-bold transition-all",
+                    activeTab === "activities"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  City-Led Activities ({ypopCityActivities.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("ppa")}
+                  className={cn(
+                    "rounded-xl px-4 py-1.5 text-xs font-bold transition-all",
+                    activeTab === "ppa"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  Organization PPA Logs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("history")}
+                  className={cn(
+                    "rounded-xl px-4 py-1.5 text-xs font-bold transition-all",
+                    activeTab === "history"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  Recent Activity
+                </button>
+              </div>
+
+              {/* Tab 1: City-Led Activities */}
+              {activeTab === "activities" && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Available & Participated Activities</h3>
+                  {ypopCityActivities.length === 0 ? (
+                    <Card className="p-8 text-center rounded-2xl border border-border/60 text-xs text-muted-foreground">
+                      No city-led YPOP activities currently listed for this validation period.
+                    </Card>
+                  ) : (
+                    ypopCityActivities.map((act) => {
+                      const isExpanded = expandedActivityId === act.id;
+                      const participation = ypopEventParticipations.find((p) => p.activityId === act.id);
+
+                      return (
+                        <Card key={act.id} className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs">
+                          <div
+                            onClick={() => setExpandedActivityId(isExpanded ? null : act.id)}
+                            className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-primary/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                                <Award className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="min-w-0 space-y-0.5">
+                                <p className="text-sm font-bold text-foreground truncate">{act.title}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {act.date ? formatShortPortalDate(act.date) : "TBA"} • {act.venue || "Pasig City"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              {participation ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                                  <CheckCircle2 className="h-3 w-3" /> Attended
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-semibold text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full">
+                                  Available
+                                </span>
+                              )}
+                              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isExpanded && "rotate-180")} />
+                            </div>
+                          </div>
+
+                          {/* Collapsible Details */}
+                          {isExpanded && (
+                            <div className="border-t border-border/60 bg-muted/20 p-4 space-y-3 text-xs">
+                              <p className="text-foreground">{act.description || "Official PCYDO youth activity."}</p>
+                              <div className="flex items-center justify-between pt-2">
+                                <span className="text-muted-foreground font-semibold">Points Weight: {act.points || 10} Points</span>
+                                <Button type="button" size="sm" className="h-7 text-xs rounded-lg bg-primary font-semibold">
+                                  View Event Proof →
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* Tab 2: Organization PPA Logs */}
+              {activeTab === "ppa" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Organization-Initiated Activities</h3>
+                    <Button type="button" size="sm" onClick={() => setYpopOrgActivityModalOpen(true)} className="h-7 text-xs rounded-xl gap-1">
+                      <Plus className="h-3 w-3" /> Add PPA Activity
+                    </Button>
+                  </div>
+
+                  <Card className="p-8 text-center rounded-2xl border border-border/60 text-xs text-muted-foreground space-y-3">
+                    <FileText className="h-8 w-8 text-muted-foreground mx-auto" />
+                    <p className="font-bold text-foreground">Log your organization's PPA initiatives</p>
+                    <p>Submit narrative reports and attendance files for YPOP qualification evaluation.</p>
+                    <Button type="button" onClick={() => setYpopOrgActivityModalOpen(true)} className="h-8 text-xs font-bold rounded-xl">
+                      Log PPA Activity Now
+                    </Button>
+                  </Card>
+                </div>
+              )}
+
+              {/* Tab 3: History Timeline */}
+              {activeTab === "history" && (
+                <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity History Timeline</h3>
+                  <div className="space-y-4 border-l border-border/60 pl-6 relative">
+                    {ypopEventParticipations.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">No YPOP activity history recorded yet.</p>
+                    ) : (
+                      ypopEventParticipations.map((item, idx) => (
+                        <div key={item.id || idx} className="space-y-1 relative">
+                          <span className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-primary border-2 border-background" />
+                          <p className="font-bold text-foreground text-xs">{item.title || "City-Led Event Attended"}</p>
+                          <p className="text-[11px] text-muted-foreground">{item.description || "Organized by PCYDO Pasig City"}</p>
+                          <span className="text-[10px] text-muted-foreground/70 font-medium">{item.date ? formatShortPortalDate(item.date) : "Recorded"}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Card>
               )}
             </div>
 
-            {/* Score Meter */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span>Overall YPOP Score</span>
-                <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{currentPoints}%</span>
-              </div>
-              <Progress value={currentPoints} className="h-2.5 bg-muted" />
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-0.5">
-                <span>Threshold: {threshold}%</span>
-                <span>Max: 100%</span>
-              </div>
-            </div>
+            {/* Right Column (30% - 4 cols): Intelligent Sticky Sidebar */}
+            <div className="col-span-4 space-y-4 sticky top-6">
+              <Card className="rounded-2xl border border-amber-500/30 bg-card p-5 space-y-4 shadow-xs">
+                <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Qualification Status</span>
+                  {isQualified ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Qualified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                      <Clock className="h-3.5 w-3.5" /> In Progress
+                    </span>
+                  )}
+                </div>
 
-            {/* Score Breakdown */}
-            <div className="bg-accent/40 p-3.5 rounded-xl border border-border/60 space-y-2 text-xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Score Breakdown</span>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-muted-foreground font-medium">City-Led Score:</span>
-                <span className="font-bold text-foreground">{activeEntry?.cityLedPoints ?? currentPoints}%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground font-medium">Organization Bonus:</span>
-                <span className="font-bold text-foreground">{activeEntry?.orgBonusPoints ?? 0}%</span>
-              </div>
-            </div>
+                {/* Score Meter */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span>Overall YPOP Score</span>
+                    <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{currentPoints}%</span>
+                  </div>
+                  <Progress value={currentPoints} className="h-2.5 bg-muted" />
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-0.5">
+                    <span>Threshold: {threshold}%</span>
+                    <span>Max: 100%</span>
+                  </div>
+                </div>
 
-            {/* Project Grant CTA */}
-            <div className="border-t border-border/60 pt-3 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-semibold">Project Grant (PPA):</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">Eligible</span>
-              </div>
-              <Button
-                type="button"
-                onClick={() => navigate(userRouteMap["budget-request"] || "/financial-grant")}
-                className="w-full h-9 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 shadow-2xs gap-1.5"
-              >
-                Submit Budget Request →
-              </Button>
+                {/* Score Breakdown */}
+                <div className="bg-accent/40 p-3.5 rounded-xl border border-border/60 space-y-2 text-xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Score Breakdown</span>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-muted-foreground font-medium">City-Led Score:</span>
+                    <span className="font-bold text-foreground">{activeEntry?.cityLedPoints ?? currentPoints}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground font-medium">Organization Bonus:</span>
+                    <span className="font-bold text-foreground">{activeEntry?.orgBonusPoints ?? 0}%</span>
+                  </div>
+                </div>
+
+                {/* Project Grant CTA */}
+                <div className="border-t border-border/60 pt-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground font-semibold">Project Grant (PPA):</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Eligible</span>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => navigate(userRouteMap["budget-request"] || "/financial-grant")}
+                    className="w-full h-9 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 shadow-2xs gap-1.5"
+                  >
+                    Submit Budget Request →
+                  </Button>
+                </div>
+              </Card>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
-    </div>
     </FeatureGate>
   );
 };

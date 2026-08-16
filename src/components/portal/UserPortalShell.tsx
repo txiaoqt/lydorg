@@ -106,7 +106,7 @@ export const UserPortalShell = ({
     ? userDisplayName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
     : "";
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
-  const recentNotifications = [...(notifications ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
+  const recentNotifications = [...(notifications ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8);
 
   // Sync global document theme class
   useEffect(() => {
@@ -133,7 +133,7 @@ export const UserPortalShell = ({
     <div className="min-h-screen bg-background text-foreground font-sans">
       {/* Sticky Integrated Glassmorphic Navbar (Height ~60px, max-w-[1440px]) */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 dark:bg-background/80 backdrop-blur-2xl transition-colors">
-        <div className="max-w-[1440px] mx-auto flex h-15 sm:h-16 items-center justify-between gap-3 px-3 sm:px-6">
+        <div className="max-w-[1440px] mx-auto flex h-15 sm:h-16 items-center justify-between gap-3 px-4 sm:px-6">
           {/* Left — Logo & Mobile Trigger */}
           <div className="flex items-center gap-3 min-w-0">
             <Sheet>
@@ -187,7 +187,7 @@ export const UserPortalShell = ({
                                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                 )}
                               >
-                                <Icon className="h-4 w-4" />
+                                {Icon && <Icon className="h-4 w-4" />}
                                 <span>{item.label}</span>
                               </button>
                             </SheetClose>
@@ -197,40 +197,20 @@ export const UserPortalShell = ({
                     </div>
                   ))}
 
-                  {/* Mobile Toggles */}
-                  <div className="space-y-2 pt-2 border-t border-border/40">
-                    <p className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preferences</p>
-                    <button
-                      type="button"
-                      onClick={toggleDarkMode}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
-                    >
-                      {isDarkMode ? (
-                        <>
-                          <Sun className="h-4 w-4 text-amber-400" />
-                          <span>Switch to Light Mode</span>
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="h-4 w-4 text-indigo-500" />
-                          <span>Switch to Dark Mode</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
                   {/* Mobile Sign Out */}
-                  <SheetClose asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full justify-start text-destructive hover:text-destructive rounded-xl text-xs h-10 mt-2 touch-target"
-                      onClick={() => setSignOutConfirmOpen(true)}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </SheetClose>
+                  <div className="pt-2 border-t border-border/40">
+                    <SheetClose asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-start text-destructive hover:text-destructive rounded-xl text-xs h-10 touch-target"
+                        onClick={() => setSignOutConfirmOpen(true)}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                      </Button>
+                    </SheetClose>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -291,7 +271,7 @@ export const UserPortalShell = ({
                           )}
                           onClick={() => onNavigate(item.id)}
                         >
-                          <Icon className="h-4 w-4 text-primary shrink-0" />
+                          {Icon && <Icon className="h-4 w-4 text-primary shrink-0" />}
                           <div>
                             <p className="font-semibold text-xs leading-none">{item.label}</p>
                           </div>
@@ -306,12 +286,25 @@ export const UserPortalShell = ({
 
           {/* Right — Dark Mode + Bell + User Menu */}
           <div className="flex items-center gap-2">
-
-            {/* Global Twin Pill: Dark / Light Mode */}
+            {/* Mobile Compact Dark / Light Mode Icon Button (beside notifications) */}
             <button
               type="button"
               onClick={toggleDarkMode}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-accent px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs"
+              className="sm:hidden relative flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/80 hover:bg-accent transition-all duration-200 ease-in-out active:scale-95 focus-visible:outline-none shadow-2xs text-muted-foreground hover:text-foreground cursor-pointer"
+              aria-label={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4 text-amber-400 transition-transform duration-200" />
+              ) : (
+                <Moon className="h-4 w-4 text-primary transition-transform duration-200" />
+              )}
+            </button>
+
+            {/* Desktop Global Twin Pill: Dark / Light Mode */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-accent px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
             >
               {isDarkMode ? (
                 <>
@@ -320,7 +313,7 @@ export const UserPortalShell = ({
                 </>
               ) : (
                 <>
-                  <Moon className="h-3.5 w-3.5 text-indigo-500" />
+                  <Moon className="h-3.5 w-3.5 text-primary" />
                   <span>Dark</span>
                 </>
               )}
@@ -340,43 +333,94 @@ export const UserPortalShell = ({
                   )}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-80 max-w-80 p-3 rounded-2xl bg-card border-border/80 shadow-xl space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <p className="text-xs font-bold text-foreground">Notifications</p>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={6}
+                collisionPadding={16}
+                className="w-[calc(100vw-32px)] sm:w-80 max-w-[calc(100vw-32px)] sm:max-w-80 p-2 sm:p-2.5 rounded-2xl bg-card border border-border/80 shadow-xl flex flex-col max-h-[360px] sm:max-h-[420px] overflow-hidden"
+              >
+                {/* Fixed Header */}
+                <div className="flex items-center justify-between px-2 py-1 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-foreground tracking-tight">Notifications</p>
+                    {unreadCount > 0 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 leading-none">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
                   {unreadCount > 0 && onMarkAllRead && (
-                    <button type="button" onClick={onMarkAllRead} className="text-[11px] font-semibold text-primary hover:underline">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMarkAllRead();
+                      }}
+                      className="text-[11px] font-semibold text-primary hover:underline cursor-pointer transition-colors"
+                    >
                       Mark all read
                     </button>
                   )}
                 </div>
-                <DropdownMenuSeparator className="my-1" />
-                {recentNotifications.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-xs text-muted-foreground">No notifications yet.</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <p className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recent</p>
-                    {recentNotifications.map((n) => (
-                      <div key={n.id} className="flex items-start gap-2 p-2 rounded-xl hover:bg-accent/50 transition-colors">
-                        <span className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full", n.isRead ? "bg-transparent" : "bg-primary")} />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-baseline justify-between gap-1">
-                            <p className={cn("text-xs leading-tight", n.isRead ? "font-normal text-muted-foreground" : "font-semibold text-foreground")}>
+
+                <DropdownMenuSeparator className="my-1 bg-border/60 shrink-0" />
+
+                {/* Scrollable Notification List */}
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-0.5 pr-0.5">
+                  {recentNotifications.length === 0 ? (
+                    <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                      No notifications yet.
+                    </div>
+                  ) : (
+                    recentNotifications.map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => onNavigate("notifications")}
+                        className={cn(
+                          "flex items-start gap-2 p-2 rounded-xl transition-colors cursor-pointer group",
+                          n.isRead
+                            ? "hover:bg-accent/40"
+                            : "bg-primary/[0.04] hover:bg-primary/[0.08]"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
+                            n.isRead ? "bg-transparent" : "bg-primary"
+                          )}
+                        />
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-baseline justify-between gap-1.5">
+                            <p
+                              className={cn(
+                                "text-xs leading-tight truncate",
+                                n.isRead ? "font-medium text-foreground/80" : "font-bold text-foreground"
+                              )}
+                            >
                               {n.title}
                             </p>
-                            <span className="shrink-0 text-[10px] text-muted-foreground">
-                              {new Date(n.createdAt).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
+                            <span className="shrink-0 text-[10px] text-muted-foreground font-medium">
+                              {new Date(n.createdAt).toLocaleDateString("en-PH", {
+                                month: "short",
+                                day: "numeric",
+                              })}
                             </span>
                           </div>
-                          <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{n.message}</p>
+                          <p className="line-clamp-1 text-[11px] text-muted-foreground leading-snug">
+                            {n.message}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-                <DropdownMenuSeparator className="my-1" />
+                    ))
+                  )}
+                </div>
+
+                <DropdownMenuSeparator className="my-1 bg-border/60 shrink-0" />
+
+                {/* Fixed Footer Action */}
                 <DropdownMenuItem
                   onClick={() => onNavigate("notifications")}
-                  className="justify-center text-xs font-semibold text-primary cursor-pointer hover:bg-primary/10 rounded-xl py-1.5"
+                  className="justify-center text-xs font-semibold text-primary cursor-pointer hover:bg-primary/10 rounded-xl py-1.5 shrink-0"
                 >
                   View All Notifications →
                 </DropdownMenuItem>
@@ -423,7 +467,7 @@ export const UserPortalShell = ({
       </header>
 
       {/* Main Content Area */}
-      <main className={cn("container mx-auto px-3 sm:px-4", hidePageBanner ? "pt-3 pb-8" : "py-3 sm:py-6")}>
+      <main className={cn("container mx-auto px-4 sm:px-6", hidePageBanner ? "pt-3 pb-8" : "py-3 sm:py-6")}>
         {!hidePageBanner ? (
           <section className="mb-4 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 sm:mb-6 sm:px-5 sm:py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

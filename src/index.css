@@ -271,25 +271,131 @@
   html.dark body,
   html.dark body.public-shell,
   body.dark.public-shell {
-    --background: 222 47% 11%;
-    --foreground: 210 20% 98%;
-    --card: 222 47% 14%;
-    --card-foreground: 210 20% 98%;
-    --popover: 222 47% 14%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 22.5%;
-    --input: 217.2 32.6% 22.5%;
-    --ring: 224.3 76.3% 48%;
+    /* ── Global Soft-Navy Dark Mode Design System ── */
+    --background: 220 39% 11%;          /* #111827 - App background */
+    --foreground: 210 40% 96.1%;        /* #F1F5F9 - Primary text */
+
+    --card: 219 38% 15%;                /* #182235 - Primary card surface */
+    --card-foreground: 210 40% 96.1%;   /* #F1F5F9 - Card text */
+
+    --popover: 219 38% 15%;             /* #182235 - Dropdowns / popovers */
+    --popover-foreground: 210 40% 96.1%;/* #F1F5F9 */
+
+    --primary: 212 63% 52.4%;           /* #3B82D0 - Y-TRACE Primary Blue */
+    --primary-hover: 212 73% 58.8%;     /* #4A90E2 - Primary hover */
+    --primary-active: 212 58% 46.9%;    /* #3274BD - Primary active */
+    --primary-strong: 212 73% 58.8%;    /* #4A90E2 */
+    --primary-soft: 220 41% 13.5%;      /* #141E30 - Low saturation tint */
+    --primary-foreground: 0 0% 100%;    /* #FFFFFF - On primary text */
+
+    --secondary: 219 37% 17.5%;         /* #1C283D - Elevated / secondary surface */
+    --secondary-foreground: 210 40% 96.1%; /* #F1F5F9 */
+
+    --muted: 219 37% 17.5%;             /* #1C283D - Muted / nested card surface */
+    --muted-foreground: 216 17% 56.9%;  /* #7F8DA3 - Muted helper text / metadata */
+
+    --accent: 219 37% 17.5%;            /* #1C283D - Accent / hover surface */
+    --accent-foreground: 210 40% 96.1%; /* #F1F5F9 */
+
+    --destructive: 356 59% 63.7%;       /* #D96B72 - Semantic Error/Danger */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 216 32% 22%;              /* #26344A - Subtle border */
+    --input: 216 32% 22%;               /* #26344A - Input border */
+    --ring: 212 63% 52.4%;              /* #3B82D0 - Focus ring */
+
+    --success: 159 61% 45.3%;           /* #2DBA8A - Semantic Success */
+    --success-foreground: 0 0% 100%;
+    --warning: 36 67% 54.5%;            /* #D99A3D - Semantic Warning */
+    --warning-foreground: 0 0% 100%;
+    --info: 212 63% 52.4%;              /* #3B82D0 - Semantic Info */
+    --info-foreground: 0 0% 100%;
+
+    --sidebar-background: 221 37% 13.1%;/* #151D2E - Navbar / top chrome / sidebar */
+    --sidebar-foreground: 210 40% 96.1%;
+    --sidebar-primary: 212 63% 52.4%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 219 38% 15%;      /* #182235 */
+    --sidebar-accent-foreground: 210 40% 96.1%;
+    --sidebar-border: 216 32% 22%;      /* #26344A */
+    --sidebar-ring: 212 63% 52.4%;
+
+    --semantic-success: 159 61% 45.3%;
+    --semantic-warning: 36 67% 54.5%;
+    --semantic-danger: 356 59% 63.7%;
+    --semantic-info-admin: 212 63% 52.4%;
+    --semantic-info-user: 212 63% 52.4%;
+    --semantic-disabled: 216 14% 43%;   /* #5F6B7D */
+    --semantic-placeholder: 216 17% 56.9%; /* #7F8DA3 */
+
+    --admin-page-bg: 220 39% 11%;
+    --admin-surface: 219 38% 15%;
+    --admin-surface-subtle: 219 37% 17.5%;
+    --admin-border: 216 32% 22%;
+    --admin-border-strong: 216 28% 28%;
+    --admin-nav-dark: 221 37% 13.1%;
+    --admin-heading: 210 40% 96.1%;
+    --admin-link: 212 63% 52.4%;
+    --admin-body: 210 40% 96.1%;
+    --admin-meta: 216 17% 56.9%;
+    --admin-on-dark: 0 0% 100%;
+    --admin-active-on-dark: 212 63% 52.4%;
+
+    --user-page-bg: 220 39% 11%;
+    --user-surface: 219 38% 15%;
+    --user-surface-subtle: 219 37% 17.5%;
+    --user-border: 216 32% 22%;
+    --user-border-strong: 216 28% 28%;
+    --user-nav-dark: 221 37% 13.1%;
+    --user-heading: 210 40% 96.1%;
+    --user-link: 212 63% 52.4%;
+    --user-body: 210 40% 96.1%;
+    --user-meta: 216 17% 56.9%;
+    --user-on-dark: 0 0% 100%;
+    --user-active-on-dark: 212 63% 52.4%;
+
+    /* ── Shared Y-TRACE Dark Token System ── */
+    --yt-bg: #111827;
+    --yt-surface: #182235;
+    --yt-surface-subtle: #1c283d;
+    --yt-surface-hover: #1f2d44;
+    --yt-border: #26344a;
+    --yt-border-strong: #334460;
+    --yt-primary: #3b82d0;
+    --yt-primary-hover: #4a90e2;
+    --yt-primary-active: #3274bd;
+    --yt-primary-strong: #4a90e2;
+    --yt-primary-soft: #141e30;
+    --yt-text: #f1f5f9;
+    --yt-text-secondary: #a7b3c5;
+    --yt-text-muted: #7f8da3;
+    --yt-text-subtle: #5f6b7d;
+    --yt-text-on-primary: #ffffff;
+    --yt-focus: #3b82d0;
+    --yt-focus-ring: rgb(59 130 208 / 25%);
+    --yt-shadow-sm: 0 1px 2px rgb(0 0 0 / 25%);
+    --yt-shadow-md: 0 4px 12px rgb(0 0 0 / 35%);
+    --yt-success-bg: rgba(45, 186, 138, 0.12);
+    --yt-success-text: #2dba8a;
+    --yt-success-border: rgba(45, 186, 138, 0.25);
+    --yt-info-bg: rgba(59, 130, 208, 0.12);
+    --yt-info-text: #3b82d0;
+    --yt-info-border: rgba(59, 130, 208, 0.25);
+    --yt-progress-bg: rgba(20, 184, 166, 0.12);
+    --yt-progress-text: #14b8a6;
+    --yt-progress-border: rgba(20, 184, 166, 0.25);
+    --yt-warning-bg: rgba(217, 154, 61, 0.12);
+    --yt-warning-text: #d99a3d;
+    --yt-warning-border: rgba(217, 154, 61, 0.25);
+    --yt-revision-bg: rgba(249, 115, 22, 0.12);
+    --yt-revision-text: #f97316;
+    --yt-revision-border: rgba(249, 115, 22, 0.25);
+    --yt-danger-bg: rgba(217, 107, 114, 0.12);
+    --yt-danger-text: #d96b72;
+    --yt-danger-border: rgba(217, 107, 114, 0.25);
+    --yt-neutral-bg: #141e30;
+    --yt-neutral-text: #a7b3c5;
+    --yt-neutral-border: #26344a;
   }
 }
 
@@ -318,6 +424,28 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
+
+  /* Unified Fast Theme Transition (150ms ease-out) */
+  html,
+  body,
+  .bg-background,
+  .bg-card,
+  header {
+    transition: background-color 150ms ease-out,
+                border-color 150ms ease-out,
+                color 150ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html,
+    body,
+    .bg-background,
+    .bg-card,
+    header {
+      transition: none !important;
+    }
+  }
+
   body input::placeholder,
   body textarea::placeholder {
     color: hsl(var(--semantic-placeholder));

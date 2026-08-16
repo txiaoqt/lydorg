@@ -25,7 +25,7 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({
 }) => {
   if (!canAccess) {
     return (
-      <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-6 max-w-[1440px] mx-auto py-2">
+      <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-4 sm:space-y-6 max-w-[1440px] mx-auto pt-0 pb-2 sm:py-2">
         {heroSection}
         <WebsiteWorkflowNotice
           title={title}
