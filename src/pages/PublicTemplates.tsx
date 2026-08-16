@@ -1,13 +1,9 @@
-import { Search } from "lucide-react";
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PublicTemplatesCatalog from "@/components/public/PublicTemplatesCatalog";
 
 const PublicTemplates = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-
   return (
     <div className="public-templates-page min-h-screen bg-background">
       <AnnouncementBar />
@@ -27,29 +23,13 @@ const PublicTemplates = () => {
             </p>
           </div>
 
-          {/* Desktop Search Bar — visible on sm and up */}
-          <div className="hidden sm:flex h-[52px] w-full max-w-[792px] items-center gap-[8px] rounded-full border border-border bg-card shadow-xs px-[16px]">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search forms and templates..."
-              className="flex-1 bg-transparent font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-foreground outline-hidden placeholder:text-muted-foreground"
-            />
-          </div>
-
         </div>
       </section>
 
       {/* Catalog */}
-      <section className="bg-background px-4 pb-8 pt-6 sm:px-6 sm:pb-[32px] sm:pt-[48px] lg:px-[64px]">
+      <section className="bg-background px-4 pb-8 pt-6 sm:px-6 sm:pb-[32px] sm:pt-[32px] lg:px-[64px]">
         <div className="mx-auto w-full max-w-7xl">
-          <PublicTemplatesCatalog
-            compactHeader
-            externalSearchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-          />
+          <PublicTemplatesCatalog compactHeader />
         </div>
       </section>
 

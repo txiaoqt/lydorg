@@ -64,7 +64,7 @@ const LegalPolicy = () => {
           <div className="flex gap-2 sm:gap-[10px] rounded-xl sm:rounded-[16px] border border-public-border-default bg-white p-2 sm:p-[16px] shadow-2xs sm:shadow-public-nav">
             <Link
               to="/privacy"
-              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
+              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
                 !isTerms
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                   : "text-public-text-brand hover:bg-slate-50"
@@ -74,7 +74,7 @@ const LegalPolicy = () => {
             </Link>
             <Link
               to="/terms"
-              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
+              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
                 isTerms
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                   : "text-public-text-brand hover:bg-slate-50"

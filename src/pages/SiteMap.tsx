@@ -74,7 +74,7 @@ const SiteMap = () => {
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEF7FE] p-1 shrink-0">
                       <Icon className="h-4 w-4 text-public-text-brand" />
                     </div>
-                    <h2 className="font-segoe text-base sm:text-base font-bold text-public-text-brand">
+                    <h2 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-bold text-public-text-brand">
                       {section.title}
                     </h2>
                   </div>

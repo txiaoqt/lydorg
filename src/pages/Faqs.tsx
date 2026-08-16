@@ -121,7 +121,6 @@ const Faqs = () => {
       {/* Hero */}
       <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-4 pt-4 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
-
           <div className="flex flex-col items-center gap-2 text-center sm:items-start sm:text-left sm:gap-[16px]">
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Frequently Asked Questions
@@ -130,27 +129,14 @@ const Faqs = () => {
               Quick answers about using Y-TRACE and navigating the compliance workflow.
             </p>
           </div>
-
-          {/* Desktop Search Bar — visible on md and up */}
-          <div className="hidden md:flex h-[52px] w-full max-w-[792px] items-center gap-[8px] rounded-full border border-public-border-default bg-white px-[16px] shadow-xs">
-            <Search className="h-4 w-4 shrink-0 text-public-text-secondary" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search questions..."
-              className="flex-1 bg-transparent font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default outline-hidden placeholder:text-public-text-secondary"
-            />
-          </div>
-
         </div>
       </section>
 
       {/* Catalog */}
-      <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[32px] sm:pt-[48px] lg:px-[64px]">
+      <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[48px] sm:pt-[40px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-[24px]">
 
-          {/* Mobile Unified Toolbar: Single Search + [Category: All] (matching Forms & Templates) */}
+          {/* Mobile Unified Toolbar: Single Search + [Category: All] */}
           <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
             {/* Full-width Search Input */}
             <div className="relative w-full">
@@ -166,7 +152,7 @@ const Faqs = () => {
 
             {/* Row 2: Category Action Button */}
             <div className="flex items-center">
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
@@ -201,60 +187,100 @@ const Faqs = () => {
             </div>
           </div>
 
-          {/* Desktop Filter Tabs Bar — visible on md and up */}
-          <div className="hidden md:flex gap-[10px] justify-center p-[10px]">
-            {filterTabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveFilter(tab.id)}
-                className={
-                  activeFilter === tab.id
-                    ? `shrink-0 whitespace-nowrap rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]${tab.id === "all" ? " min-w-[80px]" : ""}`
-                    : `shrink-0 whitespace-nowrap rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default hover:bg-slate-50 transition-colors${tab.id === "all" ? " min-w-[80px]" : ""}`
-                }
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Desktop Search + Category Filter Row — visible on md and up */}
+          <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs max-w-4xl mx-auto w-full">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                placeholder="Search questions by keyword, topic, or answer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
+              />
+            </div>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
+                >
+                  <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>Category: {activeFilterLabel}</span>
+                  <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
+                {filterTabs.map((tab) => {
+                  const count = tab.id === "all" ? faqs.length : faqs.filter((f) => f.category === tab.id).length;
+                  return (
+                    <DropdownMenuItem
+                      key={tab.id}
+                      onClick={() => setActiveFilter(tab.id)}
+                      className={cn(
+                        "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                        activeFilter === tab.id && "bg-primary/10 text-primary font-bold"
+                      )}
+                    >
+                      <span>{tab.id === "all" ? "All Categories" : tab.label}</span>
+                      <span className="text-[10px] text-muted-foreground">({count})</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {/* FAQ groups */}
+          {/* FAQ groups — readable centered max-width */}
           {groups.length > 0 ? (
-            <div className="flex flex-col gap-4 sm:gap-[24px]">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 sm:gap-8">
               {groups.map((group) => (
-                <div key={group.id} className="flex flex-col gap-2 sm:gap-[16px] px-0 sm:px-[24px] pb-1 sm:pb-[24px]">
-                  <h2 className="font-segoe text-xs sm:text-public-fs-subheading-sm font-bold uppercase tracking-wider text-public-text-brand flex items-center gap-1.5">
+                <div key={group.id} className="flex flex-col gap-3">
+                  <h2 className="font-segoe text-xs sm:text-sm font-bold uppercase tracking-wider text-[#0E2F66] flex items-center gap-2 px-1">
                     <span>{group.title}</span>
-                    <span className="text-xs sm:text-public-fs-subheading-sm font-semibold text-public-text-secondary">({group.items.length})</span>
+                    <span className="text-xs font-semibold text-slate-400">({group.items.length})</span>
                   </h2>
-                  <div className="flex flex-col gap-2 sm:gap-[16px]">
+                  <div className="flex flex-col gap-2.5">
                     {group.items.map((faq) => {
                       const isOpen = openId === faq.question;
                       return (
                         <div
                           key={faq.question}
-                          className="rounded-xl sm:rounded-[16px] border border-public-border-default [border-top-color:rgba(113,191,253,1)] bg-white p-3.5 sm:px-[24px] sm:py-[16px] shadow-2xs sm:shadow-public-overview-card transition-shadow"
+                          className={cn(
+                            "rounded-2xl border bg-white transition-all duration-200 shadow-2xs overflow-hidden",
+                            isOpen
+                              ? "border-public-border-brand/60 shadow-xs ring-1 ring-public-border-brand/20"
+                              : "border-border/70 hover:border-public-border-brand/40"
+                          )}
                         >
                           <button
                             type="button"
                             onClick={() => setOpenId(isOpen ? null : faq.question)}
-                            className="flex w-full items-center gap-2.5 sm:gap-[8px] text-left cursor-pointer"
+                            className="flex w-full items-center justify-between gap-3 p-4 sm:p-4.5 text-left cursor-pointer transition-colors hover:bg-slate-50/50"
                           >
-                            <span className="flex-1 font-segoe text-base sm:text-public-fs-subheading-sm font-semibold leading-snug sm:leading-[140%] text-public-text-brand">
+                            <span className="font-segoe text-sm sm:text-base font-semibold leading-snug text-[#0E2F66]">
                               {faq.question}
                             </span>
-                            {isOpen ? (
-                              <span className="flex h-6 w-6 sm:h-[29px] sm:w-[29px] shrink-0 items-center justify-center rounded-full bg-[rgba(10,93,159,1)] text-white">
-                                <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              </span>
-                            ) : (
-                              <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-public-text-brand opacity-80" />
-                            )}
+                            <span
+                              className={cn(
+                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all duration-200",
+                                isOpen
+                                  ? "bg-public-bg-brand text-white"
+                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                              )}
+                            >
+                              {isOpen ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </span>
                           </button>
                           {isOpen && (
-                            <div className="mt-2.5 sm:mt-[24px] border-t border-public-border-default/70 pt-2.5 sm:pt-[24px]">
-                              <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[160%] text-public-text-neutral-default">
+                            <div className="border-t border-border/50 bg-slate-50/30 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+                              <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700">
                                 {faq.answer}
                               </p>
                             </div>
@@ -267,21 +293,21 @@ const Faqs = () => {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl sm:rounded-[16px] border border-dashed border-public-bg-brand-subtle bg-white px-4 py-8 text-center font-segoe text-xs sm:text-public-fs-body-sm text-public-text-secondary">
+            <div className="mx-auto max-w-4xl w-full rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-4 py-12 text-center font-segoe text-sm text-public-text-secondary">
               No questions found matching your search.
             </div>
           )}
 
           {/* Still Need Help */}
-          <div className="mx-auto flex w-full max-w-[1024px] flex-col items-center gap-2.5 sm:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-border-default bg-white p-5 sm:px-[24px] sm:py-[60px] text-center shadow-2xs sm:shadow-public-nav mt-2 sm:mt-0">
-            <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] items-center justify-center rounded-full bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
-              <CircleHelp className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
+          <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-2.5 sm:gap-4 rounded-2xl border border-public-border-default bg-white p-6 sm:p-10 text-center shadow-public-nav mt-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-public-bg-tertiary-100 text-[#0E2F66]">
+              <CircleHelp className="h-6 w-6 text-public-text-brand" />
             </div>
-            <div className="flex flex-col gap-1 sm:gap-[10px] px-1 sm:px-[10px]">
-              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+            <div className="flex flex-col gap-1 sm:gap-1.5 max-w-md">
+              <h3 className="font-segoe text-base sm:text-lg font-bold text-[#0E2F66]">
                 Still Need Help?
               </h3>
-              <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary max-w-md">
+              <p className="font-segoe text-xs sm:text-sm text-slate-500 leading-relaxed">
                 Can't find the answer you're looking for? Reach out to the PCYDO office directly
                 and we'll get back to you as soon as possible.
               </p>
@@ -290,9 +316,9 @@ const Faqs = () => {
               href="https://mail.google.com/mail/?view=cm&fs=1&to=lydo@pasigcity.gov.ph"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 sm:gap-[8px] rounded-lg sm:rounded-[8px] bg-public-bg-brand px-4 py-2 sm:px-[20px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-2xs mt-1 sm:mt-0"
+              className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
             >
-              <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <Send className="h-4 w-4 shrink-0" />
               Send an Email
             </a>
           </div>

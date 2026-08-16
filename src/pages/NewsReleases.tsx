@@ -76,18 +76,6 @@ const NewsReleases = () => {
               Official announcements and updates from the Pasig City Local Youth Development Office.
             </p>
           </div>
-
-          {/* Desktop Search Bar — visible on sm and up */}
-          <div className="hidden sm:flex h-[52px] w-full max-w-[792px] items-center gap-[8px] rounded-full border border-public-border-default bg-white px-[16px] shadow-xs">
-            <Search className="h-4 w-4 shrink-0 text-public-text-secondary" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search news releases..."
-              className="flex-1 bg-transparent font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default outline-hidden placeholder:text-public-text-secondary"
-            />
-          </div>
         </div>
       </section>
 
@@ -95,7 +83,7 @@ const NewsReleases = () => {
       <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[64px] sm:pt-[48px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-[24px]">
 
-          {/* Mobile Unified Toolbar: Single Search + [Category: All] [Visit Facebook] (matching Forms & Templates) */}
+          {/* Mobile Unified Toolbar: Single Search + [Category: All] [Visit Facebook] */}
           <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
             {/* Full-width Search Input */}
             <div className="relative w-full">
@@ -112,7 +100,7 @@ const NewsReleases = () => {
             {/* Row 2: Equal-width Action Buttons (50/50 split) */}
             <div className="flex items-center gap-2">
               {/* Category Action Button */}
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
@@ -170,71 +158,93 @@ const NewsReleases = () => {
             </div>
           </div>
 
-          {/* Desktop Facebook announcement bar — visible on md and up */}
-          <div className="hidden md:flex mx-auto w-full max-w-[980px] flex-col overflow-hidden rounded-[8px] border border-[#DCE4F0] bg-white shadow-public-nav sm:flex-row sm:items-center">
-            {/* Icon + text */}
-            <div className="flex flex-1 items-center gap-[24px] px-[24px] pb-[16px] pt-[24px] sm:py-[24px]">
-              <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[8px] bg-[#EEF7FE] p-[8px]">
-                <Facebook className="h-[32px] w-[32px] text-public-text-brand" strokeWidth={1.5} />
-              </div>
-              <div className="flex flex-col gap-[4px]">
-                <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
-                  Official announcements are posted on Facebook
-                </p>
-                <p className="font-segoe text-public-fs-body-sm font-normal leading-[100%] text-public-text-neutral-default">
-                  Follow the official LYDO Pasig City page to stay updated on the latest news.
-                </p>
-              </div>
+          {/* Desktop Compact Horizontal Toolbar (visible on md and up) */}
+          <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs">
+            {/* Search Input (fills majority of width) */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                placeholder="Search news title, summary, keyword..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
+              />
             </div>
 
-            {/* Button */}
-            <div className="flex shrink-0 items-center px-[24px] pb-[24px] pt-0 sm:py-[24px]">
-              <a
-                href={LYDO_FACEBOOK_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-[8px] rounded-[4px] bg-[#0E2F66] px-[12px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-[#F5F5F5] sm:w-auto sm:py-0 sm:h-[40px]"
-              >
-                <Facebook className="h-[16px] w-[16px]" /> Visit Facebook Page
-              </a>
-            </div>
-          </div>
-
-          {/* Desktop Category filter pills — visible on md and up */}
-          {availableCategories.length > 0 && (
-            <div className="hidden md:flex flex-wrap justify-center gap-[10px] p-[10px]">
-              {["all", ...availableCategories].map((cat) => (
-                <button
-                  key={cat}
+            {/* Category Dropdown Button (compact content-width) */}
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
                   type="button"
-                  onClick={() => setActiveFilter(cat)}
-                  className={
-                    activeFilter === cat
-                      ? "rounded-full bg-public-bg-brand px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-on-neutral backdrop-blur-[4px]"
-                      : "rounded-full border border-public-border-default bg-white px-[20px] py-[10px] font-segoe text-public-fs-subheading-sm font-normal leading-[100%] text-public-text-neutral-default"
-                  }
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
                 >
-                  {cat === "all" ? "All" : cat}
-                </button>
-              ))}
-            </div>
-          )}
+                  <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>
+                    {activeFilter === "all" ? "Category: All" : `Category: ${activeFilter}`}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
+                <DropdownMenuItem
+                  onClick={() => setActiveFilter("all")}
+                  className={cn(
+                    "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                    activeFilter === "all" && "bg-primary/10 text-primary font-bold"
+                  )}
+                >
+                  <span>All Categories</span>
+                  <span className="text-[10px] text-muted-foreground">({releases?.length ?? 0})</span>
+                </DropdownMenuItem>
+                {availableCategories.map((cat) => {
+                  const count = (releases ?? []).filter((r) => r.category === cat).length;
+                  return (
+                    <DropdownMenuItem
+                      key={cat}
+                      onClick={() => setActiveFilter(cat)}
+                      className={cn(
+                        "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                        activeFilter === cat && "bg-primary/10 text-primary font-bold"
+                      )}
+                    >
+                      <span>{cat}</span>
+                      <span className="text-[10px] text-muted-foreground">({count})</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Visit Facebook Action Button (compact content-width) */}
+            <a
+              href={LYDO_FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 shrink-0 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5 transition-colors"
+            >
+              <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>Visit Facebook</span>
+            </a>
+          </div>
 
           {/* News Cards Grid */}
           {filteredReleases === null ? (
-            <div className="grid gap-3.5 sm:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 py-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-[360px] sm:h-[470px] animate-pulse rounded-xl sm:rounded-[16px] bg-white border border-border/50" />
+                <div key={i} className="h-[380px] sm:h-[400px] animate-pulse rounded-2xl bg-white border border-border/50" />
               ))}
             </div>
           ) : filteredReleases.length === 0 ? (
-            <div className="rounded-xl sm:rounded-[16px] border border-dashed border-public-bg-brand-subtle bg-white px-5 py-12 text-center font-segoe text-xs sm:text-public-fs-body-sm text-public-text-secondary">
+            <div className="rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-5 py-12 text-center font-segoe text-sm text-public-text-secondary">
               {query || activeFilter !== "all"
                 ? "No news releases match your search."
                 : "No news releases published yet."}
             </div>
           ) : (
-            <div className="grid gap-3.5 sm:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 py-2">
               {filteredReleases.map((news) => {
                 const formattedDate = new Intl.DateTimeFormat("en-PH", {
                   year: "numeric",
@@ -245,24 +255,24 @@ const NewsReleases = () => {
                 return (
                   <article
                     key={news.id}
-                    className="flex flex-col overflow-hidden rounded-xl sm:rounded-[16px] border border-[#DCE4F0] bg-white shadow-public-nav transition-shadow hover:shadow-md"
+                    className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-[#DCE4F0] bg-white shadow-public-nav transition-all duration-200 hover:border-public-border-brand/50 hover:shadow-md hover:shadow-slate-200/60 h-full"
                   >
-                    {/* Image area */}
-                    <div className="relative flex h-[160px] items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] p-[10px] sm:h-[309px]">
+                    {/* Image area with category overlay */}
+                    <div className="relative flex aspect-16/10 sm:h-[200px] w-full items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] overflow-hidden">
                       {news.category && (
-                        <div className="absolute left-2.5 top-2.5 z-10 rounded-full border border-[#DCF0FD] bg-white px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] shadow-2xs">
-                          <span className="font-segoe text-xs sm:text-public-fs-body-sm font-bold sm:font-semibold leading-none text-public-text-brand">
+                        <div className="absolute left-3 top-3 z-10 rounded-full border border-white/60 bg-white/95 px-2.5 py-0.5 shadow-2xs backdrop-blur-xs">
+                          <span className="font-segoe text-xs font-bold leading-none text-public-text-brand">
                             {news.category}
                           </span>
                         </div>
                       )}
-                      <Megaphone className="h-16 w-16 sm:h-[111px] sm:w-[111px] text-white/80" strokeWidth={1.5} />
+                      <Megaphone className="h-12 w-12 sm:h-16 sm:w-16 text-white/80" strokeWidth={1.5} />
                       {news.preview_image_url && (
                         <img
                           src={news.preview_image_url}
                           alt={news.title}
                           referrerPolicy="no-referrer"
-                          className="absolute inset-0 h-full w-full object-cover"
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           onError={(e) => {
                             e.currentTarget.style.display = "none";
                           }}
@@ -271,27 +281,30 @@ const NewsReleases = () => {
                     </div>
 
                     {/* Card bottom */}
-                    <div className="flex flex-col gap-2.5 sm:gap-[16px] p-3.5 sm:px-[24px] sm:pb-[24px] sm:pt-[20px]">
-                      <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[130%] sm:leading-[120%] tracking-[-0.02em] text-public-text-brand line-clamp-2">
+                    <div className="flex flex-1 flex-col justify-between p-4 sm:p-5 gap-3">
+                      <h3 className="font-segoe text-base md:text-public-fs-subtitle-sm font-bold leading-snug tracking-[-0.01em] text-[#0E2F66] group-hover:text-public-text-brand transition-colors line-clamp-2">
                         {news.title}
                       </h3>
-                      <hr className="border-border/60" />
-                      <div className="flex items-center justify-between gap-2 text-xs">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 shrink-0 text-public-text-secondary" />
-                          <span className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
-                            {formattedDate}
-                          </span>
+
+                      <div className="space-y-2.5 pt-1">
+                        <hr className="border-border/60" />
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center gap-1.5 text-slate-500">
+                            <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <span className="font-segoe text-xs font-normal leading-none">
+                              {formattedDate}
+                            </span>
+                          </div>
+                          <a
+                            href={news.facebook_post_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 font-segoe text-xs font-semibold text-public-text-brand transition-colors hover:underline shrink-0"
+                          >
+                            <span>Facebook</span>
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                          </a>
                         </div>
-                        <a
-                          href={news.facebook_post_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-1.5 py-1 font-segoe text-xs sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none text-public-text-brand transition-colors hover:underline shrink-0"
-                        >
-                          <span>Facebook</span>
-                          <ExternalLink className="h-3 w-3 shrink-0" />
-                        </a>
                       </div>
                     </div>
                   </article>

@@ -282,7 +282,7 @@ export default function PublicTemplatesCatalog({
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 font-sans">
+    <div className="flex flex-col gap-4 sm:gap-6 font-sans">
       {/* Mobile Unified Toolbar: Single Search + [Category: All] [Download ZIP] (visible below md) */}
       <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden">
         {/* Full-width Search Input */}
@@ -300,7 +300,7 @@ export default function PublicTemplatesCatalog({
         {/* Row 2: Category Button + Download ZIP Button */}
         <div className="flex items-center gap-2">
           {/* Compact Category Dropdown Button */}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
@@ -377,63 +377,91 @@ export default function PublicTemplatesCatalog({
         </div>
       </div>
 
-      {/* Desktop / Tablet Filter Toolbar Bar (visible on md and up) */}
-      <div className="hidden md:flex flex-row items-center justify-between gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setActiveFilter("all")}
-            className={cn(
-              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer",
-              activeFilter === "all"
-                ? "bg-primary text-primary-foreground shadow-2xs"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
-            )}
-          >
-            All Templates ({publicDocumentTemplates.length + publicOtherTemplates.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter("document_submission")}
-            className={cn(
-              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer",
-              activeFilter === "document_submission"
-                ? "bg-primary text-primary-foreground shadow-2xs"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
-            )}
-          >
-            Required Documents ({publicDocumentTemplates.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter("other")}
-            className={cn(
-              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer",
-              activeFilter === "other"
-                ? "bg-primary text-primary-foreground shadow-2xs"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
-            )}
-          >
-            Other References ({publicOtherTemplates.length})
-          </button>
+      {/* Desktop / Tablet Compact Horizontal Toolbar (visible on md and up) */}
+      <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs">
+        {/* Search Input (fills majority of width) */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            type="text"
+            placeholder="Search templates by title, description, category..."
+            value={currentSearchTerm}
+            onChange={(e) => handleSearchInputChange(e.target.value)}
+            className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
+          />
         </div>
 
+        {/* Category Dropdown Button (compact content-width) */}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
+            >
+              <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>
+                {activeFilter === "all"
+                  ? "Category: All"
+                  : activeFilter === "document_submission"
+                  ? "Category: Required"
+                  : "Category: References"}
+              </span>
+              <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
+            <DropdownMenuItem
+              onClick={() => setActiveFilter("all")}
+              className={cn(
+                "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between",
+                activeFilter === "all" && "bg-primary/10 text-primary font-bold"
+              )}
+            >
+              <span>All Templates</span>
+              <span className="text-[10px] text-muted-foreground">({publicDocumentTemplates.length + publicOtherTemplates.length})</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setActiveFilter("document_submission")}
+              className={cn(
+                "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between",
+                activeFilter === "document_submission" && "bg-primary/10 text-primary font-bold"
+              )}
+            >
+              <span>Required Documents</span>
+              <span className="text-[10px] text-muted-foreground">({publicDocumentTemplates.length})</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setActiveFilter("other")}
+              className={cn(
+                "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between",
+                activeFilter === "other" && "bg-primary/10 text-primary font-bold"
+              )}
+            >
+              <span>Other References</span>
+              <span className="text-[10px] text-muted-foreground">({publicOtherTemplates.length})</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Download ZIP Button (compact content-width) */}
         <Button
           type="button"
           variant="outline"
           size="sm"
           disabled={isGeneratingZip || categoryDownloadableCount === 0}
           onClick={downloadCategoryZip}
-          className="h-8 rounded-xl border-border text-xs font-medium gap-1.5 shrink-0 cursor-pointer text-primary hover:text-primary hover:bg-primary/5 disabled:opacity-50"
+          className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5 disabled:opacity-50"
         >
           {isGeneratingZip ? (
             <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
               <span>Preparing ZIP...</span>
             </>
           ) : (
             <>
-              <FolderArchive className="h-3.5 w-3.5 text-primary" />
+              <FolderArchive className="h-3.5 w-3.5 text-primary shrink-0" />
               <span>Download ZIP ({categoryDownloadableCount})</span>
             </>
           )}
@@ -473,46 +501,72 @@ export default function PublicTemplatesCatalog({
                         <td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">No required templates found.</td>
                       </tr>
                     ) : (
-                      filteredDocTemplates.map((tpl) => (
-                        <tr key={tpl.id} className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group">
-                          <td className="py-3 px-5">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-5 w-5 text-primary shrink-0" />
-                              <div className="space-y-0.5">
-                                <p className="text-xs font-bold text-foreground truncate max-w-[320px]">{tpl.name}</p>
-                                <p className="text-[11px] text-muted-foreground truncate max-w-[320px]">{tpl.description || "Official template"}</p>
+                      filteredDocTemplates.map((tpl) => {
+                        const rawUrl = tpl.templateFileUrl || tpl.templateUrl;
+                        const isOpening = openingTemplateId === tpl.name;
+                        const isDownloading = downloadingTemplateId === tpl.name;
+                        const viewDisabled = !rawUrl || Boolean(isOpening);
+                        const dlDisabled = !rawUrl || Boolean(isDownloading);
+
+                        return (
+                          <tr key={tpl.id} className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group">
+                            <td className="py-3 px-5">
+                              <div className="flex items-center gap-3">
+                                <FileText className="h-5 w-5 text-primary shrink-0" />
+                                <div className="space-y-0.5">
+                                  <p className="text-sm font-bold text-foreground truncate max-w-[320px]">{tpl.name}</p>
+                                  <p className="text-[11px] text-muted-foreground truncate max-w-[320px]">{tpl.description || "Official template"}</p>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                              Approved Standard
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
-                            Registration Form
-                          </td>
-                          <td className="py-3 px-5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => void openTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                              className="h-7 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg"
-                            >
-                              <Eye className="mr-1 h-3.5 w-3.5" /> View
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() => void downloadTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                              className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground"
-                            >
-                              <Download className="mr-1 h-3.5 w-3.5" /> Download
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                Approved Standard
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
+                              Registration Form
+                            </td>
+                            <td className="py-3 px-5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                disabled={viewDisabled}
+                                onClick={() => void openTemplate(rawUrl, tpl.name)}
+                                className="h-7 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg cursor-pointer disabled:opacity-50"
+                              >
+                                {isOpening ? (
+                                  <>
+                                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Opening…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="mr-1 h-3.5 w-3.5" /> View
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={dlDisabled}
+                                onClick={() => void downloadTemplate(rawUrl, tpl.name)}
+                                className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground cursor-pointer disabled:opacity-50"
+                              >
+                                {isDownloading ? (
+                                  <>
+                                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Downloading…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="mr-1 h-3.5 w-3.5" /> Download
+                                  </>
+                                )}
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -523,48 +577,74 @@ export default function PublicTemplatesCatalog({
                 {filteredDocTemplates.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">No required templates found.</p>
                 ) : (
-                  filteredDocTemplates.map((tpl) => (
-                    <div
-                      key={tpl.id}
-                      className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3.5 shadow-2xs"
-                    >
-                      {/* Document Icon & Title Block */}
-                      <div className="flex items-start gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
-                          <FileText className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <h4 className="text-base sm:text-base font-bold text-foreground leading-snug break-words">
-                            {tpl.name}
-                          </h4>
-                          <p className="text-sm sm:text-sm text-muted-foreground leading-relaxed break-words">
-                            {tpl.description || "Official template"}
-                          </p>
-                        </div>
-                      </div>
+                  filteredDocTemplates.map((tpl) => {
+                    const rawUrl = tpl.templateFileUrl || tpl.templateUrl;
+                    const isOpening = openingTemplateId === tpl.name;
+                    const isDownloading = downloadingTemplateId === tpl.name;
+                    const viewDisabled = !rawUrl || Boolean(isOpening);
+                    const dlDisabled = !rawUrl || Boolean(isDownloading);
 
-                      {/* Actions: View & Download Buttons */}
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void openTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-sm font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs"
-                        >
-                          <Eye className="mr-1 h-3.5 w-3.5" /> View
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => void downloadTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-sm font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer"
-                        >
-                          <Download className="mr-1 h-3.5 w-3.5" /> Download
-                        </Button>
+                    return (
+                      <div
+                        key={tpl.id}
+                        className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3.5 shadow-2xs"
+                      >
+                        {/* Document Icon & Title Block */}
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <h4 className="text-base sm:text-base font-bold text-foreground leading-snug break-words">
+                              {tpl.name}
+                            </h4>
+                            <p className="text-sm sm:text-sm text-muted-foreground leading-relaxed break-words">
+                              {tpl.description || "Official template"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions: View & Download Buttons */}
+                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={viewDisabled}
+                            onClick={() => void openTemplate(rawUrl, tpl.name)}
+                            className="h-8 text-sm font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs disabled:opacity-50"
+                          >
+                            {isOpening ? (
+                              <>
+                                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Opening…
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="mr-1 h-3.5 w-3.5" /> View
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={dlDisabled}
+                            onClick={() => void downloadTemplate(rawUrl, tpl.name)}
+                            className="h-8 text-sm font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer disabled:opacity-50"
+                          >
+                            {isDownloading ? (
+                              <>
+                                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Downloading…
+                              </>
+                            ) : (
+                              <>
+                                <Download className="mr-1 h-3.5 w-3.5" /> Download
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </>
@@ -605,46 +685,72 @@ export default function PublicTemplatesCatalog({
                         <td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">No other templates found.</td>
                       </tr>
                     ) : (
-                      filteredOtherTemplates.map((tpl) => (
-                        <tr key={tpl.id} className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group">
-                          <td className="py-3 px-5">
-                            <div className="flex items-center gap-3">
-                              <ClipboardList className="h-5 w-5 text-primary shrink-0" />
-                              <div className="space-y-0.5">
-                                <p className="text-xs font-bold text-foreground truncate max-w-[320px]">{tpl.name}</p>
-                                <p className="text-[11px] text-muted-foreground truncate max-w-[320px]">{tpl.description || "Reference template"}</p>
+                      filteredOtherTemplates.map((tpl) => {
+                        const rawUrl = tpl.templateFileUrl || tpl.templateUrl;
+                        const isOpening = openingTemplateId === tpl.name;
+                        const isDownloading = downloadingTemplateId === tpl.name;
+                        const viewDisabled = !rawUrl || Boolean(isOpening);
+                        const dlDisabled = !rawUrl || Boolean(isDownloading);
+
+                        return (
+                          <tr key={tpl.id} className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group">
+                            <td className="py-3 px-5">
+                              <div className="flex items-center gap-3">
+                                <ClipboardList className="h-5 w-5 text-primary shrink-0" />
+                                <div className="space-y-0.5">
+                                  <p className="text-sm font-bold text-foreground truncate max-w-[320px]">{tpl.name}</p>
+                                  <p className="text-[11px] text-muted-foreground truncate max-w-[320px]">{tpl.description || "Reference template"}</p>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full border border-border/60">
-                              Reference
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
-                            Reference Guide
-                          </td>
-                          <td className="py-3 px-5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => void openTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                              className="h-7 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg"
-                            >
-                              <Eye className="mr-1 h-3.5 w-3.5" /> View
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() => void downloadTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                              className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground"
-                            >
-                              <Download className="mr-1 h-3.5 w-3.5" /> Download
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full border border-border/60">
+                                Reference
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
+                              Reference Guide
+                            </td>
+                            <td className="py-3 px-5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                disabled={viewDisabled}
+                                onClick={() => void openTemplate(rawUrl, tpl.name)}
+                                className="h-7 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg cursor-pointer disabled:opacity-50"
+                              >
+                                {isOpening ? (
+                                  <>
+                                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Opening…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="mr-1 h-3.5 w-3.5" /> View
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={dlDisabled}
+                                onClick={() => void downloadTemplate(rawUrl, tpl.name)}
+                                className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground cursor-pointer disabled:opacity-50"
+                              >
+                                {isDownloading ? (
+                                  <>
+                                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Downloading…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="mr-1 h-3.5 w-3.5" /> Download
+                                  </>
+                                )}
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -655,48 +761,74 @@ export default function PublicTemplatesCatalog({
                 {filteredOtherTemplates.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">No other templates found.</p>
                 ) : (
-                  filteredOtherTemplates.map((tpl) => (
-                    <div
-                      key={tpl.id}
-                      className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3.5 shadow-2xs"
-                    >
-                      {/* Document Icon & Title Block */}
-                      <div className="flex items-start gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
-                          <ClipboardList className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <h4 className="text-base sm:text-base font-bold text-foreground leading-snug break-words">
-                            {tpl.name}
-                          </h4>
-                          <p className="text-sm sm:text-sm text-muted-foreground leading-relaxed break-words">
-                            {tpl.description || "Reference template"}
-                          </p>
-                        </div>
-                      </div>
+                  filteredOtherTemplates.map((tpl) => {
+                    const rawUrl = tpl.templateFileUrl || tpl.templateUrl;
+                    const isOpening = openingTemplateId === tpl.name;
+                    const isDownloading = downloadingTemplateId === tpl.name;
+                    const viewDisabled = !rawUrl || Boolean(isOpening);
+                    const dlDisabled = !rawUrl || Boolean(isDownloading);
 
-                      {/* Actions: View & Download Buttons */}
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void openTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-sm font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs"
-                        >
-                          <Eye className="mr-1 h-3.5 w-3.5" /> View
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => void downloadTemplate(tpl.templateFileUrl || tpl.templateUrl, tpl.name)}
-                          className="h-8 text-sm font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer"
-                        >
-                          <Download className="mr-1 h-3.5 w-3.5" /> Download
-                        </Button>
+                    return (
+                      <div
+                        key={tpl.id}
+                        className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3.5 shadow-2xs"
+                      >
+                        {/* Document Icon & Title Block */}
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
+                            <ClipboardList className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <h4 className="text-base sm:text-base font-bold text-foreground leading-snug break-words">
+                              {tpl.name}
+                            </h4>
+                            <p className="text-sm sm:text-sm text-muted-foreground leading-relaxed break-words">
+                              {tpl.description || "Reference template"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions: View & Download Buttons */}
+                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={viewDisabled}
+                            onClick={() => void openTemplate(rawUrl, tpl.name)}
+                            className="h-8 text-sm font-semibold text-primary border-primary/20 hover:bg-primary/5 rounded-lg flex items-center justify-center cursor-pointer shadow-2xs disabled:opacity-50"
+                          >
+                            {isOpening ? (
+                              <>
+                                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Opening…
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="mr-1 h-3.5 w-3.5" /> View
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={dlDisabled}
+                            onClick={() => void downloadTemplate(rawUrl, tpl.name)}
+                            className="h-8 text-sm font-bold rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-2xs cursor-pointer disabled:opacity-50"
+                          >
+                            {isDownloading ? (
+                              <>
+                                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Downloading…
+                              </>
+                            ) : (
+                              <>
+                                <Download className="mr-1 h-3.5 w-3.5" /> Download
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </>

@@ -153,7 +153,7 @@ const About = () => {
               <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px] xl:w-auto">
                 <Link
                   to={portalHref}
-                  className="flex h-10 items-center justify-center rounded-[8px] bg-public-bg-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-md font-semibold sm:font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-public-bg-brand-hover shadow-xs sm:shadow-none"
+                  className="flex h-10 items-center justify-center rounded-[8px] bg-public-bg-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-public-bg-brand-hover shadow-xs sm:shadow-none"
                 >
                   Open Portal
                 </Link>
@@ -240,7 +240,7 @@ const About = () => {
                   <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                     {title}
                   </h3>
-                  <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                  <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                     {description}
                   </p>
                 </div>
@@ -275,7 +275,7 @@ const About = () => {
               {["Youth Development", "Compliance", "Registration"].map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-xs sm:text-public-fs-subheading-sm font-normal leading-[100%] text-[#1e1e1e]"
+                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-[100%] text-[#1e1e1e]"
                 >
                   {tag}
                 </span>
@@ -334,10 +334,10 @@ const About = () => {
                 SUPPORTED PROGRAMS
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
               Programs We Support
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
               Discover the flagship government programs that Y-TRACE helps youth organizations access, comply with, and participate in.
             </p>
           </div>
@@ -355,7 +355,7 @@ const About = () => {
                     <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
                   </div>
                   <div className="inline-flex items-center rounded-full border border-public-bg-secondary-100 bg-white px-2.5 py-1 sm:px-[10px] sm:py-[10px] backdrop-blur-[4px]">
-                    <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
+                    <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
                       {tag}
                     </span>
                   </div>
@@ -384,10 +384,10 @@ const About = () => {
                 FEATURES
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
               Everything Your Organization Needs
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
               Y-TRACE provides all the digital tools your youth organization needs to stay compliant and connected with PCYDO.
             </p>
           </div>
@@ -405,7 +405,7 @@ const About = () => {
                 <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                   {description}
                 </p>
               </div>
@@ -426,10 +426,10 @@ const About = () => {
                 POLICIES
               </span>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-2xl lg:text-public-fs-title-page">
+            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
               Our Policies
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-sm lg:text-public-fs-subheading-sm">
+            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
               Read about our commitments to transparency, data protection, and responsible use of the Y-TRACE platform.
             </p>
           </div>
@@ -447,12 +447,12 @@ const About = () => {
                 <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
                   {description}
                 </p>
                 <Link
                   to={href}
-                  className="flex items-center gap-1.5 sm:gap-[8px] py-1 sm:py-[4px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold sm:font-normal leading-[100%] text-public-text-brand transition-colors hover:underline"
+                  className="flex items-center gap-1.5 sm:gap-[8px] py-1 sm:py-[4px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-[100%] text-public-text-brand transition-colors hover:underline"
                 >
                   View Policy
                   <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
