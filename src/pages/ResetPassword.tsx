@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandLogo from "@/components/BrandLogo";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
-import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
+import {
+  clearPasswordRecoveryState,
+  parsePasswordRecoveryUrl,
+} from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
@@ -285,6 +288,7 @@ const ResetPassword = () => {
   };
 
   const requestAnotherLink = () => {
+    clearPasswordRecoveryState();
     window.history.replaceState({}, document.title, "/reset-password");
     setInlineError("");
     setEmail("");

@@ -6,10 +6,16 @@ import { IS_USER_SURFACE } from "@/lib/deployment-surface";
 import { supabase, supabaseAuthStorageKey } from "@/lib/supabase";
 import { normalizeUrn } from "@/lib/urn-registration";
 import { clearSupabaseAuthStorage, isInvalidRefreshTokenError } from "@/lib/auth-session-recovery";
-import { parsePasswordRecoveryUrl } from "@/lib/password-recovery";
+import {
+  clearPasswordRecoveryState,
+  isPasswordRecoveryActive,
+  isRecoveryJwt,
+  markPasswordRecoveryActive,
+  parsePasswordRecoveryUrl,
+  RECOVERY_ACTIVE_LOCAL_STORAGE_KEY,
+  RECOVERY_STORAGE_KEY,
+} from "@/lib/password-recovery";
 import { PWA_AUTH_MARKER } from "@/user/pwa/pwaAuthFlow";
-
-const RECOVERY_SESSION_STORAGE_KEY = "ytrace-recovery-session";
 
 export type UserRole = "guest" | "youth" | "sk" | "staff" | "admin";
 export type AuthUser = {
@@ -113,11 +119,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPasswordRecoverySession, setIsPasswordRecoverySession] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    const hasUrlCredentials = parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials;
-    const hasStoredFlag = window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
-    const isRecovery = hasUrlCredentials || hasStoredFlag;
+    const isRecovery = isPasswordRecoveryActive({ url: window.location.href });
     if (isRecovery) {
-      window.sessionStorage.setItem(RECOVERY_SESSION_STORAGE_KEY, "1");
+      markPasswordRecoveryActive();
     }
     return isRecovery;
   });
@@ -134,12 +138,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const applyVersion = ++applySessionVersionRef.current;
       if (!mounted) return;
 
-      const hasUrlCredentials =
-        typeof window !== "undefined" ? parsePasswordRecoveryUrl(window.location.href).hasRecoveryCredentials : false;
-      const isRecoveryEvent = eventName === "PASSWORD_RECOVERY";
-      const isStoredRecovery =
-        typeof window !== "undefined" && window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY) === "1";
-      const isRecovery = Boolean(isRecoveryEvent || hasUrlCredentials || isStoredRecovery);
+      const isRecovery = isPasswordRecoveryActive({
+        url: window.location.href,
+        eventName,
+        session,
+      });
 
       if (typeof window !== "undefined") {
         console.debug("[AuthDebug] applySession:", {
@@ -147,23 +150,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           pathname: window.location.pathname,
           url: window.location.href,
           hasSessionUser: Boolean(session?.user),
-          hasUrlCredentials,
-          isRecoveryEvent,
-          isStoredRecovery,
+          isRecoveryJwt: isRecoveryJwt(session?.access_token),
           isRecovery,
-          sessionStorageFlag: window.sessionStorage.getItem(RECOVERY_SESSION_STORAGE_KEY),
+          localStorageFlag: window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY),
+          sessionStorageFlag: window.sessionStorage.getItem(RECOVERY_STORAGE_KEY),
         });
       }
 
       if (isRecovery) {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.setItem(RECOVERY_SESSION_STORAGE_KEY, "1");
-        }
+        markPasswordRecoveryActive(session?.user?.id);
         setIsPasswordRecoverySession(true);
       } else {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
-        }
+        // Do NOT call clearPasswordRecoveryState() here.
+        // Recovery state is cleared exclusively by explicit user actions
+        // (signIn, signOut, successful password reset) to prevent a race
+        // condition where applySession in a new tab destroys the cross-tab
+        // localStorage marker before route guards can read it.
         setIsPasswordRecoverySession(false);
       }
 
@@ -299,6 +301,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     window.addEventListener("unhandledrejection", handleUnhandledAuthRejection);
 
+    const handleStorage = (e: StorageEvent) => {
+      if (
+        e.key === RECOVERY_ACTIVE_LOCAL_STORAGE_KEY ||
+        e.key === RECOVERY_STORAGE_KEY
+      ) {
+        setIsPasswordRecoverySession(e.newValue === "1");
+      } else if (e.key === supabaseAuthStorageKey) {
+        void supabaseClient?.auth.getSession().then(({ data }) => {
+          if (mounted) {
+            void applySession(data.session ?? null);
+          }
+        });
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
     const { data: authListener } = supabaseClient.auth.onAuthStateChange((event, session) => {
       void applySession(session, event);
     });
@@ -306,6 +324,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       mounted = false;
       window.removeEventListener("unhandledrejection", handleUnhandledAuthRejection);
+      window.removeEventListener("storage", handleStorage);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -380,9 +399,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
     }
 
-    if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
-    }
+    clearPasswordRecoveryState();
     setIsPasswordRecoverySession(false);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -442,8 +459,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    clearPasswordRecoveryState();
     if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(RECOVERY_SESSION_STORAGE_KEY);
       window.sessionStorage.removeItem(PWA_AUTH_MARKER);
     }
     setIsPasswordRecoverySession(false);

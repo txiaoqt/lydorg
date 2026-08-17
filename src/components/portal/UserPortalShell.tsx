@@ -329,7 +329,7 @@ export const UserPortalShell = ({
                 >
                   <Bell className="h-4 w-4 text-foreground" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive" />
                   )}
                 </button>
               </DropdownMenuTrigger>

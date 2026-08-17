@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Menu, X } from "lucide-react";
-import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
@@ -67,7 +66,11 @@ const Navbar = () => {
     <nav className="fixed left-0 right-0 top-[32px] sm:top-[40px] z-50 bg-white shadow-public-nav border-b border-slate-100/80">
       <div className="mx-auto flex h-14 sm:h-16 lg:h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-10 lg:px-20">
         <Link to="/" className="min-w-0 shrink-0">
-          <BrandLogo showText={false} className="h-8 w-auto sm:h-10 lg:h-[49px]" />
+          <img
+            src="/FullNavbar.svg"
+            alt="Y-TRACE"
+            className="h-7 w-auto sm:h-9 lg:h-[45px] object-contain"
+          />
         </Link>
 
         {/* Desktop nav links — visible at lg and above */}

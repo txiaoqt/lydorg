@@ -1,6 +1,5 @@
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
-import BrandLogo from "@/components/BrandLogo";
 
 const mobileLinkClass =
   "font-segoe text-sm sm:text-public-fs-body-md font-normal leading-relaxed sm:leading-[140%] text-white/80 transition-colors hover:text-white";
@@ -19,7 +18,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="flex flex-col gap-2.5 sm:gap-[12px] p-1 sm:p-[10px]">
             <div className="flex items-center gap-2 sm:gap-[10px]">
-              <BrandLogo showText={false} className="h-9 w-auto sm:h-10" />
+              <img src="/FullFooter.svg" alt="Y-TRACE" className="h-9 w-auto sm:h-10 object-contain" />
             </div>
             <p className="font-segoe text-sm sm:text-public-fs-body-sm font-semibold leading-relaxed sm:leading-[140%] text-white">
               Official Pasig City Local Youth Development Office Portal
@@ -95,7 +94,7 @@ const Footer = () => {
           {/* Left Column: Brand (5 cols) */}
           <div className="lg:col-span-5 flex flex-col gap-2.5">
             <div className="flex items-center">
-              <BrandLogo showText={false} className="h-9 w-auto" />
+              <img src="/FullFooter.svg" alt="Y-TRACE" className="h-9 w-auto object-contain" />
             </div>
             <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-snug text-white">
               Official Pasig City Local Youth Development Office Portal
