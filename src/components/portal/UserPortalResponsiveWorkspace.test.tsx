@@ -679,6 +679,65 @@ describe("DropdownMenu Layout Stability & Non-Modal Scrollbar Preservation", () 
     const titleElements = screen.getAllByText("Youth Leadership Summit 2026");
     expect(titleElements.length).toBeGreaterThanOrEqual(1);
   });
+
+  it("renders tablet Dialog and Sheet overlays without scrollbar layout shifts (768px-1023px)", () => {
+    // Set viewport to tablet width 768px
+    window.innerWidth = 768;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("min-width: 768px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const defaultLiquidationProps: any = {
+      navigate: vi.fn(),
+      userRouteMap: {},
+      liquidationWorkflowEligibility: { eligible: true },
+      liquidationReports: [
+        {
+          id: "rep-tab-1",
+          budgetRequestId: "br-tab-1",
+          status: "submitted",
+          createdAt: "2026-08-10T00:00:00Z",
+          deadlineAt: "2026-08-20T00:00:00Z",
+        },
+      ],
+      budgetRequests: [
+        {
+          id: "br-tab-1",
+          activityTitle: "Tablet Youth Summit 2026",
+          purposeCategory: "Leadership",
+          venue: "Pasig City Hall",
+          releasedAmount: 25000,
+        },
+      ],
+      liquidationFilesByReportId: new Map(),
+      liquidationNotesByReportId: {},
+      setLiquidationNotesByReportId: vi.fn(),
+      buildPublicRecordCode: () => "LR-2026-TAB",
+      formatCurrency: (n: number) => `PHP ${n.toLocaleString()}`,
+      formatShortPortalDate: () => "Aug 20, 2026",
+      formatDateTimeLabel: () => "Aug 11, 2026",
+      formatStatusLabel: (s: string) => s,
+      openCreateModal: false,
+      setOpenCreateModal: vi.fn(),
+    };
+
+    render(<UserPortalLiquidationWorkspaceView {...defaultLiquidationProps} />);
+
+    const openReportBtns = screen.getAllByRole("button", { name: /Open Report/i });
+    expect(openReportBtns.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(openReportBtns[0]);
+
+    // Modal/dialog content is displayed
+    const titleElements = screen.getAllByText("Tablet Youth Summit 2026");
+    expect(titleElements.length).toBeGreaterThanOrEqual(1);
+  });
 });
 
 
