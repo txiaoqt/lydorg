@@ -176,4 +176,82 @@ describe("Cross-Tab Password Recovery Security & Route Protection", () => {
     });
     expect(isRecovery).toBe(false);
   });
+
+  it("TEST 8: All Tabs Closed / Later Direct Visit to /dashboard — does NOT lock the app into recovery", () => {
+    // Simulate user previously had recovery active and closed the browser
+    markPasswordRecoveryActive("user-abandoned");
+    window.sessionStorage.clear();
+
+    // User opens /dashboard days later with no Supabase session
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/dashboard",
+      session: null,
+    });
+
+    // Recovery is NOT active because there is no session and no recovery URL
+    expect(isRecovery).toBe(false);
+
+    // Stale marker is auto-purged
+    expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(RECOVERY_STORAGE_KEY)).toBeNull();
+  });
+
+  it("TEST 9: Expired JWT in Session — isRecoveryJwt returns false when exp is in the past", () => {
+    const pastExp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+    const expiredPayload = btoa(JSON.stringify({ amr: [{ method: "recovery" }], exp: pastExp }));
+    const expiredJwt = `header.${expiredPayload}.signature`;
+
+    expect(isRecoveryJwt(expiredJwt)).toBe(false);
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/dashboard",
+      session: {
+        access_token: expiredJwt,
+        user: { id: "user-exp" },
+      },
+    });
+
+    expect(isRecovery).toBe(false);
+  });
+
+  it("TEST 10: Continue to Sign In / Back to Home navigation after reset — recovery is completely cleared", () => {
+    // Active recovery setup
+    markPasswordRecoveryActive("user-reset");
+    expect(isPasswordRecoveryActive({ url: "https://y-trace.local/reset-password" })).toBe(true);
+
+    // Password reset completes -> clear state
+    clearPasswordRecoveryState();
+
+    // Navigating to /signin
+    const signinRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/signin",
+      session: null,
+    });
+    expect(signinRecovery).toBe(false);
+
+    // Navigating to / (home)
+    const homeRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/",
+      session: null,
+    });
+    expect(homeRecovery).toBe(false);
+  });
+
+  it("TEST 11: Normal Sign In after recovery — regular session with password AMR is not blocked", () => {
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const normalPayload = btoa(JSON.stringify({ amr: [{ method: "password" }], exp: futureExp }));
+    const normalJwt = `header.${normalPayload}.signature`;
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/dashboard",
+      eventName: "SIGNED_IN",
+      session: {
+        access_token: normalJwt,
+        user: { id: "user-normal" },
+      },
+    });
+
+    expect(isRecovery).toBe(false);
+    expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBeNull();
+  });
 });

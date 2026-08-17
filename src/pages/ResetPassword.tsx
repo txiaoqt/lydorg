@@ -70,6 +70,8 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   const cancelRecovery = async (destination: string) => {
+    clearPasswordRecoveryState();
+    window.history.replaceState({}, document.title, destination);
     await signOut();
     navigate(destination, { replace: true });
   };
@@ -132,7 +134,7 @@ const ResetPassword = () => {
       if (!active || !session || (!isRecoveryEvent && !isRecoverySignIn)) return;
       window.history.replaceState({}, document.title, window.location.pathname);
       setInlineError("");
-      setMode("update");
+      setMode((current) => (current === "updated" ? "updated" : "update"));
     });
 
     const establishRecoverySession = async () => {
@@ -280,6 +282,8 @@ const ResetPassword = () => {
       setInlineError(error.message);
       return;
     }
+    clearPasswordRecoveryState();
+    window.history.replaceState({}, document.title, "/reset-password");
     await signOut();
     setIsLoading(false);
     setPassword("");

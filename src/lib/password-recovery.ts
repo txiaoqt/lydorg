@@ -45,10 +45,14 @@ export const parsePasswordRecoveryUrl = (href: string): PasswordRecoveryParams =
   };
 };
 
+export const RECOVERY_TIMESTAMP_LOCAL_STORAGE_KEY = "ytrace-recovery-timestamp";
+export const RECOVERY_MAX_AGE_MS = 1000 * 60 * 30; // 30 minutes TTL
+
 /**
  * Inspects a Supabase JWT access token to check if it was issued via password recovery.
  * Supabase GoTrue includes an `amr` (Authentication Methods Reference) claim in the JWT payload,
  * e.g., [{"method": "recovery", "timestamp": ...}].
+ * Also verifies that the token has not expired.
  */
 export const isRecoveryJwt = (accessToken?: string | null): boolean => {
   if (!accessToken || typeof accessToken !== "string") return false;
@@ -64,6 +68,15 @@ export const isRecoveryJwt = (accessToken?: string | null): boolean => {
         .join("")
     );
     const payload = JSON.parse(jsonPayload);
+
+    // Verify token expiration
+    if (typeof payload?.exp === "number") {
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp < now) {
+        return false;
+      }
+    }
+
     if (Array.isArray(payload?.amr)) {
       return payload.amr.some(
         (entry: { method?: string } | string) =>
@@ -74,6 +87,29 @@ export const isRecoveryJwt = (accessToken?: string | null): boolean => {
   } catch {
     return false;
   }
+};
+
+/**
+ * Reads any Supabase access token stored in localStorage synchronously.
+ */
+export const getStoredSupabaseToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        const raw = window.localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.access_token) return parsed.access_token;
+          if (Array.isArray(parsed) && parsed[0]?.access_token) return parsed[0].access_token;
+        }
+      }
+    }
+  } catch {
+    // Ignore storage exceptions
+  }
+  return null;
 };
 
 /**
@@ -91,28 +127,56 @@ export const isPasswordRecoveryActive = (params?: {
   // 1. Explicit auth event from Supabase onAuthStateChange
   if (params?.eventName === "PASSWORD_RECOVERY") return true;
 
-  // 2. URL contains recovery credentials/hash/query
+  // 2. URL contains recovery credentials/hash/query or recovery error
   const href = params?.url ?? window.location.href;
   const urlRecovery = parsePasswordRecoveryUrl(href);
-  if (urlRecovery.hasRecoveryCredentials) return true;
   if (urlRecovery.hasRecoveryError) return false;
+  if (urlRecovery.hasRecoveryCredentials) return true;
 
-  // 3. Cryptographic JWT payload AMR inspection
+  // 3. Cryptographic JWT payload AMR inspection from current session parameter
   if (isRecoveryJwt(params?.session?.access_token)) return true;
 
-  // 4. Shared cross-tab localStorage check
+  // 4. If session is explicitly null and URL has no recovery credentials,
+  // there is NO active recovery session anywhere in the browser.
+  // Purge any stale storage flags left over from previously closed/abandoned tabs.
+  if (params?.session === null) {
+    clearPasswordRecoveryState();
+    return false;
+  }
+
+  // 5. If no explicit session was passed (e.g. initial synchronous check before async getSession()),
+  // inspect any Supabase recovery session stored in localStorage.
+  if (params?.session === undefined) {
+    const storedToken = getStoredSupabaseToken();
+    if (storedToken && isRecoveryJwt(storedToken)) {
+      return true;
+    }
+  }
+
+  // 6. Shared cross-tab localStorage check (corroborated by timestamp validity)
   try {
     const localFlag =
       window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY) === "1" ||
       window.localStorage.getItem(RECOVERY_STORAGE_KEY) === "1";
+
     if (localFlag) {
+      const timestampRaw = window.localStorage.getItem(RECOVERY_TIMESTAMP_LOCAL_STORAGE_KEY);
+      if (timestampRaw) {
+        const timestamp = Number(timestampRaw);
+        if (!Number.isNaN(timestamp) && Date.now() - timestamp > RECOVERY_MAX_AGE_MS) {
+          // Marker is older than max age TTL; purge stale marker
+          clearPasswordRecoveryState();
+          return false;
+        }
+      }
+
       return true;
     }
   } catch {
     // Ignore storage exceptions
   }
 
-  // 5. Per-tab sessionStorage check (fast fallback)
+  // 7. Per-tab sessionStorage check
   try {
     const sessionFlag =
       window.sessionStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY) === "1" ||
@@ -131,8 +195,10 @@ export const isPasswordRecoveryActive = (params?: {
 export const markPasswordRecoveryActive = (userId?: string | null) => {
   if (typeof window === "undefined") return;
   try {
+    const now = String(Date.now());
     window.localStorage.setItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY, "1");
     window.localStorage.setItem(RECOVERY_STORAGE_KEY, "1");
+    window.localStorage.setItem(RECOVERY_TIMESTAMP_LOCAL_STORAGE_KEY, now);
     window.sessionStorage.setItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY, "1");
     window.sessionStorage.setItem(RECOVERY_STORAGE_KEY, "1");
     if (userId) {
@@ -151,6 +217,7 @@ export const clearPasswordRecoveryState = () => {
   try {
     window.localStorage.removeItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY);
     window.localStorage.removeItem(RECOVERY_STORAGE_KEY);
+    window.localStorage.removeItem(RECOVERY_TIMESTAMP_LOCAL_STORAGE_KEY);
     window.localStorage.removeItem(`${RECOVERY_STORAGE_KEY}-user`);
     window.sessionStorage.removeItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY);
     window.sessionStorage.removeItem(RECOVERY_STORAGE_KEY);
