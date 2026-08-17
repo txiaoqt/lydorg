@@ -398,8 +398,8 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             </div>
 
             {/* Search + Sort */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-60 min-w-0">
+            <div className="flex items-center gap-2 w-full sm:w-auto lg:flex-1 lg:min-w-0 lg:justify-end">
+              <div className="relative flex-1 sm:w-60 lg:w-full min-w-0">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
@@ -410,7 +410,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                 />
               </div>
 
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0 cursor-pointer">
                     <Filter className="h-3.5 w-3.5" />

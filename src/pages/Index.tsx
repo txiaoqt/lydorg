@@ -9,8 +9,8 @@ import overviewPreview from "@/assets/overview-preview.jpg";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
+import { PublicNewsReleaseCard } from "@/components/public/PublicNewsReleaseCard";
 import { toast } from "@/hooks/use-toast";
 
 const faqs = [
@@ -433,69 +433,15 @@ const Index = () => {
                 View all <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
               {latestReleases === null ? (
                 [1, 2, 3].map((i) => (
-                  <div key={i} className="h-[280px] sm:h-[400px] animate-pulse rounded-xl sm:rounded-[16px] bg-white" />
+                  <div key={i} className="h-[300px] sm:h-[380px] lg:h-[380px] animate-pulse rounded-xl sm:rounded-[16px] lg:rounded-2xl bg-white border border-border/50" />
                 ))
               ) : (
-                latestReleases.map((news) => {
-                  const formattedDate = new Intl.DateTimeFormat("en-PH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  }).format(new Date(news.date_posted));
-                  return (
-                    <div key={news.id} className="flex flex-col overflow-hidden rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white shadow-public-nav">
-
-                      {/* Image frame */}
-                      <div className="relative flex h-[140px] sm:h-[200px] lg:h-[260px] items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] p-2 sm:p-[10px]">
-                        {news.category && (
-                          <div className="absolute left-2.5 top-2.5 sm:left-[10px] sm:top-[10px] z-10 inline-flex w-fit items-center rounded-full border border-[#DCF0FD] bg-white px-2.5 py-0.5 sm:px-[10px] sm:py-[4px]">
-                            <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
-                              {news.category}
-                            </span>
-                          </div>
-                        )}
-                        <Megaphone className="h-16 w-16 sm:h-20 sm:w-20 lg:h-[111px] lg:w-[111px] text-white/80" strokeWidth={1.5} />
-                        {news.preview_image_url && (
-                          <img
-                            src={news.preview_image_url}
-                            alt={news.title}
-                            referrerPolicy="no-referrer"
-                            className="absolute inset-0 h-full w-full object-cover"
-                            onError={(e) => { e.currentTarget.style.display = "none"; }}
-                          />
-                        )}
-                      </div>
-
-                      {/* Details */}
-                      <div className="flex flex-col gap-2.5 sm:gap-3 lg:gap-[16px] p-3.5 sm:p-5 lg:px-[24px] lg:py-[20px]">
-                        <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-base sm:text-public-fs-subtitle-sm line-clamp-2">
-                          {news.title}
-                        </h3>
-                        <hr className="border-public-border-neutral-tertiary" />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 sm:gap-[8px] py-0.5 sm:py-[4px]">
-                            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-public-text-secondary" />
-                            <span className="font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-none text-public-text-secondary">
-                              {formattedDate}
-                            </span>
-                          </div>
-                          <a
-                            href={news.facebook_post_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 sm:gap-[8px] font-segoe text-xs sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:underline"
-                          >
-                            View on Facebook <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </a>
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })
+                latestReleases.map((news) => (
+                  <PublicNewsReleaseCard key={news.id} news={news} />
+                ))
               )}
             </div>
             <div className="flex pt-1.5 sm:hidden">

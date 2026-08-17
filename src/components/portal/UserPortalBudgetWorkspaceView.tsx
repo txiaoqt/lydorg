@@ -779,29 +779,29 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             </div>
 
             {/* Search Input & Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <div className="relative w-full sm:w-72">
+            <div className="flex items-center gap-2 w-full sm:w-auto lg:flex-1 lg:min-w-0 lg:justify-end">
+              <div className="relative flex-1 sm:w-72 lg:w-full min-w-0">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search activity, category, venue..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80"
+                  className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full"
                 />
               </div>
 
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0">
+                  <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0 cursor-pointer">
                     <Filter className="h-3.5 w-3.5" />
                     Sort
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44 p-2 rounded-xl bg-card border-border/80">
-                  <DropdownMenuItem onClick={() => setSortOrder("newest")} className="text-xs font-medium">Newest</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortOrder("oldest")} className="text-xs font-medium">Oldest</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortOrder("amount")} className="text-xs font-medium">Highest Amount</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder("newest")} className="text-xs font-medium cursor-pointer">Newest</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder("oldest")} className="text-xs font-medium cursor-pointer">Oldest</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder("amount")} className="text-xs font-medium cursor-pointer">Highest Amount</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

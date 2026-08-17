@@ -31,6 +31,7 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNumber, c
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [rendered, setRendered] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const renderTaskRef = useRef<any>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -38,32 +39,69 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNumber, c
 
     const renderPage = async () => {
       try {
+        // Cancel any pending render task on this canvas before starting a new one
+        if (renderTaskRef.current) {
+          try {
+            renderTaskRef.current.cancel();
+          } catch {
+            // ignore cancellation exceptions
+          }
+          renderTaskRef.current = null;
+        }
+
         const page = await pdf.getPage(pageNumber);
         if (isCancelled || !canvasRef.current) return;
 
+        // Get unscaled viewport with default page rotation from PDF metadata
         const unscaledViewport = page.getViewport({ scale: 1 });
-        const scale = (containerWidth - 32) / unscaledViewport.width;
-        const finalScale = Math.min(Math.max(scale, 0.5), 2.5);
-        const viewport = page.getViewport({ scale: finalScale });
+
+        // Calculate appropriate display scale
+        // For mobile/small containers: fit container width with padding
+        // For desktop/large containers: cap reading width at 840px for optimal document readability
+        const availableWidth = Math.max(containerWidth - 32, 280);
+        const targetDisplayWidth = Math.min(availableWidth, 840);
+        const displayScale = Math.max(targetDisplayWidth / unscaledViewport.width, 0.4);
+
+        // Use devicePixelRatio for crisp rendering on HiDPI displays
+        const pixelRatio = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+        const renderScale = displayScale * pixelRatio;
+
+        const viewport = page.getViewport({ scale: renderScale });
 
         const canvas = canvasRef.current;
-        const context = canvas.getContext("2d");
+        const context = canvas.getContext("2d", { alpha: false });
         if (!context) return;
 
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        // Set buffer dimensions (scaled by pixel ratio)
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+
+        // Set CSS display dimensions (logical CSS pixels)
+        const cssWidth = Math.floor(viewport.width / pixelRatio);
+        const cssHeight = Math.floor(viewport.height / pixelRatio);
+        canvas.style.width = `${cssWidth}px`;
+        canvas.style.height = `${cssHeight}px`;
+
+        // Fill background with white before rendering page content
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
 
         const renderContext = {
           canvasContext: context,
           viewport: viewport,
         };
 
-        await page.render(renderContext).promise;
+        const renderTask = page.render(renderContext);
+        renderTaskRef.current = renderTask;
+
+        await renderTask.promise;
+        renderTaskRef.current = null;
+
         if (!isCancelled) {
           setRendered(true);
         }
       } catch (err: any) {
-        if (!isCancelled) {
+        if (!isCancelled && err?.name !== "RenderingCancelledException") {
           console.error(`Error rendering page ${pageNumber}:`, err);
           setRenderError("Failed to render page");
         }
@@ -74,25 +112,33 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNumber, c
 
     return () => {
       isCancelled = true;
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch {
+          // ignore
+        }
+        renderTaskRef.current = null;
+      }
     };
   }, [pdf, pageNumber, containerWidth]);
 
   return (
-    <div className="flex flex-col items-center my-2.5 relative w-full">
-      <div className="bg-card rounded-xl shadow-md border border-border/80 overflow-hidden flex items-center justify-center min-h-[260px] w-full max-w-full">
-        <canvas ref={canvasRef} className="max-w-full h-auto block" />
+    <div className="flex flex-col items-center my-3 relative w-full">
+      <div className="bg-white rounded-lg shadow-md border border-border/70 overflow-hidden flex items-center justify-center relative transition-all mx-auto">
+        <canvas ref={canvasRef} className="block mx-auto max-w-full" />
         {!rendered && !renderError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-xs">
+          <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-xs min-h-[260px]">
             <Loader2 className="h-6 w-6 text-primary animate-spin" />
           </div>
         )}
         {renderError && (
-          <div className="p-8 text-center text-xs text-muted-foreground">
+          <div className="p-8 text-center text-xs text-muted-foreground min-h-[200px] flex items-center justify-center">
             <p>{renderError}</p>
           </div>
         )}
       </div>
-      <div className="text-[11px] text-muted-foreground/80 font-medium mt-1.5 px-3 py-0.5 rounded-full bg-accent/60">
+      <div className="text-[11px] text-muted-foreground/80 font-medium mt-2 px-3 py-0.5 rounded-full bg-accent/60 shadow-2xs">
         Page {pageNumber} of {pdf?.numPages || 1}
       </div>
     </div>
@@ -404,8 +450,101 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
           Preview document inline for {previewTitle || "Document"}
         </DialogDescription>
 
-        {/* INFORMATION HEADER BAR */}
-        <div className="px-3.5 sm:px-5 py-3 sm:py-3.5 border-b border-border/70 bg-card flex flex-col gap-2.5 sm:gap-3 shrink-0">
+        {/* DESKTOP HEADER BAR (hidden lg:flex) */}
+        <div className="hidden lg:flex items-center justify-between gap-4 px-6 py-3.5 border-b border-border/70 bg-card shrink-0">
+          {/* Left: Document Info (Icon, Title, Status, Metadata) */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <DialogTitle
+                  className="text-base font-bold text-foreground leading-snug truncate"
+                  title={previewTitle}
+                >
+                  {previewTitle || "Document Preview"}
+                </DialogTitle>
+                {statusBadge && (
+                  <div className="shrink-0 flex items-center">
+                    {statusBadge}
+                  </div>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
+                <span className="font-semibold text-foreground/80">PDF Document</span>
+                <span>•</span>
+                <span className="truncate max-w-[280px]">
+                  {fileSize || "Standard PDF"}
+                </span>
+                <span>•</span>
+                <span>
+                  Updated: {updatedAt || "Aug 7, 2026"}
+                </span>
+                {organizationName && (
+                  <>
+                    <span>•</span>
+                    <span className="truncate max-w-[200px]">{organizationName}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Action Buttons + Close Button */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {headerActions ? (
+              headerActions
+            ) : previewUrl ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenNewTab}
+                  className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>Open in New Tab</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={downloading}
+                  onClick={() => void handleDownload()}
+                  className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  {downloading ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                      <span>Downloading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-3.5 w-3.5 shrink-0" />
+                      <span>Download File</span>
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : null}
+
+            {!hideTopCloseButton && (
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="h-8 w-8 rounded-full border border-border/60 hover:bg-accent hover:text-foreground text-muted-foreground flex items-center justify-center shrink-0 transition-colors cursor-pointer ml-1"
+                aria-label="Close dialog"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* MOBILE HEADER BAR (block lg:hidden) - 100% PRESERVED */}
+        <div className="block lg:hidden px-3.5 sm:px-5 py-3 sm:py-3.5 border-b border-border/70 bg-card flex flex-col gap-2.5 sm:gap-3 shrink-0">
           {/* Top Row: Icon + Main Info (Title, Status, Metadata) + Protected Close Button */}
           <div className="flex items-start justify-between gap-2.5 sm:gap-4 w-full">
             {/* Left: Icon & Main Content */}
@@ -463,7 +602,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
             )}
           </div>
 
-          {/* Action Buttons Row */}
+          {/* Action Buttons Row on Mobile */}
           {headerActions ? (
             <div className="w-full pt-1 sm:pt-0">
               {headerActions}

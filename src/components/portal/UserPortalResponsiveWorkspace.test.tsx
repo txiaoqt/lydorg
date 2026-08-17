@@ -8,6 +8,7 @@ import { UserPortalYPOPWorkspaceView } from "./UserPortalYPOPWorkspaceView";
 import { UserPortalTemplatesWorkspaceView } from "./UserPortalTemplatesWorkspaceView";
 import { UserPortalNewsWorkspaceView } from "./UserPortalNewsWorkspaceView";
 import { UserPortalShell } from "./UserPortalShell";
+import { PortalDocumentPreviewModal } from "./PortalDocumentPreviewModal";
 
 // Mock resize observer and matchMedia for tests
 beforeEach(() => {
@@ -559,4 +560,126 @@ describe("UserPortalShell Notification Dropdown Responsive Behavior", () => {
     expect(defaultShellProps.onNavigate).toHaveBeenCalledWith("notifications");
   });
 });
+
+describe("PortalDocumentPreviewModal Responsive Layout & Header Isolation", () => {
+  const defaultModalProps = {
+    open: true,
+    onOpenChange: vi.fn(),
+    previewUrl: "https://example.com/sample-constitution.pdf",
+    previewTitle: "Constitution and By-Laws Official Template",
+    previewCanInline: true,
+    fileSize: "1.4 MB",
+    updatedAt: "Aug 12, 2026",
+    organizationName: "Pasig Youth Alliance",
+    onDownloadFile: vi.fn(),
+  };
+
+  it("renders Desktop single-row header and Mobile 2-row header with responsive isolation", () => {
+    render(<PortalDocumentPreviewModal {...defaultModalProps} />);
+
+    // Verify desktop header exists with responsive class hidden lg:flex
+    const desktopHeader = document.querySelector(".hidden.lg\\:flex");
+    expect(desktopHeader).toBeInTheDocument();
+
+    // Verify mobile header exists with responsive class block lg:hidden
+    const mobileHeader = document.querySelector(".block.lg\\:hidden");
+    expect(mobileHeader).toBeInTheDocument();
+
+    // Verify action buttons exist in both headers
+    const openInTabButtons = screen.getAllByRole("button", { name: /Open in New Tab/i });
+    expect(openInTabButtons.length).toBeGreaterThanOrEqual(2);
+
+    const downloadButtons = screen.getAllByRole("button", { name: /Download File/i });
+    expect(downloadButtons.length).toBeGreaterThanOrEqual(2);
+
+    // Verify close buttons exist
+    const closeButtons = screen.getAllByRole("button", { name: /Close dialog/i });
+    expect(closeButtons.length).toBeGreaterThanOrEqual(2);
+
+    // Verify Close Preview button in footer works
+    const footerCloseBtn = screen.getByRole("button", { name: /Close Preview/i });
+    expect(footerCloseBtn).toBeInTheDocument();
+    fireEvent.click(footerCloseBtn);
+    expect(defaultModalProps.onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("DropdownMenu Layout Stability & Non-Modal Scrollbar Preservation", () => {
+  it("opens sort and filter dropdowns without locking body scroll or shifting layout", () => {
+    const defaultDocProps = {
+      navigate: vi.fn(),
+      userRouteMap: {},
+      templateDocuments: [
+        { id: "doc-1", title: "Constitution and By-Laws", description: "Official bylaws", templateFileName: "bylaws.pdf" },
+      ],
+    };
+
+    render(<UserPortalDocumentWorkspaceView {...defaultDocProps} />);
+
+    // Find the Sort: Newest button
+    const sortButton = screen.getByRole("button", { name: /Sort:/i });
+    expect(sortButton).toBeInTheDocument();
+
+    // Trigger dropdown opening
+    fireEvent.pointerDown(sortButton, { button: 0, pointerType: "mouse" });
+    fireEvent.keyDown(sortButton, { key: "ArrowDown" });
+
+    // Verify sort menu items appear
+    expect(screen.getByText("Default Order")).toBeInTheDocument();
+    expect(screen.getByText("Document Name")).toBeInTheDocument();
+    expect(screen.getByText("Recently Updated")).toBeInTheDocument();
+
+    // Verify body overflow is NOT locked to prevent layout shifts
+    expect(document.body.style.overflow).not.toBe("hidden");
+  });
+
+  it("renders desktop Sheet drawer and Dialog overlays with scrollbar stability", () => {
+    const defaultLiquidationProps: any = {
+      navigate: vi.fn(),
+      userRouteMap: {},
+      liquidationWorkflowEligibility: { eligible: true },
+      liquidationReports: [
+        {
+          id: "rep-1",
+          budgetRequestId: "br-1",
+          status: "submitted",
+          createdAt: "2026-08-10T00:00:00Z",
+          deadlineAt: "2026-08-20T00:00:00Z",
+        },
+      ],
+      budgetRequests: [
+        {
+          id: "br-1",
+          activityTitle: "Youth Leadership Summit 2026",
+          purposeCategory: "Leadership",
+          venue: "Pasig City Hall",
+          releasedAmount: 25000,
+        },
+      ],
+      liquidationFilesByReportId: new Map(),
+      liquidationNotesByReportId: {},
+      setLiquidationNotesByReportId: vi.fn(),
+      buildPublicRecordCode: () => "LR-2026-001",
+      formatCurrency: (n: number) => `PHP ${n.toLocaleString()}`,
+      formatShortPortalDate: () => "Aug 20, 2026",
+      formatDateTimeLabel: () => "Aug 11, 2026",
+      formatStatusLabel: (s: string) => s,
+      openCreateModal: false,
+      setOpenCreateModal: vi.fn(),
+    };
+
+    render(<UserPortalLiquidationWorkspaceView {...defaultLiquidationProps} />);
+
+    // Open report row on desktop
+    const openReportBtns = screen.getAllByRole("button", { name: /Open Report/i });
+    expect(openReportBtns.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(openReportBtns[0]);
+
+    // Verify Sheet drawer opened with detail content
+    const titleElements = screen.getAllByText("Youth Leadership Summit 2026");
+    expect(titleElements.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+
 

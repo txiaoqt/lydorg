@@ -781,20 +781,20 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
         </div>
 
         {/* Unified Search & Category Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
-          <div className="relative w-full sm:w-80">
+        <div className="flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search templates by title, description, category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80"
+              className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full"
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
+          <div className="flex items-center gap-2 shrink-0">
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 cursor-pointer">
                   <Filter className="h-3.5 w-3.5" />
@@ -824,7 +824,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                   : "Official-Templates.zip";
                 void handleDownloadTemplatesZip(filteredTemplates, name, "toolbar-zip");
               }}
-              className="h-8 rounded-xl border-border text-xs font-medium gap-1.5 cursor-pointer"
+              className="h-8 rounded-xl border-border text-xs font-medium gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {downloadingZipKey === "toolbar-zip" ? (
                 <>

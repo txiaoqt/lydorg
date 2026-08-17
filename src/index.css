@@ -23,6 +23,34 @@
     scrollbar-gutter: stable;
   }
 
+  /* Desktop Modal/Drawer Scrollbar Stability
+     ──────────────────────────────────────────
+     When a Radix Dialog/Sheet opens, react-remove-scroll-bar injects a
+     runtime <style> tag into <head> that applies to body[data-scroll-locked]:
+       overflow: hidden !important;
+       position: relative !important;
+       margin-right: {gap}px !important;
+     The doubled attribute selector below has higher specificity than the
+     single body[data-scroll-locked] in the injected stylesheet, so our
+     rules always win regardless of source order.
+     The critical override is position: static — preventing the body from
+     becoming a new containing block, which causes centered flex layouts
+     to reflow and shift horizontally. */
+  @media (min-width: 1024px) {
+    html {
+      scrollbar-gutter: stable !important;
+    }
+    body[data-scroll-locked][data-scroll-locked] {
+      overflow: hidden !important;
+      overscroll-behavior: contain;
+      position: static !important;
+      margin-right: 0px !important;
+      padding-right: 0px !important;
+      margin-left: 0px !important;
+      padding-left: 0px !important;
+    }
+  }
+
   html,
   body,
   #root {
