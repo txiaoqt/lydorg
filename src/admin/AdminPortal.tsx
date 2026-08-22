@@ -1,13 +1,10 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import "./admin-news-releases.css";
 import "./admin-inquiries.css";
-import "./admin-template-management.css";
-import "./admin-activity-logs.css";
 import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
 import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, ClipboardList, Clock3, Download, Eye, FileText, FolderOpen, Mail, MapPin, Medal, MoreHorizontal, Pencil, Plus, Save, Trash2, Trophy, UserRound, Users, Wallet, X } from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock3, CornerDownLeft, Download, Eye, EyeOff, FileText, FolderOpen, Globe, Inbox, LogOut, Mail, MapPin, Medal, MessageSquare, MoreHorizontal, Newspaper, Pencil, Plus, Save, Shield, Trash2, TrendingUp, Trophy, Upload, UserPlus, UserRound, Users, Wallet, X } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,14 +43,31 @@ import { RecentActivityList, RecentActivityPreview } from "@/components/activity
 import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { PortalEmptyState, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
 import { PortalShell } from "@/components/portal/PortalShell";
+import { DangerConfirmDialog } from "@/components/portal/DangerConfirmDialog";
+import { AdminPageHeader } from "@/components/portal/AdminPageHeader";
 import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
+import { ActivityLogsExportDialog } from "@/admin/components/ActivityLogsExportDialog";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { adminNavigationGroups as baseAdminNavigationGroups, buildPublicRecordCode, computeYpopScore, DEFAULT_ORG_LED_TIERS, getApprovedYpopOrgActivityCount, getYpopCityLedPoints, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, templateScopeLabelMap, YPOP_BASE_TOTAL_POINTS, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type InquiryRecord, type NewsRelease, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildPublicRecordCode, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, getApprovedYpopOrgActivityCount, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, YPOP_BASE_TOTAL_POINTS, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
+import { StatsCard } from "@/admin/components/StatsCard";
+import { NeedsAttentionList, type NeedsAttentionItem } from "@/admin/components/NeedsAttentionList";
+import { BudgetMonitoringSummaryCard } from "@/admin/components/BudgetMonitoringSummaryCard";
+import { RecentActivityLogCard, type RecentActivityLogItem } from "@/admin/components/RecentActivityLogCard";
+import { InquiriesTable } from "@/admin/components/InquiriesTable";
+import { NewsReleasesTable } from "@/admin/components/NewsReleasesTable";
+import { ActivityLogsTable, type ActivityDateFilter } from "@/admin/components/ActivityLogsTable";
+import { TemplatesTable, type TemplateCategoryFilter, type TemplateStatusFilter } from "@/admin/components/TemplatesTable";
+import { TemplateFilePreviewDialog } from "@/admin/components/TemplateFilePreviewDialog";
+import { TemplateFormDialog } from "@/admin/components/TemplateFormDialog";
+import { NewsReleaseFormDialog } from "@/admin/components/NewsReleaseFormDialog";
+import { InquiryDetailDrawer } from "@/admin/components/InquiryDetailDrawer";
+import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import {
   allocationByBarangayExportConfig,
   budgetRequestExportConfig,
@@ -75,6 +89,7 @@ import {
 } from "@/lib/activity-log-export";
 import {
   createAdminActivityLogInSupabase,
+  getAdminAccountsInSupabase,
   createNewsReleaseInSupabase,
   createTransparencyPostInSupabase,
   createTemplateRecordInSupabase,
@@ -83,6 +98,9 @@ import {
   deleteTransparencyPostInSupabase,
   updateBudgetRequestInSupabase,
   deleteTemplateRecordInSupabase,
+  reactivateTemplateRecordInSupabase,
+  updateTemplateCategoryInSupabase,
+  permanentlyDeleteTemplateRecordInSupabase,
   loadAdminPortalSupabaseState,
   loadLydoConnectSupabaseState,
   resolveSupabaseFileUrl,
@@ -120,23 +138,13 @@ const routeMap: Record<string, string> = {
   "activity-logs": "/admin/activity-logs",
   "ypop-validation": "/admin/ypop-validation",
   "yorp-registry": "/admin/yorp-registry",
+  administrators: "/admin/administrators",
+  settings: "/admin/settings",
 };
 
 const adminId = "admin-demo";
-const splitNotificationsGroup = baseAdminNavigationGroups.map((group) =>
-  group.items.some((item) => item.id === "notifications-activity")
-    ? {
-        ...group,
-        items: group.items.flatMap((item) =>
-          item.id === "notifications-activity"
-            ? [
-                { id: "notifications", label: "Notifications", icon: Bell },
-                { id: "activity-logs", label: "Activity Logs", icon: ClipboardList },
-              ]
-            : [item],
-        ),
-      }
-    : group,
+const adminNavItemsById = new Map(
+  baseAdminNavigationGroups.flatMap((group) => group.items).map((item) => [item.id, item] as const),
 );
 
 const renderAdvocacyChips = (advocacies: string[]) =>
@@ -198,154 +206,6 @@ function MobileInquiryCard({
         <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
         View Inquiry
       </Button>
-    </article>
-  );
-}
-
-function MobileAdminTemplateCard({
-  template,
-  updatedDate,
-  onPreview,
-  onEdit,
-  onReplace,
-  onDelete,
-}: {
-  template: TemplateRecord;
-  updatedDate: string | null;
-  onPreview: () => void;
-  onEdit: () => void;
-  onReplace: () => void;
-  onDelete: () => void;
-}) {
-  const displayFilename = template.templateFileName.replace(/^\d{13}-/, "");
-
-  return (
-    <article className="mobile-template-card">
-      <div className="mobile-template-card-header">
-        <span className="mobile-template-icon">
-          <FileText className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <div className="mobile-template-heading">
-          <h3 className="mobile-template-title">{template.name}</h3>
-          <p className="mobile-template-category">{templateScopeLabelMap[template.templateScope]}</p>
-        </div>
-      </div>
-
-      {template.description ? <p className="mobile-template-description">{template.description}</p> : null}
-
-      <div className="mobile-template-file-meta">
-        {displayFilename ? (
-          <div className="mobile-template-file-row">
-            <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <p className="mobile-template-filename">{displayFilename}</p>
-          </div>
-        ) : (
-          <p className="mobile-template-filename">No file uploaded yet</p>
-        )}
-        <p className="mobile-template-updated">Updated {updatedDate ?? "Not uploaded"}</p>
-      </div>
-
-      <div className="mobile-template-actions">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!template.templateFileUrl}
-          onClick={onPreview}
-        >
-          <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
-          Preview
-        </Button>
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="mobile-template-more"
-              aria-label={`More actions for ${template.name}`}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit Template
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onReplace}>
-              <FileText className="mr-2 h-4 w-4" />
-              Replace File
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Template
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </article>
-  );
-}
-
-function MobileActivityLogItem({
-  log,
-  actorLabel,
-}: {
-  log: ActivityLog;
-  actorLabel: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [canExpand, setCanExpand] = useState(false);
-  const descriptionRef = useRef<HTMLParagraphElement | null>(null);
-  const timestamp = new Intl.DateTimeFormat("en-PH", {
-    timeZone: "Asia/Manila",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(log.createdAt));
-
-  useEffect(() => {
-    const measureDescription = () => {
-      const element = descriptionRef.current;
-      if (!element || expanded) return;
-      setCanExpand(element.scrollHeight > element.clientHeight + 1);
-    };
-    measureDescription();
-    window.addEventListener("resize", measureDescription);
-    return () => window.removeEventListener("resize", measureDescription);
-  }, [expanded, log.description]);
-
-  return (
-    <article className="mobile-activity-item">
-      <div className="activity-timeline-marker" aria-hidden="true" />
-      <div className="activity-content">
-        <div className="activity-heading">
-          <h3>{getFriendlyAuditAction(log.action)}</h3>
-          <span>{getFriendlyAuditCategory(log.relatedType)}</span>
-        </div>
-        {log.description ? (
-          <>
-            <p ref={descriptionRef} className={`activity-description ${expanded ? "is-expanded" : ""}`}>{log.description}</p>
-            {canExpand || expanded ? (
-              <button
-                type="button"
-                className="activity-details-toggle"
-                onClick={() => setExpanded((current) => !current)}
-              >
-                {expanded ? "Show less" : "View details"}
-              </button>
-            ) : null}
-          </>
-        ) : null}
-        <div className="activity-metadata">
-          {log.relatedId ? <span className="activity-target">Record: {log.relatedId}</span> : null}
-          <span>{actorLabel}</span>
-          <time dateTime={log.createdAt}>{timestamp}</time>
-        </div>
-      </div>
     </article>
   );
 }
@@ -468,12 +328,6 @@ type PendingAdminConfirmation =
       organizationName: string;
       activityTitle: string;
       currentStatus: LiquidationReport["status"];
-    }
-  | {
-      kind: "news_release";
-      action: "publish" | "hide";
-      id: string;
-      title: string;
     }
   | {
       kind: "transparency_post";
@@ -629,7 +483,7 @@ type RecentActivityEntry = {
 export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateInquiry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
@@ -640,7 +494,15 @@ export default function AdminPortal({ section }: { section: string }) {
   const [templateDescriptionDraft, setTemplateDescriptionDraft] = useState("");
   const [templateScopeDraft, setTemplateScopeDraft] = useState<"document_submission" | "other">("document_submission");
   const [templateFileDraft, setTemplateFileDraft] = useState<File | null>(null);
+  const [templateCategoryDraft, setTemplateCategoryDraft] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState<TemplateCategoryFilter>("all");
+  const [templateStatusFilter, setTemplateStatusFilter] = useState<TemplateStatusFilter>("all");
+  const [pendingArchiveTemplate, setPendingArchiveTemplate] = useState<TemplateRecord | null>(null);
+  const [pendingDeleteTemplate, setPendingDeleteTemplate] = useState<TemplateRecord | null>(null);
+  const [pendingRestoreTemplate, setPendingRestoreTemplate] = useState<TemplateRecord | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateRecord | null>(null);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
@@ -655,12 +517,15 @@ export default function AdminPortal({ section }: { section: string }) {
   const [newsPreviewImageFileDraft, setNewsPreviewImageFileDraft] = useState<File | null>(null);
   const [newsSearch, setNewsSearch] = useState("");
   const [newsVisibilityFilter, setNewsVisibilityFilter] = useState<"all" | NewsRelease["visibilityStatus"]>("all");
+  const [newsCategoryFilter, setNewsCategoryFilter] = useState<"all" | string>("all");
+  const [newsViewMode, setNewsViewMode] = useState<"list" | "grid">("list");
   const [activityLogFilter, setActivityLogFilter] = useState<string>("all");
+  const [activitySearch, setActivitySearch] = useState("");
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
-  const [activityDateFilter, setActivityDateFilter] = useState<"all" | "7d" | "30d" | "90d">("all");
-  const [activityPage, setActivityPage] = useState(0);
+  const [activityDateFilter, setActivityDateFilter] = useState<ActivityDateFilter>("all");
   const [activityExporting, setActivityExporting] = useState<ExportFormat | null>(null);
   const [activityExportDialogOpen, setActivityExportDialogOpen] = useState(false);
+  const [adminAccountsById, setAdminAccountsById] = useState<Record<string, { displayName: string; email: string }>>({});
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
   const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
@@ -676,12 +541,19 @@ export default function AdminPortal({ section }: { section: string }) {
   const [savingTransparencyPost, setSavingTransparencyPost] = useState(false);
   const [pendingAdminConfirmation, setPendingAdminConfirmation] = useState<PendingAdminConfirmation | null>(null);
   const [pendingDeleteConfirmation, setPendingDeleteConfirmation] = useState<PendingDeleteConfirmation | null>(null);
+  const [pendingNewsVisibilityConfirmation, setPendingNewsVisibilityConfirmation] = useState<{
+    title: string;
+    nextStatus: "published" | "hidden";
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
   const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
   const [statusChangeRemarkDraft, setStatusChangeRemarkDraft] = useState("");
   const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
   const [inquirySearch, setInquirySearch] = useState("");
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | InquiryRecord["status"]>("all");
+  const [inquiryCategoryFilter, setInquiryCategoryFilter] = useState<"all" | (typeof INQUIRY_CATEGORY_OPTIONS)[number]>("all");
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
+  const [replyDialogInquiry, setReplyDialogInquiry] = useState<InquiryRecord | null>(null);
   const [inquiryStatusDraft, setInquiryStatusDraft] = useState<InquiryRecord["status"]>("pending_review");
   const [inquiryAdminRemarksDraft, setInquiryAdminRemarksDraft] = useState("");
   const [savingInquiryStatus, setSavingInquiryStatus] = useState(false);
@@ -1208,9 +1080,36 @@ export default function AdminPortal({ section }: { section: string }) {
           .toLowerCase()
           .includes(query);
       const matchesVisibility = newsVisibilityFilter === "all" || news.visibilityStatus === newsVisibilityFilter;
-      return matchesSearch && matchesVisibility;
+      const matchesCategory = newsCategoryFilter === "all" || news.category === newsCategoryFilter;
+      return matchesSearch && matchesVisibility && matchesCategory;
     });
-  }, [newsSearch, newsVisibilityFilter, newsReleases]);
+  }, [newsSearch, newsVisibilityFilter, newsCategoryFilter, newsReleases]);
+  const filteredTemplates = useMemo(() => {
+    const query = templateSearch.trim().toLowerCase();
+    return [...state.templates]
+      .filter((template) => {
+        const matchesSearch =
+          !query ||
+          [template.name, template.description, template.templateFileName]
+            .join(" ")
+            .toLowerCase()
+            .includes(query);
+        const matchesStatus =
+          templateStatusFilter === "all" ||
+          (templateStatusFilter === "active" ? template.isActive : !template.isActive);
+        const matchesCategory = templateCategoryFilter === "all" || template.templateCategories.includes(templateCategoryFilter);
+        return matchesSearch && matchesStatus && matchesCategory;
+      })
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }, [state.templates, templateSearch, templateStatusFilter, templateCategoryFilter]);
+  const templateCategoryOptions = useMemo(
+    () => orderTemplateCategories(Array.from(new Set(state.templates.flatMap((template) => template.templateCategories)))),
+    [state.templates],
+  );
+  const newsCategoryOptions = useMemo(
+    () => Array.from(new Set(newsReleases.map((news) => news.category).filter((category): category is string => Boolean(category)))),
+    [newsReleases],
+  );
   const filteredInquiries = useMemo(() => {
     const query = inquirySearch.trim().toLowerCase();
     return [...state.inquiries]
@@ -1222,10 +1121,11 @@ export default function AdminPortal({ section }: { section: string }) {
             .toLowerCase()
             .includes(query);
         const matchesStatus = inquiryStatusFilter === "all" || inquiry.status === inquiryStatusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesCategory = inquiryCategoryFilter === "all" || deriveInquiryCategory(inquiry) === inquiryCategoryFilter;
+        return matchesSearch && matchesStatus && matchesCategory;
       })
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-  }, [inquirySearch, inquiryStatusFilter, state.inquiries]);
+  }, [inquirySearch, inquiryStatusFilter, inquiryCategoryFilter, state.inquiries]);
   const openInquiryDetails = (inquiry: InquiryRecord) => {
     setSelectedInquiry(inquiry);
     setInquiryStatusDraft(inquiry.status);
@@ -1625,6 +1525,121 @@ export default function AdminPortal({ section }: { section: string }) {
     [state],
   );
 
+  const pendingYpop = useMemo(
+    () => state.ypopEntries.filter((entry) => entry.status === "submitted" || entry.status === "under_review").length,
+    [state.ypopEntries],
+  );
+
+  const sidebarGroups = useMemo<PortalNavGroup[]>(() => {
+    const withOverrides = (id: string, overrides: Partial<PortalNavItem> = {}): PortalNavItem | null => {
+      const base = adminNavItemsById.get(id);
+      if (!base) return null;
+      return { ...base, ...overrides };
+    };
+    const compact = (items: Array<PortalNavItem | null>) => items.filter((item): item is PortalNavItem => item !== null);
+
+    return [
+      { id: "workspace", label: "Workspace", items: compact([withOverrides("overview")]) },
+      {
+        id: "organizations",
+        label: "Organizations",
+        items: compact([
+          withOverrides("registrations", {
+            label: "Registrations",
+            icon: UserPlus,
+            count: overviewStats.pendingProfiles || undefined,
+          }),
+          withOverrides("yorp-registry", { icon: Globe }),
+        ]),
+      },
+      {
+        id: "programs",
+        label: "Programs",
+        items: compact([withOverrides("ypop-validation", { icon: Award, count: pendingYpop || undefined })]),
+      },
+      {
+        id: "budget-management",
+        label: "Budget Management",
+        items: compact([
+          withOverrides("budget-utilization", { count: overviewStats.pendingBudget || undefined }),
+          withOverrides("liquidation-monitoring", {
+            icon: Clipboard,
+            count: overviewStats.overdueLiquidation + overviewStats.pendingLiquidation || undefined,
+          }),
+          withOverrides("budget-monitoring", { label: "Budget Monitoring", icon: TrendingUp }),
+        ]),
+      },
+      {
+        id: "content",
+        label: "Content",
+        items: compact([
+          withOverrides("news-releases", { icon: Newspaper }),
+          withOverrides("templates", { label: "Forms & Templates" }),
+        ]),
+      },
+      {
+        id: "communication",
+        label: "Communication",
+        items: compact([
+          withOverrides("inquiries", { icon: Inbox, count: overviewStats.pendingInquiries || undefined }),
+        ]),
+      },
+      {
+        id: "administration",
+        label: "Administration",
+        items: [
+          { id: "administrators", label: "Administrators", icon: Shield },
+          { id: "activity-logs", label: "Activity Logs", icon: Activity },
+        ],
+      },
+    ];
+  }, [overviewStats, pendingYpop]);
+
+  const [annualAllocation, setAnnualAllocation] = useState<number | null>(null);
+  const [annualAllocationFiscalYear, setAnnualAllocationFiscalYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    if (!isSupabaseConfigured || !supabase) return;
+
+    void supabase
+      .from("barangay_financials")
+      .select("barangay_id,fiscal_year,month_no,sk_budget")
+      .order("fiscal_year", { ascending: false })
+      .order("month_no", { ascending: false })
+      .then(({ data, error }) => {
+        if (!isActive || error || !data) return;
+        const latestByBarangay = new Map<string, { fiscalYear: number; skBudget: number }>();
+        for (const row of data as Array<{ barangay_id: string; fiscal_year: number; sk_budget: number }>) {
+          if (!latestByBarangay.has(row.barangay_id)) {
+            latestByBarangay.set(row.barangay_id, { fiscalYear: row.fiscal_year, skBudget: Number(row.sk_budget ?? 0) });
+          }
+        }
+        const entries = Array.from(latestByBarangay.values());
+        const fiscalYear = entries.length ? Math.max(...entries.map((entry) => entry.fiscalYear)) : null;
+        const total = entries
+          .filter((entry) => entry.fiscalYear === fiscalYear)
+          .reduce((sum, entry) => sum + entry.skBudget, 0);
+        setAnnualAllocation(total);
+        setAnnualAllocationFiscalYear(fiscalYear);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const totalLiquidated = useMemo(
+    () =>
+      state.liquidationReports
+        .filter((report) => report.status === "completed_liquidated")
+        .reduce((sum, report) => {
+          const relatedBudgetRequest = state.budgetRequests.find((request) => request.id === report.budgetRequestId);
+          return sum + (relatedBudgetRequest?.releasedAmount ?? 0);
+        }, 0),
+    [state.liquidationReports, state.budgetRequests],
+  );
+
   useEffect(() => {
     let isActive = true;
     const filesWithUploads = state.documentSubmissionFiles.filter((file) => file.fileUrl.trim());
@@ -1891,6 +1906,17 @@ export default function AdminPortal({ section }: { section: string }) {
     };
   }, [section]);
 
+  useEffect(() => {
+    let isActive = true;
+    void (async () => {
+      const accountsById = await getAdminAccountsInSupabase();
+      if (isActive) setAdminAccountsById(accountsById);
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const appendAuditLog = async (
     action: string,
     relatedType: string,
@@ -1907,14 +1933,15 @@ export default function AdminPortal({ section }: { section: string }) {
     });
   };
 
-  const handleSaveInquiryStatus = async () => {
+  const handleSaveInquiryStatus = async (overrideStatus?: InquiryRecord["status"]) => {
     if (!selectedInquiry || savingInquiryStatus) return;
 
+    const nextStatus = overrideStatus ?? inquiryStatusDraft;
     setSavingInquiryStatus(true);
     try {
       const previousStatus = selectedInquiry.status;
       const savedInquiry = await adminUpdateInquiryInSupabase(selectedInquiry.id, {
-        status: inquiryStatusDraft,
+        status: nextStatus,
         adminRemarks: inquiryAdminRemarksDraft.trim(),
       });
 
@@ -1944,6 +1971,42 @@ export default function AdminPortal({ section }: { section: string }) {
       });
     } finally {
       setSavingInquiryStatus(false);
+    }
+  };
+
+  const handleMarkInquiryResponded = async (inquiry: InquiryRecord) => {
+    try {
+      const savedInquiry = await adminUpdateInquiryInSupabase(inquiry.id, {
+        status: "reviewed",
+        adminRemarks: inquiry.adminRemarks,
+      });
+
+      updateInquiry(savedInquiry.id, savedInquiry);
+      if (selectedInquiry?.id === savedInquiry.id) {
+        setSelectedInquiry(savedInquiry);
+        setInquiryStatusDraft(savedInquiry.status);
+        setInquiryAdminRemarksDraft(savedInquiry.adminRemarks);
+      }
+
+      void appendAuditLog(
+        "update_inquiry_status",
+        "inquiry",
+        savedInquiry.id,
+        `Changed inquiry status from ${statusLabelMap[inquiry.status] ?? inquiry.status} to ${statusLabelMap[savedInquiry.status] ?? savedInquiry.status}.`,
+        savedInquiry.organizationId,
+      ).catch((error) => console.error("Unable to record inquiry status activity:", error));
+
+      toast({
+        title: "Inquiry status updated",
+        description: `The inquiry is now ${statusLabelMap[savedInquiry.status] ?? savedInquiry.status}.`,
+      });
+    } catch (error) {
+      console.error("Unable to update inquiry status:", error);
+      toast({
+        title: "Status update failed",
+        description: error instanceof Error ? error.message : "The inquiry status could not be updated.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -2460,29 +2523,6 @@ export default function AdminPortal({ section }: { section: string }) {
         showCommentBox: true,
         commentLabel: "Admin Comment",
         commentPlaceholder: "Explain what needs to be corrected before liquidation can proceed.",
-      };
-    }
-
-    if (pendingAdminConfirmation.kind === "news_release") {
-      if (pendingAdminConfirmation.action === "publish") {
-        return {
-          title: "Confirm News Publish",
-          description: `Click the checkbox to publish "${pendingAdminConfirmation.title}" to the portal.`,
-          checkboxLabel: "I acknowledge this publish action.",
-          confirmLabel: "Publish News",
-          showCommentBox: false,
-          commentLabel: "",
-          commentPlaceholder: "",
-        };
-      }
-      return {
-        title: "Confirm News Hide",
-        description: `Click the checkbox to hide "${pendingAdminConfirmation.title}" from public view.`,
-        checkboxLabel: "I acknowledge this hide action.",
-        confirmLabel: "Hide News",
-        showCommentBox: false,
-        commentLabel: "",
-        commentPlaceholder: "",
       };
     }
 
@@ -3297,37 +3337,6 @@ export default function AdminPortal({ section }: { section: string }) {
             description: `${pendingAdminConfirmation.organizationName}'s organization-initiated activity log was rejected.`,
           });
         }
-      } else if (pendingAdminConfirmation.kind === "news_release") {
-        const visibilityStatus = pendingAdminConfirmation.action === "publish" ? "published" : "hidden";
-        const updatedNewsRelease = await updateNewsReleaseInSupabase(pendingAdminConfirmation.id, {
-          visibilityStatus,
-        });
-        updateNewsRelease(pendingAdminConfirmation.id, updatedNewsRelease);
-        await refreshAdminState();
-
-        if (pendingAdminConfirmation.action === "publish") {
-          await appendAuditLog(
-            "Published news release",
-            "news_release",
-            pendingAdminConfirmation.id,
-            `Published news release "${updatedNewsRelease.title}".`,
-          );
-          toast({
-            title: "News release published",
-            description: `${updatedNewsRelease.title} is now visible in the portal.`,
-          });
-        } else {
-          await appendAuditLog(
-            "Hidden news release",
-            "news_release",
-            pendingAdminConfirmation.id,
-            `Hidden news release "${updatedNewsRelease.title}".`,
-          );
-          toast({
-            title: "News release hidden",
-            description: `${updatedNewsRelease.title} is now hidden from public view.`,
-          });
-        }
       } else if (pendingAdminConfirmation.kind === "transparency_post") {
         const visibilityStatus = pendingAdminConfirmation.action === "publish" ? "published" : "hidden";
         const updatedPost = await updateTransparencyPostInSupabase(pendingAdminConfirmation.id, {
@@ -3444,6 +3453,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setTemplateDescriptionDraft("");
     setTemplateScopeDraft("document_submission");
     setTemplateFileDraft(null);
+    setTemplateCategoryDraft("");
   };
 
   const resetNewsReleaseForm = () => {
@@ -3471,7 +3481,7 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const startEditingTemplate = (templateId: string) => {
-    const template = activeTemplates.find((entry) => entry.id === templateId);
+    const template = state.templates.find((entry) => entry.id === templateId);
     if (!template) return;
     setTemplateModalMode("edit");
     setEditingTemplateId(templateId);
@@ -3479,6 +3489,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setTemplateDescriptionDraft(template.description);
     setTemplateScopeDraft(template.templateScope);
     setTemplateFileDraft(null);
+    setTemplateCategoryDraft(template.templateCategories[0] ?? "");
   };
 
   const startEditingNewsRelease = (newsReleaseId: string) => {
@@ -3514,12 +3525,18 @@ export default function AdminPortal({ section }: { section: string }) {
       toast({ title: "Template name required", description: "Please enter a document name.", variant: "destructive" });
       return;
     }
+    if (!templateCategoryDraft) {
+      toast({ title: "Category required", description: "Please select a category for this file.", variant: "destructive" });
+      return;
+    }
     if (!templateFileDraft) {
       toast({ title: "Template file required", description: "Please upload the document file for this template.", variant: "destructive" });
       return;
     }
 
     setSavingTemplate(true);
+    let createdTemplateId: string | null = null;
+    let createdTemplateDatabaseId: string | null = null;
     try {
       const newTemplate = await createTemplateRecordInSupabase({
         name: templateNameDraft,
@@ -3528,6 +3545,11 @@ export default function AdminPortal({ section }: { section: string }) {
         templateScope: templateScopeDraft,
       });
       createTemplate(newTemplate);
+      createdTemplateId = newTemplate.id;
+      createdTemplateDatabaseId = newTemplate.databaseId;
+
+      const categorizedTemplate = await updateTemplateCategoryInSupabase(newTemplate.databaseId, newTemplate.name, [templateCategoryDraft]);
+      updateTemplate(newTemplate.id, categorizedTemplate);
       if (templateFileDraft) {
         setUploadingTemplateId(newTemplate.id);
         const uploadedTemplate = await uploadTemplateDocumentToSupabase({
@@ -3543,6 +3565,15 @@ export default function AdminPortal({ section }: { section: string }) {
       resetTemplateForm();
       toast({ title: "Template created", description: `${newTemplate.name} was added successfully.` });
     } catch (error) {
+      setUploadingTemplateId(null);
+      if (createdTemplateId && createdTemplateDatabaseId) {
+        try {
+          await permanentlyDeleteTemplateRecordInSupabase(createdTemplateDatabaseId, templateNameDraft);
+          removeTemplate(createdTemplateId);
+        } catch {
+          // Best-effort rollback; surface the original create error below regardless.
+        }
+      }
       toast({
         title: "Create failed",
         description: error instanceof Error ? error.message : "The template could not be created.",
@@ -3550,6 +3581,46 @@ export default function AdminPortal({ section }: { section: string }) {
       });
     } finally {
       setSavingTemplate(false);
+    }
+  };
+
+  const applyNewsVisibilityChange = async (newsId: string, nextStatus: "published" | "hidden") => {
+    try {
+      const updatedNewsRelease = await updateNewsReleaseInSupabase(newsId, {
+        visibilityStatus: nextStatus,
+      });
+      updateNewsRelease(newsId, updatedNewsRelease);
+      await refreshAdminState();
+
+      if (nextStatus === "published") {
+        await appendAuditLog(
+          "Published news release",
+          "news_release",
+          newsId,
+          `Published news release "${updatedNewsRelease.title}".`,
+        );
+        toast({
+          title: "News release published",
+          description: `${updatedNewsRelease.title} is now visible in the portal.`,
+        });
+      } else {
+        await appendAuditLog(
+          "Hidden news release",
+          "news_release",
+          newsId,
+          `Hidden news release "${updatedNewsRelease.title}".`,
+        );
+        toast({
+          title: "News release hidden",
+          description: `${updatedNewsRelease.title} is now hidden from public view.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: nextStatus === "published" ? "Publish failed" : "Hide failed",
+        description: error instanceof Error ? error.message : "The news release's visibility could not be updated.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -3703,10 +3774,14 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const handleUpdateTemplate = async () => {
-    const template = templateDocuments.find((entry) => entry.id === editingTemplateId);
+    const template = state.templates.find((entry) => entry.id === editingTemplateId);
     if (!template) return;
     if (!templateNameDraft.trim()) {
       toast({ title: "Template name required", description: "Please enter a document name.", variant: "destructive" });
+      return;
+    }
+    if (!templateCategoryDraft) {
+      toast({ title: "Category required", description: "Please select a category for this file.", variant: "destructive" });
       return;
     }
 
@@ -3721,6 +3796,10 @@ export default function AdminPortal({ section }: { section: string }) {
         templateScope: templateScopeDraft,
       });
       updateTemplate(template.id, updatedTemplate);
+      if (templateCategoryDraft !== template.templateCategories[0]) {
+        const categorizedTemplate = await updateTemplateCategoryInSupabase(template.databaseId, template.name, [templateCategoryDraft]);
+        updateTemplate(template.id, categorizedTemplate);
+      }
       if (templateFileDraft) {
         setUploadingTemplateId(template.id);
         const uploadedTemplate = await uploadTemplateDocumentToSupabase({
@@ -3753,16 +3832,54 @@ export default function AdminPortal({ section }: { section: string }) {
     try {
       await deleteTemplateRecordInSupabase(template.databaseId, template.name);
       removeTemplate(template.id);
-      await appendAuditLog("Deleted template", "template", template.databaseId, `Deleted template "${template.name}" from the active list.`);
+      await appendAuditLog("Archived file", "template", template.databaseId, `Archived file "${template.name}".`);
       await refreshAdminState();
       if (editingTemplateId === template.id || templateModalMode === "delete") {
         resetTemplateForm();
       }
-      toast({ title: "Template deleted", description: `${template.name} was removed from the active template list.` });
+      toast({ title: "File archived", description: `${template.name} was archived and hidden from Forms & Templates.` });
+    } catch (error) {
+      toast({
+        title: "Archive failed",
+        description: error instanceof Error ? error.message : "The file could not be archived.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRestoreTemplate = async (templateId: string) => {
+    const template = state.templates.find((entry) => entry.id === templateId);
+    if (!template) return;
+
+    try {
+      const restoredTemplate = await reactivateTemplateRecordInSupabase(template.databaseId, template.name);
+      updateTemplate(template.id, restoredTemplate);
+      await appendAuditLog("Restored file", "template", template.databaseId, `Restored file "${template.name}".`);
+      await refreshAdminState();
+      toast({ title: "File restored", description: `${template.name} is active again.` });
+    } catch (error) {
+      toast({
+        title: "Restore failed",
+        description: error instanceof Error ? error.message : "The file could not be restored.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePermanentlyDeleteTemplate = async (templateId: string) => {
+    const template = state.templates.find((entry) => entry.id === templateId);
+    if (!template) return;
+
+    try {
+      await permanentlyDeleteTemplateRecordInSupabase(template.databaseId, template.name);
+      removeTemplate(template.id);
+      await appendAuditLog("Deleted file", "template", template.databaseId, `Permanently deleted file "${template.name}".`);
+      await refreshAdminState();
+      toast({ title: "File deleted", description: `${template.name} was permanently removed.` });
     } catch (error) {
       toast({
         title: "Delete failed",
-        description: error instanceof Error ? error.message : "The template could not be deleted.",
+        description: error instanceof Error ? error.message : "The file could not be deleted.",
         variant: "destructive",
       });
     }
@@ -3975,7 +4092,7 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const selectedTemplate = editingTemplateId
-    ? activeTemplates.find((template) => template.id === editingTemplateId) ?? null
+    ? state.templates.find((template) => template.id === editingTemplateId) ?? null
     : null;
 
   const handleSaveTransparencyPost = async () => {
@@ -4042,16 +4159,71 @@ export default function AdminPortal({ section }: { section: string }) {
         const formatActionName = (action: string) =>
           action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-        const taskItems = [
-          { count: overviewStats.pendingProfiles,    label: "Organization profile(s) pending review", route: routeMap.registrations,             critical: false },
-          { count: overviewStats.pendingDocuments,   label: "Document set(s) awaiting validation",   route: routeMap.registrations,             critical: false },
-          { count: overviewStats.revisions,          label: "Document revision(s) need re-review",   route: routeMap.registrations,             critical: false },
-          { count: overviewStats.overdueLiquidation, label: "liquidation report(s) overdue",         route: routeMap["liquidation-monitoring"], critical: true  },
-          { count: overviewStats.pendingLiquidation, label: "liquidation report(s) awaiting review", route: routeMap["liquidation-monitoring"], critical: false },
-          { count: overviewStats.pendingInquiries,    label: "inquiry(s) awaiting response",          route: routeMap.inquiries,                 critical: false },
-          { count: overviewStats.nonCompliant,       label: "organization(s) with compliance issues", route: routeMap.users,                    critical: true  },
-        ].filter((item) => item.count > 0);
-        const totalPendingTaskItems = taskItems.reduce((sum, item) => sum + item.count, 0);
+        const findOrgName = (organizationId: string) =>
+          state.organizationProfiles.find((org) => org.id === organizationId)?.organizationName ?? "Organization";
+
+        const needsAttentionItems: NeedsAttentionItem[] = [
+          ...state.organizationProfiles
+            .filter((org) => org.profileStatus === "pending_review" || org.profileStatus === "incomplete")
+            .map((org) => ({
+              id: `org-${org.id}`,
+              icon: UserPlus,
+              orgName: org.organizationName,
+              actionText: "Submitted registration profile · Review registration",
+              verb: "Submitted" as const,
+              timestamp: org.updatedAt,
+              href: routeMap.registrations,
+            })),
+          ...state.ypopEntries
+            .filter((entry) => entry.status === "submitted" || entry.status === "under_review")
+            .map((entry) => ({
+              id: `ypop-${entry.id}`,
+              icon: Award,
+              orgName: findOrgName(entry.organizationId),
+              actionText: `Submitted YPOP entry (${entry.semesterLabel}) · Review validation`,
+              verb: "Submitted" as const,
+              timestamp: entry.submittedAt,
+              href: routeMap["ypop-validation"],
+            })),
+          ...state.budgetRequests
+            .filter((request) => request.status === "submitted" || request.status === "under_review")
+            .map((request) => ({
+              id: `budget-${request.id}`,
+              icon: Wallet,
+              orgName: findOrgName(request.organizationId),
+              actionText: `${request.activityTitle} · Review budget request`,
+              verb: "Submitted" as const,
+              timestamp: request.createdAt,
+              href: routeMap["budget-utilization"],
+            })),
+          ...state.liquidationReports
+            .filter((report) => report.status === "submitted" || report.status === "under_review" || report.status === "overdue")
+            .map((report) => {
+              const relatedBudgetRequest = state.budgetRequests.find((request) => request.id === report.budgetRequestId);
+              return {
+                id: `liquidation-${report.id}`,
+                icon: Clipboard,
+                orgName: findOrgName(report.organizationId),
+                actionText: `${relatedBudgetRequest?.activityTitle ?? "Liquidation report"} · Review liquidation`,
+                verb: "Submitted" as const,
+                timestamp: report.createdAt,
+                href: routeMap["liquidation-monitoring"],
+              };
+            }),
+          ...state.inquiries
+            .filter((inquiry) => inquiry.status === "pending_review")
+            .map((inquiry) => ({
+              id: `inquiry-${inquiry.id}`,
+              icon: Inbox,
+              orgName: inquiry.organizationName || inquiry.submitterName,
+              actionText: `${inquiry.subject} · Review inquiry`,
+              verb: "Received" as const,
+              timestamp: inquiry.createdAt,
+              href: routeMap.inquiries,
+            })),
+        ]
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(0, 5);
         const dashboardRecentActivities = state.activityLogs.map((log) => ({
           id: log.id,
           message: formatActionName(log.action),
@@ -4062,343 +4234,134 @@ export default function AdminPortal({ section }: { section: string }) {
 
         return (
           <div className="admin-dashboard-page space-y-3 lg:space-y-5">
-            {/* Summary stats */}
-            <PortalSection title="Summary" description="Current compliance and budget status across all organizations." headerClassName="gap-1.5 sm:gap-4">
-              <div className="summary-grid grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-                <PortalMetricCard
-                  label="Registered Organizations"
-                  value={overviewStats.organizations}
-                  helper="Total organizations on the portal."
-                  icon={Users}
-                  iconTone="primary"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap.registrations)}
-                />
-                <PortalMetricCard
-                  label="Approved Documents"
-                  value={overviewStats.approvedDocs}
-                  helper="Fully validated document sets."
-                  icon={CheckCircle2}
-                  iconTone="emerald"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap.registrations)}
-                />
-                <PortalMetricCard
-                  label="Budget Released"
-                  value={overviewStats.releasedBudget}
-                  helper="Funds confirmed released to organizations."
-                  icon={Banknote}
-                  iconTone="violet"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap["budget-utilization"])}
-                />
-                <PortalMetricCard
-                  label="Pending Inquiries"
-                  value={overviewStats.pendingInquiries}
-                  helper="User submissions waiting for admin review."
-                  icon={Mail}
-                  iconTone="sky"
-                  className="summary-card"
-                  onClick={() => navigate(routeMap.inquiries)}
-                />
-              </div>
-            </PortalSection>
-
-            {/* Tasks */}
-            <PortalSection
-              title="Tasks"
-              action={
-                taskItems.length > 0 ? (
-                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                    <span className="lg:hidden">{totalPendingTaskItems} pending items</span>
-                    <span className="hidden lg:inline">{taskItems.length} pending</span>
-                  </span>
-                ) : null
-              }
-              headerClassName="gap-1.5 sm:gap-4"
-            >
-              {taskItems.length === 0 ? (
-                <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  All clear — no pending tasks right now.
-                </div>
-              ) : (
-                <div className="task-list divide-y divide-border/60">
-                  {taskItems.map((item, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => navigate(item.route)}
-                      className="task-row grid w-full grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-1 py-3 text-left text-sm transition-colors hover:bg-muted/40"
-                    >
-                      <AlertTriangle className={`h-4 w-4 shrink-0 ${item.critical ? "text-destructive" : "text-amber-500"}`} />
-                      <span className={`inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md px-1.5 text-xs font-semibold tabular-nums ${
-                        item.critical
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                      }`}>
-                        {item.count}
-                      </span>
-                      <span className="min-w-0 text-foreground">{item.label}</span>
-                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </PortalSection>
-
-            {/* Recent Activity — two separate cards */}
-            <div className="hidden gap-5 xl:grid-cols-2 lg:grid">
-              <PortalSection title="Notifications">
-                <div className="space-y-2">
-                  {state.notifications.slice(0, 4).length > 0 ? state.notifications.slice(0, 4).map((notification) => (
-                    <button
-                      key={notification.id}
-                      type="button"
-                      className="w-full rounded-xl border border-border/70 bg-background p-3.5 text-left text-sm transition-colors hover:bg-muted/40"
-                      onClick={() => markNotificationRead(notification.id)}
-                    >
-                      <div className="flex items-start gap-2.5">
-                        {!notification.isRead && (
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className={`font-medium leading-snug ${!notification.isRead ? "text-foreground" : "text-muted-foreground"}`}>
-                            {notification.title}
-                          </p>
-                          <p className="mt-1 text-muted-foreground text-xs">{notification.message}</p>
-                        </div>
-                      </div>
-                    </button>
-                  )) : (
-                    <p className="text-sm text-muted-foreground">No notifications.</p>
-                  )}
-                </div>
-              </PortalSection>
-              <PortalSection title="Recent Activity">
-                <RecentActivityPreview
-                  title="Recent Activity"
-                  activities={state.activityLogs.map((log) => ({
-                    id: log.id,
-                    message: formatActionName(log.action),
-                    note: log.description,
-                    timestamp: log.createdAt,
-                    timestampLabel: formatDateTimeLabel(log.createdAt),
-                  }))}
-                  onViewAll={
-                    state.activityLogs.length > 3
-                      ? () => {
-                          setRecentActivityDialogTitle("Recent Activity");
-                          setRecentActivityDialogEntries(
-                            state.activityLogs.map((log) => ({
-                              key: log.id,
-                              title: formatActionName(log.action),
-                              note: log.description,
-                              timestamp: formatDateTimeLabel(log.createdAt),
-                              dotClassName: "bg-primary",
-                            })),
-                          );
-                          setRecentActivityDialogOpen(true);
-                        }
-                      : undefined
-                  }
-                  className="border-0 bg-transparent p-0 shadow-none"
-                  headerClassName="mb-3"
-                  emptyMessage="No recent activity yet."
-                />
-              </PortalSection>
+            <AdminPageHeader title="Overview" description="Monitor workflows, pending items, and recent activity." />
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
+              <StatsCard
+                title="YORP REGISTRATIONS"
+                value={state.organizationProfiles.length}
+                icon={UserPlus}
+                trend="up"
+                trendLabel={`${overviewStats.pendingProfiles} awaiting review`}
+                description="YORP accreditation submissions"
+                onClick={() => navigate(routeMap.registrations)}
+              />
+              <StatsCard
+                title="YPOP VALIDATIONS"
+                value={state.ypopEntries.length}
+                icon={Award}
+                trend="up"
+                trendLabel={`${pendingYpop} awaiting review`}
+                description="YPOP eligibility evaluations"
+                onClick={() => navigate(routeMap["ypop-validation"])}
+              />
+              <StatsCard
+                title="BUDGET REQUESTS"
+                value={state.budgetRequests.length}
+                icon={Wallet}
+                trend="up"
+                trendLabel={`${overviewStats.pendingBudget} awaiting review`}
+                description="Funding requests for approved projects"
+                onClick={() => navigate(routeMap["budget-utilization"])}
+              />
+              <StatsCard
+                title="LIQUIDATIONS"
+                value={state.liquidationReports.length}
+                icon={Clipboard}
+                trend="up"
+                trendLabel={`${overviewStats.overdueLiquidation + overviewStats.pendingLiquidation} awaiting review`}
+                description="Financial accountability reports"
+                onClick={() => navigate(routeMap["liquidation-monitoring"])}
+              />
+              <StatsCard
+                title="INQUIRIES"
+                value={state.inquiries.length}
+                icon={Inbox}
+                trend="up"
+                trendLabel={`${overviewStats.pendingInquiries} awaiting review`}
+                description="Questions from organization users"
+                onClick={() => navigate(routeMap.inquiries)}
+              />
             </div>
 
-            <PortalSection title="Recent Activity" headerClassName="gap-1.5 sm:gap-4 lg:hidden">
-              <div className="recent-activity-card">
-                <RecentActivityList
-                  activities={dashboardRecentActivities}
-                  maxItems={3}
-                  emptyMessage="No recent activity yet."
-                />
-                {dashboardRecentActivities.length > 3 ? (
-                  <button
-                    type="button"
-                    className="mt-3 inline-flex text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                    onClick={() => {
-                      setRecentActivityDialogTitle("Recent Activity");
-                      setRecentActivityDialogEntries(
-                        state.activityLogs.map((log) => ({
-                          key: log.id,
-                          title: formatActionName(log.action),
-                          note: log.description,
-                          timestamp: formatDateTimeLabel(log.createdAt),
-                          dotClassName: "bg-primary",
-                        })),
-                      );
-                      setRecentActivityDialogOpen(true);
-                    }}
-                  >
-                    View full activity log
-                  </button>
-                ) : null}
-              </div>
-            </PortalSection>
+            {/* Needs Attention */}
+            <NeedsAttentionList items={needsAttentionItems} onNavigate={navigate} />
+
+            {/* Budget Monitoring + Recent Activity Log */}
+            <div className="flex flex-col gap-2.5 lg:flex-row">
+              <BudgetMonitoringSummaryCard
+                fiscalYearLabel={
+                  annualAllocationFiscalYear ? `FY ${annualAllocationFiscalYear}-${annualAllocationFiscalYear + 1}` : "FY —"
+                }
+                annualAllocation={annualAllocation}
+                totalReleased={budgetMonitoringAnalysis.totalReleased}
+                totalLiquidated={totalLiquidated}
+                onManageRequests={() => navigate(routeMap["budget-utilization"])}
+              />
+              <RecentActivityLogCard
+                items={dashboardRecentActivities.slice(0, 4).map<RecentActivityLogItem>((activity) => ({
+                  id: activity.id,
+                  activity: activity.message,
+                  detail: activity.note,
+                  timestamp: activity.timestamp,
+                }))}
+                actorName={user?.displayName ?? "Administrator"}
+                actorRole="Administrator"
+                onViewFullLog={() => navigate(routeMap["activity-logs"])}
+              />
+            </div>
           </div>
         );
       }
       case "inquiries": {
+        const totalInquiries = state.inquiries.length;
+        const openInquiries = state.inquiries.filter((inquiry) => inquiry.status === "pending_review").length;
+        const respondedInquiries = state.inquiries.filter((inquiry) => inquiry.status === "reviewed").length;
+        const closedInquiries = state.inquiries.filter((inquiry) => inquiry.status === "closed").length;
+
         return (
-          <div className="admin-inquiries-page">
-            <PortalSection
-              title="Inquiries"
-              description="Submitted inquiries from the user dashboard appear here in a consistent review format."
-            >
-              <div className="space-y-4">
-                <div className="inquiry-filters grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
-                  <Input
-                    value={inquirySearch}
-                    onChange={(event) => setInquirySearch(event.target.value)}
-                    placeholder="Search inquiries"
-                    aria-label="Search inquiries"
-                    className="h-11 lg:hidden"
-                  />
-                  <Input
-                    value={inquirySearch}
-                    onChange={(event) => setInquirySearch(event.target.value)}
-                    placeholder="Search name, organization, email, subject, or description"
-                    aria-label="Search inquiries"
-                    className="hidden h-11 lg:flex"
-                  />
-                  <Select value={inquiryStatusFilter} onValueChange={(value) => setInquiryStatusFilter(value as typeof inquiryStatusFilter)}>
-                    <SelectTrigger className="h-11" aria-label="Filter inquiries by status">
-                      <SelectValue placeholder="Filter status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="pending_review">Pending Review</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          <div className="admin-inquiries-page space-y-3 lg:space-y-5">
+            <AdminPageHeader title="Inquiries" description="Manage questions and inquiries from organization users." />
 
-                <p className="inquiry-results-count">
-                  {filteredInquiries.length} {filteredInquiries.length === 1 ? "inquiry" : "inquiries"}
-                </p>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <StatsCard
+                title="TOTAL INQUIRIES"
+                value={totalInquiries}
+                icon={MessageSquare}
+                description="Inquiries received during this period"
+              />
+              <StatsCard
+                title="OPEN"
+                value={openInquiries}
+                icon={AlertCircle}
+                description="Inquiries awaiting the team's first response"
+              />
+              <StatsCard
+                title="RESPONDED"
+                value={respondedInquiries}
+                icon={CornerDownLeft}
+                description="Inquiries awaiting organization follow-up"
+              />
+              <StatsCard
+                title="CLOSED"
+                value={closedInquiries}
+                icon={CheckCircle}
+                description="Inquiries resolved during this period"
+              />
+            </div>
 
-                <div className="mobile-inquiries-list">
-                  {filteredInquiries.length ? (
-                    filteredInquiries.map((inquiry) => {
-                      const submittedParts = formatCompactDateParts(inquiry.createdAt);
-                      return (
-                        <MobileInquiryCard
-                          key={inquiry.id}
-                          inquiry={inquiry}
-                          submittedDate={submittedParts.date}
-                          submittedTime={submittedParts.time}
-                          onView={() => openInquiryDetails(inquiry)}
-                        />
-                      );
-                    })
-                  ) : (
-                    <PortalEmptyState
-                      title="No inquiries found"
-                      description="Try changing your search or status filter."
-                    />
-                  )}
-                </div>
-
-                {filteredInquiries.length ? (
-                  <div className="desktop-inquiries-table overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
-                  <Table className="min-w-[940px] table-fixed">
-                    <TableHeader>
-                      <TableRow className="border-border/70 bg-muted/35 hover:bg-muted/35">
-                        <TableHead className="h-11 w-[16%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Name / Organization
-                        </TableHead>
-                        <TableHead className="h-11 w-[21%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Email
-                        </TableHead>
-                        <TableHead className="h-11 w-[29%] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Subject
-                        </TableHead>
-                        <TableHead className="h-11 w-[17%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Submitted
-                        </TableHead>
-                        <TableHead className="h-11 w-[11%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Status
-                        </TableHead>
-                        <TableHead className="h-11 w-[6%] px-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          Action
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInquiries.map((inquiry) => {
-                        const submittedParts = formatCompactDateParts(inquiry.createdAt);
-                        return (
-                          <TableRow key={inquiry.id} className="border-border/60 transition-colors hover:bg-muted/20">
-                            <TableCell className="px-4 py-3.5 align-middle">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-foreground">
-                                  {inquiry.submitterName || "Unnamed submitter"}
-                                </p>
-                                <p className="truncate text-xs text-muted-foreground">
-                                  {inquiry.organizationName || "No organization name provided"}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 align-middle">
-                              <p className="truncate text-sm text-foreground" title={inquiry.email}>
-                                {inquiry.email}
-                              </p>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 align-top">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium text-foreground" title={inquiry.subject}>
-                                  {inquiry.subject}
-                                </p>
-                                <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted-foreground" title={inquiry.description}>
-                                  {inquiry.description}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 text-center align-middle">
-                              <div className="space-y-0.5">
-                                <p className="text-sm font-medium text-foreground">{submittedParts.date}</p>
-                                <p className="text-xs text-muted-foreground">{submittedParts.time}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 text-center align-middle">
-                              <div className="flex justify-center">
-                                <PortalStatusBadge status={inquiry.status} />
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3.5 text-center align-middle">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2.5 text-xs font-medium"
-                                aria-label={`View inquiry from ${inquiry.submitterName || inquiry.organizationName || inquiry.email}`}
-                                onClick={() => openInquiryDetails(inquiry)}
-                              >
-                                <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                View
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                  </div>
-                ) : (
-                  <div className="desktop-inquiries-table">
-                    <PortalEmptyState
-                      title="No inquiries yet"
-                      description="Once a user submits an inquiry from the dashboard, it will appear here."
-                    />
-                  </div>
-                )}
-              </div>
-            </PortalSection>
+            <InquiriesTable
+              inquiries={filteredInquiries}
+              getReferenceCode={(inquiry) => buildPublicRecordCode("INQ", inquiry, state.inquiries)}
+              searchValue={inquirySearch}
+              onSearchChange={setInquirySearch}
+              statusFilter={inquiryStatusFilter}
+              onStatusFilterChange={setInquiryStatusFilter}
+              categoryFilter={inquiryCategoryFilter}
+              onCategoryFilterChange={setInquiryCategoryFilter}
+              onSelectInquiry={openInquiryDetails}
+              onMarkResponded={handleMarkInquiryResponded}
+            />
           </div>
         );
       }
@@ -7136,14 +7099,13 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       case "news-releases":
         return (
-          <div className="admin-news-releases-page">
-            <PortalSection
+          <div className="space-y-3 lg:space-y-5">
+            <AdminPageHeader
               title="News Releases"
               description="Create and publish announcements visible to all organizations on the portal's news feed."
               action={
-                <Button
+                <button
                   type="button"
-                  className="w-full sm:w-auto"
                   onClick={() => {
                     setNewsModalMode("create");
                     setEditingNewsReleaseId(null);
@@ -7155,319 +7117,75 @@ export default function AdminPortal({ section }: { section: string }) {
                     setNewsVisibilityDraft("draft");
                     setNewsCategoryDraft("");
                   }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add News Release
-                </Button>
+                  <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  Add News
+                </button>
               }
-            >
-              {newsReleases.length ? (
-                <div className="space-y-3">
-                  <div className="admin-news-toolbar grid gap-2 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-3">
-                    <Input
-                      className="lg:hidden"
-                      value={newsSearch}
-                      onChange={(event) => setNewsSearch(event.target.value)}
-                      placeholder="Search news releases"
-                    />
-                    <Input
-                      className="hidden lg:flex"
-                      value={newsSearch}
-                      onChange={(event) => setNewsSearch(event.target.value)}
-                      placeholder="Search by title, description, or Facebook link"
-                    />
-                    <Select value={newsVisibilityFilter} onValueChange={(value) => setNewsVisibilityFilter(value as "all" | NewsRelease["visibilityStatus"])}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All visibility" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Visibility</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="hidden">Hidden</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="news-results-count lg:hidden">
-                    {filteredNewsReleases.length} {filteredNewsReleases.length === 1 ? "news release" : "news releases"}
-                  </p>
-                  {filteredNewsReleases.length ? (
-                    <div className="news-releases-list grid gap-3 lg:grid-cols-2 lg:gap-4">
-                      {filteredNewsReleases.map((news) => {
-                        const dotColor =
-                          news.visibilityStatus === "published"
-                            ? "bg-emerald-500"
-                            : news.visibilityStatus === "hidden"
-                            ? "bg-slate-400"
-                            : "bg-amber-400";
-                        const formattedDate = news.datePosted
-                          ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(news.datePosted))
-                          : "?";
-                        return (
-                          <Card key={news.id} className="news-release-card flex flex-col border-border/70 shadow-sm">
-                            <CardContent className="flex flex-1 flex-col gap-3 p-4 lg:p-5">
-                              <div className="news-card-thumbnail lg:hidden">
-                                {news.previewImageUrl ? (
-                                  <img src={news.previewImageUrl} alt="" />
-                                ) : (
-                                  <div className="news-card-thumbnail-placeholder">No thumbnail</div>
-                                )}
-                              </div>
-                              <div className="news-card-header flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-start gap-2">
-                                  <span className={`news-status-dot mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColor}`} />
-                                  <p className="news-card-title break-words font-semibold leading-snug text-foreground" title={news.title}>{news.title}</p>
-                                </div>
-                                <div className="shrink-0">
-                                  <PortalStatusBadge status={news.visibilityStatus} />
-                                </div>
-                              </div>
-                              <p className="news-card-description line-clamp-3 pl-4 text-sm leading-relaxed text-muted-foreground">{news.description}</p>
-                              <div className="news-card-metadata space-y-0.5 pl-4">
-                                <p className="news-meta-item hidden text-xs text-muted-foreground lg:flex">
-                                  <span className="news-meta-label">Posted</span>
-                                  <span>{formattedDate}</span>
-                                </p>
-                                <p className="text-xs text-muted-foreground lg:hidden">
-                                  Posted {formattedDate}
-                                  {news.facebookPostUrl ? (
-                                    <>
-                                      {" · "}
-                                      <a href={news.facebookPostUrl} target="_blank" rel="noopener noreferrer">
-                                        Open Facebook Post ↗
-                                      </a>
-                                    </>
-                                  ) : null}
-                                </p>
-                                <p className="news-meta-item hidden text-xs text-muted-foreground/70 lg:flex">
-                                  <span className="news-meta-label">Facebook</span>
-                                  {news.facebookPostUrl ? (
-                                    <a href={news.facebookPostUrl} target="_blank" rel="noopener noreferrer" title={news.facebookPostUrl}>
-                                      Open Facebook Post <span aria-hidden="true">↗</span>
-                                    </a>
-                                  ) : <span>Link not added</span>}
-                                </p>
-                                {news.previewImageUrl ? (
-                                  <p className="news-meta-item hidden max-w-full text-xs text-muted-foreground/70 lg:flex">
-                                    <span className="news-meta-label">Thumbnail</span>
-                                    <span>Uploaded and ready for public preview</span>
-                                  </p>
-                                ) : (
-                                  <p className="news-meta-item hidden max-w-full text-xs text-muted-foreground/70 lg:flex">
-                                    <span className="news-meta-label">Thumbnail</span>
-                                    <span>Not uploaded</span>
-                                  </p>
-                                )}
-                              </div>
-                              <div className="news-card-actions mt-auto flex flex-col gap-2 pt-1 lg:flex-row lg:items-center lg:justify-between">
-                                <Button size="sm" variant="outline" className="w-full lg:w-auto" onClick={() => navigate(`/admin/news-releases/${news.id}`)}>
-                                  <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                  Preview
-                                </Button>
-                                <div className="news-card-secondary-actions flex items-center justify-end gap-1.5">
-                                  {news.visibilityStatus === "published" ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="hidden lg:inline-flex"
-                                      onClick={() => openAdminConfirmation({ kind: "news_release", action: "hide", id: news.id, title: news.title })}
-                                    >
-                                      Hide
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="hidden lg:inline-flex"
-                                      onClick={() => openAdminConfirmation({ kind: "news_release", action: "publish", id: news.id, title: news.title })}
-                                    >
-                                      Publish
-                                    </Button>
-                                  )}
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button size="sm" variant="ghost" className="news-card-more h-8 w-8 p-0">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">More actions</span>
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-36">
-                                      <DropdownMenuItem
-                                        className="lg:hidden"
-                                        onClick={() =>
-                                          openAdminConfirmation({
-                                            kind: "news_release",
-                                            action: news.visibilityStatus === "published" ? "hide" : "publish",
-                                            id: news.id,
-                                            title: news.title,
-                                          })
-                                        }
-                                      >
-                                        {news.visibilityStatus === "published" ? "Hide" : "Publish"}
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator className="lg:hidden" />
-                                      <DropdownMenuItem onClick={() => startEditingNewsRelease(news.id)}>
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        onClick={() => void handleDeleteNewsRelease(news.id)}
-                                      >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <PortalEmptyState
-                      title="No matching news releases"
-                      description="Try adjusting the search or visibility filter."
-                    />
-                  )}
-                </div>
-              ) : (
-                <PortalEmptyState
-                  title="No news releases yet"
-                  description="Create the first news release so both admin and users can preview the source post."
-                />
-              )}
-            </PortalSection>
-            <Dialog open={newsModalMode === "create" || newsModalMode === "edit"} onOpenChange={(open) => (!open ? resetNewsReleaseForm() : undefined)}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{newsModalMode === "edit" ? "Edit News Release" : "Add News Release"}</DialogTitle>
-                  <DialogDescription>
-                    {newsModalMode === "edit"
-                      ? "Update the public news release details, source post link, and thumbnail image link."
-                      : "Create a news release record with a source post link and optional thumbnail image link."}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-title" className="text-sm font-medium">Title</label>
-                    <Input id="news-release-title" name="newsReleaseTitle" value={newsTitleDraft} onChange={(event) => setNewsTitleDraft(event.target.value)} placeholder="Enter news release title" />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-description" className="text-sm font-medium">Description</label>
-                    <Textarea
-                      id="news-release-description"
-                      name="newsReleaseDescription"
-                      value={newsDescriptionDraft}
-                      onChange={(event) => setNewsDescriptionDraft(event.target.value)}
-                      placeholder="Write the summary shown in the preview page."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-category" className="text-sm font-medium">Category</label>
-                    <Input
-                      id="news-release-category"
-                      name="newsReleaseCategory"
-                      value={newsCategoryDraft}
-                      onChange={(event) => setNewsCategoryDraft(event.target.value)}
-                      placeholder="e.g. YORP, YPOP, MOVE"
-                    />
-                    <p className="text-xs text-muted-foreground">Optional tag shown on public news release cards.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="news-release-facebook-url" className="text-sm font-medium">Facebook Post URL</label>
-                    <Input
-                      id="news-release-facebook-url"
-                      name="newsReleaseFacebookPostUrl"
-                      value={newsFacebookPostUrlDraft}
-                      onChange={(event) => setNewsFacebookPostUrlDraft(event.target.value)}
-                      placeholder="https://facebook.com/..."
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <label htmlFor="news-release-preview-image-file" className="text-sm font-medium">Thumbnail Image</label>
-                    <Input
-                      id="news-release-preview-image-file"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(event) => setNewsPreviewImageFileDraft(event.target.files?.[0] ?? null)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Recommended: upload a JPG, PNG, or WebP image. The file is copied to Y-TRACE Storage so Facebook link restrictions do not break it.
-                    </p>
-                    <label htmlFor="news-release-preview-image-url" className="text-xs font-medium text-muted-foreground">Existing or external image URL</label>
-                    <Input
-                      id="news-release-preview-image-url"
-                      name="newsReleasePreviewImageUrl"
-                      value={newsPreviewImageUrlDraft}
-                      onChange={(event) => setNewsPreviewImageUrlDraft(event.target.value)}
-                      placeholder="https://example.com/thumbnail.jpg"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      External URLs may expire or block image embedding. Uploading the image above is more reliable.
-                    </p>
-                    {newsPreviewImageFileDraft ? (
-                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-primary">
-                        Ready to upload: <strong>{newsPreviewImageFileDraft.name}</strong>
-                      </div>
-                    ) : newsPreviewImageUrlDraft.trim() ? (
-                      <div className="space-y-2 rounded-xl border border-border/70 bg-muted/10 p-3">
-                        <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                          Thumbnail Preview
-                        </p>
-                        <img
-                          src={newsPreviewImageUrlDraft}
-                          alt="News release thumbnail preview"
-                          referrerPolicy="no-referrer"
-                          onError={(event) => {
-                            event.currentTarget.style.display = "none";
-                          }}
-                          className="h-40 w-full rounded-lg border border-border/60 object-cover"
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <label htmlFor="news-release-date-posted" className="text-sm font-medium">Date Posted</label>
-                      <Input
-                        id="news-release-date-posted"
-                        name="newsReleaseDatePosted"
-                        type="date"
-                        value={newsDatePostedDraft}
-                        onChange={(event) => setNewsDatePostedDraft(event.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="news-release-visibility" className="text-sm font-medium">Visibility</label>
-                      <select
-                        id="news-release-visibility"
-                        name="newsReleaseVisibility"
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={newsVisibilityDraft}
-                        onChange={(event) => setNewsVisibilityDraft(event.target.value as NewsRelease["visibilityStatus"])}
-                      >
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="hidden">Hidden</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetNewsReleaseForm}>
-                    Cancel
-                  </Button>
-                  <Button type="button" className="w-full sm:w-auto" onClick={() => void handleSaveNewsRelease()} disabled={savingNewsRelease}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {savingNewsRelease ? "Saving..." : newsModalMode === "edit" ? "Save Changes" : "Create News Release"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            />
+            <NewsReleasesTable
+              newsReleases={filteredNewsReleases}
+              searchValue={newsSearch}
+              onSearchChange={setNewsSearch}
+              statusFilter={newsVisibilityFilter}
+              onStatusFilterChange={setNewsVisibilityFilter}
+              categoryFilter={newsCategoryFilter}
+              onCategoryFilterChange={setNewsCategoryFilter}
+              categoryOptions={newsCategoryOptions}
+              viewMode={newsViewMode}
+              onViewModeChange={setNewsViewMode}
+              onEdit={(news) => startEditingNewsRelease(news.id)}
+              onTogglePublish={(news) => {
+                const nextStatus = news.visibilityStatus === "published" ? "hidden" : "published";
+                setPendingNewsVisibilityConfirmation({
+                  title: news.title,
+                  nextStatus,
+                  onConfirm: () => applyNewsVisibilityChange(news.id, nextStatus),
+                });
+              }}
+              onDelete={(news) => void handleDeleteNewsRelease(news.id)}
+            />
+            <NewsReleaseFormDialog
+              mode={newsModalMode}
+              title={newsTitleDraft}
+              onTitleChange={setNewsTitleDraft}
+              description={newsDescriptionDraft}
+              onDescriptionChange={setNewsDescriptionDraft}
+              category={newsCategoryDraft}
+              onCategoryChange={setNewsCategoryDraft}
+              facebookPostUrl={newsFacebookPostUrlDraft}
+              onFacebookPostUrlChange={setNewsFacebookPostUrlDraft}
+              previewImageUrl={newsPreviewImageUrlDraft}
+              onPreviewImageUrlChange={setNewsPreviewImageUrlDraft}
+              previewImageFile={newsPreviewImageFileDraft}
+              onPreviewImageFileChange={setNewsPreviewImageFileDraft}
+              datePosted={newsDatePostedDraft}
+              onDatePostedChange={setNewsDatePostedDraft}
+              visibility={newsVisibilityDraft}
+              onVisibilityChange={setNewsVisibilityDraft}
+              saving={savingNewsRelease}
+              onCancel={resetNewsReleaseForm}
+              onSave={() => {
+                const currentStatus = editingNewsReleaseId
+                  ? newsReleases.find((entry) => entry.id === editingNewsReleaseId)?.visibilityStatus
+                  : undefined;
+                if (
+                  newsModalMode === "edit" &&
+                  currentStatus &&
+                  newsVisibilityDraft !== currentStatus &&
+                  (newsVisibilityDraft === "published" || newsVisibilityDraft === "hidden")
+                ) {
+                  setPendingNewsVisibilityConfirmation({
+                    title: newsTitleDraft,
+                    nextStatus: newsVisibilityDraft,
+                    onConfirm: () => handleSaveNewsRelease(),
+                  });
+                  return;
+                }
+                void handleSaveNewsRelease();
+              }}
+            />
           </div>
         );
       case "budget-monitoring":
@@ -8438,14 +8156,13 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       case "templates":
         return (
-          <div className="admin-template-management-page">
-            <PortalSection
-              title="Template Management"
-              description="Manage downloadable templates for document submissions and other user-side reference files."
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Forms & Templates"
+              description="Manage forms and templates published to the Organization Portal."
               action={
-                <Button
+                <button
                   type="button"
-                  className="admin-news-header-add w-full sm:w-auto lg:hidden"
                   onClick={() => {
                     setTemplateModalMode("create");
                     setEditingTemplateId(null);
@@ -8453,315 +8170,46 @@ export default function AdminPortal({ section }: { section: string }) {
                     setTemplateDescriptionDraft("");
                     setTemplateScopeDraft("document_submission");
                     setTemplateFileDraft(null);
+                    setTemplateCategoryDraft("");
                   }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Template
-                </Button>
+                  <Upload className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  Upload File
+                </button>
               }
-            >
-              <div className="mobile-template-presentation">
-                {[
-                  {
-                    key: "document_submission" as const,
-                    title: "Document Submissions",
-                    description: "These templates appear inside the user document submissions page.",
-                    items: templateDocuments,
-                  },
-                  {
-                    key: "other" as const,
-                    title: "Other Templates",
-                    description: "These templates appear in the user Templates page for download and reference.",
-                    items: otherTemplates,
-                  },
-                ].map((group) => (
-                  <section key={group.key} className="mobile-template-section">
-                    <div className="mobile-template-section-header">
-                      <h2>{group.title}</h2>
-                      <span>{group.items.length} {group.items.length === 1 ? "template" : "templates"}</span>
-                    </div>
-                    <p className="mobile-template-section-description">{group.description}</p>
-                    {group.items.length ? (
-                      <div className="mobile-template-list">
-                        {group.items.map((template) => {
-                          const uploadedDate = template.templateUploadedAt
-                            ? new Intl.DateTimeFormat("en-PH", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }).format(new Date(template.templateUploadedAt))
-                            : null;
-                          const openEdit = () => startEditingTemplate(template.id);
-                          return (
-                            <MobileAdminTemplateCard
-                              key={template.id}
-                              template={template}
-                              updatedDate={uploadedDate}
-                              onPreview={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
-                              onEdit={openEdit}
-                              onReplace={openEdit}
-                              onDelete={() => {
-                                setEditingTemplateId(template.id);
-                                setTemplateModalMode("delete");
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="mobile-template-empty">
-                        <p>No {group.title.toLowerCase()} yet</p>
-                        <span>Templates assigned to {group.title} will appear here after they are added.</span>
-                      </div>
-                    )}
-                  </section>
-                ))}
-              </div>
-
-              <div className="desktop-template-presentation">
-              {activeTemplates.length === 0 ? (
-              <PortalEmptyState
-                title="No templates yet"
-                description="Upload a template file and assign where it should appear in the user portal."
-              />
-            ) : (
-              <div className="space-y-6">
-                {[
-                  {
-                    key: "document_submission" as const,
-                    title: "Document Submissions",
-                    description: "These templates appear inside the user document submissions page.",
-                    items: templateDocuments,
-                  },
-                  {
-                    key: "other" as const,
-                    title: "Other Templates",
-                    description: "These templates appear in the user Templates page for download and reference.",
-                    items: otherTemplates,
-                  },
-                ].map((group) => (
-                  <div key={group.key} className="space-y-3">
-                    <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-foreground">{group.title}</h3>
-                      <p className="text-sm text-muted-foreground">{group.description}</p>
-                    </div>
-                    {group.items.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
-                        No templates added for this section yet.
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-muted/35 hover:bg-muted/35">
-                              <TableHead className="min-w-[260px]">Template</TableHead>
-                              <TableHead className="min-w-[300px]">Description</TableHead>
-                              <TableHead className="min-w-[220px]">File</TableHead>
-                              <TableHead className="min-w-[150px]">Updated</TableHead>
-                              <TableHead className="w-[70px] text-right">Action</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {group.items.map((template) => {
-                              const hasFile = Boolean(template.templateFileName);
-                              const uploadedDate = template.templateUploadedAt
-                                ? new Intl.DateTimeFormat("en-PH", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  }).format(new Date(template.templateUploadedAt))
-                                : null;
-                              return (
-                                <TableRow key={template.id}>
-                                  <TableCell className="align-top">
-                                    <div className="flex items-start gap-2.5">
-                                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${hasFile ? "bg-emerald-500" : "bg-amber-400"}`} />
-                                      <div className="space-y-1">
-                                        <p className="font-semibold leading-snug text-foreground">{template.name}</p>
-                                        <p className="text-xs text-muted-foreground">{templateScopeLabelMap[template.templateScope]}</p>
-                                      </div>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="align-top">
-                                    <p className="text-sm leading-relaxed text-muted-foreground">{template.description || "No description provided."}</p>
-                                  </TableCell>
-                                  <TableCell className="align-top">
-                                    {hasFile ? (
-                                      <div className="space-y-1">
-                                        <div className="flex items-center gap-1.5">
-                                        <FileText className="h-3.5 w-3.5 shrink-0 text-red-500/80" />
-                                          <p className="break-all text-sm text-foreground">{template.templateFileName}</p>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">Ready for preview and download</p>
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-muted-foreground">No file uploaded yet</p>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="align-top">
-                                    <p className="text-sm text-foreground">{uploadedDate ?? "Not uploaded"}</p>
-                                  </TableCell>
-                                  <TableCell className="align-top text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        disabled={!template.templateFileUrl}
-                                        onClick={() => void openPreview(template.templateFileUrl, template.templateFileName || template.name)}
-                                      >
-                                        <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                        Preview
-                                      </Button>
-                                      <DropdownMenu modal={false}>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">More actions</span>
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-36">
-                                          <DropdownMenuItem onClick={() => startEditingTemplate(template.id)}>
-                                            <Pencil className="mr-2 h-4 w-4" />
-                                            Edit
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
-                                            onClick={() => {
-                                              setEditingTemplateId(template.id);
-                                              setTemplateModalMode("delete");
-                                            }}
-                                          >
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Delete
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              )}
-              </div>
-            <Dialog open={templateModalMode === "create" || templateModalMode === "edit"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{templateModalMode === "edit" ? "Edit Template" : "Add Template"}</DialogTitle>
-                  <DialogDescription>
-                    {templateModalMode === "edit"
-                      ? "Update the template details, category, and uploaded file if needed."
-                      : "Create a new template record, assign where it should appear, then upload the file users will access."}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-scope" className="text-sm font-medium">Template Section</label>
-                    <Select value={templateScopeDraft} onValueChange={(value) => setTemplateScopeDraft(value as "document_submission" | "other")}>
-                      <SelectTrigger id="template-document-scope">
-                        <SelectValue placeholder="Select where this template should appear" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="document_submission">Document Submissions</SelectItem>
-                        <SelectItem value="other">Other Templates</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-name" className="text-sm font-medium">Document Name</label>
-                    <Input
-                      id="template-document-name"
-                      name="templateDocumentName"
-                      value={templateNameDraft}
-                      onChange={(event) => setTemplateNameDraft(event.target.value)}
-                      placeholder="Enter document name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-description" className="text-sm font-medium">Document Description</label>
-                    <Textarea
-                      id="template-document-description"
-                      name="templateDocumentDescription"
-                      value={templateDescriptionDraft}
-                      onChange={(event) => setTemplateDescriptionDraft(event.target.value)}
-                      placeholder="Explain what the organization should upload for this document."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="template-document-file" className="text-sm font-medium">
-                      {templateModalMode === "edit" ? "Replace Template File" : "Upload Template File"}
-                    </label>
-                    <Input
-                      id="template-document-file"
-                      name="templateDocumentFile"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                      onChange={(event) => setTemplateFileDraft(event.target.files?.[0] ?? null)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {templateModalMode === "edit"
-                        ? "Leave this empty if you only want to update the title or description."
-                        : "Upload a Word, PDF, XLS, or XLSX template file here so organization users can view and download it."}
-                    </p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    className="w-full sm:w-auto"
-                    onClick={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
-                    disabled={savingTemplate || uploadingTemplateId !== null}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {savingTemplate || uploadingTemplateId !== null
-                      ? "Saving..."
-                      : templateModalMode === "edit"
-                        ? "Save Changes"
-                        : "Create Template"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={templateModalMode === "delete"} onOpenChange={(open) => (!open ? resetTemplateForm() : undefined)}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Delete Template</DialogTitle>
-                  <DialogDescription>
-                    {selectedTemplate
-                      ? `Are you sure you want to delete ${selectedTemplate.name}?`
-                      : "Are you sure you want to delete this template?"}
-                  </DialogDescription>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground">
-                  This removes the template from the active user-side template list.
-                </p>
-                <DialogFooter>
-                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={resetTemplateForm}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="w-full sm:w-auto"
-                    onClick={() => void (editingTemplateId ? handleDeleteTemplate(editingTemplateId) : Promise.resolve())}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Template
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            />
+            <TemplatesTable
+              templates={filteredTemplates}
+              categoryOptions={templateCategoryOptions}
+              searchValue={templateSearch}
+              onSearchChange={setTemplateSearch}
+              statusFilter={templateStatusFilter}
+              onStatusFilterChange={setTemplateStatusFilter}
+              categoryFilter={templateCategoryFilter}
+              onCategoryFilterChange={setTemplateCategoryFilter}
+              onPreview={(template) => setPreviewTemplate(template)}
+              onEdit={(template) => startEditingTemplate(template.id)}
+              onArchive={(template) => setPendingArchiveTemplate(template)}
+              onRestore={(template) => setPendingRestoreTemplate(template)}
+              onDelete={(template) => setPendingDeleteTemplate(template)}
+            />
+            <TemplateFormDialog
+              mode={templateModalMode === "create" || templateModalMode === "edit" ? templateModalMode : null}
+              name={templateNameDraft}
+              onNameChange={setTemplateNameDraft}
+              description={templateDescriptionDraft}
+              onDescriptionChange={setTemplateDescriptionDraft}
+              category={templateCategoryDraft}
+              onCategoryChange={setTemplateCategoryDraft}
+              file={templateFileDraft}
+              onFileChange={setTemplateFileDraft}
+              existingFileName={selectedTemplate?.templateFileName}
+              existingFileSize={selectedTemplate?.templateFileSize}
+              saving={savingTemplate || uploadingTemplateId !== null}
+              onCancel={resetTemplateForm}
+              onSave={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
+            />
             <Dialog
               open={previewModalOpen}
               onOpenChange={(open) => {
@@ -8827,7 +8275,97 @@ export default function AdminPortal({ section }: { section: string }) {
                 </div>
               </DialogContent>
             </Dialog>
-            </PortalSection>
+            <DangerConfirmDialog
+              variant="info"
+              open={Boolean(pendingArchiveTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPendingArchiveTemplate(null);
+              }}
+              icon={Archive}
+              title="Archive File"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to archive </span>
+                  <span className="font-semibold text-text-default">{pendingArchiveTemplate?.name ?? ""}</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                <>
+                  This file will be removed from the active <span className="font-semibold">Forms &amp; Templates</span> list
+                  available to users. You can restore it at any time.
+                </>
+              }
+              confirmLabel="Confirm Archive"
+              confirmIcon={Archive}
+              onConfirm={() => {
+                if (pendingArchiveTemplate) void handleDeleteTemplate(pendingArchiveTemplate.id);
+                setPendingArchiveTemplate(null);
+              }}
+            />
+            <DangerConfirmDialog
+              open={Boolean(pendingDeleteTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPendingDeleteTemplate(null);
+              }}
+              icon={Trash2}
+              title="Delete File"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to delete </span>
+                  <span className="font-semibold text-text-default">{pendingDeleteTemplate?.name ?? ""}</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                <>
+                  This file will be permanently removed from the <span className="font-semibold">Forms &amp; Templates</span>{" "}
+                  list available to users and cannot be recovered.
+                </>
+              }
+              warningTone="danger"
+              confirmLabel="Delete File"
+              confirmIcon={Trash2}
+              onConfirm={() => {
+                if (pendingDeleteTemplate) void handlePermanentlyDeleteTemplate(pendingDeleteTemplate.id);
+                setPendingDeleteTemplate(null);
+              }}
+            />
+            <DangerConfirmDialog
+              variant="info"
+              open={Boolean(pendingRestoreTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPendingRestoreTemplate(null);
+              }}
+              icon={Archive}
+              title="Restore File"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to restore </span>
+                  <span className="font-semibold text-text-default">{pendingRestoreTemplate?.name ?? ""}</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                <>
+                  This file will be restored to the active <span className="font-semibold">Forms &amp; Templates</span> list
+                  and made available to users again.
+                </>
+              }
+              confirmLabel="Confirm Restore"
+              confirmIcon={Archive}
+              onConfirm={() => {
+                if (pendingRestoreTemplate) void handleRestoreTemplate(pendingRestoreTemplate.id);
+                setPendingRestoreTemplate(null);
+              }}
+            />
+            <TemplateFilePreviewDialog
+              open={Boolean(previewTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPreviewTemplate(null);
+              }}
+              template={previewTemplate}
+            />
           </div>
         );
       case "notifications":
@@ -8878,48 +8416,30 @@ export default function AdminPortal({ section }: { section: string }) {
           </PortalSection>
         );
       case "activity-logs": {
-        const activityMeta: Record<string, { label: string; iconColor: string; bgColor: string }> = {
-          verify_organization_profile: { label: "Organization Verified",  iconColor: "text-emerald-600", bgColor: "bg-emerald-500/10" },
-          release_budget:              { label: "Budget Released",         iconColor: "text-blue-600",    bgColor: "bg-blue-500/10"    },
-          approve_document_submission: { label: "Document Approved",       iconColor: "text-emerald-600", bgColor: "bg-emerald-500/10" },
-          create_news_release:         { label: "News Release Published",  iconColor: "text-amber-600",   bgColor: "bg-amber-500/10"   },
-          reject_budget_request:       { label: "Budget Request Rejected", iconColor: "text-rose-600",    bgColor: "bg-rose-500/10"    },
-          review_liquidation_report:   { label: "Liquidation Reviewed",    iconColor: "text-slate-500",   bgColor: "bg-slate-500/10"   },
-        };
-        const activityIconMap: Record<string, typeof CheckCircle2> = {
-          verify_organization_profile: CheckCircle2,
-          release_budget:              Banknote,
-          approve_document_submission: FileText,
-          create_news_release:         Pencil,
-          reject_budget_request:       AlertTriangle,
-          review_liquidation_report:   ClipboardList,
-        };
-        const relatedTypeLabel: Record<string, string> = {
-          organization_profile: "Organization",
-          budget_request:       "Budget",
-          document_submission:  "Document",
-          news_release:         "News Release",
-          liquidation_report:   "Liquidation",
-        };
-        const filterTypes = ["all", "organization_profile", "budget_request", "document_submission", "news_release", "liquidation_report"];
-        const mobileFilterTypes = [...new Set([
-          ...filterTypes,
-          ...state.activityLogs
-            .map((log) => log.relatedType)
-            .filter((type) => type && !filterTypes.includes(type)),
-        ])];
         const now = Date.now();
         const dateFilterDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
+        const activitySearchTerm = activitySearch.trim().toLowerCase();
         const filteredLogs = state.activityLogs
           .filter((l) => activityLogFilter === "all" || l.relatedType === activityLogFilter)
           .filter((l) => {
             if (activityDateFilter === "all") return true;
             const days = dateFilterDays[activityDateFilter] ?? 0;
             return new Date(l.createdAt).getTime() >= now - days * 24 * 60 * 60 * 1000;
+          })
+          .filter((l) => {
+            if (!activitySearchTerm) return true;
+            const admin = l.actorUserId ? adminAccountsById[l.actorUserId] : undefined;
+            const actorText = admin ? `${admin.displayName} ${admin.email}` : l.actorUserId ? "Administrator" : "System";
+            const haystack = [
+              getFriendlyAuditAction(l.action),
+              getFriendlyAuditCategory(l.relatedType),
+              l.description,
+              actorText,
+            ]
+              .join(" ")
+              .toLowerCase();
+            return haystack.includes(activitySearchTerm);
           });
-        const ACTIVITY_PAGE_SIZE = 20;
-        const totalActivityPages = Math.max(1, Math.ceil(filteredLogs.length / ACTIVITY_PAGE_SIZE));
-        const pagedLogs = filteredLogs.slice(activityPage * ACTIVITY_PAGE_SIZE, (activityPage + 1) * ACTIVITY_PAGE_SIZE);
         const handleActivityExport = async (format: ExportFormat) => {
           if (!filteredLogs.length) {
             toast({
@@ -8971,195 +8491,33 @@ export default function AdminPortal({ section }: { section: string }) {
           }
         };
         return (
-          <div className="admin-activity-logs-page">
-            <PortalSection title="Recent Activity" description="Audit trail of admin-side edits and review actions.">
-            <div className="mobile-activity-controls">
-              <Button
-                type="button"
-                variant="outline"
-                className="activity-export-trigger"
-                disabled={!filteredLogs.length || activityExporting !== null}
-                onClick={() => setActivityExportDialogOpen(true)}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-
-              <div className="activity-category-filters" aria-label="Filter activity by category">
-                {mobileFilterTypes.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    className={`activity-filter-chip ${activityLogFilter === type ? "is-active" : ""}`}
-                    onClick={() => {
-                      setActivityLogFilter(type);
-                      setActivityPage(0);
-                    }}
-                  >
-                    {type === "all" ? "All" : getFriendlyAuditCategory(type)}
-                  </button>
-                ))}
-              </div>
-
-              <select
-                value={activityDateFilter}
-                onChange={(event) => {
-                  setActivityDateFilter(event.target.value as "all" | "7d" | "30d" | "90d");
-                  setActivityPage(0);
-                }}
-                className="activity-time-filter"
-                aria-label="Filter activity by time range"
-              >
-                <option value="all">All time</option>
-                <option value="90d">Last 90 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="7d">Last 7 days</option>
-              </select>
-              <p className="activity-result-count">
-                {filteredLogs.length} {filteredLogs.length === 1 ? "activity record" : "activity records"}
-              </p>
-            </div>
-
-            <div className="desktop-activity-controls mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
-                {filterTypes.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => { setActivityLogFilter(type); setActivityPage(0); }}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      activityLogFilter === type
-                        ? "bg-foreground text-background"
-                        : "border border-border/60 bg-muted/60 text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {type === "all" ? "All" : (relatedTypeLabel[type] ?? type)}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={activityDateFilter}
-                  onChange={(e) => { setActivityDateFilter(e.target.value as "all" | "7d" | "30d" | "90d"); setActivityPage(0); }}
-                  className="rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground focus:outline-none"
-                  aria-label="Filter activity by time range"
-                >
-                  <option value="all">All time</option>
-                  <option value="90d">Last 90 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="7d">Last 7 days</option>
-                </select>
-                <Button
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Activity Logs"
+              description="Review the system-wide history of admin actions."
+              action={
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   disabled={!filteredLogs.length || activityExporting !== null}
                   onClick={() => setActivityExportDialogOpen(true)}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                   Export
-                </Button>
-              </div>
-            </div>
-            {filteredLogs.length ? (
-              <>
-              <div className="desktop-activity-table overflow-hidden rounded-xl border border-border/70">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-44 text-xs">Date & Time</TableHead>
-                      <TableHead className="w-56 text-xs">Action</TableHead>
-                      <TableHead className="text-xs">Description</TableHead>
-                      <TableHead className="w-36 text-xs">Category</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pagedLogs.map((activity) => {
-                      const meta = activityMeta[activity.action] ?? { label: activity.action, iconColor: "text-muted-foreground", bgColor: "bg-muted/60" };
-                      const Icon = activityIconMap[activity.action] ?? ClipboardList;
-                      const formattedDate = new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(activity.createdAt));
-                      return (
-                        <TableRow key={activity.id}>
-                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formattedDate}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${meta.bgColor}`}>
-                                <Icon className={`h-3 w-3 ${meta.iconColor}`} />
-                              </div>
-                              <span className="text-sm font-medium text-foreground">{meta.label}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            <p className="line-clamp-2">{activity.description}</p>
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground">
-                              {relatedTypeLabel[activity.relatedType] ?? activity.relatedType}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="mobile-activity-list">
-                {pagedLogs.map((activity) => (
-                  <MobileActivityLogItem
-                    key={activity.id}
-                    log={activity}
-                    actorLabel={activity.actorUserId ? "Administrator" : "System"}
-                  />
-                ))}
-              </div>
-              </>
-            ) : (
-              <>
-                <div className="desktop-activity-empty">
-                  <PortalEmptyState title="No activity found" description="No logs match the selected filter." />
-                </div>
-                <div className="mobile-activity-empty">
-                  <PortalEmptyState
-                    title="No activity records found"
-                    description="Try changing the selected category or time range."
-                  />
-                </div>
-              </>
-            )}
-            {filteredLogs.length > ACTIVITY_PAGE_SIZE && (
-              <>
-              <div className="desktop-activity-pagination mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  Showing {activityPage * ACTIVITY_PAGE_SIZE + 1}–{Math.min((activityPage + 1) * ACTIVITY_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
-                </span>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="sm" disabled={activityPage === 0} onClick={() => setActivityPage((p) => p - 1)}>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled={activityPage >= totalActivityPages - 1} onClick={() => setActivityPage((p) => p + 1)}>
-                    Next
-                  </Button>
-                </div>
-              </div>
-              <div className="mobile-activity-pagination">
-                <span>
-                  Showing {activityPage * ACTIVITY_PAGE_SIZE + 1}{"\u2013"}
-                  {Math.min((activityPage + 1) * ACTIVITY_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
-                </span>
-                <div className="mobile-activity-pagination-controls">
-                  <Button variant="outline" size="sm" disabled={activityPage === 0} onClick={() => setActivityPage((page) => page - 1)}>
-                    Previous
-                  </Button>
-                  <span>Page {activityPage + 1} of {totalActivityPages}</span>
-                  <Button variant="outline" size="sm" disabled={activityPage >= totalActivityPages - 1} onClick={() => setActivityPage((page) => page + 1)}>
-                    Next
-                  </Button>
-                </div>
-              </div>
-              </>
-            )}
-            </PortalSection>
-            <ExportReportDialog
+                </button>
+              }
+            />
+            <ActivityLogsTable
+              logs={filteredLogs}
+              searchValue={activitySearch}
+              onSearchChange={setActivitySearch}
+              categoryFilter={activityLogFilter}
+              onCategoryFilterChange={setActivityLogFilter}
+              dateFilter={activityDateFilter}
+              onDateFilterChange={setActivityDateFilter}
+              adminAccountsById={adminAccountsById}
+            />
+            <ActivityLogsExportDialog
               open={activityExportDialogOpen}
               onOpenChange={setActivityExportDialogOpen}
               reportTitle="Activity Logs"
@@ -11207,7 +10565,8 @@ export default function AdminPortal({ section }: { section: string }) {
     activityDateFilter,
     activityExportDialogOpen,
     activityExporting,
-    activityPage,
+    activitySearch,
+    adminAccountsById,
     createNotification,
     selectedBudgetRequestId,
     selectedLiquidationReportSnapshot,
@@ -11367,11 +10726,11 @@ export default function AdminPortal({ section }: { section: string }) {
       <PortalShell
         title="Admin Portal"
         subtitle="LYDO / PCYDO Admin"
-        groups={splitNotificationsGroup}
+        groups={sidebarGroups}
         activeId={section}
         onNavigate={handleAdminSectionNavigate}
         onSignOut={() => setSignOutConfirmOpen(true)}
-        userProfile={{ name: "Administrator", role: "LYDO / PCYDO Admin" }}
+        userProfile={{ name: user?.displayName ?? "Administrator", role: "Administrator", email: user?.email ?? "" }}
       >
         {activeContent}
       </PortalShell>
@@ -11397,108 +10756,33 @@ export default function AdminPortal({ section }: { section: string }) {
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={Boolean(selectedInquiry)}
-        onOpenChange={(open) => (!open && !savingInquiryStatus ? setSelectedInquiry(null) : undefined)}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{selectedInquiry?.subject || "Inquiry details"}</DialogTitle>
-            <DialogDescription>
-              Full inquiry details from the user dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedInquiry ? (
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Name / Organization</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {selectedInquiry.submitterName || "Unnamed submitter"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {selectedInquiry.organizationName || "No organization name provided"}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Email</p>
-                  <p className="mt-1 break-all text-sm font-medium text-foreground">{selectedInquiry.email}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Submitted</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">{formatDateTimeLabel(selectedInquiry.createdAt)}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Status</p>
-                  <div className="mt-1">
-                    <PortalStatusBadge status={selectedInquiry.status} />
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-background p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Description</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{selectedInquiry.description}</p>
-              </div>
-              <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4">
-                <div className="space-y-2">
-                  <label htmlFor="inquiry-status" className="text-sm font-medium text-foreground">
-                    Change Status
-                  </label>
-                  <Select
-                    value={inquiryStatusDraft}
-                    onValueChange={(value) => setInquiryStatusDraft(value as InquiryRecord["status"])}
-                    disabled={savingInquiryStatus}
-                  >
-                    <SelectTrigger id="inquiry-status">
-                      <SelectValue placeholder="Select inquiry status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending_review">Pending Review</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="inquiry-admin-remarks" className="text-sm font-medium text-foreground">
-                    Admin Remarks <span className="font-normal text-muted-foreground">(optional)</span>
-                  </label>
-                  <Textarea
-                    id="inquiry-admin-remarks"
-                    value={inquiryAdminRemarksDraft}
-                    onChange={(event) => setInquiryAdminRemarksDraft(event.target.value)}
-                    placeholder="Add a note about this inquiry or status change."
-                    rows={3}
-                    disabled={savingInquiryStatus}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={savingInquiryStatus}
-              onClick={() => setSelectedInquiry(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={
-                !selectedInquiry ||
-                savingInquiryStatus ||
-                (inquiryStatusDraft === selectedInquiry.status &&
-                  inquiryAdminRemarksDraft.trim() === selectedInquiry.adminRemarks.trim())
-              }
-              onClick={() => void handleSaveInquiryStatus()}
-            >
-              {savingInquiryStatus ? "Saving..." : "Save Status"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <InquiryDetailDrawer
+        inquiry={selectedInquiry}
+        referenceCode={selectedInquiry ? buildPublicRecordCode("INQ", selectedInquiry, state.inquiries) : ""}
+        onOpenChange={(open) => {
+          if (!open && !savingInquiryStatus) setSelectedInquiry(null);
+        }}
+        onUpdateStatus={(status) => void handleSaveInquiryStatus(status)}
+        onReplyEmail={() => {
+          if (selectedInquiry) setReplyDialogInquiry(selectedInquiry);
+          setSelectedInquiry(null);
+        }}
+        saving={savingInquiryStatus}
+      />
+      <ReplyEmailDialog
+        open={Boolean(replyDialogInquiry)}
+        onOpenChange={(open) => {
+          if (!open) setReplyDialogInquiry(null);
+        }}
+        email={replyDialogInquiry?.email ?? ""}
+        subject={replyDialogInquiry?.subject ?? ""}
+        organizationName={
+          replyDialogInquiry
+            ? replyDialogInquiry.organizationName || replyDialogInquiry.submitterName || "Unknown"
+            : ""
+        }
+        onMarkResponded={() => (replyDialogInquiry ? handleMarkInquiryResponded(replyDialogInquiry) : undefined)}
+      />
       <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -11546,7 +10830,7 @@ export default function AdminPortal({ section }: { section: string }) {
         </DialogContent>
       </Dialog>
       <AlertDialog
-        open={Boolean(pendingDeleteConfirmation)}
+        open={Boolean(pendingDeleteConfirmation) && pendingDeleteConfirmation?.kind !== "news_release"}
         onOpenChange={(open) => {
           if (!open) setPendingDeleteConfirmation(null);
         }}
@@ -11583,18 +10867,69 @@ export default function AdminPortal({ section }: { section: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sign out?</AlertDialogTitle>
-            <AlertDialogDescription>You will be returned to the login page.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void signOut()}>Sign Out</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DangerConfirmDialog
+        open={signOutConfirmOpen}
+        onOpenChange={setSignOutConfirmOpen}
+        icon={LogOut}
+        title="Sign Out Confirmation"
+        subtitle="Y-TRACE Admin Portal Session"
+        description="Are you sure you want to sign out of your active administrative session? Any unsaved form drafts will be discarded."
+        warning="You will need to re-authenticate with your admin credentials to access the system."
+        confirmLabel="Sign-out"
+        confirmIcon={LogOut}
+        onConfirm={() => void signOut()}
+      />
+      <DangerConfirmDialog
+        open={pendingDeleteConfirmation?.kind === "news_release"}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+        icon={Trash2}
+        title="Delete News Release"
+        description={
+          <>
+            <span className="text-slate-500">Are you sure you want to delete </span>
+            <span className="font-semibold text-text-default">
+              {pendingDeleteConfirmation?.kind === "news_release" ? pendingDeleteConfirmation.title : ""}
+            </span>
+            <span className="text-slate-500">?</span>
+          </>
+        }
+        warning="This news release will be permanently removed from the system and cannot be recovered."
+        warningTone="danger"
+        confirmLabel="Delete News Release"
+        confirmIcon={Trash2}
+        onConfirm={() => void confirmDeleteRecord()}
+      />
+      <DangerConfirmDialog
+        variant="info"
+        open={Boolean(pendingNewsVisibilityConfirmation)}
+        onOpenChange={(open) => {
+          if (!open) setPendingNewsVisibilityConfirmation(null);
+        }}
+        icon={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? Globe : EyeOff}
+        title={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? "Publish News" : "Hide News"}
+        description={
+          <>
+            <span className="text-slate-500">
+              Are you sure you want to {pendingNewsVisibilityConfirmation?.nextStatus === "published" ? "publish" : "hide"}{" "}
+            </span>
+            <span className="font-semibold text-text-default">{pendingNewsVisibilityConfirmation?.title ?? ""}</span>
+            <span className="text-slate-500">?</span>
+          </>
+        }
+        warning={
+          pendingNewsVisibilityConfirmation?.nextStatus === "published"
+            ? "This news release will become visible on the Organization Portal once published."
+            : "This news release will no longer be visible on the Organization Portal. You can publish it again at any time."
+        }
+        confirmLabel={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? "Confirm Publish" : "Confirm Hide"}
+        confirmIcon={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? Globe : EyeOff}
+        onConfirm={() => {
+          if (pendingNewsVisibilityConfirmation) void pendingNewsVisibilityConfirmation.onConfirm();
+          setPendingNewsVisibilityConfirmation(null);
+        }}
+      />
       <ExportReportDialog
         open={activeReportExport !== null}
         onOpenChange={(open) => {

@@ -27,6 +27,7 @@ import UserPortalEntry, { PwaRouteEntry } from "./user/UserPortalEntry";
 import { useInstalledUserPwa } from "./user/pwa/hooks/useInstalledUserPwa";
 import PwaInitialLoadingScreen from "./user/pwa/PwaInitialLoadingScreen";
 import PublicPageLoader from "./components/PublicPageLoader";
+import AdminPageLoader from "./components/AdminPageLoader";
 import { PwaEntryGate, PwaPublicResourceGate } from "./user/pwa/public/PwaPublicEntry";
 import { PWA_ENTRY_ROUTE } from "./user/pwa/pwaAuthFlow";
 import { LydoConnectProvider } from "./lib/lydo-connect-store";
@@ -72,11 +73,13 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   if (!isInitialized) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
     if (isPublicPath) return <PublicPageLoader />;
+    if (pathname.startsWith("/admin")) return <AdminPageLoader />;
     return <FullScreenLoader />;
   }
   if (shouldCheckPolicy && isChecking) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
     if (isPublicPath) return <PublicPageLoader />;
+    if (pathname.startsWith("/admin")) return <AdminPageLoader />;
     return <FullScreenLoader />;
   }
 
@@ -106,7 +109,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
 const RequireAdmin = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isPasswordRecoverySession, role } = useAuth();
   const { pathname } = useLocation();
-  if (!isInitialized) return <FullScreenLoader />;
+  if (!isInitialized) return <AdminPageLoader />;
   if (isPasswordRecoverySession) {
     console.debug("[AuthDebug] RequireAdmin redirecting recovery session from", pathname, "to /reset-password");
     return <Navigate to="/reset-password" replace />;
@@ -255,6 +258,8 @@ const App = () => (
                       <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                       <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
                       <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
+                      <Route path="/admin/administrators" element={<RequireAdmin><AdminPortal section="administrators" /></RequireAdmin>} />
+                      <Route path="/admin/settings" element={<RequireAdmin><AdminPortal section="settings" /></RequireAdmin>} />
                       <Route path="/" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="*" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                     </>
@@ -279,6 +284,8 @@ const App = () => (
                           <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                           <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
                           <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
+                          <Route path="/admin/administrators" element={<RequireAdmin><AdminPortal section="administrators" /></RequireAdmin>} />
+                          <Route path="/admin/settings" element={<RequireAdmin><AdminPortal section="settings" /></RequireAdmin>} />
                         </>
                       ) : (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />

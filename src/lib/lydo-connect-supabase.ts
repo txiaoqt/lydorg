@@ -24,7 +24,7 @@ import type {
   PublicOrganizationActivity,
   PublicOrganizationDirectoryItem,
 } from "./lydo-connect-data";
-import { createTemplateLocalId, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, otherDocumentTypes, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
+import { createTemplateLocalId, deriveTemplateCategory, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, otherDocumentTypes, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { supabase } from "./supabase";
@@ -46,7 +46,9 @@ type RequiredDocumentTypeRow = {
   sort_order: number | null;
   is_required: boolean | null;
   is_active: boolean | null;
-  template_scope?: "document_submission" | "other" | null;
+  template_scope?: "document_submission" | "move" | "other" | null;
+  template_category?: string[] | null;
+  template_file_size?: number | null;
   updated_at?: string | null;
 };
 
@@ -538,6 +540,11 @@ const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
     templateFileUrl: row.template_url ?? "",
     templateFileType: row.template_url?.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf",
     templateUploadedAt: row.updated_at ?? "",
+    templateCategories: (() => {
+      const cleaned = (row.template_category ?? []).map((category) => category.trim().toLowerCase()).filter(Boolean);
+      return cleaned.length > 0 ? cleaned : [deriveTemplateCategory(row.name)];
+    })(),
+    templateFileSize: row.template_file_size ?? null,
   };
 };
 
@@ -2460,6 +2467,29 @@ export const createAdminActivityLogInSupabase = async (params: {
   return mapActivityLog(createdRow as ActivityLogRow);
 };
 
+export const getAdminAccountsInSupabase = async (): Promise<Record<string, { displayName: string; email: string }>> => {
+  try {
+    const adminSession = readAdminSession();
+    if (!supabase || !adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+    const { data, error } = await supabase.rpc("list_admin_accounts_for_admin_portal", {
+      _session_token: adminSession.sessionToken,
+    });
+    if (error || !data) throw error ?? new Error("No admin accounts returned.");
+    const accountsById: Record<string, { displayName: string; email: string }> = {};
+    for (const row of data as { id: string; display_name: string | null; email: string | null }[]) {
+      accountsById[String(row.id)] = {
+        displayName: row.display_name ?? "Admin User",
+        email: row.email ?? "",
+      };
+    }
+    return accountsById;
+  } catch (error) {
+    console.warn("Unable to load admin accounts; activity log actors will fall back to generic labels.", error);
+    return {};
+  }
+};
+
 export const adminUpdateInquiryInSupabase = async (
   inquiryId: string,
   patch: Pick<InquiryRecord, "status" | "adminRemarks">,
@@ -2589,6 +2619,9 @@ export const uploadTemplateDocumentToSupabase = async (params: {
   return mappedTemplate;
 };
 
+const isDuplicateNameError = (error: { code?: string; message?: string } | null) =>
+  error?.code === "23505" || /duplicate key value violates unique constraint/i.test(error?.message ?? "");
+
 export const createTemplateRecordInSupabase = async (params: {
   name: string;
   description: string;
@@ -2607,6 +2640,9 @@ export const createTemplateRecordInSupabase = async (params: {
     _template_scope: params.templateScope,
   });
 
+  if (error && isDuplicateNameError(error)) {
+    throw new Error(`A form or template named "${params.name.trim()}" already exists. Please use a different name.`);
+  }
   const createdRow = Array.isArray(data) ? data[0] : null;
   if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the template.");
 
@@ -2638,6 +2674,9 @@ export const updateTemplateRecordInSupabase = async (params: {
     _template_scope: params.templateScope,
   });
 
+  if (error && isDuplicateNameError(error)) {
+    throw new Error(`A form or template named "${params.name.trim()}" already exists. Please use a different name.`);
+  }
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template.");
 
@@ -2654,6 +2693,62 @@ export const deleteTemplateRecordInSupabase = async (databaseId: string, name?: 
   const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
 
   const { error } = await supabase.rpc("deactivate_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+  });
+
+  if (error) throw new Error(error.message);
+};
+
+export const reactivateTemplateRecordInSupabase = async (databaseId: string, name?: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { data, error } = await supabase.rpc("reactivate_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to restore the template.");
+
+  const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The restored template could not be mapped to the portal.");
+  return mappedTemplate;
+};
+
+export const updateTemplateCategoryInSupabase = async (databaseId: string, name: string | undefined, categories: string[]) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { data, error } = await supabase.rpc("update_admin_template_category", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+    _template_category: categories,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template category.");
+
+  const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The updated template could not be mapped to the portal.");
+  return mappedTemplate;
+};
+
+export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: string, name?: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { error } = await supabase.rpc("hard_delete_admin_template_document", {
     _session_token: adminSession.sessionToken,
     _template_id: resolvedDatabaseId,
   });

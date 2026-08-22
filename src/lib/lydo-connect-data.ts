@@ -281,11 +281,12 @@ export type RequiredDocumentType = {
   sortOrder: number;
   isRequired: boolean;
   isActive: boolean;
-  templateScope: "document_submission" | "other";
+  templateScope: "document_submission" | "move" | "other";
 };
 
 export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"], string> = {
   document_submission: "Document Submissions",
+  move: "Other Templates",
   other: "Other Templates",
 };
 
@@ -304,7 +305,8 @@ export const legacyRemovedTemplateNames = new Set([
 export type PortalNavItem = {
   id: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  count?: number;
 };
 
 export type PortalNavGroup = {
@@ -853,6 +855,45 @@ export type InquiryRecord = {
   updatedAt: string;
 };
 
+export const INQUIRY_CATEGORY_OPTIONS = ["YORP", "YPOP", "Budget Request", "Liquidation Report", "General"] as const;
+export type InquiryCategory = (typeof INQUIRY_CATEGORY_OPTIONS)[number];
+
+export const NEWS_CATEGORY_OPTIONS = ["YORP", "YPOP", "MOVE"] as const;
+export type NewsCategory = (typeof NEWS_CATEGORY_OPTIONS)[number];
+
+export const deriveInquiryCategory = (inquiry: Pick<InquiryRecord, "subject" | "description">): InquiryCategory => {
+  const text = `${inquiry.subject} ${inquiry.description}`.toLowerCase();
+  if (text.includes("yorp")) return "YORP";
+  if (text.includes("ypop")) return "YPOP";
+  if (text.includes("liquidat")) return "Liquidation Report";
+  if (text.includes("budget")) return "Budget Request";
+  return "General";
+};
+
+export const TEMPLATE_CATEGORY_PRIORITY = ["yorp", "ypop", "move", "data_form"] as const;
+export type TemplateCategory = (typeof TEMPLATE_CATEGORY_PRIORITY)[number];
+
+export const deriveTemplateCategory = (name: string): TemplateCategory => {
+  const text = name.toLowerCase();
+  if (text.includes("yorp")) return "yorp";
+  if (text.includes("ypop")) return "ypop";
+  if (text.includes("move")) return "move";
+  return "data_form";
+};
+
+export const formatTemplateCategoryLabel = (raw: string) => raw.replace(/_/g, " ").toUpperCase();
+
+export const formatTemplateCategoryDropdownLabel = (raw: string) =>
+  raw === "data_form" ? "Data Form" : formatTemplateCategoryLabel(raw);
+
+export const orderTemplateCategories = (categories: string[]) => {
+  const known = TEMPLATE_CATEGORY_PRIORITY.filter((category) => categories.includes(category));
+  const unknown = categories
+    .filter((category) => !(TEMPLATE_CATEGORY_PRIORITY as readonly string[]).includes(category))
+    .sort((left, right) => formatTemplateCategoryLabel(left).localeCompare(formatTemplateCategoryLabel(right)));
+  return [...known, ...unknown];
+};
+
 export type TemplateRecord = RequiredDocumentType & {
   databaseId: string;
   templateDescription: string;
@@ -861,6 +902,8 @@ export type TemplateRecord = RequiredDocumentType & {
   templateFileUrl: string;
   templateFileType: string;
   templateUploadedAt: string;
+  templateFileSize: number | null;
+  templateCategories: string[];
 };
 
 export type LydoSeedState = {
