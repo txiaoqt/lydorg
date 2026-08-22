@@ -21,7 +21,11 @@ import {
   getVerificationErrorMessage,
   OTP_ISSUED_AT_KEY,
 } from "@/lib/verification-error";
-import { PENDING_SIGNUP_EMAIL_KEY, VERIFY_FRESH_NAV_KEY } from "@/lib/email-validation";
+import {
+  clearSignupDraft,
+  PENDING_SIGNUP_EMAIL_KEY,
+  VERIFY_FRESH_NAV_KEY,
+} from "@/lib/email-validation";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
@@ -111,6 +115,7 @@ const VerifyEmail = () => {
       typeof window !== "undefined" &&
       Boolean(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY));
     if (!isVerified && hasPendingSignup) return;
+    clearSignupDraft();
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
     window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
     window.sessionStorage.removeItem("ytrace_verify_active");
@@ -174,6 +179,7 @@ const VerifyEmail = () => {
       }
     }
 
+    clearSignupDraft();
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
     window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
     window.sessionStorage.removeItem("ytrace_verify_active");
@@ -265,7 +271,7 @@ const VerifyEmail = () => {
             <div>
               <h2 className="text-2xl font-heading font-bold">Verify your email</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Enter the six-digit code sent to{" "}
+                If this email can be used for registration, we&apos;ll send a verification code to{" "}
                 <span className="font-medium text-foreground">{email || "your email address"}</span>.
               </p>
             </div>

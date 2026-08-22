@@ -13,8 +13,9 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
+import { GENERIC_RESET_MESSAGE, isValidEmailFormat } from "@/lib/email-validation";
 
-import { checkRecoveryEmail, type RecoveryEmailStatus } from "@/lib/email-validation";
+const RESEND_COOLDOWN_SECONDS = 60;
 
 type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
@@ -75,15 +76,17 @@ const ResetPassword = () => {
     await signOut();
     navigate(destination, { replace: true });
   };
+
   const recovery = useMemo(
     () => parsePasswordRecoveryUrl(typeof window === "undefined" ? "/reset-password" : window.location.href),
     [],
   );
+
   const [mode, setMode] = useState<ResetMode>(() =>
     recovery.hasRecoveryError ? "invalid" : recovery.hasRecoveryCredentials ? "verifying" : "request",
   );
+
   const [email, setEmail] = useState("");
-  const [emailStatus, setEmailStatus] = useState<RecoveryEmailStatus>("idle");
   const [touchedEmail, setTouchedEmail] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -91,31 +94,18 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [inlineError, setInlineError] = useState("");
+  const [requestSent, setRequestSent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  const isEmailValid = useMemo(() => {
-    return /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email.trim());
-  }, [email]);
+  const isEmailValid = useMemo(() => isValidEmailFormat(email), [email]);
 
   useEffect(() => {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!isEmailValid || !supabase) {
-      setEmailStatus("idle");
-      return;
-    }
-
-    let active = true;
-    setEmailStatus("checking");
-    const timeoutId = window.setTimeout(() => {
-      void checkRecoveryEmail(normalizedEmail).then((result) => {
-        if (active) setEmailStatus(result);
-      });
-    }, 500);
-
-    return () => {
-      active = false;
-      window.clearTimeout(timeoutId);
-    };
-  }, [email, isEmailValid]);
+    if (resendCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setResendCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendCooldown]);
 
   useEffect(() => {
     endPwaAuthFlow();
@@ -185,9 +175,6 @@ const ResetPassword = () => {
     if (recovery.hasRecoveryCredentials) {
       void establishRecoverySession();
     } else if (isPasswordRecoverySession) {
-      // detectSessionInUrl already consumed the URL credentials and established
-      // the recovery session before this component mounted. Verify the session
-      // is still valid and transition to the password update form.
       void supabase.auth.getSession().then(({ data }) => {
         if (active && data.session) {
           setMode("update");
@@ -198,7 +185,7 @@ const ResetPassword = () => {
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, [recovery]);
+  }, [recovery, isPasswordRecoverySession]);
 
   const requestReset = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -212,33 +199,27 @@ const ResetPassword = () => {
       setInlineError("Password recovery is unavailable because Supabase is not configured.");
       return;
     }
-
-    let currentStatus = emailStatus;
-    if (currentStatus !== "registered") {
-      setIsLoading(true);
-      currentStatus = await checkRecoveryEmail(normalizedEmail);
-      setEmailStatus(currentStatus);
-      if (currentStatus !== "registered") {
-        setIsLoading(false);
-        setInlineError("We couldn't process this email. Please check the address and try again.");
-        return;
-      }
-    }
+    if (resendCooldown > 0) return;
 
     setIsLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: getPasswordResetUrl(),
     });
     setIsLoading(false);
+
     if (error) {
       if (/rate limit|too many/i.test(error.message)) {
-        setInlineError("Too many requests. Please wait a few moments before trying again.");
+        setInlineError("Too many requests. Please wait a moment before trying again.");
       } else {
-        setInlineError("We couldn't process this email. Please check the address and try again.");
+        // Show generic confirmation to prevent enumeration even on unexpected backend responses
+        setRequestSent(true);
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
       }
       return;
     }
-    setMode("verifying");
+
+    setRequestSent(true);
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
   };
 
   const updatePassword = async (event: React.FormEvent) => {
@@ -296,8 +277,9 @@ const ResetPassword = () => {
     window.history.replaceState({}, document.title, "/reset-password");
     setInlineError("");
     setEmail("");
-    setEmailStatus("idle");
     setTouchedEmail(false);
+    setRequestSent(false);
+    setResendCooldown(0);
     setMode("request");
   };
 
@@ -337,6 +319,18 @@ const ResetPassword = () => {
                 <h1 className="text-2xl font-heading font-bold">Forgot your password?</h1>
                 <p className="mt-1 text-sm text-muted-foreground">Enter your email and we&apos;ll send you a secure reset link.</p>
               </div>
+
+              {requestSent && (
+                <div role="status" className="rounded-lg border border-primary/30 bg-primary/10 p-3.5 text-sm text-foreground space-y-1">
+                  <p className="font-medium text-primary flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" /> Reset link requested
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {GENERIC_RESET_MESSAGE}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email address</Label>
                 <Input
@@ -359,48 +353,27 @@ const ResetPassword = () => {
                 {touchedEmail && email && !isEmailValid ? (
                   <p className="text-xs text-destructive">Please enter a valid email address.</p>
                 ) : null}
-                {isEmailValid && emailStatus === "checking" ? (
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-                    Checking email...
-                  </p>
-                ) : null}
-                {isEmailValid && emailStatus === "registered" ? (
-                  <p className="text-xs text-success">
-                    This email is valid. Click Send Reset Link to continue.
-                  </p>
-                ) : null}
-                {isEmailValid && emailStatus === "not_found" ? (
-                  <p className="text-xs text-destructive">
-                    We couldn&apos;t process this email. Please check the address and try again.
-                  </p>
-                ) : null}
-                {isEmailValid && emailStatus === "error" ? (
-                  <p className="text-xs text-muted-foreground">
-                    We could not verify this email right now.
-                  </p>
-                ) : null}
                 {inlineError ? (
                   <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                     {inlineError}
                   </p>
                 ) : null}
               </div>
+
               <Button
                 type="submit"
                 className="w-full font-semibold"
-                disabled={isLoading || !isEmailValid || emailStatus !== "registered"}
+                disabled={isLoading || !isEmailValid || resendCooldown > 0}
               >
-                {emailStatus === "checking" ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Checking email...
-                  </>
-                ) : isLoading ? (
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Sending...
                   </>
+                ) : resendCooldown > 0 ? (
+                  `Resend available in ${resendCooldown}s`
+                ) : requestSent ? (
+                  "Resend password reset link"
                 ) : (
                   "Send Reset Link"
                 )}
@@ -412,16 +385,11 @@ const ResetPassword = () => {
             <div className="space-y-4 py-2 text-center">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
               <div>
-                <h1 className="text-2xl font-heading font-bold">{recovery.hasRecoveryCredentials ? "Verifying reset link" : "Check your inbox"}</h1>
+                <h1 className="text-2xl font-heading font-bold">Verifying reset link</h1>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {recovery.hasRecoveryCredentials
-                    ? "Please wait while we securely verify your password reset link."
-                    : <>We sent a password reset link to <span className="font-medium text-foreground">{email}</span>.</>}
+                  Please wait while we securely verify your password reset link.
                 </p>
               </div>
-              {!recovery.hasRecoveryCredentials ? (
-                <Button type="button" variant="outline" className="w-full" onClick={requestAnotherLink}>Send another link</Button>
-              ) : null}
             </div>
           ) : null}
 
@@ -558,4 +526,3 @@ const PasswordField = ({
 );
 
 export default ResetPassword;
-
