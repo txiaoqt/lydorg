@@ -233,10 +233,30 @@ export type YPOPCityActivity = {
   semesterKey: string;
   name: string;
   date: string;
+  startDate: string;
+  endDate: string;
   venue: string;
   category?: YPOPCityActivityCategory;
   points: number;
   createdAt: string;
+};
+
+export const formatActivityDateRange = (startDate: string, endDate: string): string => {
+  const start = startDate ? new Date(startDate) : null;
+  const end = endDate ? new Date(endDate) : null;
+  const isStartValid = Boolean(start && !Number.isNaN(start.getTime()));
+  const isEndValid = Boolean(end && !Number.isNaN(end.getTime()));
+
+  const formatOne = (date: Date) =>
+    new Intl.DateTimeFormat("en-PH", { day: "numeric", month: "short", year: "numeric" }).format(date);
+
+  if (isStartValid && isEndValid) {
+    const startLabel = formatOne(start as Date);
+    const endLabel = formatOne(end as Date);
+    return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
+  }
+  if (isStartValid) return formatOne(start as Date);
+  return startDate || endDate || "";
 };
 
 export type YPOPPeriodStatus = "draft" | "open" | "closed";
@@ -601,6 +621,7 @@ export const adminNavigation = adminNavigationGroups.flatMap((group) => group.it
 
 export type OrganizationProfile = {
   id: string;
+  referenceId: string;
   userId: string;
   organizationName: string;
   organizationEmail: string;
@@ -813,6 +834,27 @@ export type ActivityLog = {
   relatedId: string;
   description: string;
   createdAt: string;
+};
+
+export type AdminRoleRecord = {
+  id: number;
+  code: string;
+  label: string;
+  permissionCodes: string[];
+};
+
+export type AdministratorRecord = {
+  id: string;
+  displayName: string;
+  email: string;
+  username: string;
+  roleCode: string | null;
+  roleLabel: string | null;
+  unitCode: string | null;
+  unitLabel: string | null;
+  isActive: boolean;
+  isPasswordSet: boolean;
+  lastActiveAt: string | null;
 };
 
 export type PublicOrganizationDirectoryItem = {
@@ -1792,14 +1834,14 @@ export const seedState: LydoSeedState = {
   ypopOrgActivities: [],
   ypopOrgActivityFiles: [],
   ypopCityActivities: [
-    { id: "ypop-act-001", semesterKey: "2025-S2", name: "Seminar on Responsible Parenthood and Reproductive Health", date: "August 5, 2025", venue: "Tanghalang Pasigueño", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-002", semesterKey: "2025-S2", name: "SEATED! Youth Participation in Local Governance", date: "August 23, 2025", venue: "Zoom", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-003", semesterKey: "2025-S2", name: "Jobstart Philippines Program", date: "August 26–27, 2025", venue: "PESO", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-004", semesterKey: "2025-S2", name: "Youthnified: Youth for Inclusive and Gender-Fair Community (Gender Sensitivity Training)", date: "October 3–5, 2025", venue: "Laurel, Batangas", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-005", semesterKey: "2025-S2", name: "Digital Power-Up! Mastering Skills for a Career-Ready Future", date: "October 26, 2025", venue: "Google Meet", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-006", semesterKey: "2025-S2", name: "Cyber Youth Empowerment Orientation", date: "October 29, 2025", venue: "Astoria Plaza", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-007", semesterKey: "2025-S2", name: "Galing Kabataan Awards Application", date: "November 15, 2025", venue: "Temporary Pasig City Hall", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-008", semesterKey: "2025-S2", name: "PLP Youth Summit 2025", date: "November 25, 2025", venue: "PLP Auditorium", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-001", semesterKey: "2025-S2", name: "Seminar on Responsible Parenthood and Reproductive Health", date: "August 5, 2025", startDate: "2025-08-05", endDate: "2025-08-05", venue: "Tanghalang Pasigueño", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-002", semesterKey: "2025-S2", name: "SEATED! Youth Participation in Local Governance", date: "August 23, 2025", startDate: "2025-08-23", endDate: "2025-08-23", venue: "Zoom", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-003", semesterKey: "2025-S2", name: "Jobstart Philippines Program", date: "August 26–27, 2025", startDate: "2025-08-26", endDate: "2025-08-27", venue: "PESO", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-004", semesterKey: "2025-S2", name: "Youthnified: Youth for Inclusive and Gender-Fair Community (Gender Sensitivity Training)", date: "October 3–5, 2025", startDate: "2025-10-03", endDate: "2025-10-05", venue: "Laurel, Batangas", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-005", semesterKey: "2025-S2", name: "Digital Power-Up! Mastering Skills for a Career-Ready Future", date: "October 26, 2025", startDate: "2025-10-26", endDate: "2025-10-26", venue: "Google Meet", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-006", semesterKey: "2025-S2", name: "Cyber Youth Empowerment Orientation", date: "October 29, 2025", startDate: "2025-10-29", endDate: "2025-10-29", venue: "Astoria Plaza", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-007", semesterKey: "2025-S2", name: "Galing Kabataan Awards Application", date: "November 15, 2025", startDate: "2025-11-15", endDate: "2025-11-15", venue: "Temporary Pasig City Hall", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-008", semesterKey: "2025-S2", name: "PLP Youth Summit 2025", date: "November 25, 2025", startDate: "2025-11-25", endDate: "2025-11-25", venue: "PLP Auditorium", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
   ],
   ypopPeriods: [
     {

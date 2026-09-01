@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { readAdminSession, type SeededAdminUser, writeAdminSession } from "@/lib/admin-auth";
+import { getAdminPermissionContextInSupabase } from "@/lib/lydo-connect-supabase";
 import { getAuthCallbackUrl } from "@/lib/auth-redirect";
 import { IS_USER_SURFACE } from "@/lib/deployment-surface";
 import { supabase, supabaseAuthStorageKey } from "@/lib/supabase";
@@ -22,6 +23,8 @@ export type AuthUser = {
   id: string;
   email: string;
   displayName: string;
+  roleCode?: string;
+  permissionCodes?: string[];
   profileHints?: {
     contactNumber?: string;
     district?: string;
@@ -87,6 +90,8 @@ const toAuthUser = (adminUser: SeededAdminUser): AuthUser => ({
   id: adminUser.id,
   email: adminUser.email,
   displayName: adminUser.displayName,
+  roleCode: adminUser.roleCode,
+  permissionCodes: adminUser.permissionCodes,
 });
 
 const createDemoAdminSession = (username: string): SeededAdminUser => {
@@ -185,6 +190,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setUser(null);
               setIsInitialized(true);
               return;
+            }
+
+            const permissionContext = await getAdminPermissionContextInSupabase(storedAdmin.sessionToken);
+            if (permissionContext) {
+              storedAdmin.roleCode = permissionContext.roleCode;
+              storedAdmin.permissionCodes = permissionContext.permissionCodes;
+              writeAdminSession(storedAdmin);
             }
           }
           setIsAuthenticated(true);
@@ -382,6 +394,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         sessionToken: String(adminAccount.session_token ?? ""),
         expiresAt: String(adminAccount.expires_at ?? ""),
       };
+
+      const permissionContext = await getAdminPermissionContextInSupabase(adminUser.sessionToken);
+      if (permissionContext) {
+        adminUser.roleCode = permissionContext.roleCode;
+        adminUser.permissionCodes = permissionContext.permissionCodes;
+      }
 
       await supabase.auth.signOut();
       writeAdminSession(adminUser);

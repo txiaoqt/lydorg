@@ -187,7 +187,7 @@ export const TemplatesTable = ({
                 type="button"
                 onClick={() => onStatusFilterChange(tab.value)}
                 className={cn(
-                  "whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",

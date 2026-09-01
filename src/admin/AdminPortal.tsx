@@ -4,8 +4,9 @@ import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
 import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
-import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock3, CornerDownLeft, Download, Eye, EyeOff, FileText, FolderOpen, Globe, Inbox, LogOut, Mail, MapPin, Medal, MessageSquare, MoreHorizontal, Newspaper, Pencil, Plus, Save, Shield, Trash2, TrendingUp, Trophy, Upload, UserPlus, UserRound, Users, Wallet, X } from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock, Clock3, Copy, CornerDownLeft, Download, Eye, EyeOff, FileText, FolderOpen, Globe, History, Inbox, Info, Loader, Lock, LogOut, Mail, MapPin, Medal, Megaphone, MessageSquare, MoreHorizontal, Newspaper, Pencil, Phone, Plus, Save, Send, Shield, Trash2, TrendingUp, Trophy, Upload, UserCheck, UserPlus, UserRound, UserX, Users, Wallet, X, XCircle, type LucideIcon } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { format, parse } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -50,7 +51,7 @@ import { ActivityLogsExportDialog } from "@/admin/components/ActivityLogsExportD
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { adminNavigationGroups as baseAdminNavigationGroups, buildPublicRecordCode, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, getApprovedYpopOrgActivityCount, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, YPOP_BASE_TOTAL_POINTS, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildPublicRecordCode, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, getApprovedYpopOrgActivityCount, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus } from "@/lib/lydo-connect-data";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
@@ -58,13 +59,24 @@ import { StatsCard } from "@/admin/components/StatsCard";
 import { NeedsAttentionList, type NeedsAttentionItem } from "@/admin/components/NeedsAttentionList";
 import { BudgetMonitoringSummaryCard } from "@/admin/components/BudgetMonitoringSummaryCard";
 import { RecentActivityLogCard, type RecentActivityLogItem } from "@/admin/components/RecentActivityLogCard";
-import { InquiriesTable } from "@/admin/components/InquiriesTable";
+import { CategoryChip, InquiriesTable, ReferenceCodeChip } from "@/admin/components/InquiriesTable";
+import { YpopPeriodsTable, type YpopPeriodStatusFilter } from "@/admin/components/YpopPeriodsTable";
 import { NewsReleasesTable } from "@/admin/components/NewsReleasesTable";
 import { ActivityLogsTable, type ActivityDateFilter } from "@/admin/components/ActivityLogsTable";
 import { TemplatesTable, type TemplateCategoryFilter, type TemplateStatusFilter } from "@/admin/components/TemplatesTable";
 import { TemplateFilePreviewDialog } from "@/admin/components/TemplateFilePreviewDialog";
 import { TemplateFormDialog } from "@/admin/components/TemplateFormDialog";
-import { NewsReleaseFormDialog } from "@/admin/components/NewsReleaseFormDialog";
+import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
+import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
+import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
+import { formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
+import { type PasigDistrict } from "@/lib/pasig-districts";
+import { AdministratorFormDialog } from "@/admin/components/AdministratorFormDialog";
+import { RolesPermissionsPanel } from "@/admin/components/RolesPermissionsPanel";
+import { ADMIN_NAV_PERMISSION_MAP, hasAdminNavPermission } from "@/lib/admin-permissions";
+import { NewsReleaseFormDialog, CalendarCaption } from "@/admin/components/NewsReleaseFormDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { InquiryDetailDrawer } from "@/admin/components/InquiryDetailDrawer";
 import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -123,7 +135,114 @@ import {
   adminUpdateYpopEventParticipationInSupabase,
   adminUpdateYpopOrgActivityInSupabase,
   adminUpdateInquiryInSupabase,
+  getAdministratorsInSupabase,
+  getAdministratorRolesInSupabase,
+  getAdministratorUnitsInSupabase,
+  createAdministratorInSupabase,
+  updateAdministratorInSupabase,
+  setAdministratorActiveInSupabase,
+  deleteAdministratorInSupabase,
+  resendAdminInviteInSupabase,
+  updateRolePermissionsInSupabase,
+  DuplicateUsernameError,
 } from "@/lib/lydo-connect-supabase";
+import type { AdminRoleRecord, AdministratorRecord, SubmissionFile } from "@/lib/lydo-connect-data";
+
+const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
+  <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+    <div className="flex flex-col gap-0.5">
+      <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{title}</p>
+      {description ? <p className="truncate font-segoe text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
+    </div>
+  </div>
+);
+
+const RegistrationContactBox = ({
+  icon: Icon,
+  label,
+  title,
+  description,
+  href,
+  showCopy,
+}: {
+  icon: LucideIcon;
+  label: string;
+  title: string;
+  description?: string;
+  href?: string;
+  showCopy?: boolean;
+}) => {
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(title);
+    toast({ title: "Copied", description: `${title} copied to clipboard.` });
+  };
+
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-brand-secondary-100 p-2">
+        <Icon className="h-5 w-5 text-border-brand-secondary" strokeWidth={2} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          {href ? (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="truncate font-segoe text-sm font-semibold leading-none text-text-default underline-offset-4 hover:underline"
+            >
+              {title}
+            </a>
+          ) : (
+            <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{title}</p>
+          )}
+          {showCopy ? (
+            <button
+              type="button"
+              onClick={handleCopy}
+              aria-label={`Copy ${label.toLowerCase()}`}
+              className="shrink-0 text-slate-400 transition-colors hover:text-slate-600"
+            >
+              <Copy className="h-3.5 w-3.5" strokeWidth={1.6} />
+            </button>
+          ) : null}
+        </div>
+        {description ? <p className="truncate font-segoe text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
+      </div>
+    </div>
+  );
+};
+
+const DocumentQueueStatusPill = ({ status }: { status: SubmissionFile["adminStatus"] }) => {
+  if (status === "approved_green") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+        Approved
+      </span>
+    );
+  }
+  if (status === "rejected_red") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+        Rejected
+      </span>
+    );
+  }
+  if (status === "needs_revision") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+        Needs Revision
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      Pending Review
+    </span>
+  );
+};
 
 const routeMap: Record<string, string> = {
   overview: "/admin",
@@ -146,22 +265,6 @@ const adminId = "admin-demo";
 const adminNavItemsById = new Map(
   baseAdminNavigationGroups.flatMap((group) => group.items).map((item) => [item.id, item] as const),
 );
-
-const renderAdvocacyChips = (advocacies: string[]) =>
-  advocacies.length ? (
-    <div className="flex flex-wrap gap-2">
-      {advocacies.map((advocacy) => (
-        <span
-          key={advocacy}
-          className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-[11px] font-medium text-primary"
-        >
-          {advocacy}
-        </span>
-      ))}
-    </div>
-  ) : (
-    <span className="text-sm text-muted-foreground">N/A</span>
-  );
 
 function MobileInquiryCard({
   inquiry,
@@ -357,26 +460,12 @@ type PendingAdminConfirmation =
       currentAdminRemarks: string;
     };
 
-type RegistrationReviewDecision = "approve" | "needs_revision" | "reject" | "unreviewed";
-
-type RegistrationReviewDraft = {
-  decision: RegistrationReviewDecision;
-  remark: string;
-  expectedUpdatedAt: string;
-};
+type RegistrationReviewDecision = "approve" | "needs_revision" | "reject";
 
 const registrationReviewDecisionLabel: Record<RegistrationReviewDecision, string> = {
   approve: "Approve",
-  needs_revision: "Needs Revision",
+  needs_revision: "Request Revision",
   reject: "Reject",
-  unreviewed: "Unreviewed",
-};
-
-const registrationReviewPendingTone: Record<RegistrationReviewDecision, string> = {
-  approve: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  needs_revision: "border-amber-200 bg-amber-50 text-amber-700",
-  reject: "border-rose-200 bg-rose-50 text-rose-700",
-  unreviewed: "border-border/70 bg-muted/20 text-muted-foreground",
 };
 
 const registrationDecisionRequiresRemark = (decision: RegistrationReviewDecision) =>
@@ -484,7 +573,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateInquiry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
+  const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateLiquidationReport, updateInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
   const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
@@ -525,7 +614,32 @@ export default function AdminPortal({ section }: { section: string }) {
   const [activityDateFilter, setActivityDateFilter] = useState<ActivityDateFilter>("all");
   const [activityExporting, setActivityExporting] = useState<ExportFormat | null>(null);
   const [activityExportDialogOpen, setActivityExportDialogOpen] = useState(false);
-  const [adminAccountsById, setAdminAccountsById] = useState<Record<string, { displayName: string; email: string }>>({});
+  const [adminAccountsById, setAdminAccountsById] = useState<
+    Record<string, { displayName: string; email: string; roleLabel: string | null }>
+  >({});
+  const [administrators, setAdministrators] = useState<AdministratorRecord[]>([]);
+  const [administratorRoles, setAdministratorRoles] = useState<AdminRoleRecord[]>([]);
+  const [administratorUnits, setAdministratorUnits] = useState<{ id: number; code: string; label: string }[]>([]);
+  const [administratorsLoading, setAdministratorsLoading] = useState(false);
+  const [administratorSearch, setAdministratorSearch] = useState("");
+  const [administratorRoleFilter, setAdministratorRoleFilter] = useState<AdministratorRoleFilter>("all");
+  const [administratorUnitFilter, setAdministratorUnitFilter] = useState<AdministratorUnitFilter>("all");
+  const [administratorStatusFilter, setAdministratorStatusFilter] = useState<AdministratorStatusFilter>("all");
+  const [administratorModalMode, setAdministratorModalMode] = useState<"create" | "edit" | null>(null);
+  const [editingAdministratorId, setEditingAdministratorId] = useState<string | null>(null);
+  const [administratorDisplayNameDraft, setAdministratorDisplayNameDraft] = useState("");
+  const [administratorEmailDraft, setAdministratorEmailDraft] = useState("");
+  const [administratorUsernameDraft, setAdministratorUsernameDraft] = useState("");
+  const [administratorRoleIdDraft, setAdministratorRoleIdDraft] = useState<number | null>(null);
+  const [administratorUnitIdDraft, setAdministratorUnitIdDraft] = useState<number | null>(null);
+  const [savingAdministrator, setSavingAdministrator] = useState(false);
+  const [pendingToggleActiveAdministrator, setPendingToggleActiveAdministrator] = useState<AdministratorRecord | null>(null);
+  const [pendingDeleteAdministrator, setPendingDeleteAdministrator] = useState<AdministratorRecord | null>(null);
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [administratorsExportDialogOpen, setAdministratorsExportDialogOpen] = useState(false);
+  const [administratorsViewTab, setAdministratorsViewTab] = useState<"accounts" | "roles-permissions">("accounts");
+  const [rolesPermissionsSubTab, setRolesPermissionsSubTab] = useState<"edit" | "compare">("edit");
+  const [configuringRoleCode, setConfiguringRoleCode] = useState<"super_admin" | "admin">("super_admin");
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
   const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
@@ -560,14 +674,19 @@ export default function AdminPortal({ section }: { section: string }) {
   const [expandedRegistrationIds, setExpandedRegistrationIds] = useState<string[]>([]);
   const [expandedDocumentFileIds, setExpandedDocumentFileIds] = useState<string[]>([]);
   const [documentReviewRemarksByFileId, setDocumentReviewRemarksByFileId] = useState<Record<string, string>>({});
-  const [registrationReviewDraftsByFileId, setRegistrationReviewDraftsByFileId] = useState<Record<string, RegistrationReviewDraft>>({});
   const [selectedRegistrationReviewFileIds, setSelectedRegistrationReviewFileIds] = useState<string[]>([]);
   const [activeRegistrationReviewFileId, setActiveRegistrationReviewFileId] = useState<string | null>(null);
-  const [registrationInfoCollapsed, setRegistrationInfoCollapsed] = useState(false);
-  const [registrationBulkDecision, setRegistrationBulkDecision] = useState<Exclude<RegistrationReviewDecision, "unreviewed">>("approve");
+  const [registrationInfoCollapsed, setRegistrationInfoCollapsed] = useState(true);
+  const [registrationBulkDecision, setRegistrationBulkDecision] = useState<RegistrationReviewDecision>("approve");
   const [registrationBulkRemark, setRegistrationBulkRemark] = useState("");
-  const [registrationMobileInfoExpanded, setRegistrationMobileInfoExpanded] = useState(false);
-  const [registrationMobileBulkOpen, setRegistrationMobileBulkOpen] = useState(false);
+  const [registrationActivityVisibleCount, setRegistrationActivityVisibleCount] = useState(4);
+  const [isRegistrationActivityPopoverOpen, setIsRegistrationActivityPopoverOpen] = useState(false);
+  const registrationActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const registrationActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRegistrationDecisionHelpOpen, setIsRegistrationDecisionHelpOpen] = useState(false);
+  const registrationDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const registrationDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRegistrationDecisionConfirmOpen, setIsRegistrationDecisionConfirmOpen] = useState(false);
   const [registrationReviewSubmitting, setRegistrationReviewSubmitting] = useState(false);
   const [selectedBudgetRequestId, setSelectedBudgetRequestId] = useState<string | null>(null);
   const [selectedBudgetFileId, setSelectedBudgetFileId] = useState<string | null>(null);
@@ -595,8 +714,10 @@ export default function AdminPortal({ section }: { section: string }) {
   const [budgetMonitoringSearch, setBudgetMonitoringSearch] = useState("");
   const [budgetMonitoringRiskFilter, setBudgetMonitoringRiskFilter] = useState("all");
   const [registrationSearch, setRegistrationSearch] = useState("");
-  const [registrationStatusFilter, setRegistrationStatusFilter] = useState("all");
-  const [registrationDistrictFilter, setRegistrationDistrictFilter] = useState("all");
+  const [registrationStatusFilter, setRegistrationStatusFilter] = useState<RegistrationStatusFilter>("all");
+  const [registrationDistrictFilter, setRegistrationDistrictFilter] = useState<"all" | PasigDistrict>("all");
+  const [registrationBarangayFilter, setRegistrationBarangayFilter] = useState("all");
+  const [registrationClassificationFilter, setRegistrationClassificationFilter] = useState("all");
   const [budgetAllocationDistrictFilter, setBudgetAllocationDistrictFilter] = useState("all");
   const [budgetAllocationBarangayFilter, setBudgetAllocationBarangayFilter] = useState("all");
   const [budgetAllocationMobilePage, setBudgetAllocationMobilePage] = useState(1);
@@ -604,43 +725,29 @@ export default function AdminPortal({ section }: { section: string }) {
   const [documentPreviewUrls, setDocumentPreviewUrls] = useState<Record<string, string>>({});
   const documentPreviewSourceRef = useRef<Record<string, string>>({});
   const [selectedYpopId, setSelectedYpopId] = useState<string | null>(null);
-  const [ypopValidationForm, setYpopValidationForm] = useState<{
-    cityLedAttendance: Array<{ activityId: string; attended: boolean }>;
-    orgLedProjectCount: number;
-    status: YPOPStatus;
-    adminRemarks: string;
-  } | null>(null);
-  const [savingYpopValidation, setSavingYpopValidation] = useState(false);
-  const [ypopScoringHelpOpen, setYpopScoringHelpOpen] = useState(false);
-  const [confirmYpopValidationOpen, setConfirmYpopValidationOpen] = useState(false);
-  const [ypopValidationAcknowledged, setYpopValidationAcknowledged] = useState(false);
-  const [showAllYpopProofDocuments, setShowAllYpopProofDocuments] = useState(false);
-  const [showAllYpopOrgActivities, setShowAllYpopOrgActivities] = useState(false);
   const [ypopAdminView, setYpopAdminView] = useState<"periods" | "create-period" | "period-detail" | "entry-review">("periods");
   const [selectedYpopPeriodId, setSelectedYpopPeriodId] = useState<string | null>(null);
+  const [ypopPeriodSearch, setYpopPeriodSearch] = useState("");
+  const [ypopPeriodStatusFilter, setYpopPeriodStatusFilter] = useState<YpopPeriodStatusFilter>("all");
   const [createPeriodForm, setCreatePeriodForm] = useState<{ semesterLabel: string; validationDeadline: string; status: YPOPPeriodStatus }>({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
   const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
-  const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; date: string; venue: string; category: YPOPCityActivityCategory }>>([]);
-  const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; date: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
+  const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory }>>([]);
+  const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [createPeriodOrgLedTiers, setCreatePeriodOrgLedTiers] = useState<YPOPOrgLedTier[]>(DEFAULT_ORG_LED_TIERS);
-  const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | YPOPStatus>("all");
-  const [newActivityForm, setNewActivityForm] = useState<{ name: string; date: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
+  const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | "pending_evaluation" | "qualified" | "not_qualified">("all");
+  const [ypopSubmissionSearch, setYpopSubmissionSearch] = useState("");
+  const [ypopSubmissionClassificationFilter, setYpopSubmissionClassificationFilter] = useState("all");
+  const [newActivityForm, setNewActivityForm] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
-  const [editingActivityData, setEditingActivityData] = useState<{ name: string; date: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
-  const [ypopPreviewFileId, setYpopPreviewFileId] = useState<string | null>(null);
-  const [ypopPreviewUrl, setYpopPreviewUrl] = useState("");
-  const [ypopPreviewTitle, setYpopPreviewTitle] = useState("");
-  const [ypopPreviewCanInline, setYpopPreviewCanInline] = useState(false);
-  const [ypopPreviewLoading, setYpopPreviewLoading] = useState(false);
-  const [ypopEventReviewRemarksById, setYpopEventReviewRemarksById] = useState<Record<string, string>>({});
+  const [editingDraftTempId, setEditingDraftTempId] = useState<string | null>(null);
+  const [editingActivityData, setEditingActivityData] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
+  const [submittingPeriodStatus, setSubmittingPeriodStatus] = useState<"draft" | "publish" | null>(null);
+  const [deadlineDateOpen, setDeadlineDateOpen] = useState(false);
+  const [activityStartDateOpen, setActivityStartDateOpen] = useState(false);
+  const [activityEndDateOpen, setActivityEndDateOpen] = useState(false);
   const [recentActivityDialogOpen, setRecentActivityDialogOpen] = useState(false);
   const [recentActivityDialogTitle, setRecentActivityDialogTitle] = useState("Recent Activity");
   const [recentActivityDialogEntries, setRecentActivityDialogEntries] = useState<RecentActivityEntry[]>([]);
-
-  useEffect(() => {
-    setShowAllYpopProofDocuments(false);
-    setShowAllYpopOrgActivities(false);
-  }, [selectedYpopId]);
 
   const profile = state.organizationProfiles[0] ?? null;
   const adminNotifications = state.notifications.filter((item) => item.userId === adminId);
@@ -1045,31 +1152,31 @@ export default function AdminPortal({ section }: { section: string }) {
       return matchesSearch && matchesRisk;
     });
   }, [budgetMonitoringEntries, budgetMonitoringRiskFilter, budgetMonitoringSearch, state.budgetRequests]);
-  const registrationStatusOptions = useMemo(
-    () => Array.from(new Set(state.organizationProfiles.map((org) => org.profileStatus))),
-    [state.organizationProfiles],
-  );
-  const registrationDistrictOptions = useMemo(
-    () =>
-      Array.from(new Set(state.organizationProfiles.map((org) => org.district?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) =>
-        a.localeCompare(b),
-      ),
-    [state.organizationProfiles],
-  );
   const filteredRegistrations = useMemo(() => {
     const query = registrationSearch.trim().toLowerCase();
     return state.organizationProfiles.filter((org) => {
+      if (org.profileStatus === "suspended_inactive") return false;
       const matchesSearch =
         !query ||
-        [org.organizationName, org.organizationEmail, org.barangay ?? "", org.district ?? ""]
+        [org.organizationName, org.organizationEmail, org.referenceId ?? "", org.barangay ?? "", org.district ?? ""]
           .join(" ")
           .toLowerCase()
           .includes(query);
       const matchesStatus = registrationStatusFilter === "all" || org.profileStatus === registrationStatusFilter;
       const matchesDistrict = registrationDistrictFilter === "all" || org.district === registrationDistrictFilter;
-      return matchesSearch && matchesStatus && matchesDistrict;
+      const matchesBarangay = registrationBarangayFilter === "all" || org.barangay === registrationBarangayFilter;
+      const matchesClassification =
+        registrationClassificationFilter === "all" || org.majorClassification === registrationClassificationFilter;
+      return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
     });
-  }, [registrationDistrictFilter, registrationSearch, registrationStatusFilter, state.organizationProfiles]);
+  }, [
+    registrationBarangayFilter,
+    registrationClassificationFilter,
+    registrationDistrictFilter,
+    registrationSearch,
+    registrationStatusFilter,
+    state.organizationProfiles,
+  ]);
   const filteredNewsReleases = useMemo(() => {
     const query = newsSearch.trim().toLowerCase();
     return newsReleases.filter((news) => {
@@ -1538,7 +1645,7 @@ export default function AdminPortal({ section }: { section: string }) {
     };
     const compact = (items: Array<PortalNavItem | null>) => items.filter((item): item is PortalNavItem => item !== null);
 
-    return [
+    const allGroups: PortalNavGroup[] = [
       { id: "workspace", label: "Workspace", items: compact([withOverrides("overview")]) },
       {
         id: "organizations",
@@ -1593,7 +1700,14 @@ export default function AdminPortal({ section }: { section: string }) {
         ],
       },
     ];
-  }, [overviewStats, pendingYpop]);
+
+    return allGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => hasAdminNavPermission(user?.permissionCodes, item.id)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [overviewStats, pendingYpop, user]);
 
   const [annualAllocation, setAnnualAllocation] = useState<number | null>(null);
   const [annualAllocationFiscalYear, setAnnualAllocationFiscalYear] = useState<number | null>(null);
@@ -1712,27 +1826,62 @@ export default function AdminPortal({ section }: { section: string }) {
 
   useEffect(() => {
     setSelectedRegistrationReviewFileIds([]);
-    setRegistrationReviewDraftsByFileId({});
     setRegistrationBulkDecision("approve");
     setRegistrationBulkRemark("");
-    setRegistrationMobileInfoExpanded(false);
-    setRegistrationMobileBulkOpen(false);
+    setRegistrationActivityVisibleCount(4);
+    setIsRegistrationActivityPopoverOpen(false);
+    setIsRegistrationDecisionHelpOpen(false);
+    setIsRegistrationDecisionConfirmOpen(false);
   }, [selectedRegistrationId]);
 
   useEffect(() => {
-    const hasStagedRegistrationReviewChanges = Object.values(registrationReviewDraftsByFileId).some(
-      (draft) => draft.decision !== "unreviewed",
-    );
-    if (!hasStagedRegistrationReviewChanges) return undefined;
+    if (!isRegistrationActivityPopoverOpen) return;
 
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (registrationActivityPanelRef.current?.contains(target)) return;
+      if (registrationActivityTriggerRef.current?.contains(target)) return;
+      setIsRegistrationActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRegistrationActivityPopoverOpen(false);
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [registrationReviewDraftsByFileId]);
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRegistrationActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isRegistrationDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (registrationDecisionHelpPanelRef.current?.contains(target)) return;
+      if (registrationDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsRegistrationDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRegistrationDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRegistrationDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (selectedRegistrationReviewFileIds.length > 1 && registrationBulkDecision !== "approve") {
+      setRegistrationBulkDecision("approve");
+      setRegistrationBulkRemark("");
+    }
+  }, [selectedRegistrationReviewFileIds.length, registrationBulkDecision]);
 
   useEffect(() => {
     let isActive = true;
@@ -1838,48 +1987,6 @@ export default function AdminPortal({ section }: { section: string }) {
     selectedLiquidationReportFile?.fileUrl,
   ]);
 
-  useEffect(() => {
-    let isActive = true;
-    const ypopFile = ypopPreviewFileId
-      ? state.ypopFiles.find((f) => f.id === ypopPreviewFileId) ?? null
-      : null;
-
-    if (!ypopFile) {
-      setYpopPreviewUrl("");
-      setYpopPreviewCanInline(false);
-      setYpopPreviewLoading(false);
-      return;
-    }
-
-    setYpopPreviewTitle(ypopFile.fileName);
-
-    if (!ypopFile.fileUrl.trim()) {
-      setYpopPreviewUrl("");
-      setYpopPreviewCanInline(false);
-      setYpopPreviewLoading(false);
-      return;
-    }
-
-    setYpopPreviewLoading(true);
-
-    void (async () => {
-      try {
-        const resolvedUrl = await resolveSupabaseFileUrl(ypopFile.fileUrl);
-        if (!isActive) return;
-        const finalUrl = resolvedUrl ?? "";
-        setYpopPreviewUrl(finalUrl);
-        setYpopPreviewCanInline(canInlinePreviewFile(ypopFile.fileName) || canInlinePreviewFile(finalUrl));
-      } catch {
-        if (!isActive) return;
-        setYpopPreviewUrl("");
-        setYpopPreviewCanInline(false);
-      } finally {
-        if (isActive) setYpopPreviewLoading(false);
-      }
-    })();
-
-    return () => { isActive = false; };
-  }, [ypopPreviewFileId, state.ypopFiles]);
 
   const mergeRemoteStateRef = useRef(mergeRemoteState);
   useEffect(() => {
@@ -1916,6 +2023,268 @@ export default function AdminPortal({ section }: { section: string }) {
       isActive = false;
     };
   }, []);
+
+  const refreshAdministrators = async () => {
+    setAdministratorsLoading(true);
+    try {
+      const [administratorRows, roleRows, unitRows] = await Promise.all([
+        getAdministratorsInSupabase(),
+        getAdministratorRolesInSupabase(),
+        getAdministratorUnitsInSupabase(),
+      ]);
+      setAdministrators(administratorRows);
+      setAdministratorRoles(roleRows.filter((role) => role.code === "super_admin" || role.code === "admin"));
+      setAdministratorUnits(unitRows);
+    } catch (error) {
+      console.error("Unable to load administrators:", error);
+      toast({
+        title: "Unable to load administrators",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdministratorsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (section !== "administrators") return;
+    let isActive = true;
+    void (async () => {
+      if (!isActive) return;
+      await refreshAdministrators();
+    })();
+    return () => {
+      isActive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
+
+  const resetAdministratorForm = () => {
+    setAdministratorModalMode(null);
+    setEditingAdministratorId(null);
+    setAdministratorDisplayNameDraft("");
+    setAdministratorEmailDraft("");
+    setAdministratorUsernameDraft("");
+    setAdministratorRoleIdDraft(null);
+    setAdministratorUnitIdDraft(null);
+  };
+
+  const startEditingAdministrator = (administrator: AdministratorRecord) => {
+    setAdministratorModalMode("edit");
+    setEditingAdministratorId(administrator.id);
+    setAdministratorDisplayNameDraft(administrator.displayName);
+    setAdministratorEmailDraft(administrator.email);
+    setAdministratorUsernameDraft(administrator.username);
+    setAdministratorRoleIdDraft(administratorRoles.find((role) => role.code === administrator.roleCode)?.id ?? null);
+    setAdministratorUnitIdDraft(administratorUnits.find((unit) => unit.code === administrator.unitCode)?.id ?? null);
+  };
+
+  const MAX_USERNAME_COLLISION_ATTEMPTS = 20;
+
+  const handleCreateAdministrator = async () => {
+    if (!administratorDisplayNameDraft.trim() || !administratorEmailDraft.trim()) {
+      toast({ title: "Missing information", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    if (administratorRoleIdDraft === null || administratorUnitIdDraft === null) {
+      toast({ title: "Missing information", description: "Please select a role and unit.", variant: "destructive" });
+      return;
+    }
+    const baseUsername = administratorEmailDraft
+      .trim()
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "");
+    if (!baseUsername) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+
+    setSavingAdministrator(true);
+    try {
+      let attempt = 0;
+      for (;;) {
+        const candidateUsername = attempt === 0 ? baseUsername : `${baseUsername}${attempt + 1}`;
+        try {
+          await createAdministratorInSupabase({
+            displayName: administratorDisplayNameDraft,
+            email: administratorEmailDraft,
+            username: candidateUsername,
+            roleId: administratorRoleIdDraft,
+            unitId: administratorUnitIdDraft,
+          });
+          break;
+        } catch (error) {
+          if (error instanceof DuplicateUsernameError && attempt < MAX_USERNAME_COLLISION_ATTEMPTS) {
+            attempt += 1;
+            continue;
+          }
+          throw error;
+        }
+      }
+      toast({
+        title: "Administrator invited",
+        description: `An invite email has been sent to ${administratorEmailDraft.trim()}.`,
+      });
+      resetAdministratorForm();
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to add administrator",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAdministrator(false);
+    }
+  };
+
+  const handleResendInvite = async (administrator: AdministratorRecord) => {
+    setResendingInviteId(administrator.id);
+    try {
+      await resendAdminInviteInSupabase(administrator.id);
+      toast({ title: "Invite resent", description: `A new invite email has been sent to ${administrator.email}.` });
+    } catch (error) {
+      toast({
+        title: "Unable to resend the invite",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendingInviteId(null);
+    }
+  };
+
+  const handleUpdateAdministrator = async () => {
+    if (!editingAdministratorId) return;
+    if (!administratorDisplayNameDraft.trim() || !administratorEmailDraft.trim() || !administratorUsernameDraft.trim()) {
+      toast({ title: "Missing information", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    if (administratorRoleIdDraft === null || administratorUnitIdDraft === null) {
+      toast({ title: "Missing information", description: "Please select a role and unit.", variant: "destructive" });
+      return;
+    }
+    setSavingAdministrator(true);
+    try {
+      await updateAdministratorInSupabase({
+        id: editingAdministratorId,
+        displayName: administratorDisplayNameDraft,
+        email: administratorEmailDraft,
+        username: administratorUsernameDraft,
+        roleId: administratorRoleIdDraft,
+        unitId: administratorUnitIdDraft,
+      });
+      toast({ title: "Administrator updated" });
+      resetAdministratorForm();
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to update administrator",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAdministrator(false);
+    }
+  };
+
+  const handleToggleAdministratorActive = async (administrator: AdministratorRecord) => {
+    try {
+      await setAdministratorActiveInSupabase(administrator.id, !administrator.isActive);
+      toast({
+        title: administrator.isActive ? "Administrator suspended" : "Administrator reactivated",
+        description: administrator.displayName,
+      });
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to update status",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAdministrator = async (administrator: AdministratorRecord) => {
+    try {
+      await deleteAdministratorInSupabase(administrator.id);
+      toast({ title: "Administrator deleted", description: administrator.displayName });
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to delete administrator",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateRolePermissions = async (roleId: number, permissionCodes: string[]) => {
+    try {
+      await updateRolePermissionsInSupabase(roleId, permissionCodes);
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to update permissions",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportAdministrators = async (format: ExportFormat) => {
+    if (!filteredAdministrators.length) {
+      toast({ title: "No administrators found", description: "Try changing the selected filters." });
+      return;
+    }
+    try {
+      await exportReport(format, {
+        config: {
+          title: "Administrators",
+          filenamePrefix: "administrators",
+          columns: [
+            { label: "Display Name", value: (row: AdministratorRecord) => row.displayName, pdfWidth: 100, xlsxWidth: 24 },
+            { label: "Email", value: (row: AdministratorRecord) => row.email, pdfWidth: 130, xlsxWidth: 28 },
+            { label: "Username", value: (row: AdministratorRecord) => row.username, pdfWidth: 90, xlsxWidth: 18 },
+            { label: "Role", value: (row: AdministratorRecord) => row.roleLabel ?? "", pdfWidth: 70, xlsxWidth: 16 },
+            { label: "Unit", value: (row: AdministratorRecord) => row.unitLabel ?? "", pdfWidth: 110, xlsxWidth: 24 },
+            {
+              label: "Status",
+              value: (row: AdministratorRecord) => (row.isActive ? "Active" : "Suspended"),
+              pdfWidth: 60,
+              xlsxWidth: 14,
+            },
+          ],
+        },
+        rows: filteredAdministrators,
+      });
+      toast({ title: "Export Ready", description: `The administrators ${format.toUpperCase()} export has been downloaded.` });
+    } catch (error) {
+      console.error("Unable to export administrators:", error);
+      toast({
+        title: "Export Failed",
+        description: "Unable to export administrators. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredAdministrators = useMemo(() => {
+    const searchTerm = administratorSearch.trim().toLowerCase();
+    return administrators.filter((administrator) => {
+      if (administratorRoleFilter !== "all" && administrator.roleCode !== administratorRoleFilter) return false;
+      if (administratorUnitFilter !== "all" && administrator.unitCode !== administratorUnitFilter) return false;
+      if (administratorStatusFilter === "active" && !administrator.isActive) return false;
+      if (administratorStatusFilter === "suspended" && administrator.isActive) return false;
+      if (!searchTerm) return true;
+      const haystack = `${administrator.displayName} ${administrator.email} ${administrator.username}`.toLowerCase();
+      return haystack.includes(searchTerm);
+    });
+  }, [administrators, administratorRoleFilter, administratorUnitFilter, administratorStatusFilter, administratorSearch]);
+
+  const editingAdministrator = administrators.find((administrator) => administrator.id === editingAdministratorId) ?? null;
 
   const appendAuditLog = async (
     action: string,
@@ -2033,169 +2402,48 @@ export default function AdminPortal({ section }: { section: string }) {
     });
   };
 
-  const getRegistrationReviewDraft = (fileId: string, fallbackRemark = "", expectedUpdatedAt = "") =>
-    registrationReviewDraftsByFileId[fileId] ?? {
-      decision: "unreviewed" as const,
-      remark: fallbackRemark,
-      expectedUpdatedAt,
-    };
-
-  const setRegistrationReviewDraft = (
-    fileId: string,
-    nextValue: Partial<RegistrationReviewDraft> & Pick<RegistrationReviewDraft, "expectedUpdatedAt">,
-  ) => {
-    setRegistrationReviewDraftsByFileId((current) => ({
-      ...current,
-      [fileId]: {
-        decision: current[fileId]?.decision ?? "unreviewed",
-        remark: current[fileId]?.remark ?? "",
-        expectedUpdatedAt: current[fileId]?.expectedUpdatedAt ?? nextValue.expectedUpdatedAt,
-        ...current[fileId],
-        ...nextValue,
-      },
-    }));
-  };
-
-  const clearRegistrationReviewDraft = (fileId: string) => {
-    setRegistrationReviewDraftsByFileId((current) => {
-      if (!current[fileId]) return current;
-      const next = { ...current };
-      delete next[fileId];
-      return next;
-    });
-  };
-
-  const applyRegistrationBulkDecision = (
-    fileIds: string[],
-    decision: Exclude<RegistrationReviewDecision, "unreviewed">,
-  ) => {
-    if (!fileIds.length) {
-      toast({
-        title: "No documents selected",
-        description: "Select at least one submitted document first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setRegistrationReviewDraftsByFileId((current) => {
-      const next = { ...current };
-      fileIds.forEach((fileId) => {
-        const existingFile = selectedRegistrationFiles.find((file) => file.id === fileId);
-        if (!existingFile || existingFile.adminStatus === "approved_green") return;
-        next[fileId] = {
-          decision,
-          remark:
-            decision === "approve"
-              ? ""
-              : current[fileId]?.remark?.trim() || registrationBulkRemark.trim() || existingFile.adminRemarks || "",
-          expectedUpdatedAt: current[fileId]?.expectedUpdatedAt || existingFile.updatedAt,
-        };
-      });
-      return next;
-    });
-  };
-
-  const hasStagedRegistrationReviewChanges = Object.values(registrationReviewDraftsByFileId).some(
-    (draft) => draft.decision !== "unreviewed",
-  );
-
-  const confirmDiscardRegistrationReviewChanges = async () =>
-    !hasStagedRegistrationReviewChanges ||
-    await confirmAction({
-      title: "Discard unsaved review decisions?",
-      description: "You have unsaved review decisions. Leaving this page will discard them.",
-      confirmLabel: "Discard and Leave",
-      destructive: true,
-    });
-
-  const handleRegistrationSelectionChange = async (nextRegistrationId: string | null) => {
-    if (nextRegistrationId === selectedRegistrationId) return;
-    if (!await confirmDiscardRegistrationReviewChanges()) return;
+  const handleRegistrationSelectionChange = (nextRegistrationId: string | null) => {
     setSelectedRegistrationId(nextRegistrationId);
   };
 
-  const handleAdminSectionNavigate = async (id: string) => {
+  const handleAdminSectionNavigate = (id: string) => {
     const nextRoute = routeMap[id] ?? routeMap.overview;
     const currentRoute = routeMap[section] ?? routeMap.overview;
     if (nextRoute === currentRoute) return;
-    if (!await confirmDiscardRegistrationReviewChanges()) return;
     navigate(nextRoute);
-  };
-
-  const stageBulkRegistrationDecision = async (
-    fileIds: string[],
-    decision: Exclude<RegistrationReviewDecision, "unreviewed">,
-  ) => {
-    if (!fileIds.length) {
-      toast({
-        title: "No documents selected",
-        description: "Select at least one submitted document first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const shouldConfirm = decision !== "approve" || fileIds.length > 1;
-    if (shouldConfirm) {
-      const confirmed = await confirmAction({
-        title: `${registrationReviewDecisionLabel[decision]} ${fileIds.length} selected document${fileIds.length === 1 ? "" : "s"}?`,
-        description:
-          decision === "approve"
-            ? "This will only stage approval decisions until you submit the review batch."
-            : `Shared remark: ${registrationBulkRemark.trim() || "No shared remark provided."}`,
-        confirmLabel: `Stage ${registrationReviewDecisionLabel[decision]}`,
-        destructive: decision !== "approve",
-      });
-      if (!confirmed) return;
-    }
-
-    applyRegistrationBulkDecision(fileIds, decision);
-  };
-
-  const stageApproveAllUnreviewedDocuments = async (fileIds: string[]) => {
-    if (!fileIds.length) {
-      toast({
-        title: "No eligible documents",
-        description: "All reviewable documents already have a final status or staged decision.",
-      });
-      return;
-    }
-
-    const confirmed = await confirmAction({
-      title: `Approve all ${fileIds.length} eligible document${fileIds.length === 1 ? "" : "s"}?`,
-      description: "This will add approval decisions to the review summary.\nNothing will be submitted until you click Submit Review Decisions.",
-      confirmLabel: "Stage Approvals",
-    });
-    if (!confirmed) return;
-
-    applyRegistrationBulkDecision(fileIds, "approve");
   };
 
   const submitRegistrationReviewDecisions = async () => {
     if (!selectedRegistrationProfile || !selectedRegistrationSubmission) return;
 
-    const decisionEntries = selectedRegistrationFiles
-      .map((file) => ({ file, draft: registrationReviewDraftsByFileId[file.id] }))
-      .filter((entry): entry is { file: (typeof selectedRegistrationFiles)[number]; draft: RegistrationReviewDraft } => Boolean(entry.draft))
-      .filter((entry) => entry.draft.decision !== "unreviewed");
+    const decision = registrationBulkDecision;
+    const targetFiles = selectedRegistrationFiles.filter(
+      (file) => selectedRegistrationReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+    );
 
-    if (!decisionEntries.length) {
+    if (!targetFiles.length) {
       toast({
-        title: "No review decisions yet",
-        description: "Assign at least one decision before submitting the batch review.",
+        title: "No documents selected",
+        description: "Select at least one submitted document before confirming a decision.",
         variant: "destructive",
       });
       return;
     }
 
-    const missingRemarkEntry = decisionEntries.find(
-      ({ draft }) => (draft.decision === "needs_revision" || draft.decision === "reject") && !draft.remark.trim(),
-    );
-    if (missingRemarkEntry) {
+    if (registrationDecisionRequiresRemark(decision) && targetFiles.length > 1) {
+      toast({
+        title: "One document at a time",
+        description: `${registrationReviewDecisionLabel[decision]} requires selecting a single document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const remark = registrationBulkRemark.trim();
+    if (registrationDecisionRequiresRemark(decision) && !remark) {
       toast({
         title: "Comment required",
-        description: "Add a remark for every Needs Revision or Reject decision before submitting.",
+        description: `Add a remark before you can ${registrationReviewDecisionLabel[decision].toLowerCase()} this document.`,
         variant: "destructive",
       });
       return;
@@ -2204,26 +2452,26 @@ export default function AdminPortal({ section }: { section: string }) {
     setRegistrationReviewSubmitting(true);
     try {
       const result = await submitDocumentReviewBatchToSupabase({
-        decisions: decisionEntries.map(({ file, draft }) => ({
+        decisions: targetFiles.map((file) => ({
           fileId: file.id,
           status:
-            draft.decision === "approve"
+            decision === "approve"
               ? "approved_green"
-              : draft.decision === "needs_revision"
+              : decision === "needs_revision"
                 ? "needs_revision"
                 : "rejected_red",
-          adminRemarks: draft.decision === "approve" ? undefined : draft.remark.trim(),
-          expectedUpdatedAt: draft.expectedUpdatedAt,
+          adminRemarks: decision === "approve" ? undefined : remark,
+          expectedUpdatedAt: file.updatedAt,
         })),
       });
 
       const successfulFileIds = new Set(
         result.results.filter((item) => item.success).map((item) => item.fileId),
       );
-      const successfulEntries = decisionEntries.filter((entry) => successfulFileIds.has(entry.file.id));
+      const successfulFiles = targetFiles.filter((file) => successfulFileIds.has(file.id));
       const failedResults = result.results.filter((item) => !item.success);
 
-      if (!successfulEntries.length) {
+      if (!successfulFiles.length) {
         throw new Error(
           failedResults.map((item) => item.error).filter(Boolean).join(" ") ||
             "No document review decisions were saved. Please refresh and try again.",
@@ -2232,29 +2480,29 @@ export default function AdminPortal({ section }: { section: string }) {
 
       await refreshAdminState();
 
-      for (const entry of successfulEntries) {
-        if (entry.draft.decision === "approve") {
+      for (const file of successfulFiles) {
+        if (decision === "approve") {
           await appendAuditLog(
             "Approved document submission",
             "document_submission_file",
-            entry.file.id,
-            `Approved ${entry.file.fileName} from the registration detail batch review.`,
+            file.id,
+            `Approved ${file.fileName} from the registration detail review.`,
             selectedRegistrationProfile.id,
           );
-        } else if (entry.draft.decision === "needs_revision") {
+        } else if (decision === "needs_revision") {
           await appendAuditLog(
             "Document revision requested",
             "document_submission_file",
-            entry.file.id,
-            `Requested revisions for ${entry.file.fileName} from the registration detail batch review.`,
+            file.id,
+            `Requested revisions for ${file.fileName} from the registration detail review.`,
             selectedRegistrationProfile.id,
           );
         } else {
           await appendAuditLog(
             "Rejected document submission",
             "document_submission_file",
-            entry.file.id,
-            `Rejected ${entry.file.fileName} from the registration detail batch review.`,
+            file.id,
+            `Rejected ${file.fileName} from the registration detail review.`,
             selectedRegistrationProfile.id,
           );
         }
@@ -2278,10 +2526,8 @@ export default function AdminPortal({ section }: { section: string }) {
         relatedId: selectedRegistrationSubmission.id,
       });
 
-      setRegistrationReviewDraftsByFileId((current) =>
-        Object.fromEntries(Object.entries(current).filter(([fileId]) => !successfulFileIds.has(fileId))),
-      );
       setSelectedRegistrationReviewFileIds([]);
+      setRegistrationBulkDecision("approve");
       setRegistrationBulkRemark("");
 
       if (failedResults.length) {
@@ -4154,6 +4400,19 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const activeContent = useMemo(() => {
+    const requiredPermission = ADMIN_NAV_PERMISSION_MAP[section];
+    const hasSectionAccess = !requiredPermission || (user?.permissionCodes ?? []).includes(requiredPermission);
+    if (!hasSectionAccess) {
+      return (
+        <PortalEmptyState
+          title="Access Restricted"
+          description="You don't have permission to view this page. Contact a Super Admin if you believe this is a mistake."
+          action={
+            <Button onClick={() => navigate(routeMap.overview)}>Back to Overview</Button>
+          }
+        />
+      );
+    }
     switch (section) {
       case "overview": {
         const formatActionName = (action: string) =>
@@ -4395,79 +4654,14 @@ export default function AdminPortal({ section }: { section: string }) {
         const activeReviewIndex = activeReviewEntry
           ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
           : -1;
-        const activeReviewDraft = activeReviewEntry
-          ? getRegistrationReviewDraft(
-              activeReviewEntry.file.id,
-              activeReviewEntry.file.adminStatus === "needs_revision" || activeReviewEntry.file.adminStatus === "rejected_red"
-                ? activeReviewEntry.file.adminRemarks
-                : "",
-              activeReviewEntry.file.updatedAt,
-            )
-          : null;
         const selectedBulkFiles = orderedSubmittedFiles.filter((entry) => selectedRegistrationReviewFileIds.includes(entry.file.id));
-        const eligibleUnreviewedFileIds = orderedSubmittedFiles
-          .filter(
-            (entry) =>
-              entry.file.adminStatus !== "approved_green" &&
-              (entry.file.adminStatus === "submitted" || entry.file.adminStatus === "under_admin_review") &&
-              getRegistrationReviewDraft(entry.file.id, "", entry.file.updatedAt).decision === "unreviewed",
-          )
-          .map((entry) => entry.file.id);
-        const activeReviewHistory = activeReviewEntry
-          ? [
-              {
-                id: `${activeReviewEntry.file.id}-submitted`,
-                message: "Submitted",
-                timestamp: activeReviewEntry.file.uploadedAt,
-                timestampLabel: activeReviewEntry.file.uploadedAt ? formatDateTimeLabel(activeReviewEntry.file.uploadedAt) : undefined,
-              },
-              ...(activeReviewEntry.file.reviewedAt
-                ? [{
-                    id: `${activeReviewEntry.file.id}-reviewed`,
-                    message: statusLabelMap[activeReviewEntry.file.adminStatus] ?? activeReviewEntry.file.adminStatus.replaceAll("_", " "),
-                    note:
-                      (activeReviewEntry.file.adminStatus === "needs_revision" ||
-                        activeReviewEntry.file.adminStatus === "rejected_red") &&
-                      activeReviewEntry.file.adminRemarks
-                        ? `"${activeReviewEntry.file.adminRemarks}"`
-                        : undefined,
-                    timestamp: activeReviewEntry.file.reviewedAt,
-                    timestampLabel: activeReviewEntry.file.reviewedAt ? formatDateTimeLabel(activeReviewEntry.file.reviewedAt) : undefined,
-                  }]
-                : []),
-              ...(activeReviewEntry.file.userRemarks
-                ? [{
-                    id: `${activeReviewEntry.file.id}-user-note`,
-                    message: "Note from org",
-                    note: `"${activeReviewEntry.file.userRemarks}"`,
-                  }]
-                : []),
-            ]
-          : [];
-        const bulkDecisionSummary = Object.values(registrationReviewDraftsByFileId).reduce(
-          (summary, draft) => {
-            if (draft.decision === "approve") summary.approve += 1;
-            if (draft.decision === "needs_revision") summary.needsRevision += 1;
-            if (draft.decision === "reject") summary.reject += 1;
-            if (draft.decision === "unreviewed") summary.unreviewed += 1;
-            return summary;
-          },
-          { approve: 0, needsRevision: 0, reject: 0, unreviewed: 0 },
-        );
-        const stagedDecisionCount = bulkDecisionSummary.approve + bulkDecisionSummary.needsRevision + bulkDecisionSummary.reject;
-        const reviewableUnreviewedCount = orderedSubmittedFiles.filter((entry) => {
-          if (entry.file.adminStatus === "approved_green") return false;
-          return getRegistrationReviewDraft(entry.file.id, "", entry.file.updatedAt).decision === "unreviewed";
-        }).length;
-        const hasMissingDecisionRemark = orderedSubmittedFiles.some((entry) => {
-          const draft = registrationReviewDraftsByFileId[entry.file.id];
-          return Boolean(draft && registrationDecisionRequiresRemark(draft.decision) && !draft.remark.trim());
-        });
-        const isActiveDocumentLocked = activeReviewEntry?.file.adminStatus === "approved_green";
         const missingDocumentCount = Math.max(templateDocuments.length - submittedDocumentCount, 0);
-        const selectableBulkFileCount = orderedSubmittedFiles.filter((entry) => entry.file.adminStatus !== "approved_green").length;
-        const shouldShowMobileBulkReview = selectedBulkFiles.length > 0 && selectableBulkFileCount > 1;
         const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
+        const decisionRequiresRemark = registrationDecisionRequiresRemark(registrationBulkDecision);
+        const isRegistrationDecisionConfirmDisabled =
+          selectedBulkFiles.length === 0 ||
+          registrationReviewSubmitting ||
+          (selectedBulkFiles.length === 1 && decisionRequiresRemark && !registrationBulkRemark.trim());
 
         if (selectedOrg) {
           if (selectedOrg.registrationType === "existing_urn") {
@@ -4479,1232 +4673,688 @@ export default function AdminPortal({ section }: { section: string }) {
               />
             );
           }
-          return (
-            <div className="space-y-5">
-              <div className="rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="min-w-0 space-y-2">
-                    <Button size="sm" variant="ghost" className="-ml-2 h-8 px-2 text-muted-foreground" onClick={() => handleRegistrationSelectionChange(null)}>
-                      <ArrowLeft className="mr-1.5 h-4 w-4" />
-                      Back
-                    </Button>
-                    <div className="min-w-0">
-                      <h1 className="truncate text-2xl font-semibold text-foreground">{selectedOrg.organizationName}</h1>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {selectedOrg.profileStatus === "verified" && selectedOrg.verifiedAt
-                          ? `Verified on ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" }).format(new Date(selectedOrg.verifiedAt))}`
-                          : selectedOrg.profileStatus === "needs_update"
-                          ? "Needs update"
-                          : "Pending verification"}
+          const isRegistrationDocumentsComplete = templateDocuments.length > 0 && submittedDocumentCount >= templateDocuments.length;
+          const registrationCreatedDate = new Date(selectedOrg.createdAt);
+          const isRegistrationCreatedDateValid = !Number.isNaN(registrationCreatedDate.getTime());
+
+          const getActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const organizationActivityEntries = state.activityLogs
+            .filter(
+              (log) =>
+                log.relatedType === "document_submission_file" &&
+                log.organizationId === selectedOrg.id &&
+                log.action !== "Submitted batch document review",
+            )
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              const relatedFile = state.documentSubmissionFiles.find((file) => file.id === log.relatedId);
+              const docName = relatedFile
+                ? templateDocuments.find((doc) => doc.id === relatedFile.documentTypeId)?.name ?? relatedFile.fileName
+                : "a document";
+              const verb =
+                log.action === "Approved document submission"
+                  ? "approved"
+                  : log.action === "Document revision requested"
+                    ? "requested revisions to the"
+                    : log.action === "Rejected document submission"
+                      ? "rejected"
+                      : "updated";
+              return { id: log.id, adminName, docName, verb, createdAt: log.createdAt };
+            });
+
+          const visibleActivityEntries = organizationActivityEntries.slice(0, registrationActivityVisibleCount);
+          const hasMoreActivityEntries = organizationActivityEntries.length > visibleActivityEntries.length;
+          const groupedActivityEntries = visibleActivityEntries.reduce<{ label: string; entries: typeof visibleActivityEntries }[]>(
+            (groups, entry) => {
+              const label = getActivityDayLabel(entry.createdAt);
+              const existingGroup = groups.find((group) => group.label === label);
+              if (existingGroup) {
+                existingGroup.entries.push(entry);
+              } else {
+                groups.push({ label, entries: [entry] });
+              }
+              return groups;
+            },
+            [],
+          );
+
+          const reviewSummaryCard = (
+            <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
+                <div className="flex flex-col gap-1">
+                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                  <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                    Review your decisions before submitting.
+                  </p>
+                </div>
+                <div className="relative shrink-0">
+                  <button
+                    ref={registrationActivityTriggerRef}
+                    type="button"
+                    aria-label="Decision history"
+                    onClick={() => setIsRegistrationActivityPopoverOpen((current) => !current)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                  {isRegistrationActivityPopoverOpen ? (
+                    <div
+                      ref={registrationActivityPanelRef}
+                      className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                  >
+                    <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                      <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                        Recent Activity
                       </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-medium ${selectedOrg.isExistingOrganization ? "border-sky-200 bg-sky-50 text-sky-700" : "border-primary/20 bg-primary-soft text-primary"}`}>
-                          {selectedOrg.isExistingOrganization ? "Existing Organization" : "New Organization"}
-                        </span>
-                        <span>&middot;</span>
-                        <span>{approvedDocumentCount}/{templateDocuments.length} documents approved</span>
-                      </div>
+                      <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                        A log of recent actions taken on this organization.
+                      </p>
                     </div>
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
-                    <PortalStatusBadge status={selectedOrg.profileStatus} />
-                    {selectedOrg.profileStatus !== "verified" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!allRequiredDocumentsApproved}
-                        onClick={() =>
-                          openAdminConfirmation({
-                            kind: "profile",
-                            action: "verify",
-                            organizationId: selectedOrg.id,
-                            organizationName: selectedOrg.organizationName,
-                            userId: selectedOrg.userId,
-                          })
-                        }
-                      >
-                        Mark Verified
-                      </Button>
+
+                    <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                      {groupedActivityEntries.length ? (
+                        groupedActivityEntries.map((group) => (
+                          <div key={group.label} className="space-y-2">
+                            <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                              {group.label}
+                            </p>
+                            <div className="space-y-0">
+                              {group.entries.map((entry, index) => {
+                                const entryDate = new Date(entry.createdAt);
+                                const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                return (
+                                  <div key={entry.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                    {index < group.entries.length - 1 ? (
+                                      <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                    ) : null}
+                                    <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                      <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                    </span>
+                                    <div className="min-w-0 flex-1 space-y-0.5">
+                                      <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                        <span className="font-semibold">{entry.adminName}</span> {entry.verb}{" "}
+                                        <span className="font-semibold">{entry.docName}</span>.
+                                      </p>
+                                      <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                        {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                          No activity recorded yet.
+                        </p>
+                      )}
+                    </div>
+
+                    {hasMoreActivityEntries ? (
+                      <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                        <button
+                          type="button"
+                          onClick={() => setRegistrationActivityVisibleCount((current) => current + 4)}
+                          className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                        >
+                          Load older activity
+                        </button>
+                      </div>
                     ) : null}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        openAdminConfirmation({
-                          kind: "profile",
-                          action: "needs_update",
-                          organizationId: selectedOrg.id,
-                          organizationName: selectedOrg.organizationName,
-                          userId: selectedOrg.userId,
-                        })
-                      }
-                    >
-                      Needs Update
-                    </Button>
-                  </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm lg:hidden">
+              <div className="mt-4 space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{needsRevisionCount + rejectedCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
-                  className="flex w-full items-start justify-between gap-3 text-left"
-                  aria-expanded={registrationMobileInfoExpanded}
-                  onClick={() => setRegistrationMobileInfoExpanded((current) => !current)}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  onClick={() => handleRegistrationSelectionChange(null)}
                 >
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/75">Organization Information</p>
-                    <p className="mt-1 text-sm font-medium text-foreground">{selectedOrg.organizationEmail}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {[selectedOrg.barangay, selectedOrg.district].filter(Boolean).join(" · ") || "No location provided"}
-                    </p>
-                  </div>
-                  {registrationMobileInfoExpanded ? (
-                    <ChevronUp className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Registrations Queue
                 </button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+                      isRegistrationDocumentsComplete
+                        ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
+                        : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
+                    )}
+                  >
+                    {submittedDocumentCount}/{templateDocuments.length} Documents Submitted
+                  </span>
+                  <RegistrationStatusPill status={selectedOrg.profileStatus} />
+                </div>
+              </div>
 
-                {registrationMobileInfoExpanded ? (
-                  <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/75">Contact &amp; Location</p>
-                      <div className="space-y-2 text-sm">
-                        <p className="break-all text-foreground">{selectedOrg.organizationEmail}</p>
-                        <p className="text-muted-foreground">{selectedOrg.contactNumber || "No contact number"}</p>
-                        <p className="text-muted-foreground">{selectedOrg.address || "No address provided"}</p>
-                        {selectedOrg.facebookPageUrl ? (
-                          <a
-                            href={selectedOrg.facebookPageUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="break-all text-primary underline-offset-4 hover:underline"
-                          >
-                            {selectedOrg.facebookPageUrl}
-                          </a>
-                        ) : null}
-                      </div>
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 p-4",
+                    !registrationInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
+                  )}
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                     </div>
+                    <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {selectedOrg.organizationName}
+                    </h1>
+                    <ReferenceCodeChip code={selectedOrg.referenceId || "—"} />
+                    {selectedOrg.majorClassification ? <CategoryChip category={selectedOrg.majorClassification} /> : null}
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
+                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                    >
+                      {registrationInfoCollapsed ? "Expand Details" : "Collapse Details"}
+                    </button>
+                    <button
+                      type="button"
+                      aria-expanded={!registrationInfoCollapsed}
+                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                    >
+                      <ChevronDown
+                        className={cn("h-4 w-4 text-text-default transition-transform", !registrationInfoCollapsed && "rotate-180")}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                  </div>
+                </div>
 
-                    <div className="space-y-2 border-t border-border/60 pt-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/75">Leadership</p>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <p>Representative: <span className="font-medium text-foreground">{selectedOrg.representativeName || "N/A"}</span></p>
-                        <p>Adviser: <span className="font-medium text-foreground">{selectedOrg.adviserName || "N/A"}</span></p>
-                      </div>
+                {!registrationInfoCollapsed ? (
+                  <div className="space-y-3 p-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <RegistrationInfoBox label="ORGANIZATION" title={selectedOrg.organizationName} />
+                      <RegistrationInfoBox
+                        label="CLASSIFICATION"
+                        title={selectedOrg.majorClassification || "N/A"}
+                        description={selectedOrg.subClassification || undefined}
+                      />
+                      <RegistrationInfoBox
+                        label="LOCATION"
+                        title={selectedOrg.district || "N/A"}
+                        description={selectedOrg.barangay || undefined}
+                      />
+                      <RegistrationInfoBox
+                        label="REGISTRATION DATE"
+                        title={isRegistrationCreatedDateValid ? format(registrationCreatedDate, "d MMM yyyy") : "N/A"}
+                        description={selectedOrg.isExistingOrganization ? "Existing Organization" : "New Organization"}
+                      />
                     </div>
-
-                    <div className="space-y-2 border-t border-border/60 pt-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/75">Classification</p>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <p>Major: <span className="font-medium text-foreground">{selectedOrg.majorClassification || "N/A"}</span></p>
-                        <p>Sub: <span className="font-medium text-foreground">{selectedOrg.subClassification || "N/A"}</span></p>
-                        <p>Created: <span className="font-medium text-foreground">{selectedOrg.verifiedAt ? formatVerifiedDateLabel(selectedOrg.verifiedAt) : "Pending verification"}</span></p>
-                      </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <RegistrationContactBox
+                        icon={UserRound}
+                        label="REPRESENTATIVE"
+                        title={selectedOrg.representativeName || "N/A"}
+                        description={`Adviser: ${selectedOrg.adviserName || "N/A"}`}
+                      />
+                      <RegistrationContactBox
+                        icon={Mail}
+                        label="EMAIL"
+                        title={selectedOrg.organizationEmail}
+                        description="Verified Portal Account"
+                        showCopy
+                      />
+                      <RegistrationContactBox
+                        icon={Phone}
+                        label="CONTACT"
+                        title={selectedOrg.contactNumber || "N/A"}
+                      />
+                      <RegistrationContactBox
+                        icon={Globe}
+                        label="FACEBOOK"
+                        title={selectedOrg.facebookPageUrl ? selectedOrg.facebookPageUrl.replace(/^https?:\/\/(www\.)?/i, "") : "N/A"}
+                        href={selectedOrg.facebookPageUrl || undefined}
+                      />
                     </div>
-
-                    <div className="space-y-2 border-t border-border/60 pt-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/75">Advocacies</p>
-                      {renderAdvocacyChips(selectedOrg.advocacies)}
+                    <div className="rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                      <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Office Address</p>
+                      <p className="mt-2 font-segoe text-sm font-medium leading-[140%] text-text-default">
+                        {selectedOrg.address || "No address provided"}
+                      </p>
                     </div>
                   </div>
                 ) : null}
               </div>
 
-              <div className="hidden lg:block">
-                <PortalSection
-                  title="Organization Information"
-                  action={
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      aria-expanded={!registrationInfoCollapsed}
-                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
-                    >
-                      {registrationInfoCollapsed ? "Expand" : "Collapse"}
-                    </Button>
-                  }
-                >
-                  {registrationInfoCollapsed ? (
-                    <div className="rounded-xl border border-border/70 bg-muted/15 px-4 py-3 text-sm text-muted-foreground">
-                      <p>
-                        {selectedOrg.majorClassification || "Unclassified"} &middot; {selectedOrg.subClassification || "No sub-classification"} &middot; {selectedOrg.barangay || "No barangay"}
-                      </p>
-                      <p className="mt-1">
-                        Representative: {selectedOrg.representativeName || "N/A"} &middot; Adviser: {selectedOrg.adviserName || "N/A"}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 lg:grid-cols-2">
-                      <div className="rounded-xl border border-border/70 bg-background p-3.5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">Contact &amp; Location</p>
-                        <div className="mt-3 divide-y divide-border/50">
-                          <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Email</p>
-                            <p className="break-all text-sm font-medium">{selectedOrg.organizationEmail}</p>
-                          </div>
-                          <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Contact</p>
-                            <p className="text-sm font-medium">{selectedOrg.contactNumber || "N/A"}</p>
-                          </div>
-                          <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Barangay</p>
-                            <p className="text-sm font-medium">{selectedOrg.barangay || "N/A"}</p>
-                          </div>
-                          <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Facebook</p>
-                            {selectedOrg.facebookPageUrl ? (
-                              <a href={selectedOrg.facebookPageUrl} target="_blank" rel="noreferrer" className="break-all text-sm font-medium text-primary underline-offset-4 hover:underline">
-                                {selectedOrg.facebookPageUrl}
-                              </a>
-                            ) : (
-                              <p className="text-sm font-medium text-muted-foreground">N/A</p>
-                            )}
-                          </div>
-                          <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Address</p>
-                            <p className="break-words text-sm font-medium">{selectedOrg.address || "N/A"}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="grid gap-3">
-                        <div className="rounded-xl border border-border/70 bg-background p-3.5">
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">Leadership</p>
-                          <div className="mt-3 divide-y divide-border/50">
-                            <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Representative</p>
-                              <p className="text-sm font-medium">{selectedOrg.representativeName || "N/A"}</p>
-                            </div>
-                            <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
-                              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Adviser</p>
-                              <p className="text-sm font-medium">{selectedOrg.adviserName || "N/A"}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-                          <div className="rounded-xl border border-border/70 bg-background p-3.5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">Classification</p>
-                            <div className="mt-3 divide-y divide-border/50">
-                              <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[6rem_minmax(0,1fr)] lg:gap-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Major</p>
-                                <p className="text-sm font-medium">{selectedOrg.majorClassification || "N/A"}</p>
-                              </div>
-                              <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[6rem_minmax(0,1fr)] lg:gap-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Sub</p>
-                                <p className="text-sm font-medium">{selectedOrg.subClassification || "N/A"}</p>
-                              </div>
-                              <div className="grid gap-1 py-2 first:pt-0 last:pb-0 lg:grid-cols-[6rem_minmax(0,1fr)] lg:gap-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/75">Created</p>
-                                <p className="text-sm font-medium">{selectedOrg.verifiedAt ? formatVerifiedDateLabel(selectedOrg.verifiedAt) : "Pending verification"}</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="rounded-xl border border-border/70 bg-background p-3.5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">Advocacies</p>
-                            <div className="mt-3">{renderAdvocacyChips(selectedOrg.advocacies)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </PortalSection>
-              </div>
+              {reviewSummaryCard}
 
-              {/* Documents */}
-              <PortalSection
-                title="Submitted Documents"
-                description={`${selectedFiles.length}/${templateDocuments.length} files submitted from the organization user side.`}
-              >
-                {selectedSubmission ? (
-                  <div className="space-y-4">
-                    {orderedSubmittedFiles.length ? (
-                      <>
-                        <div className="space-y-4 lg:hidden">
-                          <div className="rounded-xl border border-border/70 bg-background p-3.5 shadow-sm">
-                            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Submission Summary</p>
-                            <p className="mt-2 text-sm font-medium text-foreground">
-                              {submittedDocumentCount} submitted · {approvedDocumentCount} approved
-                              {missingDocumentCount ? ` · ${missingDocumentCount} missing` : ""}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {orderedSubmittedFiles.length} queued for review
-                            </p>
-                          </div>
-
-                          {activeReviewEntry ? (
-                            <>
-                              <div className="rounded-xl border border-border/70 bg-background p-3.5 shadow-sm">
-                                <div className="space-y-3">
-                                  <div>
-                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Document Selector</p>
-                                    <p className="mt-1 text-sm text-muted-foreground">Switch the active preview and review the current file from here.</p>
-                                  </div>
-                                  <Select
-                                    value={activeReviewEntry.file.id}
-                                    onValueChange={(value) => setActiveRegistrationReviewFileId(value)}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {orderedSubmittedFiles.map(({ documentType, file }) => (
-                                        <SelectItem key={file.id} value={file.id}>
-                                          {documentType.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <div className="flex items-center justify-between gap-2">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      disabled={activeReviewIndex <= 0}
-                                      onClick={() => setActiveRegistrationReviewFileId(filteredQueueEntries[Math.max(0, activeReviewIndex - 1)]?.file.id ?? null)}
-                                    >
-                                      <ArrowLeft className="mr-1.5 h-4 w-4" />
-                                      Previous
-                                    </Button>
-                                    <span className="text-xs text-muted-foreground">
-                                      {Math.max(activeReviewIndex + 1, 0)} of {filteredQueueEntries.length || orderedSubmittedFiles.length}
-                                    </span>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      disabled={activeReviewIndex < 0 || activeReviewIndex >= filteredQueueEntries.length - 1}
-                                      onClick={() => setActiveRegistrationReviewFileId(filteredQueueEntries[Math.min(filteredQueueEntries.length - 1, activeReviewIndex + 1)]?.file.id ?? null)}
-                                    >
-                                      Next
-                                      <ArrowRight className="ml-1.5 h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                  {selectableBulkFileCount > 1 ? (
-                                    <div className="flex flex-wrap gap-2 border-t border-border/60 pt-3">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-8 px-2 text-xs"
-                                        onClick={() =>
-                                          setSelectedRegistrationReviewFileIds(
-                                            orderedSubmittedFiles
-                                              .filter((entry) => entry.file.adminStatus !== "approved_green")
-                                              .map((entry) => entry.file.id),
-                                          )
-                                        }
-                                      >
-                                        Select all reviewable
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-8 px-2 text-xs"
-                                        onClick={() =>
-                                          setSelectedRegistrationReviewFileIds(
-                                            orderedSubmittedFiles
-                                              .filter(
-                                                (entry) =>
-                                                  entry.file.adminStatus !== "approved_green" &&
-                                                  (entry.file.adminStatus === "submitted" || entry.file.adminStatus === "under_admin_review"),
-                                              )
-                                              .map((entry) => entry.file.id),
-                                          )
-                                        }
-                                      >
-                                        Select all unreviewed
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-8 px-2 text-xs text-muted-foreground"
-                                        onClick={() => setSelectedRegistrationReviewFileIds([])}
-                                      >
-                                        Clear
-                                      </Button>
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-
-                              <div className="rounded-xl border border-border/70 bg-background p-3.5 shadow-sm">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <p className="text-base font-semibold text-foreground">{activeReviewEntry.documentType.name}</p>
-                                      <PortalStatusBadge status={activeReviewEntry.file.adminStatus} />
-                                    </div>
-                                    <p className="mt-1 text-sm text-muted-foreground" title={activeReviewEntry.file.fileName}>
-                                      {activeReviewEntry.file.fileName}
-                                    </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                      Current: {statusLabelMap[activeReviewEntry.file.adminStatus] ?? activeReviewEntry.file.adminStatus.replaceAll("_", " ")}
-                                    </p>
-                                  </div>
-                                  <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 rounded border-border"
-                                      checked={selectedRegistrationReviewFileIds.includes(activeReviewEntry.file.id)}
-                                      disabled={isActiveDocumentLocked}
-                                      onChange={(event) =>
-                                        setSelectedRegistrationReviewFileIds((current) =>
-                                          event.target.checked
-                                            ? current.includes(activeReviewEntry.file.id)
-                                              ? current
-                                              : [...current, activeReviewEntry.file.id]
-                                            : current.filter((item) => item !== activeReviewEntry.file.id),
-                                        )
-                                      }
-                                    />
-                                    Select
-                                  </label>
-                                </div>
-                                <div className="mt-3 flex flex-wrap items-center gap-2">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => void openFile(activeReviewEntry.file.fileUrl, activeReviewEntry.file.fileName)}
-                                  >
-                                    <Eye className="mr-1.5 h-4 w-4" />
-                                    Open File
-                                  </Button>
-                                  {activeReviewDraft?.decision !== "unreviewed" ? (
-                                    <span
-                                      className={cn(
-                                        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
-                                        registrationReviewPendingTone[activeReviewDraft.decision],
-                                      )}
-                                    >
-                                      Pending: {registrationReviewDecisionLabel[activeReviewDraft.decision]}
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </div>
-
-                              <div className="overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm">
-                                {activeDocumentPreviewUrl ? (
-                                  <iframe
-                                    src={activeDocumentPreviewUrl}
-                                    title={activeReviewEntry.file.fileName}
-                                    className="w-full border-0"
-                                    style={{ height: "clamp(420px, 62vh, 620px)" }}
-                                  />
-                                ) : (
-                                  <div
-                                    className="grid place-items-center p-6 text-center text-sm text-muted-foreground"
-                                    style={{ minHeight: "clamp(420px, 62vh, 620px)" }}
-                                  >
-                                    Preview unavailable. Open the file in a new tab if needed.
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="rounded-xl border border-border/70 bg-background p-3.5 shadow-sm">
-                                <div className="space-y-4">
-                                  <div>
-                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Review Decision</p>
-                                    <p className="mt-1 text-sm text-muted-foreground">Stage one decision for the active document.</p>
-                                  </div>
-                                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Review decision">
-                                    {(["approve", "needs_revision", "reject"] as const).map((decision) => {
-                                      const isActive = activeReviewDraft?.decision === decision;
-                                      return (
-                                        <Button
-                                          key={decision}
-                                          type="button"
-                                          variant={isActive ? (decision === "reject" ? "destructive" : "default") : "outline"}
-                                          aria-pressed={isActive}
-                                          className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight"
-                                          disabled={isActiveDocumentLocked}
-                                          onClick={() =>
-                                            setRegistrationReviewDraft(activeReviewEntry.file.id, {
-                                              decision,
-                                              remark:
-                                                decision === "approve"
-                                                  ? ""
-                                                  : activeReviewDraft?.remark ?? activeReviewEntry.file.adminRemarks ?? "",
-                                              expectedUpdatedAt: activeReviewEntry.file.updatedAt,
-                                            })
-                                          }
-                                        >
-                                          {registrationReviewDecisionLabel[decision]}
-                                        </Button>
-                                      );
-                                    })}
-                                  </div>
-                                  {activeReviewDraft?.decision !== "unreviewed" ? (
-                                    <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm">
-                                      <span className="text-muted-foreground">
-                                        Pending:{" "}
-                                        <span className="font-medium text-foreground">
-                                          {registrationReviewDecisionLabel[activeReviewDraft.decision]}
-                                        </span>
-                                      </span>
-                                      <Button type="button" variant="ghost" size="sm" onClick={() => clearRegistrationReviewDraft(activeReviewEntry.file.id)}>
-                                        Clear
-                                      </Button>
-                                    </div>
-                                  ) : null}
-                                  {isActiveDocumentLocked ? (
-                                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                                      This document is already approved and locked.
-                                    </div>
-                                  ) : null}
-                                  {registrationDecisionRequiresRemark(activeReviewDraft?.decision ?? "unreviewed") ? (
-                                    <div className="space-y-2">
-                                      <p className="text-sm font-medium text-foreground">Admin Remark *</p>
-                                      <Textarea
-                                        className="min-h-24"
-                                        disabled={isActiveDocumentLocked}
-                                        placeholder="Explain what needs to be corrected or why this document is rejected."
-                                        value={activeReviewDraft?.remark ?? ""}
-                                        onChange={(event) =>
-                                          setRegistrationReviewDraft(activeReviewEntry.file.id, {
-                                            decision: activeReviewDraft?.decision ?? "unreviewed",
-                                            remark: event.target.value,
-                                            expectedUpdatedAt: activeReviewEntry.file.updatedAt,
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-
-                              {shouldShowMobileBulkReview ? (
-                                <div className="rounded-xl border border-border/70 bg-background p-3.5 shadow-sm">
-                                  <button
-                                    type="button"
-                                    className="flex w-full items-center justify-between gap-3 text-left"
-                                    aria-expanded={registrationMobileBulkOpen}
-                                    onClick={() => setRegistrationMobileBulkOpen((current) => !current)}
-                                  >
-                                    <div>
-                                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Bulk Review</p>
-                                      <p className="mt-1 text-sm text-muted-foreground">
-                                        {selectedBulkFiles.length} selected document{selectedBulkFiles.length === 1 ? "" : "s"}
-                                      </p>
-                                    </div>
-                                    {registrationMobileBulkOpen ? (
-                                      <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    )}
-                                  </button>
-                                  {registrationMobileBulkOpen ? (
-                                    <div className="mt-4 grid gap-3 border-t border-border/60 pt-4">
-                                      <div className="grid gap-2">
-                                        <p className="text-sm font-medium text-foreground">Decision</p>
-                                        <Select
-                                          value={registrationBulkDecision}
-                                          onValueChange={(value) => setRegistrationBulkDecision(value as Exclude<RegistrationReviewDecision, "unreviewed">)}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="approve">Approve</SelectItem>
-                                            <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                                            <SelectItem value="reject">Reject</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      {registrationDecisionRequiresRemark(registrationBulkDecision) ? (
-                                        <div className="grid gap-2">
-                                          <p className="text-sm font-medium text-foreground">Shared Remark</p>
-                                          <Textarea
-                                            className="min-h-20"
-                                            placeholder="Used only when a selected document does not already have its own staged remark."
-                                            value={registrationBulkRemark}
-                                            onChange={(event) => setRegistrationBulkRemark(event.target.value)}
-                                          />
-                                        </div>
-                                      ) : null}
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => stageBulkRegistrationDecision(selectedBulkFiles.map((entry) => entry.file.id), registrationBulkDecision)}
-                                      >
-                                        Apply to Selected
-                                      </Button>
-                                    </div>
-                                  ) : null}
-                                </div>
-                              ) : null}
-
-                              <div className="rounded-xl border border-border/70 bg-background p-3.5 shadow-sm">
-                                <div className="space-y-4">
-                                  <div>
-                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Review Summary</p>
-                                    <p className="mt-1 text-sm text-muted-foreground">Staged decisions stay local until you submit the batch review.</p>
-                                  </div>
-                                  {eligibleUnreviewedFileIds.length ? (
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      className="w-full"
-                                      onClick={() => stageApproveAllUnreviewedDocuments(eligibleUnreviewedFileIds)}
-                                    >
-                                      Approve all {eligibleUnreviewedFileIds.length} unreviewed
-                                    </Button>
-                                  ) : null}
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Approve</p>
-                                      <p className="mt-1 text-lg font-semibold text-foreground">{bulkDecisionSummary.approve}</p>
-                                    </div>
-                                    <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Needs Revision</p>
-                                      <p className="mt-1 text-lg font-semibold text-foreground">{bulkDecisionSummary.needsRevision}</p>
-                                    </div>
-                                    <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Reject</p>
-                                      <p className="mt-1 text-lg font-semibold text-foreground">{bulkDecisionSummary.reject}</p>
-                                    </div>
-                                    <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Unreviewed</p>
-                                      <p className="mt-1 text-lg font-semibold text-foreground">{reviewableUnreviewedCount}</p>
-                                    </div>
-                                  </div>
-                                  {!stagedDecisionCount ? <p className="text-sm text-muted-foreground">No decisions staged</p> : null}
-                                  <Button
-                                    type="button"
-                                    className="w-full"
-                                    disabled={registrationReviewSubmitting || !stagedDecisionCount || hasMissingDecisionRemark}
-                                    onClick={() => void submitRegistrationReviewDecisions()}
-                                  >
-                                    {registrationReviewSubmitting
-                                      ? "Submitting..."
-                                      : stagedDecisionCount
-                                      ? `Submit ${stagedDecisionCount} Review Decision${stagedDecisionCount === 1 ? "" : "s"}`
-                                      : "Submit Review Decisions"}
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <RecentActivityPreview
-                                title="Recent Activity"
-                                description={`Latest actions for ${activeReviewEntry.documentType.name}.`}
-                                activities={activeReviewHistory}
-                                maxItems={3}
-                                onViewAll={
-                                  activeReviewHistory.length > 3
-                                    ? () => {
-                                        setRecentActivityDialogTitle(`Recent Activity - ${activeReviewEntry.documentType.name}`);
-                                        setRecentActivityDialogEntries(
-                                          activeReviewHistory.map((entry, index) => ({
-                                            key: entry.id,
-                                            title: typeof entry.message === "string" ? entry.message : `Activity ${index + 1}`,
-                                            timestamp:
-                                              typeof entry.timestampLabel === "string"
-                                                ? entry.timestampLabel
-                                                : typeof entry.timestamp === "string"
-                                                ? formatDateTimeLabel(entry.timestamp)
-                                                : undefined,
-                                            note: typeof entry.note === "string" ? entry.note : undefined,
-                                            dotClassName: "bg-primary",
-                                          })),
-                                        );
-                                        setRecentActivityDialogOpen(true);
-                                      }
-                                    : undefined
-                                }
-                                viewAllLabel="View all recent activity"
-                                emptyDescription="Activity entries will appear after reviewers or the organization update this file."
-                                className="border-border/70 bg-background shadow-sm"
-                              />
-                            </>
-                          ) : (
-                            <PortalEmptyState title="No document preview" description="Select a submitted document to begin reviewing it." />
-                          )}
-                        </div>
-
-                        <div className="hidden items-start gap-4 lg:grid lg:grid-cols-[minmax(270px,0.9fr)_minmax(620px,2.2fr)_minmax(300px,0.95fr)]">
-                        <div className="grid min-h-0 gap-4 lg:grid-rows-[minmax(0,1fr)_auto]">
-                          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/70 bg-background p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Document Queue</p>
-                                <p className="mt-1 text-sm text-muted-foreground">Review the current organization documents and switch the active preview from here.</p>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Document queue actions</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setSelectedRegistrationReviewFileIds(
-                                        orderedSubmittedFiles
-                                          .filter((entry) => entry.file.adminStatus !== "approved_green")
-                                          .map((entry) => entry.file.id),
-                                      )
-                                    }
-                                  >
-                                    Select all reviewable
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setSelectedRegistrationReviewFileIds(
-                                        orderedSubmittedFiles
-                                          .filter(
-                                            (entry) =>
-                                              entry.file.adminStatus !== "approved_green" &&
-                                              (entry.file.adminStatus === "submitted" || entry.file.adminStatus === "under_admin_review"),
-                                          )
-                                          .map((entry) => entry.file.id),
-                                      )
-                                    }
-                                  >
-                                    Select all unreviewed
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    disabled={!eligibleUnreviewedFileIds.length}
-                                    onClick={() => stageApproveAllUnreviewedDocuments(eligibleUnreviewedFileIds)}
-                                  >
-                                    Approve all {eligibleUnreviewedFileIds.length || ""} unreviewed
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => setSelectedRegistrationReviewFileIds([])}>
-                                    Clear selection
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                            <div className="mt-4 max-h-[26rem] min-h-0 space-y-2 overflow-y-auto pr-1">
-                              {filteredQueueEntries.length ? filteredQueueEntries.map(({ documentType, file }) => {
-                                const draft = getRegistrationReviewDraft(
-                                  file.id,
-                                  file.adminStatus === "needs_revision" || file.adminStatus === "rejected_red" ? file.adminRemarks : "",
-                                  file.updatedAt,
-                                );
-                                const isSelected = selectedRegistrationReviewFileIds.includes(file.id);
-                                const isActive = activeReviewEntry?.file.id === file.id;
-                                const isLocked = file.adminStatus === "approved_green";
-                                return (
-                                  <div
-                                    key={file.id}
-                                    className={cn(
-                                      "rounded-xl border transition-colors",
-                                      isActive ? "border-primary bg-primary/5" : "border-border/60 bg-card",
-                                    )}
-                                  >
-                                    <div className="flex items-start gap-3 px-3 py-3">
-                                      <input
-                                        type="checkbox"
-                                        className="mt-1 h-4 w-4 rounded border-border"
-                                        checked={isSelected}
-                                        disabled={isLocked}
-                                        onChange={(event) =>
-                                          setSelectedRegistrationReviewFileIds((current) =>
-                                            event.target.checked
-                                              ? [...current, file.id]
-                                              : current.filter((item) => item !== file.id),
-                                          )
-                                        }
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => setActiveRegistrationReviewFileId(file.id)}
-                                        className="min-w-0 flex-1 text-left"
-                                      >
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-foreground">{documentType.name}</p>
-                                          <PortalStatusBadge status={file.adminStatus} />
-                                        </div>
-                                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground" title={file.fileName}>
-                                          {file.fileName}
-                                        </p>
-                                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                                          <span className="text-muted-foreground">
-                                            Current: {statusLabelMap[file.adminStatus] ?? file.adminStatus.replaceAll("_", " ")}
-                                          </span>
-                                          {draft.decision !== "unreviewed" ? (
-                                            <span
-                                              className={cn(
-                                                "inline-flex items-center rounded-full border px-2 py-0.5 font-medium",
-                                                registrationReviewPendingTone[draft.decision],
-                                              )}
-                                            >
-                                              Pending: {registrationReviewDecisionLabel[draft.decision]}
-                                            </span>
-                                          ) : null}
-                                        </div>
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              }) : (
-                                <div className="rounded-xl border border-dashed border-border/70 px-3 py-5 text-sm text-muted-foreground">
-                                  No documents match the current queue filters.
-                                </div>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {activeReviewEntry?.documentType.name ?? "No document selected"}
+                    </p>
+                    {filteredQueueEntries.length ? (
+                      <div className="flex shrink-0 items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          disabled={activeReviewIndex <= 0}
+                          onClick={() =>
+                            setActiveRegistrationReviewFileId(
+                              filteredQueueEntries[Math.max(0, activeReviewIndex - 1)]?.file.id ?? null,
+                            )
+                          }
+                          className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                        >
+                          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                          {filteredQueueEntries.slice(0, 5).map((entry, index) => (
+                            <button
+                              key={entry.file.id}
+                              type="button"
+                              onClick={() => setActiveRegistrationReviewFileId(entry.file.id)}
+                              className={cn(
+                                "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                activeReviewEntry?.file.id === entry.file.id
+                                  ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                  : "text-text-default hover:bg-slate-50",
                               )}
-                            </div>
-                          </div>
-
-                          <RecentActivityPreview
-                            title="Recent Activity"
-                            description={activeReviewEntry ? `Latest actions for ${activeReviewEntry.documentType.name}.` : undefined}
-                            activities={activeReviewHistory}
-                            maxItems={3}
-                            onViewAll={
-                              activeReviewHistory.length > 3
-                                ? () => {
-                                    setRecentActivityDialogTitle(`Recent Activity - ${activeReviewEntry?.documentType.name ?? "Document"}`);
-                                    setRecentActivityDialogEntries(
-                                      activeReviewHistory.map((entry, index) => ({
-                                        key: entry.id,
-                                        title: typeof entry.message === "string" ? entry.message : `Activity ${index + 1}`,
-                                        timestamp:
-                                          typeof entry.timestampLabel === "string"
-                                            ? entry.timestampLabel
-                                            : typeof entry.timestamp === "string"
-                                            ? formatDateTimeLabel(entry.timestamp)
-                                            : undefined,
-                                        note: typeof entry.note === "string" ? entry.note : undefined,
-                                        dotClassName: "bg-primary",
-                                      })),
-                                    );
-                                    setRecentActivityDialogOpen(true);
-                                  }
-                                : undefined
-                            }
-                            viewAllLabel="View full activity log"
-                            emptyDescription="Activity entries will appear after reviewers or the organization update this file."
-                            className="border-border/70 bg-background shadow-none"
-                          />
+                            >
+                              {index + 1}
+                            </button>
+                          ))}
                         </div>
+                        <button
+                          type="button"
+                          disabled={activeReviewIndex < 0 || activeReviewIndex >= filteredQueueEntries.length - 1}
+                          onClick={() =>
+                            setActiveRegistrationReviewFileId(
+                              filteredQueueEntries[Math.min(filteredQueueEntries.length - 1, activeReviewIndex + 1)]?.file.id ?? null,
+                            )
+                          }
+                          className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                        >
+                          Next
+                          <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
 
-                        <div className="active-document-panel flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/70 bg-background p-4 lg:min-h-[calc(100vh-210px)]">
-                          {activeReviewEntry ? (
-                            <div className="flex min-h-0 flex-1 flex-col gap-4">
-                              <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="min-w-0">
-                                  <p className="text-lg font-semibold text-foreground">{activeReviewEntry.documentType.name}</p>
-                                  <p className="mt-1 truncate text-sm text-muted-foreground" title={activeReviewEntry.file.fileName}>
-                                    {activeReviewEntry.file.fileName}
-                                  </p>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-2">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={activeReviewIndex <= 0}
-                                    onClick={() => setActiveRegistrationReviewFileId(filteredQueueEntries[Math.max(0, activeReviewIndex - 1)]?.file.id ?? null)}
-                                  >
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                    Previous
-                                  </Button>
-                                  <span className="text-xs text-muted-foreground">
-                                    {Math.max(activeReviewIndex + 1, 0)} of {filteredQueueEntries.length || orderedSubmittedFiles.length}
-                                  </span>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={activeReviewIndex < 0 || activeReviewIndex >= filteredQueueEntries.length - 1}
-                                    onClick={() => setActiveRegistrationReviewFileId(filteredQueueEntries[Math.min(filteredQueueEntries.length - 1, activeReviewIndex + 1)]?.file.id ?? null)}
-                                  >
-                                    Next
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
-                                {documentPreviewUrls[activeReviewEntry.file.id] ? (
-                                  <iframe
-                                    src={documentPreviewUrls[activeReviewEntry.file.id]}
-                                    title={activeReviewEntry.file.fileName}
-                                    className="h-full min-h-[28rem] w-full xl:min-h-[34rem]"
-                                  />
-                                ) : (
-                                  <div className="grid h-full min-h-[28rem] place-items-center p-6 text-center text-sm text-muted-foreground xl:min-h-[34rem]">
-                                    Preview unavailable. Open the file from the browser storage link if needed.
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <PortalEmptyState title="No document preview" description="Select a submitted document to begin reviewing it." />
-                          )}
-                        </div>
-
-                        <div className="review-control-panel min-h-0 overflow-hidden rounded-xl border border-border/70 bg-background lg:sticky lg:top-4 lg:max-h-[calc(100vh-32px)] lg:overflow-y-auto">
-                          {activeReviewEntry ? (
-                            <div className="flex h-full flex-col divide-y divide-border/60">
-                              <div className="space-y-4 p-4">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Review Decision</p>
-                                  <p className="mt-1 text-sm text-muted-foreground">Stage one decision for the active document. Nothing is submitted until the final review action.</p>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Review decision">
-                                  {(["approve", "needs_revision", "reject"] as const).map((decision) => {
-                                    const isActive = activeReviewDraft?.decision === decision;
-                                    return (
-                                      <Button
-                                        key={decision}
-                                        type="button"
-                                        variant={isActive ? (decision === "reject" ? "destructive" : "default") : "outline"}
-                                        aria-pressed={isActive}
-                                        className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:px-3 sm:text-sm"
-                                        disabled={isActiveDocumentLocked}
-                                        onClick={() =>
-                                          setRegistrationReviewDraft(activeReviewEntry.file.id, {
-                                            decision,
-                                            remark:
-                                              decision === "approve"
-                                                ? ""
-                                                : activeReviewDraft?.remark ?? activeReviewEntry.file.adminRemarks ?? "",
-                                            expectedUpdatedAt: activeReviewEntry.file.updatedAt,
-                                          })
-                                        }
-                                      >
-                                        {registrationReviewDecisionLabel[decision]}
-                                      </Button>
-                                    );
-                                  })}
-                                </div>
-                                {activeReviewDraft?.decision !== "unreviewed" ? (
-                                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm">
-                                    <span className="text-muted-foreground">
-                                      Pending:{" "}
-                                      <span className="font-medium text-foreground">
-                                        {registrationReviewDecisionLabel[activeReviewDraft.decision]}
-                                      </span>
-                                    </span>
-                                    <Button type="button" variant="ghost" size="sm" onClick={() => clearRegistrationReviewDraft(activeReviewEntry.file.id)}>
-                                      Clear
-                                    </Button>
-                                  </div>
-                                ) : null}
-                                {isActiveDocumentLocked ? (
-                                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                                    This document is already approved.
-                                  </div>
-                                ) : null}
-                                {registrationDecisionRequiresRemark(activeReviewDraft?.decision ?? "unreviewed") ? (
-                                  <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">Admin Remark *</p>
-                                    <Textarea
-                                      className="min-h-24"
-                                      disabled={isActiveDocumentLocked}
-                                      placeholder="Explain what needs to be corrected or why this document is rejected."
-                                      value={activeReviewDraft?.remark ?? ""}
-                                      onChange={(event) =>
-                                        setRegistrationReviewDraft(activeReviewEntry.file.id, {
-                                          decision: activeReviewDraft?.decision ?? "unreviewed",
-                                          remark: event.target.value,
-                                          expectedUpdatedAt: activeReviewEntry.file.updatedAt,
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                ) : null}
-                              </div>
-
-                              <div className="space-y-4 p-4">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Bulk Review</p>
-                                  <p className="mt-1 text-sm text-muted-foreground">
-                                    Selected: {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"}
-                                  </p>
-                                </div>
-                                <div className="grid gap-3">
-                                  <div className="grid gap-2">
-                                    <p className="text-sm font-medium text-foreground">Decision</p>
-                                    <Select value={registrationBulkDecision} onValueChange={(value) => setRegistrationBulkDecision(value as Exclude<RegistrationReviewDecision, "unreviewed">)} disabled={!selectedBulkFiles.length}>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="approve">Approve</SelectItem>
-                                        <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                                        <SelectItem value="reject">Reject</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  {registrationDecisionRequiresRemark(registrationBulkDecision) ? (
-                                    <div className="grid gap-2">
-                                      <p className="text-sm font-medium text-foreground">Shared Remark</p>
-                                      <Textarea
-                                        className="min-h-20"
-                                        disabled={!selectedBulkFiles.length}
-                                        placeholder="Used only when a selected document does not already have its own staged remark."
-                                        value={registrationBulkRemark}
-                                        onChange={(event) => setRegistrationBulkRemark(event.target.value)}
-                                      />
-                                    </div>
-                                  ) : null}
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={!selectedBulkFiles.length}
-                                    onClick={() => stageBulkRegistrationDecision(selectedBulkFiles.map((entry) => entry.file.id), registrationBulkDecision)}
-                                  >
-                                    Apply to Selected
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <div className="mt-auto space-y-4 p-4">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">Review Summary</p>
-                                  <p className="mt-1 text-sm text-muted-foreground">Staged decisions stay local until you submit the batch review.</p>
-                                </div>
-                                {eligibleUnreviewedFileIds.length ? (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => stageApproveAllUnreviewedDocuments(eligibleUnreviewedFileIds)}
-                                  >
-                                    Approve all {eligibleUnreviewedFileIds.length} unreviewed
-                                  </Button>
-                                ) : null}
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Approve</p>
-                                    <p className="mt-1 text-lg font-semibold text-foreground">{bulkDecisionSummary.approve}</p>
-                                  </div>
-                                  <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Needs Revision</p>
-                                    <p className="mt-1 text-lg font-semibold text-foreground">{bulkDecisionSummary.needsRevision}</p>
-                                  </div>
-                                  <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Reject</p>
-                                    <p className="mt-1 text-lg font-semibold text-foreground">{bulkDecisionSummary.reject}</p>
-                                  </div>
-                                  <div className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
-                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground/75">Unreviewed</p>
-                                    <p className="mt-1 text-lg font-semibold text-foreground">{reviewableUnreviewedCount}</p>
-                                  </div>
-                                </div>
-                                {!stagedDecisionCount ? <p className="text-sm text-muted-foreground">No decisions staged</p> : null}
-                                <Button
-                                  type="button"
-                                  className="w-full"
-                                  disabled={registrationReviewSubmitting || !stagedDecisionCount || hasMissingDecisionRemark}
-                                  onClick={() => void submitRegistrationReviewDecisions()}
-                                >
-                                  {registrationReviewSubmitting
-                                    ? "Submitting..."
-                                    : `Submit ${stagedDecisionCount} Review Decision${stagedDecisionCount === 1 ? "" : "s"}`}
-                                </Button>
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-                        </div>
-                      </>
+                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
+                    {activeReviewEntry && activeDocumentPreviewUrl ? (
+                      activeReviewEntry.file.fileType.startsWith("image/") ? (
+                        <img
+                          src={activeDocumentPreviewUrl}
+                          alt={activeReviewEntry.documentType.name}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <iframe
+                          src={activeDocumentPreviewUrl}
+                          title={activeReviewEntry.documentType.name}
+                          className="h-full min-h-[500px] w-full border-0"
+                        />
+                      )
                     ) : (
-                      <PortalEmptyState
-                        title="No submitted files yet"
-                        description="Once the organization uploads documents, they will appear here for batch review."
-                      />
+                      <div
+                        className="flex h-full min-h-[500px] w-full items-center justify-center"
+                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                      >
+                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                      </div>
                     )}
                   </div>
-                ) : (
-                  <PortalEmptyState
-                    title="No document submission yet"
-                    description="Once this organization submits files on the user side, the same files will appear here."
-                  />
-                )}
-              </PortalSection>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                  <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedRegistrationReviewFileIds(
+                            orderedSubmittedFiles
+                              .filter((entry) => entry.file.adminStatus !== "approved_green")
+                              .map((entry) => entry.file.id),
+                          )
+                        }
+                        className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
+                      >
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
+                        Select all
+                      </button>
+                    </div>
+                    <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                      Review the organization&rsquo;s submitted documents and select a document to preview.
+                    </p>
+                  </div>
+
+                  <div className="space-y-0.5 pt-1">
+                    {orderedSubmittedFiles.length ? (
+                      orderedSubmittedFiles.map(({ documentType, file }) => {
+                        const isChecked = selectedRegistrationReviewFileIds.includes(file.id);
+                        const isActive = activeReviewEntry?.file.id === file.id;
+                        const uploadedDate = new Date(file.uploadedAt);
+                        const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                        const isLocked = file.adminStatus === "approved_green";
+
+                        return (
+                          <div
+                            key={file.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => {
+                              setActiveRegistrationReviewFileId(file.id);
+                              if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key !== "Enter" && event.key !== " ") return;
+                              event.preventDefault();
+                              setActiveRegistrationReviewFileId(file.id);
+                              if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
+                            }}
+                            className={cn(
+                              "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                              isChecked
+                                ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                : isActive
+                                  ? "border border-transparent bg-slate-50"
+                                  : "border border-transparent hover:bg-slate-50",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              disabled={isLocked}
+                              onClick={(event) => event.stopPropagation()}
+                              onChange={() => {
+                                setSelectedRegistrationReviewFileIds((current) =>
+                                  current.includes(file.id)
+                                    ? current.filter((id) => id !== file.id)
+                                    : [...current, file.id],
+                                );
+                              }}
+                              className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                  {documentType.name}
+                                </p>
+                                <DocumentQueueStatusPill status={file.adminStatus} />
+                              </div>
+                              <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                {file.fileName}
+                              </p>
+                              <div className="flex items-center gap-2 pt-1">
+                                <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                </p>
+                                <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  {formatFileSize(file.fileSize)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                        No documents submitted yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                  <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                    <button
+                      type="button"
+                      ref={registrationDecisionHelpTriggerRef}
+                      onClick={() => setIsRegistrationDecisionHelpOpen((current) => !current)}
+                      aria-label="Review rules"
+                      className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                    >
+                      <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                    </button>
+                    {isRegistrationDecisionHelpOpen ? (
+                      <div
+                        ref={registrationDecisionHelpPanelRef}
+                        className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                      >
+                        <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                        <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <span className="font-semibold">Approve</span> — multiple files can be selected.
+                        </p>
+                        <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-4">
+                    {selectedBulkFiles.length === 0 ? (
+                      <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                        <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                        <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                          {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                      <Select
+                        value={registrationBulkDecision}
+                        onValueChange={(value) => setRegistrationBulkDecision(value as RegistrationReviewDecision)}
+                        disabled={selectedBulkFiles.length === 0}
+                      >
+                        <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="approve">Approve</SelectItem>
+                          <SelectItem
+                            value="needs_revision"
+                            disabled={selectedBulkFiles.length > 1}
+                            className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                          >
+                            Request Revision
+                          </SelectItem>
+                          <SelectItem
+                            value="reject"
+                            disabled={selectedBulkFiles.length > 1}
+                            className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                          >
+                            Reject
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="font-segoe text-[13px] text-text-default">
+                          Remarks <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          value={registrationBulkRemark}
+                          onChange={(event) => setRegistrationBulkRemark(event.target.value)}
+                          placeholder="Explain the reason or required action..."
+                          rows={3}
+                          className="resize-none text-[13px]"
+                        />
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      disabled={isRegistrationDecisionConfirmDisabled}
+                      onClick={() => setIsRegistrationDecisionConfirmOpen(true)}
+                      className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+
+                <DangerConfirmDialog
+                  open={isRegistrationDecisionConfirmOpen}
+                  onOpenChange={setIsRegistrationDecisionConfirmOpen}
+                  icon={CheckCircle}
+                  variant="info"
+                  title="Confirm Review Decision"
+                  description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
+                  content={
+                    <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                      <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                      </div>
+                      <div className="flex flex-col gap-2 pt-2">
+                        {selectedBulkFiles.map((entry) => (
+                          <div key={entry.file.id} className="grid grid-cols-3 gap-2">
+                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                              {entry.documentType.name}
+                            </p>
+                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                              {registrationReviewDecisionLabel[registrationBulkDecision]}
+                            </p>
+                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                              {selectedBulkFiles.length === 1 && decisionRequiresRemark
+                                ? registrationBulkRemark.trim() || "—"
+                                : "—"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                  warning="Once submitted, these decisions cannot be changed from this review."
+                  cancelLabel="Cancel"
+                  confirmLabel="Submit Review"
+                  confirmIcon={Send}
+                  onConfirm={submitRegistrationReviewDecisions}
+                />
+                </div>
+              </div>
             </div>
           );
         }
 
+        const documentCountsByOrgId: Record<string, { submitted: number; required: number }> = {};
+        for (const org of state.organizationProfiles) {
+          const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
+          const submittedCount = orgSubmission
+            ? state.documentSubmissionFiles.filter(
+                (file) =>
+                  file.submissionId === orgSubmission.id &&
+                  validDocumentTypeIds.has(file.documentTypeId) &&
+                  file.adminStatus !== "draft",
+              ).length
+            : 0;
+          documentCountsByOrgId[org.id] = { submitted: submittedCount, required: templateDocuments.length };
+        }
+
+        const submittedCount = state.organizationProfiles.filter((org) => org.profileStatus === "incomplete").length;
+        const receivedTodayCount = state.organizationProfiles.filter((org) => {
+          if (org.profileStatus !== "incomplete") return false;
+          const createdDate = new Date(org.createdAt);
+          return !Number.isNaN(createdDate.getTime()) && createdDate.toDateString() === new Date().toDateString();
+        }).length;
+        const pendingReviewCount = state.organizationProfiles.filter((org) => org.profileStatus === "pending_review").length;
+        const profilesNeedingRevisionCount = state.organizationProfiles.filter((org) => org.profileStatus === "needs_update").length;
+
         return (
-          <PortalSection
-            title="Registration Review"
-            description="Review pending organization profiles and their submitted documents. Open an organization to validate files and verify their registration."
-          >
-            {state.organizationProfiles.length ? (
-              <div className="registration-review-page space-y-4">
-                <div className="review-filter-grid grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
-                  <Input
-                    className="review-search"
-                    value={registrationSearch}
-                    onChange={(event) => setRegistrationSearch(event.target.value)}
-                    placeholder="Search organizations..."
-                  />
-                  <Select value={registrationStatusFilter} onValueChange={setRegistrationStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      {registrationStatusOptions.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {formatStatusLabel(status)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={registrationDistrictFilter} onValueChange={setRegistrationDistrictFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="District" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Districts</SelectItem>
-                      {registrationDistrictOptions.map((district) => (
-                        <SelectItem key={district} value={district}>
-                          {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader title="Registrations" description="Review incoming YORP accreditation submissions." />
 
-                <div className="text-sm text-muted-foreground lg:hidden">
-                  {filteredRegistrations.length} organization{filteredRegistrations.length === 1 ? "" : "s"} - {filteredRegistrations.filter((org) => org.profileStatus === "pending_review").length} pending review
-                </div>
-
-                {filteredRegistrations.length ? (
-                  <>
-                  <div className="grid gap-3 lg:hidden">
-                    {filteredRegistrations.map((org) => {
-                      const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
-                      const submittedCount = orgSubmission
-                        ? state.documentSubmissionFiles.filter(
-                            (file) =>
-                              file.submissionId === orgSubmission.id &&
-                              validDocumentTypeIds.has(file.documentTypeId) &&
-                              file.adminStatus !== "draft",
-                          ).length
-                        : 0;
-                      const completionRate = templateDocuments.length ? Math.round((submittedCount / templateDocuments.length) * 100) : 0;
-                      const statusDotColor =
-                        org.profileStatus === "verified"
-                          ? "bg-emerald-500"
-                          : org.profileStatus === "needs_update" || org.profileStatus === "pending_review"
-                          ? "bg-amber-400"
-                          : "bg-muted-foreground/40";
-                      return (
-                        <Card key={org.id} className="border-border/70 shadow-sm">
-                          <CardContent className="p-3.5">
-                            <div className="organization-review-header grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-start">
-                              <div className="flex min-w-0 items-start gap-2.5">
-                                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
-                                <div className="min-w-0">
-                                  <p className="organization-review-name line-clamp-2 text-sm font-semibold leading-5 text-foreground">{org.organizationName}</p>
-                                  <p className="organization-review-email mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted-foreground">{org.organizationEmail}</p>
-                                  <p className="mt-0.5 text-xs text-muted-foreground">
-                                    {[org.barangay, org.district].filter(Boolean).join(" - ") || "No location provided"}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="organization-review-status max-w-[112px] text-right">
-                                <PortalStatusBadge status={org.profileStatus} />
-                              </div>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between gap-3">
-                              <p className="text-xs text-muted-foreground">
-                                {org.registrationType === "existing_urn" ? (
-                                  <span className="font-medium text-foreground">Existing URN · {org.urnReviewStatus === "pending" ? "Pending URN Review" : org.urnReviewStatus.replaceAll("_", " ")}</span>
-                                ) : <><span className="font-medium text-foreground">{submittedCount} of {templateDocuments.length}</span> documents</>}
-                              </p>
-                              <Button type="button" size="sm" className="h-10 px-3" onClick={() => handleRegistrationSelectionChange(org.id)}>
-                                Review
-                                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                              <div
-                                className="h-full rounded-full bg-primary/60 transition-[width]"
-                                style={{ width: `${completionRate}%` }}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                  <div className="hidden gap-4 lg:grid md:grid-cols-2">
-                    {filteredRegistrations.map((org) => {
-                      const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
-                      const submittedCount = orgSubmission
-                        ? state.documentSubmissionFiles.filter(
-                            (file) =>
-                              file.submissionId === orgSubmission.id &&
-                              validDocumentTypeIds.has(file.documentTypeId) &&
-                              file.adminStatus !== "draft",
-                          ).length
-                        : 0;
-                      const statusDotColor =
-                        org.profileStatus === "verified"
-                          ? "bg-emerald-500"
-                          : org.profileStatus === "needs_update" || org.profileStatus === "pending_review"
-                          ? "bg-amber-400"
-                          : "bg-muted-foreground/40";
-                      return (
-                        <Card key={org.id} className="border-border/70 shadow-sm">
-                          <CardContent className="p-4 sm:p-5">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex min-w-0 items-start gap-2.5">
-                                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
-                                <div className="min-w-0">
-                                  <p className="truncate font-semibold text-foreground">{org.organizationName}</p>
-                                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{org.organizationEmail}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {[org.barangay, org.district].filter(Boolean).join(" - ") || "No location provided"}
-                                  </p>
-                                </div>
-                              </div>
-                              <PortalStatusBadge status={org.profileStatus} />
-                            </div>
-                            <div className="mt-4">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>{org.registrationType === "existing_urn" ? "Registration Type" : "Documents submitted"}</span>
-                                <span className="font-medium">{org.registrationType === "existing_urn" ? "Existing URN" : `${submittedCount}/${templateDocuments.length}`}</span>
-                              </div>
-                              {org.registrationType !== "existing_urn" ? <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                                <div
-                                  className="h-full rounded-full bg-primary/60 transition-[width]"
-                                  style={{ width: templateDocuments.length ? `${(submittedCount / templateDocuments.length) * 100}%` : "0%" }}
-                                />
-                              </div> : <p className="mt-1.5 text-sm">{org.urnReviewStatus === "pending" ? "Pending URN Review" : org.urnReviewStatus.replaceAll("_", " ")}</p>}
-                            </div>
-                            <div className="mt-4 flex justify-end">
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => handleRegistrationSelectionChange(org.id)}
-                              >
-                                Review
-                                <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        );
-                      })}
-                  </div>
-                  </>
-                ) : (
-                  <PortalEmptyState
-                    title="No matching registrations"
-                    description="Try adjusting the search, status, or district filter."
-                  />
-                )}
-              </div>
-            ) : (
-              <PortalEmptyState
-                title="No registrations yet"
-                description="Organization profiles will appear here after users complete and save them from the user portal."
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <StatsCard
+                title="SUBMITTED"
+                value={submittedCount}
+                icon={Send}
+                trend="up"
+                trendLabel={`${receivedTodayCount} received today`}
+                description="New submissions awaiting review."
               />
-            )}
-          </PortalSection>
+              <StatsCard
+                title="PENDING REVIEW"
+                value={pendingReviewCount}
+                icon={Clock}
+                description="Submissions being evaluated."
+              />
+              <StatsCard
+                title="NEEDS REVISION"
+                value={profilesNeedingRevisionCount}
+                icon={AlertCircle}
+                description="Submissions requiring corrections."
+              />
+            </div>
+
+            <RegistrationsTable
+              registrations={filteredRegistrations}
+              documentCountsByOrgId={documentCountsByOrgId}
+              searchValue={registrationSearch}
+              onSearchChange={setRegistrationSearch}
+              statusFilter={registrationStatusFilter}
+              onStatusFilterChange={setRegistrationStatusFilter}
+              districtFilter={registrationDistrictFilter}
+              onDistrictFilterChange={setRegistrationDistrictFilter}
+              barangayFilter={registrationBarangayFilter}
+              onBarangayFilterChange={setRegistrationBarangayFilter}
+              classificationFilter={registrationClassificationFilter}
+              onClassificationFilterChange={setRegistrationClassificationFilter}
+              onReview={(organizationId) => handleRegistrationSelectionChange(organizationId)}
+            />
+          </div>
         );
       }
       case "budget-utilization":
@@ -8368,6 +8018,200 @@ export default function AdminPortal({ section }: { section: string }) {
             />
           </div>
         );
+      case "administrators":
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Administrators"
+              description="Manage administrator accounts, roles, and permissions."
+              action={
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={!filteredAdministrators.length}
+                    onClick={() => setAdministratorsExportDialogOpen(true)}
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                    Export
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetAdministratorForm();
+                      setAdministratorModalMode("create");
+                    }}
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                  >
+                    <UserPlus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                    Add Administrator
+                  </button>
+                </div>
+              }
+            />
+
+            <div className="flex h-[52px] w-fit items-center gap-1 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1">
+              <button
+                type="button"
+                onClick={() => setAdministratorsViewTab("accounts")}
+                className={cn(
+                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-none transition-colors",
+                  administratorsViewTab === "accounts"
+                    ? "bg-admin-surface text-public-bg-brand"
+                    : "text-segmented-control-inactive-text",
+                )}
+              >
+                <Users className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                Accounts
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdministratorsViewTab("roles-permissions")}
+                className={cn(
+                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-none transition-colors",
+                  administratorsViewTab === "roles-permissions"
+                    ? "bg-admin-surface text-public-bg-brand"
+                    : "text-segmented-control-inactive-text",
+                )}
+              >
+                <Shield className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                Roles and Permissions
+              </button>
+            </div>
+
+            {administratorsViewTab === "roles-permissions" ? (
+              <RolesPermissionsPanel
+                administrators={administrators}
+                roles={administratorRoles}
+                onUpdateRolePermissions={handleUpdateRolePermissions}
+                configuringRoleCode={configuringRoleCode}
+                onConfiguringRoleChange={setConfiguringRoleCode}
+                subTab={rolesPermissionsSubTab}
+                onSubTabChange={setRolesPermissionsSubTab}
+              />
+            ) : administratorsLoading && administrators.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-md border border-slate-300 bg-admin-surface px-4 py-20 text-center shadow-sm">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-public-bg-section border-t-public-text-brand" />
+              </div>
+            ) : (
+              <AdministratorsTable
+                administrators={filteredAdministrators}
+                roleOptions={administratorRoles.map((role) => ({ code: role.code, label: role.label }))}
+                unitOptions={administratorUnits.map((unit) => ({ code: unit.code, label: unit.label }))}
+                searchValue={administratorSearch}
+                onSearchChange={setAdministratorSearch}
+                roleFilter={administratorRoleFilter}
+                onRoleFilterChange={setAdministratorRoleFilter}
+                unitFilter={administratorUnitFilter}
+                onUnitFilterChange={setAdministratorUnitFilter}
+                statusFilter={administratorStatusFilter}
+                onStatusFilterChange={setAdministratorStatusFilter}
+                currentAdminId={user?.id ?? null}
+                resendingInviteId={resendingInviteId}
+                onEdit={(administrator) => startEditingAdministrator(administrator)}
+                onToggleActive={(administrator) => setPendingToggleActiveAdministrator(administrator)}
+                onDelete={(administrator) => setPendingDeleteAdministrator(administrator)}
+                onResendInvite={(administrator) => void handleResendInvite(administrator)}
+              />
+            )}
+
+            <AdministratorFormDialog
+              mode={administratorModalMode}
+              displayName={administratorDisplayNameDraft}
+              onDisplayNameChange={setAdministratorDisplayNameDraft}
+              email={administratorEmailDraft}
+              onEmailChange={setAdministratorEmailDraft}
+              existingEmails={administrators.map((administrator) => administrator.email.toLowerCase())}
+              roleOptions={administratorRoles}
+              roleId={administratorRoleIdDraft}
+              onRoleIdChange={setAdministratorRoleIdDraft}
+              unitOptions={administratorUnits}
+              unitId={administratorUnitIdDraft}
+              onUnitIdChange={setAdministratorUnitIdDraft}
+              isActive={editingAdministrator?.isActive ?? true}
+              isPasswordSet={editingAdministrator?.isPasswordSet ?? true}
+              isSelf={Boolean(editingAdministrator && user?.id && editingAdministrator.id === user.id)}
+              onSuspendToggle={() => {
+                if (editingAdministrator) setPendingToggleActiveAdministrator(editingAdministrator);
+              }}
+              onDeleteAdministrator={() => {
+                if (editingAdministrator) setPendingDeleteAdministrator(editingAdministrator);
+              }}
+              saving={savingAdministrator}
+              onCancel={resetAdministratorForm}
+              onSave={() => void (administratorModalMode === "edit" ? handleUpdateAdministrator() : handleCreateAdministrator())}
+            />
+
+            <DangerConfirmDialog
+              variant={pendingToggleActiveAdministrator?.isActive ? "warning" : "success"}
+              open={Boolean(pendingToggleActiveAdministrator)}
+              onOpenChange={(open) => {
+                if (!open) setPendingToggleActiveAdministrator(null);
+              }}
+              icon={pendingToggleActiveAdministrator?.isActive ? UserX : UserCheck}
+              title={pendingToggleActiveAdministrator?.isActive ? "Suspend Administrator" : "Reactivate Administrator"}
+              description={
+                <>
+                  <span className="text-slate-500">
+                    Are you sure you want to {pendingToggleActiveAdministrator?.isActive ? "suspend" : "reactivate"} administrator{" "}
+                  </span>
+                  <span className="font-semibold text-text-default">{pendingToggleActiveAdministrator?.displayName ?? ""}</span>
+                  <span className="text-text-default underline"> ({pendingToggleActiveAdministrator?.email ?? ""})</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                pendingToggleActiveAdministrator?.isActive ? (
+                  <>The account will be temporarily disabled and access to the Admin Portal will be suspended.</>
+                ) : (
+                  <>The account will be reactivated and access to the Admin Portal will be restored.</>
+                )
+              }
+              confirmLabel={pendingToggleActiveAdministrator?.isActive ? "Suspend Administrator" : "Reactivate Administrator"}
+              confirmIcon={pendingToggleActiveAdministrator?.isActive ? UserX : UserCheck}
+              onConfirm={async () => {
+                if (pendingToggleActiveAdministrator) await handleToggleAdministratorActive(pendingToggleActiveAdministrator);
+                setPendingToggleActiveAdministrator(null);
+              }}
+            />
+
+            <DangerConfirmDialog
+              open={Boolean(pendingDeleteAdministrator)}
+              onOpenChange={(open) => {
+                if (!open) setPendingDeleteAdministrator(null);
+              }}
+              icon={Trash2}
+              title="Delete Administrator"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to delete administrator </span>
+                  <span className="font-semibold text-text-default">{pendingDeleteAdministrator?.displayName ?? ""}</span>
+                  <span className="text-text-default underline"> ({pendingDeleteAdministrator?.email ?? ""})</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={<>The account and its access rights will be permanently removed. This action cannot be undone.</>}
+              warningTone="danger"
+              confirmLabel="Delete Administrator"
+              confirmIcon={Trash2}
+              onConfirm={async () => {
+                if (pendingDeleteAdministrator) await handleDeleteAdministrator(pendingDeleteAdministrator);
+                if (pendingDeleteAdministrator && pendingDeleteAdministrator.id === editingAdministratorId) {
+                  resetAdministratorForm();
+                }
+                setPendingDeleteAdministrator(null);
+              }}
+            />
+
+            <ActivityLogsExportDialog
+              open={administratorsExportDialogOpen}
+              onOpenChange={setAdministratorsExportDialogOpen}
+              reportTitle="Administrators"
+              description="Export the current filtered list of administrator accounts."
+              onExport={handleExportAdministrators}
+            />
+          </div>
+        );
       case "notifications":
         return (
           <PortalSection
@@ -8528,7 +8372,7 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       }
       case "ypop-validation": {
-        // ── VIEW 4: entry-review (two-column layout) ──────────────────────────
+        // ── VIEW 4: entry-review ────────────────────────────────────────────
         if (ypopAdminView === "entry-review" && selectedYpopId) {
           const entry = state.ypopEntries.find((e) => e.id === selectedYpopId);
           if (!entry) {
@@ -8537,1308 +8381,81 @@ export default function AdminPortal({ section }: { section: string }) {
             return null;
           }
           const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
-          // Legacy entry-level uploads are intentionally retired from the
-          // review UI. Proof now belongs to a city-led event or a PPA.
-          const entryFiles: YPOPFile[] = [];
-          const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
-          const semesterActivityIds = new Set(semesterActivities.map((activity) => activity.id));
-          const orgEventParticipations = [...state.ypopEventParticipations]
-            .filter((participation) => participation.organizationId === entry.organizationId && semesterActivityIds.has(participation.activityId))
-            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-          const eventFilesByParticipationId = new Map<string, YPOPEventFile[]>();
-          state.ypopEventFiles.forEach((file) => {
-            const existing = eventFilesByParticipationId.get(file.participationId) ?? [];
-            existing.push(file);
-            eventFilesByParticipationId.set(file.participationId, existing);
-          });
-          const orgActivities = [...state.ypopOrgActivities]
-            .filter((activity) => activity.ypopEntryId === entry.id)
-            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-          const orgActivityFilesByActivityId = new Map<string, YPOPOrgActivityFile[]>();
-          state.ypopOrgActivityFiles.forEach((file) => {
-            const existing = orgActivityFilesByActivityId.get(file.orgActivityId) ?? [];
-            existing.push(file);
-            orgActivityFilesByActivityId.set(file.orgActivityId, existing);
-          });
-          const entryPeriod = state.ypopPeriods.find((p) => p.semesterKey === entry.semester);
-          const periodTiers = entryPeriod?.orgLedTiers?.length ? entryPeriod.orgLedTiers : DEFAULT_ORG_LED_TIERS;
-          const isTerminal = entry.status === "qualified" || entry.status === "not_qualified";
-          const verifiedCityLedAttendance = semesterActivities.map((activity) => ({
-            activityId: activity.id,
-            attended: orgEventParticipations.some(
-              (participation) => participation.activityId === activity.id && participation.status === "verified",
-            ),
-          }));
-          const approvedOrgActivityCount = getApprovedYpopOrgActivityCount(orgActivities, entry.id, entry.orgLedProjectCount ?? 0);
-          const form = ypopValidationForm ?? {
-            cityLedAttendance: verifiedCityLedAttendance,
-            orgLedProjectCount: approvedOrgActivityCount,
-            status: (entry.status === "draft" || entry.status === "submitted") ? "under_review" as YPOPStatus : entry.status,
-            adminRemarks: entry.adminRemarks ?? "",
-          };
-          const effectiveCityLedAttendance = verifiedCityLedAttendance;
-          const cityValidationScore = computeYpopScore(
-            effectiveCityLedAttendance,
-            semesterActivities,
-            0,
-            periodTiers,
-          );
-          const currentScore = computeYpopScore(
-            effectiveCityLedAttendance,
-            semesterActivities,
-            approvedOrgActivityCount,
-            periodTiers,
-          );
-          const {
-            cityLedEarned,
-            cityLedMax,
-            cityLedPercent,
-            cityLedWeightedScore,
-          } = cityValidationScore;
-          const { orgLedBonus, totalScore } = currentScore;
-          const _sortedTiers = [...periodTiers].sort((a, b) => b.minProjects - a.minProjects);
-          const _matchedTier = _sortedTiers.find((t) => form.orgLedProjectCount >= t.minProjects);
-          const orgLedTierLabel = _matchedTier
-            ? `≥ ${_matchedTier.minProjects} projects → +${_matchedTier.bonus}% bonus`
-            : "0 projects → +0% bonus";
-          const qualifies = cityLedPercent >= (entry.pointsRequired ?? YPOP_SCORE_THRESHOLD);
-          const orgLedTierLabelDisplay = orgLedTierLabel && (_matchedTier
-            ? `>= ${_matchedTier.minProjects} activit${_matchedTier.minProjects === 1 ? "y" : "ies"} -> +${_matchedTier.bonus}% bonus`
-            : "0 activities -> +0% bonus");
-          const persistYpopValidation = async () => {
-            setSavingYpopValidation(true);
-            try {
-              const now = new Date().toISOString();
-              const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
-              const { cityLedPercent: computedScore } = computeYpopScore(
-                effectiveCityLedAttendance,
-                semActs,
-                0,
-                periodTiers,
-              );
-              const patch = {
-                pointsEarned: computedScore,
-                status: form.status,
-                adminRemarks: form.adminRemarks,
-                cityLedAttendance: effectiveCityLedAttendance,
-                validatedAt: now,
-                updatedAt: now,
-                revisionHistory: [
-                  ...(entry.revisionHistory ?? []),
-                  { action: form.status, adminRemarks: form.adminRemarks, changedAt: now },
-                ],
-              };
-              try {
-                const saved = await adminUpdateYpopEntryInSupabase(entry.id, patch);
-                updateYPOPEntry(saved.id, saved);
-              } catch {
-                updateYPOPEntry(entry.id, patch);
-              }
-              toast({ title: "Validation saved", description: `${entryOrg?.organizationName ?? "Org"}'s YPOP entry updated to ${statusLabelMap[form.status] ?? form.status}.` });
-              setConfirmYpopValidationOpen(false);
-              setYpopValidationAcknowledged(false);
-              setSelectedYpopId(null);
-              setYpopValidationForm(null);
-              setYpopPreviewFileId(null);
-              setYpopAdminView("period-detail");
-            } finally {
-              setSavingYpopValidation(false);
-            }
-          };
+          const orgActivities = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id);
+          const approvedCount = orgActivities.filter((a) => a.status === "approved").length;
+          const requestRevisionCount = orgActivities.filter((a) => a.status === "needs_revision" || a.status === "rejected").length;
+          const unreviewedCount = orgActivities.filter((a) => a.status === "submitted" || a.status === "under_review").length;
+          const qualificationProgress = Math.max(0, Math.min(100, entry.pointsEarned ?? 0));
 
           return (
-            <div className="admin-ypop-validation-review-page space-y-5">
-              {/* Header bar */}
-              <div className="desktop-ypop-review-context desktop-review-toolbar flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
-                  onClick={() => { setSelectedYpopId(null); setYpopValidationForm(null); setYpopPreviewFileId(null); setYpopAdminView("period-detail"); }}
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => { setSelectedYpopId(null); setYpopAdminView("period-detail"); }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Period
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Submissions
                 </button>
-                <div className="flex items-center gap-2">
-                  <PortalStatusBadge status={entry.status} />
-                  {isTerminal && (
-                    <span className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                      Finalized — locked
-                    </span>
-                  )}
-                </div>
+                <StatusLabel status={entry.status} />
               </div>
 
-              <div className="desktop-ypop-review-context desktop-review-identity-card">
-                <h2 className="text-lg font-semibold">{entryOrg?.organizationName ?? "Unknown org"}</h2>
-                <p className="text-sm text-muted-foreground">{entry.semesterLabel}</p>
-                {entryPeriod?.validationDeadline ? <small>Validation deadline: {formatShortDate(entryPeriod.validationDeadline)}</small> : null}
-                {entry.submissionNote.trim() ? <div className="desktop-review-note"><strong>Org&apos;s Submission Note</strong><p>{entry.submissionNote}</p></div> : null}
-              </div>
-
-              <div className="mobile-ypop-validation-review">
-                <section className="mobile-review-context mobile-review-section">
-                  <div className="review-context-top">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedYpopId(null);
-                        setYpopValidationForm(null);
-                        setYpopPreviewFileId(null);
-                        setYpopAdminView("period-detail");
-                      }}
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Back to Period
-                    </button>
-                    <PortalStatusBadge status={entry.status} />
-                  </div>
-                  <h1>{entryOrg?.organizationName ?? "Unknown organization"}</h1>
-                  <p>{entry.semesterLabel}</p>
-                  {entryPeriod?.validationDeadline ? (
-                    <small>Validation deadline: {formatShortDate(entryPeriod.validationDeadline)}</small>
-                  ) : null}
-                  {entry.submissionNote.trim() ? (
-                    <div className="mobile-submission-note">
-                      <strong>Org&apos;s Submission Note</strong>
-                      <p>{entry.submissionNote}</p>
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-300 bg-bg-panel-subtle p-4">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                     </div>
-                  ) : null}
-                </section>
+                    <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {entryOrg?.organizationName ?? "Unknown organization"}
+                    </h1>
+                    <ReferenceCodeChip code={entryOrg?.referenceId || "—"} />
+                    {entryOrg?.majorClassification ? <CategoryChip category={entryOrg.majorClassification} /> : null}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Decision history"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                </div>
 
-                <section className="mobile-validation-summary mobile-review-section">
-                  <div className="summary-heading">
-                    <h2>Validation Summary</h2>
-                    <span className={qualifies ? "qualifies" : "does-not-qualify"}>
-                      {qualifies ? "Qualifies \u2713" : "Does Not Qualify"}
-                    </span>
-                  </div>
-                  <div className="summary-score">
-                    <strong>{totalScore}%</strong>
-                    <span>Total score</span>
-                  </div>
-                  <div className="summary-progress">
-                    <div style={{ width: `${Math.min(totalScore, 100)}%` }} />
-                    <span style={{ left: `${entry.pointsRequired ?? YPOP_SCORE_THRESHOLD}%` }} />
-                  </div>
-                  <div className="summary-metrics">
-                    <div><span>City-Led</span><strong>{cityLedWeightedScore}%</strong></div>
-                    <div><span>Bonus</span><strong>+{orgLedBonus}%</strong></div>
-                    <div><span>Threshold</span><strong>{entry.pointsRequired ?? YPOP_SCORE_THRESHOLD}%</strong></div>
-                    <div><span>Total</span><strong>{totalScore}%</strong></div>
-                  </div>
-                </section>
-
-                <section className="mobile-review-section mobile-activity-validation">
-                  <div className="mobile-section-heading">
+                <div className="space-y-4 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <h2>City-Led Activities</h2>
-                      <p>Select the verified activities that should count toward the score.</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-segoe text-sm font-semibold uppercase leading-none text-text-default">Validation Summary</p>
+                        <CircleHelp className="h-3.5 w-3.5 text-slate-400" strokeWidth={1.6} />
+                      </div>
+                      <p className="mt-1 font-segoe text-xs text-slate-500">Current computed eligibility points.</p>
                     </div>
-                    <strong>{cityLedEarned} / {cityLedMax} pts</strong>
-                  </div>
-                  {semesterActivities.length ? (
-                    <div className="mobile-activity-options">
-                      {semesterActivities.map((activity) => {
-                        const checked = effectiveCityLedAttendance.find((attendance) => attendance.activityId === activity.id)?.attended ?? false;
-                        return (
-                          <label key={activity.id} className={`mobile-activity-option ${checked ? "is-selected" : ""} ${isTerminal ? "is-disabled" : ""}`}>
-                            <input type="checkbox" checked={checked} disabled readOnly />
-                            <span className="activity-option-content">
-                              <strong>{activity.name}</strong>
-                              <small>{activity.date}{activity.venue ? ` \u00b7 ${activity.venue}` : ""}</small>
-                            </span>
-                            <span className="points-badge">{normalizeYpopCityLedPoints(activity.points, activity.category)} pts</span>
-                          </label>
-                        );
-                      })}
+                    <div className="flex items-center gap-3">
+                      <span className="whitespace-nowrap font-segoe text-xs font-medium text-slate-500">Qualification Progress</span>
+                      <div className="relative h-2 w-32 overflow-hidden rounded-full bg-bg-neutral-subtle sm:w-40">
+                        <div className="h-full rounded-full bg-positive-secondary transition-all" style={{ width: `${qualificationProgress}%` }} />
+                      </div>
+                      <span className="font-segoe text-sm font-bold text-text-default">{qualificationProgress}%</span>
                     </div>
-                  ) : (
-                    <p className="mobile-review-empty">No city-led activities configured for this validation period.</p>
-                  )}
+                  </div>
 
-                  <div className="mobile-org-activities">
-                    <h2>Organization-Initiated Activities</h2>
-                    <div className="org-activity-summary">
-                      <span>Approved activities</span><strong>{approvedOrgActivityCount}</strong>
-                      <span>Current bonus</span><strong>+{orgLedBonus}%</strong>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                      <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                      <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedCount}</p>
                     </div>
-                    {orgActivities.length ? (
-                      <div className="mobile-org-activity-list">
-                        {orgActivities.map((activity) => {
-                          const files = orgActivityFilesByActivityId.get(activity.id) ?? [];
-                          return (
-                            <div key={activity.id} className="mobile-org-activity-row">
-                              <div className="mobile-row-heading">
-                                <div>
-                                  <strong>{activity.activityName}</strong>
-                                  <small>{activity.activityDate || "Date TBD"}{activity.venue ? ` \u00b7 ${activity.venue}` : ""}</small>
-                                </div>
-                                <PortalStatusBadge status={activity.status} />
-                              </div>
-                              {activity.narrativeReport ? <p>{activity.narrativeReport}</p> : null}
-                              {files.map((file) => (
-                                <button key={file.id} type="button" className="mobile-proof-file" onClick={() => void openFile(file.fileUrl, file.fileName)}>
-                                  <FileText className="h-4 w-4 shrink-0" />
-                                  <span>{file.fileName}</span>
-                                </button>
-                              ))}
-                              <div className="mobile-org-review-controls">
-                                <Textarea
-                                  value={ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks}
-                                  onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [activity.id]: event.target.value }))}
-                                  rows={2}
-                                  className="resize-none text-sm"
-                                  placeholder="Feedback for this activity..."
-                                  disabled={isTerminal}
-                                />
-                                {!isTerminal ? (
-                                  <div className="proof-decision-actions">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      className="verify-action"
-                                      onClick={() => openAdminConfirmation({
-                                        kind: "ypop_org_activity",
-                                        action: "approved",
-                                        orgActivityId: activity.id,
-                                        entryId: entry.id,
-                                        organizationId: activity.organizationId,
-                                        organizationName: entryOrg?.organizationName ?? "Organization",
-                                        activityName: activity.activityName,
-                                        currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
-                                      })}
-                                    >
-                                      Approve Activity
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      className="needs-revision-action"
-                                      onClick={() => openAdminConfirmation({
-                                        kind: "ypop_org_activity",
-                                        action: "needs_revision",
-                                        orgActivityId: activity.id,
-                                        entryId: entry.id,
-                                        organizationId: activity.organizationId,
-                                        organizationName: entryOrg?.organizationName ?? "Organization",
-                                        activityName: activity.activityName,
-                                        currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
-                                      })}
-                                    >
-                                      Needs Revision
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() => openAdminConfirmation({
-                                        kind: "ypop_org_activity",
-                                        action: "rejected",
-                                        orgActivityId: activity.id,
-                                        entryId: entry.id,
-                                        organizationId: activity.organizationId,
-                                        organizationName: entryOrg?.organizationName ?? "Organization",
-                                        activityName: activity.activityName,
-                                        currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
-                                      })}
-                                    >
-                                      Reject
-                                    </Button>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="mobile-review-empty">No organization-initiated activities were submitted for this validation period.</p>
-                    )}
-                  </div>
-                </section>
-
-                <section className="mobile-review-section mobile-proof-documents">
-                  <div className="mobile-section-heading">
-                    <h2>Proof Documents</h2>
-                    <strong>{orgEventParticipations.length}</strong>
-                  </div>
-                  {orgEventParticipations.length ? (
-                    <Accordion type="multiple" className="mobile-proof-accordion">
-                      {orgEventParticipations.map((participation) => {
-                        const files = eventFilesByParticipationId.get(participation.id) ?? [];
-                        const remarksDraft = ypopEventReviewRemarksById[participation.id] ?? participation.adminRemarks;
-                        const isSaving = processingAdminConfirmation && pendingAdminConfirmation?.kind === "ypop_event" && pendingAdminConfirmation.participationId === participation.id;
-                        return (
-                          <AccordionItem key={participation.id} value={participation.id} className="proof-accordion-item">
-                            <AccordionTrigger className="proof-accordion-trigger hover:no-underline">
-                              <div className="proof-trigger-content">
-                                <strong>{participation.activityName}</strong>
-                                <small>{participation.activityDate || "Date TBD"}{participation.venue ? ` \u00b7 ${participation.venue}` : ""}</small>
-                                <small>{files.length} proof {files.length === 1 ? "file" : "files"}</small>
-                              </div>
-                              <PortalStatusBadge status={participation.status} />
-                            </AccordionTrigger>
-                            <AccordionContent className="proof-accordion-content">
-                              {participation.status === "verified" && participation.verifiedAt ? (
-                                <p className="proof-status-strip">
-                                  Verified {"\u00b7"} {formatShortDate(participation.verifiedAt)}
-                                </p>
-                              ) : null}
-
-                              <div className="proof-content-group">
-                                <h3>Attached Files</h3>
-                                {files.length ? files.map((file) => (
-                                  <div key={file.id} className="file-row">
-                                    <span>{file.fileName}</span>
-                                    <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
-                                      Open File
-                                    </Button>
-                                  </div>
-                                )) : <p className="mobile-review-empty">No proof files uploaded yet.</p>}
-                              </div>
-
-                              <div className="proof-content-group">
-                                <label>Event Remarks</label>
-                                <Textarea
-                                  value={remarksDraft}
-                                  onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [participation.id]: event.target.value }))}
-                                  rows={3}
-                                  className="resize-none text-sm"
-                                  placeholder="Feedback for this event proof..."
-                                />
-                              </div>
-
-                              <div className="proof-content-group">
-                                <h3>Proof Decision</h3>
-                                <div className="proof-decision-actions">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    className="verify-action"
-                                    disabled={isSaving}
-                                    onClick={() => openAdminConfirmation({
-                                      kind: "ypop_event",
-                                      action: "verified",
-                                      participationId: participation.id,
-                                      entryId: entry.id,
-                                      activityId: participation.activityId,
-                                      organizationId: participation.organizationId,
-                                      organizationName: entryOrg?.organizationName ?? "Organization",
-                                      activityName: participation.activityName,
-                                      currentAdminRemarks: remarksDraft,
-                                    })}
-                                  >
-                                    {isSaving ? "Saving..." : "Verify Proof"}
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="needs-revision-action"
-                                    disabled={isSaving}
-                                    onClick={() => openAdminConfirmation({
-                                      kind: "ypop_event",
-                                      action: "needs_revision",
-                                      participationId: participation.id,
-                                      entryId: entry.id,
-                                      activityId: participation.activityId,
-                                      organizationId: participation.organizationId,
-                                      organizationName: entryOrg?.organizationName ?? "Organization",
-                                      activityName: participation.activityName,
-                                      currentAdminRemarks: remarksDraft,
-                                    })}
-                                  >
-                                    Needs Revision
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="destructive"
-                                    disabled={isSaving}
-                                    onClick={() => openAdminConfirmation({
-                                      kind: "ypop_event",
-                                      action: "rejected",
-                                      participationId: participation.id,
-                                      entryId: entry.id,
-                                      activityId: participation.activityId,
-                                      organizationId: participation.organizationId,
-                                      organizationName: entryOrg?.organizationName ?? "Organization",
-                                      activityName: participation.activityName,
-                                      currentAdminRemarks: remarksDraft,
-                                    })}
-                                  >
-                                    Reject Proof
-                                  </Button>
-                                </div>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        );
-                      })}
-                    </Accordion>
-                  ) : (
-                    <p className="mobile-review-empty">No proof documents were submitted for this validation period.</p>
-                  )}
-
-                </section>
-
-                <section className="mobile-review-section mobile-final-decision">
-                  <h2>Final Validation Decision</h2>
-                  <div>
-                    <label htmlFor="mobile-ypop-status">Outcome</label>
-                    <Select value={form.status} onValueChange={(value) => setYpopValidationForm({ ...form, status: value as YPOPStatus })} disabled={isTerminal || savingYpopValidation}>
-                      <SelectTrigger id="mobile-ypop-status"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="under_review">Under Review</SelectItem>
-                        <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                        <SelectItem value="qualified">Qualified {"\u2713"}</SelectItem>
-                        <SelectItem value="not_qualified">Not Qualified</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {!isTerminal ? <small>Suggested from the current computed score.</small> : null}
-                  </div>
-                  <div>
-                    <label htmlFor="mobile-ypop-remarks">Admin Remarks</label>
-                    <Textarea
-                      id="mobile-ypop-remarks"
-                      value={form.adminRemarks}
-                      onChange={(event) => setYpopValidationForm({ ...form, adminRemarks: event.target.value })}
-                      placeholder="Optional feedback for the organization..."
-                      rows={3}
-                      className="resize-none"
-                      disabled={isTerminal || savingYpopValidation}
-                    />
-                  </div>
-                  {!isTerminal ? (
-                    <Button
-                      type="button"
-                      className="mobile-save-validation"
-                      disabled={savingYpopValidation}
-                      onClick={() => {
-                        setYpopValidationAcknowledged(false);
-                        setConfirmYpopValidationOpen(true);
-                      }}
-                    >
-                      {savingYpopValidation ? "Saving..." : "Save City-Led Validation"}
-                    </Button>
-                  ) : null}
-                </section>
-
-                {(entry.revisionHistory?.length ?? 0) > 0 ? (
-                  <section className="mobile-review-section mobile-review-activity">
-                    <h2>Review Activity</h2>
-                    {[...entry.revisionHistory!].slice(-3).reverse().map((revision, index) => (
-                      <div key={`${revision.changedAt}-${index}`} className="mobile-review-activity-row">
-                        <span />
-                        <div>
-                          <strong>{statusLabelMap[revision.action] ?? revision.action.replaceAll("_", " ")}</strong>
-                          <small>{formatDateTimeLabel(revision.changedAt)}</small>
-                          {revision.adminRemarks ? <p>{revision.adminRemarks}</p> : null}
-                        </div>
-                      </div>
-                    ))}
-                    {entry.revisionHistory!.length > 3 ? (
-                      <button
-                        type="button"
-                        className="mobile-full-activity-log"
-                        onClick={() => {
-                          setRecentActivityDialogTitle(`Review Activity - ${entryOrg?.organizationName ?? "Organization"}`);
-                          setRecentActivityDialogEntries(entry.revisionHistory!.map((revision, index) => ({
-                            key: `${revision.changedAt}-${index}`,
-                            title: statusLabelMap[revision.action] ?? revision.action.replaceAll("_", " "),
-                            note: revision.adminRemarks || undefined,
-                            timestamp: revision.changedAt,
-                          })));
-                          setRecentActivityDialogOpen(true);
-                        }}
-                      >
-                        View full activity log
-                      </button>
-                    ) : null}
-                  </section>
-                ) : null}
-              </div>
-
-              {/* Two-column layout */}
-              <div className="desktop-ypop-validation-review grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-                {/* LEFT: Validation */}
-                <div className="space-y-4">
-                  {entry.submissionNote.trim() && (
-                    <div className="desktop-legacy-submission-note rounded-xl border border-border/60 bg-muted/20 p-4">
-                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Org's Submission Note</p>
-                      <p className="text-sm">{entry.submissionNote}</p>
+                    <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                      <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                      <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{requestRevisionCount}</p>
                     </div>
-                  )}
-
-                  <Card className="desktop-review-workflow border-border/70">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold">Validation</CardTitle>
-                    </CardHeader>
-                    <CardContent className="desktop-review-workflow-content space-y-5 pt-0">
-                      {/* City-Led Activities checklist */}
-                      <div className="desktop-city-led-review space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-semibold">City-Led Activities</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">Verified activities that count toward the score.</p>
-                          </div>
-                          {semesterActivities.length > 0 && (
-                              <span className="text-xs text-muted-foreground">
-                                {cityLedEarned} / {cityLedMax} pts ({cityLedPercent}%)
-                              </span>
-                          )}
-                        </div>
-                        {semesterActivities.length === 0 ? (
-                          <p className="rounded-md border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
-                            No city-led activities configured. Edit the semester to add activities.
-                          </p>
-                        ) : (
-                          <div className="space-y-1.5">
-                            {semesterActivities.map((act: YPOPCityActivity) => {
-                              const checked = effectiveCityLedAttendance.find((a) => a.activityId === act.id)?.attended ?? false;
-                              return (
-                                <div
-                                  key={act.id}
-                                  className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
-                                    isTerminal ? "opacity-70" : ""
-                                  } ${checked ? "border-primary/30 bg-primary/5" : "border-border/50 bg-background"}`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    disabled
-                                    readOnly
-                                    className="mt-0.5 shrink-0 accent-primary"
-                                  />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-medium leading-snug">{act.name}</p>
-                                    <p className="mt-0.5 text-xs text-muted-foreground">{act.date} · {act.venue}</p>
-                                  </div>
-                                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                                    {normalizeYpopCityLedPoints(act.points, act.category)} pts
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Organization-initiated */}
-                      <div className="desktop-ppa-review space-y-2">
-                        <p className="text-sm font-medium">Organization-Initiated Activities</p>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-sm font-semibold tabular-nums">
-                            {approvedOrgActivityCount} approved activit{approvedOrgActivityCount === 1 ? "y" : "ies"}
-                          </div>
-                          <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                            {orgLedTierLabelDisplay}
-                          </div>
-                        </div>
-                        {orgActivities.length === 0 ? (
-                          <p className="rounded-md border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
-                            No organization-initiated activity logs were submitted for this semester yet.
-                          </p>
-                        ) : (
-                          <div className="space-y-2">
-                            {orgActivities.map((activity) => {
-                              const files = orgActivityFilesByActivityId.get(activity.id) ?? [];
-                              return (
-                                <div key={activity.id} className="rounded-lg border border-border/60 bg-background p-3">
-                                  <div className="flex flex-wrap items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-semibold leading-snug">{activity.activityName}</p>
-                                      <p className="mt-0.5 text-xs text-muted-foreground">
-                                        {activity.activityDate || "Date TBD"}{activity.venue ? ` • ${activity.venue}` : ""}
-                                      </p>
-                                    </div>
-                                    <PortalStatusBadge status={activity.status} />
-                                  </div>
-                                  <div className="mt-3 rounded-md border border-border/50 bg-muted/20 p-3">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Narrative Report</p>
-                                    <p className="text-sm whitespace-pre-wrap">{activity.narrativeReport}</p>
-                                  </div>
-                                  <div className="mt-3 space-y-2">
-                                    <p className="text-xs font-medium text-muted-foreground">Attached Files ({files.length})</p>
-                                    {files.length === 0 ? (
-                                      <p className="text-sm text-muted-foreground">No proof files uploaded yet.</p>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        {files.map((file) => (
-                                          <div key={file.id} className="flex items-center justify-between gap-2 rounded-md border border-border/50 px-3 py-2">
-                                            <span className="min-w-0 truncate text-sm">{file.fileName}</span>
-                                            <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
-                                              Open
-                                            </Button>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="mt-3 space-y-2">
-                                    <label className="text-sm font-medium">PPA Remarks</label>
-                                    <Textarea
-                                      value={ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks}
-                                      onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [activity.id]: event.target.value }))}
-                                      rows={3}
-                                      className="resize-none text-sm"
-                                      placeholder="Feedback for this organization-initiated activity…"
-                                      disabled={isTerminal}
-                                    />
-                                  </div>
-                                  {!isTerminal && (
-                                    <div className="mt-3 flex flex-wrap justify-end gap-2">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className="needs-revision-action"
-                                        onClick={() =>
-                                          openAdminConfirmation({
-                                            kind: "ypop_org_activity",
-                                            action: "needs_revision",
-                                            orgActivityId: activity.id,
-                                            entryId: entry.id,
-                                            organizationId: activity.organizationId,
-                                            organizationName: entryOrg?.organizationName ?? "Organization",
-                                            activityName: activity.activityName,
-                                            currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
-                                          })
-                                        }
-                                      >
-                                        Needs Revision
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() =>
-                                          openAdminConfirmation({
-                                            kind: "ypop_org_activity",
-                                            action: "rejected",
-                                            orgActivityId: activity.id,
-                                            entryId: entry.id,
-                                            organizationId: activity.organizationId,
-                                            organizationName: entryOrg?.organizationName ?? "Organization",
-                                            activityName: activity.activityName,
-                                            currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
-                                          })
-                                        }
-                                      >
-                                        Reject
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={() =>
-                                          openAdminConfirmation({
-                                            kind: "ypop_org_activity",
-                                            action: "approved",
-                                            orgActivityId: activity.id,
-                                            entryId: entry.id,
-                                            organizationId: activity.organizationId,
-                                            organizationName: entryOrg?.organizationName ?? "Organization",
-                                            activityName: activity.activityName,
-                                            currentAdminRemarks: ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks,
-                                          })
-                                        }
-                                      >
-                                        Approve PPA
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Score */}
-                      <div className="desktop-validation-summary rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold">Computed Score</p>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => setYpopScoringHelpOpen(true)}
-                              aria-label="View YPOP scoring guide"
-                            >
-                              <CircleHelp className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${qualifies ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
-                            {qualifies ? "Qualifies ✓" : "Does Not Qualify"}
-                          </span>
-                        </div>
-                        <div className="flex items-end gap-1">
-                          <span className="text-2xl font-bold tabular-nums">{totalScore}</span>
-                          <span className="mb-0.5 text-sm text-muted-foreground">%</span>
-                        </div>
-                        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
-                          <div className={`h-full rounded-full transition-all ${totalScore >= YPOP_SCORE_THRESHOLD ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${Math.min(totalScore, 100)}%` }} />
-                          <div className="absolute top-0 h-full w-px bg-foreground/30" style={{ left: `${YPOP_SCORE_THRESHOLD}%` }} />
-                        </div>
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <span>0</span><span className="font-medium">{YPOP_SCORE_THRESHOLD}% threshold</span><span>{YPOP_BASE_TOTAL_POINTS}%+</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                          <div className="rounded-md border border-border/50 bg-background py-1.5">
-                            <p className="font-semibold">{cityLedWeightedScore}%</p>
-                            <p className="text-muted-foreground">City-Led score</p>
-                          </div>
-                          <div className="rounded-md border border-border/50 bg-background py-1.5">
-                            <p className="font-semibold">+{orgLedBonus}%</p>
-                            <p className="text-muted-foreground">Org-initiated bonus</p>
-                          </div>
-                          <div className="rounded-md border border-border/50 bg-background py-1.5">
-                            <p className="font-semibold">{totalScore}%</p>
-                            <p className="text-muted-foreground">Total</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Outcome + Remarks */}
-                      <div className="desktop-final-decision-fields space-y-3">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium" htmlFor="ypop-status">Outcome</label>
-                          <Select value={form.status} onValueChange={(v) => setYpopValidationForm({ ...form, status: v as YPOPStatus })} disabled={isTerminal || savingYpopValidation}>
-                            <SelectTrigger id="ypop-status"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="under_review">Under Review</SelectItem>
-                              <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                              <SelectItem value="qualified">Qualified ✓</SelectItem>
-                              <SelectItem value="not_qualified">Not Qualified</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {!isTerminal && <p className="text-xs text-muted-foreground">Auto-suggested based on computed score.</p>}
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium" htmlFor="ypop-remarks">Admin Remarks <span className="font-normal text-muted-foreground">(optional)</span></label>
-                          <Textarea
-                            id="ypop-remarks"
-                            value={form.adminRemarks}
-                            onChange={(e) => setYpopValidationForm({ ...form, adminRemarks: e.target.value })}
-                            placeholder="Feedback for the organization…"
-                            rows={3}
-                            className="resize-none text-sm"
-                            disabled={isTerminal || savingYpopValidation}
-                          />
-                        </div>
-                      </div>
-
-                      {!isTerminal && (
-                        <Button
-                          type="button"
-                          className="desktop-save-validation w-full"
-                          disabled={savingYpopValidation}
-                          onClick={() => {
-                            setYpopValidationAcknowledged(false);
-                            setConfirmYpopValidationOpen(true);
-                          }}
-                        >
-                          {savingYpopValidation ? "Saving…" : "Save City-Led Validation"}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                </div>
-
-                {/* RIGHT: Proof Documents + History */}
-                <div className="desktop-review-support space-y-3">
-                  <Card className="desktop-summary-card border-border/70">
-                    <CardContent className="space-y-3 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">Validation Summary</p>
-                          <p className="text-xs text-muted-foreground">Current computed result</p>
-                        </div>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${qualifies ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
-                          {qualifies ? "Qualifies ✓" : "Does Not Qualify"}
-                        </span>
-                      </div>
-                      <div className="flex items-end gap-1">
-                        <strong className="text-3xl tabular-nums">{totalScore}</strong>
-                        <span className="mb-1 text-sm text-muted-foreground">% total</span>
-                      </div>
-                      <div className="relative h-2 overflow-hidden rounded-full bg-muted">
-                        <div className={qualifies ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-amber-400"} style={{ width: `${Math.min(totalScore, 100)}%` }} />
-                        <span className="absolute top-0 h-full w-0.5 bg-foreground/40" style={{ left: `${entry.pointsRequired ?? YPOP_SCORE_THRESHOLD}%` }} />
-                      </div>
-                      <div className="desktop-summary-metrics">
-                        <div><span>City-Led</span><strong>{cityLedWeightedScore}%</strong></div>
-                        <div><span>Bonus</span><strong>+{orgLedBonus}%</strong></div>
-                        <div><span>Threshold</span><strong>{entry.pointsRequired ?? YPOP_SCORE_THRESHOLD}%</strong></div>
-                        <div><span>Total</span><strong>{totalScore}%</strong></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="desktop-proof-documents border-border/70">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-semibold">Proof Documents ({orgEventParticipations.length})</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 pt-0">
-                      {orgEventParticipations.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No joined YPOP events for this organization in the selected semester yet.</p>
-                      ) : (
-                        <Accordion type="multiple" className="w-full rounded-xl border border-border/60">
-                          {orgEventParticipations.slice(0, showAllYpopProofDocuments ? orgEventParticipations.length : 3).map((participation) => {
-                            const files = eventFilesByParticipationId.get(participation.id) ?? [];
-                            const remarksDraft = ypopEventReviewRemarksById[participation.id] ?? participation.adminRemarks;
-                            const isSaving = processingAdminConfirmation && pendingAdminConfirmation?.kind === "ypop_event" && pendingAdminConfirmation.participationId === participation.id;
-
-                            return (
-                              <AccordionItem key={participation.id} value={participation.id} className="border-border/60 px-4">
-                                <AccordionTrigger className="gap-3 py-4 text-left hover:no-underline">
-                                  <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-semibold text-foreground">{participation.activityName}</p>
-                                      <p className="mt-0.5 text-xs text-muted-foreground">
-                                        {participation.activityDate || "Date TBD"}{participation.venue ? ` • ${participation.venue}` : ""}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {participation.proofSubmittedAt
-                                          ? `Proof submitted ${new Date(participation.proofSubmittedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`
-                                          : "No proof submitted yet"}
-                                      </p>
-                                    </div>
-                                    <div className="shrink-0">
-                                      <PortalStatusBadge status={participation.status} />
-                                    </div>
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="space-y-4 pb-4">
-                                  {participation.status === "verified" && participation.verifiedAt ? (
-                                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700">
-                                      <p className="text-sm font-semibold">Verified</p>
-                                      <p className="text-xs">{new Date(participation.verifiedAt).toLocaleDateString("en-US")}</p>
-                                    </div>
-                                  ) : null}
-
-                                  <div className="space-y-2">
-                                    <p className="text-sm font-medium">Files ({files.length})</p>
-                                    {files.length === 0 ? (
-                                      <p className="text-sm text-muted-foreground">No proof files uploaded yet.</p>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        {files.map((file) => (
-                                          <div key={file.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-                                            <span className="truncate text-sm">{file.fileName}</span>
-                                            <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>
-                                              Open
-                                            </Button>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium">Event Remarks</label>
-                                    <Textarea
-                                      value={remarksDraft}
-                                      onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [participation.id]: event.target.value }))}
-                                      rows={3}
-                                      className="resize-none text-sm"
-                                      placeholder="Feedback for this event proof…"
-                                    />
-                                  </div>
-
-                                  <div className="flex flex-wrap justify-end gap-2">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      className="needs-revision-action"
-                                      disabled={isSaving}
-                                      onClick={() =>
-                                        openAdminConfirmation({
-                                          kind: "ypop_event",
-                                          action: "needs_revision",
-                                          participationId: participation.id,
-                                          entryId: entry.id,
-                                          activityId: participation.activityId,
-                                          organizationId: participation.organizationId,
-                                          organizationName: entryOrg?.organizationName ?? "Organization",
-                                          activityName: participation.activityName,
-                                          currentAdminRemarks: remarksDraft,
-                                        })
-                                      }
-                                    >
-                                      Needs Revision
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="destructive"
-                                      disabled={isSaving}
-                                      onClick={() =>
-                                        openAdminConfirmation({
-                                          kind: "ypop_event",
-                                          action: "rejected",
-                                          participationId: participation.id,
-                                          entryId: entry.id,
-                                          activityId: participation.activityId,
-                                          organizationId: participation.organizationId,
-                                          organizationName: entryOrg?.organizationName ?? "Organization",
-                                          activityName: participation.activityName,
-                                          currentAdminRemarks: remarksDraft,
-                                        })
-                                      }
-                                    >
-                                      Reject Proof
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      disabled={isSaving}
-                                      onClick={() =>
-                                        openAdminConfirmation({
-                                          kind: "ypop_event",
-                                          action: "verified",
-                                          participationId: participation.id,
-                                          entryId: entry.id,
-                                          activityId: participation.activityId,
-                                          organizationId: participation.organizationId,
-                                          organizationName: entryOrg?.organizationName ?? "Organization",
-                                          activityName: participation.activityName,
-                                          currentAdminRemarks: remarksDraft,
-                                        })
-                                      }
-                                    >
-                                      {isSaving ? "Saving..." : "Verify Proof"}
-                                    </Button>
-                                  </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                            );
-                          })}
-                        </Accordion>
-                      )}
-                      {orgEventParticipations.length > 3 ? (
-                        <Button type="button" variant="outline" className="w-full" onClick={() => setShowAllYpopProofDocuments((current) => !current)}>
-                          {showAllYpopProofDocuments ? "Show less" : `View all proof documents (${orgEventParticipations.length})`}
-                        </Button>
-                      ) : null}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="desktop-org-activities-card border-border/70">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <CardTitle className="text-sm font-semibold">Organization-Led Activities</CardTitle>
-                          <p className="mt-1 text-xs text-muted-foreground">Review submitted PPA details and supporting files.</p>
-                        </div>
-                        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">{orgActivities.length}</span>
-                      </div>
-                      <div className="desktop-org-activity-summary">
-                        <div><span>Approved</span><strong>{approvedOrgActivityCount}</strong></div>
-                        <div><span>Current bonus</span><strong>+{orgLedBonus}%</strong></div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3 pt-0">
-                      {orgActivities.length === 0 ? (
-                        <p className="rounded-lg border border-dashed border-border/70 p-3 text-sm text-muted-foreground">
-                          No organization-led activities were submitted for this semester.
-                        </p>
-                      ) : (
-                        <Accordion type="multiple" className="w-full rounded-xl border border-border/60">
-                          {orgActivities.slice(0, showAllYpopOrgActivities ? orgActivities.length : 3).map((activity) => {
-                            const files = orgActivityFilesByActivityId.get(activity.id) ?? [];
-                            const remarksDraft = ypopEventReviewRemarksById[activity.id] ?? activity.adminRemarks;
-                            return (
-                              <AccordionItem key={activity.id} value={activity.id} className="border-border/60 px-4">
-                                <AccordionTrigger className="gap-3 py-4 text-left hover:no-underline">
-                                  <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-semibold">{activity.activityName}</p>
-                                      <p className="mt-0.5 text-xs text-muted-foreground">
-                                        {activity.activityDate || "Date TBD"}{activity.venue ? ` · ${activity.venue}` : ""}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">{files.length} attached file{files.length === 1 ? "" : "s"}</p>
-                                    </div>
-                                    <PortalStatusBadge status={activity.status} />
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="space-y-4 pb-4">
-                                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Narrative Report</p>
-                                    <p className="whitespace-pre-wrap text-sm">{activity.narrativeReport || "No narrative report provided."}</p>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p className="text-sm font-medium">Attached Files ({files.length})</p>
-                                    {files.length ? files.map((file) => (
-                                      <div key={file.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-                                        <span className="min-w-0 truncate text-sm">{file.fileName}</span>
-                                        <Button type="button" size="sm" variant="outline" onClick={() => void openFile(file.fileUrl, file.fileName)}>Open</Button>
-                                      </div>
-                                    )) : <p className="text-sm text-muted-foreground">No proof files uploaded yet.</p>}
-                                  </div>
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium">PPA Remarks</label>
-                                    <Textarea
-                                      value={remarksDraft}
-                                      onChange={(event) => setYpopEventReviewRemarksById((current) => ({ ...current, [activity.id]: event.target.value }))}
-                                      rows={3}
-                                      className="resize-none text-sm"
-                                      placeholder="Feedback for this organization-led activity..."
-                                      disabled={isTerminal}
-                                    />
-                                  </div>
-                                  {!isTerminal ? (
-                                    <div className="desktop-org-activity-actions">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        className="needs-revision-action"
-                                        variant="outline"
-                                        onClick={() => openAdminConfirmation({
-                                          kind: "ypop_org_activity",
-                                          action: "needs_revision",
-                                          orgActivityId: activity.id,
-                                          entryId: entry.id,
-                                          organizationId: activity.organizationId,
-                                          organizationName: entryOrg?.organizationName ?? "Organization",
-                                          activityName: activity.activityName,
-                                          currentAdminRemarks: remarksDraft,
-                                        })}
-                                      >Needs Revision</Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => openAdminConfirmation({
-                                          kind: "ypop_org_activity",
-                                          action: "rejected",
-                                          orgActivityId: activity.id,
-                                          entryId: entry.id,
-                                          organizationId: activity.organizationId,
-                                          organizationName: entryOrg?.organizationName ?? "Organization",
-                                          activityName: activity.activityName,
-                                          currentAdminRemarks: remarksDraft,
-                                        })}
-                                      >Reject</Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={() => openAdminConfirmation({
-                                          kind: "ypop_org_activity",
-                                          action: "approved",
-                                          orgActivityId: activity.id,
-                                          entryId: entry.id,
-                                          organizationId: activity.organizationId,
-                                          organizationName: entryOrg?.organizationName ?? "Organization",
-                                          activityName: activity.activityName,
-                                          currentAdminRemarks: remarksDraft,
-                                        })}
-                                      >Approve PPA</Button>
-                                    </div>
-                                  ) : null}
-                                </AccordionContent>
-                              </AccordionItem>
-                            );
-                          })}
-                        </Accordion>
-                      )}
-                      {orgActivities.length > 3 ? (
-                        <Button type="button" variant="outline" className="w-full" onClick={() => setShowAllYpopOrgActivities((current) => !current)}>
-                          {showAllYpopOrgActivities ? "Show less" : `View all organization-led activities (${orgActivities.length})`}
-                        </Button>
-                      ) : null}
-                    </CardContent>
-                  </Card>
-
-                  {entryFiles.length > 0 && (
-                    <Card className="border-border/70">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-semibold">General Submission Files ({entryFiles.length})</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 pt-0">
-                        <div className="flex flex-wrap gap-2">
-                          {entryFiles.map((f: YPOPFile) => (
-                            <Button
-                              key={f.id}
-                              type="button"
-                              size="sm"
-                              variant={ypopPreviewFileId === f.id ? "default" : "outline"}
-                              className="max-w-full"
-                              onClick={() => setYpopPreviewFileId(ypopPreviewFileId === f.id ? null : f.id)}
-                            >
-                              <FileText className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                              <span className="max-w-[12rem] truncate">{f.fileName}</span>
-                            </Button>
-                          ))}
-                        </div>
-
-                        <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/10">
-                          {ypopPreviewFileId === null ? (
-                            <div className="flex min-h-[20rem] items-center justify-center p-4 text-sm text-muted-foreground">
-                              Select a file above to preview it here.
-                            </div>
-                          ) : ypopPreviewLoading ? (
-                            <div className="flex min-h-[6rem] items-center justify-center p-4 text-sm text-muted-foreground">
-                              Loading preview…
-                            </div>
-                          ) : ypopPreviewUrl && ypopPreviewCanInline ? (
-                            isImagePreviewFile(ypopPreviewTitle) || isImagePreviewFile(ypopPreviewUrl) ? (
-                              <div className="flex max-h-[32rem] items-center justify-center overflow-hidden bg-background sm:max-h-[40rem]">
-                                <img src={ypopPreviewUrl} alt={ypopPreviewTitle || "YPOP proof"} className="max-h-[32rem] w-full object-contain sm:max-h-[40rem]" />
-                              </div>
-                            ) : (
-                              <iframe
-                                title={ypopPreviewTitle || "YPOP Proof Preview"}
-                                src={ypopPreviewUrl}
-                                className="h-[32rem] w-full border-0 bg-background sm:h-[40rem]"
-                                loading="eager"
-                              />
-                            )
-                          ) : ypopPreviewUrl ? (
-                            <div className="flex flex-col items-start gap-3 p-4 text-sm text-muted-foreground">
-                              <p>This file cannot be previewed inline.</p>
-                              <Button type="button" variant="outline" size="sm" onClick={() => window.open(ypopPreviewUrl, "_blank", "noopener,noreferrer")}>
-                                <Eye className="mr-2 h-4 w-4" />Open File
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex min-h-[6rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
-                              No preview available — file URL not set in this demo.
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {(entry.revisionHistory?.length ?? 0) > 0 && (
-                    <Card className="border-border/70">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Review Activity</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 pt-0">
-                        {entry.revisionHistory!.map((rev, i) => {
-                          const dotColor =
-                            rev.action === "qualified" ? "bg-emerald-500"
-                            : rev.action === "not_qualified" ? "bg-rose-500"
-                            : rev.action === "needs_revision" ? "bg-amber-400"
-                            : "bg-muted-foreground/40";
-                          return (
-                            <div key={i} className="flex items-start gap-3 text-sm">
-                              <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotColor}`} />
-                              <div>
-                                <p className="font-medium capitalize">{rev.action.replace(/_/g, " ")}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDateTimeLabel(rev.changedAt)}
-                                </p>
-                                {rev.adminRemarks && (
-                                  <p className="mt-0.5 text-xs italic text-muted-foreground/80">"{rev.adminRemarks}"</p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </CardContent>
-                    </Card>
-                  )}
+                    <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                      <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                      <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <Dialog open={ypopScoringHelpOpen} onOpenChange={setYpopScoringHelpOpen}>
-                <DialogContent className="sm:max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle>YPOP Scoring Breakdown</DialogTitle>
-                    <DialogDescription>
-                      City-led score uses verified proof records only. Total possible points are based on the sum of available city-led activity categories for the semester: Mandatory = 4, Invitational = 3, Partnership = 2. Approved organization-initiated activities then add bonus percentage points.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="overflow-x-auto rounded-xl border border-border/70">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Points Earned</TableHead>
-                            <TableHead>Total Possible Points</TableHead>
-                            <TableHead>Percentage (%)</TableHead>
-                            <TableHead>Weighted Points</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>City-Led Activities</TableCell>
-                            <TableCell>{cityLedEarned}</TableCell>
-                            <TableCell>{cityLedMax}</TableCell>
-                            <TableCell>{cityLedEarned} ÷ {cityLedMax || 0} × 100 = {cityLedPercent}%</TableCell>
-                            <TableCell>{cityLedPercent}% of total</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>Organization-Initiated Activities</TableCell>
-                            <TableCell>{approvedOrgActivityCount} approved</TableCell>
-                            <TableCell>Bonus tier basis</TableCell>
-                            <TableCell>Based on approved PPA count</TableCell>
-                            <TableCell>+{orgLedBonus}% bonus</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-semibold">Total YPOP Points</TableCell>
-                            <TableCell colSpan={3} className="font-medium">City-led percentage + organization-initiated bonus</TableCell>
-                            <TableCell className="font-semibold">{totalScore}%</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Example: if the semester has one Mandatory, one Invitational, and one Partnership activity, the total possible city-led points are 9. If the organization verifies the Mandatory and Partnership activities only, the city-led score is 6 ÷ 9 × 100 = 66.67%, rounded to 67%.
-                    </p>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <AlertDialog
-                open={confirmYpopValidationOpen}
-                onOpenChange={(open) => {
-                  setConfirmYpopValidationOpen(open);
-                  if (!open) {
-                    setYpopValidationAcknowledged(false);
-                  }
-                }}
-              >
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Validation Save</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will save the YPOP validation using the currently verified city-led proofs and approved organization-initiated activities.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <label htmlFor="ypop-validation-acknowledged" className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 text-sm">
-                    <input
-                      id="ypop-validation-acknowledged"
-                      type="checkbox"
-                      checked={ypopValidationAcknowledged}
-                      onChange={(event) => setYpopValidationAcknowledged(event.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-border text-primary"
-                    />
-                    <span>I acknowledge that the validated YPOP result is based on the records shown on this page.</span>
-                  </label>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={savingYpopValidation}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={(event) => {
-                        event.preventDefault();
-                        void persistYpopValidation();
-                      }}
-                      disabled={!ypopValidationAcknowledged || savingYpopValidation}
-                    >
-                      {savingYpopValidation ? "Saving…" : "Save City-Led Validation"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             </div>
           );
         }
@@ -9886,147 +8503,104 @@ export default function AdminPortal({ section }: { section: string }) {
               _isVirtual: true,
             }));
           const combinedPeriodEntries = [...periodEntries, ...supplementalEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-          const filteredPeriodEntries =
-            ypopSubmissionFilter === "all"
-              ? combinedPeriodEntries
-              : combinedPeriodEntries.filter((e) => e.status === ypopSubmissionFilter);
+
+          const isPendingEvaluationStatus = (status: YPOPStatus) => status === "under_review" || status === "needs_revision";
+          const submittedCount = combinedPeriodEntries.filter((e) => e.status === "submitted").length;
+          const pendingEvaluationCount = combinedPeriodEntries.filter((e) => isPendingEvaluationStatus(e.status)).length;
+          const qualifiedCount = combinedPeriodEntries.filter((e) => e.status === "qualified").length;
+          const notQualifiedCount = combinedPeriodEntries.filter((e) => e.status === "not_qualified").length;
+
+          const entriesById = new Map(combinedPeriodEntries.map((entry) => [entry.id, entry]));
+          const submissionRows: YpopSubmissionRow[] = combinedPeriodEntries.map((entry) => {
+            const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
+            return {
+              id: entry.id,
+              organizationId: entry.organizationId,
+              organizationName: entryOrg?.organizationName ?? "Unknown organization",
+              referenceId: entryOrg?.referenceId ?? "",
+              majorClassification: entryOrg?.majorClassification ?? "",
+              status: entry.status,
+            };
+          });
+
+          const submissionSearchQuery = ypopSubmissionSearch.trim().toLowerCase();
+          const filteredSubmissionRows = submissionRows.filter((row) => {
+            const matchesSearch =
+              !submissionSearchQuery ||
+              row.organizationName.toLowerCase().includes(submissionSearchQuery) ||
+              row.referenceId.toLowerCase().includes(submissionSearchQuery);
+            const matchesClassification =
+              ypopSubmissionClassificationFilter === "all" || row.majorClassification === ypopSubmissionClassificationFilter;
+            const matchesStatus =
+              ypopSubmissionFilter === "all" ||
+              (ypopSubmissionFilter === "pending_evaluation" && isPendingEvaluationStatus(row.status)) ||
+              (ypopSubmissionFilter === "qualified" && row.status === "qualified") ||
+              (ypopSubmissionFilter === "not_qualified" && row.status === "not_qualified");
+            return matchesSearch && matchesClassification && matchesStatus;
+          });
+
+          const handleValidateSubmission = (row: YpopSubmissionRow) => {
+            const entry = entriesById.get(row.id);
+            if (!entry) return;
+            const isVirtualEntry = "_isVirtual" in entry;
+            const reviewEntry = isVirtualEntry
+              ? {
+                  id: `ypop-${Date.now()}`,
+                  organizationId: entry.organizationId,
+                  submittedBy: "",
+                  semester: entry.semester,
+                  semesterLabel: entry.semesterLabel,
+                  pointsEarned: 0,
+                  pointsRequired: 70,
+                  totalPoints: 100,
+                  status: "draft" as const,
+                  adminRemarks: "",
+                  submissionNote: "",
+                  validationDeadline: entry.validationDeadline,
+                  submittedAt: "",
+                  validatedAt: "",
+                  revisionHistory: [],
+                  orgLedProjectCount: 0,
+                  cityLedAttendance: [],
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                }
+              : entry;
+            if (isVirtualEntry) {
+              createYPOPEntry(reviewEntry);
+            }
+            setSelectedYpopId(reviewEntry.id);
+            setYpopAdminView("entry-review");
+          };
+
           return (
             <div className="space-y-6">
               <button
                 type="button"
                 onClick={() => { setSelectedYpopPeriodId(null); setYpopAdminView("periods"); }}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back to YPOP Semesters
+                <ArrowLeft className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                Back to Semesters
               </button>
 
-              <PortalSection
-                title={period.semesterLabel}
-                description={`Deadline: ${new Date(period.validationDeadline).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" })} · ${periodActivities.length} activit${periodActivities.length !== 1 ? "ies" : "y"} · ${totalCityLedPts} pts total`}
-                action={
-                  <PortalStatusBadge status={period.status} size="md" />
-                }
-              >
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">Organization Submissions <span className="font-normal text-muted-foreground">({combinedPeriodEntries.length})</span></p>
-                  </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+                <StatsCard title="SUBMITTED" value={submittedCount} icon={Send} description="New submissions awaiting review." />
+                <StatsCard title="PENDING EVALUATION" value={pendingEvaluationCount} icon={Clock} description="Submissions awaiting validation." />
+                <StatsCard title="QUALIFIED" value={qualifiedCount} icon={CheckCircle} description="Organizations qualified for YPOP." />
+                <StatsCard title="NOT QUALIFIED" value={notQualifiedCount} icon={XCircle} description="Organizations not qualified for YPOP." />
+              </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {(["all", "submitted", "under_review", "needs_revision", "qualified", "not_qualified"] as const).map((f) => (
-                      <button
-                        key={f}
-                        type="button"
-                        onClick={() => setYpopSubmissionFilter(f)}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                          ypopSubmissionFilter === f
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground"
-                        }`}
-                      >
-                        {f === "all" ? "All" : (statusLabelMap[f] ?? f)}
-                      </button>
-                    ))}
-                  </div>
-
-                  {filteredPeriodEntries.length === 0 ? (
-                    <PortalEmptyState
-                      title="No submissions"
-                      description={ypopSubmissionFilter === "all" ? "No organizations have active YPOP records for this semester yet." : "No submissions match this filter."}
-                    />
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredPeriodEntries.map((entry) => {
-                        const isVirtualEntry = "_isVirtual" in entry;
-                        const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
-                        const joinedEventCount = participationCountByOrgId.get(entry.organizationId) ?? 0;
-                        const isTerminal = entry.status === "qualified" || entry.status === "not_qualified";
-                        const statusDotColor =
-                          entry.status === "qualified" ? "bg-emerald-500"
-                          : entry.status === "not_qualified" ? "bg-rose-500"
-                          : entry.status === "submitted" || entry.status === "under_review" ? "bg-amber-400"
-                          : "bg-muted-foreground/40";
-                        return (
-                          <Card key={entry.id} className="border-border/70 shadow-sm">
-                            <CardContent className="p-4 sm:p-5">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-start gap-2.5">
-                                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${statusDotColor}`} />
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-1.5">
-                                      <Medal className="h-3.5 w-3.5 shrink-0 text-primary" />
-                                      <p className="font-semibold text-foreground">{entryOrg?.organizationName ?? "Unknown organization"}</p>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-muted-foreground/80">
-                                      {isTerminal ? `${entry.pointsEarned}%` : "Awaiting validation"}
-                                      {" · "}{joinedEventCount} joined event{joinedEventCount !== 1 ? "s" : ""}
-                                    </p>
-                                    {isVirtualEntry && (
-                                      <p className="mt-1 text-[11px] text-muted-foreground">Draft review record generated from joined YPOP events.</p>
-                                    )}
-                                  </div>
-                                </div>
-                                <PortalStatusBadge status={isVirtualEntry ? "draft" : entry.status} />
-                              </div>
-                              <div className="mt-4 flex justify-end">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant={isTerminal ? "outline" : "default"}
-                                  onClick={() => {
-                                    const semActs = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
-                                    const reviewEntry = isVirtualEntry
-                                      ? {
-                                          id: `ypop-${Date.now()}`,
-                                          organizationId: entry.organizationId,
-                                          submittedBy: "",
-                                          semester: entry.semester,
-                                          semesterLabel: entry.semesterLabel,
-                                          pointsEarned: 0,
-                                          pointsRequired: 70,
-                                          totalPoints: 100,
-                                          status: "draft" as const,
-                                          adminRemarks: "",
-                                          submissionNote: "",
-                                          validationDeadline: entry.validationDeadline,
-                                          submittedAt: "",
-                                          validatedAt: "",
-                                          revisionHistory: [],
-                                          orgLedProjectCount: 0,
-                                          cityLedAttendance: [],
-                                          createdAt: new Date().toISOString(),
-                                          updatedAt: new Date().toISOString(),
-                                        }
-                                      : entry;
-                                    if (isVirtualEntry) {
-                                      createYPOPEntry(reviewEntry);
-                                    }
-                                    setSelectedYpopId(reviewEntry.id);
-                                    setYpopPreviewFileId(null);
-                                    setYpopValidationForm({
-                                      cityLedAttendance: reviewEntry.cityLedAttendance?.length
-                                        ? reviewEntry.cityLedAttendance
-                                        : semActs.map((a) => ({ activityId: a.id, attended: false })),
-                                      orgLedProjectCount: reviewEntry.orgLedProjectCount ?? 0,
-                                      status: (reviewEntry.status === "draft" || reviewEntry.status === "submitted") ? "under_review" : reviewEntry.status,
-                                      adminRemarks: reviewEntry.adminRemarks ?? "",
-                                    });
-                                    setYpopAdminView("entry-review");
-                                  }}
-                                >
-                                  {isTerminal ? "View" : "Review"}
-                                  <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </PortalSection>
+              <YpopSubmissionsTable
+                rows={filteredSubmissionRows}
+                searchValue={ypopSubmissionSearch}
+                onSearchChange={setYpopSubmissionSearch}
+                classificationFilter={ypopSubmissionClassificationFilter}
+                onClassificationFilterChange={setYpopSubmissionClassificationFilter}
+                statusFilter={ypopSubmissionFilter}
+                onStatusFilterChange={setYpopSubmissionFilter}
+                onValidate={handleValidateSubmission}
+              />
             </div>
           );
         }
@@ -10057,492 +8631,773 @@ export default function AdminPortal({ section }: { section: string }) {
             setEditingPeriodId(null);
           };
 
+          const submitPeriod = async (statusOverride?: YPOPPeriodStatus) => {
+            const status = statusOverride ?? createPeriodForm.status;
+            setSubmittingPeriodStatus(statusOverride === "draft" ? "draft" : "publish");
+            try {
+            if (isEditMode && editingPeriodId) {
+              const deadline = createPeriodForm.validationDeadline.includes("T")
+                ? createPeriodForm.validationDeadline
+                : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+              const patch = {
+                semesterLabel: generatedSemesterLabel,
+                validationDeadline: deadline,
+                status,
+                orgLedTiers: createPeriodOrgLedTiers,
+              };
+              try {
+                const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                updateYPOPPeriod(saved.id, saved);
+              } catch {
+                updateYPOPPeriod(editingPeriodId, patch);
+              }
+              toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
+              resetForm();
+              setYpopAdminView("periods");
+            } else {
+              const now = new Date().toISOString();
+              const deadline = createPeriodForm.validationDeadline.includes("T")
+                ? createPeriodForm.validationDeadline
+                : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+              const periodData = { semesterKey: generatedSemesterKey, semesterLabel: generatedSemesterLabel, validationDeadline: deadline, status, orgLedTiers: createPeriodOrgLedTiers };
+              let savedPeriodId: string;
+              try {
+                const saved = await adminCreateYpopPeriodInSupabase(periodData);
+                createYPOPPeriod({ ...saved });
+                savedPeriodId = saved.id;
+                for (let i = 0; i < createPeriodActivities.length; i++) {
+                  const act = createPeriodActivities[i];
+                  try {
+                    const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
+                    createYPOPCityActivity({ ...savedAct });
+                  } catch {
+                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                  }
+                }
+              } catch {
+                const newId = `ypop-period-${Date.now()}`;
+                createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
+                createPeriodActivities.forEach((act, i) => {
+                  createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                });
+                savedPeriodId = newId;
+              }
+              toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
+              setSelectedYpopPeriodId(savedPeriodId);
+              setYpopSubmissionFilter("all");
+              resetForm();
+              setYpopAdminView("period-detail");
+            }
+            } finally {
+              setSubmittingPeriodStatus(null);
+            }
+          };
+
+          const categoryPillClasses: Record<YPOPCityActivityCategory, string> = {
+            mandatory: "border-border-mandatory-subtle bg-bg-mandatory-subtle text-text-mandatory",
+            invitational: "border-border-pink-subtle bg-bg-pink-subtle text-text-pink",
+            partnership: "border-border-partnership-subtle bg-bg-partnership-subtle text-text-partnership",
+          };
+
+          const inlineInputClass = "flex h-8 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled";
+          const inlineLabelClass = "font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500";
+
+          const isEditingActivity = Boolean((editingActivityId || editingDraftTempId) && editingActivityData);
+          const activityModalData = isEditingActivity ? editingActivityData : createFormNewActivity;
+          const isActivityModalOpen = Boolean(activityModalData);
+
+          const closeActivityModal = () => {
+            setCreateFormNewActivity(null);
+            setEditingActivityId(null);
+            setEditingDraftTempId(null);
+            setEditingActivityData(null);
+          };
+
+          const updateActivityModalField = (
+            patch: Partial<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory }>,
+          ) => {
+            if (isEditingActivity && editingActivityData) {
+              setEditingActivityData({ ...editingActivityData, ...patch });
+            } else if (createFormNewActivity) {
+              setCreateFormNewActivity({ ...createFormNewActivity, ...patch });
+            }
+          };
+
+          const saveActivityModal = async () => {
+            if (!activityModalData) return;
+            const startDate = activityModalData.startDate.trim();
+            const endDate = (activityModalData.endDate || activityModalData.startDate).trim();
+            if (isEditingActivity && editingActivityId) {
+              const patch = {
+                name: activityModalData.name.trim(),
+                date: startDate,
+                startDate,
+                endDate,
+                venue: activityModalData.venue.trim(),
+                category: activityModalData.category,
+                points: getYpopCityLedPoints(activityModalData.category),
+              };
+              try {
+                const saved = await adminUpdateYpopCityActivityInSupabase(editingActivityId, patch);
+                updateYPOPCityActivity(saved.id, saved);
+              } catch {
+                updateYPOPCityActivity(editingActivityId, patch);
+              }
+            } else if (editingDraftTempId) {
+              setCreatePeriodActivities((prev) =>
+                prev.map((a) =>
+                  a.tempId === editingDraftTempId
+                    ? {
+                        ...a,
+                        name: activityModalData.name.trim(),
+                        startDate,
+                        endDate,
+                        venue: activityModalData.venue.trim(),
+                        category: activityModalData.category,
+                      }
+                    : a,
+                ),
+              );
+            } else if (isEditMode && editPeriod) {
+              const actData = {
+                semesterKey: editPeriod.semesterKey,
+                name: activityModalData.name.trim(),
+                date: startDate,
+                startDate,
+                endDate,
+                venue: activityModalData.venue.trim(),
+                category: activityModalData.category,
+                points: getYpopCityLedPoints(activityModalData.category),
+              };
+              try {
+                const saved = await adminCreateYpopCityActivityInSupabase(actData);
+                createYPOPCityActivity({ ...saved });
+              } catch {
+                createYPOPCityActivity({ id: `ypop-act-${Date.now()}`, ...actData, createdAt: new Date().toISOString() });
+              }
+            } else {
+              setCreatePeriodActivities((prev) => [
+                ...prev,
+                {
+                  tempId: `tmp-${Date.now()}`,
+                  name: activityModalData.name.trim(),
+                  startDate,
+                  endDate,
+                  venue: activityModalData.venue.trim(),
+                  category: activityModalData.category,
+                },
+              ]);
+            }
+            closeActivityModal();
+          };
+
           return (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <button
                 type="button"
                 onClick={() => { resetForm(); setYpopAdminView("periods"); }}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back to YPOP Semesters
+                <ArrowLeft className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                Cancel &amp; Back
               </button>
 
-              <PortalSection
+              <AdminPageHeader
                 title={isEditMode ? "Edit YPOP Semester" : "New YPOP Semester"}
-                description={isEditMode ? "Update the semester details and configure city-led activities." : "Set up a new semester period including activities before opening it to organizations."}
-              >
-                <div className="space-y-6">
-                  {/* Metadata fields */}
-                  <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
-                    <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-medium" htmlFor="cp-label">Semester Label <span className="font-normal text-muted-foreground">(auto-generated)</span></label>
-                      <Input
-                        id="cp-label"
-                        value={generatedSemesterLabel}
-                        readOnly
-                        className="bg-muted/40"
-                      />
+                description="Configure cycle identification, city-led activities point table, and organization-initiated scoring bonus tiers."
+              />
+
+              <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                {/* Group 1: Semester Information */}
+                <div className="flex flex-col gap-4 border-b border-slate-300 p-6">
+                  <div>
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">1. Semester Information</p>
+                    <p className="mt-1.5 font-segoe text-[13px] text-slate-500">General identification and deadline configuration for this validation period.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center justify-between gap-1.5 font-segoe text-[13px] text-text-default" htmlFor="cp-label">
+                        <span>
+                          Semester Label <span className="font-segoe text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
+                        </span>
+                        <span className="flex h-[19px] shrink-0 items-center gap-1 rounded-[4px] border-[0.6px] border-slate-300 bg-admin-surface px-1.5 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
+                          <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
+                          Read-Only
+                        </span>
+                      </label>
+                      <div className="flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-bg-neutral-subtle px-2.5">
+                        <span className="truncate font-segoe text-[13px] text-text-default">{generatedSemesterLabel}</span>
+                      </div>
                     </div>
 
-                    <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-medium" htmlFor="cp-key">Semester Key <span className="font-normal text-muted-foreground">(auto-derived, read-only)</span></label>
-                      <Input id="cp-key" value={generatedSemesterKey || "—"} readOnly className="bg-muted/40 font-mono text-sm text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">Used to link submissions and activities to this semester.</p>
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center justify-between gap-1.5 font-segoe text-[13px] text-text-default" htmlFor="cp-key">
+                        <span>
+                          Semester Key <span className="font-segoe text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
+                        </span>
+                        <span className="flex h-[19px] shrink-0 items-center gap-1 rounded-[4px] border-[0.6px] border-slate-300 bg-admin-surface px-1.5 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
+                          <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
+                          Read-Only
+                        </span>
+                      </label>
+                      <div className="flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-bg-neutral-subtle px-2.5">
+                        <span className="truncate font-cascadia text-[13px] text-text-default">{generatedSemesterKey || "—"}</span>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium" htmlFor="cp-deadline">Validation Deadline <span className="text-destructive">*</span></label>
-                      <Input
-                        id="cp-deadline"
-                        type="date"
-                        value={createPeriodForm.validationDeadline}
-                        onChange={(e) => setCreatePeriodForm({ ...createPeriodForm, validationDeadline: e.target.value })}
-                      />
+                    <div className="flex flex-col gap-2">
+                      <label className="font-segoe text-[13px] text-text-default" htmlFor="cp-deadline">
+                        Validation Deadline <span className="text-icon-danger-secondary">*</span>
+                      </label>
+                      <Popover open={deadlineDateOpen} onOpenChange={setDeadlineDateOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            id="cp-deadline"
+                            type="button"
+                            className="flex h-8 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-[13px] text-text-default outline-none"
+                          >
+                            <span className={createPeriodForm.validationDeadline ? "" : "text-text-disabled"}>
+                              {createPeriodForm.validationDeadline
+                                ? format(parse(createPeriodForm.validationDeadline, "yyyy-MM-dd", new Date()), "d MMM yyyy")
+                                : "Select date"}
+                            </span>
+                            <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              createPeriodForm.validationDeadline
+                                ? parse(createPeriodForm.validationDeadline, "yyyy-MM-dd", new Date())
+                                : undefined
+                            }
+                            onSelect={(date) => {
+                              if (date) {
+                                setCreatePeriodForm({ ...createPeriodForm, validationDeadline: format(date, "yyyy-MM-dd") });
+                                setDeadlineDateOpen(false);
+                              }
+                            }}
+                            components={{ Caption: CalendarCaption }}
+                            classNames={{
+                              day_selected:
+                                "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium" htmlFor="cp-status">Status</label>
+                    <div className="flex flex-col gap-2">
+                      <label className="font-segoe text-[13px] text-text-default" htmlFor="cp-status">
+                        {isEditMode ? "Status" : "Initial Status"}
+                      </label>
                       <Select
                         value={createPeriodForm.status}
                         onValueChange={(v) => setCreatePeriodForm({ ...createPeriodForm, status: v as YPOPPeriodStatus })}
                       >
-                        <SelectTrigger id="cp-status"><SelectValue /></SelectTrigger>
+                        <SelectTrigger id="cp-status" className="h-8 border-slate-300 text-[13px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="draft">Draft — not yet visible</SelectItem>
-                          <SelectItem value="open">Open — organizations can submit</SelectItem>
-                          <SelectItem value="closed">Closed — no new submissions</SelectItem>
+                          <SelectItem value="draft" className="pl-3 [&>span:first-child]:hidden">Draft</SelectItem>
+                          <SelectItem value="open" className="pl-3 [&>span:first-child]:hidden">Open</SelectItem>
+                          {isEditMode ? <SelectItem value="closed" className="pl-3 [&>span:first-child]:hidden">Closed</SelectItem> : null}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
+                </div>
 
-                  {/* City-Led Activities section */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold">City-Led Activities</p>
-                        <p className="text-xs text-muted-foreground">Assign a memo-based category for each city-led activity. Points are automatic: Mandatory = 4, Invitational = 3, Partnership = 2.</p>
-                      </div>
-                      {!createFormNewActivity && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="shrink-0"
-                          onClick={() => setCreateFormNewActivity({ name: "", date: "", venue: "", category: "mandatory" })}
-                        >
-                          <Plus className="mr-1.5 h-3.5 w-3.5" />Add Activity
-                        </Button>
-                      )}
+                {/* Group 2: City-Led Activities */}
+                <div className="flex flex-col gap-4 border-b border-slate-300 p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">2. City-Led Activities</p>
+                      <p className="mt-1.5 font-segoe text-[13px] text-slate-500">
+                        Assign each city-led activity a type. Points are automatic:{" "}
+                        <span className="italic font-bold">Mandatory (4), Invitational (3), Partnership (2).</span>
+                      </p>
                     </div>
+                    {!isActivityModalOpen ? (
+                      <button
+                        type="button"
+                        onClick={() => setCreateFormNewActivity({ name: "", startDate: "", endDate: "", venue: "", category: "mandatory" })}
+                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      >
+                        <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                        Add Activity
+                      </button>
+                    ) : null}
+                  </div>
 
-                    <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-3">
-                      {/* Activities list */}
-                      {(isEditMode ? editActivities : createPeriodActivities).length === 0 && !createFormNewActivity ? (
-                        <p className="py-3 text-center text-xs text-muted-foreground">No activities added yet. Use "+ Add Activity" to start.</p>
-                      ) : isEditMode ? (
-                        editActivities.map((act: YPOPCityActivity) =>
-                          editingActivityId === act.id && editingActivityData ? (
-                            <div key={act.id} className="flex flex-wrap items-end gap-2.5 rounded-lg border border-primary/30 bg-background p-2.5">
-                              <div className="flex-1 min-w-[10rem] space-y-1">
-                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Activity Name</label>
-                                <Input className="h-7 w-full text-xs" placeholder="e.g. Youth Leadership Summit" value={editingActivityData.name} onChange={(e) => setEditingActivityData({ ...editingActivityData, name: e.target.value })} />
-                              </div>
-                              <div className="flex-1 min-w-[8rem] space-y-1">
-                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Venue</label>
-                                <Input className="h-7 w-full text-xs" placeholder="e.g. City Hall" value={editingActivityData.venue} onChange={(e) => setEditingActivityData({ ...editingActivityData, venue: e.target.value })} />
-                              </div>
-                              <div className="w-36 shrink-0 space-y-1">
-                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Date</label>
-                                <Input className="h-7 w-full text-xs" type="date" value={editingActivityData.date} onChange={(e) => setEditingActivityData({ ...editingActivityData, date: e.target.value })} />
-                              </div>
-                              <div className="w-44 shrink-0 space-y-1">
-                                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Category</label>
-                                <Select value={editingActivityData.category} onValueChange={(value) => setEditingActivityData({ ...editingActivityData, category: value as YPOPCityActivityCategory })}>
-                                  <SelectTrigger className="h-7 text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="mandatory">Mandatory • 4 pts</SelectItem>
-                                    <SelectItem value="invitational">Invitational • 3 pts</SelectItem>
-                                    <SelectItem value="partnership">Partnership • 2 pts</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex shrink-0 items-end gap-1 pb-0.5">
-                                <Button type="button" size="sm" className="h-7 px-2 text-xs" disabled={!editingActivityData.name.trim()} onClick={async () => { const patch = { name: editingActivityData.name.trim(), date: editingActivityData.date.trim(), venue: editingActivityData.venue.trim(), category: editingActivityData.category, points: getYpopCityLedPoints(editingActivityData.category) }; try { const saved = await adminUpdateYpopCityActivityInSupabase(act.id, patch); updateYPOPCityActivity(saved.id, saved); } catch { updateYPOPCityActivity(act.id, patch); } setEditingActivityId(null); setEditingActivityData(null); }}>
-                                  <Save className="h-3 w-3" />
-                                </Button>
-                                <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setEditingActivityId(null); setEditingActivityData(null); }}>Cancel</Button>
-                              </div>
+                  <div className="flex flex-col">
+                    {(isEditMode ? editActivities : createPeriodActivities).length === 0 ? (
+                      <p className="py-6 text-center font-segoe text-xs text-slate-500">No activities added yet. Use "+ Add Activity" to start.</p>
+                    ) : isEditMode ? (
+                      editActivities.map((act: YPOPCityActivity) => (
+                        <div key={act.id} className="flex items-center justify-between gap-2 border-b border-slate-300 py-4 last:border-b-0">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
+                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]", categoryPillClasses[resolveYpopCityLedCategory(act.category, act.points)])}>
+                                {YPOP_CITY_LED_CATEGORY_LABELS[resolveYpopCityLedCategory(act.category, act.points)]}
+                              </span>
                             </div>
-                          ) : (
-                            <div key={act.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium">{act.name}</p>
-                                <p className="text-xs text-muted-foreground">{act.date} · {act.venue}</p>
-                              </div>
-                              <span className="shrink-0 rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{YPOP_CITY_LED_CATEGORY_LABELS[resolveYpopCityLedCategory(act.category, act.points)]}</span>
-                              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{normalizeYpopCityLedPoints(act.points, act.category)} pts</span>
-                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0" onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, date: act.date, venue: act.venue, category: resolveYpopCityLedCategory(act.category, act.points) }); }}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive"
-                                onClick={() => setPendingDeleteConfirmation({ kind: "ypop_city_activity", id: act.id, title: act.name })}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
+                            <div className="mt-1 flex items-center gap-3">
+                              <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                {formatActivityDateRange(act.startDate, act.endDate)}
+                              </span>
+                              {act.venue ? (
+                                <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                  {act.venue}
+                                </span>
+                              ) : null}
                             </div>
-                          )
-                        )
-                      ) : (
-                        createPeriodActivities.map((act, idx) => (
-                          <div key={act.tempId} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium">{act.name}</p>
-                              <p className="text-xs text-muted-foreground">{act.date}{act.venue ? ` · ${act.venue}` : ""}</p>
-                            </div>
-                            <span className="shrink-0 rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{YPOP_CITY_LED_CATEGORY_LABELS[act.category]}</span>
-                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{getYpopCityLedPoints(act.category)} pts</span>
-                            <Button type="button" size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive hover:text-destructive" onClick={() => setCreatePeriodActivities((prev) => prev.filter((_, i) => i !== idx))}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
                           </div>
-                        ))
-                      )}
-
-                      {/* Add activity inline form */}
-                      {createFormNewActivity && (
-                        <div className="flex flex-wrap items-end gap-2.5 rounded-lg border border-primary/30 bg-background p-2.5">
-                          <div className="flex-1 min-w-[10rem] space-y-1">
-                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Activity Name *</label>
-                            <Input className="h-7 w-full text-xs" placeholder="e.g. Youth Leadership Summit" value={createFormNewActivity.name} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, name: e.target.value })} />
-                          </div>
-                          <div className="flex-1 min-w-[8rem] space-y-1">
-                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Venue</label>
-                            <Input className="h-7 w-full text-xs" placeholder="e.g. City Hall" value={createFormNewActivity.venue} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, venue: e.target.value })} />
-                          </div>
-                          <div className="w-36 shrink-0 space-y-1">
-                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Date</label>
-                            <Input className="h-7 w-full text-xs" type="date" value={createFormNewActivity.date} onChange={(e) => setCreateFormNewActivity({ ...createFormNewActivity, date: e.target.value })} />
-                          </div>
-                          <div className="w-44 shrink-0 space-y-1">
-                            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Category</label>
-                            <Select value={createFormNewActivity.category} onValueChange={(value) => setCreateFormNewActivity({ ...createFormNewActivity, category: value as YPOPCityActivityCategory })}>
-                              <SelectTrigger className="h-7 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="mandatory">Mandatory • 4 pts</SelectItem>
-                                <SelectItem value="invitational">Invitational • 3 pts</SelectItem>
-                                <SelectItem value="partnership">Partnership • 2 pts</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex shrink-0 items-end gap-1 pb-0.5">
-                            <Button
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                              {normalizeYpopCityLedPoints(act.points, act.category)} pts
+                            </span>
+                            <button
                               type="button"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              disabled={!createFormNewActivity.name.trim()}
-                              onClick={async () => {
-                                if (isEditMode && editPeriod) {
-                                  const actData = { semesterKey: editPeriod.semesterKey, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), category: createFormNewActivity.category, points: getYpopCityLedPoints(createFormNewActivity.category) };
-                                  try {
-                                    const saved = await adminCreateYpopCityActivityInSupabase(actData);
-                                    createYPOPCityActivity({ ...saved });
-                                  } catch {
-                                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}`, ...actData, createdAt: new Date().toISOString() });
-                                  }
-                                } else {
-                                  setCreatePeriodActivities((prev) => [...prev, { tempId: `tmp-${Date.now()}`, name: createFormNewActivity.name.trim(), date: createFormNewActivity.date.trim(), venue: createFormNewActivity.venue.trim(), category: createFormNewActivity.category }]);
-                                }
-                                setCreateFormNewActivity(null);
-                              }}
+                              aria-label="Edit activity"
+                              onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, startDate: act.startDate, endDate: act.endDate, venue: act.venue, category: resolveYpopCityLedCategory(act.category, act.points) }); }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50"
                             >
-                              <Save className="h-3 w-3" />
-                            </Button>
-                            <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setCreateFormNewActivity(null)}>Cancel</Button>
+                              <Pencil className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Delete activity"
+                              onClick={() => setPendingDeleteConfirmation({ kind: "ypop_city_activity", id: act.id, title: act.name })}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50 hover:text-icon-danger-secondary"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
                           </div>
                         </div>
-                      )}
-
-                      {/* Total pts footer */}
-                      {(() => {
-                        const totalPts = isEditMode
-                          ? editActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0)
-                          : createPeriodActivities.reduce((s, a) => s + getYpopCityLedPoints(a.category), 0);
-                        return totalPts > 0 ? (
-                          <p className="pt-1 text-right text-xs font-medium text-muted-foreground">
-                            Total: <span className="text-foreground">{totalPts} pts</span>
-                          </p>
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Org-Led Scoring Tiers */}
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold">Organization-Initiated Scoring</p>
-                        <p className="text-xs text-muted-foreground">Configure how organization-initiated activity counts map to bonus percentages. Defaults follow the memo and can still be adjusted by admin.</p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={() => setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS)}
-                      >
-                        Reset to defaults
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-3">
-                      {[...createPeriodOrgLedTiers]
-                        .sort((a, b) => b.minProjects - a.minProjects)
-                        .map((tier, displayIdx) => {
-                          const actualIdx = createPeriodOrgLedTiers.indexOf(tier);
-                          return (
-                            <div key={displayIdx} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
-                              <span className="shrink-0 text-sm text-muted-foreground">≥</span>
-                              <Input
-                                className="h-7 w-16 text-xs"
-                                type="number"
-                                min={0}
-                                value={tier.minProjects}
-                                onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
-                                  prev.map((t, i) => i === actualIdx ? { ...t, minProjects: Math.max(0, Number(e.target.value) || 0) } : t)
-                                )}
-                              />
-                              <span className="shrink-0 text-sm text-muted-foreground">projects → +</span>
-                              <Input
-                                className="h-7 w-16 text-xs"
-                                type="number"
-                                min={0}
-                                value={tier.bonus}
-                                onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
-                                  prev.map((t, i) => i === actualIdx ? { ...t, bonus: Math.max(0, Number(e.target.value) || 0) } : t)
-                                )}
-                              />
-                              <span className="shrink-0 text-sm text-muted-foreground">% bonus</span>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="ml-auto h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-destructive"
-                                onClick={() => setCreatePeriodOrgLedTiers((prev) => prev.filter((_, i) => i !== actualIdx))}
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
+                      ))
+                    ) : (
+                      createPeriodActivities.map((act, idx) => (
+                        <div key={act.tempId} className="flex items-center justify-between gap-2 border-b border-slate-300 py-4 last:border-b-0">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
+                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]", categoryPillClasses[act.category])}>
+                                {YPOP_CITY_LED_CATEGORY_LABELS[act.category]}
+                              </span>
                             </div>
-                          );
-                        })}
+                            <div className="mt-1 flex items-center gap-3">
+                              <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                {formatActivityDateRange(act.startDate, act.endDate)}
+                              </span>
+                              {act.venue ? (
+                                <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                  {act.venue}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                              {getYpopCityLedPoints(act.category)} pts
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="Edit activity"
+                              onClick={() => {
+                                setEditingDraftTempId(act.tempId);
+                                setEditingActivityData({ name: act.name, startDate: act.startDate, endDate: act.endDate, venue: act.venue, category: act.category });
+                              }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50"
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Delete activity"
+                              onClick={() => setCreatePeriodActivities((prev) => prev.filter((_, i) => i !== idx))}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50 hover:text-icon-danger-secondary"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
 
-                      {createPeriodOrgLedTiers.length === 0 && (
-                        <p className="py-3 text-center text-xs text-muted-foreground">No tiers configured. Org-led activities will contribute 0 bonus points.</p>
-                      )}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-1 h-7 w-full text-xs"
-                        onClick={() => setCreatePeriodOrgLedTiers((prev) => [...prev, { minProjects: 0, bonus: 0 }])}
-                      >
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />Add Tier
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Submit */}
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      disabled={!canSubmit}
-                      onClick={async () => {
-                        if (isEditMode && editingPeriodId) {
-                          const deadline = createPeriodForm.validationDeadline.includes("T")
-                            ? createPeriodForm.validationDeadline
-                            : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
-                          const patch = {
-                            semesterLabel: generatedSemesterLabel,
-                            validationDeadline: deadline,
-                            status: createPeriodForm.status,
-                            orgLedTiers: createPeriodOrgLedTiers,
-                          };
-                          try {
-                            const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
-                            updateYPOPPeriod(saved.id, saved);
-                          } catch {
-                            updateYPOPPeriod(editingPeriodId, patch);
-                          }
-                          toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
-                          resetForm();
-                          setYpopAdminView("periods");
-                        } else {
-                          const now = new Date().toISOString();
-                          const deadline = createPeriodForm.validationDeadline.includes("T")
-                            ? createPeriodForm.validationDeadline
-                            : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
-                          const periodData = { semesterKey: generatedSemesterKey, semesterLabel: generatedSemesterLabel, validationDeadline: deadline, status: createPeriodForm.status, orgLedTiers: createPeriodOrgLedTiers };
-                          let savedPeriodId: string;
-                          try {
-                            const saved = await adminCreateYpopPeriodInSupabase(periodData);
-                            createYPOPPeriod({ ...saved });
-                            savedPeriodId = saved.id;
-                            for (let i = 0; i < createPeriodActivities.length; i++) {
-                              const act = createPeriodActivities[i];
-                              try {
-                                const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
-                                createYPOPCityActivity({ ...savedAct });
-                              } catch {
-                                createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.date, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
-                              }
-                            }
-                          } catch {
-                            const newId = `ypop-period-${Date.now()}`;
-                            createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
-                            createPeriodActivities.forEach((act, i) => {
-                              createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.date, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
-                            });
-                            savedPeriodId = newId;
-                          }
-                          toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
-                          setSelectedYpopPeriodId(savedPeriodId);
-                          setYpopSubmissionFilter("all");
-                          resetForm();
-                          setYpopAdminView("period-detail");
-                        }
-                      }}
-                    >
-                      {isEditMode ? "Save Changes" : "Create Semester"}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => { resetForm(); setYpopAdminView("periods"); }}>
-                      Cancel
-                    </Button>
+                    {/* Total pts footer */}
+                    {(() => {
+                      const totalPts = isEditMode
+                        ? editActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0)
+                        : createPeriodActivities.reduce((s, a) => s + getYpopCityLedPoints(a.category), 0);
+                      return totalPts > 0 ? (
+                        <p className="pt-3 text-right font-segoe text-xs font-semibold text-slate-500">
+                          Total: <span className="text-text-default">{totalPts} pts</span>
+                        </p>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
-              </PortalSection>
+
+                <DangerConfirmDialog
+                  open={isActivityModalOpen}
+                  onOpenChange={(open) => { if (!open) closeActivityModal(); }}
+                  variant="info"
+                  icon={isEditingActivity ? Pencil : FileText}
+                  title={isEditingActivity ? "Edit City-Led Activity" : "Add City-Led Activity"}
+                  subtitle="Configure official city event parameters and automated scoring points."
+                  description=""
+                  className="w-[560px] sm:w-[560px]"
+                  confirmDisabled={!activityModalData?.name.trim() || !activityModalData?.venue.trim()}
+                  cancelLabel="Cancel"
+                  confirmLabel={isEditingActivity ? "Save Changes" : "Add Activity"}
+                  confirmIcon={isEditingActivity ? Save : Plus}
+                  onConfirm={saveActivityModal}
+                  content={
+                    activityModalData ? (
+                      <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-bg-panel-subtle p-6">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Title <span className="text-icon-danger-secondary">*</span>
+                          </label>
+                          <input
+                            value={activityModalData.name}
+                            onChange={(e) => updateActivityModalField({ name: e.target.value })}
+                            placeholder="Enter activity title"
+                            className="flex h-9 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Location <span className="text-icon-danger-secondary">*</span>
+                          </label>
+                          <div className="flex h-9 w-full items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3">
+                            <MapPin className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                            <input
+                              value={activityModalData.venue}
+                              onChange={(e) => updateActivityModalField({ venue: e.target.value })}
+                              placeholder="Enter location"
+                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Start Date</label>
+                            <Popover open={activityStartDateOpen} onOpenChange={setActivityStartDateOpen}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
+                                >
+                                  <span className={activityModalData.startDate ? "" : "text-text-disabled"}>
+                                    {activityModalData.startDate
+                                      ? format(parse(activityModalData.startDate, "yyyy-MM-dd", new Date()), "d MMM yyyy")
+                                      : "Select date"}
+                                  </span>
+                                  <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    activityModalData.startDate
+                                      ? parse(activityModalData.startDate, "yyyy-MM-dd", new Date())
+                                      : undefined
+                                  }
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      updateActivityModalField({ startDate: format(date, "yyyy-MM-dd") });
+                                      setActivityStartDateOpen(false);
+                                    }
+                                  }}
+                                  components={{ Caption: CalendarCaption }}
+                                  classNames={{
+                                    day_selected:
+                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">End Date</label>
+                            <Popover open={activityEndDateOpen} onOpenChange={setActivityEndDateOpen}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
+                                >
+                                  <span className={activityModalData.endDate ? "" : "text-text-disabled"}>
+                                    {activityModalData.endDate
+                                      ? format(parse(activityModalData.endDate, "yyyy-MM-dd", new Date()), "d MMM yyyy")
+                                      : "Select date"}
+                                  </span>
+                                  <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    activityModalData.endDate
+                                      ? parse(activityModalData.endDate, "yyyy-MM-dd", new Date())
+                                      : undefined
+                                  }
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      updateActivityModalField({ endDate: format(date, "yyyy-MM-dd") });
+                                      setActivityEndDateOpen(false);
+                                    }
+                                  }}
+                                  components={{ Caption: CalendarCaption }}
+                                  classNames={{
+                                    day_selected:
+                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">Activity Type</label>
+                          <p className="text-justify font-segoe text-[11px] leading-none text-slate-500">
+                            Select the activity type that best fits. Points are assigned based on the selected type.
+                          </p>
+                          <div className="grid grid-cols-3 gap-2.5 pt-4 pb-2" role="radiogroup" aria-label="Activity Type">
+                            {(["mandatory", "invitational", "partnership"] as YPOPCityActivityCategory[]).map((cat) => {
+                              const selected = activityModalData.category === cat;
+                              return (
+                                <button
+                                  key={cat}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={selected}
+                                  onClick={() => updateActivityModalField({ category: cat })}
+                                  className="flex flex-col gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 text-left transition-colors hover:bg-slate-50"
+                                >
+                                  <div className="flex flex-col gap-3 border-b border-slate-300 pb-1.5">
+                                    <span className="flex items-center gap-1.5">
+                                      <span
+                                        className={cn(
+                                          "flex h-[13px] w-[13px] shrink-0 items-center justify-center rounded-full border",
+                                          selected ? "border-border-info-tertiary" : "border-public-border-neutral-tertiary",
+                                        )}
+                                      >
+                                        {selected ? <span className="h-1.5 w-1.5 rounded-full bg-border-info-tertiary" /> : null}
+                                      </span>
+                                      <span className="font-segoe text-xs font-semibold uppercase text-text-default">
+                                        {YPOP_CITY_LED_CATEGORY_LABELS[cat]}
+                                      </span>
+                                    </span>
+                                    <span className="ml-[19px] font-segoe text-[10px] font-normal capitalize leading-[140%] text-slate-500">
+                                      {cat === "mandatory"
+                                        ? "Required Participation."
+                                        : cat === "invitational"
+                                          ? "Voluntary Participation."
+                                          : "Collaborative Participation."}
+                                    </span>
+                                  </div>
+                                  <span className="mt-1 inline-flex w-fit items-center self-center rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-1.5 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                                    {YPOP_CITY_LED_CATEGORY_POINTS[cat]} pts
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null
+                  }
+                />
+
+                {/* Group 3: Organization-Initiated Activities */}
+                <div className="flex flex-col gap-4 p-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">3. Organization-Initiated Activities</p>
+                      <p className="mt-1.5 font-segoe text-[13px] text-slate-500">Set bonus percentages for organization-initiated activities. Default values are applied automatically.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS)}
+                      className="shrink-0 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand transition-colors hover:underline"
+                    >
+                      Reset to defaults
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5">
+                    {[...createPeriodOrgLedTiers]
+                      .sort((a, b) => b.minProjects - a.minProjects)
+                      .map((tier, displayIdx) => {
+                        const actualIdx = createPeriodOrgLedTiers.indexOf(tier);
+                        return (
+                          <div key={displayIdx} className="flex items-center gap-2 rounded-md border border-slate-300 bg-bg-panel-subtle px-4 py-3">
+                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">&#8805;</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={tier.minProjects}
+                              onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
+                                prev.map((t, i) => i === actualIdx ? { ...t, minProjects: Math.max(0, Number(e.target.value) || 0) } : t)
+                              )}
+                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-segoe text-[13px] text-text-default outline-none"
+                            />
+                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">projects &#8594; +</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={tier.bonus}
+                              onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
+                                prev.map((t, i) => i === actualIdx ? { ...t, bonus: Math.max(0, Number(e.target.value) || 0) } : t)
+                              )}
+                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-segoe text-[13px] text-text-default outline-none"
+                            />
+                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">% bonus</span>
+                            <button
+                              type="button"
+                              aria-label="Remove tier"
+                              onClick={() => setCreatePeriodOrgLedTiers((prev) => prev.filter((_, i) => i !== actualIdx))}
+                              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-icon-danger-secondary"
+                            >
+                              <X className="h-3.5 w-3.5" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                    {createPeriodOrgLedTiers.length === 0 ? (
+                      <p className="py-3 text-center font-segoe text-xs text-slate-500">No tiers configured. Org-led activities will contribute 0 bonus points.</p>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => setCreatePeriodOrgLedTiers((prev) => [...prev, { minProjects: 0, bonus: 0 }])}
+                      className="flex items-center justify-center gap-3 rounded-md border border-dashed border-slate-300 bg-admin-surface px-4 py-4 font-segoe text-public-fs-body-sm text-public-bg-brand transition-colors hover:bg-bg-panel-subtle"
+                    >
+                      <Plus className="h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                      Add Tier
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="flex items-center justify-end gap-2.5 border-t border-slate-300 p-6">
+                  <button
+                    type="button"
+                    disabled={submittingPeriodStatus !== null}
+                    onClick={() => { resetForm(); setYpopAdminView("periods"); }}
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-disabled transition-colors hover:text-slate-500 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      disabled={submittingPeriodStatus !== null}
+                      onClick={() => void submitPeriod("draft")}
+                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {submittingPeriodStatus === "draft" ? <Loader className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.6} /> : null}
+                      Save as Draft
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canSubmit || submittingPeriodStatus !== null}
+                      onClick={() => void submitPeriod()}
+                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+                    >
+                      {submittingPeriodStatus === "publish" ? <Loader className="h-4 w-4 shrink-0 animate-spin text-public-text-neutral-on-neutral" strokeWidth={1.6} /> : null}
+                      {isEditMode ? "Save Changes" : "Create Semester"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           );
         }
 
         // ── VIEW 1: YPOP Semesters list ───────────────────────────────────────
         const sortedPeriods = [...state.ypopPeriods].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        return (
-          <PortalSection
-            title="YPOP Semesters"
-            description="Manage YPOP event participation verification and semester-level incentive validation."
-            action={
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setCreatePeriodForm({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
-                  setCreatePeriodActivities([]);
-                  setCreateFormNewActivity(null);
-                  setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
-                  setEditingActivityId(null);
-                  setEditingActivityData(null);
-                  setEditingPeriodId(null);
-                  setYpopAdminView("create-period");
-                }}
-              >
-                <Plus className="mr-1.5 h-3.5 w-3.5" />
-                New Semester
-              </Button>
+        const periodRows = sortedPeriods
+          .map((period) => ({
+            period,
+            submissionCount: state.ypopEntries.filter((e) => e.semester === period.semesterKey).length,
+          }))
+          .filter(({ period }) => {
+            const q = ypopPeriodSearch.trim().toLowerCase();
+            if (q && !period.semesterLabel.toLowerCase().includes(q) && !period.semesterKey.toLowerCase().includes(q)) {
+              return false;
             }
-          >
-            {sortedPeriods.length === 0 ? (
-              <PortalEmptyState
-                title="No semesters yet"
-                description="Create a new YPOP semester to open a registration period for organizations."
-              />
-            ) : (
-              <div className="space-y-3">
-                {sortedPeriods.map((period) => {
-                  const submissionCount = state.ypopEntries.filter((e) => e.semester === period.semesterKey).length;
-                  const activityCount = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey).length;
-                  return (
-                    <Card key={period.id} className="border-border/70 shadow-sm">
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-foreground">{period.semesterLabel}</p>
-                              <PortalStatusBadge status={period.status} />
-                            </div>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Deadline: {new Date(period.validationDeadline).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {activityCount} activit{activityCount !== 1 ? "ies" : "y"} · {submissionCount} submission{submissionCount !== 1 ? "s" : ""}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex items-center justify-end gap-1">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            title="Delete semester"
-                            onClick={() => {
-                              setPendingDeleteConfirmation({ kind: "ypop_period", id: period.id, title: period.semesterLabel, activityCount });
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                            title="Edit semester"
-                            onClick={() => {
-                              const deadlineDate = period.validationDeadline.includes("T")
-                                ? period.validationDeadline.split("T")[0]
-                                : period.validationDeadline;
-                              setCreatePeriodForm({ semesterLabel: period.semesterLabel, validationDeadline: deadlineDate, status: period.status });
-                              setCreatePeriodActivities([]);
-                              setCreateFormNewActivity(null);
-                              setCreatePeriodOrgLedTiers(period.orgLedTiers?.length ? period.orgLedTiers : DEFAULT_ORG_LED_TIERS);
-                              setEditingActivityId(null);
-                              setEditingActivityData(null);
-                              setEditingPeriodId(period.id);
-                              setYpopAdminView("create-period");
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <div className="mx-1 h-5 w-px bg-border/60" />
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedYpopPeriodId(period.id);
-                              setYpopSubmissionFilter("all");
-                              setYpopAdminView("period-detail");
-                            }}
-                          >
-                            Submissions
-                            <ArrowRight className="ml-1.5 h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </PortalSection>
+            if (ypopPeriodStatusFilter !== "all" && period.status !== ypopPeriodStatusFilter) return false;
+            return true;
+          });
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <AdminPageHeader
+              title="YPOP Validation"
+              description="Review YPOP grant eligibility submissions."
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreatePeriodForm({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
+                    setCreatePeriodActivities([]);
+                    setCreateFormNewActivity(null);
+                    setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
+                    setEditingActivityId(null);
+                    setEditingActivityData(null);
+                    setEditingPeriodId(null);
+                    setYpopAdminView("create-period");
+                  }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                >
+                  <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  New Semester
+                </button>
+              }
+            />
+
+            <YpopPeriodsTable
+              rows={periodRows}
+              searchValue={ypopPeriodSearch}
+              onSearchChange={setYpopPeriodSearch}
+              statusFilter={ypopPeriodStatusFilter}
+              onStatusFilterChange={setYpopPeriodStatusFilter}
+              onEdit={(period) => {
+                const deadlineDate = period.validationDeadline.includes("T")
+                  ? period.validationDeadline.split("T")[0]
+                  : period.validationDeadline;
+                setCreatePeriodForm({ semesterLabel: period.semesterLabel, validationDeadline: deadlineDate, status: period.status });
+                setCreatePeriodActivities([]);
+                setCreateFormNewActivity(null);
+                setCreatePeriodOrgLedTiers(period.orgLedTiers?.length ? period.orgLedTiers : DEFAULT_ORG_LED_TIERS);
+                setEditingActivityId(null);
+                setEditingActivityData(null);
+                setEditingPeriodId(period.id);
+                setYpopAdminView("create-period");
+              }}
+              onDelete={(period) => {
+                const activityCount = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey).length;
+                setPendingDeleteConfirmation({ kind: "ypop_period", id: period.id, title: period.semesterLabel, activityCount });
+              }}
+              onViewSubmissions={(period) => {
+                setSelectedYpopPeriodId(period.id);
+                setYpopSubmissionFilter("all");
+                setYpopAdminView("period-detail");
+              }}
+            />
+          </div>
         );
       }
       case "yorp-registry":
@@ -10656,11 +9511,6 @@ export default function AdminPortal({ section }: { section: string }) {
     uploadingTemplateId,
     selectedYpopId,
     setSelectedYpopId,
-    ypopValidationForm,
-    setYpopValidationForm,
-    savingYpopValidation,
-    showAllYpopProofDocuments,
-    showAllYpopOrgActivities,
     ypopAdminView,
     setYpopAdminView,
     selectedYpopPeriodId,
@@ -10669,19 +9519,16 @@ export default function AdminPortal({ section }: { section: string }) {
     setCreatePeriodForm,
     ypopSubmissionFilter,
     setYpopSubmissionFilter,
+    ypopSubmissionSearch,
+    setYpopSubmissionSearch,
+    ypopSubmissionClassificationFilter,
+    setYpopSubmissionClassificationFilter,
     newActivityForm,
     setNewActivityForm,
     editingActivityId,
     setEditingActivityId,
     editingActivityData,
     setEditingActivityData,
-    ypopPreviewFileId,
-    setYpopPreviewFileId,
-    ypopPreviewUrl,
-    ypopPreviewTitle,
-    ypopPreviewCanInline,
-    ypopPreviewLoading,
-    ypopEventReviewRemarksById,
     state.ypopEntries,
     state.ypopFiles,
     state.ypopEventParticipations,
@@ -10690,6 +9537,7 @@ export default function AdminPortal({ section }: { section: string }) {
     state.ypopOrgActivityFiles,
     state.ypopCityActivities,
     state.ypopPeriods,
+    createYPOPEntry,
     updateYPOPEntry,
     updateYPOPEventParticipation,
     createYPOPOrgActivity,
@@ -10717,6 +9565,41 @@ export default function AdminPortal({ section }: { section: string }) {
     adminUpdateYpopEntryInSupabase,
     adminUpdateYpopEventParticipationInSupabase,
     adminUpdateYpopOrgActivityInSupabase,
+    user,
+    administrators,
+    administratorRoles,
+    administratorUnits,
+    filteredAdministrators,
+    editingAdministrator,
+    editingAdministratorId,
+    administratorsLoading,
+    administratorsViewTab,
+    rolesPermissionsSubTab,
+    configuringRoleCode,
+    administratorSearch,
+    administratorRoleFilter,
+    administratorUnitFilter,
+    administratorStatusFilter,
+    administratorModalMode,
+    administratorDisplayNameDraft,
+    administratorEmailDraft,
+    administratorRoleIdDraft,
+    administratorUnitIdDraft,
+    savingAdministrator,
+    pendingToggleActiveAdministrator,
+    pendingDeleteAdministrator,
+    resendingInviteId,
+    resetAdministratorForm,
+    handleCreateAdministrator,
+    handleUpdateAdministrator,
+    handleToggleAdministratorActive,
+    handleDeleteAdministrator,
+    handleExportAdministrators,
+    handleUpdateRolePermissions,
+    handleResendInvite,
+    startEditingAdministrator,
+    administratorsExportDialogOpen,
+    handleExportAdministrators,
   ]);
 
   const adminConfirmationCopy = getAdminConfirmationCopy();
@@ -10830,28 +9713,21 @@ export default function AdminPortal({ section }: { section: string }) {
         </DialogContent>
       </Dialog>
       <AlertDialog
-        open={Boolean(pendingDeleteConfirmation) && pendingDeleteConfirmation?.kind !== "news_release"}
+        open={
+          Boolean(pendingDeleteConfirmation) &&
+          pendingDeleteConfirmation?.kind !== "news_release" &&
+          pendingDeleteConfirmation?.kind !== "ypop_period" &&
+          pendingDeleteConfirmation?.kind !== "ypop_city_activity"
+        }
         onOpenChange={(open) => {
           if (!open) setPendingDeleteConfirmation(null);
         }}
       >
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {pendingDeleteConfirmation?.kind === "news_release"
-                ? "Delete News Release"
-                : pendingDeleteConfirmation?.kind === "ypop_period"
-                ? "Delete Semester"
-                : pendingDeleteConfirmation?.kind === "ypop_city_activity"
-                ? "Delete City-Led Activity"
-                : "Delete Transparency Post"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>Delete Transparency Post</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingDeleteConfirmation?.kind === "ypop_period"
-                ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This will also remove its organization submissions, uploaded-file records, and ${pendingDeleteConfirmation.activityCount} configured activit${pendingDeleteConfirmation.activityCount !== 1 ? "ies" : "y"}. This action cannot be undone.`
-                : pendingDeleteConfirmation?.kind === "ypop_city_activity"
-                ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
-                : pendingDeleteConfirmation
+              {pendingDeleteConfirmation
                 ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
@@ -10898,6 +9774,53 @@ export default function AdminPortal({ section }: { section: string }) {
         warning="This news release will be permanently removed from the system and cannot be recovered."
         warningTone="danger"
         confirmLabel="Delete News Release"
+        confirmIcon={Trash2}
+        onConfirm={() => void confirmDeleteRecord()}
+      />
+      <DangerConfirmDialog
+        open={pendingDeleteConfirmation?.kind === "ypop_period"}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+        icon={Trash2}
+        title="Delete Semester"
+        description={
+          <>
+            <span className="text-slate-500">Are you sure you want to delete this semester period? </span>
+            <span className="text-slate-500">
+              Submissions linked to this cycle
+              {pendingDeleteConfirmation?.kind === "ypop_period"
+                ? ` and its ${pendingDeleteConfirmation.activityCount} configured activit${pendingDeleteConfirmation.activityCount !== 1 ? "ies" : "y"}`
+                : ""}{" "}
+              will be removed.
+            </span>
+          </>
+        }
+        warning="This activity will be permanently removed from the system and cannot be recovered."
+        warningTone="danger"
+        confirmLabel="Delete Semester"
+        confirmIcon={Trash2}
+        onConfirm={() => void confirmDeleteRecord()}
+      />
+      <DangerConfirmDialog
+        open={pendingDeleteConfirmation?.kind === "ypop_city_activity"}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+        icon={Trash2}
+        title="Delete City-Led Activity"
+        description={
+          <>
+            <span className="text-slate-500">Are you sure you want to delete </span>
+            <span className="font-semibold text-text-default">
+              {pendingDeleteConfirmation?.kind === "ypop_city_activity" ? pendingDeleteConfirmation.title : ""}
+            </span>
+            <span className="text-slate-500">?</span>
+          </>
+        }
+        warning="This activity will be permanently removed from the system and cannot be recovered."
+        warningTone="danger"
+        confirmLabel="Delete Activity"
         confirmIcon={Trash2}
         onConfirm={() => void confirmDeleteRecord()}
       />

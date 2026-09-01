@@ -22,7 +22,7 @@ type ActivityLogsTableProps = {
   onCategoryFilterChange: (value: ActivityCategoryFilter) => void;
   dateFilter: ActivityDateFilter;
   onDateFilterChange: (value: ActivityDateFilter) => void;
-  adminAccountsById: Record<string, { displayName: string; email: string }>;
+  adminAccountsById: Record<string, { displayName: string; email: string; roleLabel: string | null }>;
 };
 
 const CATEGORY_TABS: { value: ActivityCategoryFilter; label: string }[] = [
@@ -89,7 +89,7 @@ export const ActivityLogsTable = ({
                 setPage(0);
               }}
               className={cn(
-                "whitespace-nowrap rounded-full px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                "inline-flex items-center justify-center whitespace-nowrap rounded-full px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
                 active
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                   : "text-text-default hover:bg-slate-50",
@@ -149,8 +149,8 @@ export const ActivityLogsTable = ({
 
         {/* Column headers */}
         <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-          <span className="w-[15%]">Date & Time</span>
-          <span className="w-[15%]">Actor</span>
+          <span className="w-[10%]">Date & Time</span>
+          <span className="w-[20%]">Actor</span>
           <span className="w-[20%]">Category</span>
           <span className="w-[15%]">Action</span>
           <span className="min-w-0 flex-1">Details</span>
@@ -167,7 +167,14 @@ export const ActivityLogsTable = ({
             const date = new Date(log.createdAt);
             const isValidDate = !Number.isNaN(date.getTime());
             const admin = log.actorUserId ? adminAccountsById[log.actorUserId] : undefined;
-            const actorName = admin?.displayName ?? (log.actorUserId ? "Administrator" : "System");
+            const actorFirstName = admin?.displayName.trim().split(/\s+/)[0] ?? "";
+            const actorName = admin
+              ? admin.roleLabel
+                ? `${admin.roleLabel} - ${actorFirstName}`
+                : actorFirstName
+              : log.actorUserId
+                ? "Administrator"
+                : "System";
             const actorEmail = admin?.email ?? "";
 
             return (
@@ -175,7 +182,7 @@ export const ActivityLogsTable = ({
                 key={log.id}
                 className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 last:border-b-0"
               >
-                <div className="flex w-[15%] flex-col gap-1">
+                <div className="flex w-[10%] flex-col gap-1">
                   <p className="font-segoe text-xs font-semibold leading-[140%] text-text-default">
                     {isValidDate ? format(date, "h:mm:ss a") : ""}
                   </p>
@@ -184,7 +191,7 @@ export const ActivityLogsTable = ({
                   </p>
                 </div>
 
-                <div className="flex w-[15%] flex-col gap-1">
+                <div className="flex w-[20%] flex-col gap-1">
                   <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">{actorName}</p>
                   {actorEmail ? (
                     <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">{actorEmail}</p>

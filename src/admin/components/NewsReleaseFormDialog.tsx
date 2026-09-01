@@ -46,7 +46,7 @@ const MONTH_NAMES = [
   "December",
 ];
 
-const CalendarCaption = ({ displayMonth }: CaptionProps) => {
+export const CalendarCaption = ({ displayMonth }: CaptionProps) => {
   const { goToMonth, previousMonth, nextMonth } = useNavigation();
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);

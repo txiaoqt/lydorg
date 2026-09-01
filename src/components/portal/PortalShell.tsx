@@ -279,7 +279,7 @@ export const PortalShell = ({
         <main className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             <header className="sticky top-0 z-30 border-b border-slate-300 bg-admin-surface">
-              <div className="flex h-20 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+              <div className="flex h-20 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   {/* Mobile: opens drawer */}
                   <Button

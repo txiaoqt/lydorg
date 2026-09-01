@@ -13,6 +13,8 @@ const activity: YPOPCityActivity = {
   semesterKey: "2026-1",
   name: "Youth Summit",
   date: "2026-06-30",
+  startDate: "2026-06-30",
+  endDate: "2026-06-30",
   venue: "Pasig",
   points: 4,
   createdAt: "",

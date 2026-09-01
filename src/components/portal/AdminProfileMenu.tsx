@@ -25,7 +25,7 @@ export const AdminProfileMenu = ({ userProfile, onSettings, onActivityLogs, onSi
     <DropdownMenuTrigger asChild>
       <button
         type="button"
-        className="flex items-center gap-3 rounded-md px-4 py-3 transition-colors hover:bg-slate-50"
+        className="flex items-center gap-3 rounded-md px-2.5 py-2.5 transition-colors hover:bg-slate-50"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-public-bg-brand font-segoe text-sm leading-[120%] text-public-text-on-brand">
           {getAvatarInitial(userProfile.name)}
