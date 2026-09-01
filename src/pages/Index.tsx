@@ -9,6 +9,7 @@ import overviewPreview from "@/assets/overview-preview.jpg";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
+import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import { PublicNewsReleaseCard } from "@/components/public/PublicNewsReleaseCard";
 import { toast } from "@/hooks/use-toast";
