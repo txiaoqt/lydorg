@@ -705,6 +705,8 @@ export type DocumentSubmission = {
   updatedAt: string;
 };
 
+export type BudgetRequestFileAdminStatus = "submitted" | "under_admin_review" | "approved_green" | "needs_revision" | "rejected_red";
+
 export type BudgetRequestFile = {
   id: string;
   budgetRequestId: string;
@@ -714,6 +716,8 @@ export type BudgetRequestFile = {
   fileSize: number;
   uploadedAt: string;
   createdAt: string;
+  adminStatus: BudgetRequestFileAdminStatus;
+  adminRemarks: string;
 };
 
 export type BudgetRequest = {
@@ -751,6 +755,8 @@ export type LiquidationReportFile = {
   fileSize: number;
   uploadedAt: string;
   createdAt: string;
+  adminStatus: BudgetRequestFileAdminStatus;
+  adminRemarks: string;
 };
 
 export type LiquidationReport = {
@@ -767,6 +773,28 @@ export type LiquidationReport = {
   createdAt: string;
   updatedAt: string;
   revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+};
+
+export type PublicBudgetSource = {
+  id: string;
+  fiscalYear: number;
+  amount: number;
+  purpose: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PublicBudgetSnapshotSettings = {
+  defaultFiscalYear: number | null;
+  allowFiscalYearSwitch: boolean;
+  showUtilizationProgress: boolean;
+  showTotalFyBudget: boolean;
+  showApprovedBudget: boolean;
+  showReleasedBudget: boolean;
+  showLiquidatedBudget: boolean;
+  showAllocationBreakdown: boolean;
+  updatedAt: string;
 };
 
 export type NewsRelease = {

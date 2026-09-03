@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type StatsCardProps = {
   title: string;
-  value: number;
+  value: number | string;
   icon: LucideIcon;
   trend?: "up" | "down";
   trendLabel?: string;

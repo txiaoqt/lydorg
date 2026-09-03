@@ -35,6 +35,27 @@ const NewsReleases = () => {
       });
   }, []);
 
+  useEffect(() => {
+    const fb = (window as unknown as { FB?: { XFBML: { parse: () => void } } }).FB;
+    if (fb) {
+      fb.XFBML.parse();
+      return;
+    }
+    if (!document.getElementById("fb-root")) {
+      const root = document.createElement("div");
+      root.id = "fb-root";
+      document.body.prepend(root);
+    }
+    if (document.getElementById("facebook-jssdk")) return;
+    const script = document.createElement("script");
+    script.id = "facebook-jssdk";
+    script.src = "https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v19.0";
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = "anonymous";
+    document.body.appendChild(script);
+  }, []);
+
   const availableCategories = useMemo(
     () =>
       [...new Set((releases ?? []).map((r) => r.category).filter((c): c is string => Boolean(c)))].sort(),
@@ -72,7 +93,43 @@ const NewsReleases = () => {
 
       {/* Content */}
       <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[64px] sm:pt-[48px] lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-[24px]">
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 sm:gap-[24px] lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-8">
+
+          {/* Facebook Feed Sidebar (desktop: left column, sticky; mobile: stacks below content) */}
+          <aside className="order-2 lg:sticky lg:top-24 lg:order-1">
+            <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Facebook className="h-4 w-4" />
+                </div>
+                <div className="flex flex-col">
+                  <p className="font-segoe text-sm font-bold leading-tight text-foreground">Latest from Facebook</p>
+                  <p className="font-segoe text-[11px] text-muted-foreground">Real-time updates &amp; announcements</p>
+                </div>
+              </div>
+              <div className="flex justify-center overflow-hidden rounded-xl border border-border/40">
+                <div
+                  className="fb-page"
+                  data-href={LYDO_FACEBOOK_URL}
+                  data-tabs="timeline"
+                  data-width="268"
+                  data-height="620"
+                  data-small-header="true"
+                  data-hide-cover="true"
+                  data-show-facepile="false"
+                >
+                  <blockquote cite={LYDO_FACEBOOK_URL} className="fb-xfbml-parse-ignore">
+                    <a href={LYDO_FACEBOOK_URL} target="_blank" rel="noopener noreferrer">
+                      Local Youth Development Office Pasig City
+                    </a>
+                  </blockquote>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content: toolbar + news grid */}
+          <div className="order-1 flex flex-col gap-4 sm:gap-[24px] lg:order-2">
 
           {/* Mobile Unified Toolbar: Single Search + [Category: All] [Visit Facebook] */}
           <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
@@ -223,7 +280,7 @@ const NewsReleases = () => {
 
           {/* News Cards Grid */}
           {filteredReleases === null ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-[300px] sm:h-[380px] lg:h-[380px] animate-pulse rounded-xl sm:rounded-[16px] lg:rounded-2xl bg-white border border-border/50" />
               ))}
@@ -235,12 +292,14 @@ const NewsReleases = () => {
                 : "No news releases published yet."}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
               {filteredReleases.map((news) => (
                 <PublicNewsReleaseCard key={news.id} news={news} />
               ))}
             </div>
           )}
+
+          </div>
 
         </div>
       </section>

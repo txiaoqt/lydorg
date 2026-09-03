@@ -25,6 +25,8 @@ import type {
   YPOPCityActivity,
   PublicOrganizationActivity,
   PublicOrganizationDirectoryItem,
+  PublicBudgetSource,
+  PublicBudgetSnapshotSettings,
 } from "./lydo-connect-data";
 import { createTemplateLocalId, deriveTemplateCategory, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, otherDocumentTypes, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
@@ -165,6 +167,8 @@ type BudgetRequestFileRow = {
   file_size: number | string;
   uploaded_at: string | null;
   created_at: string;
+  admin_status: string | null;
+  admin_remarks: string | null;
 };
 
 type LiquidationReportRow = {
@@ -191,6 +195,8 @@ type LiquidationReportFileRow = {
   file_size: number | string;
   uploaded_at: string | null;
   created_at: string;
+  admin_status: string | null;
+  admin_remarks: string | null;
 };
 
 type NewsReleaseRow = {
@@ -631,6 +637,8 @@ const mapBudgetRequestFile = (row: BudgetRequestFileRow): BudgetRequestFile => (
   fileSize: normalizeNumeric(row.file_size),
   uploadedAt: row.uploaded_at ?? "",
   createdAt: row.created_at,
+  adminStatus: (row.admin_status ?? "submitted") as BudgetRequestFile["adminStatus"],
+  adminRemarks: row.admin_remarks ?? "",
 });
 
 const mapLiquidationReport = (row: LiquidationReportRow): LiquidationReport => ({
@@ -657,6 +665,8 @@ const mapLiquidationReportFile = (row: LiquidationReportFileRow): LiquidationRep
   fileSize: normalizeNumeric(row.file_size),
   uploadedAt: row.uploaded_at ?? "",
   createdAt: row.created_at,
+  adminStatus: (row.admin_status ?? "submitted") as LiquidationReportFile["adminStatus"],
+  adminRemarks: row.admin_remarks ?? "",
 });
 
 const mapNewsRelease = (row: NewsReleaseRow): NewsRelease => ({
@@ -3632,6 +3642,139 @@ export const adminUpdateYpopEventParticipationInSupabase = async (
   const row = Array.isArray(data) ? data[0] : null;
   if (!row) throw new Error("No data returned from admin_update_ypop_event_participation.");
   return mapYpopEventParticipation(row as YpopEventParticipationRow);
+};
+
+export const adminUpdateBudgetRequestFileStatusInSupabase = async (
+  id: string,
+  patch: Partial<BudgetRequestFile>,
+): Promise<BudgetRequestFile> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_budget_request_file_status", {
+    _session_token: adminSession.sessionToken,
+    _file_id: id,
+    _admin_status: patch.adminStatus ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_budget_request_file_status.");
+  return mapBudgetRequestFile(row as BudgetRequestFileRow);
+};
+
+type PublicBudgetSourceRow = {
+  id: string;
+  fiscal_year: number;
+  amount: number | string;
+  purpose: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+const mapPublicBudgetSource = (row: PublicBudgetSourceRow): PublicBudgetSource => ({
+  id: row.id,
+  fiscalYear: row.fiscal_year,
+  amount: normalizeNumeric(row.amount),
+  purpose: row.purpose,
+  sortOrder: row.sort_order,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const adminGetPublicBudgetSourcesFromSupabase = async (fiscalYear: number): Promise<PublicBudgetSource[]> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_public_budget_sources", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: fiscalYear,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as PublicBudgetSourceRow[]).map(mapPublicBudgetSource);
+};
+
+export const adminSavePublicBudgetSourcesInSupabase = async (
+  fiscalYear: number,
+  sources: Array<{ amount: number; purpose: string; sortOrder: number }>,
+): Promise<PublicBudgetSource[]> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_save_public_budget_sources", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: fiscalYear,
+    _sources: sources,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as PublicBudgetSourceRow[]).map(mapPublicBudgetSource);
+};
+
+type PublicBudgetSnapshotSettingsRow = {
+  default_fiscal_year: number | null;
+  allow_fiscal_year_switch: boolean;
+  show_utilization_progress: boolean;
+  show_total_fy_budget: boolean;
+  show_approved_budget: boolean;
+  show_released_budget: boolean;
+  show_liquidated_budget: boolean;
+  show_allocation_breakdown: boolean;
+  updated_at: string;
+};
+
+const mapPublicBudgetSnapshotSettings = (row: PublicBudgetSnapshotSettingsRow): PublicBudgetSnapshotSettings => ({
+  defaultFiscalYear: row.default_fiscal_year,
+  allowFiscalYearSwitch: row.allow_fiscal_year_switch,
+  showUtilizationProgress: row.show_utilization_progress,
+  showTotalFyBudget: row.show_total_fy_budget,
+  showApprovedBudget: row.show_approved_budget,
+  showReleasedBudget: row.show_released_budget,
+  showLiquidatedBudget: row.show_liquidated_budget,
+  showAllocationBreakdown: row.show_allocation_breakdown,
+  updatedAt: row.updated_at,
+});
+
+export const adminGetPublicBudgetSnapshotSettingsFromSupabase = async (): Promise<PublicBudgetSnapshotSettings | null> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_public_budget_snapshot_settings", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  return row ? mapPublicBudgetSnapshotSettings(row as PublicBudgetSnapshotSettingsRow) : null;
+};
+
+export const adminSavePublicBudgetSnapshotSettingsInSupabase = async (
+  settings: PublicBudgetSnapshotSettings,
+): Promise<PublicBudgetSnapshotSettings> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_save_public_budget_snapshot_settings", {
+    _session_token: adminSession.sessionToken,
+    _default_fiscal_year: settings.defaultFiscalYear,
+    _allow_fiscal_year_switch: settings.allowFiscalYearSwitch,
+    _show_utilization_progress: settings.showUtilizationProgress,
+    _show_total_fy_budget: settings.showTotalFyBudget,
+    _show_approved_budget: settings.showApprovedBudget,
+    _show_released_budget: settings.showReleasedBudget,
+    _show_liquidated_budget: settings.showLiquidatedBudget,
+    _show_allocation_breakdown: settings.showAllocationBreakdown,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_save_public_budget_snapshot_settings.");
+  return mapPublicBudgetSnapshotSettings(row as PublicBudgetSnapshotSettingsRow);
+};
+
+export const adminUpdateLiquidationReportFileStatusInSupabase = async (
+  id: string,
+  patch: Partial<LiquidationReportFile>,
+): Promise<LiquidationReportFile> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_liquidation_report_file_status", {
+    _session_token: adminSession.sessionToken,
+    _file_id: id,
+    _admin_status: patch.adminStatus ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_liquidation_report_file_status.");
+  return mapLiquidationReportFile(row as LiquidationReportFileRow);
 };
 
 export const adminUpdateYpopOrgActivityInSupabase = async (
