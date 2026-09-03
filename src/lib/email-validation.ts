@@ -1,139 +1,88 @@
-import { supabase } from "@/lib/supabase";
-
 export const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
 export const VERIFY_FRESH_NAV_KEY = "ytrace_verify_fresh_nav";
+export const SIGNUP_DRAFT_KEY = "ytrace_signup_draft";
 
-export type EmailAvailability = "idle" | "checking" | "available" | "unconfirmed" | "registered" | "error";
+export const GENERIC_VERIFY_MESSAGE = "If this email can be used for registration, we'll send a verification code.";
+export const GENERIC_RESET_MESSAGE = "If an account exists for this email, you'll receive a password reset link.";
 
-
-export type CheckSignupEmailOptions = {
-  /**
-   * Explicitly indicates caller is within an active registration-resume workflow.
-   * Only used when the caller can definitively prove registration is being resumed.
-   */
-  isResumingRegistration?: boolean;
-  /**
-   * Explicit pending email passed from registration context if different from sessionStorage.
-   */
-  pendingSignupEmail?: string;
-};
-
-/**
- * Checks the availability and confirmation state of an email address for registration:
- * - "available": No account exists in Supabase for this email.
- * - "unconfirmed": An account exists in Supabase Auth, AND the user is in an active registration-resume
- *                  context matching this email (primary source: sessionStorage PENDING_SIGNUP_EMAIL_KEY).
- * - "registered": An account exists in Supabase Auth, but NO matching registration-resume context exists.
- * - "error": Supabase service was unreachable.
- */
-export const checkSignupEmail = async (
-  email: string,
-  options?: CheckSignupEmailOptions,
-): Promise<Exclude<EmailAvailability, "idle" | "checking">> => {
-  if (!supabase) return "error";
-
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) return "available";
-
-  // Primary source of truth is the registration session / context:
-  const sessionEmail =
-    options?.pendingSignupEmail?.trim().toLowerCase() ??
-    (typeof window !== "undefined"
-      ? window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY)?.trim().toLowerCase()
-      : null);
-
-  const matchesRegistrationSession = Boolean(sessionEmail && sessionEmail === normalizedEmail);
-  const isExplicitlyResuming = Boolean(options?.isResumingRegistration);
-
-  try {
-    // 1. Preferred: Check server-side Auth state including confirmed_at
-    const { data: statusData, error: statusError } = await supabase.rpc(
-      "check_signup_email_status",
-      { _email: normalizedEmail },
-    );
-
-    if (!statusError && typeof statusData === "string") {
-      if (statusData === "available") {
-        return "available";
-      }
-      if (statusData === "registered") {
-        return "registered";
-      }
-      if (statusData === "unconfirmed") {
-        return matchesRegistrationSession || isExplicitlyResuming ? "unconfirmed" : "registered";
-      }
-    }
-
-    // 2. Fallback: is_signup_email_registered boolean check
-    const { data: rpcRegistered, error: rpcError } = await supabase.rpc(
-      "is_signup_email_registered",
-      { _email: normalizedEmail },
-    );
-
-    if (rpcError) {
-      console.warn("Error checking signup email availability:", rpcError);
-      return "error";
-    }
-
-    if (!rpcRegistered) {
-      return "available";
-    }
-
-    // Account exists in auth.users; classify based on registration-resume context
-    if (matchesRegistrationSession || isExplicitlyResuming) {
-      return "unconfirmed";
-    }
-
-    return "registered";
-  } catch (err) {
-    console.warn("Error checking signup email availability:", err);
-    return "available";
-  }
-};
-
-export type RecoveryEmailStatus = "idle" | "checking" | "registered" | "not_found" | "error";
+export interface SignupDraft {
+  organizationName: string;
+  isExistingOrganization: boolean;
+  organizationIdentifierNumber: string;
+  email: string;
+  contactNumber: string;
+  district: string;
+  barangayId: string;
+  agreedToPolicies: boolean;
+}
 
 /**
- * Checks whether a verified account exists in Supabase for password recovery.
- * Returns 'registered' ONLY if the account is confirmed/verified.
- * Returns 'not_found' for unconfirmed/pending accounts and non-existent accounts.
+ * Saves non-sensitive registration form fields to sessionStorage.
+ * Passwords and confirmation passwords are NEVER persisted.
  */
-export const checkRecoveryEmail = async (
-  email: string,
-): Promise<Exclude<RecoveryEmailStatus, "idle" | "checking">> => {
-  if (!supabase) return "error";
-
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) return "not_found";
-
+export const saveSignupDraft = (draft: SignupDraft): void => {
+  if (typeof window === "undefined") return;
   try {
-    const { data: statusData, error: statusError } = await supabase.rpc(
-      "check_signup_email_status",
-      { _email: normalizedEmail },
-    );
-
-    if (!statusError && typeof statusData === "string") {
-      if (statusData === "registered") {
-        return "registered";
-      }
-      return "not_found";
-    }
-
-    const { data: rpcRegistered, error: rpcError } = await supabase.rpc(
-      "is_signup_email_registered",
-      { _email: normalizedEmail },
-    );
-
-    if (rpcError) {
-      return "error";
-    }
-
-    return rpcRegistered ? "registered" : "not_found";
+    const payload: SignupDraft = {
+      organizationName: draft.organizationName ?? "",
+      isExistingOrganization: Boolean(draft.isExistingOrganization),
+      organizationIdentifierNumber: draft.organizationIdentifierNumber ?? "",
+      email: (draft.email ?? "").trim().toLowerCase(),
+      contactNumber: draft.contactNumber ?? "",
+      district: draft.district ?? "",
+      barangayId: draft.barangayId ?? "",
+      agreedToPolicies: Boolean(draft.agreedToPolicies),
+    };
+    window.sessionStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify(payload));
   } catch {
-    return "error";
+    // Ignore storage exceptions
   }
 };
 
+/**
+ * Loads the non-sensitive registration draft from sessionStorage.
+ */
+export const loadSignupDraft = (): SignupDraft | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(SIGNUP_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "object" && parsed !== null) {
+      return {
+        organizationName: String(parsed.organizationName ?? ""),
+        isExistingOrganization: Boolean(parsed.isExistingOrganization),
+        organizationIdentifierNumber: String(parsed.organizationIdentifierNumber ?? ""),
+        email: String(parsed.email ?? "").trim().toLowerCase(),
+        contactNumber: String(parsed.contactNumber ?? ""),
+        district: String(parsed.district ?? ""),
+        barangayId: String(parsed.barangayId ?? ""),
+        agreedToPolicies: Boolean(parsed.agreedToPolicies),
+      };
+    }
+  } catch {
+    // Ignore storage exceptions
+  }
+  return null;
+};
 
+/**
+ * Clears the registration draft from sessionStorage.
+ */
+export const clearSignupDraft = (): void => {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+  } catch {
+    // Ignore storage exceptions
+  }
+};
 
+/**
+ * Synchronous client-side format checks (zero network calls, zero enumeration).
+ */
+export const isGmailFormat = (email: string): boolean =>
+  /^[a-z0-9._%+-]+@gmail\.com$/i.test(email.trim());
 
+export const isValidEmailFormat = (email: string): boolean =>
+  /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email.trim());

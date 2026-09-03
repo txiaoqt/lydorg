@@ -19,16 +19,18 @@ import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
-import { checkSignupEmail, PENDING_SIGNUP_EMAIL_KEY, VERIFY_FRESH_NAV_KEY, type EmailAvailability } from "@/lib/email-validation";
+import {
+  isGmailFormat,
+  loadSignupDraft,
+  PENDING_SIGNUP_EMAIL_KEY,
+  saveSignupDraft,
+  VERIFY_FRESH_NAV_KEY,
+} from "@/lib/email-validation";
 import { OTP_ISSUED_AT_KEY } from "@/lib/verification-error";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 import {
-  URN_MAX_LENGTH,
   generateUniqueUrn,
-  isRegistrationVerified,
-  isUrnRegistration,
   normalizeUrn,
-  urnReviewLabels,
   validateUrn,
 } from "@/lib/urn-registration";
 import { sanitizeContactNumber } from "@/lib/organization-profile-domain";
@@ -125,23 +127,23 @@ const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
 };
 
 const SignUp = () => {
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
-  const [district, setDistrict] = useState<PasigDistrict | "">("");
-  const [barangayId, setBarangayId] = useState("");
-  const [isExistingOrganization, setIsExistingOrganization] = useState(false);
-  const [organizationIdentifierNumber, setOrganizationIdentifierNumber] = useState("");
+  const initialDraft = useMemo(() => loadSignupDraft(), []);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(() => (initialDraft ? 2 : 1));
+  const [name, setName] = useState(() => initialDraft?.organizationName ?? "");
+  const [email, setEmail] = useState(() => initialDraft?.email ?? "");
+  const [contactNumber, setContactNumber] = useState(() => initialDraft?.contactNumber ?? "");
+  const [district, setDistrict] = useState<PasigDistrict | "">(() => (initialDraft?.district as PasigDistrict) ?? "");
+  const [barangayId, setBarangayId] = useState(() => initialDraft?.barangayId ?? "");
+  const [isExistingOrganization, setIsExistingOrganization] = useState(() => initialDraft?.isExistingOrganization ?? false);
+  const [organizationIdentifierNumber, setOrganizationIdentifierNumber] = useState(() => initialDraft?.organizationIdentifierNumber ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
+  const [agreedToPolicies, setAgreedToPolicies] = useState(() => initialDraft?.agreedToPolicies ?? false);
   const [inlineError, setInlineError] = useState("");
-  const [emailAvailability, setEmailAvailability] = useState<EmailAvailability>("idle");
   const [urnAvailability, setUrnAvailability] = useState<UrnAvailability>("idle");
   const [legalPolicyType, setLegalPolicyType] = useState<LegalPolicyType | null>(null);
   const [activePolicy, setActivePolicy] = useState<PolicyVersion | null>(null);
@@ -159,7 +161,7 @@ const SignUp = () => {
   const useSupabaseAuth = Boolean(supabase);
 
   const passwordsMatch = password === confirmPassword;
-  const isGmailEmail = /^[a-z0-9._%+-]+@gmail\.com$/i.test(email.trim());
+  const isGmailEmail = isGmailFormat(email);
   const normalizedContactNumber = contactNumber.trim();
   const isContactNumberValid = /^09\d{9}$/.test(normalizedContactNumber);
   const districtBarangays = district ? pasigDistrictBarangays[district] : [];
@@ -177,8 +179,6 @@ const SignUp = () => {
       name.trim().length <= 100 &&
       email.trim() &&
       isGmailEmail &&
-      emailAvailability !== "registered" &&
-      emailAvailability !== "checking" &&
       isContactNumberValid &&
       district &&
       barangayId &&
@@ -219,27 +219,6 @@ const SignUp = () => {
       setUrnAvailability("idle");
     }
   }, [isExistingOrganization]);
-
-  useEffect(() => {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!isGmailEmail || !supabase) {
-      setEmailAvailability("idle");
-      return;
-    }
-
-    let active = true;
-    setEmailAvailability("checking");
-    const timeoutId = window.setTimeout(() => {
-      void checkSignupEmail(normalizedEmail).then((result) => {
-        if (active) setEmailAvailability(result);
-      });
-    }, 500);
-
-    return () => {
-      active = false;
-      window.clearTimeout(timeoutId);
-    };
-  }, [email, isGmailEmail]);
 
   useEffect(() => {
     if (!isExistingOrganization || urnError) {
@@ -370,14 +349,6 @@ const SignUp = () => {
       setInlineError("Email must end with @gmail.com.");
       return;
     }
-    if (emailAvailability === "checking") {
-      setInlineError("Please wait while we check your Email Address.");
-      return;
-    }
-    if (emailAvailability === "registered") {
-      setInlineError("This email cannot be used. Please try a different email address.");
-      return;
-    }
     if (!isContactNumberValid) {
       setInlineError("Contact Number must be 11 digits starting with 09.");
       return;
@@ -393,14 +364,6 @@ const SignUp = () => {
         setInlineError(DUPLICATE_URN_ERROR_MESSAGE);
         return;
       }
-    }
-
-    setEmailAvailability("checking");
-    const latestAvailability = await checkSignupEmail(email);
-    setEmailAvailability(latestAvailability);
-    if (latestAvailability === "registered") {
-      setInlineError("This email cannot be used. Please try a different email address.");
-      return;
     }
 
     setIsConfirmOpen(true);
@@ -433,6 +396,18 @@ const SignUp = () => {
       setInlineError("Some required details are missing or invalid. Review every field before creating the account.");
       return;
     }
+
+    // Persist non-sensitive registration draft (never passwords)
+    saveSignupDraft({
+      organizationName: name.trim(),
+      isExistingOrganization,
+      organizationIdentifierNumber: normalizedIdentifierNumber,
+      email: email.trim().toLowerCase(),
+      contactNumber: normalizedContactNumber,
+      district,
+      barangayId,
+      agreedToPolicies,
+    });
 
     setIsCreating(true);
     const result = await signUp({
@@ -585,43 +560,21 @@ const SignUp = () => {
                   type="email"
                   placeholder="you@gmail.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setInlineError("");
+                  }}
                   onBlur={() => touch("email")}
                   autoComplete="email"
-                  aria-invalid={emailAvailability === "registered" || (touched.has("email") && Boolean(email) && !isGmailEmail)}
+                  aria-invalid={touched.has("email") && (!email.trim() || !isGmailEmail)}
                   aria-describedby="signup-email-status"
                   required
                 />
                 <div id="signup-email-status" aria-live="polite">
                   {touched.has("email") && !email.trim() ? (
                     <p className="text-xs text-destructive">Email Address is required.</p>
-                  ) : null}
-                  {touched.has("email") && email && !isGmailEmail ? (
+                  ) : touched.has("email") && email && !isGmailEmail ? (
                     <p className="text-xs text-destructive">Email must end with @gmail.com.</p>
-                  ) : null}
-                  {isGmailEmail && emailAvailability === "checking" ? (
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-                      Checking email availability...
-                    </p>
-                  ) : null}
-                  {isGmailEmail && emailAvailability === "registered" ? (
-                    <p className="text-xs text-destructive">
-                      This email cannot be used. Please try a different email address.
-                    </p>
-                  ) : null}
-                  {isGmailEmail && emailAvailability === "unconfirmed" ? (
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      Pending verification. Continue registration to receive a new code.
-                    </p>
-                  ) : null}
-                  {isGmailEmail && emailAvailability === "available" ? (
-                    <p className="text-xs text-success">Email is available.</p>
-                  ) : null}
-                  {isGmailEmail && emailAvailability === "error" ? (
-                    <p className="text-xs text-muted-foreground">
-                      We could not verify this email right now. It will be checked again when you continue.
-                    </p>
                   ) : null}
                 </div>
               </div>
@@ -633,7 +586,10 @@ const SignUp = () => {
                   type="tel"
                   placeholder="09XXXXXXXXX"
                   value={contactNumber}
-                  onChange={(e) => setContactNumber(sanitizeContactNumber(e.target.value))}
+                  onChange={(e) => {
+                    setContactNumber(sanitizeContactNumber(e.target.value));
+                    setInlineError("");
+                  }}
                   onBlur={() => touch("contactNumber")}
                   inputMode="numeric"
                   autoComplete="tel"
@@ -906,7 +862,7 @@ const SignUp = () => {
                 <Button
                   type="submit"
                   className="font-semibold"
-                  disabled={!useSupabaseAuth || isCreating || emailAvailability === "checking"}
+                  disabled={!useSupabaseAuth || isCreating}
                 >
                   {isCreating ? (
                     <>

@@ -27,4 +27,6 @@ worker/.env
 
 playwright-report/
 test-results/
+*.tsbuildinfo
+.codex/
 

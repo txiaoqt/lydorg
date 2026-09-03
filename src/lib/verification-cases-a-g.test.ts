@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { checkSignupEmail, PENDING_SIGNUP_EMAIL_KEY } from "./email-validation";
+import {
+  clearSignupDraft,
+  loadSignupDraft,
+  PENDING_SIGNUP_EMAIL_KEY,
+  saveSignupDraft,
+  type SignupDraft,
+} from "./email-validation";
 import { supabase } from "@/lib/supabase";
 
 describe("Verification of Cases A through G", () => {
@@ -10,16 +16,24 @@ describe("Verification of Cases A through G", () => {
 
   it("Case A: New registration → Step 3 → OTP verification works", async () => {
     const newEmail = "brand_new_org@gmail.com";
-    // 1. Initial check: email is available
-    vi.spyOn(supabase!, "rpc").mockResolvedValue({ data: false, error: null } as any);
-    const availability = await checkSignupEmail(newEmail);
-    expect(availability).toBe("available");
+    const draft: SignupDraft = {
+      organizationName: "Brand New Org",
+      isExistingOrganization: false,
+      organizationIdentifierNumber: "",
+      email: newEmail,
+      contactNumber: "09123456789",
+      district: "District I",
+      barangayId: "barangay-buting",
+      agreedToPolicies: true,
+    };
 
-    // 2. Signup initiates: session key stored
+    // 1. Signup initiates: non-sensitive draft and pending email stored
+    saveSignupDraft(draft);
     window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, newEmail);
+    expect(loadSignupDraft()).toEqual(draft);
     expect(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY)).toBe(newEmail);
 
-    // 3. Step 3 verification completes: OTP verified and session cleared
+    // 2. Step 3 verification completes: OTP verified and session cleared
     vi.spyOn(supabase!.auth, "verifyOtp").mockResolvedValue({
       data: { session: { user: { id: "u-123" } } },
       error: null,
@@ -33,51 +47,51 @@ describe("Verification of Cases A through G", () => {
     });
     expect(verifyResult.error).toBeNull();
 
+    clearSignupDraft();
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
+    expect(loadSignupDraft()).toBeNull();
     expect(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY)).toBeNull();
   });
 
-  it("Case B: Registration → Step 3 → Back → return to registration: pending email is recognized and allows continue/resend", async () => {
-    const pendingEmail = "interrupted_org@gmail.com";
-    // User reached Step 3 previously
-    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, pendingEmail);
-    // Supabase auth user exists
-    vi.spyOn(supabase!, "rpc").mockResolvedValue({ data: true, error: null } as any);
+  it("Case B: Registration → Step 3 → Use a different email → Step 2 restores non-sensitive draft", () => {
+    const originalDraft: SignupDraft = {
+      organizationName: "Interrupted Youth Org",
+      isExistingOrganization: true,
+      organizationIdentifierNumber: "PCYDO-2026-9999",
+      email: "old@gmail.com",
+      contactNumber: "09123456789",
+      district: "District II",
+      barangayId: "barangay-rosario",
+      agreedToPolicies: true,
+    };
+    saveSignupDraft(originalDraft);
+    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "old@gmail.com");
 
-    // When returning to registration, status is recognized as unconfirmed
-    const status = await checkSignupEmail(pendingEmail);
-    expect(status).toBe("unconfirmed");
+    // Returning to Step 2 restores non-sensitive draft with all fields intact and editable
+    const restored = loadSignupDraft();
+    expect(restored).toEqual(originalDraft);
+  });
 
-    // Resending / continuing signup calls signInWithOtp with shouldCreateUser false or true
-    const otpMock = vi.fn().mockResolvedValue({ data: {}, error: null });
-    vi.spyOn(supabase!.auth, "signInWithOtp").mockImplementation(otpMock);
+  it("Case C: Forgot Password does not perform account existence lookup", async () => {
+    const resetMock = vi.fn().mockResolvedValue({ data: {}, error: null });
+    vi.spyOn(supabase!.auth, "resetPasswordForEmail").mockImplementation(resetMock);
 
-    await supabase!.auth.signInWithOtp({
-      email: pendingEmail,
-      options: { shouldCreateUser: false },
+    const email = "any_account@gmail.com";
+    const { error } = await supabase!.auth.resetPasswordForEmail(email, {
+      redirectTo: "http://localhost:5173/reset-password",
     });
-    expect(otpMock).toHaveBeenCalledWith({
-      email: pendingEmail,
-      options: { shouldCreateUser: false },
+
+    expect(error).toBeNull();
+    expect(resetMock).toHaveBeenCalledWith(email, {
+      redirectTo: "http://localhost:5173/reset-password",
     });
   });
 
-  it("Case C: Existing verified account: must not be classified as pending registration", async () => {
-    const verifiedEmail = "verified_existing@gmail.com";
-    // No active registration session in sessionStorage for this email
-    vi.spyOn(supabase!, "rpc").mockResolvedValue({ data: true, error: null } as any);
-
-    const status = await checkSignupEmail(verifiedEmail);
-    expect(status).toBe("registered");
-    expect(status).not.toBe("unconfirmed");
-  });
-
-  it("Case D: Forgot Password with an unverified account: must NOT show registration pending-verification and must still use resetPasswordForEmail", async () => {
+  it("Case D: Forgot Password with an unverified account: triggers resetPasswordForEmail with generic output", async () => {
     const unverifiedEmail = "unconfirmed_account@gmail.com";
     const resetMock = vi.fn().mockResolvedValue({ data: {}, error: null });
     vi.spyOn(supabase!.auth, "resetPasswordForEmail").mockImplementation(resetMock);
 
-    // Forgot password executes resetPasswordForEmail directly
     const { error } = await supabase!.auth.resetPasswordForEmail(unverifiedEmail, {
       redirectTo: "http://localhost:5173/reset-password",
     });
@@ -118,40 +132,26 @@ describe("Verification of Cases A through G", () => {
     expect(helperText).toBe("Re-enter the password if this page was refreshed.");
   });
 
-  it("Case G: Normal new registration: email is correctly treated as available", async () => {
-    const cleanEmail = "brand_new_leader@gmail.com";
-    vi.spyOn(supabase!, "rpc").mockResolvedValue({ data: false, error: null } as any);
-
-    const status = await checkSignupEmail(cleanEmail);
-    expect(status).toBe("available");
-  });
-
-  it("Specific Scenario: haha@gmail.com (unconfirmed user) is pending when resuming, but registered when not resuming", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: "unconfirmed", error: null } as any;
-      return { data: true, error: null } as any;
+  it("Case G: Changing email from Step 2 creates a fresh verification state for the new email", () => {
+    saveSignupDraft({
+      organizationName: "Pasig Youth Org",
+      isExistingOrganization: false,
+      organizationIdentifierNumber: "",
+      email: "old_email@gmail.com",
+      contactNumber: "09123456789",
+      district: "District I",
+      barangayId: "barangay-malinao",
+      agreedToPolicies: true,
     });
+    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "old_email@gmail.com");
 
-    // 1. When resuming registration (session storage has haha@gmail.com)
-    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "haha@gmail.com");
-    const resumeStatus = await checkSignupEmail("haha@gmail.com");
-    expect(resumeStatus).toBe("unconfirmed");
+    // Change to new email
+    const draft = loadSignupDraft()!;
+    draft.email = "new_email@gmail.com";
+    saveSignupDraft(draft);
+    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "new_email@gmail.com");
 
-    // 2. When not resuming registration (session storage is empty)
-    window.sessionStorage.clear();
-    const nonResumeStatus = await checkSignupEmail("haha@gmail.com");
-    expect(nonResumeStatus).toBe("registered");
-  });
-
-  it("Specific Scenario: xxfaker4@gmail.com (confirmed user) is always registered", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: "registered", error: null } as any;
-      return { data: true, error: null } as any;
-    });
-
-    // Even if session storage had this email, a confirmed account is registered
-    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "xxfaker4@gmail.com");
-    const status = await checkSignupEmail("xxfaker4@gmail.com");
-    expect(status).toBe("registered");
+    expect(loadSignupDraft()?.email).toBe("new_email@gmail.com");
+    expect(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY)).toBe("new_email@gmail.com");
   });
 });

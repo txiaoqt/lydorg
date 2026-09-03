@@ -1,99 +1,87 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { checkSignupEmail, PENDING_SIGNUP_EMAIL_KEY } from "./email-validation";
-import { supabase } from "@/lib/supabase";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  clearSignupDraft,
+  isGmailFormat,
+  isValidEmailFormat,
+  loadSignupDraft,
+  saveSignupDraft,
+  SIGNUP_DRAFT_KEY,
+  type SignupDraft,
+} from "./email-validation";
 
-describe("checkSignupEmail", () => {
+describe("email-validation and registration draft persistence", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     window.sessionStorage.clear();
   });
 
-  it("returns available when input email is empty", async () => {
-    const result = await checkSignupEmail("");
-    expect(result).toBe("available");
+  it("saves and loads non-sensitive registration draft", () => {
+    const draft: SignupDraft = {
+      organizationName: "Pasig Youth Council",
+      isExistingOrganization: true,
+      organizationIdentifierNumber: "PCYDO-2026-0001",
+      email: "leader@gmail.com",
+      contactNumber: "09123456789",
+      district: "District I",
+      barangayId: "barangay-kapitolyo",
+      agreedToPolicies: true,
+    };
+
+    saveSignupDraft(draft);
+    const loaded = loadSignupDraft();
+    expect(loaded).toEqual(draft);
   });
 
-  it("returns registered when server check_signup_email_status reports registered (confirmed account)", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: "registered", error: null } as any;
-      return { data: true, error: null } as any;
+  it("normalizes email to lowercase and strips whitespace when saving draft", () => {
+    const draft: SignupDraft = {
+      organizationName: "Kabataan",
+      isExistingOrganization: false,
+      organizationIdentifierNumber: "",
+      email: "  USER@GMAIL.COM  ",
+      contactNumber: "09998887777",
+      district: "District II",
+      barangayId: "barangay-santolan",
+      agreedToPolicies: true,
+    };
+
+    saveSignupDraft(draft);
+    const loaded = loadSignupDraft();
+    expect(loaded?.email).toBe("user@gmail.com");
+  });
+
+  it("returns null when no draft is stored", () => {
+    expect(loadSignupDraft()).toBeNull();
+  });
+
+  it("clears registration draft from sessionStorage", () => {
+    saveSignupDraft({
+      organizationName: "Test Org",
+      isExistingOrganization: false,
+      organizationIdentifierNumber: "",
+      email: "test@gmail.com",
+      contactNumber: "09123456789",
+      district: "District I",
+      barangayId: "barangay-bagong-ilog",
+      agreedToPolicies: true,
     });
 
-    const result = await checkSignupEmail("xxfaker4@gmail.com");
-    expect(result).toBe("registered");
+    expect(window.sessionStorage.getItem(SIGNUP_DRAFT_KEY)).not.toBeNull();
+    clearSignupDraft();
+    expect(window.sessionStorage.getItem(SIGNUP_DRAFT_KEY)).toBeNull();
+    expect(loadSignupDraft()).toBeNull();
   });
 
-  it("returns unconfirmed when check_signup_email_status reports unconfirmed AND session matches", async () => {
-    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "haha@gmail.com");
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: "unconfirmed", error: null } as any;
-      return { data: true, error: null } as any;
-    });
-
-    const result = await checkSignupEmail("haha@gmail.com");
-    expect(result).toBe("unconfirmed");
+  it("validates Gmail formats synchronously without network requests", () => {
+    expect(isGmailFormat("test@gmail.com")).toBe(true);
+    expect(isGmailFormat("test.user+tag@gmail.com")).toBe(true);
+    expect(isGmailFormat("test@yahoo.com")).toBe(false);
+    expect(isGmailFormat("invalid-email")).toBe(false);
+    expect(isGmailFormat("")).toBe(false);
   });
 
-  it("returns registered when check_signup_email_status reports unconfirmed but session has no matching pending registration", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: "unconfirmed", error: null } as any;
-      return { data: true, error: null } as any;
-    });
-
-    const result = await checkSignupEmail("haha@gmail.com");
-    expect(result).toBe("registered");
-  });
-
-  it("returns registered when fallback is_signup_email_registered is true and not resuming registration", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: null, error: { message: "function not found" } } as any;
-      if (name === "is_signup_email_registered") return { data: true, error: null } as any;
-      return { data: null, error: null } as any;
-    });
-
-    const result = await checkSignupEmail("registered@gmail.com");
-    expect(result).toBe("registered");
-  });
-
-  it("returns unconfirmed when fallback is_signup_email_registered is true and matches sessionStorage", async () => {
-    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, "pending@gmail.com");
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: null, error: { message: "function not found" } } as any;
-      if (name === "is_signup_email_registered") return { data: true, error: null } as any;
-      return { data: null, error: null } as any;
-    });
-
-    const result = await checkSignupEmail("pending@gmail.com");
-    expect(result).toBe("unconfirmed");
-  });
-
-  it("returns unconfirmed when fallback is_signup_email_registered is true and explicit isResumingRegistration option is provided", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: null, error: { message: "function not found" } } as any;
-      if (name === "is_signup_email_registered") return { data: true, error: null } as any;
-      return { data: null, error: null } as any;
-    });
-
-    const result = await checkSignupEmail("pending@gmail.com", { isResumingRegistration: true });
-    expect(result).toBe("unconfirmed");
-  });
-
-  it("returns available when auth user does not exist in Supabase", async () => {
-    vi.spyOn(supabase!, "rpc").mockImplementation(async (name) => {
-      if (name === "check_signup_email_status") return { data: "available", error: null } as any;
-      if (name === "is_signup_email_registered") return { data: false, error: null } as any;
-      return { data: false, error: null } as any;
-    });
-
-    const result = await checkSignupEmail("new@gmail.com");
-    expect(result).toBe("available");
-  });
-
-  it("returns error when Supabase RPC encounters an error", async () => {
-    vi.spyOn(supabase!, "rpc").mockResolvedValue({ data: null, error: { message: "Network failure" } } as any);
-
-    const result = await checkSignupEmail("user@gmail.com");
-    expect(result).toBe("error");
+  it("validates standard email formats", () => {
+    expect(isValidEmailFormat("test@domain.com")).toBe(true);
+    expect(isValidEmailFormat("user.name+tag@sub.domain.org")).toBe(true);
+    expect(isValidEmailFormat("invalid")).toBe(false);
+    expect(isValidEmailFormat("@domain.com")).toBe(false);
   });
 });
-
