@@ -373,6 +373,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           ypopEventFiles: snapshot.ypopEventFiles ? mergeById(current.ypopEventFiles, snapshot.ypopEventFiles) : current.ypopEventFiles,
           ypopOrgActivities: snapshot.ypopOrgActivities ? mergeById(current.ypopOrgActivities, snapshot.ypopOrgActivities) : current.ypopOrgActivities,
           ypopOrgActivityFiles: snapshot.ypopOrgActivityFiles ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles) : current.ypopOrgActivityFiles,
+          ypopPeriods: snapshot.ypopPeriods ? mergeById(current.ypopPeriods, snapshot.ypopPeriods) : current.ypopPeriods,
+          ypopCityActivities: snapshot.ypopCityActivities
+            ? mergeById(current.ypopCityActivities, snapshot.ypopCityActivities)
+            : current.ypopCityActivities,
+          ypopEntries: snapshot.ypopEntries ? mergeById(current.ypopEntries, snapshot.ypopEntries) : current.ypopEntries,
         }));
       } catch (error) {
         console.error("Failed to sync Y-TRACE state from Supabase:", error);
@@ -431,6 +436,15 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             ? mergeById(current.ypopOrgActivityFiles, snapshot.ypopOrgActivityFiles)
             : current.ypopOrgActivityFiles;
           const mergedInquiries = snapshot.inquiries ? mergeById(current.inquiries, snapshot.inquiries) : current.inquiries;
+          const mergedYpopPeriods = snapshot.ypopPeriods
+            ? mergeById(current.ypopPeriods, snapshot.ypopPeriods)
+            : current.ypopPeriods;
+          const mergedYpopCityActivities = snapshot.ypopCityActivities
+            ? mergeById(current.ypopCityActivities, snapshot.ypopCityActivities)
+            : current.ypopCityActivities;
+          const mergedYpopEntries = snapshot.ypopEntries
+            ? mergeById(current.ypopEntries, snapshot.ypopEntries)
+            : current.ypopEntries;
 
           return {
             ...current,
@@ -441,6 +455,9 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             ypopOrgActivities: mergedYpopOrgActivities,
             ypopOrgActivityFiles: mergedYpopOrgActivityFiles,
             inquiries: mergedInquiries,
+            ypopPeriods: mergedYpopPeriods,
+            ypopCityActivities: mergedYpopCityActivities,
+            ypopEntries: mergedYpopEntries,
           };
         }),
       createTemplate: (template) =>

@@ -8,6 +8,8 @@ export type SeededAdminUser = {
   displayName: string;
   sessionToken: string;
   expiresAt: string;
+  roleCode?: string;
+  permissionCodes?: string[];
 };
 
 export const readAdminSession = (): SeededAdminUser | null => {
@@ -36,6 +38,8 @@ export const readAdminSession = (): SeededAdminUser | null => {
       displayName: parsed.displayName,
       sessionToken: parsed.sessionToken,
       expiresAt: parsed.expiresAt,
+      roleCode: parsed.roleCode,
+      permissionCodes: parsed.permissionCodes,
     };
   } catch {
     return null;

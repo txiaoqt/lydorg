@@ -64,6 +64,11 @@
   body.portal-shell-active {
     height: 100%;
     overflow: hidden;
+    /* The shell scrolls internally (see the overflow-y-auto wrapper in
+       PortalShell), so html/body never show their own scrollbar here —
+       the gutter reservation below would otherwise leave permanent dead
+       space on the right edge. */
+    scrollbar-gutter: auto !important;
   }
 
   input[readonly]:not([data-input-otp]),
@@ -165,7 +170,7 @@
     --brand-sk-gold: 49.07 91.84% 48.04%;
     --brand-sk-red: 354.04 72.77% 46.08%;
 
-    --admin-page-bg: 220 50% 97.65%;
+    --admin-page-bg: 216 33.33% 97.06%;
     --admin-surface: 0 0% 100%;
     --admin-surface-subtle: 216 55.56% 98.24%;
     --admin-border: 214.74 42.22% 91.18%;
@@ -190,6 +195,77 @@
     --user-meta: 215.38 16.32% 46.86%;
     --user-on-dark: 0 0% 100%;
     --user-active-on-dark: 49 92% 48%;
+
+    /* ── Admin shell tokens (from Figma) ──────────────────── */
+    --text-default: 0 0% 11.76%;
+    --bg-info-tertiary: 215 75% 96.86%;
+    --icon-danger-secondary: 1 88.24% 40%;
+    --text-warning-secondary: 31.81 97.39% 30%;
+    --text-disabled: 0 0% 70.2%;
+    --danger-subtle: 5.22 92% 95.1%;
+    --border-default: 0 0% 85.1%;
+    --border-warning-subtle: 46.23 100% 88.04%;
+    --bg-danger-default: 0.88 84.36% 52.35%;
+    --bg-info-secondary: 216 71.43% 93.14%;
+    --icon-info-secondary: 216.92 66.1% 46.27%;
+    --bg-neutral-subtle: 214.29 25.93% 94.71%;
+    --bg-warning-default: 44.59 79.91% 55.1%;
+    --bg-success-default: 148.05 79.38% 38.04%;
+    --bg-success-subtle: 129 100% 96.08%;
+    --border-success-subtle: 126 71.43% 89.02%;
+    --text-neutral-tertiary: 0 0% 46.27%;
+    --bg-reference-chip: 216 23.81% 95.88%;
+    --border-reference-chip: 222.86 17.95% 92.35%;
+    --text-reference: 220.65 13.19% 46.08%;
+    --border-tertiary-200: 208.24 94.44% 92.94%;
+    --text-tertiary-800: 205.64 56.7% 38.04%;
+    --brand-secondary-100: 205.4 89.17% 92.75%;
+    --border-brand-secondary: 206.6 88.15% 50.4%;
+    --border-info-tertiary: 216.8 80.36% 58.25%;
+    --border-closed-subtle: 0 0% 90.2%;
+    --bg-brand-hover: 217.4 76.24% 19.8%;
+    --bg-panel-subtle: 210 20% 98.04%;
+    --gray-100: 0 0% 96.08%;
+    --brand-info-subtle: 204.5 100% 95.69%;
+    --brand-info-border: 217.4 72.59% 85.69%;
+    --positive-secondary: 151.76 100% 30%;
+    --text-positive-strong: 151.41 100% 25.1%;
+    --text-danger-strong: 0.89 88.24% 30%;
+    --text-neutral-secondary: 0 0% 35.29%;
+    --text-info-strong: 217.08 63.16% 44.71%;
+    --bg-warning-subtle: 48 100% 96.08%;
+    --bg-tertiary-subtle: 206.25 88.89% 96.47%;
+    --border-panel-subtle: 210 50% 96.86%;
+    --bg-progress-track: 0 0% 89.02%;
+    --bg-mandatory-subtle: 264.00 100% 98.04%;
+    --border-mandatory-subtle: 266.86 93.58% 93.92%;
+    --text-mandatory: 257.70 68.53% 65.1%;
+    --bg-partnership-subtle: 166.12 76.58% 96.67%;
+    --border-partnership-subtle: 171.01 68.97% 88.63%;
+    --text-partnership: 175.22 82.53% 35.88%;
+    --bg-pink-subtle: 294.9 75.12% 96.86%;
+    --border-pink-subtle: 300 71.4% 93.14%;
+    --text-pink: 317.55 80.28% 58.24%;
+    --icon-neutral-strong: 0 0% 18.82%;
+    --info-panel-subtle: 216 100% 98.04%;
+    --segmented-control-bg: 215 26.10% 90.98%;
+    --segmented-control-border: 210 24.14% 88.63%;
+    --segmented-control-inactive-text: 214 12.71% 53.73%;
+    --neutral-hover-subtle: 216 33.33% 97.06%;
+    --role-pink-bg: 295 75% 96.86%;
+    --role-pink-border: 300 71.43% 93.14%;
+    --role-pink-text: 315.56 60.47% 33.73%;
+    --role-blue-bg: 215 75% 96.86%;
+    --role-blue-border: 216 71.43% 93.14%;
+    --role-blue-text: 216.92 60.47% 33.73%;
+    --status-active-border: 140 75.84% 82.16%;
+    --access-pill-bg: 205.35 100% 94.9%;
+    --access-pill-border: 206.78 100% 89.02%;
+    --status-danger-border: 4.01 91.88% 90.39%;
+    --status-warning-border: 44.59 79.93% 55.1%;
+    --status-danger-border-strong: 5.65 86.26% 68.63%;
+    --bg-warning-default: 27.93 97.3% 43.73%;
+    --bg-warning-hover: 25.97 90.47% 37.06%;
 
     --semantic-success: 146 40% 30%;
     --semantic-warning: 47 100% 24%;
@@ -358,6 +434,74 @@
     --semantic-info-user: 212 63% 52.4%;
     --semantic-disabled: 216 14% 43%;   /* #5F6B7D */
     --semantic-placeholder: 216 17% 56.9%; /* #7F8DA3 */
+
+    /* Admin shell tokens (from Figma) — dark mode */
+    --text-default: 210 40% 96.1%;
+    --bg-info-tertiary: 219 37% 17.5%;
+    --icon-danger-secondary: 356 59% 63.7%;
+    --text-warning-secondary: 36 67% 54.5%;
+    --text-disabled: 216 14% 43%;
+    --danger-subtle: 356 40% 18%;
+    --border-default: 216 28% 28%;
+    --border-warning-subtle: 36 40% 28%;
+    --bg-danger-default: 356 59% 45%;
+    --bg-info-secondary: 216 40% 20%;
+    --icon-info-secondary: 216.92 66.1% 65%;
+    --bg-neutral-subtle: 216 20% 22%;
+    --bg-warning-default: 44.59 60% 50%;
+    --bg-success-default: 148.05 60% 40%;
+    --bg-success-subtle: 129 30% 16%;
+    --border-success-subtle: 126 30% 24%;
+    --text-neutral-tertiary: 216 17% 56.9%;
+    --bg-reference-chip: 219 37% 17.5%;
+    --border-reference-chip: 216 32% 22%;
+    --text-reference: 216 17% 56.9%;
+    --border-tertiary-200: 208 40% 28%;
+    --text-tertiary-800: 205 56% 65%;
+    --border-closed-subtle: 216 28% 28%;
+    --bg-brand-hover: 217 60% 75%;
+    --bg-panel-subtle: 219 30% 14%;
+    --gray-100: 219 30% 12%;
+    --brand-info-subtle: 219 37% 17.5%;
+    --positive-secondary: 152 60% 55%;
+    --text-positive-strong: 152 55% 45%;
+    --text-danger-strong: 1 70% 55%;
+    --text-neutral-secondary: 0 0% 68%;
+    --text-info-strong: 217 55% 65%;
+    --bg-warning-subtle: 44 30% 16%;
+    --bg-tertiary-subtle: 206 30% 16%;
+    --border-panel-subtle: 216 24% 20%;
+    --bg-progress-track: 216 12% 24%;
+    --bg-mandatory-subtle: 264 24% 16%;
+    --border-mandatory-subtle: 266 24% 22%;
+    --text-mandatory: 258 55% 70%;
+    --bg-partnership-subtle: 166 24% 14%;
+    --border-partnership-subtle: 171 24% 20%;
+    --text-partnership: 175 55% 55%;
+    --bg-pink-subtle: 295 24% 16%;
+    --border-pink-subtle: 300 24% 22%;
+    --text-pink: 318 55% 65%;
+    --icon-neutral-strong: 0 0% 80%;
+    --neutral-hover-subtle: 216 20% 20%;
+    --info-panel-subtle: 219 30% 14%;
+    --segmented-control-bg: 215 20% 22%;
+    --segmented-control-border: 210 18% 28%;
+    --segmented-control-inactive-text: 214 15% 65%;
+    --brand-info-border: 216 32% 22%;
+    --role-pink-bg: 295 40% 18%;
+    --role-pink-border: 300 30% 24%;
+    --role-pink-text: 315.56 55% 65%;
+    --role-blue-bg: 215 40% 18%;
+    --role-blue-border: 216 30% 24%;
+    --role-blue-text: 216.92 55% 65%;
+    --status-active-border: 140 30% 24%;
+    --access-pill-bg: 205.35 40% 18%;
+    --access-pill-border: 206.78 30% 24%;
+    --status-danger-border: 4.01 30% 24%;
+    --status-warning-border: 44.59 30% 24%;
+    --status-danger-border-strong: 5.65 30% 24%;
+    --bg-warning-default: 27.93 90% 55%;
+    --bg-warning-hover: 25.97 85% 48%;
 
     --admin-page-bg: 220 39% 11%;
     --admin-surface: 219 38% 15%;

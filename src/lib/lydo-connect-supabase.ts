@@ -1,5 +1,7 @@
 import type {
   ActivityLog,
+  AdminRoleRecord,
+  AdministratorRecord,
   BudgetRequest,
   BudgetRequestFile,
   ComplianceRemark,
@@ -23,8 +25,10 @@ import type {
   YPOPCityActivity,
   PublicOrganizationActivity,
   PublicOrganizationDirectoryItem,
+  PublicBudgetSource,
+  PublicBudgetSnapshotSettings,
 } from "./lydo-connect-data";
-import { createTemplateLocalId, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, otherDocumentTypes, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
+import { createTemplateLocalId, deriveTemplateCategory, legacyRemovedTemplateNames, normalizeYpopCityLedPoints, otherDocumentTypes, requiredDocumentTypes, resolveYpopCityLedCategory } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { supabase } from "./supabase";
@@ -46,12 +50,15 @@ type RequiredDocumentTypeRow = {
   sort_order: number | null;
   is_required: boolean | null;
   is_active: boolean | null;
-  template_scope?: "document_submission" | "other" | null;
+  template_scope?: "document_submission" | "move" | "other" | null;
+  template_category?: string[] | null;
+  template_file_size?: number | null;
   updated_at?: string | null;
 };
 
 type OrganizationProfileRow = {
   id: string;
+  reference_id?: string | null;
   user_id: string;
   organization_name: string;
   organization_email: string;
@@ -160,6 +167,8 @@ type BudgetRequestFileRow = {
   file_size: number | string;
   uploaded_at: string | null;
   created_at: string;
+  admin_status: string | null;
+  admin_remarks: string | null;
 };
 
 type LiquidationReportRow = {
@@ -186,6 +195,8 @@ type LiquidationReportFileRow = {
   file_size: number | string;
   uploaded_at: string | null;
   created_at: string;
+  admin_status: string | null;
+  admin_remarks: string | null;
 };
 
 type NewsReleaseRow = {
@@ -271,6 +282,8 @@ type YpopCityActivityRow = {
   semester_key: string;
   name: string;
   date: string | null;
+  start_date: string | null;
+  end_date: string | null;
   venue: string | null;
   category?: string | null;
   points: number;
@@ -478,6 +491,7 @@ const formatDateOnly = (value: string | null | undefined) => {
 
 const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfile => ({
   id: row.id,
+  referenceId: row.reference_id ?? "",
   userId: row.user_id,
   organizationName: row.organization_name,
   organizationEmail: row.organization_email,
@@ -538,6 +552,11 @@ const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
     templateFileUrl: row.template_url ?? "",
     templateFileType: row.template_url?.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf",
     templateUploadedAt: row.updated_at ?? "",
+    templateCategories: (() => {
+      const cleaned = (row.template_category ?? []).map((category) => category.trim().toLowerCase()).filter(Boolean);
+      return cleaned.length > 0 ? cleaned : [deriveTemplateCategory(row.name)];
+    })(),
+    templateFileSize: row.template_file_size ?? null,
   };
 };
 
@@ -618,6 +637,8 @@ const mapBudgetRequestFile = (row: BudgetRequestFileRow): BudgetRequestFile => (
   fileSize: normalizeNumeric(row.file_size),
   uploadedAt: row.uploaded_at ?? "",
   createdAt: row.created_at,
+  adminStatus: (row.admin_status ?? "submitted") as BudgetRequestFile["adminStatus"],
+  adminRemarks: row.admin_remarks ?? "",
 });
 
 const mapLiquidationReport = (row: LiquidationReportRow): LiquidationReport => ({
@@ -644,6 +665,8 @@ const mapLiquidationReportFile = (row: LiquidationReportFileRow): LiquidationRep
   fileSize: normalizeNumeric(row.file_size),
   uploadedAt: row.uploaded_at ?? "",
   createdAt: row.created_at,
+  adminStatus: (row.admin_status ?? "submitted") as LiquidationReportFile["adminStatus"],
+  adminRemarks: row.admin_remarks ?? "",
 });
 
 const mapNewsRelease = (row: NewsReleaseRow): NewsRelease => ({
@@ -744,7 +767,9 @@ const mapYpopCityActivity = (row: YpopCityActivityRow): YPOPCityActivity => ({
   id: row.id,
   semesterKey: row.semester_key,
   name: row.name,
-  date: row.date ?? "",
+  date: row.date ?? row.start_date ?? "",
+  startDate: row.start_date ?? "",
+  endDate: row.end_date ?? row.start_date ?? "",
   venue: row.venue ?? "",
   category: resolveYpopCityLedCategory(row.category, row.points),
   points: normalizeYpopCityLedPoints(row.points, row.category),
@@ -1123,6 +1148,62 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
       return [] as InquiryRow[];
     });
 
+  // get_admin_portal_snapshot does not currently return ypop_periods /
+  // ypop_city_activities / ypop_entries, so these are fetched here via their
+  // own session-token-validated RPCs rather than relying on that snapshot —
+  // otherwise every periodic snapshot sync would wipe out periods/
+  // activities/entries the admin just created. These RPCs are security
+  // definer and validate the admin session before returning anything, so
+  // they bypass RLS safely without needing any public-read policy on the
+  // underlying tables (see add_admin_ypop_read_rpcs.sql).
+  const ypopPeriodsPromise = (async (): Promise<YpopPeriodRow[] | null> => {
+    try {
+      const { data, error } = await supabase.rpc("admin_get_ypop_periods", {
+        _session_token: adminSession.sessionToken,
+      });
+      if (error) {
+        console.warn("admin_get_ypop_periods RPC failed; falling back to snapshot data.", error.message);
+        return null;
+      }
+      return (data ?? []) as YpopPeriodRow[];
+    } catch (error) {
+      console.warn("admin_get_ypop_periods RPC unavailable; falling back to snapshot data.", error);
+      return null;
+    }
+  })();
+
+  const ypopCityActivitiesPromise = (async (): Promise<YpopCityActivityRow[] | null> => {
+    try {
+      const { data, error } = await supabase.rpc("admin_get_ypop_city_activities", {
+        _session_token: adminSession.sessionToken,
+      });
+      if (error) {
+        console.warn("admin_get_ypop_city_activities RPC failed; falling back to snapshot data.", error.message);
+        return null;
+      }
+      return (data ?? []) as YpopCityActivityRow[];
+    } catch (error) {
+      console.warn("admin_get_ypop_city_activities RPC unavailable; falling back to snapshot data.", error);
+      return null;
+    }
+  })();
+
+  const ypopEntriesPromise = (async (): Promise<YpopEntryRow[] | null> => {
+    try {
+      const { data, error } = await supabase.rpc("admin_get_ypop_entries", {
+        _session_token: adminSession.sessionToken,
+      });
+      if (error) {
+        console.warn("admin_get_ypop_entries RPC failed; falling back to snapshot data.", error.message);
+        return null;
+      }
+      return (data ?? []) as YpopEntryRow[];
+    } catch (error) {
+      console.warn("admin_get_ypop_entries RPC unavailable; falling back to snapshot data.", error);
+      return null;
+    }
+  })();
+
   const { data, error } = await supabase.rpc("get_admin_portal_snapshot", {
     _session_token: adminSession.sessionToken,
   });
@@ -1165,9 +1246,23 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     };
   }
 
-  const inquiryRows = await inquiriesPromise;
+  const [inquiryRows, ypopPeriodRows, ypopCityActivityRows, ypopEntryRows] = await Promise.all([
+    inquiriesPromise,
+    ypopPeriodsPromise,
+    ypopCityActivitiesPromise,
+    ypopEntriesPromise,
+  ]);
   if (inquiryRows.length > 0 || !remoteState.inquiries?.length) {
     remoteState.inquiries = inquiryRows.map(mapInquiry);
+  }
+  if (ypopPeriodRows) {
+    remoteState.ypopPeriods = ypopPeriodRows.map(mapYpopPeriod);
+  }
+  if (ypopCityActivityRows) {
+    remoteState.ypopCityActivities = ypopCityActivityRows.map(mapYpopCityActivity);
+  }
+  if (ypopEntryRows) {
+    remoteState.ypopEntries = ypopEntryRows.map(mapYpopEntry);
   }
 
   return remoteState;
@@ -2460,6 +2555,285 @@ export const createAdminActivityLogInSupabase = async (params: {
   return mapActivityLog(createdRow as ActivityLogRow);
 };
 
+export const getAdminAccountsInSupabase = async (): Promise<
+  Record<string, { displayName: string; email: string; roleLabel: string | null }>
+> => {
+  try {
+    const adminSession = readAdminSession();
+    if (!supabase || !adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+    const { data, error } = await supabase.rpc("list_admin_accounts_for_admin_portal", {
+      _session_token: adminSession.sessionToken,
+    });
+    if (error || !data) throw error ?? new Error("No admin accounts returned.");
+    const accountsById: Record<string, { displayName: string; email: string; roleLabel: string | null }> = {};
+    for (const row of data as { id: string; display_name: string | null; email: string | null; role_label: string | null }[]) {
+      accountsById[String(row.id)] = {
+        displayName: row.display_name ?? "Admin User",
+        email: row.email ?? "",
+        roleLabel: row.role_label,
+      };
+    }
+    return accountsById;
+  } catch (error) {
+    console.warn("Unable to load admin accounts; activity log actors will fall back to generic labels.", error);
+    return {};
+  }
+};
+
+type AdministratorRow = {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+  username: string | null;
+  role_code: string | null;
+  role_label: string | null;
+  unit_code: string | null;
+  unit_label: string | null;
+  is_active: boolean | null;
+  is_password_set: boolean | null;
+  last_active_at: string | null;
+};
+
+const mapAdministrator = (row: AdministratorRow): AdministratorRecord => ({
+  id: row.id,
+  displayName: row.display_name ?? "",
+  email: row.email ?? "",
+  username: row.username ?? "",
+  roleCode: row.role_code,
+  roleLabel: row.role_label,
+  unitCode: row.unit_code,
+  unitLabel: row.unit_label,
+  isActive: row.is_active ?? true,
+  isPasswordSet: row.is_password_set ?? true,
+  lastActiveAt: row.last_active_at,
+});
+
+export const getAdminPermissionContextInSupabase = async (
+  sessionToken: string,
+): Promise<{ roleCode: string; roleLabel: string; permissionCodes: string[] } | null> => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("get_admin_permission_context", {
+    _session_token: sessionToken,
+  });
+  if (error) {
+    console.warn("Unable to load admin permission context.", error);
+    return null;
+  }
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) return null;
+  return {
+    roleCode: row.role_code,
+    roleLabel: row.role_label,
+    permissionCodes: row.permission_codes ?? [],
+  };
+};
+
+export const getAdministratorRolesInSupabase = async (): Promise<AdminRoleRecord[]> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("list_roles_for_admin_portal", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { id: number; code: string; label: string; permission_codes: string[] | null }[]).map((row) => ({
+    id: row.id,
+    code: row.code,
+    label: row.label,
+    permissionCodes: row.permission_codes ?? [],
+  }));
+};
+
+export const updateRolePermissionsInSupabase = async (roleId: number, permissionCodes: string[]): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("update_role_permissions", {
+    _session_token: adminSession.sessionToken,
+    _role_id: roleId,
+    _permission_codes: permissionCodes,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update role permissions.");
+};
+
+export const getAdministratorUnitsInSupabase = async (): Promise<{ id: number; code: string; label: string }[]> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("list_units_for_admin_portal", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { id: number; code: string; label: string }[]).map((row) => ({
+    id: row.id,
+    code: row.code,
+    label: row.label,
+  }));
+};
+
+export const getAdministratorsInSupabase = async (): Promise<AdministratorRecord[]> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("list_administrators_for_admin_portal", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as AdministratorRow[]).map(mapAdministrator);
+};
+
+export class DuplicateUsernameError extends Error {
+  constructor() {
+    super("That username is already taken.");
+    this.name = "DuplicateUsernameError";
+  }
+}
+
+const isDuplicateUsernameError = (error: { code?: string; message?: string } | null) =>
+  Boolean(error) && /username/i.test(error?.message ?? "") && /duplicate key value violates unique constraint/i.test(error?.message ?? "");
+
+export const createAdministratorInSupabase = async (params: {
+  displayName: string;
+  email: string;
+  username: string;
+  roleId: number;
+  unitId: number;
+}): Promise<AdministratorRecord> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.functions.invoke("admin-invite", {
+    body: {
+      action: "create",
+      session_token: adminSession.sessionToken,
+      display_name: params.displayName.trim(),
+      email: params.email.trim(),
+      username: params.username.trim(),
+      role_id: params.roleId,
+      unit_id: params.unitId,
+      redirect_origin: window.location.origin,
+    },
+  });
+
+  const responseError = (data as { error?: string } | null)?.error;
+  if (responseError && isDuplicateUsernameError({ message: responseError })) {
+    throw new DuplicateUsernameError();
+  }
+  if (responseError && isDuplicateNameError({ message: responseError })) {
+    throw new Error(`An administrator with that email already exists. Please use a different email address.`);
+  }
+  if (error || responseError || !(data as { administrator?: AdministratorRow })?.administrator) {
+    throw new Error(responseError ?? error?.message ?? "Failed to create the administrator account.");
+  }
+  return mapAdministrator((data as { administrator: AdministratorRow }).administrator);
+};
+
+export const setInitialAdminPasswordInSupabase = async (newPassword: string): Promise<{ username: string }> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const { data, error } = await supabase.rpc("set_initial_admin_password", {
+    _new_password: newPassword,
+  });
+
+  const row = Array.isArray(data) ? data[0] : null;
+  if (error || !row) throw new Error(error?.message ?? "This invite link is invalid or has expired.");
+  return { username: row.username ?? "" };
+};
+
+export const finalizeAdminInviteInSupabase = async (): Promise<void> => {
+  if (!supabase) return;
+  try {
+    await supabase.functions.invoke("admin-invite", { body: { action: "finalize" } });
+  } catch {
+    // Best-effort cleanup of the shadow auth.users row; a failure here is harmless.
+  }
+};
+
+export const resendAdminInviteInSupabase = async (adminId: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.functions.invoke("admin-invite", {
+    body: {
+      action: "resend",
+      session_token: adminSession.sessionToken,
+      admin_id: adminId,
+      redirect_origin: window.location.origin,
+    },
+  });
+
+  const responseError = (data as { error?: string } | null)?.error;
+  if (error || responseError) throw new Error(responseError ?? error?.message ?? "Failed to resend the invite.");
+};
+
+export const updateAdministratorInSupabase = async (params: {
+  id: string;
+  displayName: string;
+  email: string;
+  username: string;
+  roleId: number;
+  unitId: number;
+}) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("update_admin_account", {
+    _session_token: adminSession.sessionToken,
+    _admin_id_to_update: params.id,
+    _display_name: params.displayName.trim(),
+    _email: params.email.trim(),
+    _username: params.username.trim(),
+    _role_id: params.roleId,
+    _unit_id: params.unitId,
+  });
+
+  if (error && isDuplicateNameError(error)) {
+    throw new Error(`An administrator with that username or email already exists. Please use different details.`);
+  }
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the administrator account.");
+  return mapAdministrator(updatedRow as AdministratorRow);
+};
+
+export const setAdministratorActiveInSupabase = async (id: string, isActive: boolean) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("set_admin_account_active", {
+    _session_token: adminSession.sessionToken,
+    _admin_id_to_update: id,
+    _is_active: isActive,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the administrator's status.");
+  return mapAdministrator(updatedRow as AdministratorRow);
+};
+
+export const deleteAdministratorInSupabase = async (id: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { error } = await supabase.rpc("delete_admin_account", {
+    _session_token: adminSession.sessionToken,
+    _admin_id_to_delete: id,
+  });
+
+  if (error) throw new Error(error.message);
+};
+
 export const adminUpdateInquiryInSupabase = async (
   inquiryId: string,
   patch: Pick<InquiryRecord, "status" | "adminRemarks">,
@@ -2589,6 +2963,9 @@ export const uploadTemplateDocumentToSupabase = async (params: {
   return mappedTemplate;
 };
 
+const isDuplicateNameError = (error: { code?: string; message?: string } | null) =>
+  error?.code === "23505" || /duplicate key value violates unique constraint/i.test(error?.message ?? "");
+
 export const createTemplateRecordInSupabase = async (params: {
   name: string;
   description: string;
@@ -2607,6 +2984,9 @@ export const createTemplateRecordInSupabase = async (params: {
     _template_scope: params.templateScope,
   });
 
+  if (error && isDuplicateNameError(error)) {
+    throw new Error(`A form or template named "${params.name.trim()}" already exists. Please use a different name.`);
+  }
   const createdRow = Array.isArray(data) ? data[0] : null;
   if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the template.");
 
@@ -2638,6 +3018,9 @@ export const updateTemplateRecordInSupabase = async (params: {
     _template_scope: params.templateScope,
   });
 
+  if (error && isDuplicateNameError(error)) {
+    throw new Error(`A form or template named "${params.name.trim()}" already exists. Please use a different name.`);
+  }
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template.");
 
@@ -2654,6 +3037,62 @@ export const deleteTemplateRecordInSupabase = async (databaseId: string, name?: 
   const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
 
   const { error } = await supabase.rpc("deactivate_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+  });
+
+  if (error) throw new Error(error.message);
+};
+
+export const reactivateTemplateRecordInSupabase = async (databaseId: string, name?: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { data, error } = await supabase.rpc("reactivate_admin_template_document", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to restore the template.");
+
+  const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The restored template could not be mapped to the portal.");
+  return mappedTemplate;
+};
+
+export const updateTemplateCategoryInSupabase = async (databaseId: string, name: string | undefined, categories: string[]) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { data, error } = await supabase.rpc("update_admin_template_category", {
+    _session_token: adminSession.sessionToken,
+    _template_id: resolvedDatabaseId,
+    _template_category: categories,
+  });
+
+  const updatedRow = Array.isArray(data) ? data[0] : null;
+  if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template category.");
+
+  const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
+  if (!mappedTemplate) throw new Error("The updated template could not be mapped to the portal.");
+  return mappedTemplate;
+};
+
+export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: string, name?: string) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession) throw new Error("Please sign in with the seeded admin account first.");
+
+  const resolvedDatabaseId = await resolveTemplateDatabaseId(databaseId, name);
+
+  const { error } = await supabase.rpc("hard_delete_admin_template_document", {
     _session_token: adminSession.sessionToken,
     _template_id: resolvedDatabaseId,
   });
@@ -3123,7 +3562,8 @@ export const adminCreateYpopCityActivityInSupabase = async (
     _session_token: adminSession.sessionToken,
     _semester_key: activity.semesterKey,
     _name: activity.name,
-    _date: activity.date || null,
+    _start_date: activity.startDate || null,
+    _end_date: activity.endDate || activity.startDate || null,
     _venue: activity.venue || null,
     _points: activity.points,
   });
@@ -3142,7 +3582,8 @@ export const adminUpdateYpopCityActivityInSupabase = async (
     _session_token: adminSession.sessionToken,
     _activity_id: id,
     _name: patch.name ?? null,
-    _date: patch.date ?? null,
+    _start_date: patch.startDate ?? null,
+    _end_date: patch.endDate ?? null,
     _venue: patch.venue ?? null,
     _points: patch.points ?? null,
   });
@@ -3201,6 +3642,139 @@ export const adminUpdateYpopEventParticipationInSupabase = async (
   const row = Array.isArray(data) ? data[0] : null;
   if (!row) throw new Error("No data returned from admin_update_ypop_event_participation.");
   return mapYpopEventParticipation(row as YpopEventParticipationRow);
+};
+
+export const adminUpdateBudgetRequestFileStatusInSupabase = async (
+  id: string,
+  patch: Partial<BudgetRequestFile>,
+): Promise<BudgetRequestFile> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_budget_request_file_status", {
+    _session_token: adminSession.sessionToken,
+    _file_id: id,
+    _admin_status: patch.adminStatus ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_budget_request_file_status.");
+  return mapBudgetRequestFile(row as BudgetRequestFileRow);
+};
+
+type PublicBudgetSourceRow = {
+  id: string;
+  fiscal_year: number;
+  amount: number | string;
+  purpose: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+const mapPublicBudgetSource = (row: PublicBudgetSourceRow): PublicBudgetSource => ({
+  id: row.id,
+  fiscalYear: row.fiscal_year,
+  amount: normalizeNumeric(row.amount),
+  purpose: row.purpose,
+  sortOrder: row.sort_order,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const adminGetPublicBudgetSourcesFromSupabase = async (fiscalYear: number): Promise<PublicBudgetSource[]> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_public_budget_sources", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: fiscalYear,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as PublicBudgetSourceRow[]).map(mapPublicBudgetSource);
+};
+
+export const adminSavePublicBudgetSourcesInSupabase = async (
+  fiscalYear: number,
+  sources: Array<{ amount: number; purpose: string; sortOrder: number }>,
+): Promise<PublicBudgetSource[]> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_save_public_budget_sources", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: fiscalYear,
+    _sources: sources,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as PublicBudgetSourceRow[]).map(mapPublicBudgetSource);
+};
+
+type PublicBudgetSnapshotSettingsRow = {
+  default_fiscal_year: number | null;
+  allow_fiscal_year_switch: boolean;
+  show_utilization_progress: boolean;
+  show_total_fy_budget: boolean;
+  show_approved_budget: boolean;
+  show_released_budget: boolean;
+  show_liquidated_budget: boolean;
+  show_allocation_breakdown: boolean;
+  updated_at: string;
+};
+
+const mapPublicBudgetSnapshotSettings = (row: PublicBudgetSnapshotSettingsRow): PublicBudgetSnapshotSettings => ({
+  defaultFiscalYear: row.default_fiscal_year,
+  allowFiscalYearSwitch: row.allow_fiscal_year_switch,
+  showUtilizationProgress: row.show_utilization_progress,
+  showTotalFyBudget: row.show_total_fy_budget,
+  showApprovedBudget: row.show_approved_budget,
+  showReleasedBudget: row.show_released_budget,
+  showLiquidatedBudget: row.show_liquidated_budget,
+  showAllocationBreakdown: row.show_allocation_breakdown,
+  updatedAt: row.updated_at,
+});
+
+export const adminGetPublicBudgetSnapshotSettingsFromSupabase = async (): Promise<PublicBudgetSnapshotSettings | null> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_public_budget_snapshot_settings", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  return row ? mapPublicBudgetSnapshotSettings(row as PublicBudgetSnapshotSettingsRow) : null;
+};
+
+export const adminSavePublicBudgetSnapshotSettingsInSupabase = async (
+  settings: PublicBudgetSnapshotSettings,
+): Promise<PublicBudgetSnapshotSettings> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_save_public_budget_snapshot_settings", {
+    _session_token: adminSession.sessionToken,
+    _default_fiscal_year: settings.defaultFiscalYear,
+    _allow_fiscal_year_switch: settings.allowFiscalYearSwitch,
+    _show_utilization_progress: settings.showUtilizationProgress,
+    _show_total_fy_budget: settings.showTotalFyBudget,
+    _show_approved_budget: settings.showApprovedBudget,
+    _show_released_budget: settings.showReleasedBudget,
+    _show_liquidated_budget: settings.showLiquidatedBudget,
+    _show_allocation_breakdown: settings.showAllocationBreakdown,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_save_public_budget_snapshot_settings.");
+  return mapPublicBudgetSnapshotSettings(row as PublicBudgetSnapshotSettingsRow);
+};
+
+export const adminUpdateLiquidationReportFileStatusInSupabase = async (
+  id: string,
+  patch: Partial<LiquidationReportFile>,
+): Promise<LiquidationReportFile> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_update_liquidation_report_file_status", {
+    _session_token: adminSession.sessionToken,
+    _file_id: id,
+    _admin_status: patch.adminStatus ?? null,
+    _admin_remarks: patch.adminRemarks ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) throw new Error("No data returned from admin_update_liquidation_report_file_status.");
+  return mapLiquidationReportFile(row as LiquidationReportFileRow);
 };
 
 export const adminUpdateYpopOrgActivityInSupabase = async (

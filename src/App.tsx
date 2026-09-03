@@ -17,6 +17,7 @@ const LegalPolicy = lazy(() => import("./pages/LegalPolicy"));
 const Faqs = lazy(() => import("./pages/Faqs"));
 const Contacts = lazy(() => import("./pages/Contacts"));
 import ResetPassword from "./pages/ResetPassword";
+import AdminCreatePassword from "./pages/AdminCreatePassword";
 const SiteMap = lazy(() => import("./pages/SiteMap"));
 import NewsReleaseRecord from "./pages/NewsReleaseRecord";
 const PublicTemplates = lazy(() => import("./pages/PublicTemplates"));
@@ -27,6 +28,7 @@ import UserPortalEntry, { PwaRouteEntry } from "./user/UserPortalEntry";
 import { useInstalledUserPwa } from "./user/pwa/hooks/useInstalledUserPwa";
 import PwaInitialLoadingScreen from "./user/pwa/PwaInitialLoadingScreen";
 import PublicPageLoader from "./components/PublicPageLoader";
+import AdminPageLoader from "./components/AdminPageLoader";
 import { PwaEntryGate, PwaPublicResourceGate } from "./user/pwa/public/PwaPublicEntry";
 import { PWA_ENTRY_ROUTE } from "./user/pwa/pwaAuthFlow";
 import { LydoConnectProvider } from "./lib/lydo-connect-store";
@@ -53,8 +55,15 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   const navigate = useNavigate();
 
   const isRecoveryRoute = pathname === "/reset-password" || pathname === "/auth/callback";
+  const isAdminCreatePasswordRoute = pathname === "/admin/create-password";
   const shouldCheckPolicy =
-    !isRecoveryRoute && isInitialized && isAuthenticated && !isPasswordRecoverySession && role !== "admin" && Boolean(user?.id);
+    !isRecoveryRoute &&
+    !isAdminCreatePasswordRoute &&
+    isInitialized &&
+    isAuthenticated &&
+    !isPasswordRecoverySession &&
+    role !== "admin" &&
+    Boolean(user?.id);
   const { isChecking, isRequired, activePolicy, accepting, error, accept } = usePolicyAgreement({
     userId: user?.id ?? null,
     enabled: shouldCheckPolicy,
@@ -64,7 +73,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
     ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/advocacy"].includes(pathname) ||
     pathname.startsWith("/news-releases");
 
-  if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password") {
+  if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password" && !isAdminCreatePasswordRoute) {
     console.debug("[AuthDebug] PolicyAgreementGate redirecting recovery session from", pathname, "to /reset-password");
     return <Navigate to="/reset-password" replace />;
   }
@@ -72,11 +81,13 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   if (!isInitialized) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
     if (isPublicPath) return <PublicPageLoader />;
+    if (pathname.startsWith("/admin")) return <AdminPageLoader />;
     return <FullScreenLoader />;
   }
   if (shouldCheckPolicy && isChecking) {
     if (usePwaUi) return <PwaInitialLoadingScreen />;
     if (isPublicPath) return <PublicPageLoader />;
+    if (pathname.startsWith("/admin")) return <AdminPageLoader />;
     return <FullScreenLoader />;
   }
 
@@ -106,7 +117,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
 const RequireAdmin = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isPasswordRecoverySession, role } = useAuth();
   const { pathname } = useLocation();
-  if (!isInitialized) return <FullScreenLoader />;
+  if (!isInitialized) return <AdminPageLoader />;
   if (isPasswordRecoverySession) {
     console.debug("[AuthDebug] RequireAdmin redirecting recovery session from", pathname, "to /reset-password");
     return <Navigate to="/reset-password" replace />;
@@ -238,6 +249,7 @@ const App = () => (
                     <>
                       <Route path={ADMIN_SIGNIN_PATH} element={<SignIn forcedMode="admin" />} />
                       <Route path={USER_SIGNIN_PATH} element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
+                      <Route path="/admin/create-password" element={<AdminCreatePassword />} />
                       <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                       <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                       <Route path="/admin/users" element={<Navigate to="/admin/yorp-registry" replace />} />
@@ -255,6 +267,8 @@ const App = () => (
                       <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                       <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
                       <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
+                      <Route path="/admin/administrators" element={<RequireAdmin><AdminPortal section="administrators" /></RequireAdmin>} />
+                      <Route path="/admin/settings" element={<RequireAdmin><AdminPortal section="settings" /></RequireAdmin>} />
                       <Route path="/" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="*" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                     </>
@@ -262,6 +276,7 @@ const App = () => (
                     <>
                       {IS_COMBINED_SURFACE ? (
                         <>
+                          <Route path="/admin/create-password" element={<AdminCreatePassword />} />
                           <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                           <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                           <Route path="/admin/users" element={<Navigate to="/admin/yorp-registry" replace />} />
@@ -279,6 +294,8 @@ const App = () => (
                           <Route path="/admin/notifications-activity" element={<Navigate to="/admin/notifications" replace />} />
                           <Route path="/admin/ypop-validation" element={<RequireAdmin><AdminPortal section="ypop-validation" /></RequireAdmin>} />
                           <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
+                          <Route path="/admin/administrators" element={<RequireAdmin><AdminPortal section="administrators" /></RequireAdmin>} />
+                          <Route path="/admin/settings" element={<RequireAdmin><AdminPortal section="settings" /></RequireAdmin>} />
                         </>
                       ) : (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />

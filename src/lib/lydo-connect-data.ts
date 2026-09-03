@@ -233,10 +233,30 @@ export type YPOPCityActivity = {
   semesterKey: string;
   name: string;
   date: string;
+  startDate: string;
+  endDate: string;
   venue: string;
   category?: YPOPCityActivityCategory;
   points: number;
   createdAt: string;
+};
+
+export const formatActivityDateRange = (startDate: string, endDate: string): string => {
+  const start = startDate ? new Date(startDate) : null;
+  const end = endDate ? new Date(endDate) : null;
+  const isStartValid = Boolean(start && !Number.isNaN(start.getTime()));
+  const isEndValid = Boolean(end && !Number.isNaN(end.getTime()));
+
+  const formatOne = (date: Date) =>
+    new Intl.DateTimeFormat("en-PH", { day: "numeric", month: "short", year: "numeric" }).format(date);
+
+  if (isStartValid && isEndValid) {
+    const startLabel = formatOne(start as Date);
+    const endLabel = formatOne(end as Date);
+    return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
+  }
+  if (isStartValid) return formatOne(start as Date);
+  return startDate || endDate || "";
 };
 
 export type YPOPPeriodStatus = "draft" | "open" | "closed";
@@ -281,11 +301,12 @@ export type RequiredDocumentType = {
   sortOrder: number;
   isRequired: boolean;
   isActive: boolean;
-  templateScope: "document_submission" | "other";
+  templateScope: "document_submission" | "move" | "other";
 };
 
 export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"], string> = {
   document_submission: "Document Submissions",
+  move: "Other Templates",
   other: "Other Templates",
 };
 
@@ -304,7 +325,8 @@ export const legacyRemovedTemplateNames = new Set([
 export type PortalNavItem = {
   id: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  count?: number;
 };
 
 export type PortalNavGroup = {
@@ -599,6 +621,7 @@ export const adminNavigation = adminNavigationGroups.flatMap((group) => group.it
 
 export type OrganizationProfile = {
   id: string;
+  referenceId: string;
   userId: string;
   organizationName: string;
   organizationEmail: string;
@@ -682,6 +705,8 @@ export type DocumentSubmission = {
   updatedAt: string;
 };
 
+export type BudgetRequestFileAdminStatus = "submitted" | "under_admin_review" | "approved_green" | "needs_revision" | "rejected_red";
+
 export type BudgetRequestFile = {
   id: string;
   budgetRequestId: string;
@@ -691,6 +716,8 @@ export type BudgetRequestFile = {
   fileSize: number;
   uploadedAt: string;
   createdAt: string;
+  adminStatus: BudgetRequestFileAdminStatus;
+  adminRemarks: string;
 };
 
 export type BudgetRequest = {
@@ -728,6 +755,8 @@ export type LiquidationReportFile = {
   fileSize: number;
   uploadedAt: string;
   createdAt: string;
+  adminStatus: BudgetRequestFileAdminStatus;
+  adminRemarks: string;
 };
 
 export type LiquidationReport = {
@@ -744,6 +773,28 @@ export type LiquidationReport = {
   createdAt: string;
   updatedAt: string;
   revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+};
+
+export type PublicBudgetSource = {
+  id: string;
+  fiscalYear: number;
+  amount: number;
+  purpose: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PublicBudgetSnapshotSettings = {
+  defaultFiscalYear: number | null;
+  allowFiscalYearSwitch: boolean;
+  showUtilizationProgress: boolean;
+  showTotalFyBudget: boolean;
+  showApprovedBudget: boolean;
+  showReleasedBudget: boolean;
+  showLiquidatedBudget: boolean;
+  showAllocationBreakdown: boolean;
+  updatedAt: string;
 };
 
 export type NewsRelease = {
@@ -813,6 +864,27 @@ export type ActivityLog = {
   createdAt: string;
 };
 
+export type AdminRoleRecord = {
+  id: number;
+  code: string;
+  label: string;
+  permissionCodes: string[];
+};
+
+export type AdministratorRecord = {
+  id: string;
+  displayName: string;
+  email: string;
+  username: string;
+  roleCode: string | null;
+  roleLabel: string | null;
+  unitCode: string | null;
+  unitLabel: string | null;
+  isActive: boolean;
+  isPasswordSet: boolean;
+  lastActiveAt: string | null;
+};
+
 export type PublicOrganizationDirectoryItem = {
   organizationId: string;
   organizationName: string;
@@ -853,6 +925,45 @@ export type InquiryRecord = {
   updatedAt: string;
 };
 
+export const INQUIRY_CATEGORY_OPTIONS = ["YORP", "YPOP", "Budget Request", "Liquidation Report", "General"] as const;
+export type InquiryCategory = (typeof INQUIRY_CATEGORY_OPTIONS)[number];
+
+export const NEWS_CATEGORY_OPTIONS = ["YORP", "YPOP", "MOVE"] as const;
+export type NewsCategory = (typeof NEWS_CATEGORY_OPTIONS)[number];
+
+export const deriveInquiryCategory = (inquiry: Pick<InquiryRecord, "subject" | "description">): InquiryCategory => {
+  const text = `${inquiry.subject} ${inquiry.description}`.toLowerCase();
+  if (text.includes("yorp")) return "YORP";
+  if (text.includes("ypop")) return "YPOP";
+  if (text.includes("liquidat")) return "Liquidation Report";
+  if (text.includes("budget")) return "Budget Request";
+  return "General";
+};
+
+export const TEMPLATE_CATEGORY_PRIORITY = ["yorp", "ypop", "move", "data_form"] as const;
+export type TemplateCategory = (typeof TEMPLATE_CATEGORY_PRIORITY)[number];
+
+export const deriveTemplateCategory = (name: string): TemplateCategory => {
+  const text = name.toLowerCase();
+  if (text.includes("yorp")) return "yorp";
+  if (text.includes("ypop")) return "ypop";
+  if (text.includes("move")) return "move";
+  return "data_form";
+};
+
+export const formatTemplateCategoryLabel = (raw: string) => raw.replace(/_/g, " ").toUpperCase();
+
+export const formatTemplateCategoryDropdownLabel = (raw: string) =>
+  raw === "data_form" ? "Data Form" : formatTemplateCategoryLabel(raw);
+
+export const orderTemplateCategories = (categories: string[]) => {
+  const known = TEMPLATE_CATEGORY_PRIORITY.filter((category) => categories.includes(category));
+  const unknown = categories
+    .filter((category) => !(TEMPLATE_CATEGORY_PRIORITY as readonly string[]).includes(category))
+    .sort((left, right) => formatTemplateCategoryLabel(left).localeCompare(formatTemplateCategoryLabel(right)));
+  return [...known, ...unknown];
+};
+
 export type TemplateRecord = RequiredDocumentType & {
   databaseId: string;
   templateDescription: string;
@@ -861,6 +972,8 @@ export type TemplateRecord = RequiredDocumentType & {
   templateFileUrl: string;
   templateFileType: string;
   templateUploadedAt: string;
+  templateFileSize: number | null;
+  templateCategories: string[];
 };
 
 export type LydoSeedState = {
@@ -1749,14 +1862,14 @@ export const seedState: LydoSeedState = {
   ypopOrgActivities: [],
   ypopOrgActivityFiles: [],
   ypopCityActivities: [
-    { id: "ypop-act-001", semesterKey: "2025-S2", name: "Seminar on Responsible Parenthood and Reproductive Health", date: "August 5, 2025", venue: "Tanghalang Pasigueño", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-002", semesterKey: "2025-S2", name: "SEATED! Youth Participation in Local Governance", date: "August 23, 2025", venue: "Zoom", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-003", semesterKey: "2025-S2", name: "Jobstart Philippines Program", date: "August 26–27, 2025", venue: "PESO", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-004", semesterKey: "2025-S2", name: "Youthnified: Youth for Inclusive and Gender-Fair Community (Gender Sensitivity Training)", date: "October 3–5, 2025", venue: "Laurel, Batangas", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-005", semesterKey: "2025-S2", name: "Digital Power-Up! Mastering Skills for a Career-Ready Future", date: "October 26, 2025", venue: "Google Meet", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-006", semesterKey: "2025-S2", name: "Cyber Youth Empowerment Orientation", date: "October 29, 2025", venue: "Astoria Plaza", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-007", semesterKey: "2025-S2", name: "Galing Kabataan Awards Application", date: "November 15, 2025", venue: "Temporary Pasig City Hall", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
-    { id: "ypop-act-008", semesterKey: "2025-S2", name: "PLP Youth Summit 2025", date: "November 25, 2025", venue: "PLP Auditorium", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-001", semesterKey: "2025-S2", name: "Seminar on Responsible Parenthood and Reproductive Health", date: "August 5, 2025", startDate: "2025-08-05", endDate: "2025-08-05", venue: "Tanghalang Pasigueño", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-002", semesterKey: "2025-S2", name: "SEATED! Youth Participation in Local Governance", date: "August 23, 2025", startDate: "2025-08-23", endDate: "2025-08-23", venue: "Zoom", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-003", semesterKey: "2025-S2", name: "Jobstart Philippines Program", date: "August 26–27, 2025", startDate: "2025-08-26", endDate: "2025-08-27", venue: "PESO", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-004", semesterKey: "2025-S2", name: "Youthnified: Youth for Inclusive and Gender-Fair Community (Gender Sensitivity Training)", date: "October 3–5, 2025", startDate: "2025-10-03", endDate: "2025-10-05", venue: "Laurel, Batangas", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-005", semesterKey: "2025-S2", name: "Digital Power-Up! Mastering Skills for a Career-Ready Future", date: "October 26, 2025", startDate: "2025-10-26", endDate: "2025-10-26", venue: "Google Meet", category: "partnership", points: 2, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-006", semesterKey: "2025-S2", name: "Cyber Youth Empowerment Orientation", date: "October 29, 2025", startDate: "2025-10-29", endDate: "2025-10-29", venue: "Astoria Plaza", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-007", semesterKey: "2025-S2", name: "Galing Kabataan Awards Application", date: "November 15, 2025", startDate: "2025-11-15", endDate: "2025-11-15", venue: "Temporary Pasig City Hall", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
+    { id: "ypop-act-008", semesterKey: "2025-S2", name: "PLP Youth Summit 2025", date: "November 25, 2025", startDate: "2025-11-25", endDate: "2025-11-25", venue: "PLP Auditorium", category: "invitational", points: 3, createdAt: "2025-08-01T00:00:00.000Z" },
   ],
   ypopPeriods: [
     {
