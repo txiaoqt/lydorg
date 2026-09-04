@@ -247,11 +247,10 @@ const VerifyEmail = () => {
                     <span className="absolute right-1/2 top-3.5 h-px w-full bg-primary" aria-hidden="true" />
                   ) : null}
                   <span
-                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${
-                      isActive || isComplete
+                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${isActive || isComplete
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-card text-muted-foreground"
-                    }`}
+                      }`}
                     aria-current={isActive ? "step" : undefined}
                   >
                     {isComplete ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : step}
@@ -271,7 +270,7 @@ const VerifyEmail = () => {
             <div>
               <h2 className="text-2xl font-heading font-bold">Verify your email</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                If this email can be used for registration, we&apos;ll send a verification code to{" "}
+                We&apos;ll send a verification code to{" "} to verify your email address.
                 <span className="font-medium text-foreground">{email || "your email address"}</span>.
               </p>
             </div>

@@ -3,7 +3,7 @@ export const VERIFY_FRESH_NAV_KEY = "ytrace_verify_fresh_nav";
 export const SIGNUP_DRAFT_KEY = "ytrace_signup_draft";
 
 export const GENERIC_VERIFY_MESSAGE = "If this email can be used for registration, we'll send a verification code.";
-export const GENERIC_RESET_MESSAGE = "If an account exists for this email, you'll receive a password reset link.";
+export const GENERIC_RESET_MESSAGE = "If an account is associated with this email address, you’ll receive a password reset link shortly. Please check your inbox and spam folder.";
 
 export interface SignupDraft {
   organizationName: string;

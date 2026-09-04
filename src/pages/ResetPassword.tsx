@@ -306,9 +306,9 @@ const ResetPassword = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-7 text-left">
-          <Link to="/" className="inline-flex max-w-full items-center gap-3">
-            <BrandLogo showText={false} />
+        <div className="mb-7 flex justify-center">
+          <Link to="/" className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
           </Link>
         </div>
 
@@ -317,7 +317,7 @@ const ResetPassword = () => {
             <form onSubmit={requestReset} className="space-y-5">
               <div>
                 <h1 className="text-2xl font-heading font-bold">Forgot your password?</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Enter your email and we&apos;ll send you a secure reset link.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Enter the email address associated with your account, and we&apos;ll send you a secure reset link to reset your password</p>
               </div>
 
               {requestSent && (

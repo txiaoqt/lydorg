@@ -167,7 +167,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
                 Admin sign in
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Sign in with your LYDO/PCYDO admin credentials.
+                Sign in to access the Y-TRACE administration portal and manage youth organization records.
               </p>
             </div>
 
@@ -310,12 +310,12 @@ const SignIn = ({ forcedMode }: SignInProps) => {
       >
         <div className="w-full max-w-[350px] lg:max-w-[390px] mx-auto flex flex-col justify-center space-y-6 sm:space-y-7 py-4">
           {/* Logo — showText={false} ensures single authentic brand lockup */}
-          <div>
+          <div className="flex justify-center">
             <Link
               to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
               className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <BrandLogo showText={false} className="h-10 w-auto" />
+              <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
             </Link>
           </div>
 
@@ -325,7 +325,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
               Welcome back
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5">
-              Sign in to access your organization's compliance portal.
+              Sign in to access your organization’s Y-TRACE compliance portal.
             </p>
           </div>
 

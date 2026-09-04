@@ -2,12 +2,33 @@ import { useCallback, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const LOGIN_SLIDES = [
-  { src: "/loginPageImages/image1.jpg", alt: "Y-TRACE Community Youth Program 1" },
-  { src: "/loginPageImages/image2.jpg", alt: "Y-TRACE Community Youth Program 2" },
-  { src: "/loginPageImages/image3.jpg", alt: "Y-TRACE Community Youth Program 3" },
-  { src: "/loginPageImages/image4.jpg", alt: "Y-TRACE Community Youth Program 4" },
-  { src: "/loginPageImages/image5.jpg", alt: "Y-TRACE Community Youth Program 5" },
+export interface LoginSlide {
+  src: string;
+  alt: string;
+  description: string;
+}
+
+export const LOGIN_SLIDES: LoginSlide[] = [
+  {
+    src: "/loginPageImages/image1.jpg",
+    alt: "Y-TRACE Community Youth Program 1",
+    description: "YORP Advocacy Blueprint: Seminar-Workshop on Advocacy Building 2025",
+  },
+  {
+    src: "/loginPageImages/image2.jpg",
+    alt: "Y-TRACE Community Youth Program 2",
+    description: "Youth Organizations (YOs) and Youth-Serving Organizations (YSOs) General Assembly 2026",
+  },
+  {
+    src: "/loginPageImages/image3.jpg",
+    alt: "Y-TRACE Community Youth Program 3",
+    description: "Youth Organizations (YOs) and Youth-Serving Organizations (YSOs) General Assembly 2026",
+  },
+  {
+    src: "/loginPageImages/image4.jpg",
+    alt: "Y-TRACE Community Youth Program 4",
+    description: "YOUTHnified: Youth for Inclusive and Gender-Fair Community 2025",
+  },
 ];
 
 let lastInitialIndex = -1;
@@ -102,7 +123,7 @@ export default function AuthImageSlideshow({ className, initialIndex }: AuthImag
     >
       {/* Live Region for Screen Readers */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {`Showing photo ${activeIndex + 1} of ${LOGIN_SLIDES.length}`}
+        {`Showing photo ${activeIndex + 1} of ${LOGIN_SLIDES.length}: ${LOGIN_SLIDES[activeIndex]?.description}`}
       </div>
 
       {/* Full-Bleed Horizontal Sliding Track */}
@@ -134,32 +155,39 @@ export default function AuthImageSlideshow({ className, initialIndex }: AuthImag
       </div>
 
       {/* Subtle Bottom Vignette Gradient for Universal Overlay Control Contrast */}
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-10" />
+      <div className="absolute inset-x-0 bottom-0 h-32 sm:h-36 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none z-10" />
 
       {/* Floating Direct Overlay Controls */}
-      {/* Slide Indicators (Bottom Left) */}
-      <div
-        className="absolute left-4 sm:left-6 bottom-4 sm:bottom-6 z-20 flex items-center gap-1.5"
-        aria-label="Photo pagination"
-      >
-        {LOGIN_SLIDES.map((_, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setActiveIndex(index)}
-              aria-label={`Go to photo ${index + 1}`}
-              aria-current={isActive ? "true" : undefined}
-              className={cn(
-                "h-2 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1",
-                isActive
-                  ? "w-6 bg-white shadow-sm"
-                  : "w-2 bg-white/45 hover:bg-white/75",
-              )}
-            />
-          );
-        })}
+      {/* Slide Description & Indicators (Bottom Left) */}
+      <div className="absolute left-4 sm:left-6 bottom-4 sm:bottom-6 z-20 flex flex-col items-start gap-2.5 max-w-[calc(100%-110px)] sm:max-w-[calc(100%-130px)] md:max-w-md pointer-events-none">
+        <p className="text-xs sm:text-sm font-medium text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-snug line-clamp-2 transition-all duration-300">
+          {LOGIN_SLIDES[activeIndex]?.description}
+        </p>
+
+        {/* Slide Indicators */}
+        <div
+          className="flex items-center gap-1.5 pointer-events-auto"
+          aria-label="Photo pagination"
+        >
+          {LOGIN_SLIDES.map((_, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Go to photo ${index + 1}`}
+                aria-current={isActive ? "true" : undefined}
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1",
+                  isActive
+                    ? "w-6 bg-white shadow-sm"
+                    : "w-2 bg-white/45 hover:bg-white/75",
+                )}
+              />
+            );
+          })}
+        </div>
       </div>
 
       {/* Previous / Next Navigation Buttons (Bottom Right) */}

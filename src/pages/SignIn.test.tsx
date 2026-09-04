@@ -121,7 +121,7 @@ describe("SignIn Component", () => {
       expect(mockSignIn).not.toHaveBeenCalled();
     });
 
-    it("renders slideshow with all 5 images, allows previous/next navigation and indicator selection", () => {
+    it("renders slideshow with all 4 images, allows previous/next navigation and indicator selection", () => {
       render(
         <MemoryRouter>
           <AuthImageSlideshow initialIndex={0} />
@@ -131,29 +131,32 @@ describe("SignIn Component", () => {
       const carousel = screen.getByRole("region", { name: /Y-TRACE photo gallery/i });
       expect(carousel).toBeInTheDocument();
 
-      expect(screen.getByText(/Showing photo 1 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 1 of 4/i)).toBeInTheDocument();
+      expect(screen.getByText("YORP Advocacy Blueprint: Seminar-Workshop on Advocacy Building 2025")).toBeInTheDocument();
 
       const nextBtn = screen.getByRole("button", { name: "Next photo" });
       const prevBtn = screen.getByRole("button", { name: "Previous photo" });
 
       fireEvent.click(nextBtn);
-      expect(screen.getByText(/Showing photo 2 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 2 of 4/i)).toBeInTheDocument();
+      expect(screen.getByText("Youth Organizations (YOs) and Youth-Serving Organizations (YSOs) General Assembly 2026")).toBeInTheDocument();
 
       fireEvent.click(prevBtn);
-      expect(screen.getByText(/Showing photo 1 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 1 of 4/i)).toBeInTheDocument();
 
       fireEvent.click(prevBtn);
-      expect(screen.getByText(/Showing photo 5 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 4 of 4/i)).toBeInTheDocument();
+      expect(screen.getByText("YOUTHnified: Youth for Inclusive and Gender-Fair Community 2025")).toBeInTheDocument();
 
       const dot3 = screen.getByRole("button", { name: "Go to photo 3" });
       fireEvent.click(dot3);
-      expect(screen.getByText(/Showing photo 3 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 3 of 4/i)).toBeInTheDocument();
 
       fireEvent.keyDown(carousel, { key: "ArrowRight" });
-      expect(screen.getByText(/Showing photo 4 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 4 of 4/i)).toBeInTheDocument();
 
       fireEvent.keyDown(carousel, { key: "ArrowLeft" });
-      expect(screen.getByText(/Showing photo 3 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 3 of 4/i)).toBeInTheDocument();
     });
 
     it("supports horizontal touch swipe gestures to navigate slides", () => {
@@ -169,13 +172,13 @@ describe("SignIn Component", () => {
       fireEvent.touchStart(carousel, { touches: [{ clientX: 200 }] });
       fireEvent.touchMove(carousel, { touches: [{ clientX: 100 }] });
       fireEvent.touchEnd(carousel);
-      expect(screen.getByText(/Showing photo 2 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 2 of 4/i)).toBeInTheDocument();
 
       // Swipe Right (drag from 100px to 200px = delta -100px < -40px -> Prev)
       fireEvent.touchStart(carousel, { touches: [{ clientX: 100 }] });
       fireEvent.touchMove(carousel, { touches: [{ clientX: 200 }] });
       fireEvent.touchEnd(carousel);
-      expect(screen.getByText(/Showing photo 1 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Showing photo 1 of 4/i)).toBeInTheDocument();
     });
 
     it("renders true two-column sibling sections with mobile slideshow hiding", () => {
@@ -204,16 +207,16 @@ describe("SignIn Component", () => {
 
     it("randomizes initial slide index across mounts and avoids consecutive duplicates", () => {
       resetLastInitialIndex();
-      const first = getInitialSlideIndex(5);
-      const second = getInitialSlideIndex(5);
-      const third = getInitialSlideIndex(5);
+      const first = getInitialSlideIndex(4);
+      const second = getInitialSlideIndex(4);
+      const third = getInitialSlideIndex(4);
 
       expect(first).toBeGreaterThanOrEqual(0);
-      expect(first).toBeLessThan(5);
+      expect(first).toBeLessThan(4);
       expect(second).toBeGreaterThanOrEqual(0);
-      expect(second).toBeLessThan(5);
+      expect(second).toBeLessThan(4);
       expect(third).toBeGreaterThanOrEqual(0);
-      expect(third).toBeLessThan(5);
+      expect(third).toBeLessThan(4);
 
       // Verify consecutive non-repetition
       expect(second).not.toBe(first);
@@ -252,7 +255,7 @@ describe("SignIn Component", () => {
       );
 
       expect(screen.getByText("Admin sign in")).toBeInTheDocument();
-      expect(screen.getByText("Sign in with your LYDO/PCYDO admin credentials.")).toBeInTheDocument();
+      expect(screen.getByText("Sign in to access the Y-TRACE administration portal and manage youth organization records.")).toBeInTheDocument();
       expect(screen.getByLabelText(/Admin Username/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /^Sign In$/i })).toBeInTheDocument();
