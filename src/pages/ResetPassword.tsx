@@ -24,7 +24,7 @@ const validatePasswordCriteria = (value: string) => ({
   uppercase: /[A-Z]/.test(value),
   lowercase: /[a-z]/.test(value),
   number: /[0-9]/.test(value),
-  special: /[!@#$%^&*()\-_+=\[\]{}|;:'",.<>?/\\~]/.test(value),
+  special: /[!@#$%^&*()\-_+=[\]{}|;:'",.<>?/\\~]/.test(value),
 });
 
 const isPasswordValid = (value: string) => {
@@ -288,29 +288,32 @@ const ResetPassword = () => {
     if (password === confirmPassword && isPasswordValid(password)) {
       return (
         <p className="flex items-center gap-1 text-xs text-success">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match
+          <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match.
         </p>
       );
     }
     if (password !== confirmPassword) {
-      return <p className="text-xs text-destructive">Passwords do not match</p>;
+      return <p className="text-xs text-destructive">Passwords do not match.</p>;
     }
     return null;
   }, [password, confirmPassword]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 pt-20 pb-8 sm:py-8 text-foreground">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
       </div>
 
+      {/* Page-level Brand Logo (upper-left viewport mark) */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
+        <Link to="/" className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+        </Link>
+      </div>
+
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-7 flex justify-center">
-          <Link to="/" className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
-          </Link>
-        </div>
+        
 
         <div className="space-y-5 rounded-2xl border border-border bg-card p-6 card-shadow sm:p-8">
           {mode === "request" ? (
@@ -332,7 +335,7 @@ const ResetPassword = () => {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"

@@ -26,35 +26,46 @@ export function resolveBudgetEligibility({
   periods: YPOPPeriod[];
   entries: YPOPEntry[];
 }): BudgetEligibility {
-  const period = [...periods]
+  // 1. A QUALIFIED organization remains eligible for the Budget Request flow even after the YPOP semester is CLOSED.
+  // Check if organization has a qualified entry in any period (open or closed).
+  const qualifiedEntry = [...entries]
+    .filter((item) => item.organizationId === organizationId && item.status === "qualified")
+    .sort((left, right) =>
+      (right.validatedAt || right.updatedAt || "").localeCompare(left.validatedAt || left.updatedAt || "")
+    )[0] ?? null;
+
+  if (qualifiedEntry) {
+    const period = periods.find((p) => p.semesterKey === qualifiedEntry.semester) ?? null;
+    return { eligible: true, reason: "qualified", period, entry: qualifiedEntry };
+  }
+
+  // 2. If not qualified, evaluate against the newest active open period.
+  const openPeriod = [...periods]
     .filter((item) => item.status === "open")
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0] ?? null;
 
-  if (!period) {
+  if (!openPeriod) {
     return { eligible: false, reason: "no_active_period", period: null, entry: null };
   }
 
   const entry = [...entries]
-    .filter((item) => item.organizationId === organizationId && item.semester === period.semesterKey)
+    .filter((item) => item.organizationId === organizationId && item.semester === openPeriod.semesterKey)
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0] ?? null;
 
   if (!entry || entry.status === "draft") {
-    return { eligible: false, reason: "ypop_not_submitted", period, entry };
-  }
-  if (entry.status === "qualified") {
-    return { eligible: true, reason: "qualified", period, entry };
+    return { eligible: false, reason: "ypop_not_submitted", period: openPeriod, entry };
   }
   if (entry.status === "needs_revision") {
-    return { eligible: false, reason: "ypop_needs_revision", period, entry };
+    return { eligible: false, reason: "ypop_needs_revision", period: openPeriod, entry };
   }
   if (entry.status === "not_qualified") {
-    return { eligible: false, reason: "ypop_not_qualified", period, entry };
+    return { eligible: false, reason: "ypop_not_qualified", period: openPeriod, entry };
   }
   if (reviewStatuses.has(entry.status)) {
-    return { eligible: false, reason: "ypop_under_review", period, entry };
+    return { eligible: false, reason: "ypop_under_review", period: openPeriod, entry };
   }
 
-  return { eligible: false, reason: "ypop_not_submitted", period, entry };
+  return { eligible: false, reason: "ypop_not_submitted", period: openPeriod, entry };
 }
 
 export const budgetEligibilityMessage: Record<
@@ -87,4 +98,3 @@ export const budgetEligibilityMessage: Record<
     actionLabel: "View YPOP Status",
   },
 };
-

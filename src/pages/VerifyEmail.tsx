@@ -212,7 +212,7 @@ const VerifyEmail = () => {
 
   return (
     <div
-      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground`}
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 pt-20 pb-8 sm:py-8 text-foreground`}
       data-pwa-theme={pwaFlow ? pwaTheme : undefined}
       style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
     >
@@ -221,16 +221,22 @@ const VerifyEmail = () => {
         <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
       </div>
 
+      {/* Page-level Brand Logo (upper-left viewport mark) */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
+        <Link
+          to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
+          className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+        </Link>
+      </div>
+
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-7 text-left">
-          <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex max-w-full items-center gap-3">
-            <BrandLogo showText={false} />
-          </Link>
-        </div>
+        
 
         <div className="space-y-6 rounded-2xl border border-border bg-card p-6 card-shadow sm:p-8">
           <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">Create organization account</h1>
+            <h1 className="text-2xl font-heading font-bold text-foreground">Create Organization Account</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Register your youth organization to start the compliance process.
             </p>
@@ -248,8 +254,8 @@ const VerifyEmail = () => {
                   ) : null}
                   <span
                     className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${isActive || isComplete
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card text-muted-foreground"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground"
                       }`}
                     aria-current={isActive ? "step" : undefined}
                   >

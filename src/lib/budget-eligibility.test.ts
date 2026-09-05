@@ -32,8 +32,30 @@ const entry = (status: YPOPEntry["status"]): YPOPEntry => ({
 });
 
 describe("budget eligibility", () => {
-  it("requires a qualified entry in the active YPOP period", () => {
+  it("qualifies an organization when entry is qualified in an active YPOP period", () => {
     expect(resolveBudgetEligibility({ organizationId: "org", periods: [period], entries: [entry("qualified")] }).eligible).toBe(true);
+  });
+
+  it("maintains budget eligibility for a qualified organization even after the period is closed", () => {
+    const closedPeriod = { ...period, status: "closed" as const };
+    const result = resolveBudgetEligibility({
+      organizationId: "org",
+      periods: [closedPeriod],
+      entries: [entry("qualified")],
+    });
+    expect(result.eligible).toBe(true);
+    expect(result.reason).toBe("qualified");
+  });
+
+  it("does not allow an unqualified organization to become eligible when period is closed", () => {
+    const closedPeriod = { ...period, status: "closed" as const };
+    const result = resolveBudgetEligibility({
+      organizationId: "org",
+      periods: [closedPeriod],
+      entries: [entry("not_qualified")],
+    });
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toBe("no_active_period");
   });
 
   it.each([
@@ -42,7 +64,7 @@ describe("budget eligibility", () => {
     ["needs_revision", "ypop_needs_revision"],
     ["not_qualified", "ypop_not_qualified"],
     ["draft", "ypop_not_submitted"],
-  ] as const)("maps %s to %s", (status, reason) => {
+  ] as const)("maps %s to %s for active period", (status, reason) => {
     expect(resolveBudgetEligibility({ organizationId: "org", periods: [period], entries: [entry(status)] }).reason).toBe(reason);
   });
 
@@ -50,12 +72,7 @@ describe("budget eligibility", () => {
     expect(resolveBudgetEligibility({ organizationId: "other", periods: [period], entries: [entry("qualified")] }).eligible).toBe(false);
   });
 
-  it("requires an active period", () => {
-    expect(resolveBudgetEligibility({ organizationId: "org", periods: [{ ...period, status: "closed" }], entries: [entry("qualified")] }).reason).toBe("no_active_period");
-  });
-
-  it("uses the newest open period as the applicable period", () => {
-    const newer = { ...period, id: "newer", semesterKey: "2026-second", createdAt: "2026-06-01" };
-    expect(resolveBudgetEligibility({ organizationId: "org", periods: [period, newer], entries: [entry("qualified")] }).eligible).toBe(false);
+  it("returns no_active_period when there are no open periods and no qualified entries", () => {
+    expect(resolveBudgetEligibility({ organizationId: "org", periods: [{ ...period, status: "closed" }], entries: [entry("draft")] }).reason).toBe("no_active_period");
   });
 });

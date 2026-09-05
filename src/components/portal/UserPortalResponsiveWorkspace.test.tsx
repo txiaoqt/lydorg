@@ -273,48 +273,77 @@ describe("UserPortalBudgetWorkspaceView Responsive Behavior", () => {
 });
 
 describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
+  const mockPeriod = {
+    id: "period-1",
+    semesterKey: "2026-s2",
+    semesterLabel: "2nd Semester 2026",
+    submissionDeadline: "2026-08-30T00:00:00Z",
+    validationDeadline: "2026-08-30T00:00:00Z",
+    status: "open" as const,
+    orgLedTiers: [],
+    createdAt: "2026-01-01T00:00:00Z",
+  };
+
   const mockActivities = [
     {
       id: "act-1",
+      semesterKey: "2026-s2",
+      name: "Pasig Youth Leadership Summit",
       title: "Pasig Youth Leadership Summit",
       date: "2026-08-20T00:00:00Z",
+      startDate: "2026-08-20T00:00:00Z",
+      endDate: "2026-08-20T00:00:00Z",
       venue: "Pasig City Hall",
+      category: "institutionalized" as const,
       points: 15,
       description: "Leadership development workshop for youth organization officers.",
+      createdAt: "2026-01-01T00:00:00Z",
     },
   ];
 
   const defaultYpopProps: any = {
+    initialSemesterKey: "2026-s2",
     ypopWorkflowEligibility: { canEditParticipation: true },
     currentProfile: { id: "org-1", organizationName: "Tadz Youth Group" },
+    ypopPeriods: [mockPeriod],
     ypopEntries: [
       {
         id: "entry-1",
         organizationId: "org-1",
+        semester: "2026-s2",
         pointsEarned: 75,
-        cityLedPoints: 75,
-        orgBonusPoints: 0,
+        pointsRequired: 70,
+        totalPoints: 100,
+        status: "qualified",
+        cityLedAttendance: [],
+        orgLedProjectCount: 0,
+        validationDeadline: "2026-08-30T00:00:00Z",
       },
     ],
     ypopCityActivities: mockActivities,
     ypopEventParticipations: [
       {
         id: "part-1",
+        organizationId: "org-1",
         activityId: "act-1",
         title: "City-Led Event Attended",
         description: "Organized by PCYDO Pasig City",
         date: "2026-08-20T00:00:00Z",
+        status: "verified",
       },
     ],
     ypopEventFiles: [],
     ypopFiles: [],
+    ypopOrgActivities: [],
     ypopOrgActivityFiles: [],
     activeEntry: {
       id: "entry-1",
       organizationId: "org-1",
+      semester: "2026-s2",
       pointsEarned: 75,
-      cityLedPoints: 75,
-      orgBonusPoints: 0,
+      pointsRequired: 70,
+      totalPoints: 100,
+      status: "qualified",
     },
     navigate: vi.fn(),
     userRouteMap: { "budget-request": "/financial-grant", ypop: "/ypop" },
@@ -324,29 +353,45 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
     setYpopOrgActivityModalOpen: vi.fn(),
   };
 
-  it("renders desktop layout with sticky sidebar and mobile layout with single global summary", () => {
+  it("renders semester workspace with responsive header, tabs, and activities", () => {
     const { container } = render(<UserPortalYPOPWorkspaceView {...defaultYpopProps} />);
 
-    // Verify desktop layout element exists with responsive class hidden lg:block
-    const desktopLayout = container.querySelector(".desktop-layout");
-    expect(desktopLayout).toBeInTheDocument();
-    expect(desktopLayout?.className).toContain("hidden lg:block");
+    // Verify responsive header layout adapts with flex-col md:flex-row
+    const headerBanner = container.querySelector(".md\\:flex-row");
+    expect(headerBanner).toBeInTheDocument();
 
-    // Verify mobile layout element exists with responsive class block lg:hidden
-    const mobileLayout = container.querySelector(".mobile-layout");
-    expect(mobileLayout).toBeInTheDocument();
-    expect(mobileLayout?.className).toContain("block lg:hidden");
-
-    // Verify Log PPA Activity buttons exist
-    const logPpaButtons = screen.getAllByRole("button", { name: /Log PPA Activity/i });
-    expect(logPpaButtons.length).toBeGreaterThan(0);
-
-    // Verify Submit Budget Request buttons exist
-    const submitBudgetButtons = screen.getAllByRole("button", { name: /Submit Budget Request →/i });
-    expect(submitBudgetButtons.length).toBeGreaterThan(0);
+    // Verify responsive horizontal scroll on tab container
+    const tabScrollContainer = container.querySelector(".overflow-x-auto");
+    expect(tabScrollContainer).toBeInTheDocument();
 
     // Verify activities are listed
     expect(screen.getAllByText("Pasig Youth Leadership Summit").length).toBeGreaterThan(0);
+
+    // Verify qualified organization sees active New Budget Request button
+    const budgetBtn = screen.getByRole("button", { name: /New Budget Request/i });
+    expect(budgetBtn).toBeInTheDocument();
+
+    // Verify tab switching to Organization PPAs and logging action
+    const orgTabBtn = screen.getByRole("button", { name: /Organization PPAs/i });
+    fireEvent.click(orgTabBtn);
+    expect(screen.getByRole("button", { name: /Log PPA Activity/i })).toBeInTheDocument();
+  });
+
+  it("renders semester list with responsive table overflow container when no semester is selected", () => {
+    const listProps = {
+      ...defaultYpopProps,
+      initialSemesterKey: null,
+    };
+    const { container } = render(<UserPortalYPOPWorkspaceView {...listProps} />);
+
+    // Verify responsive table container provides horizontal scroll on narrow screens
+    const tableWrapper = container.querySelector(".overflow-x-auto");
+    expect(tableWrapper).toBeInTheDocument();
+    expect(tableWrapper?.querySelector("table")).toBeInTheDocument();
+
+    // Verify semester period row is rendered with action
+    expect(screen.getByText("2nd Semester 2026")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /View Evaluation Result/i })).toBeInTheDocument();
   });
 });
 

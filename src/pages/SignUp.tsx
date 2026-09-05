@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import BrandLogo from "@/components/BrandLogo";
-import AuthImageSlideshow from "@/components/auth/AuthImageSlideshow";
 import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -462,38 +461,33 @@ const SignUp = () => {
 
   return (
     <div
-      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen w-full bg-background text-foreground flex flex-col md:flex-row md:h-[100dvh] md:max-h-[100dvh] md:overflow-hidden overflow-x-hidden`}
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 pt-20 pb-10 sm:py-10 relative overflow-hidden`}
       data-pwa-theme={pwaFlow ? pwaTheme : undefined}
       style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
     >
-      {/* SIBLING 1: Left Column — Full-Bleed Slideshow Region (Hidden on mobile <768px; Visible on desktop/tablet >=768px) */}
-      <section
-        aria-label="Photo gallery showcase"
-        className="hidden md:block relative md:w-[55%] lg:w-[60%] xl:w-[62%] 2xl:w-[65%] md:h-full md:min-h-0 md:max-h-none overflow-hidden md:border-r border-border/40 shrink-0"
-      >
-        <AuthImageSlideshow className="w-full h-full" />
-      </section>
+      {/* Background blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-180px] right-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute bottom-[-190px] left-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
+      </div>
 
-      {/* SIBLING 2: Right Column — Standalone Registration Region (Full-width & min-h-screen on mobile; Desktop 35–40%, Tablet 45%) */}
-      <section
-        aria-label="Sign up form"
-        className="w-full md:w-[45%] lg:w-[40%] xl:w-[38%] 2xl:w-[35%] min-h-screen md:min-h-0 md:h-full bg-card flex items-center justify-center px-4 sm:px-6 md:px-8 lg:px-10 py-8 md:py-10 z-10 md:overflow-y-auto"
-      >
-        <div className="w-full max-w-[350px] lg:max-w-[390px] mx-auto my-auto flex flex-col justify-center space-y-6 sm:space-y-7 py-4 relative z-10">
-          {/* Logo — showText={false} ensures single authentic brand lockup */}
-          <div className="flex justify-center">
-            <Link
-              to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
-              className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
-            </Link>
-          </div>
+      {/* Page-level Brand Logo (upper-left viewport mark) */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
+        <Link
+          to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
+          className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+        </Link>
+      </div>
 
-          {/* Card */}
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 card-shadow space-y-5 sm:space-y-6">
+      <div className="w-full max-w-md relative z-10">
+        
+
+        {/* Card */}
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 card-shadow space-y-6">
             <div>
-              <h1 className="text-2xl font-heading font-bold text-foreground">Create organization account</h1>
+              <h1 className="text-2xl font-heading font-bold text-foreground">Create Organization Account</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Register your youth organization to access the Y-TRACE compliance portal.
               </p>
@@ -741,7 +735,7 @@ const SignUp = () => {
               {currentStep === 1 ? (
                 <div className="space-y-2.5">
                   <Button type="button" className="w-full font-semibold" onClick={continueToAccount}>
-                    Continue to account details
+                    Continue to Account Details
                   </Button>
                   {inlineError ? (
                     <p className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive">
@@ -880,7 +874,7 @@ const SignUp = () => {
                         Creating account…
                       </>
                     ) : (
-                      "Continue to verification"
+                      "Continue to Verification"
                     )}
                   </Button>
                 </div>
@@ -894,28 +888,21 @@ const SignUp = () => {
             </form>
           </div>
 
-          {/* Footer Navigation Links */}
-          <div className="space-y-2 text-center text-sm text-muted-foreground pt-4 border-t border-border/40">
-            <p>
-              Already have an account?{" "}
-              <Link
-                to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"}
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Sign in
-              </Link>
-            </p>
-            <p>
-              <Link
-                to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
-                className="hover:text-foreground transition-colors inline-block"
-              >
-                ← Back to {pwaFlow ? "welcome" : "home"}
-              </Link>
-            </p>
-          </div>
+        {/* Below-card links */}
+        <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
+          <p>
+            Already have an account?{" "}
+            <Link to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"} className="font-medium text-primary hover:text-primary/80 transition-colors">
+              Sign in
+            </Link>
+          </p>
+          <p>
+            <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
+              ← Back to {pwaFlow ? "welcome" : "home"}
+            </Link>
+          </p>
         </div>
-      </section>
+      </div>
 
       <Dialog open={legalPolicyType !== null} onOpenChange={(open) => { if (!open) setLegalPolicyType(null); }}>
         <DialogContent className="grid max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden p-0">

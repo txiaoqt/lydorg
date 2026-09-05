@@ -5,7 +5,7 @@ export const ORGANIZATION_NAME_MAX_LENGTH_ERROR = "Organization name must not ex
 
 export const organizationEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const philippineContactNumberPattern = /^09\d{9}$/;
-export const personNamePattern = /^[a-zA-Z\s\-\'\.]*$/;
+export const personNamePattern = /^[a-zA-Z\s\-'.]*$/;
 
 export const sanitizeContactNumber = (val: string): string => {
   return val.replace(/\D/g, "").slice(0, 11);

@@ -78,8 +78,8 @@ describe("Registration & Forgot Password Privacy-Preserving Architecture", () =>
       expect(restored?.organizationName).toBe("Youth Advocates");
 
       // Password fields in component start as empty strings
-      let componentPassword = "";
-      let componentConfirmPassword = "";
+      const componentPassword = "";
+      const componentConfirmPassword = "";
       expect(componentPassword).toBe("");
       expect(componentConfirmPassword).toBe("");
     });
@@ -203,7 +203,7 @@ describe("Registration & Forgot Password Privacy-Preserving Architecture", () =>
 
     it("provides uniform generic message for Forgot Password", () => {
       expect(GENERIC_RESET_MESSAGE).toBe(
-        "If an account exists for this email, you'll receive a password reset link.",
+        "If an account is associated with this email address, you’ll receive a password reset link shortly. Please check your inbox and spam folder.",
       );
     });
   });

@@ -11,7 +11,7 @@ export const validatePasswordCriteria = (value: string): PasswordValidationCrite
   uppercase: /[A-Z]/.test(value),
   lowercase: /[a-z]/.test(value),
   number: /[0-9]/.test(value),
-  special: /[!@#$%^&*()\-_+=\[\]{}|;:'",.<>?/\\~]/.test(value),
+  special: /[!@#$%^&*()\-_+=[\]{}|;:'",.<>?/\\~]/.test(value),
 });
 
 export const isPasswordValid = (value: string): boolean => {

@@ -348,6 +348,10 @@
     --primary-soft: 214.74 82.61% 95.49%;
     --surface-hover: 216 83.33% 97.65%;
     --primary-foreground: var(--user-on-dark);
+    --user-btn-primary: 217.5 75.86% 22.75%;        /* #0E2F66 - Standardized User-Side Button Blue */
+    --user-btn-primary-hover: 217.61 77.01% 17.06%;  /* #0A234D - User Button Hover State */
+    --user-btn-primary-active: 217.02 77.05% 11.96%; /* #071936 - User Button Active State */
+    --user-btn-primary-strong: 217.5 75.86% 22.75%;  /* #0E2F66 */
     --secondary: var(--brand-deep-blue);
     --secondary-foreground: var(--user-on-dark);
     --muted: var(--user-surface-subtle);
@@ -699,6 +703,41 @@
 
   .admin-shell thead th {
     color: hsl(var(--admin-meta));
+  }
+
+  /* ── User-side Button Color Standardization: #0E2F66 ─────────── */
+  /* Replaces User-side button blue #2460A7 with #0E2F66 across all User Portal pages & components */
+  /* Scoped specifically to buttons on public/user surfaces without affecting non-buttons, admin, or PWA */
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) button,
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) [role="button"],
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a.inline-flex[class*="bg-primary"],
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a.inline-flex[class*="border-primary"],
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a.inline-flex[class*="text-primary"],
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a[class*="rounded"][class*="bg-primary"],
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a[class*="rounded"][class*="border-primary"],
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) .btn {
+    --primary: var(--user-btn-primary);
+    --primary-hover: var(--user-btn-primary-hover);
+    --primary-active: var(--user-btn-primary-active);
+    --primary-strong: var(--user-btn-primary-strong);
+  }
+
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) button:is(.bg-primary),
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) [role="button"]:is(.bg-primary),
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a.inline-flex:is(.bg-primary) {
+    background-color: #0E2F66;
+  }
+
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) button:is(.bg-primary):hover,
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) [role="button"]:is(.bg-primary):hover,
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a.inline-flex:is(.bg-primary):hover {
+    background-color: #0A234D;
+  }
+
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) button:is(.bg-primary):active,
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) [role="button"]:is(.bg-primary):active,
+  body.public-shell:not(.dark):not(.admin-shell):not(.ytrace-pwa-active) a.inline-flex:is(.bg-primary):active {
+    background-color: #071936;
   }
 }
 

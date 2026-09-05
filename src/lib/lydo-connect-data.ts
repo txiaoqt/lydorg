@@ -123,6 +123,7 @@ export type YPOPFile = {
 };
 
 export type YPOPEventParticipationStatus =
+  | "draft"
   | "pending_verification"
   | "verified"
   | "needs_revision"
@@ -205,6 +206,35 @@ export const YPOP_CITY_LED_CATEGORY_LABELS: Record<YPOPCityActivityCategory, str
   partnership: "Partnership",
 };
 
+export const YPOP_CITY_LED_CATEGORY_TAG_STYLES: Record<
+  YPOPCityActivityCategory,
+  {
+    text: string;
+    background: string;
+    border: string;
+    className: string;
+  }
+> = {
+  mandatory: {
+    text: "#8D69E3",
+    background: "#F9F5FF",
+    border: "#EEE1FE",
+    className: "text-[#8D69E3] bg-[#F9F5FF] border-[#EEE1FE]",
+  },
+  invitational: {
+    text: "#EA3FB8",
+    background: "#FCF1FD",
+    border: "#FAE1FA",
+    className: "text-[#EA3FB8] bg-[#FCF1FD] border-[#FAE1FA]",
+  },
+  partnership: {
+    text: "#10A79B",
+    background: "#F0FDFA",
+    border: "#CEF6F0",
+    className: "text-[#10A79B] bg-[#F0FDFA] border-[#CEF6F0]",
+  },
+};
+
 export const resolveYpopCityLedCategory = (
   category?: string | null,
   points?: number,
@@ -232,6 +262,7 @@ export type YPOPCityActivity = {
   id: string;
   semesterKey: string;
   name: string;
+  description?: string;
   date: string;
   startDate: string;
   endDate: string;

@@ -740,8 +740,12 @@ export default function UserPortal({ section }: { section: string }) {
         return;
       }
       const qualifiedYpopEntry =
-        budgetEligibility.eligible && budgetEligibility.entry?.id === ypopEntryId
-          ? budgetEligibility.entry
+        budgetEligibility.eligible &&
+        (budgetEligibility.entry?.id === ypopEntryId ||
+          state.ypopEntries.some(
+            (e) => e.id === ypopEntryId && e.organizationId === currentProfile?.id && e.status === "qualified"
+          ))
+          ? (state.ypopEntries.find((e) => e.id === ypopEntryId) || budgetEligibility.entry)
           : null;
       if (qualifiedYpopEntry) {
         initializedYpopBudgetIdRef.current = ypopEntryId;
@@ -753,7 +757,7 @@ export default function UserPortal({ section }: { section: string }) {
     } else {
       initializedYpopBudgetIdRef.current = null;
     }
-  }, [budgetEligibility, currentProfile?.id, section, searchParams, user?.id]);
+  }, [budgetEligibility, currentProfile?.id, section, searchParams, state.ypopEntries, user?.id]);
 
   useEffect(() => {
     setBudgetPage(1);
@@ -2245,11 +2249,25 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const resetBudgetForm = () => {
-    setBudgetForm(createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? ""));
+    const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
+    if (budgetEligibility.eligible && budgetEligibility.entry) {
+      setBudgetForm({
+        ...blank,
+        budgetRequestType: "ypop_incentive",
+        ypopEntryId: budgetEligibility.entry.id,
+      });
+    } else {
+      setBudgetForm(blank);
+    }
     setBudgetFileDraft(null);
   };
 
-  const startEditingBudgetRequest = (request: BudgetRequest) => {
+  const startEditingBudgetRequest = (request: BudgetRequest | null) => {
+    if (!request) {
+      resetBudgetForm();
+      return;
+    }
+
     if (approvedBudgetStatuses.has(request.status)) {
       toast({
         title: "Editing locked",
@@ -2285,8 +2303,11 @@ export default function UserPortal({ section }: { section: string }) {
     const qualifiedYpopEntry =
       budgetForm.ypopEntryId &&
       budgetEligibility.eligible &&
-      budgetEligibility.entry?.id === budgetForm.ypopEntryId
-        ? budgetEligibility.entry
+      (budgetEligibility.entry?.id === budgetForm.ypopEntryId ||
+        state.ypopEntries.some(
+          (e) => e.id === budgetForm.ypopEntryId && e.organizationId === currentProfile.id && e.status === "qualified"
+        ))
+        ? (state.ypopEntries.find((e) => e.id === budgetForm.ypopEntryId) || budgetEligibility.entry)
         : null;
     if (!existingBudgetRequest && (budgetForm.budgetRequestType !== "ypop_incentive" || !qualifiedYpopEntry)) {
       toast({
@@ -3148,11 +3169,13 @@ export default function UserPortal({ section }: { section: string }) {
           <UserPortalYPOPWorkspaceView
             ypopWorkflowEligibility={ypopWorkflowEligibility}
             currentProfile={currentProfile}
+            ypopPeriods={state.ypopPeriods}
             ypopEntries={state.ypopEntries}
             ypopCityActivities={state.ypopCityActivities}
             ypopEventParticipations={ypopEventParticipations}
             ypopEventFiles={state.ypopEventFiles}
             ypopFiles={state.ypopFiles}
+            ypopOrgActivities={state.ypopOrgActivities}
             ypopOrgActivityFiles={state.ypopOrgActivityFiles}
             activeEntry={state.ypopEntries.find((e) => e.organizationId === (currentProfile?.id ?? "")) ?? null}
             navigate={navigate}
@@ -3161,6 +3184,18 @@ export default function UserPortal({ section }: { section: string }) {
             formatDateTimeLabel={formatDateTimeLabel}
             formatShortPortalDate={formatShortPortalDate}
             setYpopOrgActivityModalOpen={setYpopOrgActivityModalOpen}
+            user={user}
+            createYPOPEntry={createYPOPEntry}
+            updateYPOPEntry={updateYPOPEntry}
+            createYPOPEventParticipation={createYPOPEventParticipation}
+            updateYPOPEventParticipation={updateYPOPEventParticipation}
+            createYPOPEventFile={createYPOPEventFile}
+            deleteYPOPEventFile={deleteYPOPEventFile}
+            createYPOPOrgActivity={createYPOPOrgActivity}
+            updateYPOPOrgActivity={updateYPOPOrgActivity}
+            deleteYPOPOrgActivity={deleteYPOPOrgActivity}
+            createYPOPOrgActivityFile={createYPOPOrgActivityFile}
+            deleteYPOPOrgActivityFile={deleteYPOPOrgActivityFile}
           />
         );
       default:

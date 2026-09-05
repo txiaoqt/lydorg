@@ -53,6 +53,7 @@ test.describe('Forgot Password', () => {
   test('TC062 - Send Reset Link button shows loading state', async ({ page, context }) => {
     await test.step('1. Enter a valid email address.', async () => {
       await page.goto('/reset-password');
+      await page.locator('#email').fill(TEST_CONFIG.validEmail);
     });
     await test.step('2. Click "Send Reset Link".', async () => {
       await page.getByRole('button', { name: /send reset link/i }).click();

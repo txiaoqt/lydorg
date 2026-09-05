@@ -143,6 +143,7 @@ import {
   uploadNewsReleasePreviewImageToSupabase,
   adminCreateYpopPeriodInSupabase,
   adminUpdateYpopPeriodInSupabase,
+  adminCloseYpopSemesterInSupabase,
   adminDeleteYpopPeriodFromSupabase,
   adminCreateYpopCityActivityInSupabase,
   adminUpdateYpopCityActivityInSupabase,
@@ -281,6 +282,13 @@ const YpopDocumentStatusPill = ({ status }: { status: YPOPEventParticipationStat
     return (
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
         Needs Revision
+      </span>
+    );
+  }
+  if (status === "draft") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-300 bg-slate-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-slate-600">
+        Draft
       </span>
     );
   }
@@ -1939,6 +1947,9 @@ export default function AdminPortal({ section }: { section: string }) {
           .reduce((sum, entry) => sum + entry.skBudget, 0);
         setAnnualAllocation(total);
         setAnnualAllocationFiscalYear(fiscalYear);
+      })
+      .catch(() => {
+        // Safely suppress errors when barangay_financials table is unavailable
       });
 
     return () => {
@@ -2456,7 +2467,6 @@ export default function AdminPortal({ section }: { section: string }) {
     return () => {
       isActive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
   const resetAdministratorForm = () => {
@@ -3811,12 +3821,8 @@ export default function AdminPortal({ section }: { section: string }) {
           ],
         };
 
-        try {
-          const saved = await adminUpdateYpopEventParticipationInSupabase(pendingAdminConfirmation.participationId, patch);
-          updateYPOPEventParticipation(saved.id, saved);
-        } catch {
-          updateYPOPEventParticipation(pendingAdminConfirmation.participationId, patch);
-        }
+        const saved = await adminUpdateYpopEventParticipationInSupabase(pendingAdminConfirmation.participationId, patch);
+        updateYPOPEventParticipation(saved.id, saved);
 
         await refreshAdminState();
 
@@ -5822,7 +5828,7 @@ export default function AdminPortal({ section }: { section: string }) {
           </div>
         );
       }
-      case "budget-utilization":
+      case "budget-utilization": {
         if (selectedBudgetRequest) {
           const linkedLiquidation = getLatestLiquidationReportForBudgetRequest(selectedBudgetRequest.id);
           const proposedDate = new Date(selectedBudgetRequest.activityDate);
@@ -6580,6 +6586,7 @@ export default function AdminPortal({ section }: { section: string }) {
             />
           </div>
         );
+      }
       case "liquidation-monitoring":
         if (liquidationDetailsOpen && selectedLiquidationReport) {
           const linkedBudgetRequest = selectedLiquidationBudgetRequest;
@@ -8730,17 +8737,22 @@ export default function AdminPortal({ section }: { section: string }) {
             return null;
           }
           const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
-          const orgActivities = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id);
-          const approvedCount = orgActivities.filter((a) => a.status === "approved").length;
-          const requestRevisionCount = orgActivities.filter((a) => a.status === "needs_revision" || a.status === "rejected").length;
-          const unreviewedCount = orgActivities.filter((a) => a.status === "submitted" || a.status === "under_review").length;
-          const qualificationProgress = Math.max(0, Math.min(100, entry.pointsEarned ?? 0));
-
           const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
           const semesterActivityIds = new Set(semesterActivities.map((a) => a.id));
           const orgEventParticipations = state.ypopEventParticipations.filter(
             (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId),
           );
+          const orgActivities = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id);
+          const approvedCount =
+            orgActivities.filter((a) => a.status === "approved").length +
+            orgEventParticipations.filter((p) => p.status === "verified").length;
+          const requestRevisionCount =
+            orgActivities.filter((a) => a.status === "needs_revision" || a.status === "rejected").length +
+            orgEventParticipations.filter((p) => p.status === "needs_revision" || p.status === "rejected").length;
+          const unreviewedCount =
+            orgActivities.filter((a) => a.status === "submitted" || a.status === "under_review").length +
+            orgEventParticipations.filter((p) => p.status === "pending_verification").length;
+          const qualificationProgress = Math.max(0, Math.min(100, entry.pointsEarned ?? 0));
           const eventFilesByParticipationId = new Map<string, YPOPEventFile[]>();
           state.ypopEventFiles.forEach((file) => {
             const existing = eventFilesByParticipationId.get(file.participationId) ?? [];
@@ -8769,7 +8781,9 @@ export default function AdminPortal({ section }: { section: string }) {
             files: Array<{ id: string; fileName: string; fileUrl: string; uploadedAt: string }>;
           };
 
-          const cityLedGroups: EntryReviewGroup[] = orgEventParticipations.map((participation) => {
+          const cityLedGroups: EntryReviewGroup[] = orgEventParticipations
+            .filter((p) => p.status !== "draft")
+            .map((participation) => {
             const activity = semesterActivities.find((a) => a.id === participation.activityId);
             const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : undefined;
             return {
@@ -8833,12 +8847,8 @@ export default function AdminPortal({ section }: { section: string }) {
                     verifiedAt: targetStatus === "verified" ? now : participation?.verifiedAt ?? "",
                     revisionHistory: [...(participation?.revisionHistory ?? []), { action: targetStatus, adminRemarks: remark, changedAt: now }],
                   };
-                  try {
-                    const saved = await adminUpdateYpopEventParticipationInSupabase(group.id, patch);
-                    updateYPOPEventParticipation(saved.id, saved);
-                  } catch {
-                    updateYPOPEventParticipation(group.id, patch);
-                  }
+                  const saved = await adminUpdateYpopEventParticipationInSupabase(group.id, patch);
+                  updateYPOPEventParticipation(saved.id, saved);
                 } else {
                   const activity = orgActivities.find((a) => a.id === group.id);
                   const patch = {
@@ -8847,16 +8857,15 @@ export default function AdminPortal({ section }: { section: string }) {
                     approvedAt: targetStatus === "approved" ? now : activity?.approvedAt ?? "",
                     revisionHistory: [...(activity?.revisionHistory ?? []), { action: targetStatus, adminRemarks: remark, changedAt: now }],
                   };
-                  try {
-                    const saved = await adminUpdateYpopOrgActivityInSupabase(group.id, patch);
-                    updateYPOPOrgActivity(saved.id, saved);
-                  } catch {
-                    updateYPOPOrgActivity(group.id, patch);
-                  }
+                  const saved = await adminUpdateYpopOrgActivityInSupabase(group.id, patch);
+                  updateYPOPOrgActivity(saved.id, saved);
                 }
               } catch {
                 failedTitles.push(group.title);
               }
+            }
+            if (failedTitles.length < selectedBulkGroups.length) {
+              await refreshAdminState();
             }
             setEntryReviewSubmitting(false);
             setSelectedEntryReviewGroupIds([]);
@@ -9345,7 +9354,9 @@ export default function AdminPortal({ section }: { section: string }) {
           const periodActivities = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey);
           const totalCityLedPts = periodActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0);
           const periodActivityIds = new Set(periodActivities.map((activity) => activity.id));
-          const periodParticipations = state.ypopEventParticipations.filter((participation) => periodActivityIds.has(participation.activityId));
+          const periodParticipations = state.ypopEventParticipations.filter(
+            (participation) => periodActivityIds.has(participation.activityId) && participation.status !== "draft",
+          );
           const participationCountByOrgId = new Map<string, number>();
           periodParticipations.forEach((participation) => {
             participationCountByOrgId.set(participation.organizationId, (participationCountByOrgId.get(participation.organizationId) ?? 0) + 1);
@@ -9519,13 +9530,31 @@ export default function AdminPortal({ section }: { section: string }) {
                 status,
                 orgLedTiers: createPeriodOrgLedTiers,
               };
-              try {
-                const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
-                updateYPOPPeriod(saved.id, saved);
-              } catch {
-                updateYPOPPeriod(editingPeriodId, patch);
+              if (status === "closed") {
+                try {
+                  const result = await adminCloseYpopSemesterInSupabase(editingPeriodId, patch);
+                  updateYPOPPeriod(result.period.id, result.period);
+                  result.evaluatedEntries.forEach((evaluatedEntry) => {
+                    updateYPOPEntry(evaluatedEntry.id, evaluatedEntry);
+                  });
+                  toast({
+                    title: "Semester closed & evaluated",
+                    description: `${generatedSemesterLabel} has been closed and participating organizations evaluated.`,
+                  });
+                } catch {
+                  const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                  updateYPOPPeriod(saved.id, saved);
+                  toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
+                }
+              } else {
+                try {
+                  const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                  updateYPOPPeriod(saved.id, saved);
+                } catch {
+                  updateYPOPPeriod(editingPeriodId, patch);
+                }
+                toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
               }
-              toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
               resetForm();
               setYpopAdminView("periods");
             } else {

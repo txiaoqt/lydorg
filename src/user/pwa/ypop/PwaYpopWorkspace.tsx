@@ -145,7 +145,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
     : [];
   const visibleOrgActivities = orgActivities.slice(0, 3);
   const editable = Boolean(entry && isYpopEntryEditable(entry) && isYpopPeriodOpen(period));
-  const ppaUnlocked = Boolean(entry?.status === "qualified" && isYpopPeriodOpen(period));
+  const ppaUnlocked = Boolean(isYpopPeriodOpen(period));
   const finalized = entry?.status === "qualified" || entry?.status === "not_qualified";
   const readOnly = Boolean(entry && !editable);
   const approvedPpas = entry ? getApprovedYpopOrgActivityCount(orgActivities, entry.id, entry.orgLedProjectCount ?? 0) : 0;
@@ -458,26 +458,50 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
       </section>
 
       <section className="pwa-card pwa-ypop-workspace-section pwa-ypop-main-section">
-        <div className="pwa-section-heading"><h2>Organization-Led Activities / PPA Submissions</h2>{ppaUnlocked && entry ? <Button size="sm" variant="outline" onClick={() => go(pwaYpopPpaNewRoute(entry.id))}><Plus />Log PPA</Button> : null}</div>
+        <div className="pwa-section-heading"><h2>Organization-Led Activities / PPA Submissions</h2>{ppaUnlocked ? <Button size="sm" variant="outline" onClick={async () => {
+  if (entry) {
+    go(pwaYpopPpaNewRoute(entry.id));
+  } else {
+    try {
+      const now = new Date().toISOString();
+      const created = await createYpopEntryInSupabase({
+        organizationId,
+        submittedBy: data.profile?.userId || "",
+        semester: period.semesterKey,
+        semesterLabel: period.semesterLabel,
+        pointsEarned: 0,
+        pointsRequired: 70,
+        totalPoints: 100,
+        status: "draft",
+        adminRemarks: "",
+        submissionNote: "",
+        validationDeadline: period.validationDeadline,
+        submittedAt: null,
+        validatedAt: null,
+        revisionHistory: [],
+        orgLedProjectCount: 0,
+        cityLedAttendance: [],
+      });
+      data.store.createYPOPEntry(created);
+      go(pwaYpopPpaNewRoute(created.id));
+    } catch {
+      toast({ title: "Unable to start PPA", description: "Please try again.", variant: "destructive" });
+    }
+  }
+}}><Plus />Log PPA</Button> : null}</div>
         {!ppaUnlocked ? (
           <div className="pwa-ypop-ppa-lock">
             <LockKeyhole aria-hidden="true" />
             <div>
-              <strong>{entry?.status === "submitted" || entry?.status === "under_review" ? "City-led validation in progress" : "Qualification required"}</strong>
-              <p>Organization-led PPA logging unlocks after the admin marks this semester as qualified.</p>
+              <strong>Validation window closed</strong>
+              <p>Organization-led PPA logging is available while the YPOP semester is open.</p>
             </div>
           </div>
         ) : null}
         {entry && editable ? (
           <div className="pwa-ypop-city-validation-submit">
-            <h3>Submit City-Led Activities for Validation</h3>
-            <p>Your optional note is sent only when you submit. It cannot be saved separately.</p>
-            <Textarea rows={4} value={note} placeholder="Optional message for the admin reviewing your city-led participation..." onChange={(event) => setNote(event.target.value)} />
-            {submissionBlockReason ? <p className="pwa-ypop-block-reason">{submissionBlockReason}</p> : null}
-            <div>
-              <Button variant="outline" className="is-danger" onClick={() => setDeleteEntryOpen(true)}><Trash2 />Delete Submission</Button>
-              <Button disabled={Boolean(submissionBlockReason) || busyKey === "submit-entry"} onClick={() => void submitEntry()}><Send />{busyKey === "submit-entry" ? "Submitting..." : entry.status === "needs_revision" ? "Resubmit for Validation" : "Submit for Validation"}</Button>
-            </div>
+            <h3>Active Validation Window</h3>
+            <p>Your submitted activities and proof documents accumulate continuously while the semester is open.</p>
           </div>
         ) : null}
         <div className="pwa-ypop-ppa-list">

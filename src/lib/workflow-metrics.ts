@@ -1,3 +1,5 @@
+import type { BudgetRequest, LiquidationReport } from "./lydo-connect-data";
+
 export type BudgetStatusHelper = {
   totalRequests: number;
   approvedCount: number;
@@ -57,7 +59,9 @@ export const isBudgetRevisionStatus = (status?: string): boolean => {
   );
 };
 
-export const computeBudgetWorkflowMetrics = (budgetRequests: Array<any>): BudgetStatusHelper => {
+export const computeBudgetWorkflowMetrics = (
+  budgetRequests: Array<BudgetRequest | { status?: string }>
+): BudgetStatusHelper => {
   const totalRequests = budgetRequests.length;
   if (totalRequests === 0) {
     return {
@@ -99,7 +103,9 @@ export const computeBudgetWorkflowMetrics = (budgetRequests: Array<any>): Budget
   };
 };
 
-export const computeLiquidationWorkflowMetrics = (liquidationReports: Array<any>): LiquidationStatusHelper => {
+export const computeLiquidationWorkflowMetrics = (
+  liquidationReports: Array<LiquidationReport | { status?: string }>
+): LiquidationStatusHelper => {
   const totalReports = liquidationReports.length;
   if (totalReports === 0) {
     return {

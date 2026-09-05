@@ -42,41 +42,36 @@ describe("YPOP event eligibility", () => {
     expect(getYpopEventEndAt("2026-06-30T17:00")?.toISOString()).toBe("2026-06-30T09:00:00.000Z");
   });
 
-  it("allows only verified organizations in an open editable period", () => {
-    expect(getYpopEventJoinEligibility({ activity, period, profile, now: new Date("2026-06-30T09:00:00Z") }).allowed).toBe(true);
-    expect(getYpopEventJoinEligibility({ activity, period, profile, now: new Date("2026-06-30T16:00:00Z") }).reason).toBe("event_ended");
-    expect(getYpopEventJoinEligibility({
+  it("allows submitting proof for an activity after the event date as long as the semester is open", () => {
+    // Activity happened on 2026-06-30; user submits on 2026-07-15 while semester deadline is 2026-07-31
+    const pastDate = new Date("2026-07-15T10:00:00Z");
+    const res = getYpopEventJoinEligibility({ activity, period, profile, now: pastDate });
+    expect(res.allowed).toBe(true);
+    expect(res.reason).toBe("eligible");
+  });
+
+  it("blocks submitting proof when the semester period is closed", () => {
+    const res = getYpopEventJoinEligibility({
       activity,
       period: { ...period, status: "closed" },
       profile,
       now: new Date("2026-06-30T09:00:00Z"),
-    }).reason).toBe("period_closed");
+    });
+    expect(res.allowed).toBe(false);
+    expect(res.reason).toBe("period_closed");
   });
 
-  it("blocks YPOP validation request submission if no City-Led Activities are logged", () => {
-    const entry = { id: "e1", status: "draft" } as any;
-    const res = validateYpopSubmissionEligibility({ entry, participations: [], profile });
-    expect(res.eligible).toBe(false);
-    expect(res.reason).toBe("no_city_led_activities");
-    expect(res.message).toContain("You must log at least one City-Led Activity");
+  it("blocks unverified organization profiles", () => {
+    const unverifiedProfile = { profileStatus: "pending" } as OrganizationProfile;
+    const res = getYpopEventJoinEligibility({ activity, period, profile: unverifiedProfile, now: new Date("2026-06-30T09:00:00Z") });
+    expect(res.allowed).toBe(false);
+    expect(res.reason).toBe("profile_unverified");
   });
 
-  it("blocks YPOP validation request submission if supporting proof documents are missing", () => {
-    const entry = { id: "e1", status: "draft" } as any;
-    const participations = [{ id: "p1", activityId: "a1", proofSubmittedAt: "" }] as any;
-    const res = validateYpopSubmissionEligibility({ entry, participations, eventFiles: [], entryFiles: [], profile });
-    expect(res.eligible).toBe(false);
-    expect(res.reason).toBe("missing_supporting_documents");
-    expect(res.message).toContain("You must attach all required supporting proof documents");
-  });
-
-  it("allows YPOP validation request submission when at least one City-Led Activity is logged and proof documents are attached", () => {
-    const entry = { id: "e1", status: "draft" } as any;
-    const participations = [{ id: "p1", activityId: "a1", proofSubmittedAt: "2026-07-01T10:00:00Z" }] as any;
-    const eventFiles = [{ id: "f1", participationId: "p1" }] as any;
-    const res = validateYpopSubmissionEligibility({ entry, participations, eventFiles, profile });
+  it("allows continuous semester accumulation without blocking on unproved activities", () => {
+    // User can accumulate submissions without requiring all joined activities to have proof immediately
+    const res = validateYpopSubmissionEligibility({ participations: [], profile });
     expect(res.eligible).toBe(true);
-    expect(res.message).toBe("Ready for validation submission.");
+    expect(res.message).toBe("Ready for continuous submission.");
   });
 });
-

@@ -17,7 +17,7 @@ const validatePasswordCriteria = (value: string) => ({
   uppercase: /[A-Z]/.test(value),
   lowercase: /[a-z]/.test(value),
   number: /[0-9]/.test(value),
-  special: /[!@#$%^&*()\-_+=\[\]{}|;:'",.<>?/\\~]/.test(value),
+  special: /[!@#$%^&*()\-_+=[\]{}|;:'",.<>?/\\~]/.test(value),
 });
 
 const isPasswordValid = (value: string) => {

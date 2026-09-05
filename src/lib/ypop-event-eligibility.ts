@@ -43,7 +43,7 @@ export const isYpopPeriodOpen = (period: YPOPPeriod | null | undefined, now = ne
 };
 
 export const isYpopEntryEditable = (entry: YPOPEntry | null | undefined) =>
-  !entry || entry.status === "draft" || entry.status === "needs_revision";
+  !entry || entry.status === "draft" || entry.status === "needs_revision" || entry.status === "submitted" || entry.status === "under_review";
 
 export type YpopJoinEligibility = {
   allowed: boolean;
@@ -60,12 +60,13 @@ export const getYpopEventJoinEligibility = (params: {
   now?: Date;
 }): YpopJoinEligibility => {
   const now = params.now ?? new Date();
-  if (params.participation) return { allowed: false, reason: "already_joined", label: "Joined" };
-  if (isPastYpopActivityDate(params.activity.date, now)) return { allowed: false, reason: "event_ended", label: "Event Ended" };
-  if (!isYpopPeriodOpen(params.period, now)) return { allowed: false, reason: "period_closed", label: "Joining Closed" };
-  if (!isYpopEntryEditable(params.entry)) return { allowed: false, reason: "submission_locked", label: "Submission Locked" };
-  if (params.profile?.profileStatus !== "verified") return { allowed: false, reason: "profile_unverified", label: "Verification Required" };
-  return { allowed: true, reason: "eligible", label: "Join Event" };
+  if (params.participation) return { allowed: false, reason: "already_joined", label: "Proof Uploaded" };
+  // Event date does NOT block proof submission as long as the YPOP semester remains OPEN.
+  if (!isYpopPeriodOpen(params.period, now)) return { allowed: false, reason: "period_closed", label: "Semester Closed" };
+  if (params.profile && params.profile.profileStatus !== "verified") {
+    return { allowed: false, reason: "profile_unverified", label: "Verification Required" };
+  }
+  return { allowed: true, reason: "eligible", label: "Submit Proof" };
 };
 
 export type YpopSubmissionEligibility = {
@@ -74,71 +75,31 @@ export type YpopSubmissionEligibility = {
   message: string;
 };
 
+/**
+ * Validates whether an organization is eligible to participate in the YPOP semester workflow.
+ * In the continuous submission lifecycle, organizations continuously accumulate submissions
+ * while the semester is open without being blocked by optional or unproved activities.
+ */
 export const validateYpopSubmissionEligibility = (params: {
-  entry: YPOPEntry | null | undefined;
-  participations: YPOPEventParticipation[];
+  entry?: YPOPEntry | null | undefined;
+  participations?: YPOPEventParticipation[];
   eventFiles?: YPOPEventFile[];
   entryFiles?: YPOPFile[];
   orgActivityFiles?: YPOPOrgActivityFile[];
   profile?: OrganizationProfile | null;
 }): YpopSubmissionEligibility => {
-  const { entry, participations, eventFiles = [], entryFiles = [], orgActivityFiles = [], profile } = params;
-
-  if (!entry) {
-    return {
-      eligible: false,
-      reason: "entry_not_editable",
-      message: "No active YPOP semester entry found.",
-    };
-  }
-
-  if (!isYpopEntryEditable(entry)) {
-    return {
-      eligible: false,
-      reason: "entry_not_editable",
-      message: "This YPOP submission is currently locked or under administrative review.",
-    };
-  }
+  const { profile } = params;
 
   if (profile && profile.profileStatus !== "verified") {
     return {
       eligible: false,
       reason: "profile_unverified",
-      message: "Your organization profile must be verified before submitting a YPOP validation request.",
-    };
-  }
-
-  const hasCityLedActivity =
-    participations.length > 0 || (entry.cityLedAttendance && entry.cityLedAttendance.length > 0);
-
-  if (!hasCityLedActivity) {
-    return {
-      eligible: false,
-      reason: "no_city_led_activities",
-      message: "You must log at least one City-Led Activity before submitting a YPOP validation request.",
-    };
-  }
-
-  const participationsWithFiles = new Set(eventFiles.map((file) => file.participationId));
-
-  const unprovedParticipations = participations.filter((p) => {
-    const hasProofTimestamp = Boolean(p.proofSubmittedAt && p.proofSubmittedAt.trim());
-    const hasAttachedFile = participationsWithFiles.has(p.id);
-    return !hasProofTimestamp && !hasAttachedFile;
-  });
-
-  const totalAttachedFilesCount = eventFiles.length + entryFiles.length + orgActivityFiles.length;
-
-  if (unprovedParticipations.length > 0 || totalAttachedFilesCount === 0) {
-    return {
-      eligible: false,
-      reason: "missing_supporting_documents",
-      message: "You must attach all required supporting proof documents for your logged City-Led Activities before submitting for validation.",
+      message: "Your organization profile must be verified to participate in YPOP validation.",
     };
   }
 
   return {
     eligible: true,
-    message: "Ready for validation submission.",
+    message: "Ready for continuous submission.",
   };
 };

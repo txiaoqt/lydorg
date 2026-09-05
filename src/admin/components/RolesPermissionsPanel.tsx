@@ -154,7 +154,6 @@ export const RolesPermissionsPanel = ({
 
   useEffect(() => {
     setDraftAdminPermissionCodes(adminRole?.permissionCodes ?? []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminRole?.permissionCodes]);
 
   const isDirty = !arraysEqualAsSets(draftAdminPermissionCodes, adminRole?.permissionCodes ?? []);
