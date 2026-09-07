@@ -4,7 +4,7 @@ import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
 import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
-import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock, Clock3, Copy, CornerDownLeft, Download, Eye, EyeOff, ExternalLink, FileText, FolderOpen, Globe, History, Inbox, Info, Loader, Lock, LogOut, Mail, MapPin, Medal, Megaphone, MessageSquare, MoreHorizontal, Newspaper, Pencil, Phone, PieChart as PieChartIcon, Plus, Save, Search, Send, Settings, Shield, Trash2, TrendingUp, Trophy, Upload, UserCheck, UserPlus, UserRound, UserX, Users, Wallet, X, XCircle, type LucideIcon } from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock, Clock3, Copy, CornerDownLeft, Download, Eye, EyeOff, ExternalLink, FileText, FolderOpen, Globe, History, Inbox, Info, Loader, Loader2, Lock, LogOut, Mail, MapPin, Medal, Megaphone, MessageSquare, MoreHorizontal, Newspaper, Pencil, Phone, PieChart as PieChartIcon, Plus, RefreshCw, Save, Search, Send, Settings, Shield, Trash2, TrendingUp, Trophy, Upload, UserCheck, UserPlus, UserRound, UserX, Users, Wallet, X, XCircle, type LucideIcon } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { addYears, format, parse } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,7 @@ import { TemplateFilePreviewDialog } from "@/admin/components/TemplateFilePrevie
 import { TemplateFormDialog } from "@/admin/components/TemplateFormDialog";
 import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
+import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
 import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
 import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
 import { OrganizationFundingTable, type OrganizationFundingRow } from "@/admin/components/OrganizationFundingTable";
@@ -164,8 +165,16 @@ import {
   resendAdminInviteInSupabase,
   updateRolePermissionsInSupabase,
   DuplicateUsernameError,
+  fetchAllOrganizationRenewalsInSupabase,
+  fetchAllOrganizationAccreditationsInSupabase,
+  fetchRenewalPacketInSupabase,
+  fetchRenewalRequiredDocumentTypesInSupabase,
+  adminApproveRenewalInSupabase,
+  adminRequestRenewalRevisionInSupabase,
+  adminRejectRenewalInSupabase,
 } from "@/lib/lydo-connect-supabase";
-import type { AdminRoleRecord, AdministratorRecord, SubmissionFile } from "@/lib/lydo-connect-data";
+import { validateUrn, generateUniqueUrn } from "@/lib/urn-registration";
+import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile } from "@/lib/lydo-connect-data";
 
 const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
   <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
@@ -302,6 +311,7 @@ const YpopDocumentStatusPill = ({ status }: { status: YPOPEventParticipationStat
 const routeMap: Record<string, string> = {
   overview: "/admin",
   registrations: "/admin/registrations",
+  renewals: "/admin/renewals",
   "budget-utilization": "/admin/budget-utilization",
   "liquidation-monitoring": "/admin/liquidation-monitoring",
   inquiries: "/admin/inquiries",
@@ -644,6 +654,12 @@ export default function AdminPortal({ section }: { section: string }) {
   const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+  const [selectedRenewalId, setSelectedRenewalId] = useState<string | null>(null);
+  const [adminRenewals, setAdminRenewals] = useState<OrganizationRenewalRecord[]>([]);
+  const [adminAccreditations, setAdminAccreditations] = useState<OrganizationAccreditationRecord[]>([]);
+  const [renewalRequiredDocuments, setRenewalRequiredDocuments] = useState<TemplateRecord[]>([]);
+  const [localRenewalFiles, setLocalRenewalFiles] = useState<SubmissionFile[]>([]);
+  const [renewalPacketLoading, setRenewalPacketLoading] = useState(false);
   const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
   const [templateModalMode, setTemplateModalMode] = useState<"create" | "edit" | "delete" | null>(null);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
@@ -756,6 +772,27 @@ export default function AdminPortal({ section }: { section: string }) {
   const registrationDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isRegistrationDecisionConfirmOpen, setIsRegistrationDecisionConfirmOpen] = useState(false);
   const [registrationReviewSubmitting, setRegistrationReviewSubmitting] = useState(false);
+  const [selectedRenewalReviewFileIds, setSelectedRenewalReviewFileIds] = useState<string[]>([]);
+  const [activeRenewalReviewFileId, setActiveRenewalReviewFileId] = useState<string | null>(null);
+  const [renewalInfoCollapsed, setRenewalInfoCollapsed] = useState(true);
+  const [renewalBulkDecision, setRenewalBulkDecision] = useState<RegistrationReviewDecision>("approve");
+  const [renewalBulkRemark, setRenewalBulkRemark] = useState("");
+  const [renewalActivityVisibleCount, setRenewalActivityVisibleCount] = useState(4);
+  const [isRenewalActivityPopoverOpen, setIsRenewalActivityPopoverOpen] = useState(false);
+  const renewalActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const renewalActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRenewalDecisionHelpOpen, setIsRenewalDecisionHelpOpen] = useState(false);
+  const renewalDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const renewalDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRenewalDecisionConfirmOpen, setIsRenewalDecisionConfirmOpen] = useState(false);
+  const [renewalReviewSubmitting, setRenewalReviewSubmitting] = useState(false);
+  const [isRenewalApproveDialogOpen, setIsRenewalApproveDialogOpen] = useState(false);
+  const [isRenewalRevisionDialogOpen, setIsRenewalRevisionDialogOpen] = useState(false);
+  const [isRenewalRejectDialogOpen, setIsRenewalRejectDialogOpen] = useState(false);
+  const [renewalCertificateUrnDraft, setRenewalCertificateUrnDraft] = useState("");
+  const [renewalCertificateUrnError, setRenewalCertificateUrnError] = useState("");
+  const [renewalDecisionRemarksDraft, setRenewalDecisionRemarksDraft] = useState("");
+  const [renewalDecisionSubmitting, setRenewalDecisionSubmitting] = useState(false);
   const [selectedBudgetRequestId, setSelectedBudgetRequestId] = useState<string | null>(null);
   const [budgetInfoCollapsed, setBudgetInfoCollapsed] = useState(true);
   const [budgetActivityVisibleCount, setBudgetActivityVisibleCount] = useState(4);
@@ -827,6 +864,11 @@ export default function AdminPortal({ section }: { section: string }) {
   const [registrationDistrictFilter, setRegistrationDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [registrationBarangayFilter, setRegistrationBarangayFilter] = useState("all");
   const [registrationClassificationFilter, setRegistrationClassificationFilter] = useState("all");
+  const [renewalSearch, setRenewalSearch] = useState("");
+  const [renewalStatusFilter, setRenewalStatusFilter] = useState<RenewalStatusFilter>("all");
+  const [renewalDistrictFilter, setRenewalDistrictFilter] = useState<"all" | PasigDistrict>("all");
+  const [renewalBarangayFilter, setRenewalBarangayFilter] = useState("all");
+  const [renewalClassificationFilter, setRenewalClassificationFilter] = useState("all");
   const [budgetAllocationDistrictFilter, setBudgetAllocationDistrictFilter] = useState("all");
   const [budgetAllocationBarangayFilter, setBudgetAllocationBarangayFilter] = useState("all");
   const [budgetAllocationMobilePage, setBudgetAllocationMobilePage] = useState(1);
@@ -956,7 +998,12 @@ export default function AdminPortal({ section }: { section: string }) {
   const selectedRegistrationSubmission = useMemo(
     () =>
       selectedRegistrationProfile
-        ? state.documentSubmissions.find((submission) => submission.organizationId === selectedRegistrationProfile.id) ?? null
+        ? state.documentSubmissions.find(
+            (submission) =>
+              submission.organizationId === selectedRegistrationProfile.id &&
+              (!submission.submissionScope || submission.submissionScope === "registration") &&
+              !submission.renewalId,
+          ) ?? null
         : null,
     [selectedRegistrationProfile, state.documentSubmissions],
   );
@@ -969,6 +1016,86 @@ export default function AdminPortal({ section }: { section: string }) {
         : [],
     [selectedRegistrationSubmission, state.documentSubmissionFiles],
   );
+  const selectedRenewal = useMemo(
+    () => adminRenewals.find((renewal) => renewal.id === selectedRenewalId) ?? null,
+    [adminRenewals, selectedRenewalId],
+  );
+  const selectedRenewalProfile = useMemo(
+    () =>
+      selectedRenewal
+        ? state.organizationProfiles.find((profile) => profile.id === selectedRenewal.organizationId) ?? null
+        : null,
+    [selectedRenewal, state.organizationProfiles],
+  );
+  const selectedRenewalAccreditation = useMemo(
+    () =>
+      selectedRenewal
+        ? adminAccreditations.find((accreditation) => accreditation.id === selectedRenewal.accreditationId) ?? null
+        : null,
+    [selectedRenewal, adminAccreditations],
+  );
+  const selectedRenewalSubmission = useMemo(
+    () =>
+      selectedRenewal
+        ? state.documentSubmissions.find(
+            (submission) =>
+              submission.renewalId === selectedRenewal.id ||
+              (submission.organizationId === selectedRenewal.organizationId && submission.submissionScope === "renewal"),
+          ) ?? null
+        : null,
+    [selectedRenewal, state.documentSubmissions],
+  );
+  const effectiveRenewalFiles = useMemo<SubmissionFile[]>(() => {
+    if (!selectedRenewalSubmission && !localRenewalFiles.length) return [];
+    const submissionId = selectedRenewalSubmission?.id;
+    const fromState = submissionId
+      ? state.documentSubmissionFiles.filter((file) => file.submissionId === submissionId)
+      : [];
+    const merged = new Map<string, SubmissionFile>();
+    for (const file of fromState) merged.set(file.id, file);
+    for (const file of localRenewalFiles) merged.set(file.id, file);
+    return Array.from(merged.values());
+  }, [selectedRenewalSubmission, state.documentSubmissionFiles, localRenewalFiles]);
+
+  const adminRenewalsQueue = useMemo<AdminRenewalQueueEntry[]>(() => {
+    return adminRenewals.map((renewal) => {
+      const org = state.organizationProfiles.find((o) => o.id === renewal.organizationId);
+      const accreditation = renewal.currentAccreditationId
+        ? adminAccreditations.find((a) => a.id === renewal.currentAccreditationId)
+        : adminAccreditations.find((a) => a.organizationId === renewal.organizationId);
+
+      const renewalSubmission = state.documentSubmissions.find(
+        (s) => s.renewalId === renewal.id || (s.organizationId === renewal.organizationId && s.submissionScope === "renewal"),
+      );
+
+      const files = renewalSubmission
+        ? state.documentSubmissionFiles.filter(
+            (f) => f.submissionId === renewalSubmission.id && f.adminStatus !== "draft",
+          )
+        : [];
+
+      return {
+        renewalId: renewal.id,
+        organizationId: renewal.organizationId,
+        cycleNumber: renewal.cycleNumber,
+        organizationName: org?.organizationName ?? "Unknown Organization",
+        referenceIdentifier: org?.referenceId || org?.urn || "—",
+        district: org?.district ?? "—",
+        barangay: org?.barangay ?? "—",
+        majorClassification: org?.majorClassification ?? "—",
+        currentAccreditationExpiry: accreditation?.validUntil ?? null,
+        documentCount: {
+          submitted: files.length,
+          required: 6,
+        },
+        submittedDate: renewal.submittedAt ?? renewal.createdAt,
+        renewalStatus: renewal.status,
+        linkedDocumentSubmissionId: renewal.linkedDocumentSubmissionId ?? renewalSubmission?.id ?? null,
+        currentAccreditationId: renewal.currentAccreditationId ?? accreditation?.id ?? null,
+        adminRemarks: renewal.adminRemarks ?? null,
+      };
+    });
+  }, [adminRenewals, adminAccreditations, state.organizationProfiles, state.documentSubmissions, state.documentSubmissionFiles]);
   const newsReleases = useMemo(
     () =>
       [...state.newsReleases].sort((left, right) => {
@@ -1373,6 +1500,37 @@ export default function AdminPortal({ section }: { section: string }) {
     registrationSearch,
     registrationStatusFilter,
     state.organizationProfiles,
+  ]);
+
+  const filteredRenewals = useMemo(() => {
+    const query = renewalSearch.trim().toLowerCase();
+    return adminRenewalsQueue.filter((entry) => {
+      const matchesSearch =
+        !query ||
+        [entry.organizationName, entry.referenceIdentifier, entry.barangay, entry.district, entry.majorClassification]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus =
+        renewalStatusFilter === "all" ||
+        (renewalStatusFilter === "submitted" && entry.renewalStatus === "submitted") ||
+        (renewalStatusFilter === "pending_review" && (entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted")) ||
+        (renewalStatusFilter === "needs_revision" && entry.renewalStatus === "needs_revision") ||
+        (renewalStatusFilter === "approved" && entry.renewalStatus === "approved") ||
+        (renewalStatusFilter === "rejected" && entry.renewalStatus === "rejected");
+      const matchesDistrict = renewalDistrictFilter === "all" || entry.district === renewalDistrictFilter;
+      const matchesBarangay = renewalBarangayFilter === "all" || entry.barangay === renewalBarangayFilter;
+      const matchesClassification =
+        renewalClassificationFilter === "all" || entry.majorClassification === renewalClassificationFilter;
+      return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
+    });
+  }, [
+    adminRenewalsQueue,
+    renewalSearch,
+    renewalStatusFilter,
+    renewalDistrictFilter,
+    renewalBarangayFilter,
+    renewalClassificationFilter,
   ]);
   const filteredNewsReleases = useMemo(() => {
     const query = newsSearch.trim().toLowerCase();
@@ -1848,6 +2006,15 @@ export default function AdminPortal({ section }: { section: string }) {
     [state.ypopEntries],
   );
 
+  const pendingRenewalsCount = useMemo(
+    () =>
+      adminRenewals.filter(
+        (renewal) =>
+          renewal.status === "submitted" || renewal.status === "resubmitted" || renewal.status === "under_review",
+      ).length,
+    [adminRenewals],
+  );
+
   const sidebarGroups = useMemo<PortalNavGroup[]>(() => {
     const withOverrides = (id: string, overrides: Partial<PortalNavItem> = {}): PortalNavItem | null => {
       const base = adminNavItemsById.get(id);
@@ -1866,6 +2033,11 @@ export default function AdminPortal({ section }: { section: string }) {
             label: "Registrations",
             icon: UserPlus,
             count: overviewStats.pendingProfiles || undefined,
+          }),
+          withOverrides("renewals", {
+            label: "Renewals",
+            icon: RefreshCw,
+            count: pendingRenewalsCount || undefined,
           }),
           withOverrides("yorp-registry", { icon: Globe }),
         ]),
@@ -1918,7 +2090,7 @@ export default function AdminPortal({ section }: { section: string }) {
         items: group.items.filter((item) => hasAdminNavPermission(user?.permissionCodes, item.id)),
       }))
       .filter((group) => group.items.length > 0);
-  }, [overviewStats, pendingYpop, user]);
+  }, [overviewStats, pendingRenewalsCount, pendingYpop, user]);
 
   const [annualAllocation, setAnnualAllocation] = useState<number | null>(null);
   const [annualAllocationFiscalYear, setAnnualAllocationFiscalYear] = useState<number | null>(null);
@@ -2048,7 +2220,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
   useEffect(() => {
     let isActive = true;
-    const filesWithUploads = state.documentSubmissionFiles.filter((file) => file.fileUrl.trim());
+    const filesWithUploads = [...state.documentSubmissionFiles, ...localRenewalFiles].filter((file) => file.fileUrl.trim());
 
     if (!filesWithUploads.length) {
       documentPreviewSourceRef.current = {};
@@ -2101,7 +2273,7 @@ export default function AdminPortal({ section }: { section: string }) {
     return () => {
       isActive = false;
     };
-  }, [documentPreviewUrls, state.documentSubmissionFiles]);
+  }, [documentPreviewUrls, state.documentSubmissionFiles, localRenewalFiles]);
 
   useEffect(() => {
     const firstReviewableFile = templateDocuments
@@ -2125,6 +2297,66 @@ export default function AdminPortal({ section }: { section: string }) {
     setIsRegistrationDecisionHelpOpen(false);
     setIsRegistrationDecisionConfirmOpen(false);
   }, [selectedRegistrationId]);
+
+  useEffect(() => {
+    let isActive = true;
+    if (!selectedRenewalId) {
+      setLocalRenewalFiles([]);
+      return;
+    }
+    setRenewalPacketLoading(true);
+    void (async () => {
+      try {
+        const packet = await fetchRenewalPacketInSupabase(selectedRenewalId);
+        if (!isActive) return;
+        if (packet) {
+          if (packet.requiredDocuments && packet.requiredDocuments.length > 0) {
+            setRenewalRequiredDocuments(packet.requiredDocuments);
+          }
+          if (packet.files && packet.files.length > 0) {
+            setLocalRenewalFiles(packet.files);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load renewal packet:", err);
+      } finally {
+        if (isActive) setRenewalPacketLoading(false);
+      }
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, [selectedRenewalId]);
+
+  useEffect(() => {
+    const templates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+    const firstReviewableFile = templates
+      .map((documentType) => effectiveRenewalFiles.find((file) => file.documentTypeId === documentType.id))
+      .find((file): file is NonNullable<typeof file> => Boolean(file)) ?? null;
+
+    setActiveRenewalReviewFileId((current) => {
+      if (current && effectiveRenewalFiles.some((file) => file.id === current)) {
+        return current;
+      }
+      return firstReviewableFile?.id ?? effectiveRenewalFiles[0]?.id ?? null;
+    });
+  }, [effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments]);
+
+  useEffect(() => {
+    setSelectedRenewalReviewFileIds([]);
+    setRenewalBulkDecision("approve");
+    setRenewalBulkRemark("");
+    setRenewalActivityVisibleCount(4);
+    setIsRenewalActivityPopoverOpen(false);
+    setIsRenewalDecisionHelpOpen(false);
+    setIsRenewalDecisionConfirmOpen(false);
+    setIsRenewalApproveDialogOpen(false);
+    setIsRenewalRevisionDialogOpen(false);
+    setIsRenewalRejectDialogOpen(false);
+    setRenewalCertificateUrnDraft("");
+    setRenewalCertificateUrnError("");
+    setRenewalDecisionRemarksDraft("");
+  }, [selectedRenewalId]);
 
   useEffect(() => {
     setBudgetInfoCollapsed(true);
@@ -2294,6 +2526,55 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [selectedRegistrationReviewFileIds.length, registrationBulkDecision]);
 
   useEffect(() => {
+    if (!isRenewalActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (renewalActivityPanelRef.current?.contains(target)) return;
+      if (renewalActivityTriggerRef.current?.contains(target)) return;
+      setIsRenewalActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRenewalActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRenewalActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isRenewalDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (renewalDecisionHelpPanelRef.current?.contains(target)) return;
+      if (renewalDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsRenewalDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRenewalDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRenewalDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (selectedRenewalReviewFileIds.length > 1 && renewalBulkDecision !== "approve") {
+      setRenewalBulkDecision("approve");
+      setRenewalBulkRemark("");
+    }
+  }, [selectedRenewalReviewFileIds.length, renewalBulkDecision]);
+
+  useEffect(() => {
     let isActive = true;
 
     if (!selectedBudgetRequestFile) {
@@ -2407,6 +2688,16 @@ export default function AdminPortal({ section }: { section: string }) {
     const remoteSnapshot = (await loadAdminPortalSupabaseState()) ?? (await loadLydoConnectSupabaseState());
     if (remoteSnapshot) {
       mergeRemoteStateRef.current(remoteSnapshot);
+    }
+    try {
+      const [renewals, accreditations] = await Promise.all([
+        fetchAllOrganizationRenewalsInSupabase(),
+        fetchAllOrganizationAccreditationsInSupabase(),
+      ]);
+      setAdminRenewals(renewals);
+      setAdminAccreditations(accreditations);
+    } catch (err) {
+      console.error("Failed to load renewals or accreditations in refreshAdminState:", err);
     }
   };
 
@@ -2859,6 +3150,29 @@ export default function AdminPortal({ section }: { section: string }) {
     setSelectedRegistrationId(nextRegistrationId);
   };
 
+  const handleRenewalSelectionChange = (nextRenewalId: string | null) => {
+    setSelectedRenewalId(nextRenewalId);
+    if (nextRenewalId) {
+      void (async () => {
+        try {
+          const packet = await fetchRenewalPacketInSupabase(nextRenewalId);
+          if (packet?.files) {
+            setLocalRenewalFiles(packet.files);
+          }
+          if (packet?.requiredDocuments) {
+            setRenewalRequiredDocuments(packet.requiredDocuments);
+          }
+        } catch (err) {
+          console.error("Failed to load renewal packet:", err);
+        }
+      })();
+    } else {
+      setLocalRenewalFiles([]);
+      setActiveRenewalReviewFileId(null);
+      setSelectedRenewalReviewFileIds([]);
+    }
+  };
+
   const handleAdminSectionNavigate = (id: string) => {
     const nextRoute = routeMap[id] ?? routeMap.overview;
     const currentRoute = routeMap[section] ?? routeMap.overview;
@@ -3006,6 +3320,316 @@ export default function AdminPortal({ section }: { section: string }) {
       });
     } finally {
       setRegistrationReviewSubmitting(false);
+    }
+  };
+
+  const submitRenewalReviewDecisions = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile) return;
+
+    const decision = renewalBulkDecision;
+    const targetFiles = effectiveRenewalFiles.filter(
+      (file) => selectedRenewalReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+    );
+
+    if (!targetFiles.length) {
+      toast({
+        title: "No documents selected",
+        description: "Select at least one submitted document before confirming a decision.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (registrationDecisionRequiresRemark(decision) && targetFiles.length > 1) {
+      toast({
+        title: "One document at a time",
+        description: `${registrationReviewDecisionLabel[decision]} requires selecting a single document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const remark = renewalBulkRemark.trim();
+    if (registrationDecisionRequiresRemark(decision) && !remark) {
+      toast({
+        title: "Comment required",
+        description: `Add a remark before you can ${registrationReviewDecisionLabel[decision].toLowerCase()} this document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRenewalReviewSubmitting(true);
+    try {
+      const result = await submitDocumentReviewBatchToSupabase({
+        decisions: targetFiles.map((file) => ({
+          fileId: file.id,
+          status:
+            decision === "approve"
+              ? "approved_green"
+              : decision === "needs_revision"
+                ? "needs_revision"
+                : "rejected_red",
+          adminRemarks: decision === "approve" ? undefined : remark,
+          expectedUpdatedAt: file.updatedAt,
+        })),
+      });
+
+      const successfulFileIds = new Set(
+        result.results.filter((item) => item.success).map((item) => item.fileId),
+      );
+      const successfulFiles = targetFiles.filter((file) => successfulFileIds.has(file.id));
+      const failedResults = result.results.filter((item) => !item.success);
+
+      if (!successfulFiles.length) {
+        throw new Error(
+          failedResults.map((item) => item.error).filter(Boolean).join(" ") ||
+            "No document review decisions were saved. Please refresh and try again.",
+        );
+      }
+
+      await refreshAdminState();
+      try {
+        const packet = await fetchRenewalPacketInSupabase(selectedRenewal.id);
+        if (packet?.files) {
+          setLocalRenewalFiles(packet.files);
+        }
+      } catch {
+        // Safe to ignore secondary refresh error
+      }
+
+      for (const file of successfulFiles) {
+        if (decision === "approve") {
+          await appendAuditLog(
+            "Approved renewal document",
+            "document_submission_file",
+            file.id,
+            `Approved ${file.fileName} from the renewal detail review.`,
+            selectedRenewalProfile.id,
+          );
+        } else if (decision === "needs_revision") {
+          await appendAuditLog(
+            "Renewal document revision requested",
+            "document_submission_file",
+            file.id,
+            `Requested revisions for ${file.fileName} from the renewal detail review.`,
+            selectedRenewalProfile.id,
+          );
+        } else {
+          await appendAuditLog(
+            "Rejected renewal document",
+            "document_submission_file",
+            file.id,
+            `Rejected ${file.fileName} from the renewal detail review.`,
+            selectedRenewalProfile.id,
+          );
+        }
+      }
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal document review updated",
+        message: `The admin submitted ${result.successCount} review decision${result.successCount === 1 ? "" : "s"} for your renewal files.`,
+        type: "document_review_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      setSelectedRenewalReviewFileIds([]);
+      setRenewalBulkDecision("approve");
+      setRenewalBulkRemark("");
+
+      if (failedResults.length) {
+        toast({
+          title: "Review partially completed",
+          description: `${result.successCount} saved; ${result.failureCount} failed.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Review Completed",
+          description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were updated successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to submit renewal review decisions:", error);
+      toast({
+        title: "Unable to submit review decisions",
+        description: error instanceof Error ? error.message : "The selected review decisions could not be saved.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalReviewSubmitting(false);
+      setIsRenewalDecisionConfirmOpen(false);
+    }
+  };
+
+  const handleApproveRenewalConfirm = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile) return;
+    const urn = renewalCertificateUrnDraft.trim();
+    if (!urn) {
+      setRenewalCertificateUrnError("Certificate URN is required.");
+      return;
+    }
+    const validation = validateUrn(urn);
+    if (!validation.isValid) {
+      setRenewalCertificateUrnError(validation.error || "Invalid URN format (expected LYDO-PASIG-XXXX-XXXX).");
+      return;
+    }
+    setRenewalCertificateUrnError("");
+    setRenewalDecisionSubmitting(true);
+    try {
+      await adminApproveRenewalInSupabase({
+        renewalId: selectedRenewal.id,
+        certificateUrn: urn,
+        adminRemarks: renewalDecisionRemarksDraft.trim() || undefined,
+      });
+
+      await appendAuditLog(
+        "Approved organization renewal",
+        "organization_renewal",
+        selectedRenewal.id,
+        `Approved renewal for ${selectedRenewalProfile.organizationName} with URN ${urn}.`,
+        selectedRenewalProfile.id,
+      );
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal Approved",
+        message: `Your organization renewal for ${selectedRenewalProfile.organizationName} has been approved! URN: ${urn}`,
+        type: "renewal_status_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      toast({
+        title: "Renewal Approved",
+        description: `Renewal for ${selectedRenewalProfile.organizationName} has been approved with URN ${urn}.`,
+      });
+
+      setIsRenewalApproveDialogOpen(false);
+      await refreshAdminState();
+    } catch (error) {
+      console.error("Failed to approve renewal:", error);
+      toast({
+        title: "Approval Failed",
+        description: error instanceof Error ? error.message : "Unable to approve renewal.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalDecisionSubmitting(false);
+    }
+  };
+
+  const handleRequestRevisionRenewalConfirm = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile) return;
+    const remarks = renewalDecisionRemarksDraft.trim();
+    if (!remarks) {
+      toast({
+        title: "Remarks Required",
+        description: "Please provide remarks explaining what needs revision.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setRenewalDecisionSubmitting(true);
+    try {
+      await adminRequestRenewalRevisionInSupabase({
+        renewalId: selectedRenewal.id,
+        adminRemarks: remarks,
+      });
+
+      await appendAuditLog(
+        "Requested renewal revision",
+        "organization_renewal",
+        selectedRenewal.id,
+        `Requested revision for renewal of ${selectedRenewalProfile.organizationName}: ${remarks}`,
+        selectedRenewalProfile.id,
+      );
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal Revision Requested",
+        message: `Revisions requested for your organization renewal: ${remarks}`,
+        type: "renewal_status_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      toast({
+        title: "Revision Requested",
+        description: `Revision requested for ${selectedRenewalProfile.organizationName}.`,
+      });
+
+      setIsRenewalRevisionDialogOpen(false);
+      await refreshAdminState();
+    } catch (error) {
+      console.error("Failed to request renewal revision:", error);
+      toast({
+        title: "Request Failed",
+        description: error instanceof Error ? error.message : "Unable to request renewal revision.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalDecisionSubmitting(false);
+    }
+  };
+
+  const handleRejectRenewalConfirm = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile) return;
+    const remarks = renewalDecisionRemarksDraft.trim();
+    if (!remarks) {
+      toast({
+        title: "Remarks Required",
+        description: "Please provide remarks explaining the reason for rejection.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setRenewalDecisionSubmitting(true);
+    try {
+      await adminRejectRenewalInSupabase({
+        renewalId: selectedRenewal.id,
+        adminRemarks: remarks,
+      });
+
+      await appendAuditLog(
+        "Rejected organization renewal",
+        "organization_renewal",
+        selectedRenewal.id,
+        `Rejected renewal for ${selectedRenewalProfile.organizationName}: ${remarks}`,
+        selectedRenewalProfile.id,
+      );
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal Rejected",
+        message: `Your organization renewal has been rejected: ${remarks}`,
+        type: "renewal_status_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      toast({
+        title: "Renewal Rejected",
+        description: `Renewal for ${selectedRenewalProfile.organizationName} has been rejected.`,
+      });
+
+      setIsRenewalRejectDialogOpen(false);
+      await refreshAdminState();
+    } catch (error) {
+      console.error("Failed to reject renewal:", error);
+      toast({
+        title: "Rejection Failed",
+        description: error instanceof Error ? error.message : "Unable to reject renewal.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalDecisionSubmitting(false);
     }
   };
 
@@ -5824,6 +6448,980 @@ export default function AdminPortal({ section }: { section: string }) {
               classificationFilter={registrationClassificationFilter}
               onClassificationFilterChange={setRegistrationClassificationFilter}
               onReview={(organizationId) => handleRegistrationSelectionChange(organizationId)}
+            />
+          </div>
+        );
+      }
+      case "renewals": {
+        const selectedRenewalRecord = selectedRenewal;
+        const selectedOrg = selectedRenewalProfile;
+        const selectedSubmission = selectedRenewalSubmission;
+        const renewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+        const validRenewalTypeIds = new Set(renewalTemplates.map((item) => item.id));
+        const selectedFiles = effectiveRenewalFiles.filter(
+          (file) => validRenewalTypeIds.has(file.documentTypeId) && file.adminStatus !== "draft",
+        );
+        const approvedDocumentCount = selectedFiles.filter((file) => file.adminStatus === "approved_green").length;
+        const allRequiredDocumentsApproved =
+          selectedFiles.length === renewalTemplates.length && approvedDocumentCount === renewalTemplates.length;
+        const submittedDocumentCount = selectedFiles.length;
+        const reviewedDocumentCount = selectedFiles.filter(
+          (file) => file.adminStatus !== "submitted" && file.adminStatus !== "under_admin_review",
+        ).length;
+        const needsRevisionCount = selectedFiles.filter((file) => file.adminStatus === "needs_revision").length;
+        const rejectedCount = selectedFiles.filter((file) => file.adminStatus === "rejected_red").length;
+        const unreviewedCount = selectedFiles.filter(
+          (file) => file.adminStatus === "submitted" || file.adminStatus === "under_admin_review",
+        ).length;
+        const orderedSubmittedFiles = renewalTemplates
+          .map((documentType) => {
+            const file = selectedFiles.find((entry) => entry.documentTypeId === documentType.id);
+            if (!file) return null;
+            return { documentType, file };
+          })
+          .filter(
+            (entry): entry is { documentType: (typeof renewalTemplates)[number]; file: (typeof selectedFiles)[number] } =>
+              Boolean(entry),
+          );
+        const filteredQueueEntries = orderedSubmittedFiles;
+        const activeReviewEntry =
+          filteredQueueEntries.find((entry) => entry.file.id === activeRenewalReviewFileId) ??
+          filteredQueueEntries[0] ??
+          orderedSubmittedFiles.find((entry) => entry.file.id === activeRenewalReviewFileId) ??
+          orderedSubmittedFiles[0] ??
+          null;
+        const activeReviewIndex = activeReviewEntry
+          ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
+          : -1;
+        const selectedBulkFiles = orderedSubmittedFiles.filter((entry) =>
+          selectedRenewalReviewFileIds.includes(entry.file.id),
+        );
+        const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
+        const decisionRequiresRemark = registrationDecisionRequiresRemark(renewalBulkDecision);
+        const isRenewalDecisionConfirmDisabled =
+          selectedBulkFiles.length === 0 ||
+          renewalReviewSubmitting ||
+          (selectedBulkFiles.length === 1 && decisionRequiresRemark && !renewalBulkRemark.trim());
+
+        if (selectedRenewalRecord && selectedOrg) {
+          const isRenewalDocumentsComplete =
+            renewalTemplates.length > 0 && submittedDocumentCount >= renewalTemplates.length;
+          const renewalCreatedDate = new Date(selectedRenewalRecord.submittedAt || selectedRenewalRecord.createdAt);
+          const isRenewalCreatedDateValid = !Number.isNaN(renewalCreatedDate.getTime());
+
+          const getActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const organizationActivityEntries = state.activityLogs
+            .filter(
+              (log) =>
+                (log.organizationId === selectedOrg.id || log.relatedId === selectedRenewalRecord.id) &&
+                (log.relatedType === "document_submission_file" ||
+                  log.relatedType === "organization_renewal" ||
+                  log.relatedType === "document_submission") &&
+                log.action !== "Submitted batch document review",
+            )
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              const relatedFile = effectiveRenewalFiles.find((file) => file.id === log.relatedId);
+              const docName = relatedFile
+                ? renewalTemplates.find((doc) => doc.id === relatedFile.documentTypeId)?.name ?? relatedFile.fileName
+                : log.relatedType === "organization_renewal"
+                  ? "renewal application"
+                  : "a document";
+              const verb =
+                log.action === "Approved renewal document" ||
+                log.action === "Approved document submission" ||
+                log.action === "Approved organization renewal"
+                  ? "approved"
+                  : log.action === "Renewal document revision requested" ||
+                      log.action === "Document revision requested" ||
+                      log.action === "Requested renewal revision"
+                    ? "requested revisions to"
+                    : log.action === "Rejected renewal document" ||
+                        log.action === "Rejected document submission" ||
+                        log.action === "Rejected organization renewal"
+                      ? "rejected"
+                      : "updated";
+              return { id: log.id, adminName, docName, verb, createdAt: log.createdAt };
+            });
+
+          const visibleActivityEntries = organizationActivityEntries.slice(0, renewalActivityVisibleCount);
+          const hasMoreActivityEntries = organizationActivityEntries.length > visibleActivityEntries.length;
+          const groupedActivityEntries = visibleActivityEntries.reduce<
+            { label: string; entries: typeof visibleActivityEntries }[]
+          >((groups, entry) => {
+            const label = getActivityDayLabel(entry.createdAt);
+            const existingGroup = groups.find((group) => group.label === label);
+            if (existingGroup) {
+              existingGroup.entries.push(entry);
+            } else {
+              groups.push({ label, entries: [entry] });
+            }
+            return groups;
+          }, []);
+
+          const reviewSummaryCard = (
+            <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
+                <div className="flex flex-col gap-1">
+                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                  <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                    Review your decisions before submitting.
+                  </p>
+                </div>
+                <div className="relative shrink-0">
+                  <button
+                    ref={renewalActivityTriggerRef}
+                    type="button"
+                    aria-label="Decision history"
+                    onClick={() => setIsRenewalActivityPopoverOpen((current) => !current)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                  {isRenewalActivityPopoverOpen ? (
+                    <div
+                      ref={renewalActivityPanelRef}
+                      className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                    >
+                      <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                          Recent Activity
+                        </p>
+                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          A log of recent actions taken on this renewal.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                        {groupedActivityEntries.length ? (
+                          groupedActivityEntries.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                {group.label}
+                              </p>
+                              <div className="space-y-0">
+                                {group.entries.map((entry, index) => {
+                                  const entryDate = new Date(entry.createdAt);
+                                  const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                  return (
+                                    <div
+                                      key={entry.id}
+                                      className={cn(
+                                        "py-2 font-segoe text-[13px] leading-[140%] text-text-default",
+                                        index !== group.entries.length - 1 && "border-b border-slate-200",
+                                      )}
+                                    >
+                                      <p className="font-semibold text-text-default">{entry.adminName}</p>
+                                      <p className="text-slate-600">
+                                        {entry.verb}{" "}
+                                        <span className="font-medium text-text-default">{entry.docName}</span>
+                                      </p>
+                                      <p className="pt-0.5 text-xs text-slate-500">
+                                        {isValidEntryDate ? format(entryDate, "h:mm a") : "Recently"}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <Clock className="h-8 w-8 text-slate-400" />
+                            <p className="mt-2 font-segoe text-sm font-semibold text-text-default">No activity yet</p>
+                            <p className="font-segoe text-xs text-slate-500">
+                              Decisions made on this renewal will appear here.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {hasMoreActivityEntries ? (
+                        <div className="border-t border-slate-300 p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setRenewalActivityVisibleCount((current) => current + 4)}
+                            className="font-segoe text-xs font-semibold text-public-bg-brand hover:underline"
+                          >
+                            Show more
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5 pt-4">
+                <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
+                </div>
+                <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                    Request Revision
+                  </p>
+                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">
+                    {needsRevisionCount + rejectedCount}
+                  </p>
+                </div>
+                <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                </div>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="space-y-4">
+              {/* Header bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  onClick={() => handleRenewalSelectionChange(null)}
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Renewals Queue
+                </button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+                      isRenewalDocumentsComplete
+                        ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
+                        : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
+                    )}
+                  >
+                    {submittedDocumentCount}/{renewalTemplates.length} Documents Submitted
+                  </span>
+                  <RenewalStatusPill status={selectedRenewalRecord.status} />
+
+                  {/* Application-level decision buttons */}
+                  {selectedRenewalRecord.status !== "approved" && selectedRenewalRecord.status !== "rejected" ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRenewalDecisionRemarksDraft("");
+                          setIsRenewalRevisionDialogOpen(true);
+                        }}
+                        className="flex h-9 items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 font-segoe text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-100"
+                      >
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        Request Revision
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRenewalDecisionRemarksDraft("");
+                          setIsRenewalRejectDialogOpen(true);
+                        }}
+                        className="flex h-9 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-3 font-segoe text-xs font-semibold text-red-800 transition-colors hover:bg-red-100"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const existingUrn = selectedOrg.urn || "";
+                          const candidateUrn =
+                            existingUrn && validateUrn(existingUrn).isValid
+                              ? existingUrn
+                              : generateUniqueUrn(selectedOrg.majorClassification || "YOUTH_ORGANIZATION");
+                          setRenewalCertificateUrnDraft(candidateUrn);
+                          setRenewalCertificateUrnError("");
+                          setRenewalDecisionRemarksDraft("");
+                          setIsRenewalApproveDialogOpen(true);
+                        }}
+                        className="flex h-9 items-center gap-1.5 rounded-md bg-public-bg-brand px-3.5 font-segoe text-xs font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Approve Renewal
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Organization details card (collapsible) */}
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 p-4",
+                    !renewalInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
+                  )}
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                    </div>
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {selectedOrg.organizationName}
+                    </p>
+                    <ReferenceCodeChip
+                      code={selectedOrg.referenceId || selectedOrg.urn || "—"}
+                      ariaLabel="Organization Reference Code"
+                    />
+                    <CategoryChip
+                      category={selectedOrg.majorClassification}
+                      ariaLabel="Major Classification"
+                    />
+                    <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 font-segoe text-xs font-medium text-slate-700">
+                      Cycle {selectedRenewalRecord.cycleNumber}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setRenewalInfoCollapsed((prev) => !prev)}
+                    className="flex items-center gap-1 font-segoe text-xs font-medium text-slate-600 hover:text-text-default"
+                  >
+                    <span>{renewalInfoCollapsed ? "Show details" : "Hide details"}</span>
+                    <ChevronDown
+                      className={cn("h-4 w-4 transition-transform duration-200", !renewalInfoCollapsed && "rotate-180")}
+                    />
+                  </button>
+                </div>
+
+                {!renewalInfoCollapsed ? (
+                  <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Organization</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationName}</p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Major Classification</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.majorClassification || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">District & Barangay</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {selectedOrg.district || "—"} &bull; {selectedOrg.barangay || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Submitted Date</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {isRenewalCreatedDateValid ? format(renewalCreatedDate, "d MMM yyyy, h:mm a") : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Representative</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {[selectedOrg.repFirstName, selectedOrg.repLastName].filter(Boolean).join(" ") || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Email Address</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationEmail || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Contact Number</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.contactNumber || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Facebook Page</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {selectedOrg.facebookPage ? (
+                          <a
+                            href={selectedOrg.facebookPage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-public-bg-brand hover:underline"
+                          >
+                            {selectedOrg.facebookPage}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Review summary cards */}
+              {reviewSummaryCard}
+
+              {/* 2-column Main review workspace */}
+              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_376px]">
+                {/* Left Column: Document Viewer */}
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 p-4">
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {activeReviewEntry ? activeReviewEntry.documentType.name : "Select a document"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {filteredQueueEntries.length > 1 ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label="Previous document"
+                            disabled={activeReviewIndex <= 0}
+                            onClick={() => {
+                              if (activeReviewIndex > 0) {
+                                const prev = filteredQueueEntries[activeReviewIndex - 1];
+                                if (prev) setActiveRenewalReviewFileId(prev.file.id);
+                              }
+                            }}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                          >
+                            <ChevronLeft className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                          </button>
+                          <span className="px-1 font-segoe text-xs text-slate-500">
+                            {activeReviewIndex >= 0 ? activeReviewIndex + 1 : 0} of {filteredQueueEntries.length}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Next document"
+                            disabled={activeReviewIndex >= filteredQueueEntries.length - 1}
+                            onClick={() => {
+                              if (activeReviewIndex < filteredQueueEntries.length - 1) {
+                                const next = filteredQueueEntries[activeReviewIndex + 1];
+                                if (next) setActiveRenewalReviewFileId(next.file.id);
+                              }
+                            }}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                          >
+                            <ChevronRight className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                          </button>
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label="Download documents"
+                        disabled={downloadDialogResolving || !filteredQueueEntries.length}
+                        onClick={() =>
+                          void openDownloadDialog(
+                            activeReviewEntry
+                              ? { fileName: activeReviewEntry.file.fileName, fileUrl: activeReviewEntry.file.fileUrl }
+                              : null,
+                            filteredQueueEntries.map((entry) => ({
+                              fileName: entry.file.fileName,
+                              fileUrl: entry.file.fileUrl,
+                            })),
+                            `${selectedOrg.organizationName.replace(/[^a-zA-Z0-9_-]/g, "_")}-Renewal-Documents.zip`,
+                          )
+                        }
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
+                    {activeReviewEntry && activeDocumentPreviewUrl ? (
+                      activeReviewEntry.file.fileType.startsWith("image/") ? (
+                        <img
+                          src={activeDocumentPreviewUrl}
+                          alt={activeReviewEntry.documentType.name}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <iframe
+                          src={withHiddenPdfToolbar(activeDocumentPreviewUrl)}
+                          title={activeReviewEntry.documentType.name}
+                          className="h-full min-h-[500px] w-full border-0"
+                        />
+                      )
+                    ) : (
+                      <div
+                        className="flex h-full min-h-[500px] w-full items-center justify-center"
+                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                      >
+                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column: Document Queue & Decision Box */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedRenewalReviewFileIds(
+                              orderedSubmittedFiles
+                                .filter((entry) => entry.file.adminStatus !== "approved_green")
+                                .map((entry) => entry.file.id),
+                            )
+                          }
+                          className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
+                        >
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
+                          Select all
+                        </button>
+                      </div>
+                      <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                        Review the organization&rsquo;s renewal documents and select a document to preview.
+                      </p>
+                    </div>
+
+                    <div className="space-y-0.5 pt-1">
+                      {orderedSubmittedFiles.length ? (
+                        orderedSubmittedFiles.map(({ documentType, file }) => {
+                          const isChecked = selectedRenewalReviewFileIds.includes(file.id);
+                          const isActive = activeReviewEntry?.file.id === file.id;
+                          const uploadedDate = new Date(file.uploadedAt);
+                          const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                          const isLocked = file.adminStatus === "approved_green";
+
+                          return (
+                            <div
+                              key={file.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setActiveRenewalReviewFileId(file.id);
+                                if (!isLocked) setSelectedRenewalReviewFileIds([file.id]);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                setActiveRenewalReviewFileId(file.id);
+                                if (!isLocked) setSelectedRenewalReviewFileIds([file.id]);
+                              }}
+                              className={cn(
+                                "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                                isChecked
+                                  ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                  : isActive
+                                    ? "border border-transparent bg-slate-50"
+                                    : "border border-transparent hover:bg-slate-50",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isLocked}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={() => {
+                                  setSelectedRenewalReviewFileIds((current) =>
+                                    current.includes(file.id)
+                                      ? current.filter((id) => id !== file.id)
+                                      : [...current, file.id],
+                                  );
+                                }}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                    {documentType.name}
+                                  </p>
+                                  <DocumentQueueStatusPill status={file.adminStatus} />
+                                </div>
+                                <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                  {file.fileName}
+                                </p>
+                                <div className="flex items-center gap-2 pt-1">
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                  </p>
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    {formatFileSize(file.fileSize)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                          No documents submitted yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                      <button
+                        type="button"
+                        ref={renewalDecisionHelpTriggerRef}
+                        onClick={() => setIsRenewalDecisionHelpOpen((current) => !current)}
+                        aria-label="Review rules"
+                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                      >
+                        <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                      </button>
+                      {isRenewalDecisionHelpOpen ? (
+                        <div
+                          ref={renewalDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Approve</span> &mdash; multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision / Reject</span> &mdash; one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-4">
+                      {selectedBulkFiles.length === 0 ? (
+                        <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                            {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                        <Select
+                          value={renewalBulkDecision}
+                          onValueChange={(value) => setRenewalBulkDecision(value as RegistrationReviewDecision)}
+                          disabled={selectedBulkFiles.length === 0}
+                        >
+                          <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="approve">Approve</SelectItem>
+                            <SelectItem
+                              value="needs_revision"
+                              disabled={selectedBulkFiles.length > 1}
+                              className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                            >
+                              Request Revision
+                            </SelectItem>
+                            <SelectItem
+                              value="reject"
+                              disabled={selectedBulkFiles.length > 1}
+                              className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                            >
+                              Reject
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Remarks <span className="text-destructive">*</span>
+                          </label>
+                          <Textarea
+                            value={renewalBulkRemark}
+                            onChange={(event) => setRenewalBulkRemark(event.target.value)}
+                            placeholder="Explain the reason or required action..."
+                            rows={3}
+                            className="resize-none text-[13px]"
+                          />
+                        </div>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        disabled={isRenewalDecisionConfirmDisabled}
+                        onClick={() => setIsRenewalDecisionConfirmOpen(true)}
+                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+
+                  <DangerConfirmDialog
+                    open={isRenewalDecisionConfirmOpen}
+                    onOpenChange={setIsRenewalDecisionConfirmOpen}
+                    icon={CheckCircle}
+                    variant="info"
+                    title="Confirm Review Decision"
+                    description="Review your decisions and remarks before submitting. These will be applied to the renewal files below and shown to the organization in their portal."
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {selectedBulkFiles.map((entry) => (
+                            <div key={entry.file.id} className="grid grid-cols-3 gap-2">
+                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                                {entry.documentType.name}
+                              </p>
+                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                                {registrationReviewDecisionLabel[renewalBulkDecision]}
+                              </p>
+                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                                {selectedBulkFiles.length === 1 && decisionRequiresRemark
+                                  ? renewalBulkRemark.trim() || "—"
+                                  : "—"}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    }
+                    warning="Once submitted, these decisions cannot be changed from this review."
+                    cancelLabel="Cancel"
+                    confirmLabel="Submit Review"
+                    confirmIcon={Send}
+                    onConfirm={submitRenewalReviewDecisions}
+                  />
+
+                  {/* Modal: Approve Renewal */}
+                  <Dialog open={isRenewalApproveDialogOpen} onOpenChange={setIsRenewalApproveDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-segoe text-lg font-semibold text-text-default">
+                          Approve Organization Renewal
+                        </DialogTitle>
+                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                          Assign an official Certificate Unique Registration Number (URN) to approve this renewal for{" "}
+                          <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-3 py-2">
+                        <div className="space-y-1">
+                          <label className="font-segoe text-xs font-semibold text-text-default">
+                            Certificate URN <span className="text-destructive">*</span>
+                          </label>
+                          <Input
+                            value={renewalCertificateUrnDraft}
+                            onChange={(e) => {
+                              setRenewalCertificateUrnDraft(e.target.value);
+                              setRenewalCertificateUrnError("");
+                            }}
+                            placeholder="LYDO-PASIG-XXXX-XXXX"
+                            className="font-cascadia text-sm uppercase"
+                          />
+                          {renewalCertificateUrnError ? (
+                            <p className="font-segoe text-xs text-destructive">{renewalCertificateUrnError}</p>
+                          ) : (
+                            <p className="font-segoe text-[11px] text-slate-400">
+                              Format: LYDO-PASIG-YYYY-XXXX (e.g. {generateUniqueUrn(selectedOrg.majorClassification || "YOUTH_ORGANIZATION")})
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <label className="font-segoe text-xs font-semibold text-text-default">
+                            Admin Remarks (Optional)
+                          </label>
+                          <Textarea
+                            value={renewalDecisionRemarksDraft}
+                            onChange={(e) => setRenewalDecisionRemarksDraft(e.target.value)}
+                            placeholder="Add approval notes or instructions for the organization..."
+                            rows={3}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting}
+                          onClick={() => setIsRenewalApproveDialogOpen(false)}
+                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting || !renewalCertificateUrnDraft.trim()}
+                          onClick={handleApproveRenewalConfirm}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-bg-brand-hover disabled:opacity-50"
+                        >
+                          {renewalDecisionSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4" />
+                          )}
+                          Approve Renewal
+                        </button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Modal: Request Renewal Revision */}
+                  <Dialog open={isRenewalRevisionDialogOpen} onOpenChange={setIsRenewalRevisionDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-segoe text-lg font-semibold text-text-default">
+                          Request Renewal Revision
+                        </DialogTitle>
+                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                          Explain what needs revision for{" "}
+                          <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>. The organization
+                          will be notified to update and resubmit.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2 py-2">
+                        <label className="font-segoe text-xs font-semibold text-text-default">
+                          Remarks <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          value={renewalDecisionRemarksDraft}
+                          onChange={(e) => setRenewalDecisionRemarksDraft(e.target.value)}
+                          placeholder="Describe the required updates or missing requirements..."
+                          rows={4}
+                          className="text-sm"
+                        />
+                      </div>
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting}
+                          onClick={() => setIsRenewalRevisionDialogOpen(false)}
+                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting || !renewalDecisionRemarksDraft.trim()}
+                          onClick={handleRequestRevisionRenewalConfirm}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-amber-600 px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                        >
+                          {renewalDecisionSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4" />
+                          )}
+                          Request Revision
+                        </button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Modal: Reject Renewal */}
+                  <Dialog open={isRenewalRejectDialogOpen} onOpenChange={setIsRenewalRejectDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-segoe text-lg font-semibold text-destructive">
+                          Reject Organization Renewal
+                        </DialogTitle>
+                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                          Provide a clear justification for rejecting the renewal of{" "}
+                          <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>. This action is
+                          permanent.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2 py-2">
+                        <label className="font-segoe text-xs font-semibold text-text-default">
+                          Reason for Rejection <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          value={renewalDecisionRemarksDraft}
+                          onChange={(e) => setRenewalDecisionRemarksDraft(e.target.value)}
+                          placeholder="State the reason why this renewal is being rejected..."
+                          rows={4}
+                          className="text-sm"
+                        />
+                      </div>
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting}
+                          onClick={() => setIsRenewalRejectDialogOpen(false)}
+                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting || !renewalDecisionRemarksDraft.trim()}
+                          onClick={handleRejectRenewalConfirm}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-destructive px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
+                        >
+                          {renewalDecisionSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="h-4 w-4" />
+                          )}
+                          Reject Renewal
+                        </button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const submittedRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus === "submitted").length;
+        const pendingReviewRenewalsCount = adminRenewalsQueue.filter(
+          (r) => r.renewalStatus === "under_review" || r.renewalStatus === "resubmitted",
+        ).length;
+        const needsRevisionRenewalsCount = adminRenewalsQueue.filter(
+          (r) => r.renewalStatus === "needs_revision",
+        ).length;
+
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Renewals"
+              description="Review incoming organization renewal applications and accreditation renewals."
+            />
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <StatsCard
+                title="SUBMITTED"
+                value={submittedRenewalsCount}
+                icon={Send}
+                description="New renewal submissions awaiting review."
+              />
+              <StatsCard
+                title="PENDING REVIEW"
+                value={pendingReviewRenewalsCount}
+                icon={Clock}
+                description="Renewals currently being evaluated."
+              />
+              <StatsCard
+                title="NEEDS REVISION"
+                value={needsRevisionRenewalsCount}
+                icon={AlertCircle}
+                description="Renewals requiring corrections."
+              />
+            </div>
+
+            <RenewalsTable
+              renewals={filteredRenewals}
+              searchValue={renewalSearch}
+              onSearchChange={setRenewalSearch}
+              statusFilter={renewalStatusFilter}
+              onStatusFilterChange={setRenewalStatusFilter}
+              districtFilter={renewalDistrictFilter}
+              onDistrictFilterChange={setRenewalDistrictFilter}
+              barangayFilter={renewalBarangayFilter}
+              onBarangayFilterChange={setRenewalBarangayFilter}
+              classificationFilter={renewalClassificationFilter}
+              onClassificationFilterChange={setRenewalClassificationFilter}
+              onReview={(renewalId) => handleRenewalSelectionChange(renewalId)}
             />
           </div>
         );

@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Building2, CalendarCheck, CalendarDays, ClipboardCheck, ClipboardList, FileCheck2, FileText, LayoutDashboard, Mail, Medal, Megaphone, PlaneTakeoff, Wallet } from "lucide-react";
+import { BarChart3, Bell, Building2, CalendarCheck, CalendarDays, ClipboardCheck, ClipboardList, FileCheck2, FileText, LayoutDashboard, Mail, Medal, Megaphone, PlaneTakeoff, RefreshCw, Wallet } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type ProfileStatus =
@@ -332,6 +332,7 @@ export type RequiredDocumentType = {
   sortOrder: number;
   isRequired: boolean;
   isActive: boolean;
+  scope?: "registration" | "renewal" | "both";
   templateScope: "document_submission" | "move" | "other";
 };
 
@@ -589,6 +590,7 @@ export const userRouteMap: Record<string, string> = {
   dashboard: "/dashboard",
   "organization-profile": "/organization-profile",
   "document-submission": "/document-submission",
+  "organization-renewal": "/organization-renewal",
   "budget-request": "/budget-request",
   "liquidation-reporting": "/liquidation-reporting",
   "news-releases": "/portal-news-releases",
@@ -611,6 +613,7 @@ export const adminNavigationGroups: PortalNavGroup[] = [
     label: "Organizations",
     items: [
       { id: "registrations", label: "Registration Review", icon: ClipboardCheck },
+      { id: "renewals", label: "Renewals", icon: RefreshCw },
       { id: "yorp-registry", label: "YORP Registry", icon: ClipboardList },
     ],
   },
@@ -650,6 +653,47 @@ export const adminNavigationGroups: PortalNavGroup[] = [
 
 export const adminNavigation = adminNavigationGroups.flatMap((group) => group.items);
 
+export type AccreditationPersistedStatus = "active" | "superseded" | "revoked";
+export type AccreditationDerivedStatus = "active" | "expiring_soon" | "expired" | "superseded" | "revoked";
+export type AccreditationStatus = AccreditationDerivedStatus;
+
+export type OrganizationAccreditationRecord = {
+  id: string;
+  organizationId: string;
+  termNumber: number;
+  startDate: string;
+  endDate: string;
+  certificateUrn: string;
+  status: AccreditationPersistedStatus;
+  isLegacyInferred: boolean;
+  approvedBy: string | null;
+  approvedAt: string;
+  createdAt: string;
+};
+
+export type RenewalApplicationStatus =
+  | "draft"
+  | "submitted"
+  | "under_review"
+  | "needs_revision"
+  | "resubmitted"
+  | "approved"
+  | "rejected";
+
+export type OrganizationRenewalRecord = {
+  id: string;
+  organizationId: string;
+  cycleNumber: number;
+  currentAccreditationId: string;
+  status: RenewalApplicationStatus;
+  submittedAt: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  adminRemarks: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type OrganizationProfile = {
   id: string;
   referenceId: string;
@@ -685,6 +729,10 @@ export type OrganizationProfile = {
   internalNotes: string;
   yorpRegisteredYear: number | null;
   yorpRenewedYear: number | null;
+  currentAccreditationId?: string | null;
+  accreditationStartDate?: string | null;
+  accreditationExpiresAt?: string | null;
+  accreditationStatus?: AccreditationStatus | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -728,6 +776,8 @@ export type DocumentSubmission = {
   submittedBy: string;
   status: DocumentSubmissionStatus;
   userConfirmed: boolean;
+  submissionScope?: "registration" | "renewal";
+  renewalId?: string | null;
   submittedAt: string;
   reviewedBy: string;
   reviewedAt: string;

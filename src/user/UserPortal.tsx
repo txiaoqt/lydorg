@@ -92,6 +92,7 @@ import { UserPortalBudgetWorkspaceView } from "@/components/portal/UserPortalBud
 import { UserPortalYPOPWorkspaceView } from "@/components/portal/UserPortalYPOPWorkspaceView";
 import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 import { UserPortalNewsWorkspaceView } from "@/components/portal/UserPortalNewsWorkspaceView";
+import { UserPortalRenewalWorkspaceView } from "@/components/portal/UserPortalRenewalWorkspaceView";
 import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
@@ -105,7 +106,11 @@ import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
 import { generateUniqueUrn, isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import { DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
-import { getOrganizationRenewalCountdown } from "@/lib/organization-renewal";
+import {
+  getOrganizationRenewalCountdown,
+  resolveUserRenewalState,
+  type UserFacingRenewalState,
+} from "@/lib/organization-renewal";
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
 import {
   resolveBudgetWorkflowEligibility,
@@ -167,6 +172,7 @@ import {
   YPOP_CITY_LED_CATEGORY_LABELS,
   YPOP_BASE_TOTAL_POINTS,
   YPOP_SCORE_THRESHOLD,
+  type OrganizationRenewalRecord,
 } from "@/lib/lydo-connect-data";
 import {
   loadLydoConnectSupabaseState,
@@ -201,6 +207,8 @@ import {
   deleteYpopFileFromSupabase,
   markNotificationReadInSupabase,
   markAllNotificationsReadInSupabase,
+  fetchOrganizationRenewalsInSupabase,
+  userStartOrGetRenewalDraftInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import {
   buildStructuredOcrData,
@@ -714,6 +722,93 @@ export default function UserPortal({ section }: { section: string }) {
       }),
     [currentProfile?.id, state.ypopEntries, state.ypopPeriods],
   );
+
+  const [organizationRenewals, setOrganizationRenewals] = useState<OrganizationRenewalRecord[]>([]);
+  const [loadingRenewals, setLoadingRenewals] = useState(false);
+  const [renewalLoadError, setRenewalLoadError] = useState(false);
+  const [startingRenewal, setStartingRenewal] = useState(false);
+
+  useEffect(() => {
+    if (!currentProfile?.id) {
+      setOrganizationRenewals([]);
+      setLoadingRenewals(false);
+      setRenewalLoadError(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingRenewals(true);
+    setRenewalLoadError(false);
+
+    fetchOrganizationRenewalsInSupabase(currentProfile.id)
+      .then((data) => {
+        if (!cancelled) {
+          setOrganizationRenewals(data);
+          setLoadingRenewals(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Failed to load organization renewals:", err);
+          setRenewalLoadError(true);
+          setLoadingRenewals(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentProfile?.id]);
+
+  const userRenewalState = useMemo(() => {
+    return resolveUserRenewalState({
+      profile: currentProfile,
+      renewals: organizationRenewals,
+      hasError: renewalLoadError,
+    });
+  }, [currentProfile, organizationRenewals, renewalLoadError]);
+
+  const handleContinueRenewal = () => {
+    navigate(userRouteMap["organization-renewal"]);
+  };
+
+  const handleStartRenewal = async () => {
+    if (!currentProfile?.id) return;
+    try {
+      setStartingRenewal(true);
+      const result = await userStartOrGetRenewalDraftInSupabase(currentProfile.id);
+      if (result.isExisting) {
+        toast({
+          title: "Existing renewal in progress",
+          description: "Opened your active renewal application.",
+        });
+      } else {
+        toast({
+          title: "Renewal draft started",
+          description: "Your cycle draft has been initiated successfully.",
+        });
+      }
+      setOrganizationRenewals((prev) => {
+        const existingIndex = prev.findIndex((r) => r.id === result.renewal.id);
+        if (existingIndex >= 0) {
+          const next = [...prev];
+          next[existingIndex] = result.renewal;
+          return next;
+        }
+        return [...prev, result.renewal];
+      });
+      navigate(userRouteMap["organization-renewal"]);
+    } catch (err: any) {
+      console.error("Failed to start renewal draft:", err);
+      toast({
+        title: "Unable to start renewal",
+        description: err?.message || "An unexpected error occurred while starting your renewal draft.",
+        variant: "destructive",
+      });
+    } finally {
+      setStartingRenewal(false);
+    }
+  };
   useEffect(() => {
     if (!currentProfile) return;
     setInquiryForm((current) => ({
@@ -2904,6 +2999,83 @@ export default function UserPortal({ section }: { section: string }) {
             tone: "bg-primary/10 text-primary",
           });
         }
+
+        if (userRenewalState.key === "renewal_needs_revision") {
+          dashboardTasks.unshift({
+            key: "renewal-revision",
+            title: "Renewal action required",
+            description: userRenewalState.adminRemarks || "The admin requested revisions to your renewal documents. Review remarks and resubmit.",
+            ctaLabel: "Review Remarks",
+            onClick: handleContinueRenewal,
+            icon: AlertTriangle,
+            tone: "bg-rose-500/10 text-rose-600",
+          });
+        } else if (userRenewalState.key === "renewal_draft") {
+          dashboardTasks.unshift({
+            key: "renewal-continue",
+            title: "Continue your renewal application",
+            description: "Your cycle draft is in progress. Complete and submit the required renewal documents.",
+            ctaLabel: "Continue Renewal",
+            onClick: handleContinueRenewal,
+            icon: Clock,
+            tone: "bg-amber-500/10 text-amber-600",
+          });
+        } else if (userRenewalState.key === "expiring_soon_renewal_available") {
+          dashboardTasks.unshift({
+            key: "renewal-start",
+            title: "Accreditation renewal is now open",
+            description: `Your accreditation expires in ${userRenewalState.daysRemaining} days. Submit your renewal application to maintain active standing.`,
+            ctaLabel: startingRenewal ? "Starting..." : "Start Renewal",
+            onClick: handleStartRenewal,
+            icon: Sparkles,
+            tone: "bg-amber-500/10 text-amber-600",
+          });
+        } else if (userRenewalState.key === "expired_within_renewal_window") {
+          dashboardTasks.unshift({
+            key: "renewal-start-expired",
+            title: "Accreditation expired — Renewal available",
+            description: `Accreditation expired. Privileges are paused, but late renewal remains available until ${userRenewalState.lateCutoffDate || "cutoff"}.`,
+            ctaLabel: startingRenewal ? "Starting..." : "Start Renewal",
+            onClick: handleStartRenewal,
+            icon: AlertCircle,
+            tone: "bg-rose-500/10 text-rose-600",
+          });
+        } else if (userRenewalState.key === "expired_beyond_renewal_window") {
+          dashboardTasks.unshift({
+            key: "renewal-expired-cutoff",
+            title: "Accreditation expired — Registration required",
+            description: "The 180-day late renewal window has elapsed. Renewal is closed; full re-registration is required.",
+            ctaLabel: "Open Profile",
+            onClick: () => navigate(userRouteMap["organization-profile"]),
+            icon: AlertCircle,
+            tone: "bg-rose-500/10 text-rose-600",
+          });
+        } else if (userRenewalState.key === "renewal_rejected") {
+          dashboardTasks.unshift({
+            key: "renewal-rejected",
+            title: "Renewal application not approved",
+            description: (userRenewalState.adminRemarks ? `${userRenewalState.adminRemarks} — ` : "") + "Renewal application was not approved. Please contact the LYDO office directly for guidance.",
+            ctaLabel: undefined,
+            onClick: undefined,
+            icon: AlertCircle,
+            tone: "bg-rose-500/10 text-rose-600",
+          });
+        } else if (
+          userRenewalState.key === "renewal_submitted" ||
+          userRenewalState.key === "renewal_under_review" ||
+          userRenewalState.key === "renewal_resubmitted"
+        ) {
+          dashboardTasks.unshift({
+            key: "renewal-pending",
+            title: userRenewalState.statusLabel,
+            description: userRenewalState.renewalBlockedReason || "Your renewal application is under review by the LYDO administrator.",
+            ctaLabel: "View Renewal Status",
+            onClick: handleContinueRenewal,
+            icon: ClipboardList,
+            tone: "bg-sky-500/10 text-sky-600",
+          });
+        }
+
         return (
           <UserPortalRedesignView
             profile={profile}
@@ -2920,6 +3092,10 @@ export default function UserPortal({ section }: { section: string }) {
             liquidationPercent={liquidationPercent}
             liquidationOverviewLabel={liquidationOverviewLabel}
             renewalCountdown={renewalCountdown}
+            renewalState={userRenewalState}
+            onStartRenewal={handleStartRenewal}
+            onContinueRenewal={handleContinueRenewal}
+            startingRenewal={startingRenewal}
             dashboardTasks={dashboardTasks}
             recentActivities={profileActivityLogEntries.map((log) => ({
               id: log.id,
@@ -3083,6 +3259,32 @@ export default function UserPortal({ section }: { section: string }) {
             deriveOverallDocumentSubmissionStatus={deriveOverallDocumentSubmissionStatus}
             formatStatusLabel={formatStatusLabel}
             resolveRegistrationDocumentAccess={resolveRegistrationDocumentAccess}
+          />
+        );
+      }
+      case "organization-renewal": {
+        return (
+          <UserPortalRenewalWorkspaceView
+            currentProfile={currentProfile}
+            userRenewalState={userRenewalState}
+            activeRenewal={userRenewalState.activeRenewal}
+            navigate={navigate}
+            userRouteMap={userRouteMap}
+            onStartRenewal={handleStartRenewal}
+            startingRenewal={startingRenewal}
+            openPreview={openPreview}
+            openFile={openFile}
+            onRenewalUpdated={(updatedRenewal) => {
+              setOrganizationRenewals((prev) => {
+                const existingIndex = prev.findIndex((r) => r.id === updatedRenewal.id);
+                if (existingIndex >= 0) {
+                  const updated = [...prev];
+                  updated[existingIndex] = updatedRenewal;
+                  return updated;
+                }
+                return [updatedRenewal, ...prev];
+              });
+            }}
           />
         );
       }
@@ -3346,6 +3548,10 @@ export default function UserPortal({ section }: { section: string }) {
     ypopSemesterEventFilterById,
     isDesktopViewport,
     confirmAction,
+    userRenewalState,
+    startingRenewal,
+    handleStartRenewal,
+    handleContinueRenewal,
   ]);
 
   return (

@@ -16,7 +16,8 @@ import {
   HelpCircle,
   FolderArchive,
   History,
-  X
+  X,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,6 +38,7 @@ import { SubmitInquiryModal } from "@/components/portal/SubmitInquiryModal";
 import { cn } from "@/lib/utils";
 import { formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
+import type { UserFacingRenewalState } from "@/lib/organization-renewal";
 
 export interface UserPortalRedesignViewProps {
   profile: any;
@@ -57,6 +59,10 @@ export interface UserPortalRedesignViewProps {
     daysRemaining?: number;
     isDue?: boolean;
   } | null;
+  renewalState?: UserFacingRenewalState | null;
+  onStartRenewal?: () => void;
+  onContinueRenewal?: () => void;
+  startingRenewal?: boolean;
   dashboardTasks: Array<{
     key: string;
     title: string;
@@ -107,9 +113,14 @@ export interface UserPortalRedesignViewProps {
 
 // Compact Authoritative Renewal Countdown Indicator
 // Consumes the Admin-side source of truth (useRenewalClock) and threshold rules
-export const RenewalCountdownChip: React.FC<{ expiresAt: string; className?: string }> = ({
+export const RenewalCountdownChip: React.FC<{
+  expiresAt: string;
+  className?: string;
+  renewalState?: UserFacingRenewalState | null;
+}> = ({
   expiresAt,
   className,
+  renewalState,
 }) => {
   const clock = useRenewalClock(expiresAt);
 
@@ -128,13 +139,41 @@ export const RenewalCountdownChip: React.FC<{ expiresAt: string; className?: str
   const isDueOrExpired = clock.isDue || clock.days <= 0;
   const isExpiringSoon = clock.days <= 90;
 
+  // Authoritative label and tone derivation
   let label: string;
-  if (isDueOrExpired) {
-    label = "Renewal due today";
+  let tone: "danger" | "warning" | "info" | "neutral" = "neutral";
+
+  if (renewalState?.key === "renewal_draft") {
+    label = "Renewal draft in progress";
+    tone = "warning";
+  } else if (renewalState?.key === "renewal_needs_revision") {
+    label = "Renewal action required";
+    tone = "danger";
+  } else if (renewalState?.key === "renewal_submitted" || renewalState?.key === "renewal_resubmitted") {
+    label = "Renewal submitted (Pending Review)";
+    tone = "info";
+  } else if (renewalState?.key === "renewal_under_review") {
+    label = "Renewal under review";
+    tone = "info";
+  } else if (renewalState?.key === "renewal_rejected") {
+    label = "Renewal not approved";
+    tone = "danger";
+  } else if (isDueOrExpired) {
+    label = renewalState?.key === "expired_within_renewal_window"
+      ? "Accreditation expired (Renewal open)"
+      : renewalState?.key === "expired_beyond_renewal_window"
+        ? "Accreditation expired"
+        : "Renewal due today";
+    tone = "danger";
   } else if (clock.days === 1) {
     label = "Renewal in 1 day";
+    tone = "warning";
+  } else if (isExpiringSoon) {
+    label = `Renewal in ${clock.days} days`;
+    tone = "warning";
   } else {
     label = `Renewal in ${clock.days} days`;
+    tone = "neutral";
   }
 
   return (
@@ -142,18 +181,22 @@ export const RenewalCountdownChip: React.FC<{ expiresAt: string; className?: str
       title={dueDateStr ? `Accreditation valid until ${dueDateStr}` : undefined}
       className={cn(
         "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors duration-150 shadow-2xs",
-        isDueOrExpired
+        tone === "danger"
           ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-          : isExpiringSoon
+          : tone === "warning"
             ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-            : "bg-muted/40 text-foreground border-border/50",
+            : tone === "info"
+              ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20"
+              : "bg-muted/40 text-foreground border-border/50",
         className
       )}
     >
-      {isDueOrExpired ? (
+      {tone === "danger" ? (
         <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-500" />
-      ) : isExpiringSoon ? (
+      ) : tone === "warning" ? (
         <Clock className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+      ) : tone === "info" ? (
+        <FileText className="h-3.5 w-3.5 shrink-0 text-sky-500" />
       ) : (
         <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary" />
       )}
@@ -192,6 +235,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   liquidationPercent,
   liquidationOverviewLabel,
   renewalCountdown,
+  renewalState,
+  onStartRenewal,
+  onContinueRenewal,
+  startingRenewal = false,
   dashboardTasks,
   recentActivities = [],
   inquiries = [],
@@ -278,9 +325,33 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
           </div>
 
           {/* Right: Operational telemetry (Renewal Countdown) */}
-          {renewalCountdown?.expiresAt && (
+          {(renewalCountdown?.expiresAt || renewalState?.expiresAt) && (
             <div className="w-full lg:w-auto flex items-center justify-center lg:justify-end lg:flex-col lg:items-end gap-2 text-xs text-muted-foreground font-medium shrink-0 pt-1 lg:pt-0">
-              <RenewalCountdownChip expiresAt={renewalCountdown.expiresAt} />
+              <RenewalCountdownChip
+                expiresAt={renewalCountdown?.expiresAt || renewalState?.expiresAt || ""}
+                renewalState={renewalState}
+              />
+              {!activeTask?.key?.startsWith("renewal-") && renewalState?.canStartRenewal && onStartRenewal && (
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={onStartRenewal}
+                  disabled={startingRenewal}
+                  className="h-8 text-xs font-bold px-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all cursor-pointer shrink-0"
+                >
+                  {startingRenewal ? "Starting..." : "Start Renewal →"}
+                </Button>
+              )}
+              {!activeTask?.key?.startsWith("renewal-") && renewalState?.canContinueRenewal && onContinueRenewal && (
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={onContinueRenewal}
+                  className="h-8 text-xs font-bold px-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all cursor-pointer shrink-0"
+                >
+                  Continue Renewal →
+                </Button>
+              )}
             </div>
           )}
         </div>

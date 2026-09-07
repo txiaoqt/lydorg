@@ -252,6 +252,7 @@ const App = () => (
                       <Route path="/admin/create-password" element={<AdminCreatePassword />} />
                       <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                       <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
+                      <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />
                       <Route path="/admin/users" element={<Navigate to="/admin/yorp-registry" replace />} />
                       <Route path="/admin/document-validation" element={<Navigate to="/admin/registrations" replace />} />
                       <Route path="/admin/budget-utilization" element={<RequireAdmin><AdminPortal section="budget-utilization" /></RequireAdmin>} />
@@ -279,6 +280,7 @@ const App = () => (
                           <Route path="/admin/create-password" element={<AdminCreatePassword />} />
                           <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                           <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
+                          <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />
                           <Route path="/admin/users" element={<Navigate to="/admin/yorp-registry" replace />} />
                           <Route path="/admin/document-validation" element={<Navigate to="/admin/registrations" replace />} />
                           <Route path="/admin/budget-utilization" element={<RequireAdmin><AdminPortal section="budget-utilization" /></RequireAdmin>} />
@@ -325,6 +327,7 @@ const App = () => (
                       <Route path="/dashboard" element={<RequireUser><UserPortalEntry section="dashboard" /></RequireUser>} />
                       <Route path="/organization-profile" element={<RequireUser><UserPortalEntry section="organization-profile" /></RequireUser>} />
                       <Route path="/document-submission" element={<RequireUser><UserPortalEntry section="document-submission" /></RequireUser>} />
+                      <Route path="/organization-renewal" element={<RequireUser><UserPortalEntry section="organization-renewal" /></RequireUser>} />
                       <Route path="/validation-review" element={<Navigate to="/document-submission" replace />} />
                       <Route path="/budget-request" element={<RequireUser><UserPortalEntry section="budget-request" /></RequireUser>} />
                       <Route path="/liquidation-reporting" element={<RequireUser><UserPortalEntry section="liquidation-reporting" /></RequireUser>} />

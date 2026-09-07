@@ -5,11 +5,14 @@ import type {
   BudgetRequest,
   BudgetRequestFile,
   ComplianceRemark,
+  DocumentSubmission,
   LiquidationReport,
   LiquidationReportFile,
   LydoSeedState,
   InquiryRecord,
+  OrganizationAccreditationRecord,
   OrganizationProfile,
+  OrganizationRenewalRecord,
   NewsRelease,
   NotificationRecord,
   SubmissionFile,
@@ -63,6 +66,7 @@ type RequiredDocumentTypeRow = {
   sort_order: number | null;
   is_required: boolean | null;
   is_active: boolean | null;
+  scope?: "registration" | "renewal" | "both" | null;
   template_scope?: "document_submission" | "move" | "other" | null;
   template_category?: string[] | null;
   template_file_size?: number | null;
@@ -104,6 +108,44 @@ type OrganizationProfileRow = {
   internal_notes: string | null;
   yorp_registered_year: number | null;
   yorp_renewed_year: number | null;
+  current_accreditation_id?: string | null;
+  accreditation_start_date?: string | null;
+  accreditation_expires_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type OrganizationAccreditationRow = {
+  id: string;
+  organization_id: string;
+  term_number: number;
+  start_date: string;
+  end_date: string;
+  certificate_urn: string;
+  status: "active" | "superseded" | "revoked";
+  is_legacy_inferred: boolean;
+  approved_by: string | null;
+  approved_at: string;
+  created_at: string;
+};
+
+type OrganizationRenewalRow = {
+  id: string;
+  organization_id: string;
+  cycle_number: number;
+  current_accreditation_id: string;
+  status:
+    | "draft"
+    | "submitted"
+    | "under_review"
+    | "needs_revision"
+    | "resubmitted"
+    | "approved"
+    | "rejected";
+  submitted_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  admin_remarks: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -118,6 +160,8 @@ type DocumentSubmissionRow = {
   reviewed_by: string | null;
   reviewed_at: string | null;
   overall_remarks: string | null;
+  submission_scope?: "registration" | "renewal" | null;
+  renewal_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -537,6 +581,9 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   internalNotes: row.internal_notes ?? "",
   yorpRegisteredYear: row.yorp_registered_year ?? null,
   yorpRenewedYear: row.yorp_renewed_year ?? null,
+  currentAccreditationId: row.current_accreditation_id ?? null,
+  accreditationStartDate: row.accreditation_start_date ?? null,
+  accreditationExpiresAt: row.accreditation_expires_at ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -558,6 +605,7 @@ const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
     sortOrder: row.sort_order ?? localDocumentType?.sortOrder ?? 0,
     isRequired: row.is_required ?? localDocumentType?.isRequired ?? (row.sort_order ? row.sort_order < 10 : true),
     isActive: row.is_active ?? localDocumentType?.isActive ?? true,
+    scope: (row.scope ?? localDocumentType?.scope ?? "both") as "registration" | "renewal" | "both",
     templateScope: row.template_scope ?? localDocumentType?.templateScope ?? (row.sort_order && row.sort_order >= 10 ? "other" : "document_submission"),
     templateDescription: row.template_description ?? `Template for ${row.name}.`,
     templateActive: row.is_active ?? true,
@@ -627,12 +675,14 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   revisionHistory: (row.revision_history ?? []) as BudgetRequest["revisionHistory"],
 });
 
-const mapDocumentSubmission = (row: DocumentSubmissionRow) => ({
+const mapDocumentSubmission = (row: DocumentSubmissionRow): DocumentSubmission => ({
   id: row.id,
   organizationId: row.organization_id,
   submittedBy: row.submitted_by,
   status: row.status,
   userConfirmed: row.user_confirmed,
+  submissionScope: (row.submission_scope ?? "registration") as "registration" | "renewal",
+  renewalId: row.renewal_id ?? null,
   submittedAt: row.submitted_at ?? "",
   reviewedBy: row.reviewed_by ?? "",
   reviewedAt: row.reviewed_at ?? "",
@@ -4290,3 +4340,533 @@ export const adminCloseYpopSemesterInSupabase = async (
 
   return { period: updatedPeriod, evaluatedEntries };
 };
+
+// ==============================================================================
+// PHASE 2 RENEWAL & ACCREDITATION WORKFLOW CLIENT WRAPPERS
+// ==============================================================================
+
+export const mapOrganizationAccreditation = (
+  row: OrganizationAccreditationRow,
+): OrganizationAccreditationRecord => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  termNumber: row.term_number,
+  startDate: formatDateOnly(row.start_date),
+  endDate: formatDateOnly(row.end_date),
+  certificateUrn: row.certificate_urn,
+  status: row.status,
+  isLegacyInferred: Boolean(row.is_legacy_inferred),
+  approvedBy: row.approved_by,
+  approvedAt: row.approved_at,
+  createdAt: row.created_at,
+});
+
+export const mapOrganizationRenewal = (
+  row: OrganizationRenewalRow,
+): OrganizationRenewalRecord => ({
+  id: row.id,
+  organizationId: row.organization_id,
+  cycleNumber: row.cycle_number,
+  currentAccreditationId: row.current_accreditation_id,
+  status: row.status,
+  submittedAt: row.submitted_at ?? null,
+  reviewedBy: row.reviewed_by ?? null,
+  reviewedAt: row.reviewed_at ?? null,
+  adminRemarks: row.admin_remarks ?? null,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+/**
+ * Fetches all authoritative accreditation terms across all organizations (Admin).
+ */
+export const fetchAllOrganizationAccreditationsInSupabase = async (): Promise<OrganizationAccreditationRecord[]> => {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("organization_accreditations")
+    .select("id,organization_id,term_number,start_date,end_date,certificate_urn,status,is_legacy_inferred,approved_by,approved_at,created_at")
+    .order("term_number", { ascending: true });
+
+  if (error) {
+    console.warn("fetchAllOrganizationAccreditationsInSupabase error:", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => mapOrganizationAccreditation(row as OrganizationAccreditationRow));
+};
+
+/**
+ * Fetches all authoritative accreditation terms for an organization.
+ */
+export const fetchOrganizationAccreditationsInSupabase = async (
+  organizationId: string,
+): Promise<OrganizationAccreditationRecord[]> => {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("organization_accreditations")
+    .select("id,organization_id,term_number,start_date,end_date,certificate_urn,status,is_legacy_inferred,approved_by,approved_at,created_at")
+    .eq("organization_id", organizationId)
+    .order("term_number", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => mapOrganizationAccreditation(row as OrganizationAccreditationRow));
+};
+
+/**
+ * Fetches all renewal applications across all organizations (Admin).
+ */
+export const fetchAllOrganizationRenewalsInSupabase = async (): Promise<OrganizationRenewalRecord[]> => {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("organization_renewals")
+    .select("id,organization_id,cycle_number,current_accreditation_id,status,submitted_at,reviewed_by,reviewed_at,admin_remarks,created_at,updated_at")
+    .order("submitted_at", { ascending: false, nullsFirst: false });
+
+  if (error) {
+    console.warn("fetchAllOrganizationRenewalsInSupabase error:", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => mapOrganizationRenewal(row as OrganizationRenewalRow));
+};
+
+/**
+ * Fetches all historical renewal applications for an organization.
+ */
+export const fetchOrganizationRenewalsInSupabase = async (
+  organizationId: string,
+): Promise<OrganizationRenewalRecord[]> => {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("organization_renewals")
+    .select("id,organization_id,cycle_number,current_accreditation_id,status,submitted_at,reviewed_by,reviewed_at,admin_remarks,created_at,updated_at")
+    .eq("organization_id", organizationId)
+    .order("cycle_number", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => mapOrganizationRenewal(row as OrganizationRenewalRow));
+};
+
+/**
+ * User RPC: Start or retrieve existing renewal draft.
+ */
+export const userStartOrGetRenewalDraftInSupabase = async (
+  organizationId: string,
+): Promise<{
+  renewal: OrganizationRenewalRecord;
+  submission: DocumentSubmission | null;
+  isExisting: boolean;
+}> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const { data, error } = await supabase.rpc("user_start_or_get_renewal_draft", {
+    p_organization_id: organizationId,
+  });
+
+  if (error) throw new Error(error.message);
+  if (!data || typeof data !== "object") throw new Error("Invalid response from user_start_or_get_renewal_draft.");
+
+  const payload = data as {
+    renewal: OrganizationRenewalRow;
+    submission: DocumentSubmissionRow | null;
+    is_existing: boolean;
+  };
+
+  return {
+    renewal: mapOrganizationRenewal(payload.renewal),
+    submission: payload.submission ? mapDocumentSubmission(payload.submission) : null,
+    isExisting: Boolean(payload.is_existing),
+  };
+};
+
+/**
+ * User RPC: Submit drafted renewal application.
+ */
+export const userSubmitRenewalInSupabase = async (
+  renewalId: string,
+): Promise<{ success: boolean; renewalId: string; submittedAt: string }> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const { data, error } = await supabase.rpc("user_submit_renewal", {
+    p_renewal_id: renewalId,
+  });
+
+  if (error) throw new Error(error.message);
+  const payload = data as { success: boolean; renewal_id: string; submitted_at: string };
+  return {
+    success: payload.success,
+    renewalId: payload.renewal_id,
+    submittedAt: payload.submitted_at,
+  };
+};
+
+/**
+ * User RPC: Resubmit renewal application after addressing revision remarks.
+ */
+export const userResubmitRenewalInSupabase = async (
+  renewalId: string,
+): Promise<{ success: boolean; renewalId: string; resubmittedAt: string }> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const { data, error } = await supabase.rpc("user_resubmit_renewal", {
+    p_renewal_id: renewalId,
+  });
+
+  if (error) throw new Error(error.message);
+  const payload = data as { success: boolean; renewal_id: string; resubmitted_at: string };
+  return {
+    success: payload.success,
+    renewalId: payload.renewal_id,
+    resubmittedAt: payload.resubmitted_at,
+  };
+};
+
+/**
+ * User Helper: Replace document submission file while preserving revision history.
+ */
+export const userReplaceDocumentSubmissionFileInSupabase = async (params: {
+  fileId: string;
+  newFileUrl: string;
+  newFileName: string;
+  newFileType: string;
+  newFileSize?: number;
+}): Promise<SubmissionFile> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const { data, error } = await supabase.rpc("user_replace_document_submission_file", {
+    _file_id: params.fileId,
+    _new_file_url: params.newFileUrl,
+    _new_file_name: params.newFileName,
+    _new_file_type: params.newFileType,
+    _new_file_size: params.newFileSize ?? null,
+  });
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to replace document file.");
+  return mapDocumentFile((Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow)!;
+};
+
+/**
+ * Fetches the linked document submission packet and all uploaded files for a renewal.
+ */
+export const fetchRenewalPacketInSupabase = async (
+  renewalId: string,
+): Promise<{
+  submission: DocumentSubmission | null;
+  files: SubmissionFile[];
+}> => {
+  if (!supabase) return { submission: null, files: [] };
+  const { data: submissionRow, error: submissionError } = await supabase
+    .from("document_submissions")
+    .select("*")
+    .eq("renewal_id", renewalId)
+    .maybeSingle();
+
+  if (submissionError) throw new Error(submissionError.message);
+  if (!submissionRow) return { submission: null, files: [] };
+
+  const submission = mapDocumentSubmission(submissionRow as DocumentSubmissionRow);
+
+  const { data: fileRows, error: filesError } = await supabase
+    .from("document_submission_files")
+    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .eq("submission_id", submission.id);
+
+  if (filesError) throw new Error(filesError.message);
+
+  const files = ((fileRows as DocumentSubmissionFileRow[] | null) ?? [])
+    .map(mapDocumentFile)
+    .filter((file): file is SubmissionFile => Boolean(file));
+
+  return { submission, files };
+};
+
+/**
+ * Loads the mandatory required document types configured for renewal packets.
+ */
+export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<TemplateRecord[]> => {
+  const fallbackTemplates = requiredDocumentTypes
+    .filter((t) => (t.scope === "renewal" || t.scope === "both" || !t.scope) && t.templateScope === "document_submission")
+    .map((t) => ({
+      ...t,
+      databaseId: t.id,
+      templateDescription: t.description,
+      templateActive: t.isActive,
+      templateFileName: t.name,
+      templateFileUrl: t.templateUrl,
+      templateFileType: "application/pdf",
+      templateUploadedAt: new Date().toISOString(),
+      templateFileSize: null,
+      templateCategories: ["Registration Form"],
+    }));
+
+  if (!supabase) return fallbackTemplates;
+
+  try {
+    const { data: templateRows, error: templatesError } = await supabase
+      .from("required_document_types")
+      .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at,scope")
+      .eq("is_active", true)
+      .eq("template_scope", "document_submission")
+      .order("sort_order", { ascending: true });
+
+    if (templatesError) throw new Error(templatesError.message);
+
+    const list = ((templateRows as RequiredDocumentTypeRow[] | null) ?? [])
+      .filter((row: any) => !row.scope || row.scope === "renewal" || row.scope === "both")
+      .map(mapTemplate)
+      .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
+
+    return list.length > 0 ? list : fallbackTemplates;
+  } catch (err) {
+    console.warn("fetchRenewalRequiredDocumentTypesInSupabase falling back to default:", err);
+    return fallbackTemplates;
+  }
+};
+
+/**
+ * Uploads a document file for a renewal submission packet in draft mode.
+ */
+export const uploadRenewalDocumentFileInSupabase = async (params: {
+  organizationId: string;
+  renewalId: string;
+  submissionId: string;
+  documentTypeId: string;
+  file: File;
+}): Promise<SubmissionFile> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  await assertPdfUpload(params.file, "Renewal document");
+
+  const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
+  const safeFileName = sanitizeFileName(params.file.name);
+  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${safeFileName}`;
+
+  // Check if an existing file is already registered for this document type
+  const { data: existingRows } = await supabase
+    .from("document_submission_files")
+    .select("id,file_url,admin_status")
+    .eq("submission_id", params.submissionId)
+    .eq("document_type_id", resolvedTypeId);
+
+  const existingTargetFile = existingRows?.[0];
+  if (existingTargetFile) {
+    const fileStatus = existingTargetFile.admin_status;
+    if (["under_admin_review", "submitted", "ready_for_review", "under_review"].includes(fileStatus)) {
+      throw new Error("This specific document is currently under admin review and cannot be modified until the review is complete.");
+    }
+    if (["approved", "approved_green"].includes(fileStatus)) {
+      throw new Error("This approved document is locked from modification.");
+    }
+  }
+
+  const { error: uploadError } = await supabase.storage
+    .from(ORGANIZATION_DOCUMENTS_BUCKET)
+    .upload(objectPath, params.file, {
+      upsert: true,
+      contentType: params.file.type || "application/pdf",
+    });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
+  const submittedAt = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("document_submission_files")
+    .upsert(
+      {
+        submission_id: params.submissionId,
+        document_type_id: resolvedTypeId,
+        file_url: storageUri,
+        file_name: params.file.name,
+        file_type: params.file.type || "application/pdf",
+        file_size: params.file.size,
+        admin_status: "draft",
+        admin_remarks: null,
+        uploaded_at: submittedAt,
+        reviewed_at: null,
+      },
+      {
+        onConflict: "submission_id,document_type_id",
+      },
+    )
+    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded renewal document.");
+
+  // Clean up previous storage file when replacing a draft file
+  if (existingTargetFile?.file_url && existingTargetFile.file_url !== storageUri) {
+    await removeStorageObjects([existingTargetFile.file_url]).catch(() => undefined);
+  }
+
+  return mapDocumentFile(data as DocumentSubmissionFileRow)!;
+};
+
+/**
+ * Replaces a flagged renewal document file in needs_revision mode, preserving revision history via RPC.
+ */
+export const replaceRenewalDocumentFileInSupabase = async (params: {
+  organizationId: string;
+  renewalId: string;
+  fileId: string;
+  documentTypeId: string;
+  file: File;
+}): Promise<SubmissionFile> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  await assertPdfUpload(params.file, "Replacement document");
+
+  const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
+  const safeFileName = sanitizeFileName(params.file.name);
+  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${safeFileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(ORGANIZATION_DOCUMENTS_BUCKET)
+    .upload(objectPath, params.file, {
+      upsert: false,
+      contentType: params.file.type || "application/pdf",
+    });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
+
+  return await userReplaceDocumentSubmissionFileInSupabase({
+    fileId: params.fileId,
+    newFileUrl: storageUri,
+    newFileName: params.file.name,
+    newFileType: params.file.type || "application/pdf",
+    newFileSize: params.file.size,
+  });
+};
+
+/**
+ * Admin RPC: Request renewal revision with mandatory remarks.
+ * Accepts either an object parameter `{ renewalId, adminRemarks }` or positional `(renewalId, adminRemarks)`.
+ */
+export const adminRequestRenewalRevisionInSupabase = async (
+  paramsOrRenewalId: { renewalId: string; adminRemarks: string } | string,
+  maybeAdminRemarks?: string,
+): Promise<{ success: boolean; renewalId: string; status: string }> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+  const renewalId = typeof paramsOrRenewalId === "string" ? paramsOrRenewalId : paramsOrRenewalId.renewalId;
+  const adminRemarks = typeof paramsOrRenewalId === "string" ? maybeAdminRemarks || "" : paramsOrRenewalId.adminRemarks;
+
+  const { data, error } = await supabase.rpc("admin_request_renewal_revision", {
+    p_session_token: adminSession.sessionToken,
+    p_renewal_id: renewalId,
+    p_admin_remarks: adminRemarks,
+  });
+
+  if (error) throw new Error(error.message);
+  const payload = data as { success: boolean; renewal_id: string; status: string };
+  return {
+    success: payload.success,
+    renewalId: payload.renewal_id,
+    status: payload.status,
+  };
+};
+
+/**
+ * Admin RPC: Reject renewal application (terminal).
+ * Accepts either an object parameter `{ renewalId, adminRemarks }` or positional `(renewalId, adminRemarks)`.
+ */
+export const adminRejectRenewalInSupabase = async (
+  paramsOrRenewalId: { renewalId: string; adminRemarks: string } | string,
+  maybeAdminRemarks?: string,
+): Promise<{ success: boolean; renewalId: string; status: string }> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+  const renewalId = typeof paramsOrRenewalId === "string" ? paramsOrRenewalId : paramsOrRenewalId.renewalId;
+  const adminRemarks = typeof paramsOrRenewalId === "string" ? maybeAdminRemarks || "" : paramsOrRenewalId.adminRemarks;
+
+  const { data, error } = await supabase.rpc("admin_reject_renewal", {
+    p_session_token: adminSession.sessionToken,
+    p_renewal_id: renewalId,
+    p_admin_remarks: adminRemarks,
+  });
+
+  if (error) throw new Error(error.message);
+  const payload = data as { success: boolean; renewal_id: string; status: string };
+  return {
+    success: payload.success,
+    renewalId: payload.renewal_id,
+    status: payload.status,
+  };
+};
+
+/**
+ * Admin RPC: Atomically approve renewal application and issue next accreditation term.
+ * Accepts either an object parameter `{ renewalId, certificateUrn, adminRemarks }` or positional `(renewalId, certificateUrn, adminRemarks)`.
+ */
+export const adminApproveRenewalInSupabase = async (
+  paramsOrRenewalId: {
+    renewalId: string;
+    certificateUrn: string;
+    adminRemarks?: string;
+  } | string,
+  maybeCertificateUrn?: string,
+  maybeAdminRemarks?: string,
+): Promise<{
+  success: boolean;
+  renewalId: string;
+  accreditationId: string;
+  termNumber: number;
+  startDate: string;
+  endDate: string;
+  certificateUrn: string;
+}> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+  const renewalId = typeof paramsOrRenewalId === "string" ? paramsOrRenewalId : paramsOrRenewalId.renewalId;
+  const certificateUrn = typeof paramsOrRenewalId === "string" ? maybeCertificateUrn || "" : paramsOrRenewalId.certificateUrn;
+  const adminRemarks = typeof paramsOrRenewalId === "string" ? maybeAdminRemarks : paramsOrRenewalId.adminRemarks;
+
+  const { data, error } = await supabase.rpc("admin_approve_renewal", {
+    p_session_token: adminSession.sessionToken,
+    p_renewal_id: renewalId,
+    p_certificate_urn: certificateUrn,
+    p_admin_remarks: adminRemarks?.trim() || null,
+  });
+
+  if (error) throw new Error(error.message);
+  const payload = data as {
+    success: boolean;
+    renewal_id: string;
+    accreditation_id: string;
+    term_number: number;
+    start_date: string;
+    end_date: string;
+    certificate_urn: string;
+  };
+
+  return {
+    success: payload.success,
+    renewalId: payload.renewal_id,
+    accreditationId: payload.accreditation_id,
+    termNumber: payload.term_number,
+    startDate: payload.start_date,
+    endDate: payload.end_date,
+    certificateUrn: payload.certificate_urn,
+  };
+};
+
+/**
+ * Evaluates time-driven accreditation notification events idempotently.
+ */
+export const evaluateAccreditationNotificationEventsInSupabase = async (): Promise<{
+  openedCount: number;
+  urgentCount: number;
+  expiredCount: number;
+}> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const { data, error } = await supabase.rpc("evaluate_accreditation_notification_events");
+
+  if (error) throw new Error(error.message);
+  const payload = (data ?? {}) as {
+    opened_count?: number;
+    urgent_count?: number;
+    expired_count?: number;
+  };
+
+  return {
+    openedCount: payload.opened_count ?? 0,
+    urgentCount: payload.urgent_count ?? 0,
+    expiredCount: payload.expired_count ?? 0,
+  };
+};
+
