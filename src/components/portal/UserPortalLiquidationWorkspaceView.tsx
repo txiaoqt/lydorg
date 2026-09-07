@@ -11,7 +11,9 @@ import {
   Filter,
   ExternalLink,
   Loader2,
-  X
+  X,
+  Sparkles,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
@@ -42,6 +44,7 @@ import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
+import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 
 export interface UserPortalLiquidationWorkspaceViewProps {
   liquidationWorkflowEligibility?: any;
@@ -212,6 +215,11 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   const completedCount = liquidationMetrics.completedCount;
   const completionPercent = liquidationMetrics.completionPercent;
 
+  const totalReleasedBudget = liquidationReports.reduce((sum, rep) => {
+    const relatedBudget = budgetRequests.find((req) => req.id === rep.budgetRequestId);
+    return sum + (relatedBudget?.releasedAmount || relatedBudget?.approvedAmount || 0);
+  }, 0);
+
   // Filtering
   const filteredReports = liquidationReports
     .filter((report) => {
@@ -296,17 +304,17 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
       actionLabel={nextLiquidationStepAction}
       onAction={() => navigate(nextLiquidationStepRoute)}
       heroSection={
-        <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 sm:space-y-3">
+        <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border/70 shadow-xs space-y-2">
           <div className="space-y-1 max-w-[640px]">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
-              <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">LYDO Pasig City</span>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="text-xs text-muted-foreground font-medium">LYDO Pasig City</span>
             </div>
-            <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
               Liquidation Reports
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium pt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground font-normal leading-relaxed">
               Track deadlines, upload post-activity reports, and monitor liquidation approvals.
             </p>
           </div>
@@ -314,74 +322,136 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
       }
     >
       <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-4 sm:space-y-6 max-w-[1440px] mx-auto pt-0 pb-2 sm:py-2">
-        {/* 1. Hero Header Banner */}
-        <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 sm:space-y-3">
-          <div className="space-y-1 max-w-[640px]">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
-              <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">LYDO Pasig City</span>
+        {/* 1. Hero Header Banner (Refined Institutional Framing) */}
+        <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border/70 shadow-xs space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="text-xs text-muted-foreground font-medium">LYDO Pasig City</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                Liquidation Reports
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground font-normal leading-relaxed max-w-2xl">
+                Track deadlines, upload post-activity reports, and monitor liquidation approvals in a rich data table.
+              </p>
             </div>
-            <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
-              Liquidation Reports
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium pt-0.5">
-              Track deadlines, upload post-activity reports, and monitor liquidation approvals in a rich data table.
-            </p>
 
-            {/* Metadata Chips */}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
-              <span className="font-semibold text-foreground">{totalReports} Reports</span>
+            {/* Metadata Info */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium shrink-0">
+              <span className="font-bold text-foreground bg-muted px-2.5 py-1 rounded-lg border border-border/60">{totalReports} Reports</span>
               <span>•</span>
               <span>Review ETA: 2–3 Days</span>
             </div>
           </div>
         </div>
 
-        {/* 2. Progress Summary Card */}
-        <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-3 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-foreground">
-                {completedCount} of {totalReports} Reports Liquidated ({completionPercent}%)
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Overview of all post-activity liquidation reports submitted for organization activities.
-              </p>
+        {/* 2. Unified Operational Overview (Progress + High-Density Context Metrics) */}
+        <Card className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs">
+          {/* Top: Progress & Workflow Status Distribution */}
+          <div className="p-4 sm:p-5 border-b border-border/60 bg-muted/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2.5">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground">
+                    {completedCount} of {totalReports} Reports Liquidated
+                  </h3>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary font-mono tabular-nums">
+                    {completionPercent}%
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Overview of all post-activity liquidation reports submitted for organization activities.
+                </p>
+              </div>
+
+              {/* Semantic Status Distribution */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>{completedCount} Liquidated</span>
+                </span>
+                <span className={cn("flex items-center gap-1.5 font-semibold", underReviewCount === 0 ? "text-muted-foreground/50" : "text-primary")}>
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span>{underReviewCount} Review</span>
+                </span>
+                <span className={cn("flex items-center gap-1.5 font-semibold", needsRevisionCount === 0 ? "text-muted-foreground/50" : "text-amber-600 dark:text-amber-400")}>
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{needsRevisionCount} Revision</span>
+                </span>
+              </div>
             </div>
 
-            {/* Status Badges Counters */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium pt-1 sm:pt-0">
-              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                <CheckCircle2 className="h-4 w-4 shrink-0" /> {completedCount} Liquidated
-              </span>
-              <span className={cn("flex items-center gap-1.5 font-semibold", underReviewCount === 0 ? "text-muted-foreground/50" : "text-primary")}>
-                <Clock className="h-4 w-4 shrink-0" /> {underReviewCount} Review
-              </span>
-              <span className={cn("flex items-center gap-1.5 font-semibold", needsRevisionCount === 0 ? "text-muted-foreground/50" : "text-amber-600 dark:text-amber-400")}>
-                <AlertTriangle className="h-4 w-4 shrink-0" /> {needsRevisionCount} Revision
-              </span>
+            {/* Sleek Progress Indicator */}
+            <div className="mt-3.5 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-300"
+                style={{ width: `${completionPercent}%` }}
+              />
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="h-2 w-full rounded-full bg-primary/15 overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${completionPercent}%` }} />
+          {/* Bottom: High-Density Context Metrics Strip */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/60 bg-card">
+            <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Total Reports</span>
+                <div className="text-xl sm:text-2xl font-black font-mono text-foreground tabular-nums tracking-tight">{totalReports}</div>
+                <p className="text-[11px] text-muted-foreground truncate">Post-activity filings</p>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Receipt className="h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Pending Review</span>
+                <div className="text-xl sm:text-2xl font-black font-mono text-primary tabular-nums tracking-tight">{underReviewCount}</div>
+                <p className="text-[11px] text-muted-foreground truncate">Awaiting admin validation</p>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Clock className="h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Liquidated</span>
+                <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">{completedCount}</div>
+                <p className="text-[11px] text-muted-foreground truncate">Fully cleared reports</p>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Released Budget</span>
+                <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight truncate">{formatCurrency(totalReleasedBudget)}</div>
+                <p className="text-[11px] text-muted-foreground truncate">Grant disbursements</p>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Sparkles className="h-4 w-4" />
+              </div>
+            </div>
           </div>
         </Card>
 
-        {/* 3. Smart Filter Toolbar + Filter Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-card border border-border/60 p-2 sm:p-2.5 rounded-2xl shadow-xs">
-          {/* Scrollable Filter Tabs on Mobile */}
-          <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] touch-pan-x overscroll-x-contain pb-1 sm:pb-0 px-0.5">
+        {/* 3. Coherent Segmented Filter & Search Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-card border border-border/70 p-2 sm:p-2.5 rounded-2xl shadow-xs">
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl overflow-x-auto [scrollbar-width:none] touch-pan-x">
             <button
               type="button"
               onClick={() => setFilterTab("all")}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer",
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "all"
-                  ? "bg-primary text-primary-foreground shadow-2xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  ? "bg-card text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
               )}
             >
               All ({totalReports})
@@ -390,12 +460,12 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               type="button"
               onClick={() => setFilterTab("completed")}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer",
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "completed"
-                  ? "bg-primary text-primary-foreground shadow-2xs"
+                  ? "bg-card text-foreground shadow-xs font-bold"
                   : completedCount === 0
                   ? "text-muted-foreground/40 pointer-events-none"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
               )}
             >
               Liquidated ({completedCount})
@@ -404,12 +474,12 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               type="button"
               onClick={() => setFilterTab("review")}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer",
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "review"
-                  ? "bg-primary text-primary-foreground shadow-2xs"
+                  ? "bg-card text-foreground shadow-xs font-bold"
                   : underReviewCount === 0
                   ? "text-muted-foreground/40 pointer-events-none"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
               )}
             >
               Under Review ({underReviewCount})
@@ -418,12 +488,12 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               type="button"
               onClick={() => setFilterTab("revision")}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer",
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "revision"
-                  ? "bg-primary text-primary-foreground shadow-2xs"
+                  ? "bg-card text-foreground shadow-xs font-bold"
                   : needsRevisionCount === 0
                   ? "text-muted-foreground/40 pointer-events-none"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
               )}
             >
               Needs Revision ({needsRevisionCount})
@@ -433,21 +503,21 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           {/* Search Input & Sort Dropdown */}
           <div className="flex items-center gap-2 w-full sm:w-auto lg:flex-1 lg:min-w-0 lg:justify-end">
             <div className="relative flex-1 sm:w-60 lg:w-full min-w-0">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search activity, code, venue..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-8 text-xs rounded-xl bg-background border-border/80 w-full"
+                className="pl-8 h-8 text-xs rounded-xl bg-background border-border/80 w-full focus-visible:ring-1 focus-visible:ring-primary"
               />
             </div>
 
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0 cursor-pointer">
-                  <Filter className="h-3.5 w-3.5" />
-                  <span className="hidden xs:inline">Sort:</span> <span className="capitalize">{sortOrder}</span>
+                <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border/80 text-xs font-medium gap-1.5 shrink-0 hover:bg-muted cursor-pointer">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="hidden xs:inline text-muted-foreground">Sort:</span> <span className="font-semibold capitalize">{sortOrder}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44 p-2 rounded-xl bg-card border-border/80 shadow-lg z-50">
@@ -462,7 +532,10 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
         {/* 4. Compact Mobile Report Cards (< lg) */}
         <div className="mobile-cards space-y-3 block lg:hidden">
           {filteredReports.length === 0 ? (
-            <div className="py-10 text-center text-muted-foreground text-xs space-y-1 rounded-2xl border border-border/60 bg-card">
+            <div className="py-12 text-center text-muted-foreground text-xs space-y-1.5 rounded-2xl border border-border/70 bg-card">
+              <div className="h-10 w-10 rounded-xl bg-muted/60 text-muted-foreground mx-auto flex items-center justify-center">
+                <Receipt className="h-5 w-5" />
+              </div>
               <p className="font-bold text-foreground">No liquidation reports found</p>
               <p className="text-xs">Try adjusting your search or status filter.</p>
             </div>
@@ -475,7 +548,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               return (
                 <Card 
                   key={report.id} 
-                  className="rounded-2xl border border-border/60 bg-card p-4 space-y-3 shadow-xs hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 transition-all duration-200 cursor-pointer"
+                  className="rounded-2xl border border-border/70 bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 transition-all duration-200 cursor-pointer"
                   onClick={() => openLiquidationDetail(report.id)}
                 >
                   {/* Top Header Row: Icon + Title + Status Badge Directly Below */}
@@ -497,19 +570,19 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                   {/* Metadata: Record Code + Purpose + Due Date */}
                   <div className="text-xs text-muted-foreground font-medium space-y-1 pl-12">
                     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                      <span className="font-mono text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                      <span className="font-mono text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                         {recordCode}
                       </span>
-                      <span>•</span>
+                      <span className="text-muted-foreground/50">•</span>
                       <span className="truncate max-w-[200px]">{relatedBudget?.purposeCategory || "General Purpose"}</span>
                     </div>
                     <div className="flex items-center gap-1.5 pt-0.5">
                       <span className="text-muted-foreground">Due:</span>
-                      <span className={cn("font-semibold", remainingDaysText.includes("overdue") ? "text-destructive" : "text-foreground/90")}>
+                      <span className={cn("font-semibold", remainingDaysText.includes("overdue") ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>
                         {report.deadlineAt ? formatShortPortalDate(report.deadlineAt) : "Pending"}
                       </span>
                       {remainingDaysText && (
-                        <span className={cn("text-[11px]", remainingDaysText.includes("overdue") ? "text-destructive font-bold" : "text-muted-foreground/80")}>
+                        <span className={cn("text-[11px]", remainingDaysText.includes("overdue") ? "text-rose-600 dark:text-rose-400 font-semibold" : remainingDaysText.includes("Today") ? "text-amber-600 dark:text-amber-400 font-semibold" : "text-muted-foreground")}>
                           ({remainingDaysText})
                         </span>
                       )}
@@ -518,10 +591,10 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                   {/* Bottom Row: Released Amount + Primary Action */}
                   <div 
-                    className="flex items-center justify-between gap-3 pt-2.5 border-t border-border/40 text-xs"
+                    className="flex items-center justify-between gap-3 pt-2.5 border-t border-border/50 text-xs"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-xs shrink-0">
+                    <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-xs shrink-0 tabular-nums">
                       {formatCurrency(relatedBudget?.releasedAmount || relatedBudget?.approvedAmount || 0)}
                     </span>
 
@@ -529,7 +602,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       type="button"
                       size="sm"
                       onClick={() => openLiquidationDetail(report.id)}
-                      className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-bold px-3.5 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs cursor-pointer justify-center"
+                      className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-bold px-3.5 hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-2xs cursor-pointer justify-center"
                     >
                       <span>Open Report →</span>
                     </Button>
@@ -540,12 +613,12 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           )}
         </div>
 
-        {/* 5. Rich Modern SaaS Data Table (Exact Desktop Implementation from Commit 48e7dd3: hidden lg:block) */}
-        <Card className="desktop-table rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs hidden lg:block">
+        {/* 5. Rich Modern SaaS Data Table (hidden lg:block - EXACT DESKTOP SOURCE OF TRUTH) */}
+        <Card className="desktop-table rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs hidden lg:block">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[900px]">
               <thead>
-                <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                <tr className="border-b border-border/80 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   <th className="py-3 px-5">Activity</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Released Budget</th>
@@ -554,10 +627,13 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                   <th className="py-3 px-5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40">
+              <tbody className="divide-y divide-border/50">
                 {filteredReports.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-muted-foreground text-xs space-y-1">
+                    <td colSpan={6} className="py-12 text-center text-muted-foreground text-xs space-y-1.5">
+                      <div className="h-10 w-10 rounded-xl bg-muted/60 text-muted-foreground mx-auto flex items-center justify-center">
+                        <Receipt className="h-5 w-5" />
+                      </div>
                       <p className="font-bold text-foreground">No liquidation reports found</p>
                       <p className="text-xs">Try adjusting your search or status filter.</p>
                     </td>
@@ -574,23 +650,23 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       <tr
                         key={report.id}
                         onClick={() => openLiquidationDetail(report.id)}
-                        className="h-[88px] hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors duration-150 cursor-pointer group"
+                        className="hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors duration-150 cursor-pointer group"
                       >
                         {/* Column 1: Activity */}
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                              <Receipt className="h-5 w-5" />
+                            <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                              <Receipt className="h-4.5 w-4.5" />
                             </div>
-                            <div className="space-y-1 min-w-0">
-                              <p className="text-sm font-bold text-foreground leading-tight truncate max-w-[240px]" title={relatedBudget?.activityTitle}>
+                            <div className="space-y-0.5 min-w-0">
+                              <p className="text-sm font-bold text-foreground leading-snug truncate max-w-[250px]" title={relatedBudget?.activityTitle}>
                                 {relatedBudget?.activityTitle || "Approved Activity"}
                               </p>
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="font-mono font-semibold text-muted-foreground bg-accent px-2 py-0.5 rounded-md text-[10px]">
+                                <span className="font-mono font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded text-[10px]">
                                   {recordCode}
                                 </span>
-                                <span className="text-muted-foreground/60">•</span>
+                                <span className="text-muted-foreground/50">•</span>
                                 <span className="text-muted-foreground text-[11px] truncate max-w-[140px]">
                                   {relatedBudget?.venue || "Pasig City"}
                                 </span>
@@ -606,7 +682,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                         {/* Column 3: Released Budget */}
                         <td className="py-3.5 px-4">
-                          <div className="inline-flex items-center bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                          <div className="inline-flex items-center bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400 tabular-nums">
                             {formatCurrency(relatedBudget?.releasedAmount || relatedBudget?.approvedAmount || 0)}
                           </div>
                         </td>
@@ -618,9 +694,11 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                               {report.deadlineAt ? formatShortPortalDate(report.deadlineAt) : "Pending"}
                             </p>
                             <p className={cn(
-                              "text-[10px] font-semibold",
+                              "text-[11px] font-semibold",
                               remainingDaysText.includes("overdue")
-                                ? "text-destructive"
+                                ? "text-rose-600 dark:text-rose-400"
+                                : remainingDaysText.includes("Today")
+                                ? "text-amber-600 dark:text-amber-400"
                                 : "text-muted-foreground"
                             )}>
                               {remainingDaysText}
@@ -655,7 +733,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                             type="button"
                             size="sm"
                             onClick={() => openLiquidationDetail(report.id)}
-                            className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold px-4 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
+                            className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-bold px-3.5 hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-2xs cursor-pointer"
                           >
                             Open Report →
                           </Button>
@@ -669,139 +747,117 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           </div>
         </Card>
 
-        {/* 6. Desktop Details Drawer (Exact Desktop Implementation from Commit 48e7dd3: isDesktop ONLY) */}
+        {/* 6. Desktop Details Drawer (isDesktop ONLY) */}
         {isDesktop && (
           <Sheet open={Boolean(selectedReport)} onOpenChange={(open) => { if (!open) closeLiquidationDetail(); }}>
-            <SheetContent className="w-full sm:max-w-xl overflow-y-auto bg-card border-border p-6 space-y-6">
+            <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl">
               {selectedReport && (() => {
                 const selectedBudget = budgetRequests.find((req) => req.id === selectedReport.budgetRequestId) ?? null;
                 const files = liquidationFilesByReportId.get(selectedReport.id) ?? [];
                 const primaryFile = files[0] ?? null;
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
+                const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
+                const activePreviewUrl = resolvedModalPreviewUrl || primaryFile?.fileUrl || "";
 
                 return (
-                  <div className="space-y-6">
-                    <SheetHeader className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md">
-                          {recordCode}
-                        </span>
+                  <>
+                    {/* PINNED HEADER */}
+                    <div className="p-5 sm:p-6 border-b border-border/70 bg-card shrink-0 space-y-2">
+                      <div className="flex items-center justify-between gap-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                          <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
+                            {recordCode}
+                          </span>
+                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20 tabular-nums">
                             {formatCurrency(selectedBudget?.releasedAmount || selectedBudget?.approvedAmount || 0)}
                           </span>
                         </div>
                       </div>
-                      <SheetTitle className="text-xl font-bold text-foreground leading-snug truncate" title={selectedBudget?.activityTitle}>
-                        {selectedBudget?.activityTitle || "Liquidation Report"}
-                      </SheetTitle>
-                      <SheetDescription className="text-xs text-muted-foreground">
-                        {selectedBudget?.purposeCategory || "General Purpose"} • {selectedBudget?.venue || "Pasig City"}
-                      </SheetDescription>
-                    </SheetHeader>
 
-                    {/* Timeline Strip */}
-                    <div className="bg-accent/30 p-4 rounded-2xl border border-border/60 space-y-2">
-                      <p className="text-xs font-bold text-foreground">Activity Timeline</p>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Go Signal</span>
-                          <span className="font-semibold text-foreground">
-                            {selectedReport.goSignalAt ? formatShortPortalDate(selectedReport.goSignalAt) : "Pending"}
-                          </span>
+                      <div className="space-y-1 pt-1">
+                        <SheetTitle className="text-xl font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere]" title={selectedBudget?.activityTitle}>
+                          {selectedBudget?.activityTitle || "Liquidation Report"}
+                        </SheetTitle>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <PortalStatusBadge status={selectedReport.status} />
                         </div>
-                        <div>
-                          <span className="block text-[10px] text-destructive uppercase font-semibold">Deadline</span>
-                          <span className="font-semibold text-destructive">
-                            {selectedReport.deadlineAt ? formatShortPortalDate(selectedReport.deadlineAt) : "Pending"}
-                          </span>
-                        </div>
+                        <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5">
+                          {selectedBudget?.purposeCategory || "General Purpose"} • {selectedBudget?.venue || "Pasig City"}
+                        </SheetDescription>
                       </div>
                     </div>
 
-                    {/* Attached File Viewer */}
-                    <div className="space-y-3.5">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-foreground">Liquidation Document</p>
-                        {primaryFile && (
-                          <span className="text-[10px] text-muted-foreground font-mono">
-                            {primaryFile.fileSize ? `${Math.max(1, Math.round(primaryFile.fileSize / 1024))} KB` : "Attached"}
+                    {/* SCROLLABLE BODY */}
+                    <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                      {/* Key Summary: Activity Timeline */}
+                      <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-foreground">Activity Timeline</span>
+                          <span className={cn("text-[11px] font-semibold", remainingDaysText.includes("overdue") ? "text-destructive font-bold" : "text-muted-foreground")}>
+                            {remainingDaysText}
                           </span>
-                        )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Go Signal</span>
+                            <span className="font-semibold text-foreground">
+                              {selectedReport.goSignalAt ? formatShortPortalDate(selectedReport.goSignalAt) : "Pending"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-destructive uppercase font-semibold tracking-wider">Deadline</span>
+                            <span className="font-semibold text-destructive">
+                              {selectedReport.deadlineAt ? formatShortPortalDate(selectedReport.deadlineAt) : "Pending"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      {primaryFile ? (
-                        <div className="bg-background border border-border/80 p-4 rounded-2xl space-y-4 shadow-2xs">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <FileText className="h-5 w-5 text-primary shrink-0" />
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-foreground truncate max-w-[220px]" title={primaryFile.fileName}>
-                                  {primaryFile.fileName}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  PDF • {primaryFile.uploadedAt ? `Uploaded ${formatDateTimeLabel(primaryFile.uploadedAt)}` : "Uploaded recently"}
-                                </p>
-                              </div>
-                            </div>
+                      {/* Document Section (Primary Content) */}
+                      <PortalDrawerDocumentSection
+                        file={primaryFile}
+                        previewUrl={activePreviewUrl}
+                        isDownloading={downloadingFileId === primaryFile?.id}
+                        onDownloadFile={(url, name, id) => void handleDownloadLiquidationFile(url, name, id)}
+                        formatDateTimeLabel={formatDateTimeLabel}
+                        sectionTitle="Liquidation Document"
+                        emptyTitle="No liquidation file uploaded yet"
+                        emptyDescription="Upload your signed post-activity liquidation PDF report for admin review."
+                        onUploadClick={() => {
+                          setLiquidationUploadTargetId(selectedReport.id);
+                          liquidationFileInputRef.current?.click();
+                        }}
+                        uploadButtonLabel="Upload Report File"
+                      />
 
-                            {/* Direct Blob-Fetch Download File Button */}
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={downloadingFileId === primaryFile.id}
-                              onClick={() => void handleDownloadLiquidationFile(resolvedModalPreviewUrl || primaryFile.fileUrl, primaryFile.fileName, primaryFile.id)}
-                              className="h-8 text-xs font-medium rounded-xl border-border shrink-0 cursor-pointer gap-1.5"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                              {downloadingFileId === primaryFile.id ? "Downloading..." : "Download File"}
-                            </Button>
-                          </div>
-
-                          {/* Embedded Document Preview Area */}
-                          <PortalDocumentViewer
-                            previewUrl={resolvedModalPreviewUrl || primaryFile.fileUrl}
-                            previewTitle={primaryFile.fileName}
-                            previewCanInline={true}
-                            onDownloadFile={async (url, name) => {
-                              await handleDownloadLiquidationFile(url, name, primaryFile.id);
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="border-2 border-dashed border-border/80 p-6 rounded-2xl text-center space-y-3">
-                          <FileText className="h-8 w-8 text-muted-foreground/60 mx-auto" />
-                          <div className="space-y-1">
-                            <p className="text-xs font-bold text-foreground">No liquidation file uploaded yet</p>
-                            <p className="text-[11px] text-muted-foreground/70">
-                              Upload your signed post-activity liquidation PDF report for admin review.
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              setLiquidationUploadTargetId(selectedReport.id);
-                              liquidationFileInputRef.current?.click();
-                            }}
-                            className="h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold px-4 cursor-pointer"
-                          >
-                            <FileUp className="mr-1.5 h-3.5 w-3.5" />
-                            Upload Report File
-                          </Button>
+                      {/* Secondary Details: Remarks if any */}
+                      {selectedBudget?.remarks && (
+                        <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-1 text-xs">
+                          <p className="font-bold text-foreground">Remarks</p>
+                          <p className="text-muted-foreground leading-relaxed pt-1 border-t border-border/40 italic text-[11px]">
+                            {selectedBudget.remarks}
+                          </p>
                         </div>
                       )}
                     </div>
 
-                    {/* Spacing above Close Drawer Button */}
-                    <div className="pt-4 border-t border-border/40">
+                    {/* PINNED FOOTER */}
+                    <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+                      <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                        Liquidation Report • LYDO Pasig City
+                      </p>
                       <SheetClose asChild>
-                        <Button type="button" variant="outline" className="w-full h-9.5 text-xs font-bold rounded-xl cursor-pointer">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                        >
                           Close Drawer
                         </Button>
                       </SheetClose>
                     </div>
-                  </div>
+                  </>
                 );
               })()}
             </SheetContent>
@@ -813,7 +869,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           <Dialog open={Boolean(selectedReport)} onOpenChange={(open) => { if (!open) closeLiquidationDetail(); }}>
             <DialogContent
               hideCloseButton={true}
-              className="w-[94vw] sm:w-[92vw] max-w-3xl h-[86vh] sm:h-[88vh] max-h-[860px] sm:max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+              className="w-[94vw] sm:w-[92vw] max-w-3xl h-[88vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
             >
               {selectedReport && (() => {
                 const selectedBudget = budgetRequests.find((req) => req.id === selectedReport.budgetRequestId) ?? null;
@@ -821,6 +877,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                 const primaryFile = selectedFiles[0] ?? null;
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
+                const activePreviewUrl = resolvedModalPreviewUrl || primaryFile?.fileUrl || "";
 
                 return (
                   <>
@@ -828,15 +885,14 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       Liquidation Report Details for {selectedBudget?.activityTitle || "Report"}
                     </DialogDescription>
 
-                    {/* MODAL HEADER */}
+                    {/* PINNED HEADER */}
                     <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border/70 bg-card flex flex-col gap-2 shrink-0">
-                      {/* Top Row: Record Code + Amount + Protected Close Button */}
                       <div className="flex items-center justify-between gap-2.5 w-full">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
                             {recordCode}
                           </span>
-                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20">
+                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20 tabular-nums">
                             {formatCurrency(selectedBudget?.releasedAmount || selectedBudget?.approvedAmount || 0)}
                           </span>
                         </div>
@@ -851,7 +907,6 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </button>
                       </div>
 
-                      {/* Main Title & Status & Metadata */}
                       <div className="space-y-1">
                         <DialogTitle className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2">
                           {selectedBudget?.activityTitle || "Liquidation Report"}
@@ -865,25 +920,25 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       </div>
                     </div>
 
-                    {/* MODAL SCROLLABLE BODY */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 bg-background/50">
-                      {/* Activity Timeline Card */}
-                      <div className="bg-card p-3.5 sm:p-4 rounded-2xl border border-border/70 shadow-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-foreground">Activity Timeline</p>
+                    {/* SCROLLABLE BODY */}
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                      {/* Key Summary: Activity Timeline */}
+                      <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-foreground">Activity Timeline</span>
                           <span className={cn("text-[11px] font-semibold", remainingDaysText.includes("overdue") ? "text-destructive font-bold" : "text-muted-foreground")}>
                             {remainingDaysText}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
                           <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Go Signal</span>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Go Signal</span>
                             <span className="font-semibold text-foreground">
                               {selectedReport.goSignalAt ? formatShortPortalDate(selectedReport.goSignalAt) : "Pending"}
                             </span>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-destructive uppercase font-semibold">Deadline</span>
+                            <span className="block text-[10px] text-destructive uppercase font-semibold tracking-wider">Deadline</span>
                             <span className="font-semibold text-destructive">
                               {selectedReport.deadlineAt ? formatShortPortalDate(selectedReport.deadlineAt) : "Pending"}
                             </span>
@@ -891,107 +946,35 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </div>
                       </div>
 
-                      {/* REPORT ACTIONS ROW (Placed below Timeline and ABOVE Liquidation Document section) */}
-                      {primaryFile && (
-                        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const targetUrl = resolvedModalPreviewUrl || primaryFile.fileUrl;
-                              if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
-                            }}
-                            className="h-11 rounded-xl border-border/80 text-xs font-bold gap-2 cursor-pointer hover:bg-accent text-foreground justify-center truncate px-3 shadow-xs hover:border-primary/40 transition-all"
-                          >
-                            <ExternalLink className="h-4 w-4 text-primary shrink-0" />
-                            <span className="truncate">Open in New Tab</span>
-                          </Button>
+                      {/* Document Section (Primary Content) */}
+                      <PortalDrawerDocumentSection
+                        file={primaryFile}
+                        previewUrl={activePreviewUrl}
+                        isDownloading={downloadingFileId === primaryFile?.id}
+                        onDownloadFile={(url, name, id) => void handleDownloadLiquidationFile(url, name, id)}
+                        formatDateTimeLabel={formatDateTimeLabel}
+                        sectionTitle="Liquidation Document"
+                        emptyTitle="No liquidation file uploaded yet"
+                        emptyDescription="Upload your signed post-activity liquidation PDF report for admin review."
+                        onUploadClick={() => {
+                          setLiquidationUploadTargetId(selectedReport.id);
+                          liquidationFileInputRef.current?.click();
+                        }}
+                        uploadButtonLabel="Upload Report File"
+                      />
 
-                          <Button
-                            type="button"
-                            disabled={downloadingFileId === primaryFile.id}
-                            onClick={() => void handleDownloadLiquidationFile(resolvedModalPreviewUrl || primaryFile.fileUrl, primaryFile.fileName, primaryFile.id)}
-                            className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-2 cursor-pointer shadow-xs justify-center truncate px-3 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                          >
-                            {downloadingFileId === primaryFile.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                                <span className="truncate">Downloading...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Download className="h-4 w-4 shrink-0" />
-                                <span className="truncate">Download File</span>
-                              </>
-                            )}
-                          </Button>
+                      {/* Secondary Details: Remarks if any */}
+                      {selectedBudget?.remarks && (
+                        <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-1 text-xs">
+                          <p className="font-bold text-foreground">Remarks</p>
+                          <p className="text-muted-foreground leading-relaxed pt-1 border-t border-border/40 italic text-[11px]">
+                            {selectedBudget.remarks}
+                          </p>
                         </div>
                       )}
-
-                      {/* Liquidation Document Section */}
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-foreground">Liquidation Document</p>
-                          {primaryFile && (
-                            <span className="text-[10px] text-muted-foreground font-mono">
-                              {primaryFile.fileSize ? `${Math.max(1, Math.round(primaryFile.fileSize / 1024))} KB` : "PDF Document"}
-                            </span>
-                          )}
-                        </div>
-
-                        {primaryFile ? (
-                          <div className="bg-card border border-border/80 p-3.5 sm:p-4 rounded-2xl space-y-3.5 shadow-2xs">
-                            {/* File Info */}
-                            <div className="flex items-start gap-3 min-w-0">
-                              <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
-                                <FileText className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0 flex-1 space-y-0.5">
-                                <p className="text-xs font-bold text-foreground truncate max-w-[240px] sm:max-w-[400px]" title={primaryFile.fileName}>
-                                  {primaryFile.fileName}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  PDF • {primaryFile.uploadedAt ? `Uploaded ${formatDateTimeLabel(primaryFile.uploadedAt)}` : "Uploaded recently"}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Reusable Embedded Document Renderer */}
-                            <PortalDocumentViewer
-                              previewUrl={resolvedModalPreviewUrl || primaryFile.fileUrl}
-                              previewTitle={primaryFile.fileName}
-                              previewCanInline={true}
-                              onDownloadFile={async (url, name) => {
-                                await handleDownloadLiquidationFile(url, name, primaryFile.id);
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="border-2 border-dashed border-border/80 p-6 rounded-2xl text-center space-y-3 bg-muted/10">
-                            <FileText className="h-8 w-8 text-muted-foreground/50 mx-auto" />
-                            <div className="space-y-1">
-                              <p className="text-xs font-bold text-foreground">No liquidation file uploaded yet</p>
-                              <p className="text-[11px] text-muted-foreground">
-                                Upload your signed post-activity liquidation PDF report for admin review.
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              onClick={() => {
-                                setLiquidationUploadTargetId(selectedReport.id);
-                                liquidationFileInputRef.current?.click();
-                              }}
-                              className="h-8.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold px-4 cursor-pointer gap-1.5"
-                            >
-                              <FileUp className="h-3.5 w-3.5 shrink-0" />
-                              <span>Upload Report File</span>
-                            </Button>
-                          </div>
-                        )}
-                      </div>
                     </div>
 
-                    {/* MODAL FOOTER */}
+                    {/* PINNED FOOTER */}
                     <div className="h-14 py-2.5 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
                       <p className="text-xs text-muted-foreground font-medium truncate mr-2">
                         Liquidation Report • LYDO Pasig City
@@ -1001,7 +984,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         variant="outline"
                         size="sm"
                         onClick={() => closeLiquidationDetail()}
-                        className="h-8 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
                       >
                         Close
                       </Button>

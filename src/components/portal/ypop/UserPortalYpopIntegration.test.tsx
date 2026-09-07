@@ -626,4 +626,60 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByText("S1 Youth Leadership Convention")).toBeInTheDocument();
     expect(screen.getByText("S1 Sports Summit")).toBeInTheDocument();
   });
+
+  it("25. Semester list displays refined scores, calm period status, and structured activity summary", () => {
+    render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
+
+    // Period status displays clean indicator text
+    expect(screen.getAllByText("Open Period").length).toBeGreaterThan(0);
+
+    // Calculated score displays bold percentage and cutoff reference
+    expect(screen.getAllByText(/Cutoff 70%/i).length).toBeGreaterThan(0);
+
+    // Activity summary shows clean tabular labels
+    expect(screen.getAllByText(/City-Led:/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PPAs:/i).length).toBeGreaterThan(0);
+  });
+
+  it("26. Organization-Led PPA drawer renders structured semantic sections", () => {
+    render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // Switch to Org PPAs tab
+    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    fireEvent.click(orgTab);
+
+    // Open PPA modal
+    const logBtn = screen.getByRole("button", { name: /Log PPA Activity/i });
+    fireEvent.click(logBtn);
+
+    // Form sections are clearly rendered
+    expect(screen.getByText("Activity Details")).toBeInTheDocument();
+    expect(screen.getByText("Activity Description")).toBeInTheDocument();
+    expect(screen.getByText("Supporting Documents")).toBeInTheDocument();
+
+    // Required fields are present
+    expect(screen.getByLabelText(/Activity Title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Date Conducted/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Description/i)).toBeInTheDocument();
+
+    // Action buttons
+    expect(screen.getByRole("button", { name: /Save as Draft/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Submit for Review/i })).toBeInTheDocument();
+  });
+
+  it("27. City-Led proof drawer renders streamlined status banners, upload dropzone, and differentiated file rows", () => {
+    render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // Open drawer for revision activity
+    const resolveBtn = screen.getByRole("button", { name: "Resolve Revision" });
+    fireEvent.click(resolveBtn);
+
+    // Banner and upload dropzone
+    expect(screen.getByText("Admin Revision Requested")).toBeInTheDocument();
+    expect(screen.getByText("Click to browse file")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Resubmit Corrected Proof/i })).toBeInTheDocument();
+  });
 });
+

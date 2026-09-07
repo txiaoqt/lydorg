@@ -258,10 +258,7 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     expect(screen.queryByRole("button", { name: /Budget Request/i })).not.toBeInTheDocument();
   });
 
-  it("12. Budget Request workspace New Budget Request button activates form and calls startEditingBudgetRequest(null)", () => {
-    const startEditingBudgetRequestMock = vi.fn();
-    const setShowBudgetFormMock = vi.fn();
-
+  it("12. Budget Request workspace header does not display redundant New Budget Request button", () => {
     const budgetProps: any = {
       budgetWorkflowEligibility: { eligible: true },
       budgetRequests: [],
@@ -269,9 +266,9 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
       budgetNotesByRequestId: {},
       submittingBudgetId: null,
       showBudgetForm: false,
-      setShowBudgetForm: setShowBudgetFormMock,
+      setShowBudgetForm: vi.fn(),
       editingBudgetRequest: null,
-      startEditingBudgetRequest: startEditingBudgetRequestMock,
+      startEditingBudgetRequest: vi.fn(),
       handleDeleteBudgetRequest: vi.fn(),
       openFile: vi.fn(),
       navigate: vi.fn(),
@@ -301,13 +298,11 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
 
     render(<UserPortalBudgetWorkspaceView {...budgetProps} />);
 
-    const button = screen.getByRole("button", { name: /New Budget Request/i });
-    expect(button).toBeEnabled();
-
-    fireEvent.click(button);
-
-    expect(startEditingBudgetRequestMock).toHaveBeenCalledWith(null);
-    expect(setShowBudgetFormMock).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("button", { name: /New Budget Request/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Budget Requests" })).toBeInTheDocument();
+    expect(screen.getByText("Financial Workspace")).toBeInTheDocument();
+    expect(screen.getByText("LYDO Pasig City")).toBeInTheDocument();
+    expect(screen.getByText("Submit financial grant proposals, track approval stages, and monitor released funds.")).toBeInTheDocument();
   });
 
   it("13. Budget Request workspace New Budget Request button and view are locked by FeatureGate when ineligible", () => {

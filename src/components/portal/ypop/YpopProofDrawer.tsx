@@ -13,6 +13,7 @@ import {
   Calendar,
   MapPin,
   UploadCloud,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Sheet,
@@ -269,13 +271,13 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     <>
       {/* Status Callout Banner */}
       {isVerified && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-          <div className="text-xs space-y-0.5">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-2.5 sm:gap-3">
+          <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-emerald-700 dark:text-emerald-300">
               Participation Verified
             </p>
-            <p className="text-emerald-600/90 dark:text-emerald-400/90">
+            <p className="text-emerald-600/90 dark:text-emerald-400/90 leading-snug sm:leading-relaxed break-words">
               Attendance and supporting proof have been validated by the Admin. This activity contributes {points} points to your City-Led score.
             </p>
           </div>
@@ -283,18 +285,18 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isNeedsRevision && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-xs space-y-1.5 flex-1">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 sm:gap-3">
+          <AlertTriangle className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1.5 min-w-0 flex-1">
             <p className="font-bold text-amber-700 dark:text-amber-300">
               Admin Revision Requested
             </p>
             {participation?.adminRemarks && (
-              <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium">
+              <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium italic break-words">
                 "{participation.adminRemarks}"
               </div>
             )}
-            <p className="text-muted-foreground text-[11px]">
+            <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
               Please review the admin remarks, attach updated proof files below, and resubmit for verification.
             </p>
           </div>
@@ -302,18 +304,18 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isRejected && (
-        <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
-          <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-          <div className="text-xs space-y-1.5 flex-1">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-2.5 sm:gap-3">
+          <XCircle className="h-4.5 w-4.5 text-destructive shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1.5 min-w-0 flex-1">
             <p className="font-bold text-destructive">
               Participation Rejected
             </p>
             {participation?.adminRemarks && (
-              <div className="p-2.5 rounded-lg bg-background/80 border border-destructive/20 text-foreground font-medium">
+              <div className="p-2.5 rounded-lg bg-background/80 border border-destructive/20 text-foreground font-medium italic break-words">
                 "{participation.adminRemarks}"
               </div>
             )}
-            <p className="text-muted-foreground text-[11px]">
+            <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
               This participation record was marked rejected by the administrator.
             </p>
           </div>
@@ -321,13 +323,13 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isPending && !isNeedsRevision && (
-        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-3">
-          <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-          <div className="text-xs space-y-0.5">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-2.5 sm:gap-3">
+          <Clock className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-blue-700 dark:text-blue-300">
               Awaiting Admin Validation
             </p>
-            <p className="text-blue-600/90 dark:text-blue-400/90">
+            <p className="text-blue-600/90 dark:text-blue-400/90 leading-snug sm:leading-relaxed break-words">
               Proof documents have been submitted and are under review by the LYDO Admin team.
             </p>
           </div>
@@ -335,13 +337,13 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isDraft && files.length > 0 && (
-        <div className="p-4 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-start gap-3">
-          <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
-          <div className="text-xs space-y-0.5">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-start gap-2.5 sm:gap-3">
+          <FileText className="h-4.5 w-4.5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-slate-700 dark:text-slate-300">
               Draft Proof Attached
             </p>
-            <p className="text-slate-600/90 dark:text-slate-400/90">
+            <p className="text-slate-600/90 dark:text-slate-400/90 leading-snug sm:leading-relaxed break-words">
               Your proof files are saved as a draft. Click &ldquo;Submit Proof for Review&rdquo; below when you are ready to submit to the Admin.
             </p>
           </div>
@@ -350,8 +352,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
 
       {/* Optional Remarks from Organization */}
       {isEditable && (
-        <div className="space-y-1.5 pt-1">
-          <Label htmlFor="city-remarks" className="text-xs font-bold text-muted-foreground">
+        <div className="space-y-1.5 pt-1 w-full min-w-0">
+          <Label htmlFor="city-remarks" className="text-xs font-semibold text-foreground">
             Remarks (Optional)
           </Label>
           <Textarea
@@ -360,22 +362,21 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
             rows={2}
-            className="text-xs resize-none"
+            className="text-xs resize-none rounded-lg border-border/80 w-full"
           />
         </div>
       )}
 
       {/* Uploaded Files Section */}
-      <div className="space-y-3 pt-1">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Attach File {isEditable && <span className="text-destructive">*</span>}
-            </h4>
-            <p className="text-[11px] text-muted-foreground">
-              Please attach the following: Attendance Sheet and Narrative Report.
-            </p>
-          </div>
+      <div className="space-y-3 pt-1 w-full min-w-0">
+        <div>
+          <h4 className="text-xs font-bold text-foreground flex items-center gap-1">
+            <span>Attach File</span>
+            {isEditable && <span className="text-destructive">*</span>}
+          </h4>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Please attach the following: Attendance Sheet and Narrative Report.
+          </p>
         </div>
 
         <input
@@ -390,30 +391,30 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         {isEditable && (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-accent/40 rounded-xl p-5 text-center cursor-pointer transition-all space-y-1.5"
+            className="border border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-accent/40 rounded-xl p-3 sm:p-4 text-center cursor-pointer transition-all space-y-1"
           >
-            <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
               <UploadCloud className="h-4 w-4" />
             </div>
-            <p className="text-xs font-bold text-primary">Click to browse file</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs font-semibold text-primary">Click to browse file</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground">
               Supports PDF, DOCX, and XLSX documents up to 10 MB
             </p>
           </div>
         )}
 
         {files.length === 0 ? (
-          <div className="p-6 text-center rounded-xl border border-dashed border-border/80 text-xs text-muted-foreground space-y-2 bg-muted/20">
-            <FileText className="h-7 w-7 text-muted-foreground mx-auto stroke-1" />
+          <div className="p-4 sm:p-5 text-center rounded-xl border border-dashed border-border/80 text-xs text-muted-foreground space-y-1.5 bg-muted/10">
+            <FileText className="h-6 w-6 text-muted-foreground mx-auto stroke-1" />
             <p className="font-semibold text-foreground">No proof files attached yet</p>
-            <p className="text-[11px]">Upload attendance sheets, event photos, or certificates.</p>
+            <p className="text-[10px] sm:text-[11px]">Upload attendance sheets, event photos, or certificates.</p>
             {isEditable && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-8 text-xs font-bold mt-2"
+                className="h-8 px-3 text-xs font-medium rounded-lg mt-1 border-border/80 hover:bg-muted text-foreground transition-all cursor-pointer active:scale-[0.98]"
               >
                 <Upload className="h-3.5 w-3.5 mr-1" /> Choose Files
               </Button>
@@ -424,14 +425,14 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
             {files.map((file) => (
               <div
                 key={file.id}
-                className="p-3 rounded-xl border border-border/70 bg-card flex items-center justify-between gap-3 shadow-2xs"
+                className="p-2.5 sm:p-3 rounded-xl border border-border/70 bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shadow-2xs hover:border-border transition-colors"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <FileText className="h-4 w-4" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-foreground truncate max-w-[220px] sm:max-w-[340px]" title={file.fileName}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-foreground truncate max-w-full sm:max-w-[280px]" title={file.fileName}>
                       {file.fileName}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
@@ -440,58 +441,64 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {isVerified && (
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                      Approved
-                    </span>
-                  )}
-                  {isPending && (
-                    <span className="text-[10px] font-bold text-blue-600 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                      Pending Review
-                    </span>
-                  )}
-                  {isDraft && (
-                    <span className="text-[10px] font-bold text-slate-600 bg-slate-500/10 px-2 py-0.5 rounded-full border border-slate-500/20">
-                      Draft
-                    </span>
-                  )}
-                  {isNeedsRevision && (
-                    <span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                      Needs Revision
-                    </span>
-                  )}
-                  {isRejected && (
-                    <span className="text-[10px] font-bold text-rose-600 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                      Rejected
-                    </span>
-                  )}
+                <div className="flex items-center justify-between sm:justify-end gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-border/40">
+                  <div className="flex items-center gap-1.5">
+                    {isVerified && (
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        Approved
+                      </span>
+                    )}
+                    {isPending && (
+                      <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                        Pending Review
+                      </span>
+                    )}
+                    {isDraft && (
+                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-500/10 px-2 py-0.5 rounded-full border border-slate-500/20">
+                        Draft
+                      </span>
+                    )}
+                    {isNeedsRevision && (
+                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                        Needs Revision
+                      </span>
+                    )}
+                    {isRejected && (
+                      <span className="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                        Rejected
+                      </span>
+                    )}
+                  </div>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleOpenFile(file.fileUrl)}
-                    className="h-7 px-2 text-xs text-primary hover:bg-primary/10"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5 mr-1" /> View
-                  </Button>
-                  {isEditable && (
+                  <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      disabled={deletingFileId === file.id}
-                      onClick={() => handleDeleteFile(file)}
-                      className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
+                      onClick={() => handleOpenFile(file.fileUrl)}
+                      className="h-7.5 px-2.5 text-xs font-medium text-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1.5 active:scale-[0.98]"
                     >
-                      {deletingFileId === file.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
-                      )}
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>View</span>
                     </Button>
-                  )}
+                    {isEditable && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={deletingFileId === file.id}
+                        onClick={() => handleDeleteFile(file)}
+                        className="h-7.5 w-7.5 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors cursor-pointer inline-flex items-center justify-center active:scale-[0.98]"
+                        title="Remove file"
+                      >
+                        {deletingFileId === file.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -505,8 +512,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   if (isDesktop) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-[min(38rem,95vw)] sm:w-[540px] sm:max-w-xl overflow-y-auto bg-card border-border p-6 sm:p-7 space-y-6">
-          <SheetHeader className="space-y-2 border-b border-border/60 pb-4">
+        <SheetContent side="right" className="w-[min(38rem,95vw)] sm:w-[540px] sm:max-w-xl overflow-y-auto bg-card border-border p-5 sm:p-6 space-y-5">
+          <SheetHeader className="space-y-1.5 border-b border-border/60 pb-4">
             {headerCategoryAndPoints}
             <SheetTitle className="text-xl font-bold text-foreground leading-snug">
               {activity.name}
@@ -524,7 +531,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                className="text-xs font-semibold h-9 rounded-xl cursor-pointer"
+                className="text-xs sm:text-sm font-medium h-9.5 px-4 rounded-lg cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
               >
                 {isEditable ? "Cancel" : "Close Drawer"}
               </Button>
@@ -535,9 +542,9 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                 type="button"
                 disabled={submitting || files.length === 0}
                 onClick={handleSubmitProof}
-                className="h-9 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs gap-1.5 rounded-xl cursor-pointer"
+                className="h-9.5 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
               >
-                {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
               </Button>
             )}
@@ -547,44 +554,103 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     );
   }
 
-  // MOBILE + TABLET: Centered Modal Dialog matching Budget Request / Liquidation Report
+  // MOBILE + TABLET: Centered Modal Dialog matching Budget Request / Liquidation Report & YpopPpaModal
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-[92vw] max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 rounded-2xl border border-border/80 bg-card shadow-2xl">
-        <DialogHeader className="space-y-2 border-b border-border/60 pb-4">
-          {headerCategoryAndPoints}
-          <DialogTitle className="text-xl font-bold text-foreground">
-            {activity.name}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
-            {headerDateTimeVenue}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent
+        hideCloseButton={true}
+        className="w-[calc(100vw-1.25rem)] sm:w-[92vw] max-w-2xl h-[calc(100dvh-1.5rem)] sm:h-auto sm:max-h-[88vh] p-0 gap-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+      >
+        {/* PINNED HEADER */}
+        <div className="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-border/60 bg-card shrink-0 flex items-start justify-between gap-3">
+          <div className="space-y-1 min-w-0 flex-1">
+            {/* Category & Points & Status Badge */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span
+                className={cn(
+                  "text-[11px] font-bold px-2.5 py-0.5 rounded-full border",
+                  YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].className
+                )}
+                style={{
+                  color: YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].text,
+                  backgroundColor: YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].background,
+                  borderColor: YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].border,
+                }}
+              >
+                {YPOP_CITY_LED_CATEGORY_LABELS[category]} Activity
+              </span>
+              <span className="text-xs font-bold text-muted-foreground">
+                {points} Points Weight
+              </span>
+              {participation?.status && (
+                <span
+                  className={cn(
+                    "text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border inline-flex items-center",
+                    isVerified && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+                    isPending && "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
+                    isNeedsRevision && "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
+                    isRejected && "bg-destructive/10 text-destructive border-destructive/20",
+                    isDraft && "bg-muted/80 text-muted-foreground border-border/70"
+                  )}
+                >
+                  Status: {participation.status.replace("_", " ").toUpperCase()}
+                </span>
+              )}
+            </div>
 
-        {bodyContent}
+            {/* Title */}
+            <DialogTitle className="text-base sm:text-xl font-bold text-foreground leading-snug text-left pt-0.5 break-words">
+              {activity.name}
+            </DialogTitle>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-border/60">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="text-xs font-semibold h-9 rounded-xl cursor-pointer"
-          >
-            {isEditable ? "Cancel" : "Close"}
-          </Button>
+            {/* Date & Venue */}
+            <DialogDescription className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-left">
+              {headerDateTimeVenue}
+            </DialogDescription>
+          </div>
 
-          {isEditable && (
+          {/* Top-Right Dedicated Close Button */}
+          <DialogClose asChild>
+            <button
+              type="button"
+              aria-label="Close"
+              className="h-8 w-8 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0.5"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          </DialogClose>
+        </div>
+
+        {/* SCROLLABLE BODY */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3.5 sm:px-6 sm:py-5 space-y-4">
+          {bodyContent}
+        </div>
+
+        {/* PINNED FOOTER */}
+        <div className="p-3 sm:px-6 sm:py-4 border-t border-border/60 bg-card shrink-0">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
             <Button
               type="button"
-              disabled={submitting || files.length === 0}
-              onClick={handleSubmitProof}
-              className="h-9 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs gap-1.5 rounded-xl cursor-pointer"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-lg cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
             >
-              {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-              <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+              {isEditable ? "Cancel" : "Close"}
             </Button>
-          )}
+
+            {isEditable && (
+              <Button
+                type="button"
+                disabled={submitting || files.length === 0}
+                onClick={handleSubmitProof}
+                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

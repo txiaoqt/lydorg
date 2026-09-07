@@ -127,7 +127,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 rounded-xl border-border text-xs font-medium gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-between sm:justify-center px-3 hover:bg-accent text-foreground"
+                  className="h-8 rounded-lg border border-border/80 bg-background hover:bg-muted text-xs font-medium gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-between sm:justify-center px-3 text-foreground transition-colors"
                 >
                   <div className="flex items-center gap-1.5 min-w-0 truncate">
                     <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -183,22 +183,22 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
         </div>
 
         {/* Standard User Portal Responsive Table Wrapper */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[850px]">
-            <thead>
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse md:min-w-[850px]">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3.5 px-5">Activity</th>
-                <th className="py-3.5 px-4">Category</th>
-                <th className="py-3.5 px-4">Date</th>
-                <th className="py-3.5 px-4">Venue</th>
-                <th className="py-3.5 px-4">Proof Status</th>
-                <th className="py-3.5 px-5 text-right">Action</th>
+                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Activity</th>
+                <th className="py-3.5 px-4 min-w-[120px]">Category</th>
+                <th className="py-3.5 px-4 min-w-[130px]">Date</th>
+                <th className="py-3.5 px-4 min-w-[130px]">Venue</th>
+                <th className="py-3.5 px-4 min-w-[130px]">Proof Status</th>
+                <th className="py-3.5 px-5 text-right min-w-[170px]">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40">
+            <tbody className="divide-y divide-border/40 md:table-row-group">
               {filteredActivities.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-muted-foreground text-xs space-y-2">
+                <tr className="block md:table-row">
+                  <td colSpan={6} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-2">
                     <Award className="h-8 w-8 text-muted-foreground mx-auto stroke-1" />
                     <p className="text-sm font-bold text-foreground">No City-Led activities found</p>
                     <p className="text-xs max-w-sm mx-auto">
@@ -215,7 +215,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                           setSearchQuery("");
                           setCategoryFilter("all");
                         }}
-                        className="h-8 px-3 text-xs font-semibold rounded-xl mt-2 cursor-pointer"
+                        className="h-8 px-3 text-xs font-medium rounded-lg mt-2 cursor-pointer border border-border/80 bg-background hover:bg-muted text-foreground transition-colors"
                       >
                         Reset Filters
                       </Button>
@@ -233,12 +233,17 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                   return (
                     <tr
                       key={act.id}
-                      className="hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors duration-150 group"
+                      className="grid grid-cols-2 gap-2.5 p-3.5 sm:p-4 md:table-row md:p-0 md:h-18 md:gap-0 hover:bg-muted/40 transition-colors duration-150 group border-b md:border-b-0 border-border/40"
                     >
                       {/* Column 1: Activity Name & Details */}
-                      <td className="py-3.5 px-5 align-middle">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 md:py-3.5 md:px-5 align-middle order-1">
                         <div className="space-y-1">
-                          <p className="font-bold text-sm text-foreground leading-tight">{act.name}</p>
+                          <p
+                            onClick={() => handleOpenDrawer(act)}
+                            className="font-bold text-sm text-foreground hover:text-primary transition-colors cursor-pointer leading-snug tracking-tight"
+                          >
+                            {act.name}
+                          </p>
                           {act.description && (
                             <p className="text-xs text-muted-foreground line-clamp-1 max-w-xs sm:max-w-md">
                               {act.description}
@@ -253,8 +258,8 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                         </div>
                       </td>
 
-                      {/* Column 2: Category (Exact colors, NO redundant points weight badge) */}
-                      <td className="py-3.5 px-4 align-middle whitespace-nowrap">
+                      {/* Column 2: Category (Exact colors, NO redundant points weight badge per test 21/23) */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center order-2">
                         <span
                           className={cn(
                             "text-[11px] font-bold px-2.5 py-0.5 rounded-full border inline-flex items-center",
@@ -271,28 +276,28 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       </td>
 
                       {/* Column 3: Date */}
-                      <td className="py-3.5 px-4 align-middle whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center order-4">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
                           <span>{formatActivityDateRange(act.startDate || act.date, act.endDate || act.date)}</span>
                         </div>
                       </td>
 
                       {/* Column 4: Venue */}
-                      <td className="py-3.5 px-4 align-middle whitespace-nowrap">
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center order-5">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="truncate max-w-[180px]">{act.venue || "Pasig City"}</span>
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
+                          <span className="truncate max-w-[140px] sm:max-w-[180px]">{act.venue || "Pasig City"}</span>
                         </div>
                       </td>
 
                       {/* Column 5: Proof Status */}
-                      <td className="py-3.5 px-4 align-middle whitespace-nowrap">
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start order-3">
                         {participation ? (
                           <StatusBadge
                             status={participation.status}
                             label={
-                                participation.status === "verified"
+                              participation.status === "verified"
                                 ? "Verified"
                                 : participation.status === "needs_revision"
                                 ? "Needs Revision"
@@ -310,18 +315,25 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       </td>
 
                       {/* Column 6: Action */}
-                      <td className="py-3.5 px-5 text-right align-middle whitespace-nowrap">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap order-6">
                         <Button
                           type="button"
                           variant={participation && filesCount > 0 ? "outline" : "default"}
                           size="sm"
                           onClick={() => handleOpenDrawer(act)}
-                          className="h-8 text-xs font-bold rounded-xl gap-1 cursor-pointer whitespace-nowrap"
+                          className={cn(
+                            "w-full md:w-auto h-8 px-3 rounded-lg text-xs font-medium gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center",
+                            participation?.status === "needs_revision"
+                              ? "border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                              : participation && filesCount > 0
+                              ? "border border-border/80 bg-background hover:bg-muted text-foreground"
+                              : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs"
+                          )}
                         >
                           {participation && filesCount > 0 ? (
-                            <FileText className="h-3.5 w-3.5" />
+                            <FileText className="h-3.5 w-3.5 shrink-0" />
                           ) : (
-                            <Plus className="h-3.5 w-3.5" />
+                            <Plus className="h-3.5 w-3.5 shrink-0" />
                           )}
                           <span>
                             {participation?.status === "needs_revision"

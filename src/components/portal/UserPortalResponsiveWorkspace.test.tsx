@@ -8,7 +8,10 @@ import { UserPortalYPOPWorkspaceView } from "./UserPortalYPOPWorkspaceView";
 import { UserPortalTemplatesWorkspaceView } from "./UserPortalTemplatesWorkspaceView";
 import { UserPortalNewsWorkspaceView } from "./UserPortalNewsWorkspaceView";
 import { UserPortalShell } from "./UserPortalShell";
+import { userNavigationGroups } from "@/lib/lydo-connect-data";
 import { PortalDocumentPreviewModal } from "./PortalDocumentPreviewModal";
+import { PortalAttachedDocumentDrawer } from "./PortalAttachedDocumentDrawer";
+import { PortalDocumentDrawer } from "./PortalDocumentDrawer";
 
 // Mock resize observer and matchMedia for tests
 beforeEach(() => {
@@ -389,9 +392,46 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
     expect(tableWrapper).toBeInTheDocument();
     expect(tableWrapper?.querySelector("table")).toBeInTheDocument();
 
-    // Verify semester period row is rendered with action
+    // Verify responsive thead and row grid/table layout classes
+    const thead = tableWrapper?.querySelector("thead");
+    expect(thead?.className).toContain("hidden md:table-header-group");
+
+    const row = tableWrapper?.querySelector("tbody tr");
+    expect(row?.className).toContain("grid");
+    expect(row?.className).toContain("md:table-row");
+
+    // Verify semester period row is rendered with all mobile priority elements
     expect(screen.getByText("2nd Semester 2026")).toBeInTheDocument();
+    expect(screen.getByText(/Open Period/i)).toBeInTheDocument();
+    expect(screen.getByText("Qualified")).toBeInTheDocument();
+    expect(screen.getByText(/Cutoff/i)).toBeInTheDocument();
+    expect(screen.getByText(/City-Led:/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /View Evaluation Result/i })).toBeInTheDocument();
+  });
+
+  it("renders City-Led and Org-Led activities with responsive table row layout", () => {
+    const { container } = render(<UserPortalYPOPWorkspaceView {...defaultYpopProps} />);
+
+    // In City-Led tab, verify table has responsive row layout
+    const cityTable = container.querySelector(".overflow-x-auto table");
+    expect(cityTable).toBeInTheDocument();
+
+    const cityThead = cityTable?.querySelector("thead");
+    expect(cityThead?.className).toContain("hidden md:table-header-group");
+
+    const cityRow = cityTable?.querySelector("tbody tr");
+    expect(cityRow?.className).toContain("grid");
+    expect(cityRow?.className).toContain("md:table-row");
+
+    // Switch to Org-Led tab
+    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    fireEvent.click(orgTab);
+
+    // Verify Org-Led table has responsive row layout
+    const orgTable = container.querySelector(".overflow-x-auto table");
+    expect(orgTable).toBeInTheDocument();
+    const orgThead = orgTable?.querySelector("thead");
+    expect(orgThead?.className).toContain("hidden md:table-header-group");
   });
 });
 
@@ -606,6 +646,156 @@ describe("UserPortalShell Notification Dropdown Responsive Behavior", () => {
   });
 });
 
+describe("UserPortalShell Mobile Sidebar Navigation (Notifications Removed & Preserved Structure)", () => {
+  const mockNotifications = [
+    {
+      id: "notif-1",
+      title: "Budget Released",
+      message: "Your budget request of ₱25,000 has been successfully approved and released.",
+      isRead: false,
+      createdAt: "2026-08-06T10:00:00Z",
+    },
+    {
+      id: "notif-2",
+      title: "Document Verified",
+      message: "Your constitution and bylaws have been marked compliant by LYDO admins.",
+      isRead: true,
+      createdAt: "2026-08-05T14:30:00Z",
+    },
+    {
+      id: "notif-3",
+      title: "New Announcement",
+      message: "Quarterly coordination meeting scheduled.",
+      isRead: false,
+      createdAt: "2026-08-04T09:00:00Z",
+    },
+  ];
+
+  const defaultShellProps = {
+    title: "Y-TRACE",
+    subtitle: "PASIG CITY",
+    userDisplayName: "tadz",
+    userEmail: "xxfaker4@gmail.com",
+    notifications: mockNotifications,
+    onMarkAllRead: vi.fn(),
+    groups: userNavigationGroups,
+    activeId: "dashboard",
+    onNavigate: vi.fn(),
+    onSignOut: vi.fn(),
+    children: <div>Dashboard Content</div>,
+  };
+
+  const phoneWidths = [320, 375, 390, 430];
+
+  phoneWidths.forEach((width) => {
+    it(`verifies mobile sidebar has NO redundant Notifications item and preserves all groups at ${width}px`, async () => {
+      window.innerWidth = width;
+      window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("max-width: 1023px") || !query.includes("min-width: 1024px"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      const onNavigateMock = vi.fn();
+      render(<UserPortalShell {...defaultShellProps} onNavigate={onNavigateMock} />);
+
+      // 1. Navbar notification bell remains visible and displays unread indicator
+      const navbarBell = screen.getByRole("button", { name: /^Notifications$/i });
+      expect(navbarBell).toBeInTheDocument();
+
+      // 2. Open mobile sidebar navigation sheet
+      const menuTrigger = screen.getByRole("button", { name: /Open navigation menu/i });
+      expect(menuTrigger).toBeInTheDocument();
+      fireEvent.click(menuTrigger);
+
+      // 3. Mobile sidebar dialog/sheet is open
+      const sheetDialog = screen.getByRole("dialog");
+      expect(sheetDialog).toBeInTheDocument();
+
+      // 4. Inside the mobile sidebar, there MUST NOT be any Notifications item/button
+      const sheetWithin = within(sheetDialog);
+      expect(sheetWithin.queryByRole("button", { name: /Notifications/i })).not.toBeInTheDocument();
+      expect(sheetWithin.queryByText(/Notifications/i)).not.toBeInTheDocument();
+
+      // 5. Account/user profile is present directly before navigation groups
+      expect(sheetWithin.getByRole("button", { name: /Open My Profile/i })).toBeInTheDocument();
+      expect(sheetWithin.getByText("tadz")).toBeInTheDocument();
+      expect(sheetWithin.getByText("xxfaker4@gmail.com")).toBeInTheDocument();
+
+      // 6. Navigation groups and exact items are intact in the sidebar:
+      // HOME
+      expect(sheetWithin.getByText("Home")).toBeInTheDocument();
+      const dashboardBtn = sheetWithin.getByRole("button", { name: /Dashboard/i });
+      expect(dashboardBtn).toBeInTheDocument();
+
+      // COMPLIANCE
+      expect(sheetWithin.getByText("Compliance")).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Document Submissions/i })).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Liquidation Reports/i })).toBeInTheDocument();
+
+      // GRANTS & INCENTIVES
+      expect(sheetWithin.getByText("Grants & Incentives")).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Budget Requests/i })).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /YPOP Incentive/i })).toBeInTheDocument();
+
+      // TEMPLATES
+      expect(sheetWithin.getAllByText("Templates").length).toBe(2);
+      expect(sheetWithin.getByRole("button", { name: /Templates/i })).toBeInTheDocument();
+
+      // NEWS RELEASES
+      expect(sheetWithin.getAllByText("News Releases").length).toBe(2);
+      expect(sheetWithin.getByRole("button", { name: /News Releases/i })).toBeInTheDocument();
+
+      // Sign Out
+      expect(sheetWithin.getByRole("button", { name: /Sign Out/i })).toBeInTheDocument();
+
+      // 7. Test interaction: click Dashboard navigates
+      fireEvent.click(dashboardBtn);
+      expect(onNavigateMock).toHaveBeenCalledWith("dashboard");
+    });
+  });
+
+  it("DESKTOP NAVIGATION PRESERVED: YES (Desktop navigation pills and dropdowns remain intact at 1280px)", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<UserPortalShell {...defaultShellProps} />);
+
+    // Desktop nav container exists
+    const nav = screen.getByRole("navigation");
+    expect(nav).toBeInTheDocument();
+    const navWithin = within(nav);
+
+    // Single item pill
+    expect(navWithin.getByRole("button", { name: "Dashboard" })).toBeInTheDocument();
+    // Dropdown triggers for multi-item groups
+    expect(navWithin.getByRole("button", { name: /Compliance/i })).toBeInTheDocument();
+    expect(navWithin.getByRole("button", { name: /Grants & Incentives/i })).toBeInTheDocument();
+    expect(navWithin.getByRole("button", { name: /News Releases/i })).toBeInTheDocument();
+
+    // Desktop nav does NOT contain Notifications
+    expect(navWithin.queryByText(/Notifications/i)).not.toBeInTheDocument();
+
+    // Navbar notification bell exists
+    const bellBtn = screen.getByRole("button", { name: /^Notifications$/i });
+    expect(bellBtn).toBeInTheDocument();
+  });
+});
+
 describe("PortalDocumentPreviewModal Responsive Layout & Header Isolation", () => {
   const defaultModalProps = {
     open: true,
@@ -646,6 +836,345 @@ describe("PortalDocumentPreviewModal Responsive Layout & Header Isolation", () =
     expect(footerCloseBtn).toBeInTheDocument();
     fireEvent.click(footerCloseBtn);
     expect(defaultModalProps.onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("PortalAttachedDocumentDrawer Responsive Behavior", () => {
+  const mockFile: any = {
+    id: "sub-file-1",
+    submissionId: "sub-1",
+    documentTypeId: "doc-1",
+    fileName: "constitution-by-laws-signed.pdf",
+    fileUrl: "https://example.com/constitution.pdf",
+    fileType: "application/pdf",
+    fileSize: 1048576,
+    adminStatus: "approved_green",
+    adminRemarks: "",
+    uploadedAt: "2026-06-11T12:00:00Z",
+  };
+
+  const defaultDrawerProps = {
+    open: true,
+    onOpenChange: vi.fn(),
+    file: mockFile,
+    documentTypeName: "Constitution and By-Laws",
+    previewUrl: "https://example.com/constitution.pdf",
+    previewCanInline: true,
+    onDownloadFile: vi.fn(),
+    onOpenInNewTab: vi.fn(),
+    onSubmitForReview: vi.fn(),
+    onReplaceFile: vi.fn(),
+    onDeleteDraft: vi.fn(),
+  };
+
+  it("renders Desktop Sheet ONLY on desktop viewport (>= 1024px)", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<PortalAttachedDocumentDrawer {...defaultDrawerProps} />);
+
+    // On desktop, the Sheet's "Close Drawer" button must be in the document
+    expect(screen.getByRole("button", { name: /^Close Drawer$/i })).toBeInTheDocument();
+    // Close drawer button in header
+    expect(screen.getByRole("button", { name: /Close document drawer/i })).toBeInTheDocument();
+    // Mobile close modal must NOT exist in the DOM
+    expect(screen.queryByRole("button", { name: /Close document modal/i })).not.toBeInTheDocument();
+
+    // Verify document identity and status
+    expect(screen.getByText("Constitution and By-Laws")).toBeInTheDocument();
+    expect(screen.getByText("Approved")).toBeInTheDocument();
+    expect(screen.getByText("constitution-by-laws-signed.pdf")).toBeInTheDocument();
+
+    // Verify actions
+    expect(screen.getByRole("button", { name: /Open in New Tab/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
+  });
+
+  it("renders Mobile Dialog ONLY on mobile viewport (< 1024px)", () => {
+    window.innerWidth = 800;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: !query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<PortalAttachedDocumentDrawer {...defaultDrawerProps} />);
+
+    // On mobile, the Dialog's "Close document modal" button must be in the document
+    expect(screen.getByRole("button", { name: /Close document modal/i })).toBeInTheDocument();
+    // Desktop "Close Drawer" must NOT exist in the DOM
+    expect(screen.queryByRole("button", { name: /^Close Drawer$/i })).not.toBeInTheDocument();
+
+    // Verify actions and footer
+    expect(screen.getByRole("button", { name: /Open in New Tab/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Close$/i })).toBeInTheDocument();
+  });
+
+  it("renders draft workflow actions when file status is draft", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const draftFile = {
+      ...mockFile,
+      adminStatus: "draft",
+    };
+
+    render(<PortalAttachedDocumentDrawer {...defaultDrawerProps} file={draftFile} />);
+
+    expect(screen.getByText("Draft Saved")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Submit for Review/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Replace File/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Delete Draft/i })).toBeInTheDocument();
+  });
+
+  it("renders revision remarks and revision actions when status is needs_revision", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const revisionFile = {
+      ...mockFile,
+      adminStatus: "needs_revision",
+      adminRemarks: "Please provide the notarized signature page on page 3.",
+    };
+
+    render(<PortalAttachedDocumentDrawer {...defaultDrawerProps} file={revisionFile} />);
+
+    expect(screen.getByText("Needs Revision")).toBeInTheDocument();
+    expect(screen.getByText(/Please provide the notarized signature page on page 3/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Upload Revised File/i })).toBeInTheDocument();
+  });
+});
+
+describe("PortalDocumentDrawer Template Mode Responsive Behavior", () => {
+  const defaultTemplateProps = {
+    open: true,
+    onOpenChange: vi.fn(),
+    mode: "template" as const,
+    previewUrl: "https://example.com/1782457726429-Constitution-and-By-Laws.pdf",
+    previewTitle: "1782457726429-Constitution-and-By-Laws.pdf",
+    templateTitle: "1782457726429-Constitution-and-By-Laws.pdf",
+    templateFileName: "1782457726429-Constitution-and-By-Laws.pdf",
+    previewCanInline: true,
+    onDownloadFile: vi.fn(),
+    onOpenInNewTab: vi.fn(),
+  };
+
+  it("renders Desktop Sheet ONLY for View Template on desktop viewport (>= 1024px)", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<PortalDocumentDrawer {...defaultTemplateProps} />);
+
+    // On desktop, the Sheet's "Close Drawer" button must be in the document
+    expect(screen.getByRole("button", { name: /^Close Drawer$/i })).toBeInTheDocument();
+    // Close drawer button in header with template label
+    expect(screen.getByRole("button", { name: /Close template drawer/i })).toBeInTheDocument();
+    // Mobile close modal must NOT exist in the DOM
+    expect(screen.queryByRole("button", { name: /Close template modal/i })).not.toBeInTheDocument();
+
+    // Verify template document identity and Official Template badge
+    expect(screen.getByText("Constitution and By-Laws")).toBeInTheDocument();
+    expect(screen.getByText("Official Template")).toBeInTheDocument();
+    expect(screen.getByText("1782457726429-Constitution-and-By-Laws.pdf")).toBeInTheDocument();
+    expect(screen.getByText("PDF Document")).toBeInTheDocument();
+    expect(screen.getByText("Reference Guide")).toBeInTheDocument();
+
+    // Verify actions and footer
+    expect(screen.getByRole("button", { name: /Open in New Tab/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
+    expect(screen.getByText(/Official Template • Y-TRACE Document Compliance/i)).toBeInTheDocument();
+  });
+
+  it("renders Mobile Dialog ONLY for View Template on mobile viewport (< 1024px)", () => {
+    window.innerWidth = 800;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: !query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<PortalDocumentDrawer {...defaultTemplateProps} />);
+
+    // On mobile, the Dialog's "Close template modal" button must be in the document
+    expect(screen.getByRole("button", { name: /Close template modal/i })).toBeInTheDocument();
+    // Desktop "Close Drawer" must NOT exist in the DOM
+    expect(screen.queryByRole("button", { name: /^Close Drawer$/i })).not.toBeInTheDocument();
+
+    // Verify actions and mobile Close button
+    expect(screen.getByRole("button", { name: /Open in New Tab/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Close$/i })).toBeInTheDocument();
+    expect(screen.getByText(/Official Template • Y-TRACE Document Compliance/i)).toBeInTheDocument();
+  });
+
+  it("triggers onOpenInNewTab and onDownloadFile handlers when clicked", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const mockOpenTab = vi.fn();
+    const mockDownload = vi.fn();
+
+    render(
+      <PortalDocumentDrawer
+        {...defaultTemplateProps}
+        onOpenInNewTab={mockOpenTab}
+        onDownloadFile={mockDownload}
+      />
+    );
+
+    const openTabBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+    fireEvent.click(openTabBtn);
+    expect(mockOpenTab).toHaveBeenCalledWith("https://example.com/1782457726429-Constitution-and-By-Laws.pdf");
+
+    const downloadBtn = screen.getByRole("button", { name: /Download File/i });
+    fireEvent.click(downloadBtn);
+    expect(mockDownload).toHaveBeenCalledWith(
+      "https://example.com/1782457726429-Constitution-and-By-Laws.pdf",
+      "1782457726429-Constitution-and-By-Laws.pdf"
+    );
+  });
+
+  it("maintains identical button heights, typography hierarchy, and geometry between View Template and View Attached", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    // Render Template Drawer
+    const { unmount } = render(<PortalDocumentDrawer {...defaultTemplateProps} />);
+    const templateOpenBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+    const templateDownloadBtn = screen.getByRole("button", { name: /Download File/i });
+    const templateCloseDrawerBtn = screen.getByRole("button", { name: /^Close Drawer$/i });
+    const templateCloseXBtn = screen.getByRole("button", { name: /Close template drawer/i });
+
+    // Primary action: Download File (bold, h-9)
+    expect(templateDownloadBtn.className).toContain("h-9");
+    expect(templateDownloadBtn.className).toContain("font-bold");
+    expect(templateDownloadBtn.className).toContain("bg-primary");
+
+    // Secondary action: Open in New Tab (semibold, h-9)
+    expect(templateOpenBtn.className).toContain("h-9");
+    expect(templateOpenBtn.className).toContain("font-semibold");
+
+    // Footer Close Drawer: (semibold, h-9)
+    expect(templateCloseDrawerBtn.className).toContain("h-9");
+    expect(templateCloseDrawerBtn.className).toContain("font-semibold");
+
+    // Top-right X button: (h-8.5 w-8.5 rounded-full)
+    expect(templateCloseXBtn.className).toContain("h-8.5");
+    expect(templateCloseXBtn.className).toContain("w-8.5");
+    expect(templateCloseXBtn.className).toContain("rounded-full");
+
+    unmount();
+
+    // Render Attached Drawer
+    const mockFile: any = {
+      id: "sub-file-1",
+      submissionId: "sub-1",
+      documentTypeId: "doc-1",
+      fileName: "constitution-by-laws-signed.pdf",
+      fileUrl: "https://example.com/constitution.pdf",
+      fileType: "application/pdf",
+      fileSize: 1048576,
+      adminStatus: "approved_green",
+      adminRemarks: "",
+      uploadedAt: "2026-06-11T12:00:00Z",
+    };
+
+    render(
+      <PortalDocumentDrawer
+        mode="attached"
+        open={true}
+        onOpenChange={vi.fn()}
+        file={mockFile}
+        documentTypeName="Constitution and By-Laws"
+        previewUrl="https://example.com/constitution.pdf"
+        previewCanInline={true}
+      />
+    );
+
+    const attachedOpenBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+    const attachedDownloadBtn = screen.getByRole("button", { name: /Download File/i });
+    const attachedCloseDrawerBtn = screen.getByRole("button", { name: /^Close Drawer$/i });
+    const attachedCloseXBtn = screen.getByRole("button", { name: /Close document drawer/i });
+
+    // Both drawers must share the exact same button heights, typography hierarchy, and geometry
+    expect(attachedDownloadBtn.className).toContain("h-9");
+    expect(attachedDownloadBtn.className).toContain("font-bold");
+    expect(attachedDownloadBtn.className).toContain("bg-primary");
+
+    expect(attachedOpenBtn.className).toContain("h-9");
+    expect(attachedOpenBtn.className).toContain("font-semibold");
+
+    expect(attachedCloseDrawerBtn.className).toContain("h-9");
+    expect(attachedCloseDrawerBtn.className).toContain("font-semibold");
+
+    expect(attachedCloseXBtn.className).toContain("h-8.5");
+    expect(attachedCloseXBtn.className).toContain("w-8.5");
+    expect(attachedCloseXBtn.className).toContain("rounded-full");
   });
 });
 

@@ -1,26 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   User,
   FileText,
   ClipboardList,
   CalendarDays,
   CheckCircle2,
-  Building2,
   Send,
   ChevronRight,
-  Sun,
-  Moon,
-  LayoutGrid,
   Clock,
-  Download,
-  MessageSquare,
   Check,
-  ArrowRight,
-  FileSpreadsheet,
-  FileCode,
   AlertTriangle,
+  BadgeCheck,
+  Sparkles,
+  Newspaper,
   HelpCircle,
-  BadgeCheck
+  FolderArchive,
+  History,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,9 +33,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { SubmitInquiryModal } from "@/components/portal/SubmitInquiryModal";
 import { cn } from "@/lib/utils";
-import { formatActivityActionLabel, formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
-import { getTemplateFileFormat } from "./UserPortalTemplatesWorkspaceView";
+import { formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
+import { useRenewalClock } from "@/hooks/use-renewal-clock";
 
 export interface UserPortalRedesignViewProps {
   profile: any;
@@ -55,7 +52,11 @@ export interface UserPortalRedesignViewProps {
   budgetOverviewLabel: string;
   liquidationPercent: number;
   liquidationOverviewLabel: string;
-  renewalCountdown?: { expiresAt: string } | null;
+  renewalCountdown?: {
+    expiresAt: string;
+    daysRemaining?: number;
+    isDue?: boolean;
+  } | null;
   dashboardTasks: Array<{
     key: string;
     title: string;
@@ -104,6 +105,63 @@ export interface UserPortalRedesignViewProps {
   userRouteMap: Record<string, string>;
 }
 
+// Compact Authoritative Renewal Countdown Indicator
+// Consumes the Admin-side source of truth (useRenewalClock) and threshold rules
+export const RenewalCountdownChip: React.FC<{ expiresAt: string; className?: string }> = ({
+  expiresAt,
+  className,
+}) => {
+  const clock = useRenewalClock(expiresAt);
+
+  const dueDateStr = useMemo(() => {
+    const d = new Date(expiresAt);
+    return Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+  }, [expiresAt]);
+
+  // Admin threshold semantics (YorpRegistry EXPIRING_SOON_WINDOW_DAYS = 90)
+  const isDueOrExpired = clock.isDue || clock.days <= 0;
+  const isExpiringSoon = clock.days <= 90;
+
+  let label: string;
+  if (isDueOrExpired) {
+    label = "Renewal due today";
+  } else if (clock.days === 1) {
+    label = "Renewal in 1 day";
+  } else {
+    label = `Renewal in ${clock.days} days`;
+  }
+
+  return (
+    <div
+      title={dueDateStr ? `Accreditation valid until ${dueDateStr}` : undefined}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors duration-150 shadow-2xs",
+        isDueOrExpired
+          ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+          : isExpiringSoon
+            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+            : "bg-muted/40 text-foreground border-border/50",
+        className
+      )}
+    >
+      {isDueOrExpired ? (
+        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-500" />
+      ) : isExpiringSoon ? (
+        <Clock className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+      ) : (
+        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary" />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+};
+
 // Human Readable Inquiry Status Formatter
 const formatInquiryStatusLabel = (status?: string): string => {
   if (!status) return "Pending";
@@ -114,6 +172,10 @@ const formatInquiryStatusLabel = (status?: string): string => {
   if (s === "needs_revision") return "Needs Revision";
   return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
+
+// Shared style for Overview metric numbers: refined font-weight 700 (font-bold)
+const OVERVIEW_METRIC_VALUE_CLASS =
+  "text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-none py-1 tabular-nums";
 
 export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   profile,
@@ -144,10 +206,9 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   navigate,
   userRouteMap,
 }) => {
-  const [aiQuickModalOpen, setAiQuickModalOpen] = useState(false);
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
 
-  // Formatting date ("Mon, Aug 6")
+  // Formatting date ("Sun, Sep 6")
   const todayDateStr = new Date().toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
@@ -167,70 +228,76 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   // Determine active task or focus
   const activeTask = dashboardTasks.length > 0 ? dashboardTasks[0] : null;
 
-  // Derive top 3 templates dynamically from backend
-  const displayTemplates = publicTemplates.slice(0, 3);
-
   return (
-    <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-10 max-w-[1440px] mx-auto py-2">
-      {/* Hero Section: Perfectly Balanced Left/Right with Ultra-Soft Ambient Gradient */}
-      <div className="bg-gradient-to-r from-white via-indigo-50/30 to-blue-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-6 sm:p-8 rounded-2xl border border-slate-200/90 dark:border-border/60 shadow-xs sm:shadow-sm dark:shadow-xs relative overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          {/* Left Side (7 Cols): Greeting & Subtitle */}
-          <div className="md:col-span-7 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              {todayDateStr}
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-              Hello, <span className="text-primary">{orgDisplayName}</span> 👋
-            </h1>
-            <p className="text-sm text-muted-foreground/90 max-w-xl leading-relaxed">
-              {isVerified
-                ? "Welcome back. Your organization is verified and fully operational."
-                : `Welcome back. Your compliance review is currently in progress.`}
-            </p>
-          </div>
+    <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-6 sm:space-y-8 max-w-[1440px] mx-auto py-2">
 
-          {/* Right Side (5 Cols): Balanced Contextual Information */}
-          <div className="md:col-span-5 flex flex-col items-start md:items-end justify-center space-y-3 bg-white/80 dark:bg-card/70 border border-slate-200/80 dark:border-border/60 p-4 rounded-xl backdrop-blur-xs shadow-2xs">
-            <div className="flex items-center justify-between w-full text-xs">
-              <span className="text-muted-foreground font-medium">Organization Status</span>
+      {/* ========================================================================= */}
+      {/* 1. SITUATION BANNER: Who am I & What is my current status?                 */}
+      {/* ========================================================================= */}
+      <div className="bg-card border border-border/70 rounded-2xl p-5 sm:p-7 shadow-xs relative overflow-hidden transition-all">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-5">
+          {/* Left: Warm, respectful civic greeting & standing */}
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+              <span>{todayDateStr}</span>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="text-muted-foreground font-normal">Pasig City Y-TRACE</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
+                Hello, <span className="text-primary">{orgDisplayName}</span> 👋
+              </h1>
               <span
                 className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[11px] font-bold border",
+                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0",
                   isVerified
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                     : "bg-primary/10 text-primary border-primary/20"
                 )}
               >
-                {isVerified ? "Verified Org" : `${Math.round((stepsCompleted / 3) * 100)}% Complete`}
+                {isVerified ? (
+                  <>
+                    <CheckCircle2 className="h-3 w-3 shrink-0" />
+                    Verified Organization
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-3 w-3 shrink-0" />
+                    Compliance in Progress ({Math.round((stepsCompleted / 3) * 100)}%)
+                  </>
+                )}
               </span>
             </div>
 
-            <div className="flex items-center justify-between w-full text-xs border-t border-slate-200/60 dark:border-border/40 pt-2">
-              <span className="text-muted-foreground">Verification Queue</span>
-              <span className="font-semibold text-foreground">
-                {isVerified ? "Unlocked ✓" : "2–3 Business Days"}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between w-full text-[11px] text-muted-foreground border-t border-slate-200/60 dark:border-border/40 pt-2">
-              <span>Last Login</span>
-              <span className="font-medium text-foreground">Today • 8:31 AM</span>
-            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {isVerified
+                ? "Your organization is verified and in good standing for city grants, youth initiatives, and program authorizations."
+                : "Welcome back. Complete your pending compliance verification to unlock budget requests and grant access."}
+            </p>
           </div>
+
+          {/* Right: Operational telemetry (Renewal Countdown) */}
+          {renewalCountdown?.expiresAt && (
+            <div className="w-full lg:w-auto flex items-center justify-center lg:justify-end lg:flex-col lg:items-end gap-2 text-xs text-muted-foreground font-medium shrink-0 pt-1 lg:pt-0">
+              <RenewalCountdownChip expiresAt={renewalCountdown.expiresAt} />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Compliance Onboarding Stepper with Visually Connected Pipeline (✓ ─── ✓ ─── ○) */}
+      {/* ========================================================================= */}
+      {/* 1B. COMPLIANCE ONBOARDING STEPPER (Rendered ONLY when !isVerified)         */}
+      {/* ========================================================================= */}
       {!isVerified && (
         <Card className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-xs">
           <div className="flex items-center justify-between border-b border-border/40 pb-2.5">
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Compliance Workflow
+                Compliance Verification Workflow
               </h3>
               <p className="text-xs text-muted-foreground/80 mt-0.5">
-                Complete all 3 steps to unlock budget requests.
+                Complete the remaining requirements to qualify for budget requests.
               </p>
             </div>
             <span className="text-xs font-semibold text-muted-foreground">
@@ -239,15 +306,15 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
           </div>
 
           {/* Connected Step Pipeline Grid */}
-          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             {/* Step 1 */}
             <div
               onClick={() => navigate(userRouteMap["organization-profile"])}
               className={cn(
-                "p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between relative group hover:-translate-y-0.5 shadow-2xs",
+                "p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group hover:-translate-y-0.5 shadow-2xs",
                 isProfileSaved
                   ? "bg-accent/30 border-border/60"
-                  : "bg-card border-primary/30 hover:border-primary/50"
+                  : "bg-card border-primary/40 hover:border-primary"
               )}
             >
               <div className="flex items-center gap-3">
@@ -258,7 +325,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                   {isProfileSaved ? <Check className="h-4 w-4" /> : "1"}
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">1. Complete Profile</h4>
+                  <h4 className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">1. Profile Details</h4>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{isProfileSaved ? "Completed ✓" : "Action Required"}</p>
                 </div>
               </div>
@@ -269,10 +336,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             <div
               onClick={() => navigate(userRouteMap["document-submission"])}
               className={cn(
-                "p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between relative group hover:-translate-y-0.5 shadow-2xs",
+                "p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group hover:-translate-y-0.5 shadow-2xs",
                 hasSubmittedDocuments
                   ? "bg-accent/30 border-border/60"
-                  : "bg-card border-primary/30 hover:border-primary/50"
+                  : "bg-card border-primary/40 hover:border-primary"
               )}
             >
               <div className="flex items-center gap-3">
@@ -291,13 +358,13 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             </div>
 
             {/* Step 3 */}
-            <div className="p-4 rounded-xl border bg-accent/20 border-border/40 flex items-center justify-between shadow-2xs">
+            <div className="p-3.5 rounded-xl border bg-accent/20 border-border/40 flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-3">
                 <div className="h-7 w-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0">
                   <Clock className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-foreground">3. Admin Verification</h4>
+                  <h4 className="font-bold text-xs text-foreground">3. Admin Validation</h4>
                   <p className="text-[11px] text-muted-foreground mt-0.5">Pending Review</p>
                 </div>
               </div>
@@ -308,586 +375,499 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
         </Card>
       )}
 
-      {/* Main 12-Column Responsive CSS Grid */}
-      <div className="grid grid-cols-12 gap-6 items-start">
-        {/* Left Column (8 Columns Desktop) */}
-        <div className="col-span-12 lg:col-span-8 space-y-8">
-          {/* Overview Metrics Section (Authentic Computed Backend Metrics) */}
-          <div className="space-y-3">
-            <div>
-              <h2 className="text-xl font-bold text-foreground tracking-tight">
-                Overview
-              </h2>
-              <p className="text-[13px] text-muted-foreground/70 font-normal">
-                Live computed summary of your organization compliance & requests.
-              </p>
+      {/* ========================================================================= */}
+      {/* 2. COMMAND ACTION: What do I need to do next? (PRIMARY FOCUS)             */}
+      {/* ========================================================================= */}
+      <div className="relative rounded-2xl border-2 border-primary/35 bg-gradient-to-br from-card via-card to-primary/5 dark:to-primary/10 p-5 sm:p-6 shadow-sm overflow-hidden transition-all">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="space-y-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
+                Current Focus • Action Required
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-              {/* Profile Metric Card */}
-              <div
-                onClick={() => navigate(userRouteMap["organization-profile"])}
-                className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer space-y-2 group"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-muted-foreground">Profile</p>
-                  <span
-                    className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                      isVerified
-                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                        : "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20"
-                    )}
-                  >
-                    {isVerified ? "✓ Verified" : isProfileSaved ? "In Progress" : "Incomplete"}
-                  </span>
-                </div>
-                <p className="text-4xl sm:text-[42px] font-black text-foreground tracking-tight leading-none py-1">
-                  {profilePercent}%
+            {activeTask ? (
+              <div className="space-y-1.5">
+                <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-snug">
+                  {activeTask.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                  {activeTask.description}
                 </p>
-                <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
-                  {isVerified ? "Verified organization" : "Profile update in progress"}
+
+                {/* Workflow Progress Indicator if active */}
+                <div className="pt-2 max-w-md space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                    <span>Workflow Completion</span>
+                    <span className="text-foreground font-bold">
+                      {stepsCompleted >= 3 ? "100%" : `${Math.round((stepsCompleted / 3) * 100)}%`}
+                    </span>
+                  </div>
+                  <Progress
+                    value={stepsCompleted >= 3 ? 100 : Math.round((stepsCompleted / 3) * 100)}
+                    className="h-1.5 bg-muted"
+                  />
+                </div>
+              </div>
+            ) : isVerified ? (
+              <div className="space-y-1">
+                <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-snug flex items-center gap-1.5">
+                  <span>🎉</span> All Compliance Up to Date
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                  Your organization has no pending compliance or liquidation tasks. You are ready to create and submit new budget requests for upcoming youth activities.
                 </p>
               </div>
-
-              {/* Documents Metric Card */}
-              <div
-                onClick={() => navigate(userRouteMap["document-submission"])}
-                className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer space-y-2 group"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-muted-foreground">Documents</p>
-                  <span
-                    className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                      dashboardDocumentPercent >= 100
-                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                        : "text-primary bg-primary/10 border-primary/20"
-                    )}
-                  >
-                    {dashboardDocumentPercent >= 100 ? "✓ Approved" : "In Review"}
-                  </span>
-                </div>
-                <p className="text-4xl sm:text-[42px] font-black text-foreground tracking-tight leading-none py-1">
-                  {dashboardDocumentPercent}%
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
-                  {dashboardDocumentHelper}
+            ) : (
+              <div className="space-y-1">
+                <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-snug">
+                  Complete Organization Setup
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                  Finish your organization profile and upload your official compliance documents to start the verification process.
                 </p>
               </div>
+            )}
+          </div>
 
-              {/* Budget Metric Card */}
-              <div
+          {/* Primary Action Button */}
+          <div className="shrink-0 self-start md:self-center w-full md:w-auto">
+            {activeTask?.ctaLabel ? (
+              <Button
+                type="button"
+                onClick={activeTask.onClick}
+                size="lg"
+                className="w-full md:w-auto h-11 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer justify-center"
+              >
+                {activeTask.ctaLabel} →
+              </Button>
+            ) : isVerified ? (
+              <Button
+                type="button"
                 onClick={() => navigate(userRouteMap["budget-request"])}
-                className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer space-y-2 group"
+                size="lg"
+                className="w-full md:w-auto h-11 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer justify-center"
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-muted-foreground">Budget</p>
-                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                    {budgetOverviewLabel}
-                  </span>
-                </div>
-                <p className="text-4xl sm:text-[42px] font-black text-foreground tracking-tight leading-none py-1">
-                  {budgetPercent}%
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
-                  {budgetOverviewLabel}
-                </p>
-              </div>
+                Create Budget Request →
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => navigate(userRouteMap["organization-profile"])}
+                size="lg"
+                className="w-full md:w-auto h-11 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer justify-center"
+              >
+                Start Setup →
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
 
-              {/* Liquidation Metric Card */}
-              <div
-                onClick={() => navigate(userRouteMap["liquidation-reporting"])}
-                className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer space-y-2 group"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-muted-foreground">Liquidation</p>
-                  <span className="text-[10px] font-bold text-muted-foreground bg-accent px-2 py-0.5 rounded-full border border-border/60">
-                    {liquidationOverviewLabel}
-                  </span>
-                </div>
-                <p className="text-4xl sm:text-[42px] font-black text-foreground tracking-tight leading-none py-1">
-                  {liquidationPercent}%
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
-                  {liquidationOverviewLabel}
-                </p>
-              </div>
-            </div>
+      {/* ========================================================================= */}
+      {/* 3. ORGANIZATIONAL HEALTH & METRICS: What should I know?                   */}
+      {/* ========================================================================= */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+              Overview
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Live computed health and status across all organization workflows.
+            </p>
           </div>
 
-          {/* DYNAMIC WORKSPACE SECTION */}
-          <div className="space-y-3">
-            <div>
-              <h2 className="text-xl font-bold text-foreground tracking-tight">
-                Workspace
-              </h2>
-              <p className="text-[13px] text-muted-foreground/70 font-normal">
-                Dynamic tasks, workflow status, and shortcuts.
-              </p>
-            </div>
+          {/* Secondary Activity History Affordance in Overview Header */}
+          <button
+            type="button"
+            aria-label="View activity history"
+            onClick={() => {
+              if (onViewAllActivities) {
+                onViewAllActivities();
+              }
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer px-2.5 py-1.5 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50"
+          >
+            <History className="h-3.5 w-3.5 text-primary" />
+            <span className="hidden sm:inline">Activity History</span>
+            <span className="sm:hidden">History</span>
+          </button>
+        </div>
 
-            <Card className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-xs">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                {/* 1. CURRENT FOCUS (DOMINATES: 6 Columns Desktop) */}
-                <div className="md:col-span-6 p-4 rounded-xl bg-accent/20 border border-border/40 flex flex-col justify-between space-y-3 shadow-2xs hover:-translate-y-0.5 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                      Current Focus
-                    </span>
-                    <Badge variant="outline" className="text-[10px] bg-background font-semibold">
-                      {activeTask ? "Active Action" : isVerified ? "All Clear" : "Setup"}
-                    </Badge>
-                  </div>
-
-                  {activeTask ? (
-                    <div className="space-y-2">
-                      <h4 className="font-bold text-sm text-foreground leading-snug">
-                        {activeTask.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {activeTask.description}
-                      </p>
-                      <div className="space-y-1 pt-1">
-                        <div className="flex justify-between text-[11px] text-muted-foreground font-semibold">
-                          <span>Workflow Completion</span>
-                          <span>{stepsCompleted >= 3 ? "100%" : `${Math.round((stepsCompleted / 3) * 100)}%`}</span>
-                        </div>
-                        <Progress value={stepsCompleted >= 3 ? 100 : Math.round((stepsCompleted / 3) * 100)} className="h-1.5 bg-muted" />
-                      </div>
-                    </div>
-                  ) : isVerified ? (
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-sm text-foreground leading-snug flex items-center gap-1">
-                        🎉 Organization Fully Verified!
-                      </h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        No pending compliance tasks. You can submit budget requests for upcoming organization activities.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-sm text-foreground leading-snug">
-                        🚀 Complete Registration Checklist
-                      </h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Finish your organization profile & upload required compliance files.
-                      </p>
-                    </div>
-                  )}
-
-                  {activeTask?.ctaLabel ? (
-                    <Button
-                      type="button"
-                      onClick={activeTask.onClick}
-                      size="sm"
-                      className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs h-8 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      {activeTask.ctaLabel} →
-                    </Button>
-                  ) : isVerified ? (
-                    <Button
-                      type="button"
-                      onClick={() => navigate(userRouteMap["budget-request"])}
-                      size="sm"
-                      className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs h-8 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      Create Budget Request →
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={() => navigate(userRouteMap["organization-profile"])}
-                      size="sm"
-                      className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs h-8 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      Start Setup →
-                    </Button>
-                  )}
-                </div>
-
-                {/* 2. WAITING ON (3 Columns Desktop) */}
-                <div className="md:col-span-3 p-4 rounded-xl bg-accent/20 border border-border/40 flex flex-col justify-between space-y-3 shadow-2xs hover:-translate-y-0.5 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                      Waiting On
-                    </span>
-                    <Badge variant="outline" className="text-[10px] bg-background font-semibold">
-                      Queue
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-xs text-foreground">
-                      {!isVerified && hasSubmittedDocuments
-                        ? "Awaiting Admin Review"
-                        : isVerified
-                        ? "Ready for Requests"
-                        : "Profile Submission"}
-                    </h4>
-                    <div className="pt-2">
-                      <p className="text-2xl font-black tracking-tight text-foreground">
-                        {!isVerified && hasSubmittedDocuments ? "2–3 Days" : isVerified ? "Unlocked ✓" : "Action Needed"}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-medium">
-                        Review Queue Timeframe
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-[11px] text-muted-foreground font-medium pt-1 border-t border-border/40 flex justify-between">
-                    <span>Queue Status</span>
-                    <span className="font-semibold text-foreground">
-                      {!isVerified && hasSubmittedDocuments ? "In Queue" : isVerified ? "Active" : "Pending"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 3. RESOURCES (3 Columns Desktop) */}
-                <div className="md:col-span-3 p-4 rounded-xl bg-accent/20 border border-border/40 flex flex-col justify-between space-y-3 shadow-2xs hover:-translate-y-0.5 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                      Resources
-                    </span>
-                  </div>
-
-                  <div className="space-y-1 text-xs font-medium">
-                    <button
-                      type="button"
-                      onClick={() => navigate(userRouteMap["templates"])}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-background transition-all flex items-center justify-between text-muted-foreground hover:text-foreground group border-b border-border/30 cursor-pointer"
-                    >
-                      <span className="group-hover:translate-x-0.5 transition-transform text-xs font-medium">Templates</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate(userRouteMap["news-releases"])}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-background transition-all flex items-center justify-between text-muted-foreground hover:text-foreground group border-b border-border/30 cursor-pointer"
-                    >
-                      <span className="group-hover:translate-x-0.5 transition-transform text-xs font-medium">News & Grants</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInquiryModalOpen(true)}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-background transition-all flex items-center justify-between text-muted-foreground hover:text-foreground group cursor-pointer"
-                    >
-                      <span className="group-hover:translate-x-0.5 transition-transform text-xs font-medium">Support Inquiry</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => navigate(userRouteMap["templates"])}
-                    size="sm"
-                    className="w-full text-xs font-semibold h-7 text-muted-foreground hover:text-foreground cursor-pointer"
-                  >
-                    Explore Resources →
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* RECENT ACTIVITY (Lightweight Timeline Feed matching Document Submission Page) */}
-          <div className="space-y-3">
-            <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Recent Activity</h3>
-                  <p className="text-xs text-muted-foreground pt-0.5">Authentic activity timeline recorded for your organization.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onViewAllActivities || (() => navigate(userRouteMap["organization-profile"]))}
-                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
-                >
-                  View all →
-                </button>
-              </div>
-
-              <div className="space-y-4 border-l border-border/60 pl-6 relative">
-                {recentActivities && recentActivities.length > 0 ? (
-                  recentActivities.slice(0, 5).map((act, idx) => {
-                    const actionTitle = formatActivityActionLabel(act.description);
-                    const fullTime = formatFullActivityTimestamp(act.createdAt);
-                    const isApproved = actionTitle.includes("Approved") || actionTitle.includes("Verified") || actionTitle.includes("Completed");
-                    const isRevision = actionTitle.includes("Revision") || actionTitle.includes("Rejected") || actionTitle.includes("Flagged");
-
-                    return (
-                      <div key={act.id || idx} className="relative space-y-1">
-                        <div
-                          className={cn(
-                            "absolute -left-[31px] top-0.5 h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
-                            isApproved
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                              : isRevision
-                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                              : "bg-primary/10 text-primary border-primary/20"
-                          )}
-                        >
-                          {isApproved ? (
-                            <Check className="h-2.5 w-2.5" />
-                          ) : isRevision ? (
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                          ) : (
-                            <Clock className="h-2.5 w-2.5" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <p className="text-xs font-semibold text-foreground leading-snug truncate" title={actionTitle}>
-                            {actionTitle}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground font-medium">
-                            {fullTime}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-xs text-muted-foreground italic py-2">No recent activity recorded.</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* 1. Profile Metric Card */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(userRouteMap["organization-profile"])}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate(userRouteMap["organization-profile"]);
+              }
+            }}
+            className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 transition-all duration-150 ease-out cursor-pointer space-y-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                Profile
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
+                  isVerified
+                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                    : "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20"
                 )}
-              </div>
-            </Card>
+              >
+                {isVerified ? "✓ Verified" : isProfileSaved ? "In Progress" : "Incomplete"}
+              </span>
+            </div>
+            <p className={OVERVIEW_METRIC_VALUE_CLASS}>
+              {profilePercent}%
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
+              {isVerified ? "Verified organization" : "Profile update in progress"}
+            </p>
+          </div>
+
+          {/* 2. Documents Metric Card */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(userRouteMap["document-submission"])}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate(userRouteMap["document-submission"]);
+              }
+            }}
+            className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 transition-all duration-150 ease-out cursor-pointer space-y-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                Documents
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
+                  dashboardDocumentPercent >= 100
+                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                    : "text-primary bg-primary/10 border-primary/20"
+                )}
+              >
+                {dashboardDocumentPercent >= 100 ? "✓ Approved" : "In Review"}
+              </span>
+            </div>
+            <p className={OVERVIEW_METRIC_VALUE_CLASS}>
+              {dashboardDocumentPercent}%
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
+              {dashboardDocumentHelper}
+            </p>
+          </div>
+
+          {/* 3. Budget Metric Card */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(userRouteMap["budget-request"])}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate(userRouteMap["budget-request"]);
+              }
+            }}
+            className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 transition-all duration-150 ease-out cursor-pointer space-y-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                Budget
+              </span>
+              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                {budgetOverviewLabel}
+              </span>
+            </div>
+            <p className={OVERVIEW_METRIC_VALUE_CLASS}>
+              {budgetPercent}%
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
+              {budgetOverviewLabel}
+            </p>
+          </div>
+
+          {/* 4. Liquidation Metric Card */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(userRouteMap["liquidation-reporting"])}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate(userRouteMap["liquidation-reporting"]);
+              }
+            }}
+            className="bg-card border border-border/60 p-4 rounded-2xl shadow-xs hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 transition-all duration-150 ease-out cursor-pointer space-y-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                Liquidation
+              </span>
+              <span className="text-[10px] font-bold text-muted-foreground bg-accent px-2 py-0.5 rounded-full border border-border/60 shrink-0">
+                {liquidationOverviewLabel}
+              </span>
+            </div>
+            <p className={OVERVIEW_METRIC_VALUE_CLASS}>
+              {liquidationPercent}%
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate border-t border-border/40 pt-2">
+              {liquidationOverviewLabel}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 4. SUPPORT & RESOURCES: Where can I get help or access official tools?     */}
+      {/* ========================================================================= */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+              Support & Resources
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Official PCYDO communication channel, templates, bulletins, and programs.
+            </p>
           </div>
         </div>
 
-        {/* Right Column (4 Columns Desktop) */}
-        <div className="col-span-12 lg:col-span-4 space-y-6">
-          {/* Support & Inquiries Card (Displaying Inquiry Codes & Human-Readable Badges) */}
-          <Card className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-xs">
-            <div>
-              <h3 className="text-sm font-bold text-foreground">
-                Support & Inquiries
-              </h3>
-              <p className="text-xs text-muted-foreground">Send an inquiry directly to the admin.</p>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
+          {/* Support & Inquiries Card (Left: 7 columns on Desktop) */}
+          <Card className="lg:col-span-7 h-full rounded-2xl border border-border/60 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+            <div className="space-y-2.5">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-2.5">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-foreground">
+                    Support & Inquiries
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+                    Direct inquiries to PCYDO administrative staff.
+                  </p>
+                </div>
 
-            <Button
-              type="button"
-              onClick={() => setInquiryModalOpen(true)}
-              className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs h-9 shadow-xs gap-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <Send className="h-3.5 w-3.5" />
-              Create Inquiry
-            </Button>
+                <Button
+                  type="button"
+                  onClick={() => setInquiryModalOpen(true)}
+                  className="h-9 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-xs hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-2 shrink-0 justify-center self-start sm:self-auto"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>New Inquiry</span>
+                </Button>
+              </div>
 
-            {/* Submitted Inquiries List */}
-            <div className="border-t border-border/40 pt-3 space-y-2">
-              <span className="text-xs font-bold text-foreground">
-                Submitted Inquiries ({inquiries.length})
-              </span>
+              {/* Subheader: Count and View All */}
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-xs font-bold text-foreground">
+                  Submitted Inquiries ({inquiries.length})
+                </span>
+                {inquiries.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={onViewAllInquiries}
+                    className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+                  >
+                    View all inquiries →
+                  </button>
+                )}
+              </div>
 
+              {/* Inquiries Content: Populated vs Empty State */}
               {inquiries && inquiries.length > 0 ? (
-                <div className="space-y-2 pt-1">
-                  {inquiries.slice(0, 4).map((inq) => {
-                    const inquiryCodeDisplay = inq.inquiryCode || `INQ-2026-${(inq.id || "001").slice(-4).toUpperCase()}`;
+                <div className="space-y-1.5 max-h-[148px] overflow-y-auto pr-0.5">
+                  {inquiries.slice(0, 3).map((inq) => {
+                    const inquiryCodeDisplay =
+                      inq.inquiryCode ||
+                      `INQ-2026-${(inq.id || "001").slice(-4).toUpperCase()}`;
                     const readableStatus = formatInquiryStatusLabel(inq.status);
 
                     return (
                       <div
                         key={inq.id}
-                        className="p-3 rounded-xl border border-border/60 bg-accent/20 space-y-1 shadow-2xs hover:bg-accent/40 transition-colors"
+                        onClick={onViewAllInquiries}
+                        className="px-3 py-2 rounded-xl border border-border/60 bg-accent/20 hover:bg-accent/40 transition-colors cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-mono font-bold text-primary">
-                            {inquiryCodeDisplay}
-                          </span>
-                          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 font-bold">
-                            {readableStatus}
-                          </Badge>
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[11px] font-mono font-bold text-primary shrink-0">
+                              {inquiryCodeDisplay}
+                            </span>
+                            <span className="text-muted-foreground/40 text-xs shrink-0">•</span>
+                            <p
+                              className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate"
+                              title={inq.subject}
+                            >
+                              {inq.subject || "General Inquiry"}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground font-medium">
+                            {formatFullActivityTimestamp(inq.createdAt)}
+                          </p>
                         </div>
-                        <p className="text-xs font-bold text-foreground truncate" title={inq.subject}>
-                          {inq.subject || "General Inquiry"}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground font-medium">
-                          {formatFullActivityTimestamp(inq.createdAt)}
-                        </p>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
+                            readableStatus === "Resolved"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                              : readableStatus === "In Progress"
+                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                : "bg-primary/10 text-primary border-primary/20"
+                          )}
+                        >
+                          {readableStatus}
+                        </Badge>
                       </div>
                     );
                   })}
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={onViewAllInquiries}
-                    className="w-full rounded-xl text-xs h-8 font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                  >
-                    View All History →
-                  </Button>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground py-2 text-center">
-                  No submitted inquiries.
-                </p>
+                <div className="rounded-xl border border-dashed border-border/80 bg-accent/10 p-3.5 sm:p-4 flex items-center gap-3.5 my-auto">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
+                    <HelpCircle className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h4 className="text-xs font-bold text-foreground">
+                      No submitted inquiries
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Need assistance with compliance requirements, budget requests, or registration? Submit an inquiry directly to the PCYDO team.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInquiryModalOpen(true)}
+                    className="rounded-xl text-xs font-semibold h-8 px-3 shrink-0 border-border hover:bg-accent cursor-pointer hidden sm:inline-flex"
+                  >
+                    Ask PCYDO
+                  </Button>
+                </div>
               )}
             </div>
           </Card>
 
-          {/* Required Templates Card (Renders ONLY 3 Dynamic Templates from Backend) */}
-          <Card className="rounded-2xl border border-border/60 bg-card p-5 space-y-3 shadow-xs">
-            <h4 className="font-bold text-xs text-foreground">Required Templates</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Official downloadable forms for registration and compliance.
-            </p>
-
-            <div className="space-y-1.5 pt-1 text-xs font-medium text-muted-foreground">
-              {displayTemplates.length > 0 ? (
-                displayTemplates.map((tpl) => {
-                  const fileFormat = getTemplateFileFormat(tpl.fileUrl, tpl.title);
-                  return (
-                    <div
-                      key={tpl.id}
-                      onClick={() => {
-                        if (openPreview) {
-                          void openPreview(tpl.fileUrl, tpl.title);
-                        } else {
-                          navigate(userRouteMap["templates"]);
-                        }
-                      }}
-                      className="flex items-center justify-between p-2 rounded-xl bg-accent/20 border border-border/30 hover:bg-accent/40 transition-colors cursor-pointer group"
-                    >
-                      <span className="flex items-center gap-2 min-w-0 pr-2">
-                        <FileText className="h-4 w-4 text-primary shrink-0 group-hover:scale-105 transition-transform" />
-                        <span className="text-xs font-bold text-foreground truncate max-w-[180px]" title={tpl.title}>
-                          {tpl.title}
-                        </span>
-                      </span>
-                      <span className="text-[10px] font-mono font-extrabold text-muted-foreground bg-card border border-border/60 px-2 py-0.5 rounded-md shrink-0">
-                        {fileFormat}
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-xs text-muted-foreground py-2 text-center">No templates available.</p>
-              )}
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
+          {/* Official Resources & Shortcuts (Right: 5 columns on Desktop) */}
+          <div className="lg:col-span-5 flex flex-col justify-between space-y-2.5 sm:space-y-3">
+            {/* 1. Official Templates */}
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(userRouteMap["templates"])}
-              className="w-full rounded-xl border-border text-foreground text-xs font-semibold h-8 hover:scale-[1.02] active:scale-[0.98] transition-all mt-2 cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(userRouteMap["templates"]);
+                }
+              }}
+              className="p-3.5 sm:p-4 rounded-2xl border border-border/60 bg-card hover:bg-accent/30 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 cursor-pointer shadow-xs group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center justify-between gap-3.5"
             >
-              Browse All Templates →
-            </Button>
-          </Card>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-muted text-primary shrink-0 group-hover:scale-105 transition-transform">
+                  <FolderArchive className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                    Official Templates
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground leading-snug truncate">
+                    Download official registration forms, by-laws, and compliance documents.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+
+            {/* 2. News & Bulletins */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(userRouteMap["news-releases"])}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(userRouteMap["news-releases"]);
+                }
+              }}
+              className="p-3.5 sm:p-4 rounded-2xl border border-border/60 bg-card hover:bg-accent/30 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 cursor-pointer shadow-xs group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center justify-between gap-3.5"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-muted text-primary shrink-0 group-hover:scale-105 transition-transform">
+                  <Newspaper className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                    News & Official Releases
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground leading-snug truncate">
+                    PCYDO announcements, registration schedules, and official notices.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+
+            {/* 3. Youth Programs & Incentives (YPOP) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(userRouteMap["ypop-scoring"] || userRouteMap["compliance-overview"] || "/ypop")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(userRouteMap["ypop-scoring"] || userRouteMap["compliance-overview"] || "/ypop");
+                }
+              }}
+              className="p-3.5 sm:p-4 rounded-2xl border border-border/60 bg-card hover:bg-accent/30 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 cursor-pointer shadow-xs group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center justify-between gap-3.5"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-muted text-primary shrink-0 group-hover:scale-105 transition-transform">
+                  <Sparkles className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                    Youth Programs & Incentives
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground leading-snug truncate">
+                    Check YPOP points standing, joined activities, and program qualification.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Inquiry Creation Modal Dialog */}
-      <Dialog open={inquiryModalOpen} onOpenChange={setInquiryModalOpen}>
-        <DialogContent className="sm:max-w-md rounded-2xl bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-foreground">
-              Submit Inquiry
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Send your question directly to the admin dashboard.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={onInquiryFormSubmit} className="space-y-3 pt-2">
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-foreground">
-                Name / Organization Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                required
-                value={inquiryForm?.submitterName || ""}
-                onChange={(e) =>
-                  setInquiryForm((prev) => ({
-                    ...prev,
-                    submitterName: e.target.value,
-                    organizationName: e.target.value,
-                  }))
-                }
-                placeholder="Organization name"
-                className="rounded-xl text-xs h-9 bg-background"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-foreground">
-                Email Address <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                required
-                type="email"
-                value={inquiryForm?.email || ""}
-                onChange={(e) =>
-                  setInquiryForm((prev) => ({
-                    ...prev,
-                    email: e.target.value,
-                  }))
-                }
-                placeholder="email@organization.org"
-                className="rounded-xl text-xs h-9 bg-background"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-foreground">
-                Subject <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                required
-                value={inquiryForm?.subject || ""}
-                onChange={(e) =>
-                  setInquiryForm((prev) => ({
-                    ...prev,
-                    subject: e.target.value,
-                  }))
-                }
-                placeholder="e.g. Question about liquidation requirement"
-                className="rounded-xl text-xs h-9 bg-background"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-foreground">
-                Message / Details <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                required
-                rows={4}
-                value={inquiryForm?.description || ""}
-                onChange={(e) =>
-                  setInquiryForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Provide details about your inquiry..."
-                className="rounded-xl text-xs bg-background"
-              />
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setInquiryModalOpen(false)}
-                className="rounded-xl text-xs h-8"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={submittingInquiry}
-                className="rounded-xl bg-primary text-primary-foreground font-semibold text-xs h-8"
-              >
-                {submittingInquiry ? "Sending..." : "Submit Inquiry"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* ========================================================================= */}
+      {/* 5. INQUIRY CREATION MODAL DIALOG                                          */}
+      {/* ========================================================================= */}
+      <SubmitInquiryModal
+        open={inquiryModalOpen}
+        onOpenChange={setInquiryModalOpen}
+        inquiryForm={inquiryForm}
+        setInquiryForm={setInquiryForm}
+        submittingInquiry={submittingInquiry}
+        onSubmit={onInquiryFormSubmit}
+      />
     </div>
   );
 };

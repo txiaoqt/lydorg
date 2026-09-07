@@ -185,7 +185,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
         </div>
       }
     >
-      <div className="bg-background text-foreground transition-colors duration-200 font-sans max-w-[1440px] mx-auto pt-0 pb-4">
+      <div className="bg-background text-foreground transition-colors duration-200 font-sans max-w-[1440px] mx-auto pt-2 sm:pt-0 pb-4">
         {selectedPeriod ? (
           <YpopSemesterWorkspace
             period={selectedPeriod}

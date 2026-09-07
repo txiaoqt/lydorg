@@ -95,7 +95,7 @@ export const PortalMetricCard = ({
         </p>
         {Icon ? <PortalIconBadge icon={Icon} tone={iconTone} size="sm" /> : null}
       </div>
-      <div className="mt-2.5 text-[1.9rem] font-semibold leading-none sm:mt-3 sm:text-3xl">{value}</div>
+      <div className="mt-2.5 text-[1.9rem] font-semibold leading-none tabular-nums tracking-tight sm:mt-3 sm:text-3xl">{value}</div>
       {helper ? <p className="mt-1.5 text-xs leading-snug text-muted-foreground sm:text-sm">{helper}</p> : null}
     </CardContent>
   </Card>
@@ -136,14 +136,21 @@ export const PortalEmptyState = ({
   title,
   description,
   action,
+  icon: Icon,
 }: {
   title: string;
   description: string;
   action?: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
 }) => (
-  <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 p-4 text-center sm:p-6">
-    <p className="font-medium">{title}</p>
-    <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-    {action ? <div className="mt-4">{action}</div> : null}
+  <div className="rounded-2xl border border-dashed border-border/80 bg-muted/10 p-6 sm:p-10 text-center flex flex-col items-center justify-center space-y-2">
+    {Icon ? (
+      <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-1">
+        <Icon className="h-5 w-5" />
+      </div>
+    ) : null}
+    <p className="font-bold text-foreground text-sm">{title}</p>
+    <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">{description}</p>
+    {action ? <div className="pt-3">{action}</div> : null}
   </div>
 );

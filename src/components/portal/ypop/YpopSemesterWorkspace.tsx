@@ -172,37 +172,44 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
   return (
     <div className="space-y-6 max-w-[1440px] mx-auto">
       {/* Top Navigation & Header */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="text-xs text-muted-foreground hover:text-foreground -ml-2 gap-1.5 cursor-pointer"
+          className="text-xs font-medium text-muted-foreground hover:text-foreground -ml-2 gap-1.5 cursor-pointer h-8 px-2.5 rounded-lg hover:bg-muted/80 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to All Semesters</span>
         </Button>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 border border-border/60 shadow-xs">
-          <div className="space-y-1">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 border border-border/60 shadow-xs">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold text-primary">
+              <span className="text-xs font-bold text-primary">
                 {period.semesterLabel}
               </span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground bg-accent px-2 py-0.5 rounded-full">
-                <CalendarDays className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground/70" />
                 Deadline: {formatShortPortalDate(period.validationDeadline)}
               </span>
               <span className="text-muted-foreground/30">•</span>
-              <StatusBadge
-                status={period.status === "open" ? "open" : "closed"}
-                label={period.status === "open" ? "Open Period" : "Closed Period"}
-              />
+              {period.status === "open" ? (
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>Open Period</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                  <span>Closed Period</span>
+                </div>
+              )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               YPOP Validation Workspace
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
@@ -223,10 +230,10 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
                     : basePath;
                   navigate(targetUrl);
                 }}
-                className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 h-9 px-4 text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs gap-1.5 h-8.5 px-3.5 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer inline-flex items-center"
               >
                 <Plus className="h-3.5 w-3.5" />
-                New Budget Request
+                <span>New Budget Request</span>
               </Button>
             </div>
           ) : null}
@@ -235,17 +242,17 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
 
       {/* Admin Remarks Notice (if revision or rejection) */}
       {entry?.adminRemarks && (isNeedsRevision || isNotQualified) && (
-        <div className={`p-4 sm:p-5 rounded-2xl flex items-start gap-3.5 ${
+        <div className={`p-4 rounded-xl flex items-start gap-3 ${
           isNeedsRevision
-            ? "bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200"
-            : "bg-destructive/10 border border-destructive/30 text-destructive"
+            ? "bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200"
+            : "bg-destructive/10 border border-destructive/25 text-destructive"
         }`}>
-          <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
-          <div className="space-y-1 text-xs">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+          <div className="space-y-1 text-xs flex-1">
             <p className="font-bold text-sm">
               {isNeedsRevision ? "Admin Requested Submission Revisions" : "Validation Remarks"}
             </p>
-            <p className="font-medium bg-background/80 p-3 rounded-xl border border-current/20 italic">
+            <p className="font-medium bg-background/80 p-2.5 rounded-lg border border-current/20 italic">
               "{entry.adminRemarks}"
             </p>
             <p className="text-[11px] opacity-90">
@@ -257,33 +264,53 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
         </div>
       )}
 
-      {/* Main Tabs Header (Standardized with User Portal Tabs) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] touch-pan-x overscroll-x-contain pb-2 border-b border-border/60">
+      {/* Main Tabs Header (Crisp segmented tabs with clean active indicator) */}
+      <div className="flex items-center gap-2 border-b border-border/70 overflow-x-auto [scrollbar-width:none]">
         <button
           type="button"
           onClick={() => setActiveTab("city-led")}
           className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2",
+            "relative px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 border-b-2 -mb-px",
             activeTab === "city-led"
-              ? "bg-primary text-primary-foreground shadow-2xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              ? "border-primary text-primary font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
           )}
         >
-          <Award className="h-3.5 w-3.5" />
-          <span>City-Led Activities ({semesterActivities.length})</span>
+          <Award className="h-3.5 w-3.5 shrink-0" />
+          <span>City-Led Activities</span>
+          <span
+            className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+              activeTab === "city-led"
+                ? "bg-primary/10 text-primary"
+                : "bg-muted text-muted-foreground"
+            )}
+          >
+            {semesterActivities.length}
+          </span>
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("org-led")}
           className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2",
+            "relative px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 border-b-2 -mb-px",
             activeTab === "org-led"
-              ? "bg-primary text-primary-foreground shadow-2xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              ? "border-primary text-primary font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
           )}
         >
-          <FileText className="h-3.5 w-3.5" />
-          <span>Organization PPAs ({semesterOrgActivities.length})</span>
+          <FileText className="h-3.5 w-3.5 shrink-0" />
+          <span>Organization PPAs</span>
+          <span
+            className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+              activeTab === "org-led"
+                ? "bg-primary/10 text-primary"
+                : "bg-muted text-muted-foreground"
+            )}
+          >
+            {semesterOrgActivities.length}
+          </span>
         </button>
       </div>
 

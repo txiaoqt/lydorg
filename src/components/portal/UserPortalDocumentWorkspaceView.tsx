@@ -428,7 +428,18 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
 
           {/* Document Cards Bound to Authentic Event Handlers & Data */}
           <div className="space-y-3.5">
-            {filteredRequirements.map((doc) => {
+            {filteredRequirements.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground text-xs space-y-1.5 rounded-2xl border border-border/60 bg-card p-6 shadow-xs">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+                  <FileText className="h-4.5 w-4.5" />
+                </div>
+                <p className="font-bold text-foreground text-sm">No document requirements found</p>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  Try adjusting your search query or switching the status filter tab.
+                </p>
+              </div>
+            ) : (
+              filteredRequirements.map((doc) => {
               const submission = getSubmissionForDoc(doc.id);
               const status = getDocStatus(doc);
               const isApproved = isApprovedStatus(status);
@@ -605,7 +616,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                   </div>
                 </Card>
               );
-            })}
+            }))}
           </div>
         </div>
 

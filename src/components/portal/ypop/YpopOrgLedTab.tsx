@@ -143,13 +143,13 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
       {/* Table Container in Y-TRACE Design System */}
       <Card className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs">
         {/* Table Toolbar / Header */}
-        <div className="p-4 sm:p-5 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card">
+        <div className="p-3.5 sm:p-4 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-base font-bold text-foreground">
+              <h3 className="text-sm sm:text-base font-bold text-foreground">
                 Organization-Led PPAs
               </h3>
-              <span className="text-xs font-semibold text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full border border-border/50">
+              <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/50">
                 {approvedCount} of {entryActivities.length} Approved
               </span>
             </div>
@@ -158,44 +158,44 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search PPAs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 text-xs h-9 w-40 sm:w-48 bg-muted/20 border-border/80 rounded-xl"
+                className="pl-8 text-xs h-8.5 w-full sm:w-48 bg-background border-border/80 rounded-lg"
               />
             </div>
             <Button
               type="button"
               onClick={handleOpenNew}
-              className="h-9 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-2xs gap-1.5 cursor-pointer whitespace-nowrap"
+              className="h-8.5 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-xs gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98]"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
               <span>Log PPA Activity</span>
             </Button>
           </div>
         </div>
 
         {/* Responsive Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[850px]">
-            <thead>
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse md:min-w-[850px]">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3 px-5">Activity / PPA</th>
-                <th className="py-3 px-4">Date & Venue</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Documents</th>
-                <th className="py-3 px-4">Admin Remarks</th>
-                <th className="py-3 px-5 text-right">Action</th>
+                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Activity / PPA</th>
+                <th className="py-3.5 px-4 min-w-[140px]">Date & Venue</th>
+                <th className="py-3.5 px-4 min-w-[120px]">Status</th>
+                <th className="py-3.5 px-4 min-w-[120px]">Documents</th>
+                <th className="py-3.5 px-4 min-w-[140px]">Admin Remarks</th>
+                <th className="py-3.5 px-5 text-right min-w-[160px]">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40">
+            <tbody className="divide-y divide-border/40 md:table-row-group">
               {filteredActivities.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-muted-foreground text-xs space-y-3">
+                <tr className="block md:table-row">
+                  <td colSpan={6} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-3">
                     <FileText className="h-8 w-8 text-muted-foreground mx-auto stroke-1" />
                     <p className="text-sm font-bold text-foreground">
                       {entryActivities.length === 0
@@ -211,9 +211,9 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                       <Button
                         type="button"
                         onClick={handleOpenNew}
-                        className="h-9 px-4 text-xs font-bold rounded-xl bg-primary text-primary-foreground cursor-pointer gap-1.5"
+                        className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer gap-1.5 transition-all active:scale-[0.98]"
                       >
-                        <Plus className="h-4 w-4" /> Log First PPA Activity
+                        <Plus className="h-3.5 w-3.5" /> Log First PPA Activity
                       </Button>
                     )}
                   </td>
@@ -230,14 +230,14 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                   return (
                     <tr
                       key={act.id}
-                      className="h-20 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors duration-150 group border-b border-border/40"
+                      className="grid grid-cols-2 gap-2.5 p-3.5 sm:p-4 md:table-row md:p-0 md:h-18 md:gap-0 hover:bg-muted/40 transition-colors duration-150 group border-b md:border-b-0 border-border/40"
                     >
                       {/* Column 1: Activity Name & Narrative */}
-                      <td className="py-3.5 px-5">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 md:py-3.5 md:px-5 align-middle order-1">
                         <div className="space-y-1 min-w-0 max-w-[260px]">
                           <p
                             onClick={() => handleOpenEdit(act)}
-                            className="font-bold text-sm text-foreground hover:text-primary transition-colors cursor-pointer leading-tight truncate"
+                            className="font-bold text-sm text-foreground hover:text-primary transition-colors cursor-pointer leading-snug tracking-tight truncate"
                             title={act.activityName}
                           >
                             {act.activityName}
@@ -251,34 +251,34 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                       </td>
 
                       {/* Column 2: Date & Venue */}
-                      <td className="py-3.5 px-4 align-middle">
-                        <div className="space-y-1 text-xs text-muted-foreground whitespace-nowrap">
+                      <td className="col-span-2 sm:col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap order-3">
+                        <div className="space-y-0.5 text-xs text-muted-foreground font-medium">
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3 w-3 shrink-0" />
+                            <Calendar className="h-3 w-3 text-muted-foreground/70 shrink-0" />
                             <span>{act.activityDate ? formatShortPortalDate(act.activityDate) : "Date not set"}</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3 w-3 shrink-0" />
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <MapPin className="h-3 w-3 text-muted-foreground/70 shrink-0" />
                             <span className="truncate max-w-[150px]">{act.venue || "Pasig City"}</span>
                           </div>
                         </div>
                       </td>
 
                       {/* Column 3: Status Badge (Standardized via StatusBadge) */}
-                      <td className="py-3.5 px-4 align-middle">
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center order-2">
                         <StatusBadge status={act.status} />
                       </td>
 
                       {/* Column 4: Documents */}
-                      <td className="py-3.5 px-4 align-middle">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
-                          <FileText className="h-3.5 w-3.5 shrink-0" />
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start order-2">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
                           <span>{files.length} attachment{files.length === 1 ? "" : "s"}</span>
                         </div>
                       </td>
 
                       {/* Column 5: Admin Remarks */}
-                      <td className="py-3.5 px-4 align-middle">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle order-4">
                         {act.adminRemarks ? (
                           <div
                             className={`p-2 rounded-lg text-xs leading-relaxed max-w-[240px] ${
@@ -292,32 +292,32 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                             <p className="line-clamp-2 italic font-medium">"{act.adminRemarks}"</p>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground/40 text-xs">—</span>
+                          <span className="hidden md:inline text-muted-foreground/40 text-xs">—</span>
                         )}
                       </td>
 
                       {/* Column 6: Action */}
-                      <td className="py-3.5 px-5 text-right align-middle">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap order-5">
                         {isNeedsRevision && (
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(act)}
-                            className="h-8 px-3 text-xs font-bold rounded-xl gap-1 cursor-pointer border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 whitespace-nowrap"
+                            className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg gap-1.5 cursor-pointer border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center"
                           >
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>Resolve Revision</span>
                           </Button>
                         )}
                         {isDraft && (
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-between md:justify-end gap-1.5 w-full md:w-auto">
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
                               onClick={() => handleOpenEdit(act)}
-                              className="h-8 px-2.5 text-xs font-bold rounded-xl gap-1 cursor-pointer whitespace-nowrap"
+                              className="flex-1 md:flex-initial h-8 px-3 text-xs font-medium rounded-lg gap-1.5 cursor-pointer whitespace-nowrap border-border/80 hover:bg-muted text-foreground transition-all active:scale-[0.98] inline-flex items-center justify-center"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                               <span>Edit</span>
@@ -328,7 +328,8 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                               size="sm"
                               disabled={deletingId === act.id}
                               onClick={() => handleDelete(act)}
-                              className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 rounded-xl cursor-pointer"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors active:scale-[0.98] shrink-0"
+                              title="Delete PPA"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
@@ -340,7 +341,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(act)}
-                            className="h-8 px-3 text-xs font-semibold rounded-xl whitespace-nowrap"
+                            className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg whitespace-nowrap border-border/80 hover:bg-muted text-foreground transition-all active:scale-[0.98] inline-flex items-center justify-center"
                           >
                             View Details
                           </Button>
@@ -348,10 +349,10 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                         {isApproved && (
                           <Button
                             type="button"
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(act)}
-                            className="h-8 px-3 text-xs font-semibold text-primary hover:bg-primary/10 rounded-xl whitespace-nowrap"
+                            className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg whitespace-nowrap border-border/80 hover:bg-muted text-foreground transition-all active:scale-[0.98] inline-flex items-center justify-center"
                           >
                             View Submission
                           </Button>
@@ -362,7 +363,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(act)}
-                            className="h-8 px-3 text-xs font-semibold rounded-xl text-destructive border-destructive/30 hover:bg-destructive/10 whitespace-nowrap"
+                            className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10 whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center"
                           >
                             View Remarks & Files
                           </Button>

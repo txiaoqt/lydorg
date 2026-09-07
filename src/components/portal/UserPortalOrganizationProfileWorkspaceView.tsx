@@ -37,6 +37,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PortalPublicProfilePreviewDialog } from "@/components/portal/PortalPublicProfilePreviewDialog";
 import { cn } from "@/lib/utils";
 
 export interface UserPortalOrganizationProfileWorkspaceViewProps {
@@ -812,106 +813,18 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
       )}
 
       {/* 4. PUBLIC PROFILE PREVIEW MODAL */}
-      <Dialog open={profilePreviewOpen} onOpenChange={setProfilePreviewOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 overflow-hidden rounded-3xl bg-card border-border shadow-2xl">
-          <div className="p-4 sm:p-7 space-y-5 sm:space-y-6 max-h-[85vh] overflow-y-auto">
-            {/* Header Title */}
-            <div className="flex items-center justify-between border-b border-border/60 pb-3 sm:pb-4">
-              <div className="space-y-0.5">
-                <DialogTitle className="text-lg sm:text-xl font-black tracking-tight text-foreground flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" /> Public Profile Preview
-                </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  This preview reflects the profile details currently saved on the portal.
-                </DialogDescription>
-              </div>
-            </div>
-
-            {/* Identity Banner Card */}
-            <div className="bg-gradient-to-br from-primary/10 via-accent/30 to-indigo-500/10 p-4 sm:p-5 rounded-2xl border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
-              <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
-                <div className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl bg-card border border-border/80 flex items-center justify-center shrink-0 shadow-2xs text-primary mt-0.5 sm:mt-0">
-                  <CircleUserRound className="h-6 w-6 sm:h-8 sm:w-8" />
-                </div>
-                <div className="space-y-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-black text-base sm:text-lg text-foreground truncate">{profileName}</span>
-                    <PortalStatusBadge status={profileStatus} />
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {profile.majorClassification || "Youth Organization"} • {profileSubClass}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {profile.district || "District I"} • {profile.barangay || "Pasig City"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-card/90 backdrop-blur-xs p-2.5 sm:p-3 px-3.5 sm:px-4 rounded-xl border border-border/60 text-center shrink-0 shadow-2xs self-stretch sm:self-auto">
-                <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Profile Complete</span>
-                <span className="text-base sm:text-lg font-black text-primary">{profilePercent}%</span>
-              </div>
-            </div>
-
-            {/* Leadership & Representatives */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="bg-accent/20 p-3.5 rounded-xl border border-border/50 space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground">Representative</span>
-                <p className="font-bold text-foreground text-sm">{profile.representativeName || "Unassigned Representative"}</p>
-              </div>
-              <div className="bg-accent/20 p-3.5 rounded-xl border border-border/50 space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
-                <p className="font-bold text-foreground text-sm">{profile.adviserName || "Unassigned Adviser"}</p>
-              </div>
-            </div>
-
-            {/* Facebook Page */}
-            <div className="bg-accent/20 p-3.5 rounded-xl border border-border/50 space-y-1 text-xs">
-              <span className="text-xs font-semibold text-muted-foreground">Facebook Page</span>
-              {profile.facebookPageUrl ? (
-                <a
-                  href={profile.facebookPageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-primary truncate block hover:underline flex items-center gap-1 text-xs pt-0.5 break-all"
-                >
-                  {profile.facebookPageUrl} <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
-              ) : (
-                <p className="text-muted-foreground italic">Not provided</p>
-              )}
-            </div>
-
-            {/* Recent City-Led Activities */}
-            <div className="space-y-3 pt-2 border-t border-border/60">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent City-Led Activities</span>
-              <div className="space-y-2">
-                {joinedYpopEvents.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic p-3 text-center border border-border/60 rounded-xl bg-accent/20">
-                    No recent city-led YPOP activities recorded.
-                  </p>
-                ) : (
-                  joinedYpopEvents.slice(0, 3).map((act: any) => (
-                    <div key={act.id} className="p-3 rounded-xl border border-border/60 bg-accent/20 flex items-center justify-between text-xs">
-                      <div className="space-y-0.5 min-w-0 pr-2">
-                        <p className="font-bold text-foreground truncate">{act.title || act.activityName}</p>
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                          <span>{act.date ? formatShortPortalDate(act.date) : "Recently"}</span>
-                          <span>•</span>
-                          <span className="truncate">{act.organizer || "PCYDO"}</span>
-                        </p>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full shrink-0">
-                        Verified
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PortalPublicProfilePreviewDialog
+        open={profilePreviewOpen}
+        onOpenChange={setProfilePreviewOpen}
+        profileName={profileName}
+        profileStatus={profileStatus}
+        profile={profile}
+        profileSubClass={profileSubClass}
+        displayUrn={displayUrn}
+        profilePercent={profilePercent}
+        joinedYpopEvents={joinedYpopEvents}
+        formatShortPortalDate={formatShortPortalDate}
+      />
     </div>
   );
 };

@@ -126,16 +126,16 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6 max-w-[1440px] mx-auto">
       {/* Standard User Portal Header Banner */}
-      <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2">
-        <div className="flex items-center gap-2">
+      <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 mt-1 sm:mt-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <span className="text-xs font-semibold text-primary">Youth Participation Organization Passport (YPOP)</span>
           <span className="text-muted-foreground/30">•</span>
           <span className="text-xs text-muted-foreground">Validation Periods</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-foreground leading-tight sm:leading-snug">
           Select a YPOP Semester Period
         </h1>
-        <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
           Select an active or historical validation semester below to view City-Led activities, submit attendance proof, log organization-initiated PPAs, and track your qualification progress.
         </p>
       </div>
@@ -167,7 +167,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 rounded-xl border-border text-xs font-medium gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-between sm:justify-center px-3 hover:bg-accent text-foreground"
+                  className="h-8 rounded-lg border border-border/80 bg-background hover:bg-muted text-xs font-medium gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto justify-between sm:justify-center px-3 text-foreground transition-colors"
                 >
                   <div className="flex items-center gap-1.5 min-w-0 truncate">
                     <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -176,7 +176,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                   <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0 opacity-70 ml-0.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg z-50">
+              <DropdownMenuContent align="end" className="w-[min(calc(100vw-3rem),14rem)] sm:w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg z-50">
                 <DropdownMenuItem
                   onClick={() => {
                     setStatusFilter("all");
@@ -222,22 +222,22 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
         </div>
 
         {/* Standard User Portal Responsive Table Wrapper */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[850px]">
-            <thead>
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse md:min-w-[850px]">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3.5 px-5">Semester / Period</th>
-                <th className="py-3.5 px-4">Period Status</th>
-                <th className="py-3.5 px-4">Qualification Status</th>
-                <th className="py-3.5 px-4">Calculated Score</th>
-                <th className="py-3.5 px-4">Activities Summary</th>
-                <th className="py-3.5 px-5 text-right">Action</th>
+                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Semester / Period</th>
+                <th className="py-3.5 px-4 min-w-[120px]">Period Status</th>
+                <th className="py-3.5 px-4 min-w-[140px]">Qualification Status</th>
+                <th className="py-3.5 px-4 min-w-[130px]">Calculated Score</th>
+                <th className="py-3.5 px-4 min-w-[140px]">Activities Summary</th>
+                <th className="py-3.5 px-5 text-right min-w-[150px]">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40">
+            <tbody className="divide-y divide-border/40 md:table-row-group">
               {filteredPeriods.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-muted-foreground text-xs space-y-2">
+                <tr className="block md:table-row">
+                  <td colSpan={6} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-2">
                     <Trophy className="h-10 w-10 text-muted-foreground mx-auto stroke-1" />
                     <p className="text-sm font-bold text-foreground">
                       {sortedPeriods.length === 0
@@ -294,23 +294,26 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
 
                   const verifiedCityCount = verifiedAttendance.filter((a) => a.attended).length;
                   const actionLabel = getActionLabel(entry, period);
+                  const isPeriodOpen = period.status === "open";
+                  const isQualified = entry?.status === "qualified";
+                  const isNeedsAttention = isPeriodOpen && (!entry || entry.status === "draft" || entry.status === "needs_revision");
 
                   return (
                     <tr
                       key={period.id}
-                      className="h-20 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors duration-150 group border-b border-border/40"
+                      className="grid grid-cols-2 gap-2.5 p-3.5 sm:p-4 md:table-row md:p-0 md:h-18 md:gap-0 hover:bg-muted/40 transition-colors duration-150 group border-b md:border-b-0 border-border/40"
                     >
                       {/* Column 1: Semester / Period */}
-                      <td className="py-3.5 px-5">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 md:py-3.5 md:px-5 align-middle">
                         <div className="space-y-1 min-w-0">
                           <p
                             onClick={() => onSelectSemester(period.semesterKey)}
-                            className="text-sm font-bold text-foreground hover:text-primary transition-colors cursor-pointer leading-tight"
+                            className="text-sm font-bold text-foreground hover:text-primary transition-colors cursor-pointer leading-snug tracking-tight"
                           >
                             {period.semesterLabel}
                           </p>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                            <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                             <span>
                               Deadline: {formatDeadline(period.validationDeadline)}
                             </span>
@@ -318,68 +321,92 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                         </div>
                       </td>
 
-                      {/* Column 2: Period Status (Standardized via StatusBadge) */}
-                      <td className="py-3.5 px-4 align-middle">
-                        <StatusBadge
-                          status={period.status === "open" ? "open" : "closed"}
-                          label={period.status === "open" ? "Open Period" : "Closed"}
-                        />
+                      {/* Column 2: Period Status (Subtle dot indicator - does not compete with qualification badge) */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center">
+                        {isPeriodOpen ? (
+                          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                            <span>Open Period</span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <span className="h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                            <span>Closed</span>
+                          </div>
+                        )}
                       </td>
 
-                      {/* Column 3: Qualification Status (Standardized via StatusBadge) */}
-                      <td className="py-3.5 px-4 align-middle">
+                      {/* Column 3: Qualification Status (Primary status badge in the row) */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start">
                         <StatusBadge
-                          status={entry ? entry.status : (period.status === "open" ? "not_started" : "closed")}
+                          status={entry ? entry.status : (isPeriodOpen ? "not_started" : "closed")}
                           label={
                             entry
                               ? undefined
-                              : (period.status === "open" ? "Not Started" : "No Submission")
+                              : (isPeriodOpen ? "Not Started" : "No Submission")
                           }
                         />
                       </td>
 
-                      {/* Column 4: Calculated Score */}
-                      <td className="py-3.5 px-4 align-middle">
-                        <div className="space-y-1 min-w-[130px]">
-                          <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">Score</span>
-                            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                      {/* Column 4: Calculated Score (Clear numerical anchor with cutoff reference) */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle">
+                        <div className="w-full md:min-w-[120px] md:max-w-[140px] space-y-1">
+                          <div className="flex items-baseline justify-between gap-1.5">
+                            <span
+                              className={cn(
+                                "text-sm sm:text-base font-black tracking-tight tabular-nums",
+                                isQualified
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-foreground"
+                              )}
+                            >
                               {liveScore.totalScore}%
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium whitespace-nowrap">
+                              Cutoff {YPOP_SCORE_THRESHOLD}%
                             </span>
                           </div>
                           <Progress
                             value={Math.min(100, liveScore.totalScore)}
-                            className="h-1.5 bg-muted w-28"
+                            className="h-1.5 bg-muted/80"
                           />
-                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                            <span>Cutoff: {YPOP_SCORE_THRESHOLD}%</span>
+                        </div>
+                      </td>
+
+                      {/* Column 5: Activities Summary (Clean, scannable tabular typography) */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell flex-col justify-center">
+                        <div className="space-y-0.5 sm:space-y-1 text-xs">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">City-Led:</span>
+                            <span className="font-bold text-foreground tabular-nums text-[11px] sm:text-xs">
+                              {verifiedCityCount} / {semesterActivities.length}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">PPAs:</span>
+                            <span className="font-bold text-foreground tabular-nums text-[11px] sm:text-xs">
+                              {approvedPpaCount} approved
+                            </span>
                           </div>
                         </div>
                       </td>
 
-                      {/* Column 5: Activities Summary */}
-                      <td className="py-3.5 px-4 align-middle">
-                        <div className="space-y-1 text-xs">
-                          <div className="flex items-center gap-1.5 text-[11px] text-foreground font-medium">
-                            <span className="text-muted-foreground">City-Led:</span>
-                            <span className="font-bold">{verifiedCityCount} / {semesterActivities.length}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[11px] text-foreground font-medium">
-                            <span className="text-muted-foreground">Approved PPAs:</span>
-                            <span className="font-bold">{approvedPpaCount}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Column 6: Action */}
-                      <td className="py-3.5 px-5 text-right align-middle">
+                      {/* Column 6: Action (Clear hierarchy: primary for active, outline for evaluated/closed) */}
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap">
                         <Button
                           type="button"
+                          variant={isNeedsAttention ? "default" : "outline"}
+                          size="sm"
                           onClick={() => onSelectSemester(period.semesterKey)}
-                          className="h-9 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-2xs gap-1.5 inline-flex items-center cursor-pointer whitespace-nowrap"
+                          className={cn(
+                            "w-full md:w-auto h-8 px-3 rounded-lg text-xs font-medium gap-1.5 inline-flex items-center justify-center cursor-pointer transition-all whitespace-nowrap active:scale-[0.98]",
+                            isNeedsAttention
+                              ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs"
+                              : "border border-border/80 bg-background hover:bg-muted text-foreground"
+                          )}
                         >
                           <span>{actionLabel}</span>
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
                         </Button>
                       </td>
                     </tr>
@@ -403,7 +430,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
               size="sm"
               disabled={currentPageSafe <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="h-8 px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground gap-1"
+              className="h-8 px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 gap-1 rounded-lg cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Previous</span>
@@ -416,11 +443,12 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                 variant={pageNum === currentPageSafe ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setCurrentPage(pageNum)}
-                className={`h-8 w-8 p-0 text-xs font-bold rounded-lg ${
+                className={cn(
+                  "h-8 w-8 p-0 text-xs font-semibold rounded-lg cursor-pointer transition-colors",
                   pageNum === currentPageSafe
                     ? "bg-primary text-primary-foreground shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                )}
               >
                 {pageNum}
               </Button>
@@ -432,7 +460,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
               size="sm"
               disabled={currentPageSafe >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground gap-1"
+              className="h-8 px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 gap-1 rounded-lg cursor-pointer"
             >
               <span>Next</span>
               <ChevronRight className="h-4 w-4" />

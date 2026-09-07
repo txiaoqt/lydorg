@@ -94,7 +94,9 @@ import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortal
 import { UserPortalNewsWorkspaceView } from "@/components/portal/UserPortalNewsWorkspaceView";
 import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
-import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
+import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
+import { PortalAttachedDocumentDrawer } from "@/components/portal/PortalAttachedDocumentDrawer";
+import { OrganizationActivityHistoryModal } from "@/components/portal/OrganizationActivityHistoryModal";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -3363,7 +3365,7 @@ export default function UserPortal({ section }: { section: string }) {
       >
         {activeContent}
       </UserPortalShell>
-      <PortalDocumentPreviewModal
+      <PortalDocumentDrawer
         open={previewModalOpen}
         onOpenChange={(open) => {
           setPreviewModalOpen(open);
@@ -3374,13 +3376,21 @@ export default function UserPortal({ section }: { section: string }) {
             setPreviewCanInline(false);
           }
         }}
+        mode="template"
         previewUrl={previewUrl}
         previewTitle={previewTitle}
+        templateTitle={previewTitle}
+        templateFileName={previewTitle}
         previewCanInline={previewCanInline}
         previewEmptyMessage={previewEmptyMessage}
         organizationName={currentProfile?.organizationName || "Pasig City Organization"}
         onDownloadFile={async (url, name) => {
           await downloadResolvedFile(url, name);
+        }}
+        onOpenInNewTab={(url) => {
+          if (url) {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
         }}
       />
       <Dialog
@@ -4390,474 +4400,102 @@ export default function UserPortal({ section }: { section: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Attached Document Preview Modal — Unified with PortalDocumentPreviewModal System */}
-      <PortalDocumentPreviewModal
+      {/* Attached Document Preview Drawer — Standardized Right-side Drawer on PC */}
+      <PortalAttachedDocumentDrawer
         open={attachedDocumentEditorOpen && !documentDetailMode}
         onOpenChange={(open) => {
           if (!open && !savingAttachedDocument) {
             closeAttachedDocumentEditor();
           }
         }}
+        file={attachedDocumentEditor?.file}
+        documentTypeName={attachedDocumentEditor?.documentTypeName || "Attached Document"}
         previewUrl={attachedDocumentPreviewUrl}
-        previewTitle={attachedDocumentEditor?.documentTypeName || "Attached Document"}
         previewCanInline={attachedDocumentPreviewCanInline}
         previewEmptyMessage={attachedDocumentPreviewEmptyMessage}
-        fileSize={attachedDocumentEditor?.file?.fileName || "Uploaded file"}
-        updatedAt={
-          attachedDocumentEditor?.file?.uploadedAt
-            ? formatShortPortalDate
-              ? formatShortPortalDate(attachedDocumentEditor.file.uploadedAt)
-              : formatDateTimeLabel(attachedDocumentEditor.file.uploadedAt)
-            : "Uploaded recently"
-        }
-        statusBadge={
-          attachedDocumentEditor?.file ? (
-            <span
-              className={cn(
-                "text-[10px] sm:text-[11px] font-semibold px-2 sm:px-2.5 py-0.5 rounded-full border shrink-0",
-                isApprovedSubmissionFile(attachedDocumentEditor.file)
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                  : attachedDocumentEditor.file.adminStatus === "draft"
-                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                  : attachedDocumentEditor.file.adminStatus === "needs_revision"
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                  : attachedDocumentEditor.file.adminStatus === "rejected" ||
-                    attachedDocumentEditor.file.adminStatus === "rejected_red"
-                  ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                  : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
-              )}
-            >
-              {isApprovedSubmissionFile(attachedDocumentEditor.file)
-                ? "Approved"
-                : attachedDocumentEditor.file.adminStatus === "draft"
-                ? "Draft Saved"
-                : attachedDocumentEditor.file.adminStatus === "needs_revision"
-                ? "Needs Revision"
-                : attachedDocumentEditor.file.adminStatus === "rejected" ||
-                  attachedDocumentEditor.file.adminStatus === "rejected_red"
-                ? "Rejected"
-                : "Under Review"}
-            </span>
-          ) : null
-        }
-        headerActions={
-          attachedDocumentEditor ? (
-            <div className="w-full sm:w-auto shrink-0">
-              {attachedDocumentEditor.file.adminStatus === "draft" ? (
-                <>
-                  {/* MOBILE DRAFT ACTIONS (< 640px) */}
-                  <div className="flex flex-col gap-2 w-full sm:hidden">
-                    {/* 1. Primary Workflow Action */}
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={savingAttachedDocument}
-                      className="h-9 w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs justify-center"
-                      onClick={async () => {
-                        if (!attachedDocumentEditor?.file?.submissionId) return;
-                        setSavingAttachedDocument(true);
-                        try {
-                          await submitDocumentSubmissionForReviewInSupabase(
-                            attachedDocumentEditor.file.submissionId,
-                            [attachedDocumentEditor.file.id]
-                          );
-                          const remoteSnapshot = await loadLydoConnectSupabaseState();
-                          if (remoteSnapshot) {
-                            mergeRemoteState(remoteSnapshot);
-                          }
-                          notifyAdmin({
-                            title: "Document submission",
-                            message: `${attachedDocumentEditor.documentTypeName} submitted for review by ${
-                              profile.organizationName || "an organization"
-                            }.`,
-                            relatedType: "document_submission",
-                            relatedId: attachedDocumentEditor.file.submissionId,
-                            organizationId: profile.id,
-                          });
-                          toast({
-                            title: "Documents submitted successfully",
-                            description: `${attachedDocumentEditor.documentTypeName} is now under review.`,
-                          });
-                          closeAttachedDocumentEditor();
-                        } catch (error) {
-                          toast({
-                            title: "Submission failed",
-                            description:
-                              error instanceof Error ? error.message : "The document could not be submitted.",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setSavingAttachedDocument(false);
-                        }
-                      }}
-                    >
-                      <FileUp className="h-3.5 w-3.5 shrink-0" />
-                      <span>Submit for Review</span>
-                    </Button>
-
-                    {/* 2. File Management Actions: 2-column grid */}
-                    <div className="grid grid-cols-2 gap-2 w-full">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={savingAttachedDocument}
-                        className="h-8 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground justify-center truncate"
-                        onClick={() => {
-                          closeAttachedDocumentEditor();
-                          openBatchUploadWorkspace();
-                        }}
-                      >
-                        <FileUp className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">Replace File</span>
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground justify-center truncate"
-                        onClick={() =>
-                          void openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName)
-                        }
-                      >
-                        <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span className="truncate">Open in New Tab</span>
-                      </Button>
-                    </div>
-
-                    {/* 3. Normal File Action: Download */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={downloadingAttachedFile}
-                      className="h-8 w-full rounded-xl border-border/80 hover:bg-accent text-foreground text-xs font-semibold gap-1.5 cursor-pointer justify-center truncate"
-                      onClick={async () => {
-                        if (!attachedDocumentEditor?.file?.fileUrl || downloadingAttachedFile) return;
-                        setDownloadingAttachedFile(true);
-                        try {
-                          await openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName);
-                        } finally {
-                          setDownloadingAttachedFile(false);
-                        }
-                      }}
-                    >
-                      {downloadingAttachedFile ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                          <span className="truncate">Downloading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-3.5 w-3.5 text-primary shrink-0" />
-                          <span className="truncate">Download File</span>
-                        </>
-                      )}
-                    </Button>
-
-                    {/* 4. Destructive Action: Visually Separated */}
-                    <div className="flex justify-center pt-0.5">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={savingAttachedDocument}
-                        className="h-7.5 px-3 rounded-lg text-destructive hover:bg-destructive/10 text-xs font-medium gap-1.5 cursor-pointer"
-                        onClick={async () => {
-                          if (!attachedDocumentEditor?.file?.id) return;
-                          setSavingAttachedDocument(true);
-                          try {
-                            await removeOrganizationDocumentFromSupabase(attachedDocumentEditor.file.id);
-                            const remoteSnapshot = await loadLydoConnectSupabaseState();
-                            if (remoteSnapshot) {
-                              mergeRemoteState(remoteSnapshot);
-                            }
-                            toast({
-                              title: "Draft deleted",
-                              description: `Draft for ${attachedDocumentEditor.documentTypeName} was deleted.`,
-                            });
-                            closeAttachedDocumentEditor();
-                          } catch (error) {
-                            toast({
-                              title: "Delete failed",
-                              description: error instanceof Error ? error.message : "Unable to delete draft.",
-                              variant: "destructive",
-                            });
-                          } finally {
-                            setSavingAttachedDocument(false);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                        <span>Delete Draft</span>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* DESKTOP DRAFT ACTIONS (>= 640px) */}
-                  <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-2 shrink-0">
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={savingAttachedDocument}
-                      className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs"
-                      onClick={async () => {
-                        if (!attachedDocumentEditor?.file?.submissionId) return;
-                        setSavingAttachedDocument(true);
-                        try {
-                          await submitDocumentSubmissionForReviewInSupabase(
-                            attachedDocumentEditor.file.submissionId,
-                            [attachedDocumentEditor.file.id]
-                          );
-                          const remoteSnapshot = await loadLydoConnectSupabaseState();
-                          if (remoteSnapshot) {
-                            mergeRemoteState(remoteSnapshot);
-                          }
-                          notifyAdmin({
-                            title: "Document submission",
-                            message: `${attachedDocumentEditor.documentTypeName} submitted for review by ${
-                              profile.organizationName || "an organization"
-                            }.`,
-                            relatedType: "document_submission",
-                            relatedId: attachedDocumentEditor.file.submissionId,
-                            organizationId: profile.id,
-                          });
-                          toast({
-                            title: "Documents submitted successfully",
-                            description: `${attachedDocumentEditor.documentTypeName} is now under review.`,
-                          });
-                          closeAttachedDocumentEditor();
-                        } catch (error) {
-                          toast({
-                            title: "Submission failed",
-                            description:
-                              error instanceof Error ? error.message : "The document could not be submitted.",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setSavingAttachedDocument(false);
-                        }
-                      }}
-                    >
-                      <FileUp className="h-3.5 w-3.5 shrink-0" />
-                      <span>Submit for Review</span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={savingAttachedDocument}
-                      className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground"
-                      onClick={() => {
-                        closeAttachedDocumentEditor();
-                        openBatchUploadWorkspace();
-                      }}
-                    >
-                      <FileUp className="h-3.5 w-3.5 shrink-0" />
-                      <span>Replace File</span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground"
-                      onClick={() =>
-                        void openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName)
-                      }
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span>Open in New Tab</span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={downloadingAttachedFile}
-                      className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs"
-                      onClick={async () => {
-                        if (!attachedDocumentEditor?.file?.fileUrl || downloadingAttachedFile) return;
-                        setDownloadingAttachedFile(true);
-                        try {
-                          await openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName);
-                        } finally {
-                          setDownloadingAttachedFile(false);
-                        }
-                      }}
-                    >
-                      {downloadingAttachedFile ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                          <span>Downloading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-3.5 w-3.5 shrink-0" />
-                          <span>Download File</span>
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={savingAttachedDocument}
-                      className="h-8 px-2.5 rounded-xl text-destructive hover:bg-destructive/10 text-xs font-semibold gap-1.5 cursor-pointer"
-                      onClick={async () => {
-                        if (!attachedDocumentEditor?.file?.id) return;
-                        setSavingAttachedDocument(true);
-                        try {
-                          await removeOrganizationDocumentFromSupabase(attachedDocumentEditor.file.id);
-                          const remoteSnapshot = await loadLydoConnectSupabaseState();
-                          if (remoteSnapshot) {
-                            mergeRemoteState(remoteSnapshot);
-                          }
-                          toast({
-                            title: "Draft deleted",
-                            description: `Draft for ${attachedDocumentEditor.documentTypeName} was deleted.`,
-                          });
-                          closeAttachedDocumentEditor();
-                        } catch (error) {
-                          toast({
-                            title: "Delete failed",
-                            description: error instanceof Error ? error.message : "Unable to delete draft.",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setSavingAttachedDocument(false);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                      <span>Delete Draft</span>
-                    </Button>
-                  </div>
-                </>
-              ) : attachedDocumentEditor.file.adminStatus === "needs_revision" ? (
-                <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={savingAttachedDocument}
-                    className="h-8 px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground justify-center truncate"
-                    onClick={() => {
-                      closeAttachedDocumentEditor();
-                      openBatchUploadWorkspace();
-                    }}
-                  >
-                    <FileUp className="h-3.5 w-3.5 shrink-0" />
-                    <span>Replace File</span>
-                  </Button>
-
-                  <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-2.5 sm:px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground justify-center truncate"
-                      onClick={() =>
-                        void openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName)
-                      }
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="truncate">Open in New Tab</span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={downloadingAttachedFile}
-                      className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs justify-center truncate"
-                      onClick={async () => {
-                        if (!attachedDocumentEditor?.file?.fileUrl || downloadingAttachedFile) return;
-                        setDownloadingAttachedFile(true);
-                        try {
-                          await openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName);
-                        } finally {
-                          setDownloadingAttachedFile(false);
-                        }
-                      }}
-                    >
-                      {downloadingAttachedFile ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                          <span className="truncate">Downloading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">Download File</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                /* Standard Attached Document: Under Review, Approved, etc. */
-                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2.5 sm:px-3 rounded-xl border-border text-xs font-semibold gap-1.5 cursor-pointer hover:bg-accent text-foreground justify-center truncate"
-                    onClick={() =>
-                      void openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName)
-                    }
-                  >
-                    <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">Open in New Tab</span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={downloadingAttachedFile}
-                    className="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 cursor-pointer shadow-2xs justify-center truncate"
-                    onClick={async () => {
-                      if (!attachedDocumentEditor?.file?.fileUrl || downloadingAttachedFile) return;
-                      setDownloadingAttachedFile(true);
-                      try {
-                        await openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName);
-                      } finally {
-                        setDownloadingAttachedFile(false);
-                      }
-                    }}
-                  >
-                    {downloadingAttachedFile ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                        <span className="truncate">Downloading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">Download File</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : null
-        }
-        footerStatusText={
-          isApprovedSubmissionFile(attachedDocumentEditor?.file)
-            ? "Approved document • Locked from modification"
-            : attachedDocumentEditor?.file?.adminStatus === "draft"
-            ? "Draft Saved • Ready for Submission"
-            : attachedDocumentEditor?.file?.adminStatus === "under_admin_review" ||
-              attachedDocumentEditor?.file?.adminStatus === "submitted" ||
-              attachedDocumentEditor?.file?.adminStatus === "under_review"
-            ? "Waiting for Admin Review"
-            : "Attached Document • Y-TRACE Compliance"
-        }
-        onDownloadFile={async (url, title) => {
-          if (attachedDocumentEditor?.file) {
+        saving={savingAttachedDocument}
+        downloading={downloadingAttachedFile}
+        formatDateTimeLabel={formatDateTimeLabel}
+        formatShortPortalDate={formatShortPortalDate}
+        onOpenInNewTab={() => {
+          if (attachedDocumentPreviewUrl) {
+            window.open(attachedDocumentPreviewUrl, "_blank", "noopener,noreferrer");
+          } else if (attachedDocumentEditor?.file?.fileUrl) {
+            void openFile(attachedDocumentEditor.file.fileUrl);
+          }
+        }}
+        onDownloadFile={async () => {
+          if (!attachedDocumentEditor?.file?.fileUrl || downloadingAttachedFile) return;
+          setDownloadingAttachedFile(true);
+          try {
             await openFile(attachedDocumentEditor.file.fileUrl, attachedDocumentEditor.file.fileName);
+          } finally {
+            setDownloadingAttachedFile(false);
+          }
+        }}
+        onSubmitForReview={async () => {
+          if (!attachedDocumentEditor?.file?.submissionId) return;
+          setSavingAttachedDocument(true);
+          try {
+            await submitDocumentSubmissionForReviewInSupabase(
+              attachedDocumentEditor.file.submissionId,
+              [attachedDocumentEditor.file.id]
+            );
+            const remoteSnapshot = await loadLydoConnectSupabaseState();
+            if (remoteSnapshot) {
+              mergeRemoteState(remoteSnapshot);
+            }
+            notifyAdmin({
+              title: "Document submission",
+              message: `${attachedDocumentEditor.documentTypeName} submitted for review by ${
+                profile.organizationName || "an organization"
+              }.`,
+              relatedType: "document_submission",
+              relatedId: attachedDocumentEditor.file.submissionId,
+              organizationId: profile.id,
+            });
+            toast({
+              title: "Documents submitted successfully",
+              description: `${attachedDocumentEditor.documentTypeName} is now under review.`,
+            });
+            closeAttachedDocumentEditor();
+          } catch (error) {
+            toast({
+              title: "Submission failed",
+              description:
+                error instanceof Error ? error.message : "The document could not be submitted.",
+              variant: "destructive",
+            });
+          } finally {
+            setSavingAttachedDocument(false);
+          }
+        }}
+        onReplaceFile={() => {
+          closeAttachedDocumentEditor();
+          openBatchUploadWorkspace();
+        }}
+        onDeleteDraft={async () => {
+          if (!attachedDocumentEditor?.file?.id) return;
+          setSavingAttachedDocument(true);
+          try {
+            await removeOrganizationDocumentFromSupabase(attachedDocumentEditor.file.id);
+            const remoteSnapshot = await loadLydoConnectSupabaseState();
+            if (remoteSnapshot) {
+              mergeRemoteState(remoteSnapshot);
+            }
+            toast({
+              title: "Draft deleted",
+              description: `Draft for ${attachedDocumentEditor.documentTypeName} was deleted.`,
+            });
+            closeAttachedDocumentEditor();
+          } catch (error) {
+            toast({
+              title: "Delete failed",
+              description: error instanceof Error ? error.message : "Unable to delete draft.",
+              variant: "destructive",
+            });
+          } finally {
+            setSavingAttachedDocument(false);
           }
         }}
       />
@@ -4944,25 +4582,19 @@ export default function UserPortal({ section }: { section: string }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={profileActivityModalOpen} onOpenChange={setProfileActivityModalOpen}>
-        <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-foreground">Organization Activity History</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Complete timeline of document uploads, approvals, budget requests, liquidation updates, and inquiries for your organization.
-            </DialogDescription>
-          </DialogHeader>
-          <RecentActivityList
-            activities={profileActivityLogEntries.map((log) => ({
-              id: log.id,
-              message: log.description,
-              timestamp: log.createdAt,
-              timestampLabel: formatDateTimeLabel(log.createdAt),
-            }))}
-            emptyDescription="Profile changes and admin review actions will appear here."
-          />
-        </DialogContent>
-      </Dialog>
+      <OrganizationActivityHistoryModal
+        open={profileActivityModalOpen}
+        onOpenChange={setProfileActivityModalOpen}
+        description="Complete timeline of document uploads, approvals, budget requests, liquidation updates, and inquiries for your organization."
+        activities={profileActivityLogEntries.map((log) => ({
+          id: log.id,
+          message: log.description,
+          note: (log as any).adminRemarks?.trim() || undefined,
+          timestamp: log.createdAt,
+          timestampLabel: formatDateTimeLabel(log.createdAt),
+        }))}
+        emptyDescription="Profile changes and admin review actions will appear here."
+      />
       <Dialog
         open={Boolean(budgetReviewNote)}
         onOpenChange={(open) => {

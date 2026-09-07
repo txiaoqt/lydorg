@@ -126,7 +126,13 @@ export const UserPortalShell = ({
   };
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    try {
+      if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+    } catch {
+      // Ignored in environments where scrollTo is unsupported
+    }
   }, [activeId]);
 
   return (
@@ -138,7 +144,13 @@ export const UserPortalShell = ({
           <div className="flex items-center gap-3 min-w-0">
             <Sheet>
               <SheetTrigger asChild>
-                <Button type="button" variant="outline" size="icon" className="lg:hidden shrink-0 h-9 w-9 rounded-xl border-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="lg:hidden shrink-0 h-9 w-9 rounded-xl border-border"
+                  aria-label="Open navigation menu"
+                >
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
@@ -165,7 +177,7 @@ export const UserPortalShell = ({
                 )}
 
                 {/* Mobile Nav Links */}
-                <div className="mt-5 space-y-4">
+                <div className="mt-4 space-y-4">
                   {groups.map((group) => (
                     <div key={group.id} className="space-y-1">
                       <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -221,7 +233,7 @@ export const UserPortalShell = ({
           </div>
 
           {/* Center — Horizontal Navigation Items with Modern Rounded Full Pills */}
-          <nav className="hidden lg:flex items-center gap-1.5 bg-accent/30 p-1 rounded-full border border-border/50 shadow-2xs">
+          <nav className="hidden lg:flex items-center gap-1.5 bg-card/75 backdrop-blur-md p-1.5 rounded-full border border-border/60 shadow-2xs">
             {groups.map((group) => {
               const isGroupActive = group.items.some((item) => item.id === activeId);
               if (group.items.length === 1) {
@@ -230,10 +242,10 @@ export const UserPortalShell = ({
                     key={group.id}
                     type="button"
                     className={cn(
-                      "rounded-full px-3.5 py-1 text-xs transition-all",
+                      "rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 cursor-pointer",
                       isGroupActive
-                        ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:text-foreground hover:bg-background/80 font-medium"
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
                     onClick={() => onNavigate(group.items[0].id)}
                   >
@@ -248,14 +260,14 @@ export const UserPortalShell = ({
                     <button
                       type="button"
                       className={cn(
-                        "flex items-center gap-1 rounded-full px-3.5 py-1 text-xs transition-all",
+                        "group flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 cursor-pointer",
                         isGroupActive
-                          ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
-                          : "text-muted-foreground hover:text-foreground hover:bg-background/80 font-medium"
+                          ? "bg-primary text-primary-foreground shadow-xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                       )}
                     >
                       <span>{group.label}</span>
-                      <ChevronDown className="h-3 w-3 opacity-70" />
+                      <ChevronDown className="h-3 w-3 opacity-70 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="center" className="min-w-[220px] p-2 rounded-2xl bg-card border-border/80 shadow-xl space-y-1">
@@ -266,15 +278,18 @@ export const UserPortalShell = ({
                         <DropdownMenuItem
                           key={item.id}
                           className={cn(
-                            "gap-2.5 p-2 rounded-xl text-xs cursor-pointer transition-colors",
+                            "gap-2.5 p-2 rounded-xl text-xs cursor-pointer transition-colors flex items-center justify-between",
                             active ? "bg-primary/10 text-primary font-semibold" : "hover:bg-accent"
                           )}
                           onClick={() => onNavigate(item.id)}
                         >
-                          {Icon && <Icon className="h-4 w-4 text-primary shrink-0" />}
-                          <div>
+                          <div className="flex items-center gap-2.5">
+                            {Icon && <Icon className="h-4 w-4 text-primary shrink-0" />}
                             <p className="font-semibold text-xs leading-none">{item.label}</p>
                           </div>
+                          {active && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                          )}
                         </DropdownMenuItem>
                       );
                     })}
