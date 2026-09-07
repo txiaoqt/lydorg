@@ -58,16 +58,15 @@ export const mapOrganizationProfileToYorpExportRow = (organization: Organization
 export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow> = {
   title: "YORP Registry",
   filenamePrefix: "yorp-registry",
-  orientation: "landscape",
-  logoUrl: "/y-trace-logo.png",
-  headerTitle: "Y-TRACE / LYDO YORP Registry",
-  footerText: "Pasig City YORP registry export",
+  orientation: "portrait",
+  headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
+  footerText: "Pasig City Youth Development Office - YORP Registry",
   xlsxSheetName: "YORP Registry",
   columns: [
     {
       label: "No.",
       value: (_row, index) => index + 1,
-      pdfWidth: 40,
+      pdfWidth: 26,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxType: "integer",
@@ -76,7 +75,7 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
     {
       label: "Name of Organization",
       value: (row) => row.organizationName,
-      pdfWidth: 220,
+      pdfWidth: 144,
       xlsxWidth: 35,
       xlsxMinWidth: 24,
       xlsxMaxWidth: 40,
@@ -85,7 +84,7 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
     {
       label: "Barangay",
       value: (row) => row.barangay,
-      pdfWidth: 90,
+      pdfWidth: 68,
       xlsxWidth: 20,
       xlsxMinWidth: 16,
       xlsxMaxWidth: 24,
@@ -93,7 +92,7 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
     {
       label: "Major Classification",
       value: (row) => row.majorClassification,
-      pdfWidth: 110,
+      pdfWidth: 86,
       xlsxWidth: 25,
       xlsxMinWidth: 18,
       xlsxMaxWidth: 28,
@@ -102,7 +101,7 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
     {
       label: "Contact Numbers",
       value: (row) => row.contactNumbers,
-      pdfWidth: 150,
+      pdfWidth: 90,
       preserveSpreadsheetText: true,
       xlsxValue: (row) => row.contactNumbers.join("\n"),
       xlsxType: "text",
@@ -114,7 +113,7 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
     {
       label: "Emails",
       value: (row) => row.emails,
-      pdfWidth: 168,
+      pdfWidth: 120,
       xlsxValue: (row) => row.emails.join("\n"),
       xlsxWidth: 40,
       xlsxMinWidth: 28,
@@ -127,17 +126,16 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
 export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRow> = {
   title: "Budget Request Report",
   filenamePrefix: "budget-requests",
-  orientation: "landscape",
-  logoUrl: "/y-trace-logo.png",
-  headerTitle: "Y-TRACE / LYDO Budget Requests",
-  footerText: "Budget request export",
+  orientation: "portrait",
+  headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
+  footerText: "Pasig City Youth Development Office - Budget Request Report",
   xlsxSheetName: "Budget Requests",
   pdfUseUnicodeFont: true,
   columns: [
     {
       label: "No.",
       value: (_row, index) => index + 1,
-      pdfWidth: 46,
+      pdfWidth: 28,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxType: "integer",
@@ -146,7 +144,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
     {
       label: "Organization Name",
       value: (row) => row.organizationName,
-      pdfWidth: 169,
+      pdfWidth: 135,
       xlsxWidth: 30,
       xlsxMinWidth: 24,
       xlsxMaxWidth: 34,
@@ -155,7 +153,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
     {
       label: "Activity",
       value: (row) => row.activity,
-      pdfWidth: 208,
+      pdfWidth: 152,
       xlsxWidth: 45,
       xlsxMinWidth: 34,
       xlsxMaxWidth: 50,
@@ -167,7 +165,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       csvValue: (row) => formatCurrencyCsv(row.approvedAmount),
       pdfValue: (row) => formatCurrencyPdf(row.approvedAmount),
       xlsxValue: (row) => row.approvedAmount,
-      pdfWidth: 115,
+      pdfWidth: 72,
       pdfAlign: "right",
       xlsxAlign: "right",
       xlsxType: "currency",
@@ -179,7 +177,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       csvValue: (row) => formatCurrencyCsv(row.releasedAmount),
       pdfValue: (row) => formatCurrencyPdf(row.releasedAmount),
       xlsxValue: (row) => row.releasedAmount,
-      pdfWidth: 115,
+      pdfWidth: 72,
       pdfAlign: "right",
       xlsxAlign: "right",
       xlsxType: "currency",
@@ -190,7 +188,8 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       value: (row) => formatDateDisplay(row.releasedDate),
       csvValue: (row) => formatDateDisplay(row.releasedDate),
       pdfValue: (row) => formatDateDisplay(row.releasedDate),
-      pdfWidth: 115,
+      pdfWidth: 76,
+      pdfAlign: "center",
       xlsxValue: (row) => row.releasedDate,
       xlsxAlign: "center",
       xlsxType: "date",
@@ -204,17 +203,16 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
 export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBarangayExportRow> = {
   title: "Allocation by Barangay",
   filenamePrefix: "allocation-by-barangay",
-  orientation: "landscape",
-  logoUrl: "/y-trace-logo.png",
-  headerTitle: "Y-TRACE / LYDO Allocation by Barangay",
-  footerText: "Allocation by barangay export",
+  orientation: "portrait",
+  headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
+  footerText: "Pasig City Youth Development Office - Allocation by Barangay",
   xlsxSheetName: "Allocation by Barangay",
   pdfUseUnicodeFont: true,
   columns: [
     {
       label: "No.",
       value: (_row, index) => index + 1,
-      pdfWidth: 46,
+      pdfWidth: 28,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxType: "integer",
@@ -223,7 +221,7 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
     {
       label: "District",
       value: (row) => row.district,
-      pdfWidth: 115,
+      pdfWidth: 72,
       xlsxWidth: 20,
       xlsxMinWidth: 16,
       xlsxMaxWidth: 24,
@@ -232,7 +230,7 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
     {
       label: "Barangay",
       value: (row) => row.barangay,
-      pdfWidth: 131,
+      pdfWidth: 85,
       xlsxWidth: 28,
       xlsxMinWidth: 22,
       xlsxMaxWidth: 32,
@@ -243,7 +241,7 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
       value: (row) => row.organizationNames,
       csvValue: (row) => row.organizationNames.join("; "),
       xlsxValue: (row) => row.organizationNames.join("\n"),
-      pdfWidth: 246,
+      pdfWidth: 190,
       xlsxAlign: "left",
       xlsxType: "text",
       xlsxWidth: 45,
@@ -257,7 +255,7 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
       csvValue: (row) => formatCurrencyCsv(row.approvedAmount),
       pdfValue: (row) => formatCurrencyPdf(row.approvedAmount),
       xlsxValue: (row) => row.approvedAmount,
-      pdfWidth: 115,
+      pdfWidth: 80,
       pdfAlign: "right",
       xlsxAlign: "right",
       xlsxType: "currency",
@@ -269,11 +267,198 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
       csvValue: (row) => formatCurrencyCsv(row.releasedAmount),
       pdfValue: (row) => formatCurrencyPdf(row.releasedAmount),
       xlsxValue: (row) => row.releasedAmount,
-      pdfWidth: 115,
+      pdfWidth: 80,
       pdfAlign: "right",
       xlsxAlign: "right",
       xlsxType: "currency",
       xlsxWidth: 22,
+    },
+  ],
+};
+
+export type BudgetMonitoringExportRow = {
+  organizationName: string;
+  recordCode: string;
+  activity: string;
+  approvedAmount: number;
+  releasedAmount: number;
+  remainingAmount: number;
+  utilizationRate: number;
+  budgetStatus: string;
+  liquidationStatus: string;
+  releaseDate: string;
+  goSignalAt: string;
+  deadlineAt: string;
+  hardCopySubmittedAt: string;
+  completedAt: string;
+  remarks: string;
+  riskLabel: string;
+};
+
+export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringExportRow> = {
+  title: "Budget Monitoring Report",
+  filenamePrefix: "budget-monitoring",
+  orientation: "portrait",
+  headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
+  footerText: "Pasig City Youth Development Office - Budget Monitoring Report",
+  xlsxSheetName: "Budget Monitoring",
+  pdfUseUnicodeFont: true,
+  columns: [
+    {
+      label: "No.",
+      value: (_row, index) => index + 1,
+      pdfWidth: 24,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxType: "integer",
+      xlsxWidth: 6,
+    },
+    {
+      label: "Organization",
+      value: (row) => row.organizationName,
+      pdfWidth: 92,
+      xlsxWidth: 32,
+      xlsxMinWidth: 24,
+      xlsxMaxWidth: 40,
+      xlsxWrap: true,
+    },
+    {
+      label: "Record Code",
+      value: (row) => row.recordCode,
+      xlsxWidth: 18,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Activity",
+      value: (row) => row.activity,
+      pdfWidth: 105,
+      xlsxWidth: 35,
+      xlsxMinWidth: 26,
+      xlsxMaxWidth: 45,
+      xlsxWrap: true,
+    },
+    {
+      label: "Approved Amount",
+      value: (row) => row.approvedAmount,
+      csvValue: (row) => formatCurrencyCsv(row.approvedAmount),
+      pdfValue: (row) => formatCurrencyPdf(row.approvedAmount),
+      xlsxValue: (row) => row.approvedAmount,
+      pdfWidth: 58,
+      pdfAlign: "right",
+      xlsxAlign: "right",
+      xlsxType: "currency",
+      xlsxWidth: 18,
+    },
+    {
+      label: "Released Amount",
+      value: (row) => row.releasedAmount,
+      csvValue: (row) => formatCurrencyCsv(row.releasedAmount),
+      pdfValue: (row) => formatCurrencyPdf(row.releasedAmount),
+      xlsxValue: (row) => row.releasedAmount,
+      pdfWidth: 58,
+      pdfAlign: "right",
+      xlsxAlign: "right",
+      xlsxType: "currency",
+      xlsxWidth: 18,
+    },
+    {
+      label: "Remaining Amount",
+      value: (row) => row.remainingAmount,
+      csvValue: (row) => formatCurrencyCsv(row.remainingAmount),
+      pdfValue: (row) => formatCurrencyPdf(row.remainingAmount),
+      xlsxValue: (row) => row.remainingAmount,
+      pdfWidth: 58,
+      pdfAlign: "right",
+      xlsxAlign: "right",
+      xlsxType: "currency",
+      xlsxWidth: 18,
+    },
+    {
+      label: "Utilization",
+      value: (row) => `${row.utilizationRate}%`,
+      csvValue: (row) => `${row.utilizationRate}%`,
+      pdfValue: (row) => `${row.utilizationRate}%`,
+      xlsxValue: (row) => row.utilizationRate / 100,
+      xlsxType: "decimal",
+      pdfWidth: 42,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 14,
+    },
+    {
+      label: "Budget Status",
+      value: (row) => row.budgetStatus,
+      xlsxWidth: 18,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Liquidation Status",
+      value: (row) => row.liquidationStatus,
+      xlsxWidth: 22,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Release Date",
+      value: (row) => formatDateDisplay(row.releaseDate),
+      csvValue: (row) => formatDateDisplay(row.releaseDate),
+      xlsxValue: (row) => row.releaseDate,
+      xlsxType: "date",
+      xlsxWidth: 16,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Go Signal Date",
+      value: (row) => formatDateDisplay(row.goSignalAt),
+      csvValue: (row) => formatDateDisplay(row.goSignalAt),
+      xlsxValue: (row) => row.goSignalAt,
+      xlsxType: "date",
+      xlsxWidth: 16,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Deadline",
+      value: (row) => formatDateDisplay(row.deadlineAt),
+      csvValue: (row) => formatDateDisplay(row.deadlineAt),
+      pdfValue: (row) => formatDateDisplay(row.deadlineAt),
+      xlsxValue: (row) => row.deadlineAt,
+      xlsxType: "date",
+      pdfWidth: 50,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+    },
+    {
+      label: "Hard-Copy Date",
+      value: (row) => formatDateDisplay(row.hardCopySubmittedAt),
+      csvValue: (row) => formatDateDisplay(row.hardCopySubmittedAt),
+      xlsxValue: (row) => row.hardCopySubmittedAt,
+      xlsxType: "date",
+      xlsxWidth: 16,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Completion Date",
+      value: (row) => formatDateDisplay(row.completedAt),
+      csvValue: (row) => formatDateDisplay(row.completedAt),
+      xlsxValue: (row) => row.completedAt,
+      xlsxType: "date",
+      xlsxWidth: 16,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Remarks",
+      value: (row) => row.remarks,
+      xlsxWidth: 26,
+      xlsxWrap: true,
+      excludeFromPdf: true,
+    },
+    {
+      label: "Risk Level",
+      value: (row) => row.riskLabel,
+      pdfWidth: 48,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
     },
   ],
 };
@@ -312,4 +497,80 @@ export const buildAllocationXlsxTotalsRow = (rows: AllocationByBarangayExportRow
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
   return ["", "TOTAL", "", "", totalApproved, totalReleased];
+};
+
+export const buildBudgetMonitoringTotalsRow = (rows: BudgetMonitoringExportRow[]) => {
+  const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
+  const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
+  const totalRemaining = rows.reduce((sum, row) => sum + row.remainingAmount, 0);
+  const avgUtilization = rows.length
+    ? Math.round(rows.reduce((sum, row) => sum + row.utilizationRate, 0) / rows.length)
+    : 0;
+  return [
+    "",
+    "TOTAL",
+    "",
+    "",
+    formatCurrencyCsv(totalApproved),
+    formatCurrencyCsv(totalReleased),
+    formatCurrencyCsv(totalRemaining),
+    `${avgUtilization}%`,
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ];
+};
+
+export const buildBudgetMonitoringPdfTotalsRow = (rows: BudgetMonitoringExportRow[]) => {
+  const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
+  const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
+  const totalRemaining = rows.reduce((sum, row) => sum + row.remainingAmount, 0);
+  const avgUtilization = rows.length
+    ? Math.round(rows.reduce((sum, row) => sum + row.utilizationRate, 0) / rows.length)
+    : 0;
+  return [
+    "",
+    "TOTAL",
+    "",
+    formatCurrencyPdf(totalApproved),
+    formatCurrencyPdf(totalReleased),
+    formatCurrencyPdf(totalRemaining),
+    `${avgUtilization}%`,
+    "",
+    "",
+  ];
+};
+
+export const buildBudgetMonitoringXlsxTotalsRow = (rows: BudgetMonitoringExportRow[]) => {
+  const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
+  const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
+  const totalRemaining = rows.reduce((sum, row) => sum + row.remainingAmount, 0);
+  const avgUtilization = rows.length
+    ? Math.round(rows.reduce((sum, row) => sum + row.utilizationRate, 0) / rows.length)
+    : 0;
+  return [
+    "",
+    "TOTAL",
+    "",
+    "",
+    totalApproved,
+    totalReleased,
+    totalRemaining,
+    avgUtilization / 100,
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ];
 };

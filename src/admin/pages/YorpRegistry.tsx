@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { addDays, addYears } from "date-fns";
-import { AlertTriangle, Award, Clock, Heart, Loader2, Trash2, User } from "lucide-react";
+import { AlertTriangle, Award, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
 import "./yorp-registry.css";
 import { Button } from "@/components/ui/button";
 import {
@@ -213,7 +213,21 @@ export function YorpRegistryPage() {
 
   return (
     <div className="yorp-registry-page admin-yorp-registry-page space-y-4 sm:space-y-6">
-      <AdminPageHeader title="YORP Registry" description="View accredited youth organizations." />
+      <AdminPageHeader
+        title="YORP Registry"
+        description="View accredited youth organizations."
+        action={
+          <Button
+            variant="outline"
+            onClick={() => setExportDialogOpen(true)}
+            disabled={filtered.length === 0}
+            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+          >
+            <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+            Export
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <StatsCard

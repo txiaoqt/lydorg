@@ -99,14 +99,19 @@ import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import {
   allocationByBarangayExportConfig,
+  budgetMonitoringExportConfig,
   budgetRequestExportConfig,
   buildAllocationPdfTotalsRow,
   buildAllocationTotalsRow,
   buildAllocationXlsxTotalsRow,
+  buildBudgetMonitoringPdfTotalsRow,
+  buildBudgetMonitoringTotalsRow,
+  buildBudgetMonitoringXlsxTotalsRow,
   buildBudgetRequestPdfTotalsRow,
   buildBudgetRequestTotalsRow,
   buildBudgetRequestXlsxTotalsRow,
   type AllocationByBarangayExportRow,
+  type BudgetMonitoringExportRow,
   type BudgetRequestExportRow,
 } from "@/lib/report-export-configs";
 import { exportReport, formatCurrencyPdf, type ExportFormat } from "@/lib/report-export";
@@ -638,7 +643,7 @@ type BarangayAllocationOrganizationDetail = {
   }>;
 };
 
-type ActiveReportExport = "budget-requests" | "allocation-by-barangay" | null;
+type ActiveReportExport = "budget-requests" | "budget-monitoring" | "allocation-by-barangay" | null;
 type RecentActivityEntry = {
   key: string;
   title: string;
@@ -1882,14 +1887,43 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [organizationProfileById, state.budgetRequests]);
   const budgetRequestExportRows = useMemo<BudgetRequestExportRow[]>(
     () =>
-      budgetMonitoringEntries.map((entry) => ({
-        organizationName: entry.organizationName,
-        activity: entry.title,
-        approvedAmount: entry.approvedAmount,
-        releasedAmount: entry.releasedAmount,
-        releasedDate: entry.releaseDate,
-      })),
-    [budgetMonitoringEntries],
+      filteredAdminBudgetRequests.map((request) => {
+        const organization = state.organizationProfiles.find((org) => org.id === request.organizationId);
+        return {
+          organizationName: organization?.organizationName ?? "Unknown organization",
+          activity: request.activityTitle,
+          approvedAmount: Number(request.approvedAmount || request.requestedAmount || 0),
+          releasedAmount: Number(request.releasedAmount || 0),
+          releasedDate: request.releaseDate || "",
+        };
+      }),
+    [filteredAdminBudgetRequests, state.organizationProfiles],
+  );
+  const budgetMonitoringExportRows = useMemo<BudgetMonitoringExportRow[]>(
+    () =>
+      filteredBudgetMonitoringEntries.map((entry) => {
+        const linkedRequest = state.budgetRequests.find((req) => req.id === entry.budgetRequestId);
+        const recordCode = buildPublicRecordCode("BR", linkedRequest, state.budgetRequests);
+        return {
+          organizationName: entry.organizationName,
+          recordCode,
+          activity: entry.title,
+          approvedAmount: entry.approvedAmount,
+          releasedAmount: entry.releasedAmount,
+          remainingAmount: entry.remainingAmount,
+          utilizationRate: entry.utilizationRate,
+          budgetStatus: entry.budgetStatus,
+          liquidationStatus: entry.liquidationStatus,
+          releaseDate: entry.releaseDate,
+          goSignalAt: entry.goSignalAt,
+          deadlineAt: entry.deadlineAt,
+          hardCopySubmittedAt: entry.hardCopySubmittedAt,
+          completedAt: entry.completedAt,
+          remarks: entry.remarks,
+          riskLabel: entry.riskLabel,
+        };
+      }),
+    [filteredBudgetMonitoringEntries, state.budgetRequests],
   );
   const allocationByBarangayExportRows = useMemo<AllocationByBarangayExportRow[]>(
     () =>
@@ -1906,8 +1940,25 @@ export default function AdminPortal({ section }: { section: string }) {
   );
   const budgetRequestExportFilters = useMemo(() => {
     const summary: string[] = [];
+    if (budgetRequestsSearch.trim()) summary.push(`Search: "${budgetRequestsSearch.trim()}"`);
+    if (budgetRequestsStatusFilter !== "all") summary.push(`Status: ${budgetRequestsStatusFilter}`);
+    if (budgetRequestsDistrictFilter !== "all") summary.push(`District: ${budgetRequestsDistrictFilter}`);
+    if (budgetRequestsBarangayFilter !== "all") summary.push(`Barangay: ${budgetRequestsBarangayFilter}`);
+    if (budgetRequestsClassificationFilter !== "all") summary.push(`Classification: ${budgetRequestsClassificationFilter}`);
     return summary;
-  }, []);
+  }, [
+    budgetRequestsBarangayFilter,
+    budgetRequestsClassificationFilter,
+    budgetRequestsDistrictFilter,
+    budgetRequestsSearch,
+    budgetRequestsStatusFilter,
+  ]);
+  const budgetMonitoringExportFilters = useMemo(() => {
+    const summary: string[] = [];
+    if (budgetMonitoringSearch.trim()) summary.push(`Search: "${budgetMonitoringSearch.trim()}"`);
+    if (budgetMonitoringRiskFilter !== "all") summary.push(`Risk Level: ${budgetMonitoringRiskFilter}`);
+    return summary;
+  }, [budgetMonitoringRiskFilter, budgetMonitoringSearch]);
   const allocationExportFilters = useMemo(() => {
     const summary: string[] = [];
     if (budgetAllocationDistrictFilter !== "all") summary.push(`District: ${budgetAllocationDistrictFilter}`);
@@ -1918,17 +1969,19 @@ export default function AdminPortal({ section }: { section: string }) {
     try {
       if (activeReportExport === "budget-requests") {
         if (!budgetRequestExportRows.length) {
-          toast({ title: "No Data", description: "No monitored budgets are available to export." });
+          toast({ title: "No Data", description: "No budget requests match the current filters." });
           return;
         }
+        const totalApproved = budgetRequestExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
+        const totalReleased = budgetRequestExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
 
         await exportReport(format, {
           config: budgetRequestExportConfig,
           rows: budgetRequestExportRows,
           metadataLines: [
-            `Total Records: ${budgetRequestExportRows.length}`,
-            `Total Approved Amount: ${formatCurrencyPdf(budgetMonitoringAnalysis.totalApproved)}`,
-            `Total Released Amount: ${formatCurrencyPdf(budgetMonitoringAnalysis.totalReleased)}`,
+            `Total Requests: ${budgetRequestExportRows.length}`,
+            `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
+            `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
           ],
           filterSummaryLines: budgetRequestExportFilters,
           totalsRow:
@@ -1940,6 +1993,37 @@ export default function AdminPortal({ section }: { section: string }) {
           xlsxTotalsRow: format === "xlsx" ? buildBudgetRequestXlsxTotalsRow(budgetRequestExportRows) : undefined,
         });
         toast({ title: "Export Ready", description: `The budget request ${format.toUpperCase()} export has been downloaded.` });
+        return;
+      }
+
+      if (activeReportExport === "budget-monitoring") {
+        if (!budgetMonitoringExportRows.length) {
+          toast({ title: "No Data", description: "No budget monitoring entries match the current filters." });
+          return;
+        }
+        const totalApproved = budgetMonitoringExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
+        const totalReleased = budgetMonitoringExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
+        const totalRemaining = budgetMonitoringExportRows.reduce((sum, row) => sum + row.remainingAmount, 0);
+
+        await exportReport(format, {
+          config: budgetMonitoringExportConfig,
+          rows: budgetMonitoringExportRows,
+          metadataLines: [
+            `Total Monitored Records: ${budgetMonitoringExportRows.length}`,
+            `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
+            `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
+            `Total Remaining Amount: ${formatCurrencyPdf(totalRemaining)}`,
+          ],
+          filterSummaryLines: budgetMonitoringExportFilters,
+          totalsRow:
+            format === "pdf"
+              ? buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows)
+              : format === "csv"
+              ? undefined
+              : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
+          xlsxTotalsRow: format === "xlsx" ? buildBudgetMonitoringXlsxTotalsRow(budgetMonitoringExportRows) : undefined,
+        });
+        toast({ title: "Export Ready", description: `The Budget Monitoring ${format.toUpperCase()} export has been downloaded.` });
         return;
       }
 
@@ -8141,7 +8225,24 @@ export default function AdminPortal({ section }: { section: string }) {
 
         return (
           <div className="space-y-4">
-            <AdminPageHeader title="Budget Requests" description="Review funding requests for YPOP-approved projects." />
+            <AdminPageHeader
+              title="Budget Requests"
+              description="Review funding requests for YPOP-approved projects."
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setActiveReportExport("budget-requests");
+                    setReportExportDialogOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100"
+                >
+                  <Download className="h-4 w-4 text-slate-500" />
+                  <span>Export</span>
+                </Button>
+              }
+            />
 
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <StatsCard
@@ -9346,8 +9447,18 @@ export default function AdminPortal({ section }: { section: string }) {
                 <div className="flex items-center gap-2.5">
                   <button
                     type="button"
-                    disabled={!budgetRequestExportRows.length}
-                    onClick={() => setActiveReportExport("budget-requests")}
+                    disabled={
+                      budgetMonitoringTab === "barangay-allocation"
+                        ? !allocationByBarangayExportRows.length
+                        : !budgetMonitoringExportRows.length
+                    }
+                    onClick={() => {
+                      if (budgetMonitoringTab === "barangay-allocation") {
+                        setActiveReportExport("allocation-by-barangay");
+                      } else {
+                        setActiveReportExport("budget-monitoring");
+                      }
+                    }}
                     className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                   >
                     <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
@@ -12359,11 +12470,19 @@ export default function AdminPortal({ section }: { section: string }) {
         onOpenChange={(open) => {
           if (!open) setActiveReportExport(null);
         }}
-        reportTitle={activeReportExport === "allocation-by-barangay" ? "Allocation by Barangay" : "Budget Request Report"}
+        reportTitle={
+          activeReportExport === "allocation-by-barangay"
+            ? "Allocation by Barangay"
+            : activeReportExport === "budget-monitoring"
+            ? "Budget Monitoring Report"
+            : "Budget Request Report"
+        }
         description={
           activeReportExport === "allocation-by-barangay"
             ? "Export all barangay allocation rows matching the current district and barangay filters."
-            : "Export all budget request rows in the current monitored report."
+            : activeReportExport === "budget-monitoring"
+            ? "Export monitored budget activities, utilization rates, and liquidation statuses matching the current filters."
+            : "Export all budget request rows matching the current filters."
         }
         onExport={handleReportExport}
       />

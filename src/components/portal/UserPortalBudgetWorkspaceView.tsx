@@ -575,7 +575,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
         /* ------------------------------------------------------------- */
         <div className="space-y-4 sm:space-y-6">
           {/* 1. Hero Header Banner (Refined Institutional Framing) */}
-          <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border/70 shadow-xs space-y-2">
+          <div className="bg-card p-4 sm:p-6 rounded-2xl border border-border/70 shadow-xs space-y-1.5 sm:space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -618,8 +618,92 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             />
           )}
 
-          {/* 2. Unified Operational Overview (Progress + High-Density Context Metrics) */}
-          <Card className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs">
+          {/* 2A. Mobile Operational Overview (block lg:hidden) - Scannable Hierarchy */}
+          <Card className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs block lg:hidden">
+            {/* Primary Level: "How am I doing?" Headline, Percentage, Progress & Status Breakdown */}
+            <div className="p-4 sm:p-5 space-y-3 bg-muted/20 border-b border-border/60">
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="space-y-1 min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground leading-snug tracking-tight">
+                    {approvedCount} of {totalRequests} Budget Requests Approved
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Overview of all financial grant proposals submitted for organization activities.
+                  </p>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary font-mono tabular-nums shrink-0">
+                  {completionPercent}%
+                </span>
+              </div>
+
+              {/* Sleek Integrated Progress Indicator */}
+              <div className="h-1.5 w-full rounded-full bg-muted/80 overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  style={{ width: `${completionPercent}%` }}
+                />
+              </div>
+
+              {/* Secondary Level: Concise Semantic Status Distribution */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs pt-0.5">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] sm:text-xs">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                  <span>{approvedCount} Approved</span>
+                </span>
+                <span className="text-muted-foreground/30">•</span>
+                <span className={cn("flex items-center gap-1.5 font-semibold text-[11px] sm:text-xs", underReviewCount === 0 ? "text-muted-foreground/50" : "text-primary")}>
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  <span>{underReviewCount} Review</span>
+                </span>
+                <span className="text-muted-foreground/30">•</span>
+                <span className={cn("flex items-center gap-1.5 font-semibold text-[11px] sm:text-xs", needsRevisionCount === 0 ? "text-muted-foreground/50" : "text-amber-600 dark:text-amber-400")}>
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  <span>{needsRevisionCount} Revision</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Tertiary Level: Operational Counts Strip (3 balanced columns) */}
+            <div className="grid grid-cols-3 divide-x divide-border/60 bg-card border-b border-border/60">
+              <div className="p-3 text-center sm:text-left min-w-0">
+                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">Total Requests</span>
+                <div className="text-base sm:text-lg font-black font-mono text-foreground tabular-nums tracking-tight mt-0.5">{totalRequests}</div>
+                <p className="text-[10px] text-muted-foreground truncate hidden xs:block">Total proposals filed</p>
+              </div>
+
+              <div className="p-3 text-center sm:text-left min-w-0">
+                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">Pending Review</span>
+                <div className="text-base sm:text-lg font-black font-mono text-primary tabular-nums tracking-tight mt-0.5">{underReviewCount}</div>
+                <p className="text-[10px] text-muted-foreground truncate hidden xs:block">Awaiting admin validation</p>
+              </div>
+
+              <div className="p-3 text-center sm:text-left min-w-0">
+                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">Approved / Released</span>
+                <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight mt-0.5">{approvedCount}</div>
+                <p className="text-[10px] text-muted-foreground truncate hidden xs:block">Approved grant requests</p>
+              </div>
+            </div>
+
+            {/* Tertiary Level Highlight: Total Released Funds (Dedicated Full-Width Metric to avoid clipping) */}
+            <div className="p-3.5 sm:p-4 bg-muted/10 flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Released Funds</span>
+                </div>
+                <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight break-all">
+                  {formatCurrency(totalReleasedAmount)}
+                </div>
+                <p className="text-[11px] text-muted-foreground">Disbursed to organization</p>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <DollarSign className="h-4 w-4" />
+              </div>
+            </div>
+          </Card>
+
+          {/* 2B. Desktop Operational Overview (hidden lg:block - EXACT APPROVED DESKTOP SOURCE OF TRUTH) */}
+          <Card className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs hidden lg:block">
             {/* Top: Progress & Workflow Status Distribution */}
             <div className="p-4 sm:p-5 border-b border-border/60 bg-muted/20">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -713,12 +797,12 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
           {/* 3. Coherent Segmented Filter & Search Toolbar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-card border border-border/70 p-2 sm:p-2.5 rounded-2xl shadow-xs">
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl overflow-x-auto [scrollbar-width:none] touch-pan-x">
+            <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl overflow-x-auto [scrollbar-width:none] touch-pan-x overscroll-x-contain">
               <button
                 type="button"
                 onClick={() => setFilterTab("all")}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "all"
                     ? "bg-card text-foreground shadow-xs font-bold"
                     : "text-muted-foreground hover:text-foreground hover:bg-card/50"
@@ -730,7 +814,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 type="button"
                 onClick={() => setFilterTab("approved")}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "approved"
                     ? "bg-card text-foreground shadow-xs font-bold"
                     : approvedCount === 0
@@ -744,7 +828,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 type="button"
                 onClick={() => setFilterTab("review")}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "review"
                     ? "bg-card text-foreground shadow-xs font-bold"
                     : underReviewCount === 0
@@ -758,7 +842,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 type="button"
                 onClick={() => setFilterTab("revision")}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "revision"
                     ? "bg-card text-foreground shadow-xs font-bold"
                     : needsRevisionCount === 0
@@ -773,19 +857,19 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             {/* Search Input & Sort Dropdown */}
             <div className="flex items-center gap-2 w-full sm:w-auto lg:flex-1 lg:min-w-0 lg:justify-end">
               <div className="relative flex-1 sm:w-72 lg:w-full min-w-0">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <Search className="absolute left-2.5 top-2.5 sm:top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <Input
                   type="text"
                   placeholder="Search activity, category, venue..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full focus-visible:ring-1 focus-visible:ring-primary"
+                  className="h-9 sm:h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full focus-visible:ring-1 focus-visible:ring-primary"
                 />
               </div>
 
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border/80 text-xs font-medium gap-1.5 shrink-0 hover:bg-muted cursor-pointer">
+                  <Button type="button" variant="outline" size="sm" className="h-9 sm:h-8 rounded-xl border-border/80 text-xs font-medium gap-1.5 shrink-0 hover:bg-muted active:scale-[0.98] cursor-pointer">
                     <Filter className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="hidden xs:inline text-muted-foreground">Sort:</span>
                     <span className="font-semibold capitalize">{sortOrder}</span>
@@ -800,8 +884,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             </div>
           </div>
 
-          {/* 4. Mobile Cards List (block lg:hidden) */}
-          <div className="mobile-cards flex flex-col gap-3 block lg:hidden">
+          {/* 4. Mobile Cards List (block lg:hidden) - High-Scanability Card Architecture */}
+          <div className="mobile-cards space-y-3 block lg:hidden">
             {filteredRequests.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground text-xs space-y-1.5 rounded-2xl border border-border/70 bg-card">
                 <div className="h-10 w-10 rounded-xl bg-muted/60 text-muted-foreground mx-auto flex items-center justify-center">
@@ -811,50 +895,77 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 <p className="text-xs">Try adjusting your search or status filter.</p>
               </div>
             ) : (
-              filteredRequests.map((req) => (
-                <Card
-                  key={req.id}
-                  onClick={() => openBudgetDetail(req.id)}
-                  className="rounded-2xl border border-border/70 bg-card p-4 space-y-3 shadow-xs flex flex-col hover:border-primary/40 transition-all cursor-pointer"
-                >
-                  {/* Top: Title & Status directly below */}
-                  <div className="space-y-1.5 min-w-0">
-                    <p className="font-bold text-sm text-foreground leading-snug break-words" title={req.activityTitle}>
-                      {req.activityTitle || "Proposal Activity"}
-                    </p>
-                    <div className="pt-0.5">
-                      <PortalStatusBadge status={req.status} />
+              filteredRequests.map((req) => {
+                const recordCode = buildPublicRecordCode("BR", req, budgetRequests);
+
+                return (
+                  <Card
+                    key={req.id}
+                    onClick={() => openBudgetDetail(req.id)}
+                    className="rounded-2xl border border-border/70 bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 active:scale-[0.995] transition-all duration-200 cursor-pointer"
+                  >
+                    {/* 1. Project Title & Status Badge directly below */}
+                    <div className="space-y-1.5 min-w-0">
+                      <h3
+                        className="font-bold text-sm sm:text-base text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2"
+                        title={req.activityTitle}
+                      >
+                        {req.activityTitle || "Proposal Activity"}
+                      </h3>
+                      <div className="pt-0.5">
+                        <PortalStatusBadge status={req.status} />
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Summary: Amount & Target Date in 2 columns */}
-                  <div className="grid grid-cols-2 gap-3 text-xs py-2 px-3 rounded-xl bg-muted/30 border border-border/50">
-                    <div className="min-w-0">
-                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Amount</span>
-                      <span className="font-bold font-mono text-foreground text-xs sm:text-sm truncate block">
-                        {formatCurrency(req.requestedAmount || 0)}
-                      </span>
+
+                    {/* 2. Amount & Target Date (Core Metadata Grid) */}
+                    <div className="grid grid-cols-2 gap-3 text-xs py-2.5 px-3 rounded-xl bg-muted/30 border border-border/40">
+                      <div className="min-w-0">
+                        <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
+                          Amount
+                        </span>
+                        <span className="font-bold font-mono text-foreground text-xs sm:text-sm truncate block tabular-nums">
+                          {formatCurrency(req.requestedAmount || 0)}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
+                          Target Date
+                        </span>
+                        <span className="font-semibold text-foreground text-xs sm:text-sm truncate block">
+                          {req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <span className="block text-[10px] text-muted-foreground uppercase font-semibold">Target Date</span>
-                      <span className="font-semibold text-foreground text-xs sm:text-sm truncate block">
-                        {req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Primary Action Button */}
-                  <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
-                    <Button 
-                      type="button" 
-                      onClick={() => openBudgetDetail(req.id)}
-                      className="w-full h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-xs cursor-pointer justify-center"
+
+                    {/* 3. Divided Bottom Row: Identification Badge on left, Intentional Open Button on right */}
+                    <div
+                      className="pt-2 border-t border-border/50 flex items-center justify-between gap-3"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      Open →
-                    </Button>
-                  </div>
-                </Card>
-              ))
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium min-w-0">
+                        <span className="font-mono text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
+                          {recordCode}
+                        </span>
+                        {req.purposeCategory && (
+                          <span className="truncate text-muted-foreground/70 hidden xs:inline max-w-[130px] sm:max-w-[180px]">
+                            {req.purposeCategory}
+                          </span>
+                        )}
+                      </div>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => openBudgetDetail(req.id)}
+                        className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all shadow-2xs gap-1.5 cursor-pointer shrink-0 justify-center"
+                      >
+                        <span>Open</span>
+                        <span aria-hidden="true">→</span>
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })
             )}
           </div>
 
@@ -1167,7 +1278,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
         <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => { if (!open) closeBudgetDetail(); }}>
           <DialogContent
             hideCloseButton={true}
-            className="w-[94vw] sm:w-[92vw] max-w-3xl h-[88vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+            className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
           >
             {selectedRequest && (() => {
               const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
@@ -1182,13 +1293,14 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   </DialogDescription>
 
                   {/* PINNED HEADER */}
-                  <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border/70 bg-card flex flex-col gap-2 shrink-0">
+                  <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
+                    {/* Row 1: Primary Identifier + Supporting Amount Badge + Close Control */}
                     <div className="flex items-center justify-between gap-2.5 w-full">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md shrink-0">
                           {recordCode}
                         </span>
-                        <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20 tabular-nums">
+                        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 tabular-nums truncate">
                           {formatCurrency(selectedRequest.requestedAmount || 0)}
                         </span>
                       </div>
@@ -1197,40 +1309,45 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         type="button"
                         aria-label="Close modal"
                         onClick={() => closeBudgetDetail()}
-                        className="h-8 w-8 rounded-full border border-border/60 hover:bg-accent hover:text-foreground text-muted-foreground flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                        className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
 
-                    <div className="space-y-1">
+                    {/* Row 2: Record Title */}
+                    <div className="space-y-1 min-w-0">
                       <DialogTitle className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2">
                         {selectedRequest.activityTitle || "Budget Request"}
                       </DialogTitle>
-                      <div className="flex items-center gap-2 pt-0.5">
+                      {/* Row 3: Status Badge + Supporting Metadata */}
+                      <div className="flex items-center flex-wrap gap-2 pt-0.5">
                         <PortalStatusBadge status={selectedRequest.status} />
+                        <span className="text-muted-foreground/40 hidden xs:inline">•</span>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate max-w-[220px] sm:max-w-xs">
+                          {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
+                        </p>
                       </div>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium pt-0.5">
-                        {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
-                      </p>
                     </div>
                   </div>
 
                   {/* SCROLLABLE BODY */}
-                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                  <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
                     {/* Key Summary: Financial Overview */}
-                    <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
-                      <p className="text-xs font-bold text-foreground">Financial Overview</p>
-                      <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
+                    <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-foreground tracking-tight">Financial Overview</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/50">
                         <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Requested Amount</span>
-                          <span className="font-bold text-foreground text-sm tabular-nums">
+                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Requested Amount</span>
+                          <span className="font-bold font-mono text-foreground text-sm sm:text-base tabular-nums leading-tight mt-0.5 block">
                             {formatCurrency(selectedRequest.requestedAmount || 0)}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold tracking-wider">Approved / Released</span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm tabular-nums">
+                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider">Approved / Released</span>
+                          <span className="font-extrabold font-mono text-emerald-600 dark:text-emerald-400 text-sm sm:text-base tabular-nums leading-tight mt-0.5 block">
                             {selectedRequest.approvedAmount
                               ? formatCurrency(selectedRequest.approvedAmount)
                               : selectedRequest.releasedAmount
@@ -1243,6 +1360,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                     {/* Document Section (Primary Content) */}
                     <PortalDrawerDocumentSection
+                      isMobile={true}
                       file={primaryFile}
                       previewUrl={activePreviewUrl}
                       isDownloading={downloadingFileId === primaryFile?.id}
@@ -1254,18 +1372,18 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     />
 
                     {/* Secondary Details: Schedule & Location */}
-                    <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-2">
+                    <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-2">
                       <p className="text-xs font-bold text-foreground">Schedule & Location</p>
                       <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
                         <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Target Date</span>
-                          <span className="font-semibold text-foreground">
+                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Target Date</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
                             {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Venue</span>
-                          <span className="font-semibold text-foreground truncate block" title={selectedRequest.venue}>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Venue</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedRequest.venue}>
                             {selectedRequest.venue || "Pasig City"}
                           </span>
                         </div>
@@ -1274,11 +1392,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                     {/* Secondary Details: Description & Remarks if any */}
                     {(selectedRequest.activityDescription || selectedRequest.remarks || selectedRequest.description) && (
-                      <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-1.5 text-xs">
-                        <p className="font-bold text-foreground">Activity Details & Remarks</p>
+                      <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-1.5 text-xs">
+                        <p className="text-xs font-bold text-foreground">Activity Details & Remarks</p>
                         <div className="space-y-1 pt-1 border-t border-border/40 text-muted-foreground">
                           {selectedRequest.activityDescription && (
-                            <p className="leading-relaxed">{selectedRequest.activityDescription}</p>
+                            <p className="leading-relaxed text-xs">{selectedRequest.activityDescription}</p>
                           )}
                           {selectedRequest.remarks && (
                             <p className="leading-relaxed italic text-[11px] text-muted-foreground/90">
@@ -1291,8 +1409,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   </div>
 
                   {/* PINNED FOOTER */}
-                  <div className="h-14 py-2.5 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                    <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                  <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+                    <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
                       Budget Request • LYDO Pasig City
                     </p>
                     <Button
@@ -1300,7 +1418,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       variant="outline"
                       size="sm"
                       onClick={() => closeBudgetDetail()}
-                      className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                      className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       Close
                     </Button>

@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   allocationByBarangayExportConfig,
   buildAllocationTotalsRow,
+  buildBudgetMonitoringTotalsRow,
   buildBudgetRequestTotalsRow,
+  budgetMonitoringExportConfig,
   budgetRequestExportConfig,
+  yorpRegistryExportConfig,
 } from "@/lib/report-export-configs";
 import {
   buildCsvContent,
@@ -161,5 +164,95 @@ describe("allocation by barangay export config", () => {
         },
       ]),
     ).toEqual(["", "TOTAL", "", "", "15000.00", "15300.00"]);
+  });
+});
+
+describe("budget monitoring export config", () => {
+  it("uses the required monitoring CSV columns and formats numbers correctly", () => {
+    const csv = buildCsvContent({
+      config: budgetMonitoringExportConfig,
+      rows: [
+        {
+          organizationName: "Youth Leaders Org",
+          recordCode: "BR-2026-001",
+          activity: "Summer Leadership Camp",
+          approvedAmount: 50000,
+          releasedAmount: 40000,
+          remainingAmount: 10000,
+          utilizationRate: 80,
+          budgetStatus: "Partially Released",
+          liquidationStatus: "Pending Liquidation",
+          deadlineAt: "2026-07-30T00:00:00.000Z",
+          remarks: "First tranche released",
+          riskLabel: "Low Risk",
+        },
+      ],
+    });
+
+    expect(csv).toContain(
+      '"No.","Organization","Record Code","Activity","Approved Amount","Released Amount","Remaining Amount","Utilization","Budget Status","Liquidation Status","Release Date","Go Signal Date","Deadline","Hard-Copy Date","Completion Date","Remarks","Risk Level"',
+    );
+    expect(csv).toContain(
+      '"1","Youth Leaders Org","BR-2026-001","Summer Leadership Camp","50000.00","40000.00","10000.00","80%","Partially Released","Pending Liquidation","","","Jul 30, 2026","","","First tranche released","Low Risk"',
+    );
+  });
+
+  it("builds the expected totals row shape", () => {
+    expect(
+      buildBudgetMonitoringTotalsRow([
+        {
+          organizationName: "Youth Leaders Org",
+          recordCode: "BR-2026-001",
+          activity: "Summer Leadership Camp",
+          approvedAmount: 50000,
+          releasedAmount: 40000,
+          remainingAmount: 10000,
+          utilizationRate: 80,
+          budgetStatus: "Partially Released",
+          liquidationStatus: "Pending Liquidation",
+          deadlineAt: "2026-07-30T00:00:00.000Z",
+          remarks: "First tranche released",
+          riskLabel: "Low Risk",
+        },
+      ]),
+    ).toEqual([
+      "",
+      "TOTAL",
+      "",
+      "",
+      "50000.00",
+      "40000.00",
+      "10000.00",
+      "80%",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+  });
+});
+
+describe("A4 Portrait orientation and width geometry across all configs", () => {
+  it("configures all report configs for portrait with width <= 535.28 pt", () => {
+    const configs = [
+      yorpRegistryExportConfig,
+      budgetRequestExportConfig,
+      budgetMonitoringExportConfig,
+      allocationByBarangayExportConfig,
+    ];
+
+    for (const config of configs) {
+      expect(config.orientation).toBe("portrait");
+      const totalWidth = config.columns.reduce(
+        (sum, column) => sum + (column.pdfWidth ?? 0),
+        0,
+      );
+      expect(totalWidth).toBeLessThanOrEqual(535.28);
+    }
   });
 });

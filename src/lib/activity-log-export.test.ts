@@ -20,13 +20,14 @@ const activity: ActivityLog = {
 };
 
 describe("activity log export normalization", () => {
-  it("keeps the PDF table within the printable A4 landscape width", () => {
+  it("keeps the PDF table within the printable A4 portrait width", () => {
+    expect(activityLogExportConfig.orientation).toBe("portrait");
     const totalWidth = activityLogExportConfig.columns.reduce(
       (sum, column) => sum + (column.pdfWidth ?? 0),
       0,
     );
 
-    expect(totalWidth).toBe(769);
+    expect(totalWidth).toBe(535);
   });
 
   it("uses shared friendly labels and preserves traceability fields", () => {

@@ -247,8 +247,8 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
       ? "Waiting for Admin Review"
       : "Attached Document • Y-TRACE Compliance");
 
-  // Header Content
-  const renderHeader = (closeAction: React.ReactNode) => (
+  // DESKTOP Header Content (Preserved 100% untouched for desktop Sheet)
+  const renderDesktopHeader = (closeAction: React.ReactNode) => (
     <div className="p-4 sm:p-5 border-b border-border/70 bg-card shrink-0 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
@@ -519,7 +519,294 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
     </div>
   );
 
-  const renderDocumentPreview = () => (
+  // MOBILE / TABLET Header Content (< 1024px)
+  const renderMobileHeader = (closeAction: React.ReactNode) => (
+    <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2.5">
+      {/* Row 1: Document Icon + Title & Metadata + Top-right Close Action */}
+      <div className="flex items-start justify-between gap-2.5 w-full">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+          <div className="h-8.5 w-8.5 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+            <FileText className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm sm:text-base font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2">
+              {resolvedDocumentTitle}
+            </h2>
+            {/* Supporting Badge & Metadata Row */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1 text-[11px] sm:text-xs text-muted-foreground">
+              {renderBadge()}
+              {isTemplate ? (
+                <>
+                  <span className="text-muted-foreground/40">•</span>
+                  <span
+                    className="font-medium text-foreground/80 truncate max-w-[170px] sm:max-w-[280px]"
+                    title={rawTemplateFileName}
+                  >
+                    {rawTemplateFileName}
+                  </span>
+                  <span className="text-muted-foreground/40">•</span>
+                  <span>PDF Document</span>
+                  <span className="text-muted-foreground/40 hidden xs:inline">•</span>
+                  <span className="hidden xs:inline">Reference Guide</span>
+                </>
+              ) : (
+                <>
+                  {file?.fileName && (
+                    <>
+                      <span className="text-muted-foreground/40">•</span>
+                      <span
+                        className="font-medium text-foreground/80 truncate max-w-[150px] sm:max-w-[260px]"
+                        title={file.fileName}
+                      >
+                        {file.fileName}
+                      </span>
+                    </>
+                  )}
+                  <span className="text-muted-foreground/40">•</span>
+                  <span>PDF</span>
+                  {fileSizeLabel && (
+                    <>
+                      <span className="text-muted-foreground/40">•</span>
+                      <span>{fileSizeLabel}</span>
+                    </>
+                  )}
+                  {formattedDate && (
+                    <>
+                      <span className="text-muted-foreground/40">•</span>
+                      <span className="truncate max-w-[130px]">Updated {formattedDate}</span>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        {closeAction}
+      </div>
+
+      {/* Admin Remarks Callout if Needs Revision or Rejected (Attached Mode Only) */}
+      {!isTemplate && (isNeedsRevision || isRejected) && file?.adminRemarks && (
+        <div
+          className={cn(
+            "rounded-xl border p-2.5 sm:p-3 text-xs space-y-1 mt-0.5",
+            isNeedsRevision
+              ? "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+          )}
+        >
+          <div className="flex items-center gap-1.5 font-bold">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>Admin Review Remarks</span>
+          </div>
+          <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
+            "{file.adminRemarks}"
+          </p>
+        </div>
+      )}
+
+      {/* Mobile Action Controls Area */}
+      <div className="w-full pt-1.5 pb-0.5">
+        {isTemplate ? (
+          /* Template Actions: 2-column balanced grid on mobile */
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleOpenNewTab}
+              className="h-10 px-2.5 sm:px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <ExternalLink className="h-4 w-4 text-primary shrink-0" />
+              <span className="truncate">Open in New Tab</span>
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              disabled={downloading}
+              onClick={() => void handleDownload()}
+              className="h-10 px-2.5 sm:px-3 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              {downloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  <span className="truncate">Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Download File</span>
+                </>
+              )}
+            </Button>
+          </div>
+        ) : isDraft ? (
+          /* Attached Draft Actions */
+          <div className="space-y-2.5 w-full">
+            <div className={cn("grid gap-2.5 sm:gap-3 w-full", onReplaceFile ? "grid-cols-2" : "grid-cols-1")}>
+              {onSubmitForReview && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => void onSubmitForReview()}
+                  className="h-10 px-3 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  ) : (
+                    <FileUp className="h-4 w-4 shrink-0" />
+                  )}
+                  <span className="truncate">Submit for Review</span>
+                </Button>
+              )}
+
+              {onReplaceFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={saving}
+                  onClick={onReplaceFile}
+                  className="h-10 px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <FileUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="truncate">Replace File</span>
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleOpenNewTab}
+                className="h-10 px-2.5 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <ExternalLink className="h-4 w-4 text-primary shrink-0" />
+                <span className="truncate">Open in New Tab</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={downloading}
+                onClick={() => void handleDownload()}
+                className="h-10 px-2.5 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                ) : (
+                  <Download className="h-4 w-4 text-primary shrink-0" />
+                )}
+                <span className="truncate">Download</span>
+              </Button>
+            </div>
+
+            {onDeleteDraft && (
+              <div className="flex justify-end pt-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => void onDeleteDraft()}
+                  className="h-8.5 px-2.5 rounded-xl text-destructive hover:bg-destructive/10 text-xs font-medium gap-1.5 cursor-pointer transition-all duration-150 active:scale-[0.98]"
+                >
+                  <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                  <span>Delete Draft</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : isNeedsRevision ? (
+          /* Attached Needs Revision Actions */
+          <div className="space-y-2.5 w-full">
+            {onReplaceFile && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={saving}
+                onClick={onReplaceFile}
+                className="w-full h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <FileUp className="h-4 w-4 shrink-0" />
+                <span>Upload Revised File</span>
+              </Button>
+            )}
+
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleOpenNewTab}
+                className="h-10 px-2.5 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <ExternalLink className="h-4 w-4 text-primary shrink-0" />
+                <span className="truncate">Open in New Tab</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={downloading}
+                onClick={() => void handleDownload()}
+                className="h-10 px-2.5 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                ) : (
+                  <Download className="h-4 w-4 text-primary shrink-0" />
+                )}
+                <span className="truncate">Download File</span>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* Standard Attached Actions: Approved, Under Review, etc. */
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleOpenNewTab}
+              className="h-10 px-2.5 sm:px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <ExternalLink className="h-4 w-4 text-primary shrink-0" />
+              <span className="truncate">Open in New Tab</span>
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              disabled={downloading}
+              onClick={() => void handleDownload()}
+              className="h-10 px-2.5 sm:px-3 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              {downloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  <span className="truncate">Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Download File</span>
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Desktop Document Preview (Preserved 100% untouched for desktop Sheet)
+  const renderDesktopDocumentPreview = () => (
     <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-950/20">
       <div className="flex-1 min-h-[360px] rounded-xl border border-border/80 overflow-hidden bg-slate-100/70 dark:bg-slate-900/60 shadow-inner flex flex-col">
         <PortalDocumentViewer
@@ -538,9 +825,27 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
     </div>
   );
 
+  // Mobile / Tablet Document Preview (< 1024px: single-layer clean framing, maximized reading width)
+  const renderMobileDocumentPreview = () => (
+    <div className="flex-1 min-h-0 overflow-hidden flex flex-col bg-slate-100/80 dark:bg-slate-950/40">
+      <PortalDocumentViewer
+        previewUrl={previewUrl}
+        previewTitle={isTemplate ? rawTemplateFileName : file?.fileName || resolvedDocumentTitle}
+        previewCanInline={previewCanInline}
+        previewEmptyMessage={previewEmptyMessage}
+        onDownloadFile={async (url, name) => {
+          if (onDownloadFile) {
+            await onDownloadFile(url, name);
+          }
+        }}
+        className="flex-1 overflow-y-auto p-2 sm:p-3 border-0 rounded-none"
+      />
+    </div>
+  );
+
   const closeLabel = isTemplate ? "template" : "document";
 
-  // DESKTOP: Right-side Drawer (Sheet)
+  // DESKTOP: Right-side Drawer (Sheet) — 100% UNTOUCHED
   if (isDesktop) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -557,7 +862,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
           </SheetDescription>
 
           {/* PINNED HEADER */}
-          {renderHeader(
+          {renderDesktopHeader(
             <SheetClose asChild>
               <button
                 type="button"
@@ -570,7 +875,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
           )}
 
           {/* PRIMARY DOCUMENT PREVIEW */}
-          {renderDocumentPreview()}
+          {renderDesktopDocumentPreview()}
 
           {/* PINNED FOOTER */}
           <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
@@ -598,7 +903,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton={true}
-        className="w-[94vw] sm:w-[92vw] max-w-3xl h-[88vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+        className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
       >
         <DialogTitle className="sr-only">
           {resolvedDocumentTitle} Document Preview
@@ -608,22 +913,22 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
         </DialogDescription>
 
         {/* PINNED HEADER */}
-        {renderHeader(
+        {renderMobileHeader(
           <button
             type="button"
             aria-label={`Close ${closeLabel} modal`}
             onClick={() => onOpenChange(false)}
-            className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 self-start -mt-0.5"
           >
             <X className="h-4 w-4" />
           </button>
         )}
 
         {/* PRIMARY DOCUMENT PREVIEW */}
-        {renderDocumentPreview()}
+        {renderMobileDocumentPreview()}
 
         {/* PINNED FOOTER */}
-        <div className="h-14 py-2.5 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+        <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
           <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
             {resolvedFooterStatus}
           </p>
@@ -632,7 +937,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-9 px-4.5 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 hover:border-border text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             Close
           </Button>

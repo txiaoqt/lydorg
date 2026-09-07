@@ -1176,6 +1176,117 @@ describe("PortalDocumentDrawer Template Mode Responsive Behavior", () => {
     expect(attachedCloseXBtn.className).toContain("w-8.5");
     expect(attachedCloseXBtn.className).toContain("rounded-full");
   });
+
+  it("maintains identical mobile 2-column action grid and geometry parity on mobile viewport (< 1024px)", () => {
+    window.innerWidth = 390;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: !query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    // 1. Render Mobile Template Drawer
+    const { unmount: unmountTemplate } = render(<PortalDocumentDrawer {...defaultTemplateProps} />);
+    const mobileTemplateOpenBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+    const mobileTemplateDownloadBtn = screen.getByRole("button", { name: /Download File/i });
+    const mobileTemplateCloseXBtn = screen.getByRole("button", { name: /Close template modal/i });
+    const mobileTemplateCloseFooterBtn = screen.getByRole("button", { name: /^Close$/i });
+
+    // Verify touch targets, rounded-xl proportions, and deliberate hierarchy on mobile
+    expect(mobileTemplateDownloadBtn.className).toContain("h-10");
+    expect(mobileTemplateDownloadBtn.className).toContain("rounded-xl");
+    expect(mobileTemplateDownloadBtn.className).toContain("font-semibold");
+    expect(mobileTemplateDownloadBtn.className).toContain("bg-primary");
+
+    expect(mobileTemplateOpenBtn.className).toContain("h-10");
+    expect(mobileTemplateOpenBtn.className).toContain("rounded-xl");
+    expect(mobileTemplateOpenBtn.className).toContain("font-medium");
+
+    expect(mobileTemplateCloseFooterBtn.className).toContain("h-8.5");
+    expect(mobileTemplateCloseXBtn.className).toContain("h-8.5");
+    expect(mobileTemplateCloseXBtn.className).toContain("w-8.5");
+
+    unmountTemplate();
+
+    // 2. Render Mobile Attached Drawer
+    const mockFile: any = {
+      id: "sub-file-1",
+      submissionId: "sub-1",
+      documentTypeId: "doc-1",
+      fileName: "constitution-by-laws-signed.pdf",
+      fileUrl: "https://example.com/constitution.pdf",
+      fileType: "application/pdf",
+      fileSize: 1048576,
+      adminStatus: "approved_green",
+      adminRemarks: "",
+      uploadedAt: "2026-06-11T12:00:00Z",
+    };
+
+    render(
+      <PortalDocumentDrawer
+        mode="attached"
+        open={true}
+        onOpenChange={vi.fn()}
+        file={mockFile}
+        documentTypeName="Constitution and By-Laws"
+        previewUrl="https://example.com/constitution.pdf"
+        previewCanInline={true}
+      />
+    );
+
+    const mobileAttachedOpenBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+    const mobileAttachedDownloadBtn = screen.getByRole("button", { name: /Download File/i });
+    const mobileAttachedCloseXBtn = screen.getByRole("button", { name: /Close document modal/i });
+    const mobileAttachedCloseFooterBtn = screen.getByRole("button", { name: /^Close$/i });
+
+    // Verify mobile attached drawer shares the exact same button heights, typography hierarchy, and geometry
+    expect(mobileAttachedDownloadBtn.className).toContain("h-10");
+    expect(mobileAttachedDownloadBtn.className).toContain("rounded-xl");
+    expect(mobileAttachedDownloadBtn.className).toContain("font-semibold");
+    expect(mobileAttachedDownloadBtn.className).toContain("bg-primary");
+
+    expect(mobileAttachedOpenBtn.className).toContain("h-10");
+    expect(mobileAttachedOpenBtn.className).toContain("rounded-xl");
+    expect(mobileAttachedOpenBtn.className).toContain("font-medium");
+
+    expect(mobileAttachedCloseFooterBtn.className).toContain("h-8.5");
+    expect(mobileAttachedCloseXBtn.className).toContain("h-8.5");
+    expect(mobileAttachedCloseXBtn.className).toContain("w-8.5");
+  });
+
+  it("verifies mobile action button row stability across 320px, 360px, 375px, 414px, and 430px viewports", () => {
+    const viewports = [320, 360, 375, 414, 430];
+
+    for (const width of viewports) {
+      window.innerWidth = width;
+      window.matchMedia = vi.fn().mockImplementation((query) => ({
+        matches: !query.includes("min-width: 1024px"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      const { unmount } = render(<PortalDocumentDrawer {...defaultTemplateProps} />);
+      const openBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+      const downloadBtn = screen.getByRole("button", { name: /Download File/i });
+
+      expect(openBtn).toBeInTheDocument();
+      expect(downloadBtn).toBeInTheDocument();
+      expect(openBtn.className).toContain("h-10");
+      expect(downloadBtn.className).toContain("h-10");
+
+      unmount();
+    }
+  });
 });
 
 describe("DropdownMenu Layout Stability & Non-Modal Scrollbar Preservation", () => {
@@ -1314,5 +1425,402 @@ describe("DropdownMenu Layout Stability & Non-Modal Scrollbar Preservation", () 
   });
 });
 
+describe("UserPortalLiquidationWorkspaceView Mobile Preview Modal Polish", () => {
+  const mockReport = {
+    id: "rep-mob-1",
+    budgetRequestId: "br-mob-1",
+    status: "pending",
+    createdAt: "2026-08-10T00:00:00Z",
+    deadlineAt: "2026-08-20T00:00:00Z",
+    goSignalAt: "2026-08-01T00:00:00Z",
+  };
 
+  const mockBudget = {
+    id: "br-mob-1",
+    activityTitle: "Mobile Polish Youth Summit 2026",
+    purposeCategory: "Community Outreach",
+    venue: "Pasig Mega Market",
+    releasedAmount: 45000,
+    approvedAmount: 45000,
+  };
 
+  const mockFilesMap = new Map([
+    [
+      "rep-mob-1",
+      [
+        {
+          id: "file-mob-1",
+          fileName: "summit-liquidation-report.pdf",
+          fileUrl: "https://example.com/liquidation.pdf",
+          fileSize: 81920,
+          uploadedAt: "2026-08-11T03:30:00Z",
+        },
+      ],
+    ],
+  ]);
+
+  const liquidationProps: any = {
+    navigate: vi.fn(),
+    userRouteMap: {},
+    liquidationWorkflowEligibility: { eligible: true },
+    liquidationReports: [mockReport],
+    budgetRequests: [mockBudget],
+    liquidationFilesByReportId: mockFilesMap,
+    liquidationNotesByReportId: {},
+    setLiquidationNotesByReportId: vi.fn(),
+    buildPublicRecordCode: () => "LR-2026-08-10",
+    searchParams: new URLSearchParams("reportId=rep-mob-1"),
+    formatCurrency: (n: number) => `PHP ${n.toLocaleString()}`,
+    formatShortPortalDate: () => "Aug 20, 2026",
+    formatDateTimeLabel: () => "Aug 11, 2026, 3:30 AM",
+    formatStatusLabel: (s: string) => s,
+    openCreateModal: false,
+    setOpenCreateModal: vi.fn(),
+  };
+
+  const viewports = [320, 360, 375, 390, 414, 430];
+
+  viewports.forEach((width) => {
+    it(`renders polished mobile modal hierarchy, cards, and 2-column actions at ${width}px`, () => {
+      window.innerWidth = width;
+      window.matchMedia = vi.fn().mockImplementation((query) => ({
+        matches: !query.includes("min-width: 1024px"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      render(<UserPortalLiquidationWorkspaceView {...liquidationProps} />);
+
+      // 1. Header verification: Identifier, amount, close button, title
+      const recordCodes = screen.getAllByText("LR-2026-08-10");
+      expect(recordCodes.length).toBeGreaterThanOrEqual(1);
+      const amountPills = screen.getAllByText("PHP 45,000");
+      expect(amountPills.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByRole("button", { name: /Close modal/i })).toBeInTheDocument();
+      const titleHeadings = screen.getAllByText("Mobile Polish Youth Summit 2026");
+      expect(titleHeadings.length).toBeGreaterThanOrEqual(1);
+
+      // 2. Activity Timeline Summary Card verification
+      expect(screen.getByText("Activity Timeline")).toBeInTheDocument();
+      expect(screen.getByText("Go Signal")).toBeInTheDocument();
+      const deadlineLabels = screen.getAllByText("Deadline");
+      expect(deadlineLabels.length).toBeGreaterThanOrEqual(1);
+
+      // 3. Document section & file card verification
+      expect(screen.getByText("Liquidation Document")).toBeInTheDocument();
+      const fileNames = screen.getAllByText("summit-liquidation-report.pdf");
+      expect(fileNames.length).toBeGreaterThanOrEqual(1);
+
+      // 4. Action Buttons verification
+      const openTabBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+      const downloadBtn = screen.getByRole("button", { name: /Download File/i });
+      expect(openTabBtn).toBeInTheDocument();
+      expect(downloadBtn).toBeInTheDocument();
+
+      // Verify button layout classes (h-10, rounded-xl, 2-column parent)
+      expect(openTabBtn.className).toContain("h-10");
+      expect(openTabBtn.className).toContain("rounded-xl");
+      expect(downloadBtn.className).toContain("h-10");
+      expect(downloadBtn.className).toContain("rounded-xl");
+      const buttonGrid = openTabBtn.parentElement;
+      expect(buttonGrid?.className).toContain("grid-cols-2");
+
+      // 5. Quiet Footer verification
+      expect(screen.getByText(/Liquidation Report • LYDO Pasig City/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
+  });
+});
+
+describe("UserPortalBudgetWorkspaceView Mobile Preview Modal Polish", () => {
+  const mockBudgetRequest = {
+    id: "br-mob-spec-1",
+    activityTitle: "Mobile Polish Leadership Summit",
+    purposeCategory: "Leadership Development",
+    venue: "Pasig City Hall Complex",
+    requestedAmount: 28500,
+    approvedAmount: 28500,
+    status: "approved",
+    activityDate: "2026-09-15T00:00:00Z",
+    activityDescription: "Annual youth leadership summit for Pasig youth.",
+  };
+
+  const mockFile = {
+    id: "file-br-mob-1",
+    fileName: "leadership-proposal.pdf",
+    fileUrl: "https://example.com/proposal.pdf",
+    fileSize: 65536,
+    uploadedAt: "2026-08-06T03:33:00Z",
+  };
+
+  const budgetFilesMap = new Map([["br-mob-spec-1", mockFile]]);
+
+  const budgetProps: any = {
+    navigate: vi.fn(),
+    userRouteMap: {},
+    searchParams: new URLSearchParams("budgetRequestId=br-mob-spec-1"),
+    budgetRequests: [mockBudgetRequest],
+    budgetFilesByRequestId: budgetFilesMap,
+    buildPublicRecordCode: () => "BR-2026-08-06",
+    formatCurrency: (n: number) => `PHP ${n.toLocaleString()}`,
+    formatShortPortalDate: () => "Sep 15, 2026",
+    formatDateTimeLabel: () => "Aug 6, 2026, 3:33 AM",
+    formatStatusLabel: (s: string) => s,
+    openCreateModal: false,
+    setOpenCreateModal: vi.fn(),
+    downloadingFileId: null,
+    handleDownloadBudgetFile: vi.fn(),
+  };
+
+  const viewports = [320, 360, 375, 390, 414, 430];
+
+  viewports.forEach((width) => {
+    it(`renders polished mobile modal hierarchy, financial overview, and 2-column actions at ${width}px`, () => {
+      window.innerWidth = width;
+      window.matchMedia = vi.fn().mockImplementation((query) => ({
+        matches: !query.includes("min-width: 1024px"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      render(<UserPortalBudgetWorkspaceView {...budgetProps} />);
+
+      // 1. Header verification: Identifier, amount, close button, title
+      const recordCodes = screen.getAllByText("BR-2026-08-06");
+      expect(recordCodes.length).toBeGreaterThanOrEqual(1);
+      const amountPills = screen.getAllByText("PHP 28,500");
+      expect(amountPills.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByRole("button", { name: /Close modal/i })).toBeInTheDocument();
+      const titleHeadings = screen.getAllByText("Mobile Polish Leadership Summit");
+      expect(titleHeadings.length).toBeGreaterThanOrEqual(1);
+
+      // 2. Financial Overview Summary Card verification
+      expect(screen.getByText("Financial Overview")).toBeInTheDocument();
+      expect(screen.getByText("Requested Amount")).toBeInTheDocument();
+      const approvedLabels = screen.getAllByText("Approved / Released");
+      expect(approvedLabels.length).toBeGreaterThanOrEqual(1);
+
+      // 3. Proposal Document section & file card verification
+      expect(screen.getByText("Proposal Document")).toBeInTheDocument();
+      const fileNames = screen.getAllByText("leadership-proposal.pdf");
+      expect(fileNames.length).toBeGreaterThanOrEqual(1);
+
+      // 4. Action Buttons verification
+      const openTabBtn = screen.getByRole("button", { name: /Open in New Tab/i });
+      const downloadBtn = screen.getByRole("button", { name: /Download File/i });
+      expect(openTabBtn).toBeInTheDocument();
+      expect(downloadBtn).toBeInTheDocument();
+
+      // Verify button layout classes (h-10, rounded-xl, 2-column parent)
+      expect(openTabBtn.className).toContain("h-10");
+      expect(openTabBtn.className).toContain("rounded-xl");
+      expect(downloadBtn.className).toContain("h-10");
+      expect(downloadBtn.className).toContain("rounded-xl");
+      const buttonGrid = openTabBtn.parentElement;
+      expect(buttonGrid?.className).toContain("grid-cols-2");
+
+      // 5. Quiet Footer verification
+      expect(screen.getByText(/Budget Request • LYDO Pasig City/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
+  });
+});
+
+describe("UserPortalBudgetWorkspaceView Mobile Page Polish", () => {
+  const mockRequests = [
+    {
+      id: "br-polish-1",
+      activityTitle: "Youth Environmental Summit 2026",
+      status: "approved",
+      requestedAmount: 50000,
+      approvedAmount: 50000,
+      releasedAmount: 50000,
+      activityDate: "2026-09-15T00:00:00Z",
+      purposeCategory: "Environmental",
+      venue: "Pasig Rainforest Park",
+      createdAt: "2026-08-01T00:00:00Z",
+      updatedAt: "2026-08-05T00:00:00Z",
+    },
+    {
+      id: "br-polish-2",
+      activityTitle: "Very Long Activity Proposal Title To Test Word Wrapping And Truncation sdadasdasdasdasdasdasdsa",
+      status: "submitted",
+      requestedAmount: 25000,
+      approvedAmount: null,
+      releasedAmount: null,
+      activityDate: "2026-10-01T00:00:00Z",
+      purposeCategory: "Leadership",
+      venue: "Pasig City Hall",
+      createdAt: "2026-08-02T00:00:00Z",
+      updatedAt: "2026-08-03T00:00:00Z",
+    },
+  ];
+
+  const pageProps: any = {
+    budgetWorkflowEligibility: { eligible: true, requirements: [] },
+    budgetRequests: mockRequests,
+    budgetFilesByRequestId: new Map(),
+    budgetNotesByRequestId: {},
+    submittingBudgetId: null,
+    showBudgetForm: false,
+    setShowBudgetForm: vi.fn(),
+    editingBudgetRequest: null,
+    startEditingBudgetRequest: vi.fn(),
+    handleDeleteBudgetRequest: vi.fn(),
+    openFile: vi.fn(),
+    navigate: vi.fn(),
+    searchParams: new URLSearchParams(),
+    userRouteMap: {},
+    buildPublicRecordCode: (_prefix: string, item: any) => `BR-${item.id === "br-polish-1" ? "001" : "002"}`,
+    formatCurrency: (n: number) => `PHP ${n.toLocaleString()}`,
+    formatShortPortalDate: (d: string) => (d.includes("09-15") ? "Sep 15, 2026" : "Oct 1, 2026"),
+    formatDateTimeLabel: (d: string) => d,
+    formatStatusLabel: (s: string) => s,
+    newActivityTitle: "",
+    setNewActivityTitle: vi.fn(),
+    newActivityDescription: "",
+    setNewActivityDescription: vi.fn(),
+    newPurposeCategory: "",
+    setNewPurposeCategory: vi.fn(),
+    newActivityDate: "",
+    setNewActivityDate: vi.fn(),
+    newVenue: "",
+    setNewVenue: vi.fn(),
+    newRequestedAmount: "",
+    setNewRequestedAmount: vi.fn(),
+    newRemarks: "",
+    setNewRemarks: vi.fn(),
+    handleCreateOrUpdateBudgetRequest: vi.fn(),
+  };
+
+  const mobileViewports = [320, 360, 375, 390, 414, 430];
+
+  mobileViewports.forEach((width) => {
+    it(`renders polished mobile page header, summary card, filter bar, and cards at ${width}px`, () => {
+      window.innerWidth = width;
+      window.matchMedia = vi.fn().mockImplementation((query) => ({
+        matches: !query.includes("min-width: 1024px"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      render(<UserPortalBudgetWorkspaceView {...pageProps} />);
+
+      // 1. Page Header Verification
+      expect(screen.getByText("Financial Workspace")).toBeInTheDocument();
+      expect(screen.getByText("LYDO Pasig City")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Budget Requests" })).toBeInTheDocument();
+      expect(
+        screen.getByText("Submit financial grant proposals, track approval stages, and monitor released funds.")
+      ).toBeInTheDocument();
+
+      // 2. Mobile Summary Card Hierarchy
+      const approvedHeadings = screen.getAllByText("1 of 2 Budget Requests Approved");
+      expect(approvedHeadings.length).toBeGreaterThanOrEqual(1);
+      const percentBadges = screen.getAllByText("50%");
+      expect(percentBadges.length).toBeGreaterThanOrEqual(1);
+
+      // Status breakdown
+      const approvedCounts = screen.getAllByText("1 Approved");
+      expect(approvedCounts.length).toBeGreaterThanOrEqual(1);
+      const reviewCounts = screen.getAllByText("1 Review");
+      expect(reviewCounts.length).toBeGreaterThanOrEqual(1);
+      const revisionCounts = screen.getAllByText("0 Revision");
+      expect(revisionCounts.length).toBeGreaterThanOrEqual(1);
+
+      // Operational counts strip
+      const totalReqLabels = screen.getAllByText("Total Requests");
+      expect(totalReqLabels.length).toBeGreaterThanOrEqual(1);
+      const pendingLabels = screen.getAllByText("Pending Review");
+      expect(pendingLabels.length).toBeGreaterThanOrEqual(1);
+      const approvedLabels = screen.getAllByText("Approved / Released");
+      expect(approvedLabels.length).toBeGreaterThanOrEqual(1);
+
+      // Dedicated Total Released Funds
+      const releasedFundsLabels = screen.getAllByText("Total Released Funds");
+      expect(releasedFundsLabels.length).toBeGreaterThanOrEqual(1);
+      const releasedAmountPills = screen.getAllByText("PHP 50,000");
+      expect(releasedAmountPills.length).toBeGreaterThanOrEqual(1);
+
+      // 3. Filter Bar Verification
+      expect(screen.getByRole("button", { name: "All (2)" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Approved / Released (1)" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Under Review (1)" })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Search activity, category, venue...")).toBeInTheDocument();
+      expect(screen.getByText(/newest/i)).toBeInTheDocument();
+
+      // 4. Mobile Request Cards Verification
+      const titles1 = screen.getAllByText("Youth Environmental Summit 2026");
+      expect(titles1.length).toBeGreaterThanOrEqual(1);
+      const titles2 = screen.getAllByText(/Very Long Activity Proposal Title/i);
+      expect(titles2.length).toBeGreaterThanOrEqual(1);
+
+      // Core metadata (Amount & Target Date)
+      const amountPill2 = screen.getAllByText("PHP 25,000");
+      expect(amountPill2.length).toBeGreaterThanOrEqual(1);
+      const date1 = screen.getAllByText("Sep 15, 2026");
+      expect(date1.length).toBeGreaterThanOrEqual(1);
+      const date2 = screen.getAllByText("Oct 1, 2026");
+      expect(date2.length).toBeGreaterThanOrEqual(1);
+
+      // Record code and Action Button
+      const br001 = screen.getAllByText("BR-001");
+      expect(br001.length).toBeGreaterThanOrEqual(1);
+      const br002 = screen.getAllByText("BR-002");
+      expect(br002.length).toBeGreaterThanOrEqual(1);
+
+      const openButtons = screen.getAllByRole("button", { name: /Open/i });
+      expect(openButtons.length).toBeGreaterThanOrEqual(2);
+
+      // Verify button layout & styling on mobile card
+      const firstCardOpenBtn = openButtons.find((btn) => btn.textContent?.includes("Open"));
+      expect(firstCardOpenBtn).toBeDefined();
+      expect(firstCardOpenBtn?.className).toContain("h-9");
+      expect(firstCardOpenBtn?.className).toContain("rounded-xl");
+      expect(firstCardOpenBtn?.className).toContain("bg-primary");
+    });
+  });
+
+  it("preserves desktop table and desktop operational overview on >= 1024px", () => {
+    window.innerWidth = 1280;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const { container } = render(<UserPortalBudgetWorkspaceView {...pageProps} />);
+
+    // Desktop table must be present with hidden lg:block classes
+    const desktopTable = container.querySelector(".desktop-table");
+    expect(desktopTable).toBeInTheDocument();
+    expect(desktopTable?.className).toContain("hidden");
+    expect(desktopTable?.className).toContain("lg:block");
+
+    // Mobile cards must have block lg:hidden classes
+    const mobileCards = container.querySelector(".mobile-cards");
+    expect(mobileCards).toBeInTheDocument();
+    expect(mobileCards?.className).toContain("block");
+    expect(mobileCards?.className).toContain("lg:hidden");
+  });
+});

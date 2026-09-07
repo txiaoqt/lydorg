@@ -869,7 +869,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           <Dialog open={Boolean(selectedReport)} onOpenChange={(open) => { if (!open) closeLiquidationDetail(); }}>
             <DialogContent
               hideCloseButton={true}
-              className="w-[94vw] sm:w-[92vw] max-w-3xl h-[88vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+              className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
             >
               {selectedReport && (() => {
                 const selectedBudget = budgetRequests.find((req) => req.id === selectedReport.budgetRequestId) ?? null;
@@ -886,60 +886,87 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                     </DialogDescription>
 
                     {/* PINNED HEADER */}
-                    <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border/70 bg-card flex flex-col gap-2 shrink-0">
+                    <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
+                      {/* Row 1: Primary Identifier + Supporting Amount Badge + Close Control */}
                       <div className="flex items-center justify-between gap-2.5 w-full">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md shrink-0">
                             {recordCode}
                           </span>
-                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20 tabular-nums">
+                          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 tabular-nums truncate">
                             {formatCurrency(selectedBudget?.releasedAmount || selectedBudget?.approvedAmount || 0)}
                           </span>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => closeLiquidationDetail()}
-                          className="h-8 w-8 rounded-full border border-border/60 hover:bg-accent hover:text-foreground text-muted-foreground flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                           aria-label="Close modal"
+                          onClick={() => closeLiquidationDetail()}
+                          className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                           <X className="h-4 w-4" />
                         </button>
                       </div>
 
-                      <div className="space-y-1">
+                      {/* Row 2: Record Title */}
+                      <div className="space-y-1 min-w-0">
                         <DialogTitle className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2">
                           {selectedBudget?.activityTitle || "Liquidation Report"}
                         </DialogTitle>
-                        <div className="flex items-center gap-2 pt-0.5">
+                        {/* Row 3: Status Badge + Supporting Metadata */}
+                        <div className="flex items-center flex-wrap gap-2 pt-0.5">
                           <PortalStatusBadge status={selectedReport.status} />
+                          <span className="text-muted-foreground/40 hidden xs:inline">•</span>
+                          <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate max-w-[220px] sm:max-w-xs">
+                            {selectedBudget?.purposeCategory || "General Purpose"} • {selectedBudget?.venue || "Pasig City"}
+                          </p>
                         </div>
-                        <p className="text-[11px] sm:text-xs text-muted-foreground font-medium pt-0.5">
-                          {selectedBudget?.purposeCategory || "General Purpose"} • {selectedBudget?.venue || "Pasig City"}
-                        </p>
                       </div>
                     </div>
 
                     {/* SCROLLABLE BODY */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                    <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
                       {/* Key Summary: Activity Timeline */}
-                      <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
+                      <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-foreground">Activity Timeline</span>
-                          <span className={cn("text-[11px] font-semibold", remainingDaysText.includes("overdue") ? "text-destructive font-bold" : "text-muted-foreground")}>
-                            {remainingDaysText}
-                          </span>
+                          <span className="font-bold text-foreground tracking-tight">Activity Timeline</span>
+                          {remainingDaysText && (
+                            <span
+                              className={cn(
+                                "text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-md tabular-nums",
+                                remainingDaysText.includes("overdue")
+                                  ? "text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20"
+                                  : remainingDaysText.includes("Today")
+                                  ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20"
+                                  : "text-muted-foreground bg-muted/60"
+                              )}
+                            >
+                              {remainingDaysText}
+                            </span>
+                          )}
                         </div>
-                        <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/50">
                           <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Go Signal</span>
-                            <span className="font-semibold text-foreground">
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Go Signal</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
                               {selectedReport.goSignalAt ? formatShortPortalDate(selectedReport.goSignalAt) : "Pending"}
                             </span>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-destructive uppercase font-semibold tracking-wider">Deadline</span>
-                            <span className="font-semibold text-destructive">
+                            <span
+                              className={cn(
+                                "block text-[10px] uppercase font-bold tracking-wider",
+                                remainingDaysText.includes("overdue") ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"
+                              )}
+                            >
+                              Deadline
+                            </span>
+                            <span
+                              className={cn(
+                                "font-bold text-xs sm:text-sm mt-0.5 block tabular-nums",
+                                remainingDaysText.includes("overdue") ? "text-rose-600 dark:text-rose-400" : "text-foreground"
+                              )}
+                            >
                               {selectedReport.deadlineAt ? formatShortPortalDate(selectedReport.deadlineAt) : "Pending"}
                             </span>
                           </div>
@@ -948,6 +975,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                       {/* Document Section (Primary Content) */}
                       <PortalDrawerDocumentSection
+                        isMobile={true}
                         file={primaryFile}
                         previewUrl={activePreviewUrl}
                         isDownloading={downloadingFileId === primaryFile?.id}
@@ -965,7 +993,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                       {/* Secondary Details: Remarks if any */}
                       {selectedBudget?.remarks && (
-                        <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-1 text-xs">
+                        <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-1 text-xs">
                           <p className="font-bold text-foreground">Remarks</p>
                           <p className="text-muted-foreground leading-relaxed pt-1 border-t border-border/40 italic text-[11px]">
                             {selectedBudget.remarks}
@@ -975,8 +1003,8 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                     </div>
 
                     {/* PINNED FOOTER */}
-                    <div className="h-14 py-2.5 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                      <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                    <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
                         Liquidation Report • LYDO Pasig City
                       </p>
                       <Button
@@ -984,7 +1012,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         variant="outline"
                         size="sm"
                         onClick={() => closeLiquidationDetail()}
-                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         Close
                       </Button>
