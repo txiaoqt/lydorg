@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { YpopSemesterWorkspace, type YpopSemesterWorkspaceProps } from "./YpopSemesterWorkspace";
+import { YpopSemesterList } from "./YpopSemesterList";
 import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { resolveBudgetWorkflowEligibility } from "@/lib/user-workflow-eligibility";
 import { UserPortalBudgetWorkspaceView } from "../UserPortalBudgetWorkspaceView";
@@ -353,4 +354,146 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     expect(startEditingBudgetRequestMock).not.toHaveBeenCalled();
     expect(setShowBudgetFormMock).not.toHaveBeenCalled();
   });
+
+  it("14. User YPOP Workspace displays Qualification Summary, Required Percentage: 70%, and ? help trigger", () => {
+    const entry = createEntry("qualified", basePeriod.semesterKey);
+    const props = createProps({
+      period: basePeriod,
+      entry,
+    });
+
+    render(<YpopSemesterWorkspace {...props} />);
+
+    expect(screen.getByTestId("user-ypop-qualification-summary")).toBeInTheDocument();
+    expect(screen.getByText(/Required Percentage: 70%/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View actual YPOP qualification computation" })).toBeInTheDocument();
+  });
+
+  it("15. User YPOP Workspace ? opens actual computation breakdown popover matching admin data", () => {
+    const entry = createEntry("qualified", basePeriod.semesterKey);
+    const props = createProps({
+      period: basePeriod,
+      entry,
+    });
+
+    render(<YpopSemesterWorkspace {...props} />);
+
+    const helpBtn = screen.getByRole("button", { name: "View actual YPOP qualification computation" });
+    fireEvent.click(helpBtn);
+
+    expect(screen.getByText("YPOP POINTS BREAKDOWN")).toBeInTheDocument();
+    expect(screen.getByText("City-Led Points")).toBeInTheDocument();
+    expect(screen.getByText("Organization-Led Bonus")).toBeInTheDocument();
+    expect(screen.getByText("Total YPOP Points")).toBeInTheDocument();
+  });
+
+  it("16. User YPOP Workspace supports 110% score and displays Qualified status", () => {
+    const cityAct: YPOPCityActivity = {
+      id: "act-1",
+      semesterKey: basePeriod.semesterKey,
+      name: "City Summit",
+      category: "mandatory",
+      points: 10,
+      date: "2026-06-01",
+      venue: "Pasig Hall",
+      description: "Summit",
+      createdAt: "2026-01-01",
+    };
+
+    const entry = {
+      ...createEntry("qualified", basePeriod.semesterKey),
+      pointsEarned: 110,
+      cityLedAttendance: [{ activityId: "act-1", attended: true }],
+    };
+
+    const props = createProps({
+      period: basePeriod,
+      entry,
+      cityActivities: [cityAct],
+      participations: [{
+        id: "part-1",
+        activityId: "act-1",
+        organizationId: "org-1",
+        status: "verified",
+        joinedAt: "2026-01-01",
+        proofSubmittedAt: "2026-01-01",
+        verifiedAt: "2026-01-01",
+        adminRemarks: "",
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      }],
+      orgActivities: [{
+        id: "org-act-1",
+        ypopEntryId: entry.id,
+        organizationId: "org-1",
+        submittedBy: "user-1",
+        activityName: "Tree Planting",
+        activityDate: "2026-06-02",
+        venue: "Park",
+        narrativeReport: "Done",
+        status: "approved",
+        adminRemarks: "",
+        submittedAt: "2026-01-01",
+        approvedAt: "2026-01-01",
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      }],
+    });
+
+    render(<YpopSemesterWorkspace {...props} />);
+
+    // Uncapped 110% display
+    expect(screen.getByText("110%")).toBeInTheDocument();
+    // Qualified badge
+    expect(screen.getByText("Qualified")).toBeInTheDocument();
+    // New Budget Request button present
+    expect(screen.getByRole("button", { name: /\+? ?New Budget Request/i })).toBeInTheDocument();
+  });
+
+  it("17. User YPOP Workspace hides New Budget Request and shows Not Qualified when score is below threshold", () => {
+    const entry = {
+      ...createEntry("not_qualified", basePeriod.semesterKey),
+      pointsEarned: 40,
+    };
+
+    const props = createProps({
+      period: basePeriod,
+      entry,
+    });
+
+    render(<YpopSemesterWorkspace {...props} />);
+
+    expect(screen.getByText("Not Qualified")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /New Budget Request/i })).not.toBeInTheDocument();
+  });
+
+  it("18. User YPOP Semester List presents 'Required Percentage: 70%' and Qualified / Not Qualified status", () => {
+    const qualifiedEntry = createEntry("qualified", basePeriod.semesterKey);
+    const notQualifiedEntry = createEntry("not_qualified", closedPeriod.semesterKey);
+
+    render(
+      <YpopSemesterList
+        periods={[basePeriod, closedPeriod]}
+        entries={[qualifiedEntry, notQualifiedEntry]}
+        cityActivities={[]}
+        participations={[]}
+        orgActivities={[]}
+        organizationId="org-1"
+        onSelectSemester={vi.fn()}
+        formatShortPortalDate={(d) => d}
+      />
+    );
+
+    // Required Percentage: 70% present
+    const reqPercentageElements = screen.getAllByText(/Required Percentage: 70%/i);
+    expect(reqPercentageElements.length).toBeGreaterThanOrEqual(1);
+
+    // No legacy "Cutoff" text
+    expect(screen.queryByText(/Cutoff 70%/i)).not.toBeInTheDocument();
+
+    // Primary status badges
+    expect(screen.getByText("Qualified")).toBeInTheDocument();
+    expect(screen.getByText("Not Qualified")).toBeInTheDocument();
+  });
 });
+

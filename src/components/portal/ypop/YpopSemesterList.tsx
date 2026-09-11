@@ -23,13 +23,16 @@ import { cn } from "@/lib/utils";
 import {
   buildVerifiedYpopAttendance,
   computeYpopScore,
+  deriveYpopQualificationStatus,
   getApprovedYpopOrgActivityCount,
+  statusLabelMap,
   YPOP_SCORE_THRESHOLD,
   type YPOPCityActivity,
   type YPOPEntry,
   type YPOPEventParticipation,
   type YPOPOrgActivity,
   type YPOPPeriod,
+  type YpopQualificationStatus,
 } from "@/lib/lydo-connect-data";
 
 export interface YpopSemesterListProps {
@@ -292,11 +295,23 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                     period.orgLedTiers
                   );
 
-                  const verifiedCityCount = verifiedAttendance.filter((a) => a.attended).length;
-                  const actionLabel = getActionLabel(entry, period);
+                  const threshold = entry?.pointsRequired ?? YPOP_SCORE_THRESHOLD;
                   const isPeriodOpen = period.status === "open";
-                  const isQualified = entry?.status === "qualified";
-                  const isNeedsAttention = isPeriodOpen && (!entry || entry.status === "draft" || entry.status === "needs_revision");
+                  const qualificationStatus: YpopQualificationStatus = deriveYpopQualificationStatus({
+                    score: liveScore.totalScore,
+                    pointsRequired: threshold,
+                    period,
+                    entry,
+                    participations: semesterParticipations,
+                    orgActivities: semesterOrgActivities,
+                  });
+                  const isQualified = qualificationStatus === "qualified";
+                  const verifiedCityCount = verifiedAttendance.filter((a) => a.attended).length;
+                  const actionLabel = getActionLabel(
+                    entry ? { ...entry, status: isQualified ? "qualified" : qualificationStatus === "not_qualified" ? "not_qualified" : entry.status } : null,
+                    period
+                  );
+                  const isNeedsAttention = isPeriodOpen && (!entry || qualificationStatus === "pending_evaluation");
 
                   return (
                     <tr
@@ -339,16 +354,12 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                       {/* Column 3: Qualification Status (Primary status badge in the row) */}
                       <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start">
                         <StatusBadge
-                          status={entry ? entry.status : (isPeriodOpen ? "not_started" : "closed")}
-                          label={
-                            entry
-                              ? undefined
-                              : (isPeriodOpen ? "Not Started" : "No Submission")
-                          }
+                          status={qualificationStatus}
+                          label={statusLabelMap[qualificationStatus]}
                         />
                       </td>
 
-                      {/* Column 4: Calculated Score (Clear numerical anchor with cutoff reference) */}
+                      {/* Column 4: Calculated Score (Clear numerical anchor with required percentage reference) */}
                       <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle">
                         <div className="w-full md:min-w-[120px] md:max-w-[140px] space-y-1">
                           <div className="flex items-baseline justify-between gap-1.5">
@@ -363,7 +374,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                               {liveScore.totalScore}%
                             </span>
                             <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium whitespace-nowrap">
-                              Cutoff {YPOP_SCORE_THRESHOLD}%
+                              Required Percentage: {threshold}%
                             </span>
                           </div>
                           <Progress

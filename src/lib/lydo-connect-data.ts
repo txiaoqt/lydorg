@@ -425,6 +425,84 @@ export function getApprovedYpopOrgActivityCount(
   return linkedActivities.filter((activity) => activity.status === "approved").length;
 }
 
+export type YpopQualificationStatus = "pending_evaluation" | "qualified" | "not_qualified";
+
+export interface DeriveYpopQualificationStatusParams {
+  score: number;
+  pointsRequired?: number;
+  period?: Pick<YPOPPeriod, "status"> | null;
+  entry?: Pick<YPOPEntry, "status" | "pointsRequired"> | null;
+  participations?: Array<Pick<YPOPEventParticipation, "status">>;
+  orgActivities?: Array<Pick<YPOPOrgActivity, "status">>;
+  unreviewedCount?: number;
+  needsRevisionCount?: number;
+}
+
+/**
+ * Authoritative shared helper for YPOP qualification status derivation.
+ * Evaluates in strict order:
+ * 1. Has score reached threshold (>= 70%)? -> Qualified
+ * 2. Is period closed? -> Not Qualified (if below 70%)
+ * 3. Is evaluation pending/incomplete (no submissions, unreviewed items, needs revision, draft)? -> Pending Evaluation
+ * 4. All evaluation complete and below 70%? -> Not Qualified
+ */
+export function deriveYpopQualificationStatus(
+  params: DeriveYpopQualificationStatusParams,
+): YpopQualificationStatus {
+  const threshold = params.pointsRequired ?? params.entry?.pointsRequired ?? YPOP_SCORE_THRESHOLD;
+  const score = params.score;
+  const isPeriodClosed = params.period?.status === "closed";
+
+  const unreviewedCount =
+    typeof params.unreviewedCount === "number"
+      ? params.unreviewedCount
+      : ((params.participations ?? []).filter((p) => p.status === "pending_verification").length +
+         (params.orgActivities ?? []).filter((a) => a.status === "submitted" || a.status === "under_review").length);
+
+  const needsRevisionCount =
+    typeof params.needsRevisionCount === "number"
+      ? params.needsRevisionCount
+      : ((params.participations ?? []).filter((p) => p.status === "needs_revision").length +
+         (params.orgActivities ?? []).filter((a) => a.status === "needs_revision").length);
+
+  const submittedCount =
+    (params.participations ?? []).filter((p) => p.status && p.status !== "draft").length +
+    (params.orgActivities ?? []).length;
+
+  if (score >= threshold) {
+    return "qualified";
+  }
+
+  if (params.entry?.status === "qualified") {
+    return "qualified";
+  }
+
+  if (isPeriodClosed) {
+    return "not_qualified";
+  }
+
+  if (unreviewedCount > 0 || needsRevisionCount > 0) {
+    return "pending_evaluation";
+  }
+
+  if (params.entry?.status === "not_qualified") {
+    return "not_qualified";
+  }
+
+  if (
+    submittedCount === 0 ||
+    !params.entry ||
+    params.entry.status === "draft" ||
+    params.entry.status === "submitted" ||
+    params.entry.status === "under_review" ||
+    params.entry.status === "needs_revision"
+  ) {
+    return "pending_evaluation";
+  }
+
+  return "not_qualified";
+}
+
 export const majorClassificationOptions = ["Youth Organization", "Youth-Serving Organization"] as const;
 export type MajorClassification = (typeof majorClassificationOptions)[number];
 
@@ -2039,6 +2117,7 @@ export const statusLabelMap: Record<string, string> = {
   draft_visibility: "Draft",
   qualified: "Qualified",
   not_qualified: "Not Qualified",
+  pending_evaluation: "Pending Evaluation",
   pending_verification: "Pending Verification",
   confirmed: "Participation Confirmed",
   approved: "Approved",

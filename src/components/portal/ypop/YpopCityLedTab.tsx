@@ -9,6 +9,7 @@ import {
   Filter,
   ChevronDown,
   Plus,
+  Edit3,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -229,6 +230,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                   const filesCount = participation
                     ? eventFiles.filter((f) => f.participationId === participation.id).length
                     : 0;
+                  const isNeedsRevision = participation?.status === "needs_revision";
 
                   return (
                     <tr
@@ -318,25 +320,27 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap order-6">
                         <Button
                           type="button"
-                          variant={participation && filesCount > 0 ? "outline" : "default"}
+                          variant={isNeedsRevision || (participation && filesCount > 0) ? "outline" : "default"}
                           size="sm"
                           onClick={() => handleOpenDrawer(act)}
                           className={cn(
-                            "w-full md:w-auto h-8 px-3 rounded-lg text-xs font-medium gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center",
-                            participation?.status === "needs_revision"
-                              ? "border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                            "w-full md:w-auto h-8 px-3 rounded-lg text-xs gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center",
+                            isNeedsRevision
+                              ? "border border-amber-500/40 dark:border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/60 dark:hover:border-amber-500/50 hover:text-amber-900 dark:hover:text-amber-100 font-semibold shadow-2xs focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2"
                               : participation && filesCount > 0
-                              ? "border border-border/80 bg-background hover:bg-muted text-foreground"
-                              : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs"
+                              ? "border border-border/80 bg-background hover:bg-muted text-foreground font-medium"
+                              : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs font-medium"
                           )}
                         >
-                          {participation && filesCount > 0 ? (
+                          {isNeedsRevision ? (
+                            <Edit3 className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" />
+                          ) : participation && filesCount > 0 ? (
                             <FileText className="h-3.5 w-3.5 shrink-0" />
                           ) : (
                             <Plus className="h-3.5 w-3.5 shrink-0" />
                           )}
                           <span>
-                            {participation?.status === "needs_revision"
+                            {isNeedsRevision
                               ? "Resolve Revision"
                               : participation && filesCount > 0
                               ? "View Proof & Details"

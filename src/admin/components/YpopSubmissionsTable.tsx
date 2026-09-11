@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ReferenceCodeChip } from "@/admin/components/InquiriesTable";
-import { majorClassificationOptions, type YPOPStatus } from "@/lib/lydo-connect-data";
+import { majorClassificationOptions, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 
 export type YpopSubmissionStatusFilter = "all" | "pending_evaluation" | "qualified" | "not_qualified";
 
@@ -18,7 +18,7 @@ export type YpopSubmissionRow = {
   organizationName: string;
   referenceId: string;
   majorClassification: string;
-  status: YPOPStatus;
+  status: YpopQualificationStatus | YPOPStatus;
 };
 
 type YpopSubmissionsTableProps = {
@@ -41,10 +41,10 @@ const STATUS_TABS: { value: YpopSubmissionStatusFilter; label: string }[] = [
 
 const PAGE_SIZE = 10;
 
-export const StatusLabel = ({ status }: { status: YPOPStatus }) => {
+export const StatusLabel = ({ status }: { status: YpopQualificationStatus | YPOPStatus }) => {
   if (status === "qualified") {
     return (
-      <span className="inline-flex h-5 items-center justify-center rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
         Qualified
       </span>
     );
@@ -56,9 +56,37 @@ export const StatusLabel = ({ status }: { status: YPOPStatus }) => {
       </span>
     );
   }
+  if (status === "pending_evaluation") {
+    return (
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-amber-500/30 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-800 dark:bg-amber-500/10 dark:text-amber-400">
+        Pending Evaluation
+      </span>
+    );
+  }
+  if (status === "needs_revision") {
+    return (
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+        Needs Revision
+      </span>
+    );
+  }
+  if (status === "under_review") {
+    return (
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-[#2864C4]">
+        Under Review
+      </span>
+    );
+  }
+  if (status === "draft") {
+    return (
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+        Draft
+      </span>
+    );
+  }
   return (
-    <span className="inline-flex h-6 items-center justify-center rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-[#2864C4]">
-      Pending Evaluation
+    <span className="inline-flex h-6 items-center justify-center rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      Submitted
     </span>
   );
 };

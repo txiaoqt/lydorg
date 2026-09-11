@@ -404,7 +404,7 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
     expect(screen.getByText("2nd Semester 2026")).toBeInTheDocument();
     expect(screen.getByText(/Open Period/i)).toBeInTheDocument();
     expect(screen.getByText("Qualified")).toBeInTheDocument();
-    expect(screen.getByText(/Cutoff/i)).toBeInTheDocument();
+    expect(screen.getByText(/Required Percentage/i)).toBeInTheDocument();
     expect(screen.getByText(/City-Led:/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /View Evaluation Result/i })).toBeInTheDocument();
   });

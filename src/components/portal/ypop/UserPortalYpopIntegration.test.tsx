@@ -633,8 +633,8 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     // Period status displays clean indicator text
     expect(screen.getAllByText("Open Period").length).toBeGreaterThan(0);
 
-    // Calculated score displays bold percentage and cutoff reference
-    expect(screen.getAllByText(/Cutoff 70%/i).length).toBeGreaterThan(0);
+    // Calculated score displays bold percentage and required percentage reference
+    expect(screen.getAllByText(/Required Percentage: 70%/i).length).toBeGreaterThan(0);
 
     // Activity summary shows clean tabular labels
     expect(screen.getAllByText(/City-Led:/i).length).toBeGreaterThan(0);
@@ -681,5 +681,140 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByText("Click to browse file")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Resubmit Corrected Proof/i })).toBeInTheDocument();
   });
+
+  it("28. Redundant global 'Admin Requested Submission Revisions' banner is not rendered when semester entry is in needs_revision state", () => {
+    const revisionProps = {
+      ...defaultProps,
+      ypopEntries: [
+        {
+          ...mockEntries[0],
+          status: "needs_revision" as const,
+          adminRemarks: "Please review submitted proofs and update documentation.",
+        },
+        mockEntries[1],
+      ],
+    };
+
+    render(<UserPortalYPOPWorkspaceView {...revisionProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // Global banner must NOT be rendered
+    expect(screen.queryByText("Admin Requested Submission Revisions")).toBeNull();
+    expect(screen.queryByText(/Review the items above, update your proof documents or PPA logs/i)).toBeNull();
+    // Global entry admin remarks must NOT appear in a redundant top-level banner
+    expect(screen.queryByText(/"Please review submitted proofs and update documentation."/)).toBeNull();
+  });
+
+  it("29. City-Led activities table preserves row-level Needs Revision badge, admin remark, and Resolve Revision action", () => {
+    render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // City-Led activity row with needs_revision
+    expect(screen.getByText("S1 Sports Summit")).toBeInTheDocument();
+    expect(screen.getByText(/"Please attach certified attendance photo with timestamp."/)).toBeInTheDocument();
+
+    const resolveBtn = screen.getByRole("button", { name: "Resolve Revision" });
+    expect(resolveBtn).toBeInTheDocument();
+    expect(resolveBtn).toBeVisible();
+
+    // Verify status badge
+    const revisionBadges = screen.getAllByText("Needs Revision");
+    expect(revisionBadges.length).toBeGreaterThan(0);
+  });
+
+  it("30. Organization PPAs table preserves row-level Needs Revision badge, admin remark, and Resolve Revision action", () => {
+    render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // Switch to Org PPAs tab
+    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    fireEvent.click(orgTab);
+
+    // Activity name, admin remarks, badge, and Resolve Revision button
+    expect(screen.getByText("Tree Planting Initiative")).toBeInTheDocument();
+    expect(screen.getByText(/"Missing proof photos and participant signature sheet."/)).toBeInTheDocument();
+
+    const resolveBtns = screen.getAllByRole("button", { name: "Resolve Revision" });
+    expect(resolveBtns.length).toBeGreaterThan(0);
+
+    const revisionBadges = screen.getAllByText("Needs Revision");
+    expect(revisionBadges.length).toBeGreaterThan(0);
+  });
+
+  it("31. Global redundant Validation Remarks banner is removed while underlying remark data is preserved", () => {
+    const notQualifiedProps = {
+      ...defaultProps,
+      ypopEntries: [
+        {
+          ...mockEntries[0],
+          status: "not_qualified" as const,
+          adminRemarks: "Minimum mandatory attendance requirements not satisfied for this semester.",
+        },
+        mockEntries[1],
+      ],
+    };
+
+    render(<UserPortalYPOPWorkspaceView {...notQualifiedProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // Global "Validation Remarks" banner must NOT be rendered
+    expect(screen.queryByText("Validation Remarks")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/This validation submission was evaluated and closed by the LYDO Admin./i)
+    ).not.toBeInTheDocument();
+    // Underlying entry remark data remains intact in entry record
+    expect(notQualifiedProps.ypopEntries[0].adminRemarks).toBe(
+      "Minimum mandatory attendance requirements not satisfied for this semester."
+    );
+  });
+
+  it("32. Resolve Revision buttons in both City-Led and Org-Led tabs use warning/revision visual treatment instead of primary navy", () => {
+    render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
+    openSemesterByLabel("2026 First Semester");
+
+    // 1. City-Led table Resolve Revision button
+    const cityResolveBtn = screen.getByRole("button", { name: "Resolve Revision" });
+    expect(cityResolveBtn).toBeInTheDocument();
+
+    // Must NOT have dark navy primary styling
+    expect(cityResolveBtn.className).not.toContain("bg-primary hover:bg-primary/90");
+
+    // Must have warning / revision styling classes
+    expect(cityResolveBtn.className).toContain("bg-amber-500/10");
+    expect(cityResolveBtn.className).toContain("border-amber-500/40");
+    expect(cityResolveBtn.className).toContain("text-amber-800");
+    expect(cityResolveBtn.className).toContain("active:scale-[0.98]");
+    expect(cityResolveBtn.className).toContain("focus-visible:ring-amber-500/40");
+
+    // Other activity button (e.g. Submit Attendance Proof) must remain untouched
+    const submitProofBtn = screen.getByRole("button", { name: "Submit Attendance Proof" });
+    expect(submitProofBtn).toBeInTheDocument();
+    expect(submitProofBtn.className).toContain("bg-primary");
+    expect(submitProofBtn.className).not.toContain("bg-amber-500/10");
+
+    // 2. Organization PPAs table Resolve Revision button
+    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    fireEvent.click(orgTab);
+
+    const orgResolveBtns = screen.getAllByRole("button", { name: "Resolve Revision" });
+    expect(orgResolveBtns.length).toBeGreaterThan(0);
+    const orgResolveBtn = orgResolveBtns[0];
+
+    // Must NOT have navy primary styling
+    expect(orgResolveBtn.className).not.toContain("bg-primary hover:bg-primary/90");
+
+    // Must have warning / revision styling classes
+    expect(orgResolveBtn.className).toContain("bg-amber-500/10");
+    expect(orgResolveBtn.className).toContain("border-amber-500/40");
+    expect(orgResolveBtn.className).toContain("text-amber-800");
+    expect(orgResolveBtn.className).toContain("active:scale-[0.98]");
+    expect(orgResolveBtn.className).toContain("focus-visible:ring-amber-500/40");
+
+    // Other org button (e.g. View Remarks & Files) must remain untouched
+    const viewRemarksBtn = screen.getByRole("button", { name: "View Remarks & Files" });
+    expect(viewRemarksBtn).toBeInTheDocument();
+    expect(viewRemarksBtn.className).not.toContain("bg-amber-500/10");
+  });
 });
+
 

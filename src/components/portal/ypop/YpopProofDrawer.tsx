@@ -9,7 +9,6 @@ import {
   Clock,
   XCircle,
   Loader2,
-  Award,
   Calendar,
   MapPin,
   UploadCloud,
@@ -18,7 +17,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogClose,
@@ -26,7 +24,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
   SheetDescription,
   SheetClose,
@@ -35,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { StatusBadge } from "@/components/portal/StatusBadge";
 import { cn } from "@/lib/utils";
 import {
   getYpopCityLedPoints,
@@ -53,6 +51,8 @@ import {
   updateYpopEventParticipationInSupabase,
   resolveSupabaseFileUrl,
 } from "@/lib/lydo-connect-supabase";
+import { PortalDrawerDocumentSection } from "@/components/portal/PortalDrawerDocumentSection";
+import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
 
 export interface YpopProofDrawerProps {
   open: boolean;
@@ -99,28 +99,72 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   onFileCreated,
   onFileDeleted,
 }) => {
+  const [currentParticipation, setCurrentParticipation] = useState<YPOPEventParticipation | null>(participation);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState<string>("");
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isDesktop = useIsDesktop();
 
-  if (!activity) return null;
+  useEffect(() => {
+    setCurrentParticipation(participation);
+  }, [participation]);
 
-  const category = resolveYpopCityLedCategory(activity.category, activity.points);
-  const points = activity.points ?? getYpopCityLedPoints(category);
+  const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : "mandatory";
+  const points = activity ? (activity.points ?? getYpopCityLedPoints(category)) : 0;
 
-  const files = participation
-    ? eventFiles.filter((f) => f.participationId === participation.id)
+  const files = currentParticipation
+    ? eventFiles.filter((f) => f.participationId === currentParticipation.id)
     : [];
 
-  const isVerified = participation?.status === "verified";
-  const isNeedsRevision = participation?.status === "needs_revision";
-  const isRejected = participation?.status === "rejected";
-  const isPending = participation?.status === "pending_verification";
-  const isDraft = !participation || participation.status === "draft";
-  const isEditable = !isVerified && (isDraft || isNeedsRevision || isPending);
+  const isVerified = currentParticipation?.status === "verified";
+  const isNeedsRevision = currentParticipation?.status === "needs_revision";
+  const isRejected = currentParticipation?.status === "rejected";
+  const isPending = currentParticipation?.status === "pending_verification";
+  const isDraft = !currentParticipation || currentParticipation.status === "draft";
+  const isEditable = !isVerified && !isRejected && !isPending && (isDraft || isNeedsRevision);
+
+  const activeFile = files.find((f) => f.id === selectedFileId) || files[0] || null;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!activeFile?.fileUrl) {
+      setResolvedPreviewUrl("");
+      return;
+    }
+
+    resolveSupabaseFileUrl(activeFile.fileUrl)
+      .then((url) => {
+        if (isMounted) {
+          setResolvedPreviewUrl(url || activeFile.fileUrl);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setResolvedPreviewUrl(activeFile.fileUrl);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeFile?.id, activeFile?.fileUrl]);
+
+  useEffect(() => {
+    if (files.length > 0) {
+      if (!selectedFileId || !files.some((f) => f.id === selectedFileId)) {
+        setSelectedFileId(files[0].id);
+      }
+    } else {
+      setSelectedFileId(null);
+    }
+  }, [files.length, selectedFileId]);
+
+  if (!activity) return null;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -128,8 +172,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
 
     setUploading(true);
     try {
-      // Auto-ensure participation record exists on proof submission without requiring a separate Join action
-      let targetPart = participation;
+      let targetPart = currentParticipation;
       if (!targetPart) {
         targetPart = await ensureYpopEventParticipationInSupabase({
           activityId: activity.id,
@@ -137,6 +180,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           activityDate: activity.startDate || activity.date || "",
           venue: activity.venue || "Pasig City",
         });
+        setCurrentParticipation(targetPart);
         onParticipationUpdated(targetPart);
       }
 
@@ -147,6 +191,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           file,
         });
         onFileCreated(saved);
+        setSelectedFileId(saved.id);
       }
       toast({
         title: "Proof files uploaded",
@@ -166,9 +211,14 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
 
   const handleDeleteFile = async (file: YPOPEventFile) => {
     setDeletingFileId(file.id);
+    if (selectedFileId === file.id) {
+      const remaining = files.filter((f) => f.id !== file.id);
+      setSelectedFileId(remaining[0]?.id ?? null);
+    }
+    onFileDeleted(file.id);
+
     try {
       await deleteYpopEventFileFromSupabase(file.id, file.fileUrl);
-      onFileDeleted(file.id);
       toast({
         title: "File removed",
         description: "The proof file has been deleted.",
@@ -184,12 +234,34 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     }
   };
 
-  const handleOpenFile = async (fileUrl: string) => {
+  const handleDownloadFile = async (fileUrl: string, fileName: string, fileId?: string) => {
+    if (!fileUrl) return;
     try {
-      const url = await resolveSupabaseFileUrl(fileUrl);
-      window.open(url || fileUrl, "_blank", "noopener,noreferrer");
-    } catch {
-      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      if (fileId) setDownloadingFileId(fileId);
+      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
+      const targetUrl = resolvedUrl || fileUrl;
+
+      const response = await fetch(targetUrl);
+      if (!response.ok) throw new Error("Failed to fetch file for download");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName || "proof-document.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Direct blob download failed, falling back to link download:", err);
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileName || "proof-document.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } finally {
+      if (fileId) setDownloadingFileId(null);
     }
   };
 
@@ -203,25 +275,31 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       return;
     }
 
-    if (!participation) return;
+    if (!currentParticipation) return;
 
     setSubmitting(true);
     try {
       const now = new Date().toISOString();
-      const updated = await updateYpopEventParticipationInSupabase(participation.id, {
+      const updated = await updateYpopEventParticipationInSupabase(currentParticipation.id, {
         proofSubmittedAt: now,
         status: "pending_verification",
         revisionHistory: [
-          ...(participation.revisionHistory ?? []),
-          { action: "pending_verification", adminRemarks: remarks.trim() || (isNeedsRevision ? "Revision submitted for verification." : "Submitted for verification."), changedAt: now },
+          ...(currentParticipation.revisionHistory ?? []),
+          {
+            action: "pending_verification",
+            adminRemarks:
+              remarks.trim() ||
+              (isNeedsRevision ? "Revision submitted for verification." : "Submitted for verification."),
+            changedAt: now,
+          },
         ],
       });
+      setCurrentParticipation(updated);
       onParticipationUpdated(updated);
       toast({
         title: isNeedsRevision ? "Revision resubmitted" : "Proof submitted for verification",
         description: "Your participation proof has been submitted to the Admin for review.",
       });
-      onOpenChange(false);
     } catch (error) {
       toast({
         title: "Submission failed",
@@ -234,7 +312,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   };
 
   const headerCategoryAndPoints = (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <span
         className={cn(
           "text-[11px] font-bold px-2.5 py-0.5 rounded-full border",
@@ -248,9 +326,23 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       >
         {YPOP_CITY_LED_CATEGORY_LABELS[category]} Activity
       </span>
-      <span className="text-xs font-bold text-muted-foreground">
+      <span className="text-[11px] font-bold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
         {points} Points Weight
       </span>
+      {currentParticipation?.status && (
+        <span
+          className={cn(
+            "text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full border inline-flex items-center",
+            isVerified && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+            isPending && "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
+            isNeedsRevision && "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
+            isRejected && "bg-destructive/10 text-destructive border-destructive/20",
+            isDraft && "bg-muted/80 text-muted-foreground border-border/70"
+          )}
+        >
+          Status: {currentParticipation.status.replace("_", " ").toUpperCase()}
+        </span>
+      )}
     </div>
   );
 
@@ -260,6 +352,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         <Calendar className="h-3.5 w-3.5" />
         {formatActivityDateRange(activity.startDate || activity.date, activity.endDate || activity.date)}
       </span>
+      <span className="text-muted-foreground/40">•</span>
       <span className="flex items-center gap-1">
         <MapPin className="h-3.5 w-3.5" />
         {activity.venue || "Pasig City"}
@@ -267,11 +360,17 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     </>
   );
 
+  const fileSectionTitle = files.length === 0
+    ? "Attach File"
+    : files.length > 1
+      ? "Attached Files"
+      : "Attached File";
+
   const bodyContent = (
     <>
       {/* Status Callout Banner */}
       {isVerified && (
-        <div className="p-3 sm:p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-2.5 sm:gap-3">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3 shadow-2xs">
           <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-emerald-700 dark:text-emerald-300">
@@ -285,15 +384,15 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isNeedsRevision && (
-        <div className="p-3 sm:p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 sm:gap-3">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 shadow-2xs">
           <AlertTriangle className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-xs space-y-1.5 min-w-0 flex-1">
+          <div className="text-xs space-y-2 min-w-0 flex-1">
             <p className="font-bold text-amber-700 dark:text-amber-300">
               Admin Revision Requested
             </p>
-            {participation?.adminRemarks && (
+            {currentParticipation?.adminRemarks && (
               <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium italic break-words">
-                "{participation.adminRemarks}"
+                "{currentParticipation.adminRemarks}"
               </div>
             )}
             <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
@@ -304,15 +403,15 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isRejected && (
-        <div className="p-3 sm:p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-2.5 sm:gap-3">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3 shadow-2xs">
           <XCircle className="h-4.5 w-4.5 text-destructive shrink-0 mt-0.5" />
-          <div className="text-xs space-y-1.5 min-w-0 flex-1">
+          <div className="text-xs space-y-2 min-w-0 flex-1">
             <p className="font-bold text-destructive">
               Participation Rejected
             </p>
-            {participation?.adminRemarks && (
+            {currentParticipation?.adminRemarks && (
               <div className="p-2.5 rounded-lg bg-background/80 border border-destructive/20 text-foreground font-medium italic break-words">
-                "{participation.adminRemarks}"
+                "{currentParticipation.adminRemarks}"
               </div>
             )}
             <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
@@ -323,7 +422,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isPending && !isNeedsRevision && (
-        <div className="p-3 sm:p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-2.5 sm:gap-3">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-3 shadow-2xs">
           <Clock className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-blue-700 dark:text-blue-300">
@@ -337,7 +436,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isDraft && files.length > 0 && (
-        <div className="p-3 sm:p-3.5 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-start gap-2.5 sm:gap-3">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-start gap-3 shadow-2xs">
           <FileText className="h-4.5 w-4.5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-slate-700 dark:text-slate-300">
@@ -350,7 +449,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         </div>
       )}
 
-      {/* Optional Remarks from Organization */}
+      {/* Optional Remarks from Organization: Only editable when isEditable */}
       {isEditable && (
         <div className="space-y-1.5 pt-1 w-full min-w-0">
           <Label htmlFor="city-remarks" className="text-xs font-semibold text-foreground">
@@ -367,16 +466,25 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         </div>
       )}
 
-      {/* Uploaded Files Section */}
+      {/* Files Section */}
       <div className="space-y-3 pt-1 w-full min-w-0">
-        <div>
-          <h4 className="text-xs font-bold text-foreground flex items-center gap-1">
-            <span>Attach File</span>
-            {isEditable && <span className="text-destructive">*</span>}
-          </h4>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Please attach the following: Attendance Sheet and Narrative Report.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-xs font-bold text-foreground flex items-center gap-1">
+              <span>{fileSectionTitle}</span>
+              {isEditable && isDraft && <span className="text-destructive">*</span>}
+            </h4>
+            {isDraft && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Please attach the following: Attendance Sheet and Narrative Report.
+              </p>
+            )}
+          </div>
+          {files.length > 0 && (
+            <span className="text-[11px] text-muted-foreground font-mono">
+              {files.length} {files.length === 1 ? "file" : "files"}
+            </span>
+          )}
         </div>
 
         <input
@@ -388,165 +496,190 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           accept="image/*,.pdf,.doc,.docx,.xlsx"
         />
 
+        {/* Canonical Single Upload Surface: ONLY when isEditable (draft or needs_revision) */}
         {isEditable && (
           <div
+            role="button"
+            tabIndex={0}
+            aria-label="Upload proof documents: click or press enter to browse files"
             onClick={() => fileInputRef.current?.click()}
-            className="border border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-accent/40 rounded-xl p-3 sm:p-4 text-center cursor-pointer transition-all space-y-1"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            className="border border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-accent/40 rounded-xl p-3.5 sm:p-4 text-center cursor-pointer transition-all space-y-1 select-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.99]"
           >
-            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
-              <UploadCloud className="h-4 w-4" />
+            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <UploadCloud className="h-4 w-4" />
+              )}
             </div>
-            <p className="text-xs font-semibold text-primary">Click to browse file</p>
+            <p className="text-xs font-semibold text-primary">
+              {uploading ? "Uploading files..." : "Click to browse file"}
+            </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground">
               Supports PDF, DOCX, and XLSX documents up to 10 MB
             </p>
           </div>
         )}
 
-        {files.length === 0 ? (
-          <div className="p-4 sm:p-5 text-center rounded-xl border border-dashed border-border/80 text-xs text-muted-foreground space-y-1.5 bg-muted/10">
-            <FileText className="h-6 w-6 text-muted-foreground mx-auto stroke-1" />
-            <p className="font-semibold text-foreground">No proof files attached yet</p>
-            <p className="text-[10px] sm:text-[11px]">Upload attendance sheets, event photos, or certificates.</p>
-            {isEditable && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-8 px-3 text-xs font-medium rounded-lg mt-1 border-border/80 hover:bg-muted text-foreground transition-all cursor-pointer active:scale-[0.98]"
-              >
-                <Upload className="h-3.5 w-3.5 mr-1" /> Choose Files
-              </Button>
-            )}
+        {/* Quiet empty-state notice for non-editable view when no files exist */}
+        {!isEditable && files.length === 0 && (
+          <div className="p-4 rounded-xl border border-dashed border-border/70 text-center text-xs text-muted-foreground">
+            No proof documents attached.
           </div>
-        ) : (
-          <div className="space-y-2">
-            {files.map((file) => (
-              <div
-                key={file.id}
-                className="p-2.5 sm:p-3 rounded-xl border border-border/70 bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shadow-2xs hover:border-border transition-colors"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-foreground truncate max-w-full sm:max-w-[280px]" title={file.fileName}>
-                      {file.fileName}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {file.fileType || "Document"}
-                    </p>
-                  </div>
-                </div>
+        )}
 
-                <div className="flex items-center justify-between sm:justify-end gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-border/40">
-                  <div className="flex items-center gap-1.5">
-                    {isVerified && (
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                        Approved
-                      </span>
-                    )}
-                    {isPending && (
-                      <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                        Pending Review
-                      </span>
-                    )}
-                    {isDraft && (
-                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-500/10 px-2 py-0.5 rounded-full border border-slate-500/20">
-                        Draft
-                      </span>
-                    )}
-                    {isNeedsRevision && (
-                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                        Needs Revision
-                      </span>
-                    )}
-                    {isRejected && (
-                      <span className="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                        Rejected
-                      </span>
-                    )}
-                  </div>
+        {files.length > 0 && (
+          <div className="space-y-3">
+            {/* Attached Files List - Single mechanism: Clicking an attached file selects it */}
+            <div className="space-y-2">
+              {files.map((file) => {
+                const isActive = activeFile?.id === file.id;
+                return (
+                  <PortalAttachedFileRow
+                    key={file.id}
+                    file={file}
+                    isActive={isActive}
+                    onSelect={() => setSelectedFileId(file.id)}
+                    status={
+                      isVerified
+                        ? "verified"
+                        : isPending
+                        ? "pending_verification"
+                        : isNeedsRevision
+                        ? "needs_revision"
+                        : isRejected
+                        ? "rejected"
+                        : "draft"
+                    }
+                    statusLabel={
+                      isVerified
+                        ? "Approved"
+                        : isPending
+                        ? "Pending Review"
+                        : isNeedsRevision
+                        ? "Needs Revision"
+                        : isRejected
+                        ? "Rejected"
+                        : "Draft"
+                    }
+                    canDelete={isEditable}
+                    isDeleting={deletingFileId === file.id}
+                    onDelete={() => handleDeleteFile(file)}
+                    deleteTitle="Remove file"
+                    deleteAriaLabel="Remove file"
+                  />
+                );
+              })}
+            </div>
 
-                  <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleOpenFile(file.fileUrl)}
-                      className="h-7.5 px-2.5 text-xs font-medium text-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1.5 active:scale-[0.98]"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>View</span>
-                    </Button>
-                    {isEditable && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={deletingFileId === file.id}
-                        onClick={() => handleDeleteFile(file)}
-                        className="h-7.5 w-7.5 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors cursor-pointer inline-flex items-center justify-center active:scale-[0.98]"
-                        title="Remove file"
-                      >
-                        {deletingFileId === file.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+            {/* Canonical Document Preview Section */}
+            {activeFile && (
+              <div className="pt-2">
+                <PortalDrawerDocumentSection
+                  file={{
+                    id: activeFile.id,
+                    fileName: activeFile.fileName,
+                    fileUrl: activeFile.fileUrl,
+                    uploadedAt: activeFile.uploadedAt,
+                  }}
+                  previewUrl={resolvedPreviewUrl || activeFile.fileUrl}
+                  isDownloading={downloadingFileId === activeFile.id}
+                  onDownloadFile={(url, name, id) => void handleDownloadFile(url, name, id)}
+                  formatDateTimeLabel={(date) => new Date(date).toLocaleDateString()}
+                  sectionTitle="Document Preview"
+                  emptyTitle="No document attached"
+                  emptyDescription="No file has been attached to this record."
+                  isMobile={!isDesktop}
+                />
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
     </>
   );
 
-  // DESKTOP / PC: Right-Side Drawer matching Budget Request / Liquidation Report
+  // DESKTOP / PC: Right-Side Drawer matching Liquidation Report Drawer
   if (isDesktop) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-[min(38rem,95vw)] sm:w-[540px] sm:max-w-xl overflow-y-auto bg-card border-border p-5 sm:p-6 space-y-5">
-          <SheetHeader className="space-y-1.5 border-b border-border/60 pb-4">
-            {headerCategoryAndPoints}
-            <SheetTitle className="text-xl font-bold text-foreground leading-snug">
-              {activity.name}
-            </SheetTitle>
-            <SheetDescription className="text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
-              {headerDateTimeVenue}
-            </SheetDescription>
-          </SheetHeader>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl"
+        >
+          {/* PINNED HEADER */}
+          <div className="p-5 sm:p-6 border-b border-border/70 bg-card shrink-0 space-y-2">
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                {headerCategoryAndPoints}
+              </div>
+            </div>
 
-          {bodyContent}
-
-          {/* Footer Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-border/60">
-            <SheetClose asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="text-xs sm:text-sm font-medium h-9.5 px-4 rounded-lg cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+            <div className="space-y-1 pt-1">
+              <SheetTitle
+                className="text-xl font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere]"
+                title={activity.name}
               >
-                {isEditable ? "Cancel" : "Close Drawer"}
-              </Button>
-            </SheetClose>
+                {activity.name}
+              </SheetTitle>
+              <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                {headerDateTimeVenue}
+              </SheetDescription>
+            </div>
+          </div>
 
-            {isEditable && (
-              <Button
-                type="button"
-                disabled={submitting || files.length === 0}
-                onClick={handleSubmitProof}
-                className="h-9.5 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
-              </Button>
+          {/* SCROLLABLE BODY */}
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+            {bodyContent}
+          </div>
+
+          {/* PINNED FOOTER */}
+          <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+            {isEditable ? (
+              <>
+                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0 active:scale-[0.98]"
+                  >
+                    Cancel
+                  </Button>
+                </SheetClose>
+
+                <Button
+                  type="button"
+                  disabled={submitting || files.length === 0}
+                  onClick={handleSubmitProof}
+                  className="h-8.5 px-4 sm:px-5 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                >
+                  {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                  YPOP Activity Proof • LYDO Pasig City
+                </p>
+                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0 active:scale-[0.98]"
+                  >
+                    Close Drawer
+                  </Button>
+                </SheetClose>
+              </>
             )}
           </div>
         </SheetContent>
@@ -554,103 +687,91 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     );
   }
 
-  // MOBILE + TABLET: Centered Modal Dialog matching Budget Request / Liquidation Report & YpopPpaModal
+  // MOBILE + TABLET: Centered Modal Dialog matching Liquidation Report Dialog (< 1024px)
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton={true}
-        className="w-[calc(100vw-1.25rem)] sm:w-[92vw] max-w-2xl h-[calc(100dvh-1.5rem)] sm:h-auto sm:max-h-[88vh] p-0 gap-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+        className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
       >
         {/* PINNED HEADER */}
-        <div className="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-border/60 bg-card shrink-0 flex items-start justify-between gap-3">
-          <div className="space-y-1 min-w-0 flex-1">
-            {/* Category & Points & Status Badge */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span
-                className={cn(
-                  "text-[11px] font-bold px-2.5 py-0.5 rounded-full border",
-                  YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].className
-                )}
-                style={{
-                  color: YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].text,
-                  backgroundColor: YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].background,
-                  borderColor: YPOP_CITY_LED_CATEGORY_TAG_STYLES[category].border,
-                }}
-              >
-                {YPOP_CITY_LED_CATEGORY_LABELS[category]} Activity
-              </span>
-              <span className="text-xs font-bold text-muted-foreground">
-                {points} Points Weight
-              </span>
-              {participation?.status && (
-                <span
-                  className={cn(
-                    "text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border inline-flex items-center",
-                    isVerified && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
-                    isPending && "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
-                    isNeedsRevision && "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
-                    isRejected && "bg-destructive/10 text-destructive border-destructive/20",
-                    isDraft && "bg-muted/80 text-muted-foreground border-border/70"
-                  )}
-                >
-                  Status: {participation.status.replace("_", " ").toUpperCase()}
-                </span>
-              )}
+        <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
+          {/* Row 1: Badges + Dedicated Close Button */}
+          <div className="flex items-center justify-between gap-2.5 w-full">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {headerCategoryAndPoints}
             </div>
 
-            {/* Title */}
-            <DialogTitle className="text-base sm:text-xl font-bold text-foreground leading-snug text-left pt-0.5 break-words">
+            <DialogClose asChild>
+              <button
+                type="button"
+                aria-label="Close modal"
+                className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogClose>
+          </div>
+
+          {/* Row 2: Title */}
+          <div className="space-y-1 min-w-0">
+            <DialogTitle
+              className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2"
+              title={activity.name}
+            >
               {activity.name}
             </DialogTitle>
-
-            {/* Date & Venue */}
-            <DialogDescription className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-left">
+            {/* Row 3: Subtitle */}
+            <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
               {headerDateTimeVenue}
             </DialogDescription>
           </div>
-
-          {/* Top-Right Dedicated Close Button */}
-          <DialogClose asChild>
-            <button
-              type="button"
-              aria-label="Close"
-              className="h-8 w-8 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0.5"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </button>
-          </DialogClose>
         </div>
 
         {/* SCROLLABLE BODY */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3.5 sm:px-6 sm:py-5 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
           {bodyContent}
         </div>
 
         {/* PINNED FOOTER */}
-        <div className="p-3 sm:px-6 sm:py-4 border-t border-border/60 bg-card shrink-0">
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-lg cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
-            >
-              {isEditable ? "Cancel" : "Close"}
-            </Button>
+        <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
+          {isEditable ? (
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+              >
+                Cancel
+              </Button>
 
-            {isEditable && (
               <Button
                 type="button"
                 disabled={submitting || files.length === 0}
                 onClick={handleSubmitProof}
-                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
+                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
               </Button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                YPOP Activity Proof • LYDO Pasig City
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+              >
+                Close
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

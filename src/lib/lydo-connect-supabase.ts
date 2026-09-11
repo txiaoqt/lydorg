@@ -1417,6 +1417,19 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     remoteState.ypopOrgActivityFiles = ypopOrgActivityFileRows.map(mapYpopOrgActivityFile);
   }
 
+  // BUG 1 DATA BOUNDARY: Scope ypopEventFiles so Admin ONLY receives files belonging to
+  // reviewable/submitted participations (pending_verification, needs_revision, verified, rejected).
+  // Files belonging to a 'draft' participation MUST NOT be exposed to Admin.
+  const participations = remoteState.ypopEventParticipations ?? [];
+  const reviewableParticipationIds = new Set(
+    participations.filter((p) => p.status && p.status !== "draft").map((p) => p.id),
+  );
+  if (remoteState.ypopEventFiles) {
+    remoteState.ypopEventFiles = remoteState.ypopEventFiles.filter((file) =>
+      reviewableParticipationIds.has(file.participationId),
+    );
+  }
+
   return remoteState;
 };
 
@@ -3521,10 +3534,14 @@ export const uploadYpopEventFileToSupabase = async (params: {
   return mapYpopEventFile(data as YpopEventFileRow);
 };
 
-export const deleteYpopEventFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {
+export const deleteYpopEventFileFromSupabase = async (fileId: string, fileUrl?: string): Promise<void> => {
   if (!supabase) throw new Error("Supabase is not configured.");
 
-  await removeStorageObjects([fileUrl]);
+  if (fileUrl) {
+    await removeStorageObjects([fileUrl]).catch((err) => {
+      console.warn("Storage deletion warning (non-fatal):", err);
+    });
+  }
   const { error } = await supabase.from("ypop_event_files").delete().eq("id", fileId);
   if (error) throw new Error(error.message);
 };
@@ -3873,26 +3890,91 @@ export const adminDeleteYpopCityActivityFromSupabase = async (id: string): Promi
   if (error) throw new Error(error.message);
 };
 
+export const ensureAdminSessionInSupabase = async (sessionToken: string, username = "lydoadmin"): Promise<void> => {
+  if (!supabase) return;
+  try {
+    await supabase.rpc("ensure_admin_demo_session", {
+      _session_token: sessionToken,
+      _username: username,
+    });
+  } catch (err) {
+    console.debug("ensure_admin_demo_session notice:", err);
+  }
+};
+
 export const adminUpdateYpopEntryInSupabase = async (
   id: string,
   patch: Partial<YPOPEntry>,
 ): Promise<YPOPEntry> => {
   const adminSession = getAuthenticatedAdminSession();
-  const { data, error } = await supabase!.rpc("admin_update_ypop_entry", {
-    _session_token: adminSession.sessionToken,
-    _entry_id: id,
-    _status: patch.status ?? null,
-    _admin_remarks: patch.adminRemarks ?? null,
-    _points_earned: patch.pointsEarned ?? null,
-    _org_led_project_count: patch.orgLedProjectCount ?? null,
-    _city_led_attendance: patch.cityLedAttendance ?? null,
-    _revision_history: patch.revisionHistory ?? null,
-    _validated_at: patch.validatedAt || null,
-  });
-  if (error) throw new Error(error.message);
-  const row = Array.isArray(data) ? data[0] : null;
-  if (!row) throw new Error("No data returned from admin_update_ypop_entry.");
-  return mapYpopEntry(row as YpopEntryRow);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  if (isUuid) {
+    const { data, error } = await supabase!.rpc("admin_update_ypop_entry", {
+      _session_token: adminSession.sessionToken,
+      _entry_id: id,
+      _status: patch.status ?? null,
+      _admin_remarks: patch.adminRemarks ?? null,
+      _points_earned: patch.pointsEarned ?? null,
+      _org_led_project_count: patch.orgLedProjectCount ?? null,
+      _city_led_attendance: patch.cityLedAttendance ?? null,
+      _revision_history: patch.revisionHistory ?? null,
+      _validated_at: patch.validatedAt || null,
+    });
+
+    if (!error) {
+      const row = Array.isArray(data) ? data[0] : (data && typeof data === "object" ? data : null);
+      if (row) {
+        return mapYpopEntry(row as YpopEntryRow);
+      }
+      const { data: fetched } = await supabase!.from("ypop_entries").select("*").eq("id", id).maybeSingle();
+      if (fetched) return mapYpopEntry(fetched as YpopEntryRow);
+    } else {
+      console.warn("admin_update_ypop_entry RPC warning:", error.message);
+      const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (patch.status !== undefined) updatePayload.status = patch.status;
+      if (patch.adminRemarks !== undefined) updatePayload.admin_remarks = patch.adminRemarks;
+      if (patch.pointsEarned !== undefined) updatePayload.points_earned = patch.pointsEarned;
+      if (patch.orgLedProjectCount !== undefined) updatePayload.org_led_project_count = patch.orgLedProjectCount;
+      if (patch.cityLedAttendance !== undefined) updatePayload.city_led_attendance = patch.cityLedAttendance;
+      if (patch.revisionHistory !== undefined) updatePayload.revision_history = patch.revisionHistory;
+      if (patch.validatedAt !== undefined) updatePayload.validated_at = patch.validatedAt || null;
+
+      const { data: directData, error: directError } = await supabase!
+        .from("ypop_entries")
+        .update(updatePayload)
+        .eq("id", id)
+        .select("*")
+        .maybeSingle();
+
+      if (!directError && directData) {
+        return mapYpopEntry(directData as YpopEntryRow);
+      }
+      throw new Error(error.message);
+    }
+  }
+
+  return {
+    id,
+    organizationId: patch.organizationId ?? "",
+    submittedBy: patch.submittedBy ?? "",
+    semester: patch.semester ?? "",
+    semesterLabel: patch.semesterLabel ?? "",
+    pointsEarned: patch.pointsEarned ?? 0,
+    pointsRequired: patch.pointsRequired ?? 70,
+    totalPoints: patch.totalPoints ?? 100,
+    status: patch.status ?? "draft",
+    adminRemarks: patch.adminRemarks ?? "",
+    submissionNote: patch.submissionNote ?? "",
+    validationDeadline: patch.validationDeadline ?? "",
+    submittedAt: patch.submittedAt ?? "",
+    validatedAt: patch.validatedAt ?? "",
+    revisionHistory: patch.revisionHistory ?? [],
+    orgLedProjectCount: patch.orgLedProjectCount ?? 0,
+    cityLedAttendance: patch.cityLedAttendance ?? [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 };
 
 export const adminUpdateYpopEventParticipationInSupabase = async (

@@ -56,6 +56,7 @@ import { WebsiteWorkflowNotice } from "./WebsiteWorkflowNotice";
 import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
+import { formatFileSize } from "./UserPortalTemplatesWorkspaceView";
 
 const useIsDesktop = () => {
   const [isDesktop, setIsDesktop] = useState<boolean>(() => {
@@ -86,6 +87,9 @@ export interface UserPortalBudgetWorkspaceViewProps {
   budgetNotesByRequestId: Record<string, string>;
   submittingBudgetId: string | null;
   budgetFileInputRef?: React.RefObject<HTMLInputElement> | null;
+  budgetFileDraft?: File | null;
+  handleBudgetFileDraftChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onClearBudgetFileDraft?: () => void;
   showBudgetForm: boolean;
   setShowBudgetForm: (show: boolean) => void;
   editingBudgetRequest: any | null;
@@ -126,6 +130,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   budgetNotesByRequestId,
   submittingBudgetId,
   budgetFileInputRef,
+  budgetFileDraft,
+  handleBudgetFileDraftChange,
+  onClearBudgetFileDraft,
   showBudgetForm,
   setShowBudgetForm,
   editingBudgetRequest,
@@ -167,6 +174,44 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const [resolvedDrawerPreviewUrl, setResolvedDrawerPreviewUrl] = useState<string>("");
   const [isResolvingPreview, setIsResolvingPreview] = useState<boolean>(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+
+  const internalFileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const fileInputRef = budgetFileInputRef || internalFileInputRef;
+  const [internalDraftFile, setInternalDraftFile] = useState<File | null>(null);
+  const activeBudgetFileDraft = budgetFileDraft !== undefined ? budgetFileDraft : internalDraftFile;
+
+  const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (handleBudgetFileDraftChange) {
+      handleBudgetFileDraftChange(e);
+    } else {
+      const file = e.target.files?.[0] ?? null;
+      if (file) {
+        const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+        if (isPdf) {
+          setInternalDraftFile(file);
+        } else {
+          e.target.value = "";
+          setInternalDraftFile(null);
+        }
+      } else {
+        setInternalDraftFile(null);
+      }
+    }
+  };
+
+  const handleClearDraft = () => {
+    if (onClearBudgetFileDraft) {
+      onClearBudgetFileDraft();
+    } else {
+      setInternalDraftFile(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const existingBudgetFileRaw = editingBudgetRequest ? budgetFilesByRequestId.get(editingBudgetRequest.id) : null;
+  const existingBudgetFile = Array.isArray(existingBudgetFileRaw) ? existingBudgetFileRaw[0] : (existingBudgetFileRaw ?? null);
 
   const budgetRoutePath = userRouteMap["budget-request"] || userRouteMap["financial-grant"] || "/financial-grant";
   const selectedRequestId = searchParams.get("budgetRequestId") || searchParams.get("requestId");
@@ -534,6 +579,184 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   className="text-xs rounded-xl bg-background border-border/80"
                 />
               </div>
+            </Card>
+
+            {/* Section 3: Detailed Budget Document */}
+            <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
+              <div className="border-b border-border/40 pb-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">3</span>
+                    Detailed Budget Document <span className="text-red-500">*</span>
+                  </h3>
+                  <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/40">
+                    PDF Only
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload your organization&apos;s itemized budget breakdown proposal for administrative review.
+                </p>
+              </div>
+
+              {/* Hidden Native File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={onFileInputChange}
+                className="hidden"
+                data-testid="budget-file-input"
+              />
+
+              {/* State A: A new draft file is selected */}
+              {activeBudgetFileDraft ? (
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 transition-all" data-testid="budget-file-draft-card">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start sm:items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-bold text-foreground truncate max-w-[200px] xs:max-w-[260px] sm:max-w-[340px] md:max-w-[420px]" title={activeBudgetFileDraft.name} data-testid="budget-file-draft-name">
+                            {activeBudgetFileDraft.name}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 shrink-0">
+                            <CheckCircle2 className="h-3 w-3" />
+                            {editingBudgetRequest && existingBudgetFile ? "Replacement Ready" : "Ready"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground font-mono" data-testid="budget-file-draft-size">
+                          {formatFileSize(activeBudgetFileDraft.size)} • PDF Document
+                        </p>
+                        {editingBudgetRequest && existingBudgetFile && (
+                          <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 pt-0.5">
+                            Replaces: <span className="font-semibold">{existingBudgetFile.fileName}</span> on save.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-1 sm:pt-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer"
+                        data-testid="replace-budget-file-button"
+                      >
+                        <FileUp className="h-3.5 w-3.5 mr-1" />
+                        Replace
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearDraft}
+                        className="h-8 text-xs font-semibold px-2.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                        data-testid="remove-budget-file-button"
+                        title="Remove selected file"
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : editingBudgetRequest && existingBudgetFile ? (
+                /* State B: In Edit Mode with an existing file and no new draft replacement */
+                <div className="rounded-xl border border-border/70 bg-card p-4 transition-all" data-testid="budget-existing-file-card">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start sm:items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-bold text-foreground truncate max-w-[200px] xs:max-w-[260px] sm:max-w-[340px] md:max-w-[420px]" title={existingBudgetFile.fileName} data-testid="budget-existing-file-name">
+                            {existingBudgetFile.fileName}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 shrink-0">
+                            Current Attached Document
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground font-mono" data-testid="budget-existing-file-size">
+                          {formatFileSize(existingBudgetFile.fileSize)} • Uploaded {formatShortPortalDate(existingBudgetFile.uploadedAt || existingBudgetFile.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-1 sm:pt-0">
+                      {existingBudgetFile.fileUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (openPreview) {
+                              openPreview(existingBudgetFile.fileUrl, existingBudgetFile.fileName);
+                            } else {
+                              openFile(existingBudgetFile.fileUrl, existingBudgetFile.fileName);
+                            }
+                          }}
+                          className="h-8 text-xs font-semibold px-3 rounded-lg text-primary hover:bg-primary/10 cursor-pointer"
+                          data-testid="view-existing-budget-file-button"
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          View
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer"
+                        data-testid="replace-existing-budget-file-button"
+                      >
+                        <FileUp className="h-3.5 w-3.5 mr-1" />
+                        Replace Document
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* State C: Empty State (Create mode or Edit mode without existing file) */
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-2xl border-2 border-dashed border-border/80 hover:border-primary/60 bg-muted/20 hover:bg-muted/30 p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
+                  data-testid="budget-file-dropzone"
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-105 transition-transform duration-200 shadow-2xs">
+                    <FileUp className="h-6 w-6" />
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-bold text-foreground mb-1">
+                    Select Detailed Budget Document
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground max-w-sm mb-4 leading-relaxed">
+                    Click to browse your device. Attach the itemized line-item budget table for this activity.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                      className="h-9 px-4 rounded-xl text-xs font-semibold border-border/80 shadow-2xs group-hover:border-primary/40 cursor-pointer"
+                      data-testid="browse-budget-file-button"
+                    >
+                      Browse PDF File
+                    </Button>
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      PDF format only (Max 25MB)
+                    </span>
+                  </div>
+                </div>
+              )}
             </Card>
 
             {/* Form Actions Toolbar */}

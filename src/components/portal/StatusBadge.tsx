@@ -48,6 +48,7 @@ export const statusBadgeToneMap: Record<string, StatusBadgeTone> = {
   confirmed: "progress",
   ongoing: "progress",
 
+  pending_evaluation: "warning",
   incomplete: "warning",
   pending_activity_completion: "warning",
   pending: "warning",

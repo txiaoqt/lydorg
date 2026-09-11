@@ -75,4 +75,72 @@ describe("budget eligibility", () => {
   it("returns no_active_period when there are no open periods and no qualified entries", () => {
     expect(resolveBudgetEligibility({ organizationId: "org", periods: [{ ...period, status: "closed" }], entries: [entry("draft")] }).reason).toBe("no_active_period");
   });
+
+  it("satisfies eligibility on direct navigation when current active semester is qualified", () => {
+    const result = resolveBudgetEligibility({
+      organizationId: "org",
+      periods: [period],
+      entries: [entry("qualified")],
+    });
+    expect(result.eligible).toBe(true);
+    expect(result.reason).toBe("qualified");
+  });
+
+  it("blocks direct navigation when historical closed semester is qualified but current open semester is not qualified (prevents historical leakage)", () => {
+    const historicalClosedPeriod: YPOPPeriod = {
+      ...period,
+      id: "hist-period",
+      semesterKey: "2025-second",
+      status: "closed",
+      createdAt: "2025-01-01",
+    };
+    const historicalQualifiedEntry: YPOPEntry = {
+      ...entry("qualified"),
+      id: "hist-entry",
+      semester: "2025-second",
+    };
+    const currentNotQualifiedEntry: YPOPEntry = {
+      ...entry("not_qualified"),
+      id: "curr-entry",
+      semester: period.semesterKey,
+    };
+
+    const result = resolveBudgetEligibility({
+      organizationId: "org",
+      periods: [period, historicalClosedPeriod],
+      entries: [historicalQualifiedEntry, currentNotQualifiedEntry],
+    });
+
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toBe("ypop_not_qualified");
+  });
+
+  it("scopes eligibility strictly to semesterContext when ypopEntryId or semesterKey is provided", () => {
+    const periodA: YPOPPeriod = { ...period, id: "p-a", semesterKey: "sem-a", status: "open" };
+    const periodB: YPOPPeriod = { ...period, id: "p-b", semesterKey: "sem-b", status: "open", createdAt: "2026-06-01" };
+
+    const entryA: YPOPEntry = { ...entry("qualified"), id: "entry-a", semester: "sem-a" };
+    const entryB: YPOPEntry = { ...entry("not_qualified"), id: "entry-b", semester: "sem-b" };
+
+    // Scoped to entryA (qualified)
+    const resultA = resolveBudgetEligibility({
+      organizationId: "org",
+      periods: [periodA, periodB],
+      entries: [entryA, entryB],
+      semesterContext: "entry-a",
+    });
+    expect(resultA.eligible).toBe(true);
+    expect(resultA.reason).toBe("qualified");
+
+    // Scoped to entryB (not qualified)
+    const resultB = resolveBudgetEligibility({
+      organizationId: "org",
+      periods: [periodA, periodB],
+      entries: [entryA, entryB],
+      semesterContext: "entry-b",
+    });
+    expect(resultB.eligible).toBe(false);
+    expect(resultB.reason).toBe("ypop_not_qualified");
+  });
 });
+

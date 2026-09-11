@@ -698,6 +698,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [activeOcrPage, setActiveOcrPage] = useState(1);
   const attachedDocumentInputRef = useRef<HTMLInputElement | null>(null);
   const liquidationFileInputRef = useRef<HTMLInputElement | null>(null);
+  const budgetFileInputRef = useRef<HTMLInputElement | null>(null);
   const [pendingDocumentScan, setPendingDocumentScan] = useState<{
     documentTypeId: string;
     documentTypeName: string;
@@ -713,14 +714,17 @@ export default function UserPortal({ section }: { section: string }) {
   const [batchDroppedFiles, setBatchDroppedFiles] = useState<BatchDroppedDocumentFile[]>([]);
   const [batchUploadResult, setBatchUploadResult] = useState<BatchUploadResultSummary | null>(null);
   const currentProfile = state.organizationProfiles.find((item) => item.userId === user?.id) ?? null;
+  const ypopEntryIdParam = section === "budget-request" ? searchParams.get("ypopEntryId") : null;
+  const ypopSemesterParam = section === "budget-request" ? searchParams.get("semester") : null;
   const budgetEligibility = useMemo(
     () =>
       resolveBudgetEligibility({
         organizationId: currentProfile?.id ?? "",
         periods: state.ypopPeriods,
         entries: state.ypopEntries,
+        semesterContext: ypopEntryIdParam || ypopSemesterParam,
       }),
-    [currentProfile?.id, state.ypopEntries, state.ypopPeriods],
+    [currentProfile?.id, state.ypopEntries, state.ypopPeriods, ypopEntryIdParam, ypopSemesterParam],
   );
 
   const [organizationRenewals, setOrganizationRenewals] = useState<OrganizationRenewalRecord[]>([]);
@@ -759,6 +763,16 @@ export default function UserPortal({ section }: { section: string }) {
       cancelled = true;
     };
   }, [currentProfile?.id]);
+
+  useEffect(() => {
+    if (section === "ypop" || section === "budget-request") {
+      void loadLydoConnectSupabaseState().then((remoteSnapshot) => {
+        if (remoteSnapshot) {
+          mergeRemoteState(remoteSnapshot);
+        }
+      });
+    }
+  }, [section, mergeRemoteState]);
 
   const userRenewalState = useMemo(() => {
     return resolveUserRenewalState({
@@ -3325,6 +3339,15 @@ export default function UserPortal({ section }: { section: string }) {
             setNewRequestedAmount={(val) => setBudgetForm((c) => ({ ...c, requestedAmount: val }))}
             newRemarks={budgetForm.remarks}
             setNewRemarks={(val) => setBudgetForm((c) => ({ ...c, remarks: val }))}
+            budgetFileInputRef={budgetFileInputRef}
+            budgetFileDraft={budgetFileDraft}
+            handleBudgetFileDraftChange={handleBudgetFileDraftChange}
+            onClearBudgetFileDraft={() => {
+              setBudgetFileDraft(null);
+              if (budgetFileInputRef.current) {
+                budgetFileInputRef.current.value = "";
+              }
+            }}
             handleCreateOrUpdateBudgetRequest={async (e, isDraft) => {
               e.preventDefault();
               await saveBudgetRequest(isDraft ? "draft" : "submitted");
@@ -3381,7 +3404,19 @@ export default function UserPortal({ section }: { section: string }) {
             ypopFiles={state.ypopFiles}
             ypopOrgActivities={state.ypopOrgActivities}
             ypopOrgActivityFiles={state.ypopOrgActivityFiles}
-            activeEntry={state.ypopEntries.find((e) => e.organizationId === (currentProfile?.id ?? "")) ?? null}
+            activeEntry={(() => {
+              const currentOrgId = currentProfile?.id ?? "";
+              const semesterParam = typeof window !== "undefined" && window.location?.search
+                ? new URLSearchParams(window.location.search).get("semester")
+                : null;
+              const targetSemesterKey = (semesterParam && state.ypopPeriods.some((p) => p.semesterKey === semesterParam))
+                ? semesterParam
+                : (state.ypopPeriods.find((p) => p.status === "open")?.semesterKey ?? state.ypopPeriods[0]?.semesterKey ?? null);
+
+              return targetSemesterKey
+                ? (state.ypopEntries.find((e) => e.organizationId === currentOrgId && e.semester === targetSemesterKey) ?? null)
+                : (state.ypopEntries.find((e) => e.organizationId === currentOrgId) ?? null);
+            })()}
             navigate={navigate}
             userRouteMap={userRouteMap}
             openFile={openFile}

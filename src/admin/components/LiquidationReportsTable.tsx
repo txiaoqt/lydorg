@@ -70,26 +70,26 @@ export function matchesLiquidationStatusFilter(
   return true;
 }
 
-const STATUS_LABEL_CONFIG: Record<LiquidationReport["status"], { label: string; className: string }> = {
+export const STATUS_LABEL_CONFIG: Record<LiquidationReport["status"], { label: string; className: string }> = {
   pending_activity_completion: {
-    label: "Ongoing Activity",
+    label: "Pending Activity Completion",
     className: "border-border-warning-subtle bg-bg-warning-subtle text-text-warning-secondary",
   },
   not_started: {
-    label: "Ongoing Activity",
-    className: "border-border-warning-subtle bg-bg-warning-subtle text-text-warning-secondary",
+    label: "Not Started",
+    className: "border-border-closed-subtle bg-neutral-100 text-public-text-secondary",
   },
   draft: {
-    label: "Ongoing Activity",
-    className: "border-border-warning-subtle bg-bg-warning-subtle text-text-warning-secondary",
+    label: "Draft",
+    className: "border-border-closed-subtle bg-neutral-100 text-public-text-secondary",
   },
   needs_revision: {
-    label: "Ongoing Activity",
-    className: "border-border-warning-subtle bg-bg-warning-subtle text-text-warning-secondary",
+    label: "Needs Revision",
+    className: "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
   },
   approved_for_ftf_green: {
-    label: "Ongoing Activity",
-    className: "border-border-warning-subtle bg-bg-warning-subtle text-text-warning-secondary",
+    label: "Submit Onsite",
+    className: "border-border-success-subtle bg-bg-success-subtle text-positive-secondary",
   },
   rejected_red: {
     label: "Rejected",

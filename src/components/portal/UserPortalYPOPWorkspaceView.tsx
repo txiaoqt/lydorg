@@ -217,7 +217,12 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
               createYPOPEventParticipation(created);
             }}
             onParticipationUpdated={(updated) => {
-              updateYPOPEventParticipation(updated.id, updated);
+              const exists = participations.some((p) => p.id === updated.id);
+              if (exists) {
+                updateYPOPEventParticipation(updated.id, updated);
+              } else {
+                createYPOPEventParticipation(updated);
+              }
             }}
             onEventFileCreated={(file) => {
               createYPOPEventFile(file);

@@ -355,6 +355,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         const adminUser = createDemoAdminSession(username);
         writeAdminSession(adminUser);
+        if (supabase) {
+          try {
+            await supabase.rpc("ensure_admin_demo_session", {
+              _session_token: adminUser.sessionToken,
+              _username: username,
+            });
+          } catch (e) {
+            console.debug("ensure_admin_demo_session notice:", e);
+          }
+        }
         setIsAuthenticated(true);
         setRole("admin");
         setUser(toAuthUser(adminUser));

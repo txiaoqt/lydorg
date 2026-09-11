@@ -4,7 +4,6 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
-  AlertTriangle,
   XCircle,
   Trophy,
   Award,
@@ -23,6 +22,8 @@ import {
   computeYpopScore,
   getApprovedYpopOrgActivityCount,
   YPOP_SCORE_THRESHOLD,
+  deriveYpopQualificationStatus,
+  statusLabelMap,
   type OrganizationProfile,
   type YPOPCityActivity,
   type YPOPEntry,
@@ -31,6 +32,7 @@ import {
   type YPOPOrgActivity,
   type YPOPOrgActivityFile,
   type YPOPPeriod,
+  type YpopQualificationStatus,
 } from "@/lib/lydo-connect-data";
 import {
   createYpopEntryInSupabase,
@@ -41,6 +43,7 @@ import {
 } from "@/lib/ypop-event-eligibility";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/portal/StatusBadge";
+import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
 import { YpopCityLedTab } from "./YpopCityLedTab";
 import { YpopOrgLedTab } from "./YpopOrgLedTab";
 
@@ -137,12 +140,42 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
     period.orgLedTiers
   );
 
+  const threshold = entry?.pointsRequired ?? YPOP_SCORE_THRESHOLD;
   const isPeriodOpen = period.status === "open";
-  const isQualified = entry?.status === "qualified";
-  const isNotQualified = entry?.status === "not_qualified";
+  const overallQualificationStatus: YpopQualificationStatus = deriveYpopQualificationStatus({
+    score: liveScore.totalScore,
+    pointsRequired: threshold,
+    period,
+    entry,
+    participations: semesterParticipations,
+    orgActivities: semesterOrgActivities,
+  });
+  const isQualified = overallQualificationStatus === "qualified";
+  const isNotQualified = overallQualificationStatus === "not_qualified";
   const isUnderReview = entry?.status === "under_review" || entry?.status === "submitted";
-  const isNeedsRevision = entry?.status === "needs_revision";
   const isDraft = !entry || entry.status === "draft";
+
+  const computationEntry: YPOPEntry = entry ?? {
+    id: `temp-${period.semesterKey}`,
+    organizationId,
+    submittedBy: userId,
+    semester: period.semesterKey,
+    semesterLabel: period.semesterLabel,
+    pointsEarned: liveScore.totalScore,
+    pointsRequired: threshold,
+    totalPoints: 100,
+    status: isQualified ? "qualified" : isNotQualified ? "not_qualified" : "draft",
+    adminRemarks: "",
+    submissionNote: "",
+    validationDeadline: period.validationDeadline,
+    submittedAt: null,
+    validatedAt: null,
+    revisionHistory: [],
+    orgLedProjectCount: approvedPpaCount,
+    cityLedAttendance: verifiedAttendance,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
   const handleEnsureEntry = async (): Promise<YPOPEntry> => {
     if (entry) return entry;
@@ -153,7 +186,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
       semester: period.semesterKey,
       semesterLabel: period.semesterLabel,
       pointsEarned: liveScore.totalScore,
-      pointsRequired: YPOP_SCORE_THRESHOLD,
+      pointsRequired: threshold,
       totalPoints: 100,
       status: "draft",
       adminRemarks: "",
@@ -238,31 +271,64 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
             </div>
           ) : null}
         </div>
-      </div>
 
-      {/* Admin Remarks Notice (if revision or rejection) */}
-      {entry?.adminRemarks && (isNeedsRevision || isNotQualified) && (
-        <div className={`p-4 rounded-xl flex items-start gap-3 ${
-          isNeedsRevision
-            ? "bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200"
-            : "bg-destructive/10 border border-destructive/25 text-destructive"
-        }`}>
-          <AlertTriangle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
-          <div className="space-y-1 text-xs flex-1">
-            <p className="font-bold text-sm">
-              {isNeedsRevision ? "Admin Requested Submission Revisions" : "Validation Remarks"}
-            </p>
-            <p className="font-medium bg-background/80 p-2.5 rounded-lg border border-current/20 italic">
-              "{entry.adminRemarks}"
-            </p>
-            <p className="text-[11px] opacity-90">
-              {isNeedsRevision
-                ? "Review the items above, update your proof documents or PPA logs, and submit again for review."
-                : "This validation submission was evaluated and closed by the LYDO Admin."}
-            </p>
+        {/* Qualification Summary Card */}
+        <div
+          className="p-4 sm:p-5 rounded-2xl bg-card border border-border/70 shadow-xs space-y-3"
+          data-testid="user-ypop-qualification-summary"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Qualification Summary
+                </p>
+                <StatusBadge
+                  status={overallQualificationStatus}
+                  label={statusLabelMap[overallQualificationStatus]}
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-0.5">
+                <span className="font-medium text-foreground">Required Percentage: {threshold}%</span>
+                <YpopValidationComputationPopover
+                  entry={computationEntry}
+                  organizationName={profile?.organizationName}
+                  semesterLabel={period.semesterLabel}
+                  semesterActivities={semesterActivities}
+                  orgEventParticipations={semesterParticipations}
+                  orgActivities={semesterOrgActivities}
+                  verifiedAttendance={verifiedAttendance}
+                  liveScore={liveScore}
+                  displayScore={liveScore.totalScore}
+                  overallQualificationStatus={overallQualificationStatus}
+                  period={period}
+                />
+              </div>
+            </div>
+
+            <div className="w-full sm:max-w-xs space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-foreground">Qualification Progress</span>
+                <span
+                  className={cn(
+                    "font-bold tabular-nums text-sm",
+                    isQualified
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-foreground"
+                  )}
+                >
+                  {liveScore.totalScore}%
+                </span>
+              </div>
+              <Progress
+                value={Math.min(100, liveScore.totalScore)}
+                className="h-2 bg-muted/80"
+              />
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
 
       {/* Main Tabs Header (Crisp segmented tabs with clean active indicator) */}
       <div className="flex items-center gap-2 border-b border-border/70 overflow-x-auto [scrollbar-width:none]">

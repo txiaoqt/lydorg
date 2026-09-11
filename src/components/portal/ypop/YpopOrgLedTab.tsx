@@ -304,9 +304,9 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(act)}
-                            className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg gap-1.5 cursor-pointer border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center"
+                            className="w-full md:w-auto h-8 px-3 text-xs font-semibold rounded-lg gap-1.5 cursor-pointer border border-amber-500/40 dark:border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/60 dark:hover:border-amber-500/50 hover:text-amber-900 dark:hover:text-amber-100 focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2 shadow-2xs whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center"
                           >
-                            <Edit3 className="h-3.5 w-3.5" />
+                            <Edit3 className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" />
                             <span>Resolve Revision</span>
                           </Button>
                         )}
@@ -395,7 +395,10 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         orgActivityFiles={orgActivityFiles}
         organizationId={organizationId}
         userId={userId}
-        onActivitySaved={onActivitySaved}
+        onActivitySaved={(saved) => {
+          setEditingActivity(saved);
+          onActivitySaved(saved);
+        }}
         onFileCreated={onFileCreated}
         onFileDeleted={onFileDeleted}
       />
