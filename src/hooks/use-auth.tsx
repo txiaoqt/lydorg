@@ -490,6 +490,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     clearPasswordRecoveryState();
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem(PWA_AUTH_MARKER);
+      window.dispatchEvent(new Event("lydo-auth-reset"));
     }
     setIsPasswordRecoverySession(false);
     const storedAdmin = readAdminSession();

@@ -18,7 +18,7 @@ export type YpopSubmissionRow = {
   organizationName: string;
   referenceId: string;
   majorClassification: string;
-  status: YpopQualificationStatus | YPOPStatus;
+  status: YpopQualificationStatus;
 };
 
 type YpopSubmissionsTableProps = {

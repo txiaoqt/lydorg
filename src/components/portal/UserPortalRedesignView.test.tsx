@@ -243,6 +243,30 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     expect(screen.getByPlaceholderText("e.g. Question about liquidation requirement")).toBeInTheDocument();
   });
 
+  it("submits inquiry from modal without page reload, calling handleSendInquiry and closing modal on completion", async () => {
+    const props = {
+      ...defaultProps,
+      inquiryForm: {
+        submitterName: "John Doe",
+        organizationName: "Pasig Youth Council",
+        email: "john@example.com",
+        subject: "Question about renewal requirement",
+        description: "Please clarify the required documents for accreditation.",
+      },
+    };
+    render(<UserPortalRedesignView {...props} />);
+
+    const newInquiryBtn = screen.getByRole("button", { name: /New Inquiry/i });
+    fireEvent.click(newInquiryBtn);
+
+    expect(screen.getByRole("heading", { name: /Submit Inquiry/i })).toBeInTheDocument();
+
+    const submitBtn = screen.getByRole("button", { name: /Submit Inquiry/i });
+    fireEvent.click(submitBtn);
+
+    expect(mockHandleSendInquiry).toHaveBeenCalled();
+  });
+
   it("refines renewal countdown in mobile header composition as centered secondary organization status without awkward divider", () => {
     const futureDate = new Date(Date.now() + 45 * 86_400_000 + 3600_000).toISOString();
     render(

@@ -33,7 +33,7 @@ export interface UserPortalNotificationsWorkspaceViewProps {
 
 const getNotificationIcon = (relatedType?: string, type?: string) => {
   const norm = (relatedType || type || "").toLowerCase();
-  if (norm.includes("document") || norm.includes("submission") || norm.includes("cbl") || norm.includes("ocr")) {
+  if (norm.includes("document") || norm.includes("submission") || norm.includes("cbl")) {
     return FileText;
   }
   if (norm.includes("budget") || norm.includes("grant") || norm.includes("financial")) {
@@ -57,7 +57,7 @@ const getTargetRoute = (
   userRouteMap?: Record<string, string>
 ): { route: string; label: string } | null => {
   const norm = (relatedType || type || "").toLowerCase();
-  if (norm.includes("document") || norm.includes("submission") || norm.includes("cbl") || norm.includes("ocr")) {
+  if (norm.includes("document") || norm.includes("submission") || norm.includes("cbl")) {
     return { route: userRouteMap?.["document-submission"] || "/document-submission", label: "View Documents" };
   }
   if (norm.includes("budget") || norm.includes("grant") || norm.includes("financial")) {

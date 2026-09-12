@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { YorpRegistryPage } from "@/admin/pages/YorpRegistry";
 import { LydoConnectProvider } from "@/lib/lydo-connect-store";
+import { writeAdminSession } from "@/lib/admin-auth";
 
 // Mock resize observer and scrollIntoView for jsdom
 window.ResizeObserver =
@@ -13,6 +14,21 @@ window.ResizeObserver =
   }));
 
 describe("YorpRegistry Page Export Action", () => {
+  beforeEach(() => {
+    writeAdminSession({
+      id: "admin-demo",
+      username: "lydoadmin",
+      email: "lydoadmin@lydoconnect.local",
+      displayName: "Admin User",
+      sessionToken: "demo-token",
+      expiresAt: new Date(Date.now() + 3600000).toISOString(),
+    });
+  });
+
+  afterEach(() => {
+    writeAdminSession(null);
+  });
+
   it("renders the Export button in the page header and opens the Export dialog", async () => {
     render(
       <LydoConnectProvider>

@@ -39,3 +39,41 @@ export const pasigDistrictBarangays: Record<PasigDistrict, BarangayOption[]> = {
 };
 
 export const pasigDistrictOptions: PasigDistrict[] = ["District I", "District II"];
+
+export const getBarangayOptionsForDistrict = (
+  district: "all" | PasigDistrict,
+): BarangayOption[] => {
+  if (district === "District I" || district === "District II") {
+    return [...pasigDistrictBarangays[district]].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }
+  return Object.values(pasigDistrictBarangays)
+    .flat()
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
+export const isBarangayInDistrict = (
+  barangayName: string,
+  district: "all" | PasigDistrict,
+): boolean => {
+  if (!barangayName || barangayName === "all" || barangayName.toLowerCase() === "all barangays") {
+    return true;
+  }
+  if (district === "all") {
+    return true;
+  }
+  if (district !== "District I" && district !== "District II") {
+    return false;
+  }
+
+  const districtList = pasigDistrictBarangays[district];
+  if (!districtList) return false;
+
+  const normalized = barangayName.trim().toLowerCase();
+  return districtList.some(
+    (b) =>
+      b.name.toLowerCase() === normalized ||
+      b.id.toLowerCase() === normalized,
+  );
+};

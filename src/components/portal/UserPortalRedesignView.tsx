@@ -104,7 +104,7 @@ export interface UserPortalRedesignViewProps {
     }>
   >;
   submittingInquiry?: boolean;
-  handleSendInquiry: (e: React.FormEvent) => void;
+  handleSendInquiry: (e: React.FormEvent) => void | Promise<void>;
   onViewAllInquiries: () => void;
   onViewAllActivities?: () => void;
   navigate: (path: string) => void;
@@ -267,9 +267,14 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
     currentProfile?.organizationName ||
     "Organization User";
 
-  const onInquiryFormSubmit = (e: React.FormEvent) => {
-    handleSendInquiry(e);
-    setInquiryModalOpen(false);
+  const onInquiryFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await handleSendInquiry(e);
+      setInquiryModalOpen(false);
+    } catch {
+      // Keep modal open if an error occurs so the user doesn't lose their input
+    }
   };
 
   // Determine active task or focus

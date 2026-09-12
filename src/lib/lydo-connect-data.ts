@@ -334,6 +334,8 @@ export type RequiredDocumentType = {
   isActive: boolean;
   scope?: "registration" | "renewal" | "both";
   templateScope: "document_submission" | "move" | "other";
+  templateCategory?: string[];
+  templateCategories?: string[];
 };
 
 export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"], string> = {
@@ -550,6 +552,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategories: ["yorp"],
   },
   {
     id: "yorp-form-b",
@@ -560,6 +563,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategories: ["yorp"],
   },
   {
     id: "yorp-officers-adviser",
@@ -570,6 +574,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategories: ["yorp"],
   },
   {
     id: "yorp-members",
@@ -580,6 +585,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategories: ["yorp"],
   },
   {
     id: "pcydo-form-a",
@@ -590,6 +596,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategories: ["yorp"],
   },
   {
     id: "pcydo-data-request",
@@ -600,6 +607,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     isRequired: true,
     isActive: true,
     templateScope: "document_submission",
+    templateCategories: ["yorp", "data_form"],
   },
 ];
 
@@ -613,6 +621,7 @@ export const otherDocumentTypes: RequiredDocumentType[] = [
     isRequired: false,
     isActive: true,
     templateScope: "other",
+    templateCategories: ["move"],
   },
   {
     id: "move-registration-form",
@@ -623,6 +632,7 @@ export const otherDocumentTypes: RequiredDocumentType[] = [
     isRequired: false,
     isActive: true,
     templateScope: "other",
+    templateCategories: ["move"],
   },
 ];
 
@@ -823,14 +833,10 @@ export type SubmissionFile = {
   fileUrl: string;
   fileType: string;
   fileSize: number;
-  ocrText: string;
-  ocrStatus: "pending" | "processing" | "completed" | "failed";
-  ocrConfidence: number;
   validationStatus: "correct" | "needs_reupload" | "missing" | "mismatch";
   adminStatus: DocumentSubmissionStatus;
   adminRemarks: string;
   userRemarks?: string;
-  ocrMetadata?: Record<string, unknown> | null;
   revisionHistory?: Array<{
     action?: string;
     adminRemarks?: string;
@@ -1087,8 +1093,158 @@ export type InquiryRecord = {
 export const INQUIRY_CATEGORY_OPTIONS = ["YORP", "YPOP", "Budget Request", "Liquidation Report", "General"] as const;
 export type InquiryCategory = (typeof INQUIRY_CATEGORY_OPTIONS)[number];
 
-export const NEWS_CATEGORY_OPTIONS = ["YORP", "YPOP", "MOVE"] as const;
-export type NewsCategory = (typeof NEWS_CATEGORY_OPTIONS)[number];
+export const DEFAULT_NEWS_CATEGORIES = ["YORP", "YPOP", "MOVE"] as const;
+export const NEWS_CATEGORY_OPTIONS = DEFAULT_NEWS_CATEGORIES;
+export type NewsCategory = string;
+
+export interface FacebookUrlValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+export const validateFacebookPostUrl = (rawUrl?: string | null): FacebookUrlValidationResult => {
+  if (!rawUrl || typeof rawUrl !== "string") {
+    return { isValid: false, error: "Facebook post URL is required." };
+  }
+
+  const trimmed = rawUrl.trim();
+  if (!trimmed) {
+    return { isValid: false, error: "Facebook post URL is required." };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return {
+      isValid: false,
+      error: "Please enter a valid URL (e.g. https://www.facebook.com/...).",
+    };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return {
+      isValid: false,
+      error: "Facebook post URL must use secure HTTPS (https://).",
+    };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const isFbWatch = hostname === "fb.watch" || hostname === "www.fb.watch";
+  const isFacebook =
+    hostname === "facebook.com" ||
+    hostname.endsWith(".facebook.com");
+
+  if (!isFbWatch && !isFacebook) {
+    return {
+      isValid: false,
+      error: "Please enter a valid Facebook URL (facebook.com or fb.watch).",
+    };
+  }
+
+  const pathname = parsed.pathname;
+  const searchParams = parsed.searchParams;
+
+  if (isFbWatch) {
+    const cleanPath = pathname.replace(/^\/+|\/+$/g, "");
+    if (!cleanPath) {
+      return {
+        isValid: false,
+        error: "Please enter a valid Facebook Watch video link (e.g. https://fb.watch/xxxxxx).",
+      };
+    }
+    return { isValid: true };
+  }
+
+  const hasValidQuery =
+    ((pathname === "/permalink.php" || pathname === "/story.php") &&
+      (searchParams.has("story_fbid") || searchParams.has("id") || searchParams.has("fbid"))) ||
+    (pathname.startsWith("/photo") && searchParams.has("fbid")) ||
+    (pathname.startsWith("/watch") && searchParams.has("v"));
+
+  if (hasValidQuery) {
+    return { isValid: true };
+  }
+
+  const postPathPatterns = [
+    /\/(?:posts|videos|photos)\/[a-zA-Z0-9_.-]+/i,
+    /\/posts\/pfbid[a-zA-Z0-9]+/i,
+    /\/share\/(?:p|v|[a-zA-Z0-9_-]+)(?:\/[a-zA-Z0-9_.-]+)?/i,
+    /\/groups\/[a-zA-Z0-9_.-]+\/(?:posts|permalink)\/[a-zA-Z0-9_.-]+/i,
+    /\/p\/[a-zA-Z0-9_.-]+/i,
+    /\/[a-zA-Z0-9_.-]+\/activity\/[a-zA-Z0-9_.-]+/i,
+  ];
+
+  const hasMatchingPath = postPathPatterns.some((pattern) => pattern.test(pathname));
+
+  if (!hasMatchingPath) {
+    return {
+      isValid: false,
+      error: "Please enter a direct link to a Facebook post, video, photo, or share permalink.",
+    };
+  }
+
+  return { isValid: true };
+};
+
+export const deriveNewsCategories = (
+  newsReleases: Array<Pick<NewsRelease, "category">>,
+  customCategories: string[] = [],
+): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  const add = (cat?: string | null) => {
+    if (!cat || typeof cat !== "string") return;
+    const trimmed = cat.trim();
+    if (!trimmed) return;
+    const lower = trimmed.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      result.push(trimmed);
+    }
+  };
+
+  for (const item of newsReleases) {
+    add(item.category);
+  }
+
+  for (const cat of customCategories) {
+    add(cat);
+  }
+
+  if (result.length === 0) {
+    for (const def of DEFAULT_NEWS_CATEGORIES) {
+      add(def);
+    }
+  }
+
+  return result;
+};
+
+export const validateNewCategory = (
+  name: string,
+  existingCategories: string[],
+): { isValid: boolean; normalizedName: string; error?: string } => {
+  const normalized = name.trim().replace(/\s+/g, " ");
+  if (!normalized) {
+    return { isValid: false, normalizedName: "", error: "Category name cannot be empty." };
+  }
+  if (normalized.length > 50) {
+    return { isValid: false, normalizedName: normalized, error: "Category name must be 50 characters or less." };
+  }
+  const lower = normalized.toLowerCase();
+  const duplicate = existingCategories.find((cat) => cat.trim().toLowerCase() === lower);
+  if (duplicate) {
+    return {
+      isValid: false,
+      normalizedName: normalized,
+      error: `Category "${normalized}" already exists as "${duplicate}".`,
+    };
+  }
+  return { isValid: true, normalizedName: normalized };
+};
+
 
 export const deriveInquiryCategory = (inquiry: Pick<InquiryRecord, "subject" | "description">): InquiryCategory => {
   const text = `${inquiry.subject} ${inquiry.description}`.toLowerCase();
@@ -1102,6 +1258,122 @@ export const deriveInquiryCategory = (inquiry: Pick<InquiryRecord, "subject" | "
 export const TEMPLATE_CATEGORY_PRIORITY = ["yorp", "ypop", "move", "data_form"] as const;
 export type TemplateCategory = (typeof TEMPLATE_CATEGORY_PRIORITY)[number];
 
+export const normalizeTemplateCategoryKey = (value: string): string =>
+  value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+
+export const isSystemTemplateCategory = (categoryKey: string): boolean => {
+  const normalized = normalizeTemplateCategoryKey(categoryKey);
+  return (TEMPLATE_CATEGORY_PRIORITY as readonly string[]).includes(normalized);
+};
+
+export type TemplateCategoryUsage = {
+  count: number;
+  activeCount: number;
+  archivedCount: number;
+  templateNames: string[];
+};
+
+export const getTemplateCategoryUsage = (
+  categoryKey: string,
+  templates: Array<{
+    name?: string;
+    isActive?: boolean;
+    templateActive?: boolean;
+    templateCategories?: string[];
+    templateCategory?: string[];
+  }> = [],
+): TemplateCategoryUsage => {
+  const normalizedTarget = normalizeTemplateCategoryKey(categoryKey);
+  if (!normalizedTarget) {
+    return { count: 0, activeCount: 0, archivedCount: 0, templateNames: [] };
+  }
+
+  let activeCount = 0;
+  let archivedCount = 0;
+  const templateNames: string[] = [];
+
+  for (const template of templates ?? []) {
+    const rawCategories =
+      Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+        ? template.templateCategories
+        : Array.isArray(template.templateCategory) && template.templateCategory.length > 0
+        ? template.templateCategory
+        : [deriveTemplateCategory(template.name ?? "")];
+
+    const normalizedCats = rawCategories
+      .filter((c): c is string => typeof c === "string" && Boolean(c.trim()))
+      .map(normalizeTemplateCategoryKey);
+
+    if (normalizedCats.includes(normalizedTarget)) {
+      const isActive =
+        template.isActive !== undefined ? template.isActive : (template.templateActive ?? true);
+      if (isActive) {
+        activeCount++;
+      } else {
+        archivedCount++;
+      }
+      if (template.name) {
+        templateNames.push(template.name);
+      }
+    }
+  }
+
+  return {
+    count: activeCount + archivedCount,
+    activeCount,
+    archivedCount,
+    templateNames,
+  };
+};
+
+export const buildAdminTemplateCategoryOptions = (
+  templates: Array<{
+    name?: string;
+    templateCategories?: string[];
+    templateCategory?: string[];
+  }> = [],
+  customCategories: string[] = [],
+): string[] => {
+  const seen = new Set<string>();
+  const systemKeys: string[] = [...TEMPLATE_CATEGORY_PRIORITY];
+  systemKeys.forEach((key) => seen.add(key));
+
+  const customKeys: string[] = [];
+
+  for (const raw of customCategories ?? []) {
+    if (!raw || typeof raw !== "string") continue;
+    const normalized = normalizeTemplateCategoryKey(raw);
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      customKeys.push(normalized);
+    }
+  }
+
+  for (const template of templates ?? []) {
+    const rawList =
+      Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+        ? template.templateCategories
+        : Array.isArray(template.templateCategory) && template.templateCategory.length > 0
+        ? template.templateCategory
+        : [deriveTemplateCategory(template.name ?? "")];
+
+    for (const raw of rawList) {
+      if (!raw || typeof raw !== "string") continue;
+      const normalized = normalizeTemplateCategoryKey(raw);
+      if (normalized && !seen.has(normalized)) {
+        seen.add(normalized);
+        customKeys.push(normalized);
+      }
+    }
+  }
+
+  customKeys.sort((a, b) =>
+    formatCanonicalCategoryLabel(a).localeCompare(formatCanonicalCategoryLabel(b)),
+  );
+
+  return [...systemKeys, ...customKeys];
+};
+
 export const deriveTemplateCategory = (name: string): TemplateCategory => {
   const text = name.toLowerCase();
   if (text.includes("yorp")) return "yorp";
@@ -1110,17 +1382,68 @@ export const deriveTemplateCategory = (name: string): TemplateCategory => {
   return "data_form";
 };
 
-export const formatTemplateCategoryLabel = (raw: string) => raw.replace(/_/g, " ").toUpperCase();
+export const CANONICAL_CATEGORY_DISPLAY_MAP: Record<string, string> = {
+  yorp: "YORP",
+  ypop: "YPOP",
+  move: "MOVE",
+  data_form: "Data Form",
+};
 
-export const formatTemplateCategoryDropdownLabel = (raw: string) =>
-  raw === "data_form" ? "Data Form" : formatTemplateCategoryLabel(raw);
+export const formatCanonicalCategoryLabel = (raw?: string | null): string => {
+  if (!raw || typeof raw !== "string") return "";
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+
+  const key = normalizeTemplateCategoryKey(trimmed);
+  if (CANONICAL_CATEGORY_DISPLAY_MAP[key]) {
+    return CANONICAL_CATEGORY_DISPLAY_MAP[key];
+  }
+
+  // Preserve short uppercase acronyms (e.g. YORP, MOVE, SK)
+  if (/^[A-Z0-9_-]+$/.test(trimmed) && trimmed.length <= 5) {
+    return trimmed.replace(/_/g, " ").toUpperCase();
+  }
+
+  // Sensible Title Case for dynamic/future values (e.g. "new_category" -> "New Category")
+  return trimmed
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
+export const formatTemplateCategoryLabel = (raw: string) => formatCanonicalCategoryLabel(raw);
+
+export const formatTemplateCategoryDropdownLabel = (raw: string) => formatCanonicalCategoryLabel(raw);
 
 export const orderTemplateCategories = (categories: string[]) => {
-  const known = TEMPLATE_CATEGORY_PRIORITY.filter((category) => categories.includes(category));
-  const unknown = categories
-    .filter((category) => !(TEMPLATE_CATEGORY_PRIORITY as readonly string[]).includes(category))
-    .sort((left, right) => formatTemplateCategoryLabel(left).localeCompare(formatTemplateCategoryLabel(right)));
-  return [...known, ...unknown];
+  const safeCategories = (categories ?? []).filter((c): c is string => typeof c === "string" && Boolean(c.trim()));
+  const seen = new Set<string>();
+  const uniqueCategories: string[] = [];
+  for (const cat of safeCategories) {
+    const key = normalizeTemplateCategoryKey(cat);
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueCategories.push(cat.trim());
+    }
+  }
+
+  const priorityKeys = ["yorp", "ypop", "move", "data_form"];
+
+  const getPriorityIndex = (cat: string) => {
+    const key = normalizeTemplateCategoryKey(cat);
+    return priorityKeys.indexOf(key);
+  };
+
+  return uniqueCategories.sort((a, b) => {
+    const idxA = getPriorityIndex(a);
+    const idxB = getPriorityIndex(b);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return formatCanonicalCategoryLabel(a).localeCompare(formatCanonicalCategoryLabel(b));
+  });
 };
 
 export type TemplateRecord = RequiredDocumentType & {
@@ -1158,6 +1481,7 @@ export type LydoSeedState = {
   ypopOrgActivityFiles: YPOPOrgActivityFile[];
   ypopCityActivities: YPOPCityActivity[];
   ypopPeriods: YPOPPeriod[];
+  customTemplateCategories?: string[];
 };
 
 const nowIso = new Date().toISOString();
@@ -1277,9 +1601,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 102400,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "approved_green",
       adminRemarks: "Compliant.",
@@ -1296,9 +1617,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 86400,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "approved_green",
       adminRemarks: "Correct.",
@@ -1315,9 +1633,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 75000,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "approved_green",
       adminRemarks: "",
@@ -1334,9 +1649,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 118000,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "needs_reupload",
       adminStatus: "needs_revision",
       adminRemarks: "Please update the membership list to include complete addresses for all members.",
@@ -1354,9 +1666,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 68000,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "approved_green",
       adminRemarks: "",
@@ -1373,9 +1682,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 98000,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "submitted",
       adminRemarks: "",
@@ -1392,9 +1698,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 84000,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "submitted",
       adminRemarks: "",
@@ -1411,9 +1714,6 @@ export const seedState: LydoSeedState = {
       fileUrl: "",
       fileType: "application/pdf",
       fileSize: 72000,
-      ocrText: "",
-      ocrStatus: "completed",
-      ocrConfidence: 0,
       validationStatus: "correct",
       adminStatus: "submitted",
       adminRemarks: "",
@@ -1836,6 +2136,8 @@ export const seedState: LydoSeedState = {
       templateFileUrl: documentType.templateUrl,
       templateFileType: documentType.templateUrl.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf",
       templateUploadedAt: "2026-06-26T07:10:12.769Z",
+      templateFileSize: null,
+      templateCategories: documentType.templateCategories || [deriveTemplateCategory(documentType.name)],
     })),
     ...otherDocumentTypes.map((documentType) => ({
       ...documentType,
@@ -1846,6 +2148,8 @@ export const seedState: LydoSeedState = {
       templateFileUrl: documentType.templateUrl,
       templateFileType: "application/pdf",
       templateUploadedAt: "2026-06-25T04:14:41.680Z",
+      templateFileSize: null,
+      templateCategories: documentType.templateCategories || [deriveTemplateCategory(documentType.name)],
     })),
   ],
   ypopEntries: [
@@ -2051,6 +2355,7 @@ export const seedState: LydoSeedState = {
     },
   ],
   inquiries: [],
+  customTemplateCategories: [],
 };
 
 export const statusToneMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -2099,13 +2404,13 @@ export const statusLabelMap: Record<string, string> = {
   uploaded: "Uploaded",
   ocr_processing: "OCR Processing",
   ready_for_review: "Ready for Review",
-  submitted: "Submitted",
+  submitted: "Pending Review",
   under_admin_review: "Under Admin Review",
   needs_revision: "Needs Revision",
   approved_green: "Approved",
   rejected_red: "Rejected",
-  under_review: "Under Review",
-  approved_for_ftf_green: "Submit Onsite",
+  under_review: "Pending Review",
+  approved_for_ftf_green: "Onsite Required",
   hard_copy_submitted: "Hardcopy Submitted",
   budget_released: "Budget Released",
   completed: "Completed",
@@ -2161,3 +2466,13 @@ export const complianceSummaryHighlights = [
   "Liquidation deadlines",
   "Admin remarks and consequences",
 ];
+
+export function isLiquidationOverdue(
+  deadlineAt?: string | null,
+  status?: LiquidationReport["status"] | string | null,
+): boolean {
+  if (!deadlineAt) return false;
+  const time = new Date(deadlineAt).getTime();
+  if (Number.isNaN(time) || time >= Date.now()) return false;
+  return status !== "completed_liquidated";
+}

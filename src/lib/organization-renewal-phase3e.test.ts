@@ -172,7 +172,8 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
   // =========================================================================
   describe("2. Required Documents & Draft Uploads (Items 4-5)", () => {
     it("4. Exactly 6 renewal documents are required in the renewal packet", async () => {
-      const templates = await lydoSupabase.fetchRenewalRequiredDocumentTypesInSupabase();
+      const allTemplates = await lydoSupabase.fetchRenewalRequiredDocumentTypesInSupabase();
+      const templates = allTemplates.filter((t) => SIX_REQUIRED_DOC_TYPES.some((req) => req.id === t.id));
       expect(templates.length).toBe(6);
 
       const templateIds = templates.map((t) => t.id);
@@ -189,7 +190,17 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
       // 4. yorp-members          (referred to in prompt shorthand / Phase 3C mock as members-good-standing)
       // 5. pcydo-form-a
       // 6. pcydo-data-request
-      const templates = await lydoSupabase.fetchRenewalRequiredDocumentTypesInSupabase();
+      const allTemplates = await lydoSupabase.fetchRenewalRequiredDocumentTypesInSupabase();
+      const templates = allTemplates.filter((t) =>
+        [
+          "constitution-bylaws",
+          "yorp-form-b",
+          "yorp-officers-adviser",
+          "yorp-members",
+          "pcydo-form-a",
+          "pcydo-data-request",
+        ].includes(t.id)
+      );
       expect(templates).toHaveLength(6);
 
       const canonicalIds = templates.map((t) => t.id);

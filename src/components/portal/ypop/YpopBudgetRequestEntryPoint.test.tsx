@@ -6,7 +6,7 @@ import { YpopSemesterList } from "./YpopSemesterList";
 import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { resolveBudgetWorkflowEligibility } from "@/lib/user-workflow-eligibility";
 import { UserPortalBudgetWorkspaceView } from "../UserPortalBudgetWorkspaceView";
-import type { YPOPPeriod, YPOPEntry, OrganizationProfile } from "@/lib/lydo-connect-data";
+import type { YPOPPeriod, YPOPEntry, OrganizationProfile, TemplateRecord, SubmissionFile } from "@/lib/lydo-connect-data";
 
 describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
   const basePeriod: YPOPPeriod = {
@@ -494,6 +494,552 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     // Primary status badges
     expect(screen.getByText("Qualified")).toBeInTheDocument();
     expect(screen.getByText("Not Qualified")).toBeInTheDocument();
+  });
+
+  it("19. Dynamic Registration Document Sync: 5/5 current requirements approved unlocks Budget Request FeatureGate", () => {
+    const qualifiedEntry = createEntry("qualified", basePeriod.semesterKey);
+    const ypopEligibility = resolveBudgetEligibility({
+      organizationId: "org-1",
+      periods: [basePeriod],
+      entries: [qualifiedEntry],
+    });
+
+    const verifiedProfile: OrganizationProfile = {
+      ...baseProfile,
+      profileStatus: "verified",
+      majorClassification: "community_based",
+      subClassification: "in_school",
+      advocacies: ["youth_empowerment"],
+      representativeName: "Jane Doe",
+      adviserName: "Prof. Adviser",
+      address: "123 Pasig Blvd",
+    };
+
+    const templates: TemplateRecord[] = [
+      {
+        id: "cbl",
+        databaseId: "2377a066-1111-4000-8000-000000000001",
+        name: "Constitution and By-Laws",
+        description: "CBL",
+        templateUrl: "storage://cbl.pdf",
+        sortOrder: 1,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "CBL",
+        templateActive: true,
+        templateFileName: "cbl.pdf",
+        templateFileUrl: "storage://cbl.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "form-b",
+        databaseId: "2377a066-2222-4000-8000-000000000002",
+        name: "NYC YORP Registration Form (Form B)",
+        description: "Form B",
+        templateUrl: "storage://form-b.pdf",
+        sortOrder: 2,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Form B",
+        templateActive: true,
+        templateFileName: "form-b.pdf",
+        templateFileUrl: "storage://form-b.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "officers",
+        databaseId: "2377a066-3333-4000-8000-000000000003",
+        name: "YORP Directory of Officers and Adviser",
+        description: "Officers",
+        templateUrl: "storage://officers.pdf",
+        sortOrder: 3,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Officers",
+        templateActive: true,
+        templateFileName: "officers.pdf",
+        templateFileUrl: "storage://officers.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "members",
+        databaseId: "2377a066-4444-4000-8000-000000000004",
+        name: "YORP List of Members in Good Standing",
+        description: "Members",
+        templateUrl: "storage://members.pdf",
+        sortOrder: 4,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Members",
+        templateActive: true,
+        templateFileName: "members.pdf",
+        templateFileUrl: "storage://members.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "form-a",
+        databaseId: "2377a066-5555-4000-8000-000000000005",
+        name: "Pasig City YORP Registration Form (Form A)",
+        description: "Form A",
+        templateUrl: "storage://form-a.pdf",
+        sortOrder: 5,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Form A",
+        templateActive: true,
+        templateFileName: "form-a.pdf",
+        templateFileUrl: "storage://form-a.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+    ];
+
+    // Files have databaseId as documentTypeId
+    const files: SubmissionFile[] = templates.map((t, idx) => ({
+      id: `file-${idx}`,
+      submissionId: "sub-1",
+      documentTypeId: t.databaseId,
+      fileName: `${t.id}.pdf`,
+      fileUrl: `storage://${t.id}.pdf`,
+      fileType: "application/pdf",
+      fileSize: 1024,
+      validationStatus: "correct",
+      adminStatus: "approved",
+      adminRemarks: "",
+      revisionHistory: [],
+      uploadedAt: "2026-01-01T00:00:00Z",
+      reviewedAt: "2026-01-02T00:00:00Z",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-02T00:00:00Z",
+    }));
+
+    const budgetWorkflowEligibility = resolveBudgetWorkflowEligibility({
+      profile: verifiedProfile,
+      requiredTemplates: templates,
+      documentFiles: files,
+      ypopEligibility,
+    });
+
+    expect(budgetWorkflowEligibility.documentsSatisfied).toBe(true);
+    expect(budgetWorkflowEligibility.eligible).toBe(true);
+    const docReq = budgetWorkflowEligibility.requirements.find((r) => r.id === "documents");
+    expect(docReq?.met).toBe(true);
+
+    const budgetProps: any = {
+      budgetWorkflowEligibility,
+      budgetRequests: [],
+      budgetFilesByRequestId: new Map(),
+      budgetNotesByRequestId: {},
+      submittingBudgetId: null,
+      showBudgetForm: false,
+      setShowBudgetForm: vi.fn(),
+      editingBudgetRequest: null,
+      startEditingBudgetRequest: vi.fn(),
+      handleDeleteBudgetRequest: vi.fn(),
+      openFile: vi.fn(),
+      navigate: vi.fn(),
+      searchParams: new URLSearchParams(),
+      userRouteMap: { "budget-request": "/budget-request" },
+      buildPublicRecordCode: () => "BR-001",
+      formatCurrency: (n: number) => `PHP ${n}`,
+      formatShortPortalDate: (d: string) => d,
+      formatDateTimeLabel: (d: string) => d,
+      formatStatusLabel: (s: string) => s,
+      newActivityTitle: "",
+      setNewActivityTitle: vi.fn(),
+      newActivityDescription: "",
+      setNewActivityDescription: vi.fn(),
+      newPurposeCategory: "",
+      setNewPurposeCategory: vi.fn(),
+      newActivityDate: "",
+      setNewActivityDate: vi.fn(),
+      newVenue: "",
+      setNewVenue: vi.fn(),
+      newRequestedAmount: "",
+      setNewRequestedAmount: vi.fn(),
+      newRemarks: "",
+      setNewRemarks: vi.fn(),
+      handleCreateOrUpdateBudgetRequest: vi.fn(),
+    };
+
+    render(<UserPortalBudgetWorkspaceView {...budgetProps} />);
+
+    // FeatureGate is unlocked, so the gate barrier is NOT rendered
+    expect(screen.queryByText("Complete eligibility requirements first")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Budget Requests" })).toBeInTheDocument();
+  });
+
+  it("20. Dynamic Template Deletion: 4/4 approved after admin archives one template remains unlocked", () => {
+    const qualifiedEntry = createEntry("qualified", basePeriod.semesterKey);
+    const ypopEligibility = resolveBudgetEligibility({
+      organizationId: "org-1",
+      periods: [basePeriod],
+      entries: [qualifiedEntry],
+    });
+
+    const verifiedProfile: OrganizationProfile = {
+      ...baseProfile,
+      profileStatus: "verified",
+      majorClassification: "community_based",
+      subClassification: "in_school",
+      advocacies: ["youth_empowerment"],
+      representativeName: "Jane Doe",
+      adviserName: "Prof. Adviser",
+      address: "123 Pasig Blvd",
+    };
+
+    // 4 active templates (template 5 removed/archived by admin)
+    const remainingTemplates: TemplateRecord[] = [
+      {
+        id: "cbl",
+        databaseId: "2377a066-1111-4000-8000-000000000001",
+        name: "Constitution and By-Laws",
+        description: "CBL",
+        templateUrl: "storage://cbl.pdf",
+        sortOrder: 1,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "CBL",
+        templateActive: true,
+        templateFileName: "cbl.pdf",
+        templateFileUrl: "storage://cbl.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "form-b",
+        databaseId: "2377a066-2222-4000-8000-000000000002",
+        name: "NYC YORP Registration Form (Form B)",
+        description: "Form B",
+        templateUrl: "storage://form-b.pdf",
+        sortOrder: 2,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Form B",
+        templateActive: true,
+        templateFileName: "form-b.pdf",
+        templateFileUrl: "storage://form-b.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "officers",
+        databaseId: "2377a066-3333-4000-8000-000000000003",
+        name: "YORP Directory of Officers and Adviser",
+        description: "Officers",
+        templateUrl: "storage://officers.pdf",
+        sortOrder: 3,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Officers",
+        templateActive: true,
+        templateFileName: "officers.pdf",
+        templateFileUrl: "storage://officers.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "members",
+        databaseId: "2377a066-4444-4000-8000-000000000004",
+        name: "YORP List of Members in Good Standing",
+        description: "Members",
+        templateUrl: "storage://members.pdf",
+        sortOrder: 4,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Members",
+        templateActive: true,
+        templateFileName: "members.pdf",
+        templateFileUrl: "storage://members.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+    ];
+
+    const files: SubmissionFile[] = remainingTemplates.map((t, idx) => ({
+      id: `file-${idx}`,
+      submissionId: "sub-1",
+      documentTypeId: t.databaseId,
+      fileName: `${t.id}.pdf`,
+      fileUrl: `storage://${t.id}.pdf`,
+      fileType: "application/pdf",
+      fileSize: 1024,
+      validationStatus: "correct",
+      adminStatus: "approved",
+      adminRemarks: "",
+      revisionHistory: [],
+      uploadedAt: "2026-01-01T00:00:00Z",
+      reviewedAt: "2026-01-02T00:00:00Z",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-02T00:00:00Z",
+    }));
+
+    const budgetWorkflowEligibility = resolveBudgetWorkflowEligibility({
+      profile: verifiedProfile,
+      requiredTemplates: remainingTemplates,
+      documentFiles: files,
+      ypopEligibility,
+    });
+
+    expect(budgetWorkflowEligibility.documentsSatisfied).toBe(true);
+    expect(budgetWorkflowEligibility.eligible).toBe(true);
+  });
+
+  it("21. Dynamic Template Addition: 5/6 approved locks Budget Request FeatureGate until 6th is approved", () => {
+    const qualifiedEntry = createEntry("qualified", basePeriod.semesterKey);
+    const ypopEligibility = resolveBudgetEligibility({
+      organizationId: "org-1",
+      periods: [basePeriod],
+      entries: [qualifiedEntry],
+    });
+
+    const verifiedProfile: OrganizationProfile = {
+      ...baseProfile,
+      profileStatus: "verified",
+      majorClassification: "community_based",
+      subClassification: "in_school",
+      advocacies: ["youth_empowerment"],
+      representativeName: "Jane Doe",
+      adviserName: "Prof. Adviser",
+      address: "123 Pasig Blvd",
+    };
+
+    // 6 templates: 5 existing + 1 newly added dynamic template
+    const templates: TemplateRecord[] = [
+      {
+        id: "cbl",
+        databaseId: "2377a066-1111-4000-8000-000000000001",
+        name: "Constitution and By-Laws",
+        description: "CBL",
+        templateUrl: "storage://cbl.pdf",
+        sortOrder: 1,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "CBL",
+        templateActive: true,
+        templateFileName: "cbl.pdf",
+        templateFileUrl: "storage://cbl.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "form-b",
+        databaseId: "2377a066-2222-4000-8000-000000000002",
+        name: "NYC YORP Registration Form (Form B)",
+        description: "Form B",
+        templateUrl: "storage://form-b.pdf",
+        sortOrder: 2,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Form B",
+        templateActive: true,
+        templateFileName: "form-b.pdf",
+        templateFileUrl: "storage://form-b.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "officers",
+        databaseId: "2377a066-3333-4000-8000-000000000003",
+        name: "YORP Directory of Officers and Adviser",
+        description: "Officers",
+        templateUrl: "storage://officers.pdf",
+        sortOrder: 3,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Officers",
+        templateActive: true,
+        templateFileName: "officers.pdf",
+        templateFileUrl: "storage://officers.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "members",
+        databaseId: "2377a066-4444-4000-8000-000000000004",
+        name: "YORP List of Members in Good Standing",
+        description: "Members",
+        templateUrl: "storage://members.pdf",
+        sortOrder: 4,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Members",
+        templateActive: true,
+        templateFileName: "members.pdf",
+        templateFileUrl: "storage://members.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "form-a",
+        databaseId: "2377a066-5555-4000-8000-000000000005",
+        name: "Pasig City YORP Registration Form (Form A)",
+        description: "Form A",
+        templateUrl: "storage://form-a.pdf",
+        sortOrder: 5,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "Form A",
+        templateActive: true,
+        templateFileName: "form-a.pdf",
+        templateFileUrl: "storage://form-a.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+      {
+        id: "2377a066-6666-4000-8000-000000000006",
+        databaseId: "2377a066-6666-4000-8000-000000000006",
+        name: "New Admin YORP Requirement",
+        description: "New Req",
+        templateUrl: "storage://new-req.pdf",
+        sortOrder: 6,
+        isRequired: true,
+        isActive: true,
+        scope: "registration",
+        templateScope: "document_submission",
+        templateDescription: "New Req",
+        templateActive: true,
+        templateFileName: "new-req.pdf",
+        templateFileUrl: "storage://new-req.pdf",
+        templateFileType: "application/pdf",
+        templateUploadedAt: "2026-01-01T00:00:00Z",
+        templateCategories: ["yorp"],
+        templateFileSize: 1024,
+      },
+    ];
+
+    // Only 5 files are approved (the 6th has not been submitted yet)
+    const files: SubmissionFile[] = templates.slice(0, 5).map((t, idx) => ({
+      id: `file-${idx}`,
+      submissionId: "sub-1",
+      documentTypeId: t.databaseId,
+      fileName: `${t.id}.pdf`,
+      fileUrl: `storage://${t.id}.pdf`,
+      fileType: "application/pdf",
+      fileSize: 1024,
+      validationStatus: "correct",
+      adminStatus: "approved",
+      adminRemarks: "",
+      revisionHistory: [],
+      uploadedAt: "2026-01-01T00:00:00Z",
+      reviewedAt: "2026-01-02T00:00:00Z",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-02T00:00:00Z",
+    }));
+
+    const budgetWorkflowEligibility = resolveBudgetWorkflowEligibility({
+      profile: verifiedProfile,
+      requiredTemplates: templates,
+      documentFiles: files,
+      ypopEligibility,
+    });
+
+    expect(budgetWorkflowEligibility.documentsSatisfied).toBe(false);
+    expect(budgetWorkflowEligibility.eligible).toBe(false);
+    const docReq = budgetWorkflowEligibility.requirements.find((r) => r.id === "documents");
+    expect(docReq?.met).toBe(false);
+
+    const budgetProps: any = {
+      budgetWorkflowEligibility,
+      budgetRequests: [],
+      budgetFilesByRequestId: new Map(),
+      budgetNotesByRequestId: {},
+      submittingBudgetId: null,
+      showBudgetForm: false,
+      setShowBudgetForm: vi.fn(),
+      editingBudgetRequest: null,
+      startEditingBudgetRequest: vi.fn(),
+      handleDeleteBudgetRequest: vi.fn(),
+      openFile: vi.fn(),
+      navigate: vi.fn(),
+      searchParams: new URLSearchParams(),
+      userRouteMap: { "budget-request": "/budget-request" },
+      buildPublicRecordCode: () => "BR-001",
+      formatCurrency: (n: number) => `PHP ${n}`,
+      formatShortPortalDate: (d: string) => d,
+      formatDateTimeLabel: (d: string) => d,
+      formatStatusLabel: (s: string) => s,
+      newActivityTitle: "",
+      setNewActivityTitle: vi.fn(),
+      newActivityDescription: "",
+      setNewActivityDescription: vi.fn(),
+      newPurposeCategory: "",
+      setNewPurposeCategory: vi.fn(),
+      newActivityDate: "",
+      setNewActivityDate: vi.fn(),
+      newVenue: "",
+      setNewVenue: vi.fn(),
+      newRequestedAmount: "",
+      setNewRequestedAmount: vi.fn(),
+      newRemarks: "",
+      setNewRemarks: vi.fn(),
+      handleCreateOrUpdateBudgetRequest: vi.fn(),
+    };
+
+    render(<UserPortalBudgetWorkspaceView {...budgetProps} />);
+
+    // FeatureGate is locked, displaying eligibility warning
+    expect(screen.getByText("Complete eligibility requirements first")).toBeInTheDocument();
   });
 });
 

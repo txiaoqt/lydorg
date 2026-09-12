@@ -68,15 +68,35 @@ describe("SubmitInquiryModal Component", () => {
     expect(screen.getByDisplayValue(/Good day, we would like to inquire/i)).toBeInTheDocument();
   });
 
-  it("handles input changes and triggers setInquiryForm", () => {
+  it("renders Organization Name as read-only and non-editable", () => {
+    const handleSetInquiryForm = vi.fn();
+    render(
+      <SubmitInquiryModal
+        open={true}
+        onOpenChange={vi.fn()}
+        inquiryForm={defaultInquiryForm}
+        setInquiryForm={handleSetInquiryForm}
+        submittingInquiry={false}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    const orgNameInput = screen.getByDisplayValue("Youth Org Representative") as HTMLInputElement;
+    expect(orgNameInput).toHaveAttribute("readonly");
+    expect(orgNameInput.className).toContain("cursor-not-allowed");
+    expect(screen.getByText("Organization Name")).toBeInTheDocument();
+  });
+
+  it("handles input changes for email and subject while keeping Organization Name locked", () => {
     const handleSetInquiryForm = vi.fn();
     render(
       <SubmitInquiryModal
         open={true}
         onOpenChange={vi.fn()}
         inquiryForm={{
-          submitterName: "",
-          email: "",
+          submitterName: "Pasig Youth Council",
+          organizationName: "Pasig Youth Council",
+          email: "old@pasig.ph",
           subject: "",
           description: "",
         }}
@@ -86,9 +106,12 @@ describe("SubmitInquiryModal Component", () => {
       />
     );
 
+    const emailInput = screen.getByDisplayValue("old@pasig.ph");
+    fireEvent.change(emailInput, { target: { value: "new@pasig.ph" } });
+    expect(handleSetInquiryForm).toHaveBeenCalled();
+
     const subjectInput = screen.getByPlaceholderText("e.g. Question about liquidation requirement");
     fireEvent.change(subjectInput, { target: { value: "New liquidation query" } });
-
     expect(handleSetInquiryForm).toHaveBeenCalled();
   });
 

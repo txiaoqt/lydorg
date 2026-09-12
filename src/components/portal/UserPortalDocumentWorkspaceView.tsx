@@ -89,25 +89,54 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
   const docsList = templateDocuments || documentRequirements || [];
   
   // Authentic Backend Data Binding Lookup for Each Requirement
-  const getSubmissionForDoc = (docId: string) => {
+  const getSubmissionForDoc = (docOrId: any, fallbackDbId?: string) => {
+    let docId = "";
+    let databaseId = fallbackDbId;
+    if (typeof docOrId === "object" && docOrId !== null) {
+      docId = docOrId.id || "";
+      databaseId = docOrId.databaseId || fallbackDbId;
+    } else if (typeof docOrId === "string") {
+      docId = docOrId;
+    }
+
     if (Array.isArray(docFiles)) {
-      return docFiles.find((entry: any) => entry.documentTypeId === docId || entry.id === docId) || null;
+      return (
+        docFiles.find(
+          (entry: any) =>
+            entry.documentTypeId === docId ||
+            (databaseId && entry.documentTypeId === databaseId) ||
+            entry.id === docId ||
+            (databaseId && entry.id === databaseId),
+        ) || null
+      );
     }
     if (documentSubmissions && typeof documentSubmissions.get === "function") {
-      return documentSubmissions.get(docId) || null;
+      return (
+        documentSubmissions.get(docId) ||
+        (databaseId ? documentSubmissions.get(databaseId) : null) ||
+        null
+      );
     }
     if (docFiles && typeof (docFiles as any).get === "function") {
-      return (docFiles as any).get(docId) || null;
+      return (
+        (docFiles as any).get(docId) ||
+        (databaseId ? (docFiles as any).get(databaseId) : null) ||
+        null
+      );
     }
     if (docFiles && typeof docFiles === "object" && docFiles !== null) {
-      return (docFiles as any)[docId] || null;
+      return (
+        (docFiles as any)[docId] ||
+        (databaseId ? (docFiles as any)[databaseId] : null) ||
+        null
+      );
     }
     return null;
   };
 
   // Authentic Status Mapper matching Baseline UserPortal.tsx
   const getDocStatus = (doc: any) => {
-    const sub = getSubmissionForDoc(doc.id);
+    const sub = getSubmissionForDoc(doc, doc?.databaseId);
     if (!sub) return null;
     if (sub.adminStatus) return sub.adminStatus;
     if (sub.status) return sub.status;
@@ -144,7 +173,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
   // Filter & Sort operating on Authentic Backend Data
   const filteredRequirements = docsList
     .filter((doc) => {
-      const sub = getSubmissionForDoc(doc.id);
+      const sub = getSubmissionForDoc(doc, doc?.databaseId);
       const status = getDocStatus(doc);
       const query = searchQuery.trim().toLowerCase();
       if (!query) return true;
@@ -440,7 +469,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               </div>
             ) : (
               filteredRequirements.map((doc) => {
-              const submission = getSubmissionForDoc(doc.id);
+              const submission = getSubmissionForDoc(doc, doc?.databaseId);
               const status = getDocStatus(doc);
               const isApproved = isApprovedStatus(status);
               const isUnderReview = isReviewStatus(status);
@@ -452,7 +481,9 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               const fileTypeLabel = getDocumentPrimaryFileTypeLabel ? getDocumentPrimaryFileTypeLabel(doc) : "PDF";
 
               // Template file info for View Template button
-              const template = templatesById ? templatesById[doc.id] : null;
+              const template = templatesById
+                ? templatesById[doc.id] || (doc.databaseId ? templatesById[doc.databaseId] : null)
+                : null;
               const templateFileUrl = template?.templateFileUrl ?? doc.templateFileUrl ?? doc.fileUrl ?? "";
               const templateFileName = template?.templateFileName || doc.templateFileName || docTitle;
 

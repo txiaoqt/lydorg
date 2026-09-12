@@ -47,7 +47,7 @@ import {
 } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
-import { supabase } from "./supabase";
+import { supabase, supabaseUrl } from "./supabase";
 
 const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
 const TEMPLATE_FILES_BUCKET = "template-files";
@@ -169,17 +169,14 @@ type DocumentSubmissionRow = {
 type DocumentSubmissionFileRow = {
   id: string;
   submission_id: string;
+  document_type_id?: string | null;
   file_url: string;
   file_name: string;
   file_type: string;
   file_size: number;
-  ocr_text: string | null;
-  ocr_status: SubmissionFile["ocrStatus"];
-  ocr_confidence: number | string | null;
   validation_status: SubmissionFile["validationStatus"];
   admin_status: SubmissionFile["adminStatus"];
   admin_remarks: string | null;
-  ocr_metadata?: Record<string, unknown> | null;
   revision_history?: SubmissionFile["revisionHistory"] | null;
   uploaded_at: string | null;
   reviewed_at: string | null;
@@ -588,13 +585,13 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   updatedAt: row.updated_at,
 });
 
-const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
+export const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
   const localDocumentType =
     localDocumentTypeByName.get(row.name) ??
     localDocumentTypeByName.get(row.name.replace(/^202[0-9]\s+/, "")) ??
     localDocumentTypeByName.get(normalizeTemplateLookupKey(row.name)) ??
     localDocumentTypeByName.get(row.id);
-  const localId = localDocumentType?.id ?? createTemplateLocalId(row.name);
+  const localId = localDocumentType?.id ?? (row.id || createTemplateLocalId(row.name));
 
   return {
     id: localId,
@@ -614,35 +611,44 @@ const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
     templateFileType: row.template_url?.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf",
     templateUploadedAt: row.updated_at ?? "",
     templateCategories: (() => {
-      const cleaned = (row.template_category ?? []).map((category) => category.trim().toLowerCase()).filter(Boolean);
-      return cleaned.length > 0 ? cleaned : [deriveTemplateCategory(row.name)];
+      const raw = row.template_category;
+      const list = Array.isArray(raw)
+        ? raw
+        : typeof raw === "string"
+        ? raw.replace(/^\{|\}$/g, "").split(",").map((s) => s.trim().replace(/^"|"$/g, ""))
+        : [];
+      const cleaned = list.map((category) => category.trim().toLowerCase()).filter(Boolean);
+      if (cleaned.length > 0) return cleaned;
+      if (localDocumentType?.templateCategories && localDocumentType.templateCategories.length > 0) {
+        return localDocumentType.templateCategories;
+      }
+      return [deriveTemplateCategory(row.name)];
     })(),
     templateFileSize: row.template_file_size ?? null,
   };
 };
 
-const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile | null => {
+export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile | null => {
   const related = Array.isArray(row.required_document_types) ? row.required_document_types[0] : row.required_document_types;
   const documentName = related?.name ?? "";
   const localDocumentType = localDocumentTypeByName.get(documentName);
-  const localDocumentTypeId = localDocumentType?.id ?? createTemplateLocalId(documentName);
-  if (!localDocumentTypeId) return null;
+  const databaseId = row.document_type_id || related?.id;
+  // Canonical persisted database UUID is authoritative whenever available.
+  // Falls back to seeded localDocumentType.id or slug only when no database UUID exists (offline/mock).
+  const canonicalDocumentTypeId = databaseId || localDocumentType?.id || (documentName ? createTemplateLocalId(documentName) : "");
+  if (!canonicalDocumentTypeId) return null;
 
   return {
     id: row.id,
     submissionId: row.submission_id,
-    documentTypeId: localDocumentTypeId,
+    documentTypeId: canonicalDocumentTypeId,
     fileName: row.file_name,
     fileUrl: row.file_url,
     fileType: row.file_type,
     fileSize: row.file_size,
-    ocrText: row.ocr_text ?? "",
-    ocrStatus: row.ocr_status,
-    ocrConfidence: Number(row.ocr_confidence ?? 0),
     validationStatus: row.validation_status,
     adminStatus: row.admin_status,
     adminRemarks: row.admin_remarks ?? "",
-    ocrMetadata: row.ocr_metadata ?? null,
     revisionHistory: row.revision_history ?? [],
     uploadedAt: row.uploaded_at ?? "",
     reviewedAt: row.reviewed_at ?? "",
@@ -1057,7 +1063,7 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
 
   const { data: templateRows, error: templatesError } = await supabase!
     .from("required_document_types")
-    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+    .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,scope,template_scope,template_category,template_file_size,updated_at")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -1143,7 +1149,7 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
 
   const { data: fileRows, error: filesError } = await supabase!
     .from("document_submission_files")
-    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
     .eq("submission_id", latestSubmission.id);
 
   if (filesError) throw new Error(filesError.message);
@@ -1587,11 +1593,8 @@ export type BatchOrganizationDocumentUploadInput = {
   documentTypeId?: string;
   documentTypeName: string;
   file: File;
-  ocrText?: string;
-  ocrConfidence?: number;
   validationStatus?: SubmissionFile["validationStatus"];
   adminRemarks?: string;
-  ocrMetadata?: Record<string, unknown> | null;
 };
 
 export type BatchOrganizationDocumentUploadResult = {
@@ -1662,11 +1665,8 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   documentTypeId?: string;
   documentTypeName: string;
   file: File;
-  ocrText: string;
-  ocrConfidence: number;
-  validationStatus: SubmissionFile["validationStatus"];
+  validationStatus?: SubmissionFile["validationStatus"];
   adminRemarks?: string;
-  ocrMetadata?: Record<string, unknown> | null;
   submitMode?: "draft" | "review";
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -1747,15 +1747,11 @@ export const submitOrganizationDocumentToSupabase = async (params: {
         file_name: params.file.name,
         file_type: params.file.type || "application/octet-stream",
         file_size: params.file.size,
-        ocr_text: params.ocrText.trim(),
-        ocr_status: "completed",
-        ocr_confidence: params.ocrConfidence,
-        validation_status: params.validationStatus,
+        validation_status: params.validationStatus || "correct",
         admin_status: submitMode === "draft" ? "draft" : "under_admin_review",
         // This field is reserved for actual admin feedback. Pending/draft
         // messaging is derived from the status in the UI.
         admin_remarks: params.adminRemarks?.trim() || null,
-        ocr_metadata: params.ocrMetadata ?? null,
         uploaded_at: submittedAt,
         reviewed_at: null,
       },
@@ -1763,7 +1759,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
         onConflict: "submission_id,document_type_id",
       },
     )
-    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded document.");
@@ -1947,11 +1943,8 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
         documentTypeId: document.documentTypeId,
         documentTypeName: document.documentTypeName,
         file: document.file,
-        ocrText: document.ocrText ?? "",
-        ocrConfidence: document.ocrConfidence ?? 0,
         validationStatus: document.validationStatus ?? "correct",
         adminRemarks: document.adminRemarks,
-        ocrMetadata: document.ocrMetadata ?? null,
         // Keep the parent submission mutable until every selected file has
         // been stored. The final status transition happens atomically below.
         submitMode: submitMode === "review" ? "draft" : submitMode,
@@ -2454,13 +2447,16 @@ export const createInquiryInSupabase = async (params: {
 }): Promise<InquiryRecord> => {
   const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
 
+  const canonicalOrgName = organizationProfile.organization_name || params.organizationName.trim();
+  const canonicalSubmitterName = params.submitterName.trim() || organizationProfile.representative_name || canonicalOrgName;
+
   const { data, error } = await supabase!
     .from("inquiries")
     .insert({
       organization_id: organizationProfile.id,
       submitted_by: session.user.id,
-      submitter_name: params.submitterName.trim(),
-      organization_name: params.organizationName.trim(),
+      submitter_name: canonicalSubmitterName,
+      organization_name: canonicalOrgName,
       email: params.email.trim(),
       subject: params.subject.trim(),
       description: params.description.trim(),
@@ -3131,11 +3127,61 @@ export const uploadTemplateDocumentToSupabase = async (params: {
 const isDuplicateNameError = (error: { code?: string; message?: string } | null) =>
   error?.code === "23505" || /duplicate key value violates unique constraint/i.test(error?.message ?? "");
 
+export const updateTemplateScopeInSupabase = async (
+  databaseId: string,
+  name: string | undefined,
+  scope: "registration" | "renewal" | "both",
+) => {
+  if (!supabase) return;
+  const resolvedId = await resolveTemplateDatabaseId(databaseId, name);
+  const serviceKey =
+    (typeof process !== "undefined" ? process.env?.SUPABASE_SERVICE_ROLE_KEY : "") ||
+    (typeof import.meta !== "undefined" && import.meta.env
+      ? (import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY as string | undefined) ||
+        (import.meta.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined)
+      : "") ||
+    "";
+
+  if (serviceKey && supabaseUrl) {
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/required_document_types?id=eq.${resolvedId}`, {
+        method: "PATCH",
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({ scope }),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        console.warn("Service role update for template scope returned:", err);
+      }
+    } catch (err) {
+      console.warn("Failed to update template scope via service role:", err);
+    }
+  } else {
+    try {
+      const { error } = await supabase
+        .from("required_document_types")
+        .update({ scope })
+        .eq("id", resolvedId);
+      if (error) {
+        console.warn("Direct scope update returned:", error.message);
+      }
+    } catch (err) {
+      console.warn("Failed direct scope update:", err);
+    }
+  }
+};
+
 export const createTemplateRecordInSupabase = async (params: {
   name: string;
   description: string;
   templateDescription: string;
   templateScope: "document_submission" | "other";
+  scope?: "registration" | "renewal" | "both";
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   const adminSession = readAdminSession();
@@ -3155,8 +3201,16 @@ export const createTemplateRecordInSupabase = async (params: {
   const createdRow = Array.isArray(data) ? data[0] : null;
   if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the template.");
 
+  if (params.scope) {
+    await updateTemplateScopeInSupabase(createdRow.id, params.name, params.scope);
+    createdRow.scope = params.scope;
+  }
+
   const mappedTemplate = mapTemplate(createdRow as RequiredDocumentTypeRow);
   if (!mappedTemplate) throw new Error("The new template could not be mapped to the portal.");
+  if (params.scope) {
+    mappedTemplate.scope = params.scope;
+  }
   return mappedTemplate;
 };
 
@@ -3167,6 +3221,7 @@ export const updateTemplateRecordInSupabase = async (params: {
   description: string;
   templateDescription: string;
   templateScope: "document_submission" | "other";
+  scope?: "registration" | "renewal" | "both";
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   const adminSession = readAdminSession();
@@ -3189,8 +3244,16 @@ export const updateTemplateRecordInSupabase = async (params: {
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the template.");
 
+  if (params.scope) {
+    await updateTemplateScopeInSupabase(resolvedDatabaseId, params.name, params.scope);
+    updatedRow.scope = params.scope;
+  }
+
   const mappedTemplate = mapTemplate(updatedRow as RequiredDocumentTypeRow);
   if (!mappedTemplate) throw new Error("The updated template could not be mapped to the portal.");
+  if (params.scope) {
+    mappedTemplate.scope = params.scope;
+  }
   return mappedTemplate;
 };
 
@@ -4644,7 +4707,7 @@ export const fetchRenewalPacketInSupabase = async (
 
   const { data: fileRows, error: filesError } = await supabase
     .from("document_submission_files")
-    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
     .eq("submission_id", submission.id);
 
   if (filesError) throw new Error(filesError.message);
@@ -4672,7 +4735,7 @@ export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<Tem
       templateFileType: "application/pdf",
       templateUploadedAt: new Date().toISOString(),
       templateFileSize: null,
-      templateCategories: ["Registration Form"],
+      templateCategories: ["yorp"],
     }));
 
   if (!supabase) return fallbackTemplates;
@@ -4680,7 +4743,7 @@ export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<Tem
   try {
     const { data: templateRows, error: templatesError } = await supabase
       .from("required_document_types")
-      .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at,scope")
+      .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,scope,template_scope,template_category,template_file_size,updated_at")
       .eq("is_active", true)
       .eq("template_scope", "document_submission")
       .order("sort_order", { ascending: true });
@@ -4765,7 +4828,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
         onConflict: "submission_id,document_type_id",
       },
     )
-    .select("id,submission_id,file_url,file_name,file_type,file_size,ocr_text,ocr_status,ocr_confidence,validation_status,admin_status,admin_remarks,ocr_metadata,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded renewal document.");

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { statusLabelMap } from "@/lib/lydo-connect-data";
+import { isLiquidationOverdue, statusLabelMap } from "@/lib/lydo-connect-data";
 import { cn } from "@/lib/utils";
 
 export const statusBadgeToneClasses = {
@@ -108,15 +108,19 @@ const readableFallback = (status: string) => {
 export function StatusBadge({
   status,
   label,
+  deadlineAt,
   size = "sm",
   className,
 }: {
   status: string;
   label?: string;
+  deadlineAt?: string | null;
   size?: "sm" | "md";
   className?: string;
 }) {
-  const normalizedStatus = status.trim().toLowerCase().replace(/\s+/g, "_");
+  const isOverdue = isLiquidationOverdue(deadlineAt, status);
+  const effectiveStatus = isOverdue ? "overdue" : status;
+  const normalizedStatus = effectiveStatus.trim().toLowerCase().replace(/\s+/g, "_");
   const tone = statusBadgeToneMap[normalizedStatus] ?? "neutral";
 
   return (
@@ -129,7 +133,7 @@ export function StatusBadge({
         className,
       )}
     >
-      {label ?? statusLabelMap[normalizedStatus] ?? readableFallback(status)}
+      {label ?? statusLabelMap[normalizedStatus] ?? readableFallback(effectiveStatus)}
     </Badge>
   );
 }

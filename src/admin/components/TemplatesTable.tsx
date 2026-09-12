@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CategoryChip } from "@/admin/components/InquiriesTable";
-import { formatTemplateCategoryDropdownLabel, formatTemplateCategoryLabel, orderTemplateCategories, type TemplateRecord } from "@/lib/lydo-connect-data";
+import { deriveTemplateCategory, formatTemplateCategoryDropdownLabel, formatTemplateCategoryLabel, orderTemplateCategories, type TemplateRecord } from "@/lib/lydo-connect-data";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { getTemplateFileFormat, formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 
@@ -100,16 +100,24 @@ export const TemplatesTable = ({
   const [resolvedSizeByTemplateId, setResolvedSizeByTemplateId] = useState<Record<string, number>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
+  if (Array.isArray(template.templateCategories) && template.templateCategories.length > 0) {
+    const valid = template.templateCategories.filter(Boolean);
+    if (valid.length > 0) return valid;
+  }
+  return [deriveTemplateCategory(template.name)];
+};
+
   const groups = useMemo(() => {
     if (categoryFilter !== "all") {
       return [{ category: categoryFilter, items: templates }];
     }
     const allCategories = orderTemplateCategories(
-      Array.from(new Set(templates.flatMap((template) => template.templateCategories))),
+      Array.from(new Set(templates.flatMap((template) => getSafeTemplateCategories(template)))),
     );
     return allCategories.map((category) => ({
       category,
-      items: templates.filter((template) => template.templateCategories.includes(category)),
+      items: templates.filter((template) => getSafeTemplateCategories(template).includes(category)),
     }));
   }, [templates, categoryFilter]);
 
@@ -300,7 +308,7 @@ export const TemplatesTable = ({
                     </div>
 
                     <div className="flex w-[12%] flex-wrap items-center gap-1">
-                      {template.templateCategories.map((category) => (
+                      {getSafeTemplateCategories(template).map((category) => (
                         <CategoryChip key={category} category={formatTemplateCategoryLabel(category)} />
                       ))}
                     </div>

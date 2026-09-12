@@ -9,7 +9,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CategoryChip, ReferenceCodeChip } from "@/admin/components/InquiriesTable";
-import { pasigDistrictBarangays, pasigDistrictOptions, type PasigDistrict } from "@/lib/pasig-districts";
+import {
+  pasigDistrictBarangays,
+  pasigDistrictOptions,
+  getBarangayOptionsForDistrict,
+  isBarangayInDistrict,
+  type PasigDistrict,
+} from "@/lib/pasig-districts";
 import { majorClassificationOptions, type OrganizationRenewalStatus } from "@/lib/lydo-connect-data";
 
 export type RenewalStatusFilter = "all" | "submitted" | "pending_review" | "needs_revision" | "approved" | "rejected";
@@ -134,12 +140,17 @@ export const RenewalsTable = ({
   const [page, setPage] = useState(0);
 
   const barangayOptions = useMemo(
-    () =>
-      Object.values(pasigDistrictBarangays)
-        .flat()
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [],
+    () => getBarangayOptionsForDistrict(districtFilter),
+    [districtFilter],
   );
+
+  const handleDistrictFilterChange = (nextDistrict: "all" | PasigDistrict) => {
+    onDistrictFilterChange(nextDistrict);
+    setPage(0);
+    if (!isBarangayInDistrict(barangayFilter, nextDistrict)) {
+      onBarangayFilterChange("all");
+    }
+  };
 
   const totalPages = Math.max(1, Math.ceil(renewals.length / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
@@ -206,12 +217,12 @@ export const RenewalsTable = ({
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[156px] rounded-b-md rounded-t-none border-slate-300 p-0">
+          <DropdownMenuContent
+            align="end"
+            className="w-[156px] data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0"
+          >
             <DropdownMenuItem
-              onClick={() => {
-                onDistrictFilterChange("all");
-                setPage(0);
-              }}
+              onClick={() => handleDistrictFilterChange("all")}
               className={cn(
                 "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 districtFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
@@ -222,10 +233,7 @@ export const RenewalsTable = ({
             {pasigDistrictOptions.map((district) => (
               <DropdownMenuItem
                 key={district}
-                onClick={() => {
-                  onDistrictFilterChange(district);
-                  setPage(0);
-                }}
+                onClick={() => handleDistrictFilterChange(district)}
                 className={cn(
                   "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   districtFilter === district && "bg-bg-info-tertiary text-public-text-brand",
@@ -247,7 +255,10 @@ export const RenewalsTable = ({
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[220px] rounded-b-md rounded-t-none border-slate-300 p-0">
+          <DropdownMenuContent
+            align="end"
+            className="w-[220px] max-h-[300px] overflow-y-auto data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0"
+          >
             <DropdownMenuItem
               onClick={() => {
                 onBarangayFilterChange("all");
@@ -288,7 +299,10 @@ export const RenewalsTable = ({
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[240px] rounded-b-md rounded-t-none border-slate-300 p-0">
+          <DropdownMenuContent
+            align="end"
+            className="w-[240px] max-h-[300px] overflow-y-auto data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0"
+          >
             <DropdownMenuItem
               onClick={() => {
                 onClassificationFilterChange("all");
@@ -320,97 +334,102 @@ export const RenewalsTable = ({
         </DropdownMenu>
       </div>
 
-      {/* Column headers */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-        <span className="w-6 shrink-0">
-          <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
-        </span>
-        <span className="w-[14%]">Reference / Cycle</span>
-        <span className="w-[20%]">Organization</span>
-        <span className="w-[16%]">Classification</span>
-        <span className="w-[13%]">Documents</span>
-        <span className="w-[10%]">Submitted</span>
-        <span className="w-[12%]">Status</span>
-        <span className="w-[90px] shrink-0">Actions</span>
-      </div>
+      {/* Table content with horizontal containment */}
+      <div className="min-w-0 overflow-x-auto">
+        <div className="min-w-[840px]">
+          {/* Column headers */}
+          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+            <span className="w-6 shrink-0">
+              <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
+            </span>
+            <span className="w-[14%]">Reference / Cycle</span>
+            <span className="w-[20%]">Organization</span>
+            <span className="w-[16%]">Classification</span>
+            <span className="w-[13%]">Documents</span>
+            <span className="w-[10%]">Submitted</span>
+            <span className="w-[12%]">Status</span>
+            <span className="w-[90px] shrink-0">Actions</span>
+          </div>
 
-      {/* Rows */}
-      {pageItems.length === 0 ? (
-        <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-          <p className="font-segoe text-sm font-semibold text-text-default">No matching renewal applications</p>
-          <p className="font-segoe text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
-        </div>
-      ) : (
-        pageItems.map((item) => {
-          const submittedDate = item.submittedDate ? new Date(item.submittedDate) : null;
-          const isValidDate = submittedDate ? !Number.isNaN(submittedDate.getTime()) : false;
-
-          return (
-            <div
-              key={item.renewalId}
-              className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
-            >
-              <span className="w-6 shrink-0">
-                <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
-              </span>
-
-              <div className="flex w-[14%] flex-col gap-0.5">
-                <ReferenceCodeChip code={item.referenceIdentifier || "—"} />
-                <span className="font-segoe text-[11px] font-medium text-slate-500">
-                  Cycle {item.cycleNumber}
-                </span>
-              </div>
-
-              <div className="flex w-[20%] min-w-0 flex-col gap-0.5">
-                <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
-                  {item.organizationName}
-                </p>
-                <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">
-                  {[item.district, item.barangay].filter(Boolean).join(" · ") || "No location provided"}
-                </p>
-              </div>
-
-              <div className="flex w-[16%] flex-col gap-0.5">
-                {item.majorClassification ? (
-                  <CategoryChip category={item.majorClassification} />
-                ) : (
-                  <span className="font-segoe text-xs text-slate-500">—</span>
-                )}
-                {item.currentAccreditationExpiry ? (
-                  <span className="font-segoe text-[11px] text-slate-500">
-                    Expiry: {format(new Date(item.currentAccreditationExpiry), "d MMM yyyy")}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="flex w-[13%] items-center">
-                <DocumentsPill submitted={item.documentCount.submitted} required={item.documentCount.required} />
-              </div>
-
-              <div className="flex w-[10%] items-center">
-                <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">
-                  {isValidDate && submittedDate ? format(submittedDate, "d MMM yyyy") : "—"}
-                </p>
-              </div>
-
-              <div className="flex w-[12%] items-center">
-                <RenewalStatusPill status={item.renewalStatus} />
-              </div>
-
-              <div className="flex w-[90px] shrink-0 items-center">
-                <button
-                  type="button"
-                  onClick={() => onReview(item.renewalId)}
-                  className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
-                >
-                  <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
-                  Review
-                </button>
-              </div>
+          {/* Rows */}
+          {pageItems.length === 0 ? (
+            <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
+              <p className="font-segoe text-sm font-semibold text-text-default">No matching renewal applications</p>
+              <p className="font-segoe text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
             </div>
-          );
-        })
-      )}
+          ) : (
+            pageItems.map((item, index) => {
+              const submittedDate = item.submittedDate ? new Date(item.submittedDate) : null;
+              const isValidDate = submittedDate ? !Number.isNaN(submittedDate.getTime()) : false;
+
+              return (
+                <div
+                  key={item.renewalId || item.id || `renewal-${index}`}
+                  className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
+                >
+                  <span className="w-6 shrink-0">
+                    <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
+                  </span>
+
+                  <div className="flex w-[14%] flex-col gap-0.5">
+                    <ReferenceCodeChip code={item.referenceIdentifier || "—"} />
+                    <span className="font-segoe text-[11px] font-medium text-slate-500">
+                      Cycle {item.cycleNumber}
+                    </span>
+                  </div>
+
+                  <div className="flex w-[20%] min-w-0 flex-col gap-0.5">
+                    <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                      {item.organizationName}
+                    </p>
+                    <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">
+                      {[item.district, item.barangay].filter(Boolean).join(" · ") || "No location provided"}
+                    </p>
+                  </div>
+
+                  <div className="flex w-[16%] flex-col gap-0.5">
+                    {item.majorClassification ? (
+                      <CategoryChip category={item.majorClassification} />
+                    ) : (
+                      <span className="font-segoe text-xs text-slate-500">—</span>
+                    )}
+                    {item.currentAccreditationExpiry ? (
+                      <span className="font-segoe text-[11px] text-slate-500">
+                        Expiry: {format(new Date(item.currentAccreditationExpiry), "d MMM yyyy")}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="flex w-[13%] items-center">
+                    <DocumentsPill submitted={item.documentCount.submitted} required={item.documentCount.required} />
+                  </div>
+
+                  <div className="flex w-[10%] items-center">
+                    <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">
+                      {isValidDate && submittedDate ? format(submittedDate, "d MMM yyyy") : "—"}
+                    </p>
+                  </div>
+
+                  <div className="flex w-[12%] items-center">
+                    <RenewalStatusPill status={item.renewalStatus} />
+                  </div>
+
+                  <div className="flex w-[90px] shrink-0 items-center">
+                    <button
+                      type="button"
+                      onClick={() => onReview(item.renewalId)}
+                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                    >
+                      <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+                      Review
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">

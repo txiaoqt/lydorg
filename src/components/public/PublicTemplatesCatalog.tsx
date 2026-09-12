@@ -21,12 +21,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
+import { formatTemplateCategoryDropdownLabel, deriveTemplateCategory } from "@/lib/lydo-connect-data";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import {
   getTemplateFileFormat,
   formatFileSize,
   formatTemplateTimestamp,
+  extractTemplateCategoryLabels,
 } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -72,16 +74,16 @@ export default function PublicTemplatesCatalog({
   const publicDocumentTemplates = useMemo(
     () =>
       [...state.templates]
-        .filter((t) => t.templateActive && t.isActive && t.templateScope === "document_submission")
-        .sort((a, b) => a.sortOrder - b.sortOrder),
+        .filter((t) => (t.templateActive ?? true) && t.isActive !== false && t.templateScope === "document_submission")
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [state.templates],
   );
 
   const publicOtherTemplates = useMemo(
     () =>
       [...state.templates]
-        .filter((t) => t.templateActive && t.isActive && t.templateScope === "other")
-        .sort((a, b) => a.sortOrder - b.sortOrder),
+        .filter((t) => (t.templateActive ?? true) && t.isActive !== false && t.templateScope !== "document_submission")
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [state.templates],
   );
 
@@ -124,13 +126,22 @@ export default function PublicTemplatesCatalog({
     };
   }, [publicDocumentTemplates, publicOtherTemplates]);
 
+  const getTemplateCategories = (t: any): string[] => {
+    const extracted = extractTemplateCategoryLabels(t);
+    if (extracted.length > 0) return extracted;
+    return [formatTemplateCategoryDropdownLabel(deriveTemplateCategory(t.name))];
+  };
+
   const applySearch = (templates: typeof state.templates) => {
     if (!query) return templates;
-    return templates.filter(
-      (t) =>
+    return templates.filter((t) => {
+      const cats = getTemplateCategories(t);
+      return (
         t.name.toLowerCase().includes(query) ||
-        (t.description ?? "").toLowerCase().includes(query),
-    );
+        (t.description ?? "").toLowerCase().includes(query) ||
+        cats.some((cat) => cat.toLowerCase().includes(query))
+      );
+    });
   };
 
   const filteredDocTemplates = applySearch(publicDocumentTemplates);
@@ -842,7 +853,16 @@ export default function PublicTemplatesCatalog({
 
                           {/* Column 3: Category */}
                           <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
-                            {(tpl as any).templateCategory || "Registration Form"}
+                            <div className="flex flex-wrap items-center gap-1">
+                              {getTemplateCategories(tpl).map((cat) => (
+                                <span
+                                  key={cat}
+                                  className="inline-flex items-center text-[10px] font-medium bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md text-muted-foreground"
+                                >
+                                  {cat}
+                                </span>
+                              ))}
+                            </div>
                           </td>
 
                           {/* Column 4: File Size */}
@@ -1016,7 +1036,16 @@ export default function PublicTemplatesCatalog({
 
                           {/* Column 3: Category */}
                           <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
-                            {(tpl as any).templateCategory || "Reference Guide"}
+                            <div className="flex flex-wrap items-center gap-1">
+                              {getTemplateCategories(tpl).map((cat) => (
+                                <span
+                                  key={cat}
+                                  className="inline-flex items-center text-[10px] font-medium bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md text-muted-foreground"
+                                >
+                                  {cat}
+                                </span>
+                              ))}
+                            </div>
                           </td>
 
                           {/* Column 4: File Size */}

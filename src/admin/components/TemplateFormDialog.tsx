@@ -1,6 +1,6 @@
-import { useRef } from "react";
-import { ChevronDown, File, FileMinus, FileText, Info, Pencil, Save, Upload, X } from "lucide-react";
-import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useRef, useState, useMemo } from "react";
+import { ChevronDown, File, FileMinus, FileText, Info, Pencil, Save, Trash2, Upload, X } from "lucide-react";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { formatTemplateCategoryDropdownLabel, TEMPLATE_CATEGORY_PRIORITY } from "@/lib/lydo-connect-data";
+import {
+  buildAdminTemplateCategoryOptions,
+  formatCanonicalCategoryLabel,
+  formatTemplateCategoryDropdownLabel,
+  isSystemTemplateCategory,
+  normalizeTemplateCategoryKey,
+} from "@/lib/lydo-connect-data";
 import { getTemplateFileFormat, formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 
 const FIELD_CLASS =
@@ -32,6 +38,35 @@ const fileFormatSwatch = (format: string) => {
   return { icon: FileText, iconBg: "bg-public-bg-secondary-100", iconColor: "text-public-text-brand-secondary", radius: "rounded-[14px]" };
 };
 
+export type TemplateWorkflowScope = "registration" | "renewal" | "both" | "downloadable";
+
+export const WORKFLOW_SCOPE_OPTIONS: Array<{
+  value: TemplateWorkflowScope;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "both",
+    label: "Both Registration & Renewal",
+    description: "Appears in both initial registration and annual renewal document checklists.",
+  },
+  {
+    value: "registration",
+    label: "Registration Requirement",
+    description: "Appears exclusively in initial organization registration requirements.",
+  },
+  {
+    value: "renewal",
+    label: "Renewal Requirement",
+    description: "Appears exclusively in annual re-accreditation renewal packets.",
+  },
+  {
+    value: "downloadable",
+    label: "Downloadable Template",
+    description: "General downloadable resource for reference, not a required submission.",
+  },
+];
+
 type TemplateFormDialogProps = {
   mode: "create" | "edit" | null;
   name: string;
@@ -40,6 +75,8 @@ type TemplateFormDialogProps = {
   onDescriptionChange: (value: string) => void;
   category: string;
   onCategoryChange: (value: string) => void;
+  workflowScope?: TemplateWorkflowScope;
+  onWorkflowScopeChange?: (value: TemplateWorkflowScope) => void;
   file: File | null;
   onFileChange: (file: File | null) => void;
   existingFileName?: string;
@@ -47,6 +84,9 @@ type TemplateFormDialogProps = {
   saving: boolean;
   onCancel: () => void;
   onSave: () => void;
+  categoryOptions?: string[];
+  onAddCategory?: (category: string) => void;
+  onDeleteCategory?: (category: string) => void;
 };
 
 export const TemplateFormDialog = ({
@@ -57,6 +97,8 @@ export const TemplateFormDialog = ({
   onDescriptionChange,
   category,
   onCategoryChange,
+  workflowScope = "both",
+  onWorkflowScopeChange,
   file,
   onFileChange,
   existingFileName,
@@ -64,8 +106,14 @@ export const TemplateFormDialog = ({
   saving,
   onCancel,
   onSave,
+  categoryOptions,
+  onAddCategory,
+  onDeleteCategory,
 }: TemplateFormDialogProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
 
   const displayFileName = file?.name || existingFileName || "";
   const displayFileSize = file ? file.size : existingFileSize ?? null;
@@ -73,6 +121,41 @@ export const TemplateFormDialog = ({
   const detectedFormat = hasFile ? getTemplateFileFormat(displayFileName, displayFileName) : "";
   const swatch = hasFile ? fileFormatSwatch(detectedFormat) : null;
   const SwatchIcon = swatch?.icon;
+
+  const dynamicOptions = useMemo(() => {
+    return buildAdminTemplateCategoryOptions(
+      [],
+      [...(categoryOptions ?? []), ...(category ? [category] : [])],
+    );
+  }, [categoryOptions, category]);
+
+  const handleConfirmAddCategory = () => {
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) {
+      setNewCategoryError("Please enter a category name.");
+      return;
+    }
+    const normalized = normalizeTemplateCategoryKey(trimmed);
+    if (!normalized) {
+      setNewCategoryError("Please enter a valid category name.");
+      return;
+    }
+    if (isSystemTemplateCategory(normalized)) {
+      setNewCategoryError(`"${formatCanonicalCategoryLabel(normalized)}" is a system category.`);
+      return;
+    }
+    const existingNormalized = dynamicOptions.map(normalizeTemplateCategoryKey);
+    if (existingNormalized.includes(normalized)) {
+      setNewCategoryError(`Category "${formatCanonicalCategoryLabel(normalized)}" already exists.`);
+      return;
+    }
+
+    onAddCategory?.(normalized);
+    onCategoryChange(normalized);
+    setIsAddingCategory(false);
+    setNewCategoryName("");
+    setNewCategoryError(null);
+  };
 
   return (
     <Dialog open={mode === "create" || mode === "edit"} onOpenChange={(open) => (!open ? onCancel() : undefined)}>
@@ -93,11 +176,11 @@ export const TemplateFormDialog = ({
               <DialogTitle className="font-segoe text-lg font-semibold leading-none text-text-default">
                 {mode === "edit" ? "Edit File" : "Upload File"}
               </DialogTitle>
-              <p className="font-segoe text-sm font-normal leading-none text-slate-500">
+              <DialogDescription className="font-segoe text-sm font-normal leading-none text-slate-500">
                 {mode === "edit"
                   ? "Update an existing form or template for users to download and use."
                   : "Add a new form or template for users to download and use."}
-              </p>
+              </DialogDescription>
             </div>
           </div>
           <DialogClose asChild>
@@ -113,20 +196,137 @@ export const TemplateFormDialog = ({
 
         <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-gray-50 p-6">
           <div className="flex flex-col gap-1.5">
-            <Label>Category</Label>
+            <div className="flex items-center justify-between">
+              <Label>Category</Label>
+              {!isAddingCategory ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingCategory(true);
+                    setNewCategoryError(null);
+                  }}
+                  className="text-xs text-primary font-medium hover:underline cursor-pointer"
+                >
+                  + New category
+                </button>
+              ) : null}
+            </div>
+            {isAddingCategory ? (
+              <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-white p-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-segoe text-xs font-semibold text-slate-700">Add New Category</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingCategory(false);
+                      setNewCategoryName("");
+                      setNewCategoryError(null);
+                    }}
+                    className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                    aria-label="Cancel adding category"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    value={newCategoryName}
+                    onChange={(event) => {
+                      setNewCategoryName(event.target.value);
+                      setNewCategoryError(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        handleConfirmAddCategory();
+                      }
+                    }}
+                    placeholder="e.g. Youth Development, Handbook..."
+                    className={cn(FIELD_CLASS, newCategoryError && "border-rose-500")}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleConfirmAddCategory}
+                    className="inline-flex h-8 items-center justify-center rounded-md bg-public-bg-brand px-3 text-xs font-semibold text-white transition-colors hover:bg-bg-brand-hover cursor-pointer"
+                  >
+                    Add
+                  </button>
+                </div>
+                {newCategoryError ? (
+                  <p className="font-segoe text-xs text-rose-600">{newCategoryError}</p>
+                ) : null}
+              </div>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className={cn(FIELD_CLASS, "justify-between")}>
+                    <span className={category ? "text-text-default" : "text-text-disabled"}>
+                      {category ? formatTemplateCategoryDropdownLabel(category) : "Select category"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] border-slate-300">
+                  {dynamicOptions.map((option) => {
+                    const isSystem = isSystemTemplateCategory(option);
+                    return (
+                      <DropdownMenuItem
+                        key={option}
+                        className="flex cursor-pointer items-center justify-between font-segoe text-xs"
+                        onClick={() => onCategoryChange(option)}
+                      >
+                        <span className="truncate">{formatTemplateCategoryDropdownLabel(option)}</span>
+                        {!isSystem && onDeleteCategory ? (
+                          <button
+                            type="button"
+                            aria-label={`Delete category ${formatTemplateCategoryDropdownLabel(option)}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteCategory(option);
+                            }}
+                            className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-400 opacity-70 transition-colors hover:bg-slate-100 hover:text-rose-600 hover:opacity-100 focus:opacity-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          </button>
+                        ) : null}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuItem
+                    className="cursor-pointer text-primary font-semibold border-t border-slate-200 mt-1 pt-1.5"
+                    onClick={() => {
+                      setIsAddingCategory(true);
+                      setNewCategoryError(null);
+                    }}
+                  >
+                    + Add New Category
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Workflow Scope</Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button type="button" className={cn(FIELD_CLASS, "justify-between")}>
-                  <span className={category ? "text-text-default" : "text-text-disabled"}>
-                    {category ? formatTemplateCategoryDropdownLabel(category) : "Select category"}
+                  <span className="text-text-default">
+                    {WORKFLOW_SCOPE_OPTIONS.find((opt) => opt.value === workflowScope)?.label || "Both Registration & Renewal"}
                   </span>
                   <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] border-slate-300">
-                {TEMPLATE_CATEGORY_PRIORITY.map((option) => (
-                  <DropdownMenuItem key={option} className="cursor-pointer" onClick={() => onCategoryChange(option)}>
-                    {formatTemplateCategoryDropdownLabel(option)}
+                {WORKFLOW_SCOPE_OPTIONS.map((opt) => (
+                  <DropdownMenuItem
+                    key={opt.value}
+                    className="cursor-pointer py-2 flex flex-col items-start gap-0.5"
+                    onClick={() => onWorkflowScopeChange?.(opt.value)}
+                  >
+                    <span className="font-medium text-xs text-text-default">{opt.label}</span>
+                    <span className="text-[11px] text-muted-foreground">{opt.description}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -146,6 +346,7 @@ export const TemplateFormDialog = ({
           <div className="flex flex-col gap-1.5">
             <Label>Description</Label>
             <textarea
+              required
               value={description}
               onChange={(event) => onDescriptionChange(event.target.value)}
               placeholder="Enter a brief description of the form or template."

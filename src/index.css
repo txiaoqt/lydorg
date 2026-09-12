@@ -71,6 +71,19 @@
     scrollbar-gutter: auto !important;
   }
 
+  /* Internal Portal Shell Scroller Stability
+     ─────────────────────────────────────────
+     The portal shell scrolls inside .portal-shell-scroller instead of
+     window/body. Reserving a stable scrollbar gutter on tablet and desktop
+     ensures that changing filters (e.g. District I -> District II) does NOT
+     shift the page layout horizontally when row counts change between
+     overflowing and non-overflowing states. */
+  @media (min-width: 768px) {
+    .portal-shell-scroller {
+      scrollbar-gutter: stable;
+    }
+  }
+
   input[readonly]:not([data-input-otp]),
   textarea[readonly],
   select[disabled],

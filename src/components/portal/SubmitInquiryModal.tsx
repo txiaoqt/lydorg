@@ -70,7 +70,13 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
         </DialogHeader>
 
         {/* Structured Form Body */}
-        <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit(e);
+          }}
+          className="flex flex-col flex-1 overflow-hidden"
+        >
           <div className="px-4 sm:px-5 py-4 space-y-4.5 overflow-y-auto max-h-[calc(90vh-10rem)]">
             {/* Conceptual Group 1: Sender Contact Details */}
             <div className="space-y-2.5">
@@ -83,23 +89,17 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
                 <div className="space-y-1.5">
-                  <Label htmlFor="inquiry-submitter-name" className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
-                    <span>Name / Organization Name</span>
+                  <Label htmlFor="inquiry-organization-name" className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
+                    <span>Organization Name</span>
                     <span className="text-destructive font-normal text-xs" aria-hidden="true">*</span>
                   </Label>
                   <Input
-                    id="inquiry-submitter-name"
-                    required
-                    value={inquiryForm?.submitterName || ""}
-                    onChange={(e) =>
-                      setInquiryForm((prev) => ({
-                        ...prev,
-                        submitterName: e.target.value,
-                        organizationName: e.target.value,
-                      }))
-                    }
+                    id="inquiry-organization-name"
+                    readOnly
+                    tabIndex={-1}
+                    value={inquiryForm?.organizationName || inquiryForm?.submitterName || ""}
                     placeholder="Organization name"
-                    className="rounded-xl text-xs h-9 bg-background border-border/80 focus-visible:ring-1.5 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                    className="rounded-xl text-xs h-9 bg-muted/50 border-border/80 text-muted-foreground cursor-not-allowed select-none font-medium focus-visible:ring-0"
                   />
                 </div>
 

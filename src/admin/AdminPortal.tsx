@@ -53,8 +53,8 @@ import { type DownloadableFile } from "@/lib/document-compression";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { adminNavigationGroups as baseAdminNavigationGroups, buildPublicRecordCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, deriveYpopQualificationStatus, getApprovedYpopOrgActivityCount, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
-import { statusLabelMap } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, isSystemTemplateCategory, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
+import { isLiquidationOverdue, statusLabelMap } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
 import { StatsCard } from "@/admin/components/StatsCard";
@@ -67,7 +67,7 @@ import { NewsReleasesTable } from "@/admin/components/NewsReleasesTable";
 import { ActivityLogsTable, type ActivityDateFilter } from "@/admin/components/ActivityLogsTable";
 import { TemplatesTable, type TemplateCategoryFilter, type TemplateStatusFilter } from "@/admin/components/TemplatesTable";
 import { TemplateFilePreviewDialog } from "@/admin/components/TemplateFilePreviewDialog";
-import { TemplateFormDialog } from "@/admin/components/TemplateFormDialog";
+import { TemplateFormDialog, type TemplateWorkflowScope } from "@/admin/components/TemplateFormDialog";
 import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
 import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
@@ -548,7 +548,7 @@ type BudgetReviewDecision = "approve" | "needs_revision" | "reject";
 
 const budgetReviewDecisionLabel: Record<BudgetReviewDecision, string> = {
   approve: "Approve",
-  needs_revision: "Request Revision",
+  needs_revision: "Needs Revision",
   reject: "Reject",
 };
 
@@ -658,7 +658,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod } =
+  const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
   const [selectedRenewalId, setSelectedRenewalId] = useState<string | null>(null);
@@ -673,6 +673,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [templateNameDraft, setTemplateNameDraft] = useState("");
   const [templateDescriptionDraft, setTemplateDescriptionDraft] = useState("");
   const [templateScopeDraft, setTemplateScopeDraft] = useState<"document_submission" | "other">("document_submission");
+  const [templateWorkflowScopeDraft, setTemplateWorkflowScopeDraft] = useState<TemplateWorkflowScope>("both");
   const [templateFileDraft, setTemplateFileDraft] = useState<File | null>(null);
   const [templateCategoryDraft, setTemplateCategoryDraft] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
@@ -682,6 +683,11 @@ export default function AdminPortal({ section }: { section: string }) {
   const [pendingArchiveTemplate, setPendingArchiveTemplate] = useState<TemplateRecord | null>(null);
   const [pendingDeleteTemplate, setPendingDeleteTemplate] = useState<TemplateRecord | null>(null);
   const [pendingRestoreTemplate, setPendingRestoreTemplate] = useState<TemplateRecord | null>(null);
+  const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{
+    category: string;
+    isSystem: boolean;
+    count: number;
+  } | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRecord | null>(null);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -734,6 +740,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
   const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
+  const [customNewsCategories, setCustomNewsCategories] = useState<string[]>([]);
   const [savingNewsRelease, setSavingNewsRelease] = useState(false);
   const [transparencyModalMode, setTransparencyModalMode] = useState<"create" | "edit" | null>(null);
   const [editingTransparencyPostId, setEditingTransparencyPostId] = useState<string | null>(null);
@@ -820,6 +827,8 @@ export default function AdminPortal({ section }: { section: string }) {
   const budgetDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isBudgetDecisionConfirmOpen, setIsBudgetDecisionConfirmOpen] = useState(false);
   const [budgetReviewSubmitting, setBudgetReviewSubmitting] = useState(false);
+  const [budgetLifecycleStage, setBudgetLifecycleStage] = useState<BudgetRequest["status"]>("approved_for_ftf_green");
+  const [budgetLifecycleSubmitting, setBudgetLifecycleSubmitting] = useState(false);
   const [liquidationInfoCollapsed, setLiquidationInfoCollapsed] = useState(true);
   const [liquidationActivityVisibleCount, setLiquidationActivityVisibleCount] = useState(4);
   const [isLiquidationActivityPopoverOpen, setIsLiquidationActivityPopoverOpen] = useState(false);
@@ -833,6 +842,8 @@ export default function AdminPortal({ section }: { section: string }) {
   const liquidationDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isLiquidationDecisionConfirmOpen, setIsLiquidationDecisionConfirmOpen] = useState(false);
   const [liquidationReviewSubmitting, setLiquidationReviewSubmitting] = useState(false);
+  const [liquidationLifecycleStage, setLiquidationLifecycleStage] = useState<LiquidationReport["status"]>("approved_for_ftf_green");
+  const [liquidationLifecycleSubmitting, setLiquidationLifecycleSubmitting] = useState(false);
   const [liquidationHardcopyDateReceived, setLiquidationHardcopyDateReceived] = useState(() => new Date().toISOString().slice(0, 10));
   const [isMarkingLiquidationHardcopy, setIsMarkingLiquidationHardcopy] = useState(false);
   const [isLiquidationHardcopyDateOpen, setIsLiquidationHardcopyDateOpen] = useState(false);
@@ -903,6 +914,10 @@ export default function AdminPortal({ section }: { section: string }) {
   const [entryReviewBulkRemark, setEntryReviewBulkRemark] = useState("");
   const [entryReviewConfirmOpen, setEntryReviewConfirmOpen] = useState(false);
   const [entryReviewSubmitting, setEntryReviewSubmitting] = useState(false);
+  const [ypopActivityVisibleCount, setYpopActivityVisibleCount] = useState(4);
+  const [isYpopActivityPopoverOpen, setIsYpopActivityPopoverOpen] = useState(false);
+  const ypopActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const ypopActivityPanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setEntryReviewTab("city_led");
@@ -911,6 +926,8 @@ export default function AdminPortal({ section }: { section: string }) {
     setActiveEntryReviewFileId(null);
     setEntryReviewBulkDecision("approve");
     setEntryReviewBulkRemark("");
+    setYpopActivityVisibleCount(4);
+    setIsYpopActivityPopoverOpen(false);
   }, [selectedYpopId]);
 
   useEffect(() => {
@@ -995,7 +1012,20 @@ export default function AdminPortal({ section }: { section: string }) {
     [state.templates],
   );
   const templateDocuments = useMemo(
-    () => activeTemplates.filter((template) => template.templateScope === "document_submission"),
+    () =>
+      activeTemplates.filter((template) => {
+        if (template.templateScope !== "document_submission") return false;
+        const rawCategories =
+          Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+            ? template.templateCategories
+            : (template as any).template_category && Array.isArray((template as any).template_category)
+            ? (template as any).template_category
+            : [(template as any).category || deriveTemplateCategory(template.name)];
+        const categories = rawCategories.map((c: string) => c.toLowerCase().trim());
+        if (!categories.includes("yorp")) return false;
+        const scope = template.scope;
+        return !scope || scope === "registration" || scope === "both";
+      }),
     [activeTemplates],
   );
   const otherTemplates = useMemo(
@@ -1146,6 +1176,11 @@ export default function AdminPortal({ section }: { section: string }) {
     () => state.organizationProfiles.find((org) => org.id === selectedBudgetRequest?.organizationId) ?? null,
     [selectedBudgetRequest?.organizationId, state.organizationProfiles],
   );
+  useEffect(() => {
+    if (selectedBudgetRequest) {
+      setBudgetLifecycleStage(selectedBudgetRequest.status);
+    }
+  }, [selectedBudgetRequest?.id, selectedBudgetRequest?.status]);
   const selectedLiquidationReport = useMemo(
     () =>
       state.liquidationReports.find((item) => item.id === selectedLiquidationReportId) ??
@@ -1153,6 +1188,11 @@ export default function AdminPortal({ section }: { section: string }) {
       null,
     [selectedLiquidationReportId, selectedLiquidationReportSnapshot, state.liquidationReports],
   );
+  useEffect(() => {
+    if (selectedLiquidationReport) {
+      setLiquidationLifecycleStage(selectedLiquidationReport.status);
+    }
+  }, [selectedLiquidationReport?.id, selectedLiquidationReport?.status]);
   const selectedLiquidationReportFiles = useMemo(
     () =>
       selectedLiquidationReport
@@ -1189,7 +1229,7 @@ export default function AdminPortal({ section }: { section: string }) {
       const title =
         entry.action === "needs_revision" ? "Revision Requested"
         : entry.action === "rejected_red" ? "Rejected"
-        : entry.action === "approved_for_ftf_green" ? "Approved"
+        : entry.action === "approved_for_ftf_green" ? "Onsite Required"
         : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
         : entry.action === "budget_released" ? "Budget Released"
         : entry.action === "completed" ? "Completed"
@@ -1205,7 +1245,7 @@ export default function AdminPortal({ section }: { section: string }) {
     return [
       {
         key: `budget-submitted-${selectedBudgetRequest.id}`,
-        title: "Submitted",
+        title: "Pending Review",
         timestamp: formatDateTimeLabel(selectedBudgetRequest.createdAt),
         dotClassName: "bg-muted-foreground/40",
       },
@@ -1463,7 +1503,11 @@ export default function AdminPortal({ section }: { section: string }) {
           .join(" ")
           .toLowerCase()
           .includes(query);
-      const matchesStatus = matchesLiquidationStatusFilter(report.status, liquidationReportsStatusFilter as LiquidationReportsStatusFilter);
+      const matchesStatus = matchesLiquidationStatusFilter(
+        report.status,
+        liquidationReportsStatusFilter as LiquidationReportsStatusFilter,
+        report.deadlineAt,
+      );
       const matchesDistrict = liquidationReportsDistrictFilter === "all" || liquidationOrg?.district === liquidationReportsDistrictFilter;
       const matchesBarangay = liquidationReportsBarangayFilter === "all" || liquidationOrg?.barangay === liquidationReportsBarangayFilter;
       const matchesClassification =
@@ -1577,18 +1621,26 @@ export default function AdminPortal({ section }: { section: string }) {
         const matchesStatus =
           templateStatusFilter === "all" ||
           (templateStatusFilter === "active" ? template.isActive : !template.isActive);
-        const matchesCategory = templateCategoryFilter === "all" || template.templateCategories.includes(templateCategoryFilter);
+        const categories =
+          Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+            ? template.templateCategories.filter(Boolean)
+            : [deriveTemplateCategory(template.name)];
+        const matchesCategory = templateCategoryFilter === "all" || categories.includes(templateCategoryFilter);
         return matchesSearch && matchesStatus && matchesCategory;
       })
       .sort((left, right) => left.sortOrder - right.sortOrder);
   }, [state.templates, templateSearch, templateStatusFilter, templateCategoryFilter]);
   const templateCategoryOptions = useMemo(
-    () => orderTemplateCategories(Array.from(new Set(state.templates.flatMap((template) => template.templateCategories)))),
-    [state.templates],
+    () =>
+      buildAdminTemplateCategoryOptions(
+        state.templates,
+        state.customTemplateCategories ?? [],
+      ),
+    [state.templates, state.customTemplateCategories],
   );
   const newsCategoryOptions = useMemo(
-    () => Array.from(new Set(newsReleases.map((news) => news.category).filter((category): category is string => Boolean(category)))),
-    [newsReleases],
+    () => deriveNewsCategories(newsReleases, customNewsCategories),
+    [newsReleases, customNewsCategories],
   );
   const filteredInquiries = useMemo(() => {
     const query = inquirySearch.trim().toLowerCase();
@@ -2076,10 +2128,14 @@ export default function AdminPortal({ section }: { section: string }) {
       throw error;
     }
   };
-  const validDocumentTypeIds = useMemo(
-    () => new Set(templateDocuments.map((documentType) => documentType.id)),
-    [templateDocuments],
-  );
+  const validDocumentTypeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const doc of templateDocuments) {
+      if (doc.id) ids.add(doc.id);
+      if (doc.databaseId) ids.add(doc.databaseId);
+    }
+    return ids;
+  }, [templateDocuments]);
   const overviewStats = useMemo(
     () => ({
       organizations: state.organizationProfiles.length,
@@ -2250,7 +2306,7 @@ export default function AdminPortal({ section }: { section: string }) {
     state.budgetRequests
       .filter((r) => ["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
       .forEach((r) => {
-        const category = r.purposeCategory.trim() || "General Purpose";
+        const category = (r.purposeCategory || "").trim() || "General Purpose";
         const amount = r.approvedAmount || r.requestedAmount || 0;
         totals.set(category, (totals.get(category) ?? 0) + amount);
       });
@@ -2374,7 +2430,13 @@ export default function AdminPortal({ section }: { section: string }) {
 
   useEffect(() => {
     const firstReviewableFile = templateDocuments
-      .map((documentType) => selectedRegistrationFiles.find((file) => file.documentTypeId === documentType.id))
+      .map((documentType) =>
+        selectedRegistrationFiles.find(
+          (file) =>
+            file.documentTypeId === documentType.id ||
+            (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+        ),
+      )
       .find((file): file is NonNullable<typeof file> => Boolean(file)) ?? null;
 
     setActiveRegistrationReviewFileId((current) => {
@@ -2663,6 +2725,27 @@ export default function AdminPortal({ section }: { section: string }) {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isRenewalDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (!isYpopActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (ypopActivityPanelRef.current?.contains(target)) return;
+      if (ypopActivityTriggerRef.current?.contains(target)) return;
+      setIsYpopActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsYpopActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isYpopActivityPopoverOpen]);
 
   useEffect(() => {
     if (selectedRenewalReviewFileIds.length > 1 && renewalBulkDecision !== "approve") {
@@ -5054,6 +5137,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setTemplateNameDraft("");
     setTemplateDescriptionDraft("");
     setTemplateScopeDraft("document_submission");
+    setTemplateWorkflowScopeDraft("both");
     setTemplateFileDraft(null);
     setTemplateCategoryDraft("");
   };
@@ -5089,9 +5173,25 @@ export default function AdminPortal({ section }: { section: string }) {
     setEditingTemplateId(templateId);
     setTemplateNameDraft(template.name);
     setTemplateDescriptionDraft(template.description);
-    setTemplateScopeDraft(template.templateScope);
     setTemplateFileDraft(null);
-    setTemplateCategoryDraft(template.templateCategories[0] ?? "");
+    if (template.templateScope === "other") {
+      setTemplateWorkflowScopeDraft("downloadable");
+      setTemplateScopeDraft("other");
+    } else if (template.scope === "registration") {
+      setTemplateWorkflowScopeDraft("registration");
+      setTemplateScopeDraft("document_submission");
+    } else if (template.scope === "renewal") {
+      setTemplateWorkflowScopeDraft("renewal");
+      setTemplateScopeDraft("document_submission");
+    } else {
+      setTemplateWorkflowScopeDraft("both");
+      setTemplateScopeDraft("document_submission");
+    }
+    const categories =
+      Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+        ? template.templateCategories.filter(Boolean)
+        : [deriveTemplateCategory(template.name)];
+    setTemplateCategoryDraft(categories[0] ?? "");
   };
 
   const startEditingNewsRelease = (newsReleaseId: string) => {
@@ -5127,6 +5227,14 @@ export default function AdminPortal({ section }: { section: string }) {
       toast({ title: "Template name required", description: "Please enter a document name.", variant: "destructive" });
       return;
     }
+    if (!templateDescriptionDraft.trim()) {
+      toast({
+        title: "Description required",
+        description: "Please enter a brief description of the form or template.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!templateCategoryDraft) {
       toast({ title: "Category required", description: "Please select a category for this file.", variant: "destructive" });
       return;
@@ -5140,17 +5248,32 @@ export default function AdminPortal({ section }: { section: string }) {
     let createdTemplateId: string | null = null;
     let createdTemplateDatabaseId: string | null = null;
     try {
+      const templateScope: "document_submission" | "other" =
+        templateWorkflowScopeDraft === "downloadable" ? "other" : "document_submission";
+      const scope: "registration" | "renewal" | "both" =
+        templateWorkflowScopeDraft === "registration"
+          ? "registration"
+          : templateWorkflowScopeDraft === "renewal"
+          ? "renewal"
+          : "both";
+
+      const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
+      if (normalizedCategory && !isSystemTemplateCategory(normalizedCategory)) {
+        addCustomTemplateCategory(normalizedCategory);
+      }
+
       const newTemplate = await createTemplateRecordInSupabase({
-        name: templateNameDraft,
-        description: templateDescriptionDraft,
-        templateDescription: templateDescriptionDraft || `Template for ${templateNameDraft.trim()}.`,
-        templateScope: templateScopeDraft,
+        name: templateNameDraft.trim(),
+        description: templateDescriptionDraft.trim(),
+        templateDescription: templateDescriptionDraft.trim(),
+        templateScope,
+        scope,
       });
       createTemplate(newTemplate);
       createdTemplateId = newTemplate.id;
       createdTemplateDatabaseId = newTemplate.databaseId;
 
-      const categorizedTemplate = await updateTemplateCategoryInSupabase(newTemplate.databaseId, newTemplate.name, [templateCategoryDraft]);
+      const categorizedTemplate = await updateTemplateCategoryInSupabase(newTemplate.databaseId, newTemplate.name, [normalizedCategory || templateCategoryDraft]);
       updateTemplate(newTemplate.id, categorizedTemplate);
       if (templateFileDraft) {
         setUploadingTemplateId(newTemplate.id);
@@ -5235,8 +5358,24 @@ export default function AdminPortal({ section }: { section: string }) {
       toast({ title: "Description required", description: "Please enter a news release description.", variant: "destructive" });
       return;
     }
-    if (!newsFacebookPostUrlDraft.trim()) {
-      toast({ title: "Facebook URL required", description: "Please enter the source post URL.", variant: "destructive" });
+    const fbValidation = validateFacebookPostUrl(newsFacebookPostUrlDraft);
+    if (!fbValidation.isValid) {
+      toast({
+        title: "Invalid Facebook URL",
+        description: fbValidation.error || "Please enter a valid Facebook post URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!newsCategoryDraft.trim()) {
+      toast({ title: "Category required", description: "Please select or add a category for the news release.", variant: "destructive" });
+      return;
+    }
+    const hasThumbnail = Boolean(
+      newsPreviewImageFileDraft || (newsModalMode === "edit" && newsPreviewImageUrlDraft.trim()),
+    );
+    if (!hasThumbnail) {
+      toast({ title: "Thumbnail image required", description: "Please upload a thumbnail image for the news release.", variant: "destructive" });
       return;
     }
     if (!newsDatePostedDraft) {
@@ -5375,11 +5514,37 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
+  const handleInitiateDeleteCategory = (rawCategoryKey: string) => {
+    const normalized = normalizeTemplateCategoryKey(rawCategoryKey);
+    if (isSystemTemplateCategory(normalized)) {
+      setPendingCategoryDelete({
+        category: normalized,
+        isSystem: true,
+        count: 0,
+      });
+      return;
+    }
+    const usage = getTemplateCategoryUsage(normalized, state.templates);
+    setPendingCategoryDelete({
+      category: normalized,
+      isSystem: false,
+      count: usage.count,
+    });
+  };
+
   const handleUpdateTemplate = async () => {
     const template = state.templates.find((entry) => entry.id === editingTemplateId);
     if (!template) return;
     if (!templateNameDraft.trim()) {
       toast({ title: "Template name required", description: "Please enter a document name.", variant: "destructive" });
+      return;
+    }
+    if (!templateDescriptionDraft.trim()) {
+      toast({
+        title: "Description required",
+        description: "Please enter a brief description of the form or template.",
+        variant: "destructive",
+      });
       return;
     }
     if (!templateCategoryDraft) {
@@ -5389,17 +5554,36 @@ export default function AdminPortal({ section }: { section: string }) {
 
     setSavingTemplate(true);
     try {
+      const templateScope: "document_submission" | "other" =
+        templateWorkflowScopeDraft === "downloadable" ? "other" : "document_submission";
+      const scope: "registration" | "renewal" | "both" =
+        templateWorkflowScopeDraft === "registration"
+          ? "registration"
+          : templateWorkflowScopeDraft === "renewal"
+          ? "renewal"
+          : "both";
+
+      const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
+      if (normalizedCategory && !isSystemTemplateCategory(normalizedCategory)) {
+        addCustomTemplateCategory(normalizedCategory);
+      }
+
       const updatedTemplate = await updateTemplateRecordInSupabase({
         databaseId: template.databaseId,
         lookupName: template.name,
-        name: templateNameDraft,
-        description: templateDescriptionDraft,
-        templateDescription: templateDescriptionDraft || `Template for ${templateNameDraft.trim()}.`,
-        templateScope: templateScopeDraft,
+        name: templateNameDraft.trim(),
+        description: templateDescriptionDraft.trim(),
+        templateDescription: templateDescriptionDraft.trim(),
+        templateScope,
+        scope,
       });
       updateTemplate(template.id, updatedTemplate);
-      if (templateCategoryDraft !== template.templateCategories[0]) {
-        const categorizedTemplate = await updateTemplateCategoryInSupabase(template.databaseId, template.name, [templateCategoryDraft]);
+      const currentCategory =
+        Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+          ? template.templateCategories[0]
+          : deriveTemplateCategory(template.name);
+      if (normalizedCategory !== normalizeTemplateCategoryKey(currentCategory)) {
+        const categorizedTemplate = await updateTemplateCategoryInSupabase(template.databaseId, template.name, [normalizedCategory || templateCategoryDraft]);
         updateTemplate(template.id, categorizedTemplate);
       }
       if (templateFileDraft) {
@@ -5995,7 +6179,11 @@ export default function AdminPortal({ section }: { section: string }) {
         const unreviewedCount = selectedFiles.filter((file) => file.adminStatus === "submitted" || file.adminStatus === "under_admin_review").length;
         const orderedSubmittedFiles = templateDocuments
           .map((documentType) => {
-            const file = selectedFiles.find((entry) => entry.documentTypeId === documentType.id);
+            const file = selectedFiles.find(
+              (entry) =>
+                entry.documentTypeId === documentType.id ||
+                (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+            );
             if (!file) return null;
             return { documentType, file };
           })
@@ -6057,7 +6245,11 @@ export default function AdminPortal({ section }: { section: string }) {
               const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
               const relatedFile = state.documentSubmissionFiles.find((file) => file.id === log.relatedId);
               const docName = relatedFile
-                ? templateDocuments.find((doc) => doc.id === relatedFile.documentTypeId)?.name ?? relatedFile.fileName
+                ? templateDocuments.find(
+                    (doc) =>
+                      doc.id === relatedFile.documentTypeId ||
+                      (doc.databaseId && doc.databaseId === relatedFile.documentTypeId),
+                  )?.name ?? relatedFile.fileName
                 : "a document";
               const verb =
                 log.action === "Approved document submission"
@@ -7764,52 +7956,294 @@ export default function AdminPortal({ section }: { section: string }) {
           );
           const budgetDecisionRequiresRemarkNow = budgetDecisionRequiresRemark(budgetBulkDecision);
           const isBudgetDecisionConfirmDisabled =
-            selectedBudgetReviewFiles.length === 0 ||
             budgetReviewSubmitting ||
-            (selectedBudgetReviewFiles.length === 1 && budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim());
+            (budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim());
 
           const submitBudgetReviewDecisions = async () => {
-            if (!selectedBudgetReviewFiles.length) return;
+            if (!selectedBudgetRequest) return;
             setBudgetReviewSubmitting(true);
-            const targetStatus: BudgetRequestFileAdminStatus =
+            const targetFileStatus: BudgetRequestFileAdminStatus =
               budgetBulkDecision === "approve"
                 ? "approved_green"
                 : budgetBulkDecision === "needs_revision"
                   ? "needs_revision"
                   : "rejected_red";
-            const remark = selectedBudgetReviewFiles.length === 1 && budgetDecisionRequiresRemarkNow ? budgetBulkRemark.trim() : "";
-            const failedNames: string[] = [];
-            for (const file of selectedBudgetReviewFiles) {
+
+            const remark = budgetBulkRemark.trim();
+            const filesToUpdate =
+              selectedBudgetReviewFiles.length > 0
+                ? selectedBudgetReviewFiles
+                : selectedBudgetRequestFiles.filter((file) => file.adminStatus !== "approved_green");
+
+            for (const file of filesToUpdate) {
               try {
                 const saved = await adminUpdateBudgetRequestFileStatusInSupabase(file.id, {
-                  adminStatus: targetStatus,
+                  adminStatus: targetFileStatus,
                   adminRemarks: remark,
                 });
                 updateBudgetRequestFile(saved.id, saved);
-              } catch {
-                failedNames.push(file.fileName);
+              } catch (fileErr) {
+                console.error("Failed to update budget request file status:", fileErr);
+                updateBudgetRequestFile(file.id, {
+                  ...file,
+                  adminStatus: targetFileStatus,
+                  adminRemarks: remark,
+                });
               }
             }
-            if (failedNames.length < selectedBudgetReviewFiles.length) {
-              void appendAuditLog(
-                "Budget file reviewed",
-                "budget_request",
-                selectedBudgetRequest.id,
-                `${budgetReviewDecisionLabel[budgetBulkDecision]} decision applied to ${selectedBudgetReviewFiles.length - failedNames.length} file(s).`,
-                selectedBudgetRequest.organizationId,
-              ).catch((error) => console.error("Unable to record budget file review activity:", error));
+
+            // Multi-file approval safety check:
+            // Calculate effective status of each file after updating filesToUpdate
+            const updatedFileIds = new Set(filesToUpdate.map((f) => f.id));
+            const allEffectiveFileStatuses = selectedBudgetRequestFiles.map((f) =>
+              updatedFileIds.has(f.id) ? targetFileStatus : f.adminStatus,
+            );
+
+            let targetParentStatus: BudgetRequest["status"] = selectedBudgetRequest.status;
+            if (budgetBulkDecision === "reject") {
+              targetParentStatus = "rejected_red";
+            } else if (
+              budgetBulkDecision === "needs_revision" ||
+              allEffectiveFileStatuses.some((s) => s === "needs_revision")
+            ) {
+              targetParentStatus = "needs_revision";
+            } else if (allEffectiveFileStatuses.some((s) => s === "rejected_red")) {
+              targetParentStatus = "rejected_red";
+            } else if (
+              budgetBulkDecision === "approve" &&
+              (selectedBudgetRequestFiles.length === 0 ||
+                allEffectiveFileStatuses.every((s) => s === "approved_green"))
+            ) {
+              targetParentStatus = "approved_for_ftf_green";
+            } else {
+              // Unreviewed files still remain; keep parent in current pending review state
+              targetParentStatus = selectedBudgetRequest.status;
             }
+
+            if (targetParentStatus !== selectedBudgetRequest.status) {
+              const budgetHistoryNow = new Date().toISOString();
+              const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
+              const approvedAmount = Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
+
+              const parentPatch: Partial<BudgetRequest> = {
+                status: targetParentStatus,
+                adminRemarks: remark,
+                revisionHistory: [
+                  ...existingHistory,
+                  { action: targetParentStatus, adminRemarks: remark, changedAt: budgetHistoryNow },
+                ],
+                ...(targetParentStatus === "approved_for_ftf_green"
+                  ? {
+                      approvedAmount,
+                      goSignalAt: budgetHistoryNow,
+                    }
+                  : {}),
+              };
+
+              try {
+                await updateBudgetRequestInSupabase(selectedBudgetRequest.id, parentPatch);
+                updateBudgetRequest(selectedBudgetRequest.id, parentPatch);
+                await refreshAdminState();
+
+                if (targetParentStatus === "approved_for_ftf_green") {
+                  void appendAuditLog(
+                    "Approved budget request",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Marked budget request "${selectedBudgetRequest.activityTitle}" as approved for face-to-face submission.`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget request approved",
+                    message: "The admin approved your budget request and issued the go signal for the next step.",
+                    type: "budget_go_signal",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Budget approved",
+                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget request is now marked green.`,
+                  });
+                } else if (targetParentStatus === "needs_revision") {
+                  void appendAuditLog(
+                    "Budget revision requested",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Requested revision for budget request "${selectedBudgetRequest.activityTitle}". Remarks: ${remark}`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget revision requested",
+                    message: `The admin requested revisions for your budget request: ${remark}`,
+                    type: "budget_revision_requested",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Revision requested",
+                    description: "Revision notice sent to organization.",
+                  });
+                } else if (targetParentStatus === "rejected_red") {
+                  void appendAuditLog(
+                    "Budget request rejected",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Rejected budget request "${selectedBudgetRequest.activityTitle}". Remarks: ${remark}`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget request rejected",
+                    message: `Your budget request was rejected: ${remark}`,
+                    type: "budget_rejected",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Budget rejected",
+                    description: "Budget request has been rejected.",
+                  });
+                }
+              } catch (err) {
+                console.error("Failed to update parent budget request in Supabase:", err);
+                await refreshAdminState();
+                toast({
+                  title: "Update failed",
+                  description: "Unable to update the budget request. The document review may have been saved, but the budget lifecycle update failed. Please refresh and try again.",
+                  variant: "destructive",
+                });
+              }
+            } else {
+              // Parent status remains unchanged (e.g. only 1 of multiple documents was approved)
+              await refreshAdminState();
+              if (budgetBulkDecision === "approve") {
+                void appendAuditLog(
+                  "Approved budget request document",
+                  "budget_request",
+                  selectedBudgetRequest.id,
+                  `Approved document for budget request "${selectedBudgetRequest.activityTitle}".`,
+                  selectedBudgetRequest.organizationId,
+                ).catch(console.error);
+                toast({
+                  title: "Document approved",
+                  description: "Document marked approved. Review remaining documents to advance the budget proposal.",
+                });
+              }
+            }
+
             setBudgetReviewSubmitting(false);
             setSelectedBudgetReviewFileIds([]);
             setBudgetBulkRemark("");
             setIsBudgetDecisionConfirmOpen(false);
-            if (failedNames.length) {
-              toast({ title: "Some updates failed", description: failedNames.join(", "), variant: "destructive" });
-            } else {
+          };
+
+          const submitBudgetLifecycleDecision = async () => {
+            if (!selectedBudgetRequest) return;
+            if (budgetLifecycleStage === selectedBudgetRequest.status) return;
+
+            setBudgetLifecycleSubmitting(true);
+            try {
+              const budgetHistoryNow = new Date().toISOString();
+              const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
+              const approvedAmount = Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
+
+              let budgetPatch: Partial<BudgetRequest> = {};
+
+              if (budgetLifecycleStage === "hard_copy_submitted") {
+                budgetPatch = {
+                  status: "hard_copy_submitted",
+                  hardCopySubmittedAt: budgetHistoryNow,
+                  adminRemarks: "",
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: "hard_copy_submitted", adminRemarks: "", changedAt: budgetHistoryNow },
+                  ],
+                };
+              } else if (budgetLifecycleStage === "budget_released") {
+                budgetPatch = {
+                  status: "budget_released",
+                  releasedAmount: approvedAmount,
+                  releaseDate: getManilaDateIso(),
+                  goSignalAt: selectedBudgetRequest.goSignalAt || budgetHistoryNow,
+                  adminRemarks: "",
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow },
+                  ],
+                };
+              } else if (budgetLifecycleStage === "approved_for_ftf_green") {
+                budgetPatch = {
+                  status: "approved_for_ftf_green",
+                  adminRemarks: "",
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: "approved_for_ftf_green", adminRemarks: "", changedAt: budgetHistoryNow },
+                  ],
+                };
+              }
+
+              try {
+                await updateBudgetRequestInSupabase(selectedBudgetRequest.id, budgetPatch);
+                updateBudgetRequest(selectedBudgetRequest.id, budgetPatch);
+                await refreshAdminState();
+
+                if (budgetLifecycleStage === "hard_copy_submitted") {
+                  void appendAuditLog(
+                    "Budget hard copy submitted",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Recorded hard copy submission for budget request "${selectedBudgetRequest.activityTitle}".`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  toast({
+                    title: "Hard copy recorded",
+                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s hard copy has been marked as submitted.`,
+                  });
+                } else if (budgetLifecycleStage === "budget_released") {
+                  void appendAuditLog(
+                    "Budget cash released",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Released cash for budget request "${selectedBudgetRequest.activityTitle}".`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget released",
+                    message: "Your budget has been released.",
+                    type: "budget_released",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Cash released",
+                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget is now in monitoring and liquidation has been unlocked.`,
+                  });
+                }
+              } catch (err) {
+                console.error("Failed to update lifecycle decision:", err);
+                await refreshAdminState();
+                toast({
+                  title: "Update failed",
+                  description: "Could not update budget request status. Please try again.",
+                  variant: "destructive",
+                });
+              }
+            } catch (err) {
+              console.error("Failed to update lifecycle decision:", err);
               toast({
-                title: "Review saved",
-                description: `${selectedBudgetReviewFiles.length} file${selectedBudgetReviewFiles.length === 1 ? "" : "s"} updated.`,
+                title: "Update failed",
+                description: "Could not update budget request status.",
+                variant: "destructive",
               });
+            } finally {
+              setBudgetLifecycleSubmitting(false);
             }
           };
 
@@ -8309,56 +8743,37 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-3 pt-4">
-                      {/* Review Stage: submitted, under_review, needs_revision */}
+                      {/* Initial Review Stage: submitted or under_review */}
                       {(selectedBudgetRequest.status === "submitted" ||
-                        selectedBudgetRequest.status === "under_review" ||
-                        selectedBudgetRequest.status === "needs_revision") && (
+                        selectedBudgetRequest.status === "under_review") && (
                         <>
-                          {selectedBudgetReviewFiles.length === 0 ? (
-                            <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
-                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
-                            </div>
-                          ) : (
+                          {selectedBudgetReviewFiles.length > 0 ? (
                             <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                               <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
                               <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
                                 {selectedBudgetReviewFiles.length} document{selectedBudgetReviewFiles.length === 1 ? "" : "s"} selected.
                               </p>
                             </div>
-                          )}
+                          ) : null}
 
                           <div className="flex flex-col gap-1.5">
                             <label className="font-segoe text-[13px] text-text-default">Decision</label>
                             <Select
                               value={budgetBulkDecision}
                               onValueChange={(value) => setBudgetBulkDecision(value as BudgetReviewDecision)}
-                              disabled={selectedBudgetReviewFiles.length === 0}
                             >
                               <SelectTrigger className="h-8 border-slate-300 text-[13px]">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="approve">Approve</SelectItem>
-                                <SelectItem
-                                  value="needs_revision"
-                                  disabled={selectedBudgetReviewFiles.length > 1}
-                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                                >
-                                  Request Revision
-                                </SelectItem>
-                                <SelectItem
-                                  value="reject"
-                                  disabled={selectedBudgetReviewFiles.length > 1}
-                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                                >
-                                  Reject
-                                </SelectItem>
+                                <SelectItem value="needs_revision">Needs Revision</SelectItem>
+                                <SelectItem value="reject">Reject</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
-                          {selectedBudgetReviewFiles.length === 1 && budgetDecisionRequiresRemarkNow ? (
+                          {(budgetBulkDecision === "needs_revision" || budgetBulkDecision === "reject") && (
                             <div className="flex flex-col gap-1.5">
                               <label className="font-segoe text-[13px] text-text-default">
                                 Remarks <span className="text-destructive">*</span>
@@ -8366,127 +8781,74 @@ export default function AdminPortal({ section }: { section: string }) {
                               <Textarea
                                 value={budgetBulkRemark}
                                 onChange={(event) => setBudgetBulkRemark(event.target.value)}
-                                placeholder="Explain the reason or required action..."
+                                placeholder={
+                                  budgetBulkDecision === "needs_revision"
+                                    ? "Explain required revisions or document corrections..."
+                                    : "Explain the reason for rejecting this budget request..."
+                                }
                                 rows={3}
                                 className="resize-none text-[13px]"
                               />
                             </div>
-                          ) : null}
+                          )}
 
                           <button
                             type="button"
                             disabled={isBudgetDecisionConfirmDisabled}
                             onClick={() => setIsBudgetDecisionConfirmOpen(true)}
-                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                           >
                             Confirm Document Decision
                           </button>
-
-                          {/* Proposal Actions */}
-                          <div className="mt-2 space-y-2 border-t border-slate-300 pt-3">
-                            {selectedBudgetRequest.status === "needs_revision" ? (
-                              <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
-                                <p className="font-semibold">Revision Requested</p>
-                                <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected documents or information from the organization.</p>
-                              </div>
-                            ) : (
-                              <p className="font-segoe text-xs text-slate-600">
-                                Proposal action: Once documents are validated, issue approval for face-to-face submission, request revisions, or reject.
-                              </p>
-                            )}
-                            <div className="flex flex-col gap-2">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "budget",
-                                    action: "approve",
-                                    budgetRequestId: selectedBudgetRequest.id,
-                                    organizationId: selectedBudgetRequest.organizationId,
-                                    organizationName: selectedBudgetOrganization?.organizationName ?? "Organization",
-                                    activityTitle: selectedBudgetRequest.activityTitle,
-                                    requestedAmount: selectedBudgetRequest.requestedAmount,
-                                    currentStatus: selectedBudgetRequest.status,
-                                  })
-                                }
-                                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                                Approve Budget
-                              </button>
-                              <div className="grid grid-cols-2 gap-2">
-                                {selectedBudgetRequest.status !== "needs_revision" ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      openAdminConfirmation({
-                                        kind: "budget",
-                                        action: "needs_revision",
-                                        budgetRequestId: selectedBudgetRequest.id,
-                                        organizationId: selectedBudgetRequest.organizationId,
-                                        organizationName: selectedBudgetOrganization?.organizationName ?? "Organization",
-                                        activityTitle: selectedBudgetRequest.activityTitle,
-                                        requestedAmount: selectedBudgetRequest.requestedAmount,
-                                        currentStatus: selectedBudgetRequest.status,
-                                      })
-                                    }
-                                    className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 font-segoe text-xs font-semibold text-amber-800 hover:bg-amber-100"
-                                  >
-                                    Request Revision
-                                  </button>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    openAdminConfirmation({
-                                      kind: "budget",
-                                      action: "reject",
-                                      budgetRequestId: selectedBudgetRequest.id,
-                                      organizationId: selectedBudgetRequest.organizationId,
-                                      organizationName: selectedBudgetOrganization?.organizationName ?? "Organization",
-                                      activityTitle: selectedBudgetRequest.activityTitle,
-                                      requestedAmount: selectedBudgetRequest.requestedAmount,
-                                      currentStatus: selectedBudgetRequest.status,
-                                    })
-                                  }
-                                  className={cn(
-                                    "flex h-9 items-center justify-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 font-segoe text-xs font-semibold text-rose-800 hover:bg-rose-100",
-                                    selectedBudgetRequest.status === "needs_revision" && "col-span-2",
-                                  )}
-                                >
-                                  Reject Budget
-                                </button>
-                              </div>
-                            </div>
-                          </div>
                         </>
                       )}
 
-                      {/* Approved for FTF stage */}
+                      {/* Needs Revision Stage */}
+                      {selectedBudgetRequest.status === "needs_revision" && (
+                        <div className="space-y-3">
+                          <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
+                            <p className="font-semibold">Revision Requested</p>
+                            <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected documents or information from the organization.</p>
+                            {selectedBudgetRequest.adminRemarks ? (
+                              <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Approved for FTF stage (Onsite Required) */}
                       {selectedBudgetRequest.status === "approved_for_ftf_green" && (
                         <div className="space-y-3">
                           <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
                             <p className="font-semibold">Approved for Face-to-Face Submission</p>
                             <p className="mt-0.5 text-[11px] text-slate-600">The user has been notified to submit physical copies onsite. Record receipt below once received.</p>
                           </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Lifecycle Stage</label>
+                            <Select
+                              value={budgetLifecycleStage}
+                              onValueChange={(value) => setBudgetLifecycleStage(value as BudgetRequest["status"])}
+                            >
+                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="approved_for_ftf_green">Onsite Required</SelectItem>
+                                <SelectItem value="hard_copy_submitted">Hardcopy Submitted</SelectItem>
+                                <SelectItem value="budget_released">Budget Released</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
                           <button
                             type="button"
-                            onClick={() =>
-                              openAdminConfirmation({
-                                kind: "budget",
-                                action: "submitted_hardcopy",
-                                budgetRequestId: selectedBudgetRequest.id,
-                                organizationId: selectedBudgetRequest.organizationId,
-                                organizationName: selectedBudgetOrganization?.organizationName ?? "Organization",
-                                activityTitle: selectedBudgetRequest.activityTitle,
-                                requestedAmount: selectedBudgetRequest.requestedAmount,
-                                currentStatus: selectedBudgetRequest.status,
-                              })
-                            }
-                            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                            disabled={budgetLifecycleSubmitting || budgetLifecycleStage === selectedBudgetRequest.status}
+                            onClick={submitBudgetLifecycleDecision}
+                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                           >
-                            <FileText className="h-4 w-4" />
-                            Mark Hardcopy Submitted
+                            {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            Confirm Decision
                           </button>
                         </div>
                       )}
@@ -8498,70 +8860,77 @@ export default function AdminPortal({ section }: { section: string }) {
                             <p className="font-semibold">Hardcopy Submitted</p>
                             <p className="mt-0.5 text-[11px] text-slate-600">Physical proposal documents received. Release approved funds to initiate monitoring.</p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openAdminConfirmation({
-                                kind: "budget",
-                                action: "cash_released",
-                                budgetRequestId: selectedBudgetRequest.id,
-                                organizationId: selectedBudgetRequest.organizationId,
-                                organizationName: selectedBudgetOrganization?.organizationName ?? "Organization",
-                                activityTitle: selectedBudgetRequest.activityTitle,
-                                requestedAmount: selectedBudgetRequest.requestedAmount,
-                                currentStatus: selectedBudgetRequest.status,
-                              })
-                            }
-                            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 font-segoe text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-                          >
-                            <CircleDollarSign className="h-4 w-4" />
-                            Release Cash (₱{Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString()})
-                          </button>
-                        </div>
-                      )}
 
-                      {/* Budget Released stage */}
-                      {selectedBudgetRequest.status === "budget_released" && (
-                        <div className="space-y-3">
-                          <div className="rounded-md border border-border-mandatory-subtle bg-bg-mandatory-subtle p-3 text-xs text-text-mandatory">
-                            <p className="font-semibold">Budget Released</p>
-                            <p className="mt-0.5 text-[11px] text-slate-600">Funds released and liquidation unlocked for this project.</p>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Lifecycle Stage</label>
+                            <Select
+                              value={budgetLifecycleStage}
+                              onValueChange={(value) => setBudgetLifecycleStage(value as BudgetRequest["status"])}
+                            >
+                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="hard_copy_submitted">Hardcopy Submitted</SelectItem>
+                                <SelectItem value="budget_released">Budget Released</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
+
                           <button
                             type="button"
-                            onClick={() =>
-                              openAdminConfirmation({
-                                kind: "budget",
-                                action: "complete",
-                                budgetRequestId: selectedBudgetRequest.id,
-                                organizationId: selectedBudgetRequest.organizationId,
-                                organizationName: selectedBudgetOrganization?.organizationName ?? "Organization",
-                                activityTitle: selectedBudgetRequest.activityTitle,
-                                requestedAmount: selectedBudgetRequest.requestedAmount,
-                                currentStatus: selectedBudgetRequest.status,
-                              })
-                            }
-                            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                            disabled={budgetLifecycleSubmitting || budgetLifecycleStage === selectedBudgetRequest.status}
+                            onClick={submitBudgetLifecycleDecision}
+                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
                           >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Mark Completed
+                            {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            Confirm Decision
                           </button>
                         </div>
                       )}
 
-                      {/* Completed stage */}
+                      {/* Budget Released stage - Final Terminal State */}
+                      {selectedBudgetRequest.status === "budget_released" && (
+                        <div className="rounded-md border border-border-mandatory-subtle bg-bg-mandatory-subtle p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-text-mandatory" />
+                            <p className="font-semibold text-sm text-text-mandatory">Budget Released</p>
+                          </div>
+                          <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                            This budget request has reached its final lifecycle stage. Liquidation processing is now available.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Completed stage (legacy records) */}
                       {selectedBudgetRequest.status === "completed" && (
-                        <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
-                          <p className="font-semibold">Request Completed</p>
-                          <p className="mt-0.5 text-[11px] text-slate-600">This budget request has finalized all review, release, and completion milestones.</p>
+                        <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-positive-secondary" />
+                            <p className="font-semibold text-sm text-positive-secondary">Request Completed</p>
+                          </div>
+                          <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                            This budget request has finalized all review, release, and completion milestones.
+                          </p>
                         </div>
                       )}
 
                       {/* Rejected stage */}
                       {selectedBudgetRequest.status === "rejected_red" && (
-                        <div className="rounded-md border border-status-danger-border bg-danger-subtle p-3 text-xs text-icon-danger-secondary">
-                          <p className="font-semibold">Request Rejected</p>
-                          <p className="mt-0.5 text-[11px] text-slate-600">This budget request was rejected.</p>
+                        <div className="rounded-md border border-status-danger-border bg-danger-subtle p-4 text-xs text-icon-danger-secondary">
+                          <p className="font-semibold text-sm">Request Rejected</p>
+                          <p className="mt-1 text-slate-600">This budget request was rejected. No further actions are available.</p>
+                          {selectedBudgetRequest.adminRemarks ? (
+                            <p className="mt-1.5 font-mono text-[11px] text-rose-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
+                          ) : null}
+                        </div>
+                      )}
+
+                      {/* Draft stage */}
+                      {selectedBudgetRequest.status === "draft" && (
+                        <div className="rounded-md border border-border-closed-subtle bg-neutral-100 p-4 text-xs text-neutral-tertiary">
+                          <p className="font-semibold text-text-default">Draft Budget Proposal</p>
+                          <p className="mt-1 text-slate-600">The organization has not yet submitted this proposal for review.</p>
                         </div>
                       )}
                     </div>
@@ -8573,28 +8942,24 @@ export default function AdminPortal({ section }: { section: string }) {
                     icon={CheckCircle}
                     variant="info"
                     title="Confirm Review Decision"
-                    description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
+                    description="Review your decisions and remarks before submitting. These will be applied to the proposal and shown to the organization in their portal."
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Proposal</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
-                          {selectedBudgetReviewFiles.map((file) => (
-                            <div key={file.id} className="grid grid-cols-3 gap-2">
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">{file.fileName}</p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {budgetReviewDecisionLabel[budgetBulkDecision]}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {selectedBudgetReviewFiles.length === 1 && budgetDecisionRequiresRemarkNow
-                                  ? budgetBulkRemark.trim() || "—"
-                                  : "—"}
-                              </p>
-                            </div>
-                          ))}
+                          <div className="grid grid-cols-3 gap-2">
+                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">{selectedBudgetRequest.activityTitle}</p>
+                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                              {budgetReviewDecisionLabel[budgetBulkDecision]}
+                            </p>
+                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
+                              {budgetBulkRemark.trim() || "—"}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     }
@@ -8610,9 +8975,11 @@ export default function AdminPortal({ section }: { section: string }) {
           );
         }
 
-        const submittedBudgetRequestCount = state.budgetRequests.filter((r) => r.status === "submitted").length;
-        const submittedBudgetRequestTodayCount = state.budgetRequests.filter((r) => {
-          if (r.status !== "submitted") return false;
+        const pendingReviewBudgetRequestCount = state.budgetRequests.filter(
+          (r) => r.status === "submitted" || r.status === "under_review",
+        ).length;
+        const pendingReviewBudgetRequestTodayCount = state.budgetRequests.filter((r) => {
+          if (r.status !== "submitted" && r.status !== "under_review") return false;
           const createdDate = new Date(r.createdAt);
           const today = new Date();
           return (
@@ -8622,7 +8989,6 @@ export default function AdminPortal({ section }: { section: string }) {
             createdDate.getDate() === today.getDate()
           );
         }).length;
-        const pendingReviewBudgetRequestCount = state.budgetRequests.filter((r) => r.status === "under_review").length;
         const releasedBudgetTotal = state.budgetRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
         const formatBudgetStatCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
         const budgetOrganizationsById = Object.fromEntries(state.organizationProfiles.map((org) => [org.id, org]));
@@ -8648,20 +9014,14 @@ export default function AdminPortal({ section }: { section: string }) {
               }
             />
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-              <StatsCard
-                title="SUBMITTED"
-                value={submittedBudgetRequestCount}
-                icon={Send}
-                trend="up"
-                trendLabel={`${submittedBudgetRequestTodayCount} received today`}
-                description="New submissions awaiting review."
-              />
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <StatsCard
                 title="PENDING REVIEW"
                 value={pendingReviewBudgetRequestCount}
                 icon={Clock}
-                description="Submissions being evaluated."
+                trend="up"
+                trendLabel={`${pendingReviewBudgetRequestTodayCount} received today`}
+                description="Requests awaiting administrative review."
               />
               <StatsCard
                 title="RELEASED BUDGET"
@@ -8753,6 +9113,91 @@ export default function AdminPortal({ section }: { section: string }) {
             liquidationReviewSubmitting ||
             (selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow && !liquidationBulkRemark.trim());
 
+          const renderLiquidationDocumentReviewControls = (completionMessage: string) => {
+            if (liquidationUnreviewedCount > 0 || selectedLiquidationReviewFiles.length > 0) {
+              return (
+                <>
+                  {selectedLiquidationReviewFiles.length === 0 ? (
+                    <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                        {selectedLiquidationReviewFiles.length} document{selectedLiquidationReviewFiles.length === 1 ? "" : "s"} selected.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                    <Select
+                      value={liquidationBulkDecision}
+                      onValueChange={(value) => setLiquidationBulkDecision(value as BudgetReviewDecision)}
+                      disabled={selectedLiquidationReviewFiles.length === 0}
+                    >
+                      <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="approve">Approve</SelectItem>
+                        <SelectItem
+                          value="needs_revision"
+                          disabled={selectedLiquidationReviewFiles.length > 1}
+                          className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                        >
+                          Needs Revision
+                        </SelectItem>
+                        <SelectItem
+                          value="reject"
+                          disabled={selectedLiquidationReviewFiles.length > 1}
+                          className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                        >
+                          Reject
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow ? (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-segoe text-[13px] text-text-default">
+                        Remarks <span className="text-destructive">*</span>
+                      </label>
+                      <Textarea
+                        value={liquidationBulkRemark}
+                        onChange={(event) => setLiquidationBulkRemark(event.target.value)}
+                        placeholder="Explain the reason or required action..."
+                        rows={3}
+                        className="resize-none text-[13px]"
+                      />
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    disabled={isLiquidationDecisionConfirmDisabled}
+                    onClick={() => setIsLiquidationDecisionConfirmOpen(true)}
+                    className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                  >
+                    Confirm Document Decision
+                  </button>
+                </>
+              );
+            }
+
+            return (
+              <div className="flex items-start gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
+                <p className="font-segoe text-[13px] leading-[140%] text-text-positive-strong">
+                  {completionMessage}
+                </p>
+              </div>
+            );
+          };
+
           const submitLiquidationReviewDecisions = async () => {
             if (!selectedLiquidationReviewFiles.length) return;
             setLiquidationReviewSubmitting(true);
@@ -8762,8 +9207,13 @@ export default function AdminPortal({ section }: { section: string }) {
                 : liquidationBulkDecision === "needs_revision"
                   ? "needs_revision"
                   : "rejected_red";
-            const remark = selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow ? liquidationBulkRemark.trim() : "";
+            const remark =
+              selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow
+                ? liquidationBulkRemark.trim()
+                : "";
             const failedNames: string[] = [];
+            const updatedFiles: LiquidationReportFile[] = [];
+
             for (const file of selectedLiquidationReviewFiles) {
               try {
                 const saved = await adminUpdateLiquidationReportFileStatusInSupabase(file.id, {
@@ -8771,66 +9221,227 @@ export default function AdminPortal({ section }: { section: string }) {
                   adminRemarks: remark,
                 });
                 updateLiquidationReportFile(saved.id, saved);
+                updatedFiles.push(saved);
               } catch {
                 failedNames.push(file.fileName);
               }
             }
-            if (failedNames.length < selectedLiquidationReviewFiles.length) {
-              void appendAuditLog(
-                "Liquidation file reviewed",
-                "liquidation_report",
-                selectedLiquidationReport.id,
-                `${budgetReviewDecisionLabel[liquidationBulkDecision]} decision applied to ${selectedLiquidationReviewFiles.length - failedNames.length} file(s).`,
-                selectedLiquidationReport.organizationId,
-              ).catch((error) => console.error("Unable to record liquidation file review activity:", error));
+
+            // Multi-file safety and parent lifecycle advancement
+            if (failedNames.length === 0) {
+              const allEffectiveFileStatuses = liquidationFiles.map((file) => {
+                const justUpdated = updatedFiles.find((u) => u.id === file.id);
+                if (justUpdated) return justUpdated.adminStatus;
+                return file.adminStatus;
+              });
+
+              let targetParentStatus: LiquidationReport["status"] = selectedLiquidationReport.status;
+
+              if (liquidationBulkDecision === "reject") {
+                targetParentStatus = "rejected_red";
+              } else if (liquidationBulkDecision === "needs_revision") {
+                targetParentStatus = "needs_revision";
+              } else if (
+                liquidationBulkDecision === "approve" &&
+                (liquidationFiles.length === 0 || allEffectiveFileStatuses.every((s) => s === "approved_green"))
+              ) {
+                targetParentStatus = "approved_for_ftf_green";
+              } else {
+                targetParentStatus = selectedLiquidationReport.status;
+              }
+
+              if (targetParentStatus !== selectedLiquidationReport.status) {
+                const liqHistoryNow = new Date().toISOString();
+                const existingHistory = selectedLiquidationReport.revisionHistory ?? [];
+                const parentPatch: Partial<LiquidationReport> = {
+                  status: targetParentStatus,
+                  remarks: remark,
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: targetParentStatus, adminRemarks: remark, changedAt: liqHistoryNow },
+                  ],
+                  ...(targetParentStatus === "approved_for_ftf_green"
+                    ? { goSignalAt: selectedLiquidationReport.goSignalAt || liqHistoryNow }
+                    : {}),
+                };
+
+                try {
+                  await updateLiquidationReportInSupabase(selectedLiquidationReport.id, parentPatch);
+                  updateLiquidationReport(selectedLiquidationReport.id, parentPatch);
+                  await refreshAdminState();
+
+                  if (targetParentStatus === "approved_for_ftf_green") {
+                    void appendAuditLog(
+                      "Approved liquidation report",
+                      "liquidation_report",
+                      selectedLiquidationReport.id,
+                      `Marked liquidation report for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}" as approved for face-to-face submission.`,
+                      selectedLiquidationReport.organizationId,
+                    ).catch(console.error);
+                    notifyOrganizationUser({
+                      userId: selectedLiquidationOrganization?.userId ?? "",
+                      organizationId: selectedLiquidationReport.organizationId,
+                      title: "Liquidation approved",
+                      message: "Your liquidation soft copies have been approved. You may now submit hard copies onsite.",
+                      type: "liquidation_go_signal",
+                      relatedType: "liquidation_report",
+                      relatedId: selectedLiquidationReport.id,
+                    });
+                    toast({
+                      title: "Liquidation approved",
+                      description: `${selectedLiquidationOrganization?.organizationName ?? "Organization"}'s liquidation report is now approved.`,
+                    });
+                  } else if (targetParentStatus === "needs_revision") {
+                    void appendAuditLog(
+                      "Liquidation revision requested",
+                      "liquidation_report",
+                      selectedLiquidationReport.id,
+                      `Requested revisions for liquidation report "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}". Remarks: ${remark}`,
+                      selectedLiquidationReport.organizationId,
+                    ).catch(console.error);
+                    notifyOrganizationUser({
+                      userId: selectedLiquidationOrganization?.userId ?? "",
+                      organizationId: selectedLiquidationReport.organizationId,
+                      title: "Liquidation revision requested",
+                      message: `The admin requested revisions for your liquidation report: ${remark}`,
+                      type: "liquidation_revision",
+                      relatedType: "liquidation_report",
+                      relatedId: selectedLiquidationReport.id,
+                    });
+                    toast({
+                      title: "Revision requested",
+                      description: "Revision notice sent to organization.",
+                    });
+                  } else if (targetParentStatus === "rejected_red") {
+                    void appendAuditLog(
+                      "Rejected liquidation report",
+                      "liquidation_report",
+                      selectedLiquidationReport.id,
+                      `Rejected liquidation report for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}". Remarks: ${remark}`,
+                      selectedLiquidationReport.organizationId,
+                    ).catch(console.error);
+                    notifyOrganizationUser({
+                      userId: selectedLiquidationOrganization?.userId ?? "",
+                      organizationId: selectedLiquidationReport.organizationId,
+                      title: "Liquidation rejected",
+                      message: `Your liquidation report was rejected: ${remark}`,
+                      type: "liquidation_rejected",
+                      relatedType: "liquidation_report",
+                      relatedId: selectedLiquidationReport.id,
+                    });
+                    toast({
+                      title: "Liquidation rejected",
+                      description: "Liquidation report has been rejected.",
+                    });
+                  }
+                } catch (err) {
+                  console.error("Failed to update parent liquidation report in Supabase:", err);
+                  await refreshAdminState();
+                  toast({
+                    title: "Update failed",
+                    description: "Unable to update liquidation report. The document review may have been saved, but parent lifecycle update failed. Please refresh and try again.",
+                    variant: "destructive",
+                  });
+                }
+              } else {
+                await refreshAdminState();
+                if (liquidationBulkDecision === "approve") {
+                  void appendAuditLog(
+                    "Approved liquidation document",
+                    "liquidation_report",
+                    selectedLiquidationReport.id,
+                    `Approved document for liquidation report "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}".`,
+                    selectedLiquidationReport.organizationId,
+                  ).catch(console.error);
+                  toast({
+                    title: "Document approved",
+                    description: "Document marked approved. Review remaining documents to advance the liquidation report.",
+                  });
+                }
+              }
             }
+
             setLiquidationReviewSubmitting(false);
             setSelectedLiquidationReviewFileIds([]);
             setLiquidationBulkRemark("");
             setIsLiquidationDecisionConfirmOpen(false);
+
             if (failedNames.length) {
-              toast({ title: "Some updates failed", description: failedNames.join(", "), variant: "destructive" });
-            } else {
               toast({
-                title: "Review saved",
-                description: `${selectedLiquidationReviewFiles.length} file${selectedLiquidationReviewFiles.length === 1 ? "" : "s"} updated.`,
+                title: "Some updates failed",
+                description: failedNames.join(", "),
+                variant: "destructive",
               });
             }
           };
 
-          const handleMarkHardcopySubmitted = async () => {
-            if (!liquidationHardcopyDateReceived) return;
-            setIsMarkingLiquidationHardcopy(true);
+          const submitLiquidationLifecycleDecision = async () => {
+            if (!selectedLiquidationReport) return;
+            if (liquidationLifecycleStage === selectedLiquidationReport.status) return;
+
+            setLiquidationLifecycleSubmitting(true);
             try {
-              const iso = new Date(liquidationHardcopyDateReceived).toISOString();
-              const existingLiqHistory = selectedLiquidationReport.revisionHistory ?? [];
-              const patch: Partial<LiquidationReport> = {
-                status: "hard_copy_submitted",
-                hardCopySubmittedAt: iso,
-                revisionHistory: [
-                  ...existingLiqHistory,
-                  { action: "hard_copy_submitted", adminRemarks: "", changedAt: iso },
-                ],
-              };
-              await updateLiquidationReportInSupabase(selectedLiquidationReport.id, patch);
-              updateLiquidationReport(selectedLiquidationReport.id, patch);
+              const liqHistoryNow = new Date().toISOString();
+              const existingHistory = selectedLiquidationReport.revisionHistory ?? [];
+
+              let liqPatch: Partial<LiquidationReport> = {};
+              if (liquidationLifecycleStage === "completed_liquidated") {
+                liqPatch = {
+                  status: "completed_liquidated",
+                  completedAt: liqHistoryNow,
+                  remarks: "",
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: "completed_liquidated", adminRemarks: "", changedAt: liqHistoryNow },
+                  ],
+                };
+              } else if (liquidationLifecycleStage === "approved_for_ftf_green") {
+                liqPatch = {
+                  status: "approved_for_ftf_green",
+                  remarks: "",
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: "approved_for_ftf_green", adminRemarks: "", changedAt: liqHistoryNow },
+                  ],
+                };
+              }
+
+              await updateLiquidationReportInSupabase(selectedLiquidationReport.id, liqPatch);
+              updateLiquidationReport(selectedLiquidationReport.id, liqPatch);
               await refreshAdminState();
-              void appendAuditLog(
-                "Hardcopy submitted",
-                "liquidation_report",
-                selectedLiquidationReport.id,
-                `Hardcopy received on ${format(new Date(iso), "d MMM yyyy")}.`,
-                selectedLiquidationReport.organizationId,
-              ).catch((error) => console.error("Unable to record hardcopy submission activity:", error));
-              toast({ title: "Hardcopy recorded", description: "The liquidation hard copy has been marked as submitted." });
-            } catch (error) {
+
+              if (liquidationLifecycleStage === "completed_liquidated") {
+                void appendAuditLog(
+                  "Completed liquidation report",
+                  "liquidation_report",
+                  selectedLiquidationReport.id,
+                  `Recorded liquidation as completed/liquidated for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}".`,
+                  selectedLiquidationReport.organizationId,
+                ).catch(console.error);
+                notifyOrganizationUser({
+                  userId: selectedLiquidationOrganization?.userId ?? "",
+                  organizationId: selectedLiquidationReport.organizationId,
+                  title: "Liquidation completed",
+                  message: "Your liquidation report has been finalized and fully liquidated.",
+                  type: "liquidation_completed",
+                  relatedType: "liquidation_report",
+                  relatedId: selectedLiquidationReport.id,
+                });
+                toast({
+                  title: "Liquidation completed",
+                  description: `${selectedLiquidationOrganization?.organizationName ?? "Organization"}'s liquidation is now recorded as liquidated.`,
+                });
+              }
+            } catch (err) {
+              console.error("Failed to update liquidation lifecycle decision:", err);
+              await refreshAdminState();
               toast({
-                title: "Unable to save",
-                description: error instanceof Error ? error.message : "The hardcopy submission could not be recorded right now.",
+                title: "Update failed",
+                description: "Could not update liquidation report status. Please try again.",
                 variant: "destructive",
               });
             } finally {
-              setIsMarkingLiquidationHardcopy(false);
+              setLiquidationLifecycleSubmitting(false);
             }
           };
 
@@ -8845,7 +9456,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                   Back to Reports
                 </button>
-                <LiquidationStatusLabel status={selectedLiquidationReport.status} />
+                <LiquidationStatusLabel status={selectedLiquidationReport.status} deadlineAt={selectedLiquidationReport.deadlineAt} />
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-300 bg-admin-surface p-4">
@@ -9273,7 +9884,10 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   </div>
 
-                  {selectedLiquidationReport.goSignalAt ? (
+                  {selectedLiquidationReport.goSignalAt &&
+                  (selectedLiquidationReport.status === "approved_for_ftf_green" ||
+                    selectedLiquidationReport.status === "hard_copy_submitted" ||
+                    selectedLiquidationReport.status === "completed_liquidated") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
                       <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
@@ -9282,7 +9896,9 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   ) : null}
 
-                  {selectedLiquidationReport.hardCopySubmittedAt ? (
+                  {selectedLiquidationReport.hardCopySubmittedAt &&
+                  (selectedLiquidationReport.status === "hard_copy_submitted" ||
+                    selectedLiquidationReport.status === "completed_liquidated") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
                       <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
@@ -9291,368 +9907,206 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   ) : null}
 
-                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                      <div>
-                        <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
-                        {(selectedLiquidationReport.status === "submitted" ||
+                  {selectedLiquidationReport.status === "pending_activity_completion" && liquidationFiles.length === 0 ? (
+                    <div className="rounded-md border border-border-warning-subtle bg-bg-warning-subtle p-4 text-xs text-text-warning-secondary">
+                      <p className="font-semibold text-sm text-text-warning-secondary">Pending Activity Completion</p>
+                      <p className="mt-1 text-xs text-slate-600 leading-[140%]">
+                        The organization has not yet submitted its liquidation report. Liquidation documents can be submitted once the project activity is completed.
+                      </p>
+                    </div>
+                  ) : (selectedLiquidationReport.status === "not_started" || selectedLiquidationReport.status === "draft") && liquidationFiles.length === 0 ? (
+                    <div className="rounded-md border border-border-closed-subtle bg-neutral-100 p-4 text-xs text-neutral-tertiary">
+                      <p className="font-semibold text-sm text-text-default">Liquidation Not Yet Submitted</p>
+                      <p className="mt-1 text-xs text-slate-600 leading-[140%]">
+                        The organization has not submitted a liquidation report for this activity.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                      <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                        <div>
+                          <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                          {(selectedLiquidationReport.status === "submitted" ||
+                            selectedLiquidationReport.status === "under_review" ||
+                            selectedLiquidationReport.status === "needs_revision" ||
+                            selectedLiquidationReport.status === "pending_activity_completion" ||
+                            selectedLiquidationReport.status === "not_started" ||
+                            selectedLiquidationReport.status === "draft" ||
+                            selectedLiquidationReport.status === "overdue") && (
+                            <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <LiquidationStatusLabel status={selectedLiquidationReport.status} deadlineAt={selectedLiquidationReport.deadlineAt} />
+                          {(selectedLiquidationReport.status === "submitted" ||
+                            selectedLiquidationReport.status === "under_review" ||
+                            selectedLiquidationReport.status === "needs_revision" ||
+                            selectedLiquidationReport.status === "pending_activity_completion" ||
+                            selectedLiquidationReport.status === "not_started" ||
+                            selectedLiquidationReport.status === "draft" ||
+                            selectedLiquidationReport.status === "overdue") ? (
+                            <button
+                              type="button"
+                              ref={liquidationDecisionHelpTriggerRef}
+                              onClick={() => setIsLiquidationDecisionHelpOpen((current) => !current)}
+                              aria-label="Review rules"
+                              className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                            >
+                              <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                            </button>
+                          ) : null}
+                        </div>
+                        {isLiquidationDecisionHelpOpen &&
+                        (selectedLiquidationReport.status === "submitted" ||
                           selectedLiquidationReport.status === "under_review" ||
-                          selectedLiquidationReport.status === "needs_revision") && (
-                          <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <LiquidationStatusLabel status={selectedLiquidationReport.status} />
-                        {(selectedLiquidationReport.status === "submitted" ||
-                          selectedLiquidationReport.status === "under_review" ||
-                          selectedLiquidationReport.status === "needs_revision") ? (
-                          <button
-                            type="button"
-                            ref={liquidationDecisionHelpTriggerRef}
-                            onClick={() => setIsLiquidationDecisionHelpOpen((current) => !current)}
-                            aria-label="Review rules"
-                            className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                          selectedLiquidationReport.status === "needs_revision" ||
+                          selectedLiquidationReport.status === "pending_activity_completion" ||
+                          selectedLiquidationReport.status === "not_started" ||
+                          selectedLiquidationReport.status === "draft" ||
+                          selectedLiquidationReport.status === "overdue") ? (
+                          <div
+                            ref={liquidationDecisionHelpPanelRef}
+                            className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
                           >
-                            <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
-                          </button>
+                            <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                            <p className="font-segoe text-xs leading-[140%] text-text-default">
+                              <span className="font-semibold">Approve</span> — multiple files can be selected.
+                            </p>
+                            <p className="font-segoe text-xs leading-[140%] text-text-default">
+                              <span className="font-semibold">Needs Revision / Reject</span> — one file at a time, remarks required.
+                            </p>
+                          </div>
                         ) : null}
                       </div>
-                      {isLiquidationDecisionHelpOpen &&
-                      (selectedLiquidationReport.status === "submitted" ||
-                        selectedLiquidationReport.status === "under_review" ||
-                        selectedLiquidationReport.status === "needs_revision") ? (
-                        <div
-                          ref={liquidationDecisionHelpPanelRef}
-                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
-                        >
-                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
-                            <span className="font-semibold">Approve</span> — multiple files can be selected.
-                          </p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
-                            <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
 
-                    <div className="flex flex-col gap-3 pt-4">
-                      {/* Review Stage: submitted, under_review, needs_revision */}
-                      {(selectedLiquidationReport.status === "submitted" ||
-                        selectedLiquidationReport.status === "under_review" ||
-                        selectedLiquidationReport.status === "needs_revision") && (
-                        <>
-                          {selectedLiquidationReviewFiles.length === 0 ? (
-                            <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
-                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
-                            </div>
-                          ) : (
-                            <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
-                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
-                                {selectedLiquidationReviewFiles.length} document{selectedLiquidationReviewFiles.length === 1 ? "" : "s"} selected.
-                              </p>
-                            </div>
-                          )}
+                      <div className="flex flex-col gap-3 pt-4">
+                        {/* Reviewable Stage: submitted, under_review, overdue, or pending with files */}
+                        {(selectedLiquidationReport.status === "submitted" ||
+                          selectedLiquidationReport.status === "under_review" ||
+                          (selectedLiquidationReport.status === "pending_activity_completion" && liquidationFiles.length > 0) ||
+                          (selectedLiquidationReport.status === "not_started" && liquidationFiles.length > 0) ||
+                          (selectedLiquidationReport.status === "draft" && liquidationFiles.length > 0) ||
+                          (selectedLiquidationReport.status === "needs_revision" && liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review")) ||
+                          selectedLiquidationReport.status === "overdue") && (
+                          renderLiquidationDocumentReviewControls(
+                            liquidationFiles.length > 0
+                              ? "All submitted documents have been reviewed."
+                              : "No documents submitted yet."
+                          )
+                        )}
 
-                          <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
-                            <Select
-                              value={liquidationBulkDecision}
-                              onValueChange={(value) => setLiquidationBulkDecision(value as BudgetReviewDecision)}
-                              disabled={selectedLiquidationReviewFiles.length === 0}
-                            >
-                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="approve">Approve</SelectItem>
-                                <SelectItem
-                                  value="needs_revision"
-                                  disabled={selectedLiquidationReviewFiles.length > 1}
-                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                                >
-                                  Request Revision
-                                </SelectItem>
-                                <SelectItem
-                                  value="reject"
-                                  disabled={selectedLiquidationReviewFiles.length > 1}
-                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                                >
-                                  Reject
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                        {/* Needs Revision stage awaiting organization action */}
+                        {selectedLiquidationReport.status === "needs_revision" &&
+                          !liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review") && (
+                          <div className="space-y-3">
+                            <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
+                              <p className="font-semibold">Revision Requested</p>
+                              <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected liquidation proofs or receipts from organization.</p>
+                              {selectedLiquidationReport.remarks ? (
+                                <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                              ) : null}
+                            </div>
                           </div>
+                        )}
 
-                          {selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow ? (
+                        {/* Approved for FTF stage (Onsite Required) */}
+                        {selectedLiquidationReport.status === "approved_for_ftf_green" && (
+                          <div className="space-y-3">
+                            <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
+                              <p className="font-semibold">Approved for Face-to-Face Submission</p>
+                              <p className="mt-0.5 text-[11px] text-slate-600">Soft copies approved. Record final liquidation determination below once physical copies are verified onsite.</p>
+                            </div>
+
                             <div className="flex flex-col gap-1.5">
-                              <label className="font-segoe text-[13px] text-text-default">
-                                Remarks <span className="text-destructive">*</span>
-                              </label>
-                              <Textarea
-                                value={liquidationBulkRemark}
-                                onChange={(event) => setLiquidationBulkRemark(event.target.value)}
-                                placeholder="Explain the reason or required action..."
-                                rows={3}
-                                className="resize-none text-[13px]"
-                              />
-                            </div>
-                          ) : null}
-
-                          <button
-                            type="button"
-                            disabled={isLiquidationDecisionConfirmDisabled}
-                            onClick={() => setIsLiquidationDecisionConfirmOpen(true)}
-                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
-                          >
-                            Confirm Document Decision
-                          </button>
-
-                          {/* Liquidation Actions */}
-                          <div className="mt-2 space-y-2 border-t border-slate-300 pt-3">
-                            {selectedLiquidationReport.status === "needs_revision" ? (
-                              <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
-                                <p className="font-semibold">Revision Requested</p>
-                                <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected liquidation proofs or receipts from organization.</p>
-                              </div>
-                            ) : (
-                              <p className="font-segoe text-xs text-slate-600">
-                                Soft copy evaluation: Once receipts and report documents are checked, issue go-signal approval for onsite submission, request revisions, or mark overdue.
-                              </p>
-                            )}
-                            <div className="flex flex-col gap-2">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openAdminConfirmation({
-                                    kind: "liquidation",
-                                    action: "approve",
-                                    liquidationReportId: selectedLiquidationReport.id,
-                                    budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                    organizationId: selectedLiquidationReport.organizationId,
-                                    organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                    activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                    currentStatus: selectedLiquidationReport.status,
-                                  })
-                                }
-                                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                              <Select
+                                value={liquidationLifecycleStage}
+                                onValueChange={(value) => setLiquidationLifecycleStage(value as LiquidationReport["status"])}
                               >
-                                <CheckCircle className="h-4 w-4" />
-                                Approve Liquidation
-                              </button>
-                              <div className="grid grid-cols-2 gap-2">
-                                {selectedLiquidationReport.status !== "needs_revision" ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      openAdminConfirmation({
-                                        kind: "liquidation",
-                                        action: "needs_revision",
-                                        liquidationReportId: selectedLiquidationReport.id,
-                                        budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                        organizationId: selectedLiquidationReport.organizationId,
-                                        organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                        activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                        currentStatus: selectedLiquidationReport.status,
-                                      })
-                                    }
-                                    className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 font-segoe text-xs font-semibold text-amber-800 hover:bg-amber-100"
-                                  >
-                                    Request Revision
-                                  </button>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    openAdminConfirmation({
-                                      kind: "liquidation",
-                                      action: "overdue",
-                                      liquidationReportId: selectedLiquidationReport.id,
-                                      budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                      organizationId: selectedLiquidationReport.organizationId,
-                                      organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                      activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                      currentStatus: selectedLiquidationReport.status,
-                                    })
-                                  }
-                                  className={cn(
-                                    "flex h-9 items-center justify-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 font-segoe text-xs font-semibold text-rose-800 hover:bg-rose-100",
-                                    selectedLiquidationReport.status === "needs_revision" && "col-span-2",
-                                  )}
-                                >
-                                  Mark Overdue
-                                </button>
-                              </div>
+                                <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="approved_for_ftf_green">Onsite Required</SelectItem>
+                                  <SelectItem value="completed_liquidated">Liquidated</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                          </div>
-                        </>
-                      )}
 
-                      {/* Approved for FTF stage */}
-                      {selectedLiquidationReport.status === "approved_for_ftf_green" && (
-                        <div className="space-y-3">
-                          <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
-                            <p className="font-semibold">Approved for Face-to-Face Submission</p>
-                            <p className="mt-0.5 text-[11px] text-slate-600">Soft copies approved. Record date received below when the organization presents the hard copies.</p>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Date Received</label>
-                            <Popover open={isLiquidationHardcopyDateOpen} onOpenChange={setIsLiquidationHardcopyDateOpen}>
-                              <PopoverTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
-                                >
-                                  <span className={liquidationHardcopyDateReceived ? "" : "text-text-disabled"}>
-                                    {liquidationHardcopyDateReceived
-                                      ? format(parse(liquidationHardcopyDateReceived, "yyyy-MM-dd", new Date()), "d MMM yyyy")
-                                      : "Select date"}
-                                  </span>
-                                  <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
-                                <Calendar
-                                  mode="single"
-                                  selected={
-                                    liquidationHardcopyDateReceived
-                                      ? parse(liquidationHardcopyDateReceived, "yyyy-MM-dd", new Date())
-                                      : undefined
-                                  }
-                                  onSelect={(date) => {
-                                    if (date) {
-                                      setLiquidationHardcopyDateReceived(format(date, "yyyy-MM-dd"));
-                                      setIsLiquidationHardcopyDateOpen(false);
-                                    }
-                                  }}
-                                  components={{ Caption: CalendarCaption }}
-                                  classNames={{
-                                    day_selected:
-                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
-                                  }}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <div className="flex flex-col gap-2">
                             <button
                               type="button"
-                              disabled={!liquidationHardcopyDateReceived || isMarkingLiquidationHardcopy}
-                              onClick={() => void handleMarkHardcopySubmitted()}
-                              className="flex h-10 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                              disabled={liquidationLifecycleSubmitting || liquidationLifecycleStage === selectedLiquidationReport.status}
+                              onClick={submitLiquidationLifecycleDecision}
+                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                             >
-                              {isMarkingLiquidationHardcopy ? "Saving…" : "Mark Hardcopy Submitted"}
+                              {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                              Confirm Document Decision
                             </button>
+                          </div>
+                        )}
+
+                        {/* Hardcopy Submitted stage (legacy) */}
+                        {selectedLiquidationReport.status === "hard_copy_submitted" && (
+                          <div className="space-y-3">
+                            <div className="rounded-md border border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-800">
+                              <p className="font-semibold">Hardcopy Submitted</p>
+                              <p className="mt-0.5 text-[11px] text-slate-600">Physical liquidation documents and receipts are on hand.</p>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                              <Select
+                                value={liquidationLifecycleStage}
+                                onValueChange={(value) => setLiquidationLifecycleStage(value as LiquidationReport["status"])}
+                              >
+                                <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="hard_copy_submitted">Hardcopy Submitted</SelectItem>
+                                  <SelectItem value="completed_liquidated">Liquidated</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
                             <button
                               type="button"
-                              onClick={() =>
-                                openAdminConfirmation({
-                                  kind: "liquidation",
-                                  action: "overdue",
-                                  liquidationReportId: selectedLiquidationReport.id,
-                                  budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                  organizationId: selectedLiquidationReport.organizationId,
-                                  organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                  activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                  currentStatus: selectedLiquidationReport.status,
-                                })
-                              }
-                              className="flex h-8 items-center justify-center rounded-md border border-rose-200 bg-rose-50 px-3 font-segoe text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                              disabled={liquidationLifecycleSubmitting || liquidationLifecycleStage === selectedLiquidationReport.status}
+                              onClick={submitLiquidationLifecycleDecision}
+                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                             >
-                              Mark Overdue
+                              {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                              Confirm Document Decision
                             </button>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Hardcopy Submitted stage */}
-                      {selectedLiquidationReport.status === "hard_copy_submitted" && (
-                        <div className="space-y-3">
-                          <div className="rounded-md border border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-800">
-                            <p className="font-semibold">Hardcopy Submitted</p>
-                            <p className="mt-0.5 text-[11px] text-slate-600">Physical liquidation documents and receipts are on hand. Click below to finalize and liquidate this report.</p>
+                        {/* Completed stage (Liquidated) - Final Terminal State */}
+                        {selectedLiquidationReport.status === "completed_liquidated" && (
+                          <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-positive-secondary" />
+                              <p className="font-semibold text-sm text-positive-secondary">Liquidated</p>
+                            </div>
+                            <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                              This liquidation report has been finalized and recorded as liquidated.
+                            </p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openAdminConfirmation({
-                                kind: "liquidation",
-                                action: "complete",
-                                liquidationReportId: selectedLiquidationReport.id,
-                                budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                organizationId: selectedLiquidationReport.organizationId,
-                                organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                currentStatus: selectedLiquidationReport.status,
-                              })
-                            }
-                            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 font-segoe text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Complete Liquidation
-                          </button>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Completed stage */}
-                      {selectedLiquidationReport.status === "completed_liquidated" && (
-                        <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
-                          <p className="font-semibold">Liquidated</p>
-                          <p className="mt-0.5 text-[11px] text-slate-600">This liquidation report has been finalized and recorded as liquidated.</p>
-                        </div>
-                      )}
-
-                      {/* Overdue stage */}
-                      {selectedLiquidationReport.status === "overdue" && (
-                        <div className="space-y-3">
-                          <div className="rounded-md border border-status-danger-border bg-danger-subtle p-3 text-xs text-icon-danger-secondary">
-                            <p className="font-semibold">Report Overdue</p>
-                            <p className="mt-0.5 text-[11px] text-slate-600">This report has exceeded the submission or hard copy deadline.</p>
+                        {/* Rejected stage */}
+                        {selectedLiquidationReport.status === "rejected_red" && (
+                          <div className="rounded-md border border-status-danger-border bg-danger-subtle p-4 text-xs text-icon-danger-secondary space-y-2">
+                            <p className="font-semibold text-sm">Report Rejected</p>
+                            <p className="text-xs leading-[140%] text-slate-600">This liquidation report was rejected.</p>
+                            {selectedLiquidationReport.remarks ? (
+                              <p className="font-mono text-[11px] text-red-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                            ) : null}
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openAdminConfirmation({
-                                  kind: "liquidation",
-                                  action: "approve",
-                                  liquidationReportId: selectedLiquidationReport.id,
-                                  budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                  organizationId: selectedLiquidationReport.organizationId,
-                                  organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                  activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                  currentStatus: selectedLiquidationReport.status,
-                                })
-                              }
-                              className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 font-segoe text-xs font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openAdminConfirmation({
-                                  kind: "liquidation",
-                                  action: "needs_revision",
-                                  liquidationReportId: selectedLiquidationReport.id,
-                                  budgetRequestId: selectedLiquidationReport.budgetRequestId,
-                                  organizationId: selectedLiquidationReport.organizationId,
-                                  organizationName: selectedLiquidationOrganization?.organizationName ?? "Organization",
-                                  activityTitle: linkedBudgetRequest?.activityTitle ?? "Liquidation Report",
-                                  currentStatus: selectedLiquidationReport.status,
-                                })
-                              }
-                              className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 font-segoe text-xs font-semibold text-amber-800 hover:bg-amber-100"
-                            >
-                              Request Revision
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <DangerConfirmDialog
                     open={isLiquidationDecisionConfirmOpen}
@@ -9707,7 +10161,9 @@ export default function AdminPortal({ section }: { section: string }) {
           const pendingReviewLiquidationCount = visibleLiquidationReports.filter(
             (r) => r.status === "submitted" || r.status === "under_review",
           ).length;
-          const overdueLiquidationCount = visibleLiquidationReports.filter((r) => r.status === "overdue").length;
+          const overdueLiquidationCount = visibleLiquidationReports.filter(
+            (r) => r.status === "overdue" || isLiquidationOverdue(r.deadlineAt, r.status),
+          ).length;
 
           return (
             <div className="space-y-4">
@@ -9820,6 +10276,8 @@ export default function AdminPortal({ section }: { section: string }) {
               onDescriptionChange={setNewsDescriptionDraft}
               category={newsCategoryDraft}
               onCategoryChange={setNewsCategoryDraft}
+              categoryOptions={newsCategoryOptions}
+              onAddCategory={(newCat) => setCustomNewsCategories((prev) => [...prev, newCat])}
               facebookPostUrl={newsFacebookPostUrlDraft}
               onFacebookPostUrlChange={setNewsFacebookPostUrlDraft}
               previewImageUrl={newsPreviewImageUrlDraft}
@@ -10529,6 +10987,8 @@ export default function AdminPortal({ section }: { section: string }) {
               onDescriptionChange={setTemplateDescriptionDraft}
               category={templateCategoryDraft}
               onCategoryChange={setTemplateCategoryDraft}
+              workflowScope={templateWorkflowScopeDraft}
+              onWorkflowScopeChange={setTemplateWorkflowScopeDraft}
               file={templateFileDraft}
               onFileChange={setTemplateFileDraft}
               existingFileName={selectedTemplate?.templateFileName}
@@ -10536,6 +10996,9 @@ export default function AdminPortal({ section }: { section: string }) {
               saving={savingTemplate || uploadingTemplateId !== null}
               onCancel={resetTemplateForm}
               onSave={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
+              categoryOptions={templateCategoryOptions}
+              onAddCategory={addCustomTemplateCategory}
+              onDeleteCategory={handleInitiateDeleteCategory}
             />
             <Dialog
               open={previewModalOpen}
@@ -10684,6 +11147,62 @@ export default function AdminPortal({ section }: { section: string }) {
               onConfirm={() => {
                 if (pendingRestoreTemplate) void handleRestoreTemplate(pendingRestoreTemplate.id);
                 setPendingRestoreTemplate(null);
+              }}
+            />
+            <DangerConfirmDialog
+              variant="warning"
+              warningTone="caution"
+              open={Boolean(pendingCategoryDelete && pendingCategoryDelete.isSystem)}
+              onOpenChange={(open) => {
+                if (!open) setPendingCategoryDelete(null);
+              }}
+              icon={AlertTriangle}
+              title="Cannot Delete Category"
+              description={`${formatCanonicalCategoryLabel(pendingCategoryDelete?.category)} is a system category and cannot be deleted.`}
+              confirmLabel="Understood"
+              cancelLabel="Close"
+              onConfirm={() => setPendingCategoryDelete(null)}
+            />
+            <DangerConfirmDialog
+              variant="warning"
+              warningTone="caution"
+              open={Boolean(pendingCategoryDelete && !pendingCategoryDelete.isSystem && pendingCategoryDelete.count > 0)}
+              onOpenChange={(open) => {
+                if (!open) setPendingCategoryDelete(null);
+              }}
+              icon={AlertTriangle}
+              title="Cannot Delete Category"
+              description={`The category "${formatCanonicalCategoryLabel(pendingCategoryDelete?.category)}" is currently used by ${pendingCategoryDelete?.count} template(s).`}
+              warning="Reassign or remove all associated templates before deleting this category."
+              confirmLabel="Understood"
+              cancelLabel="Close"
+              onConfirm={() => setPendingCategoryDelete(null)}
+            />
+            <DangerConfirmDialog
+              open={Boolean(pendingCategoryDelete && !pendingCategoryDelete.isSystem && pendingCategoryDelete.count === 0)}
+              onOpenChange={(open) => {
+                if (!open) setPendingCategoryDelete(null);
+              }}
+              icon={Trash2}
+              title="Delete Category"
+              description={`Are you sure you want to delete "${formatCanonicalCategoryLabel(pendingCategoryDelete?.category)}"? This category has no associated templates.`}
+              warning="This category will be removed from category selection options."
+              warningTone="danger"
+              cancelLabel="Cancel"
+              confirmLabel="Delete Category"
+              confirmIcon={Trash2}
+              onConfirm={() => {
+                if (pendingCategoryDelete?.category) {
+                  removeCustomTemplateCategory(pendingCategoryDelete.category);
+                  if (templateCategoryDraft === pendingCategoryDelete.category) {
+                    setTemplateCategoryDraft("");
+                  }
+                  toast({
+                    title: "Category deleted",
+                    description: `Category "${formatCanonicalCategoryLabel(pendingCategoryDelete.category)}" was removed.`,
+                  });
+                }
+                setPendingCategoryDelete(null);
               }}
             />
             <TemplateFilePreviewDialog
@@ -11317,6 +11836,186 @@ export default function AdminPortal({ section }: { section: string }) {
             }
           };
 
+          const getYpopActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const rawYpopLogs = state.activityLogs
+            .filter((log) => {
+              if (log.organizationId !== entry.organizationId) return false;
+              return (
+                log.relatedType === "ypop_entry" ||
+                log.relatedType === "ypop_event_participation" ||
+                log.relatedType === "ypop_org_activity" ||
+                log.relatedId === entry.id
+              );
+            })
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              return {
+                id: log.id,
+                adminName,
+                action: log.description || log.action,
+                createdAt: log.createdAt,
+                relatedType: log.relatedType,
+                relatedId: log.relatedId,
+              };
+            });
+
+          const entryRevisions = (entry.revisionHistory ?? []).map((rev, index) => {
+            const isDuplicate = rawYpopLogs.some((log) => {
+              if (log.relatedId !== entry.id && log.relatedType !== "ypop_entry") return false;
+              const timeDiff = Math.abs(new Date(log.createdAt).getTime() - new Date(rev.changedAt).getTime());
+              if (timeDiff < 60000) return true;
+              if (log.createdAt === rev.changedAt) return true;
+              const sameDay = new Date(log.createdAt).toDateString() === new Date(rev.changedAt).toDateString();
+              return sameDay && log.action.toLowerCase().includes(rev.action.toLowerCase());
+            });
+            if (isDuplicate) return null;
+
+            let actionText = `Updated YPOP validation status to ${rev.action}.`;
+            if (rev.action === "needs_revision") {
+              actionText = rev.adminRemarks
+                ? `Requested revisions for YPOP validation: "${rev.adminRemarks}".`
+                : "Requested revisions for YPOP validation.";
+            } else if (rev.action === "qualified") {
+              actionText = "Qualified organization for YPOP.";
+            } else if (rev.action === "not_qualified") {
+              actionText = "Marked organization not qualified for YPOP.";
+            } else if (rev.action === "under_review") {
+              actionText = "Moved YPOP validation under review.";
+            }
+
+            return {
+              id: `rev-entry-${entry.id}-${index}`,
+              adminName: "Administrator",
+              action: actionText,
+              createdAt: rev.changedAt,
+            };
+          });
+
+          const participationRevisions = orgEventParticipations.flatMap((participation) => {
+            const activity = semesterActivities.find((a) => a.id === participation.activityId);
+            const title = activity?.name || participation.activityName || "event proof";
+
+            return (participation.revisionHistory ?? []).map((rev, index) => {
+              const isDuplicate = rawYpopLogs.some((log) => {
+                if (log.relatedId !== participation.id && log.relatedType !== "ypop_event_participation") return false;
+                const timeDiff = Math.abs(new Date(log.createdAt).getTime() - new Date(rev.changedAt).getTime());
+                if (timeDiff < 60000) return true;
+                if (log.createdAt === rev.changedAt) return true;
+                const sameDay = new Date(log.createdAt).toDateString() === new Date(rev.changedAt).toDateString();
+                const normAction = rev.action.toLowerCase();
+                return (
+                  sameDay &&
+                  (log.action.toLowerCase().includes(normAction) ||
+                    (normAction === "verified" && log.action.toLowerCase().includes("verif")) ||
+                    (normAction === "needs_revision" && log.action.toLowerCase().includes("revis")) ||
+                    (normAction === "rejected" && log.action.toLowerCase().includes("reject")))
+                );
+              });
+              if (isDuplicate) return null;
+
+              let actionText = `Updated the YPOP event proof for "${title}".`;
+              if (rev.action === "verified") {
+                actionText = `Verified the YPOP event proof for "${title}".`;
+              } else if (rev.action === "needs_revision") {
+                actionText = `Requested revisions for the YPOP event proof "${title}".`;
+              } else if (rev.action === "rejected") {
+                actionText = `Rejected the YPOP event proof "${title}".`;
+              }
+
+              return {
+                id: `rev-part-${participation.id}-${index}`,
+                adminName: "Administrator",
+                action: actionText,
+                createdAt: rev.changedAt,
+              };
+            });
+          });
+
+          const orgActivityRevisions = orgActivities.flatMap((activity) => {
+            const title = activity.activityName || "organization-initiated activity";
+
+            return (activity.revisionHistory ?? []).map((rev, index) => {
+              const isDuplicate = rawYpopLogs.some((log) => {
+                if (log.relatedId !== activity.id && log.relatedType !== "ypop_org_activity") return false;
+                const timeDiff = Math.abs(new Date(log.createdAt).getTime() - new Date(rev.changedAt).getTime());
+                if (timeDiff < 60000) return true;
+                if (log.createdAt === rev.changedAt) return true;
+                const sameDay = new Date(log.createdAt).toDateString() === new Date(rev.changedAt).toDateString();
+                const normAction = rev.action.toLowerCase();
+                return (
+                  sameDay &&
+                  (log.action.toLowerCase().includes(normAction) ||
+                    (normAction === "approved" && log.action.toLowerCase().includes("approv")) ||
+                    (normAction === "needs_revision" && log.action.toLowerCase().includes("revis")) ||
+                    (normAction === "rejected" && log.action.toLowerCase().includes("reject")))
+                );
+              });
+              if (isDuplicate) return null;
+
+              let actionText = `Updated the organization-initiated activity "${title}".`;
+              if (rev.action === "approved") {
+                actionText = `Approved the organization-initiated activity "${title}".`;
+              } else if (rev.action === "needs_revision") {
+                actionText = `Requested revisions for the organization-initiated activity "${title}".`;
+              } else if (rev.action === "rejected") {
+                actionText = `Rejected the organization-initiated activity "${title}".`;
+              }
+
+              return {
+                id: `rev-orgact-${activity.id}-${index}`,
+                adminName: "Administrator",
+                action: actionText,
+                createdAt: rev.changedAt,
+              };
+            });
+          });
+
+          const ypopActivityEntries = [
+            ...rawYpopLogs.map((log) => ({
+              id: log.id,
+              adminName: log.adminName,
+              action: log.action,
+              createdAt: log.createdAt,
+            })),
+            ...[...entryRevisions, ...participationRevisions, ...orgActivityRevisions].filter(
+              (item): item is NonNullable<typeof item> => Boolean(item),
+            ),
+          ].sort((a, b) => {
+            const timeA = new Date(a.createdAt).getTime();
+            const timeB = new Date(b.createdAt).getTime();
+            const validA = !Number.isNaN(timeA);
+            const validB = !Number.isNaN(timeB);
+            if (!validA && !validB) return 0;
+            if (!validA) return 1;
+            if (!validB) return -1;
+            return timeB - timeA;
+          });
+
+          const visibleYpopActivityEntries = ypopActivityEntries.slice(0, ypopActivityVisibleCount);
+          const hasMoreYpopActivityEntries = ypopActivityEntries.length > visibleYpopActivityEntries.length;
+          const groupedYpopActivityEntries = visibleYpopActivityEntries.reduce<
+            { label: string; entries: typeof visibleYpopActivityEntries }[]
+          >((groups, item) => {
+            const label = getYpopActivityDayLabel(item.createdAt);
+            const existingGroup = groups.find((group) => group.label === label);
+            if (existingGroup) {
+              existingGroup.entries.push(item);
+            } else {
+              groups.push({ label, entries: [item] });
+            }
+            return groups;
+          }, []);
+
           return (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -11342,13 +12041,84 @@ export default function AdminPortal({ section }: { section: string }) {
                   <ReferenceCodeChip code={entryOrg?.referenceId || "—"} className="w-[120px] rounded" />
                   {entryOrg?.majorClassification ? <CategoryChip category={entryOrg.majorClassification} /> : null}
                 </div>
-                <button
-                  type="button"
-                  aria-label="Decision history"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
-                >
-                  <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
-                </button>
+                <div className="relative shrink-0">
+                  <button
+                    ref={ypopActivityTriggerRef}
+                    type="button"
+                    aria-label="Decision history"
+                    onClick={() => setIsYpopActivityPopoverOpen((current) => !current)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                  {isYpopActivityPopoverOpen ? (
+                    <div
+                      ref={ypopActivityPanelRef}
+                      className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                    >
+                      <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                          Recent Activity
+                        </p>
+                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          A log of recent actions taken on this organization.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                        {groupedYpopActivityEntries.length ? (
+                          groupedYpopActivityEntries.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                {group.label}
+                              </p>
+                              <div className="space-y-0">
+                                {group.entries.map((item, index) => {
+                                  const entryDate = new Date(item.createdAt);
+                                  const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                  return (
+                                    <div key={item.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                      {index < group.entries.length - 1 ? (
+                                        <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                      ) : null}
+                                      <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                        <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                      </span>
+                                      <div className="min-w-0 flex-1 space-y-0.5">
+                                        <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                          <span className="font-semibold">{item.adminName}</span> {item.action}
+                                        </p>
+                                        <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                          {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                            No activity recorded yet.
+                          </p>
+                        )}
+                      </div>
+
+                      {hasMoreYpopActivityEntries ? (
+                        <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                          <button
+                            type="button"
+                            onClick={() => setYpopActivityVisibleCount((current) => current + 4)}
+                            className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                          >
+                            Load older activity
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="space-y-4 rounded-md border border-slate-300 bg-admin-surface p-6 shadow-sm">
@@ -11869,7 +12639,6 @@ export default function AdminPortal({ section }: { section: string }) {
             };
           });
 
-          const submittedCount = combinedPeriodEntries.filter((e) => e.status === "submitted").length;
           const pendingEvaluationCount = submissionRows.filter((r) => r.status === "pending_evaluation").length;
           const qualifiedCount = submissionRows.filter((r) => r.status === "qualified").length;
           const notQualifiedCount = submissionRows.filter((r) => r.status === "not_qualified").length;
@@ -11944,8 +12713,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 Back to Semesters
               </button>
 
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
-                <StatsCard title="SUBMITTED" value={submittedCount} icon={Send} description="New submissions awaiting review." />
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 <StatsCard title="PENDING EVALUATION" value={pendingEvaluationCount} icon={Clock} description="Submissions awaiting validation." />
                 <StatsCard title="QUALIFIED" value={qualifiedCount} icon={CheckCircle} description="Organizations qualified for YPOP." />
                 <StatsCard title="NOT QUALIFIED" value={notQualifiedCount} icon={XCircle} description="Organizations not qualified for YPOP." />

@@ -501,8 +501,8 @@ describe("UserPortalTemplatesWorkspaceView Responsive Layout", () => {
 
     const mobileScope = within(mobileLayout);
 
-    // Find the mobile section header toggle
-    const toggleButton = mobileScope.getByRole("button", { name: /Toggle required templates section/i });
+    // Find the mobile section header toggle for Registration Form category
+    const toggleButton = mobileScope.getByRole("button", { name: /Toggle Registration Form templates section/i });
     expect(toggleButton).toBeInTheDocument();
 
     // Verify template card is initially visible in mobile layout
@@ -1760,7 +1760,7 @@ describe("UserPortalBudgetWorkspaceView Mobile Page Polish", () => {
       // 3. Filter Bar Verification
       expect(screen.getByRole("button", { name: "All (2)" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Approved / Released (1)" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Under Review (1)" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pending Review (1)" })).toBeInTheDocument();
       expect(screen.getByPlaceholderText("Search activity, category, venue...")).toBeInTheDocument();
       expect(screen.getByText(/newest/i)).toBeInTheDocument();
 

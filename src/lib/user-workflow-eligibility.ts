@@ -1,8 +1,9 @@
-import type {
-  BudgetRequest,
-  OrganizationProfile,
-  SubmissionFile,
-  TemplateRecord,
+import {
+  deriveTemplateCategory,
+  type BudgetRequest,
+  type OrganizationProfile,
+  type SubmissionFile,
+  type TemplateRecord,
 } from "./lydo-connect-data";
 import type { BudgetEligibility } from "./budget-eligibility";
 import { isOrganizationProfileComplete } from "./organization-profile-domain";
@@ -16,6 +17,35 @@ export type WorkflowRequirement = {
   label: string;
   met: boolean;
 };
+
+export function isRegistrationRequirementTemplate(template: TemplateRecord): boolean {
+  const isActive = (template.templateActive ?? true) && template.isActive !== false;
+  if (!isActive) return false;
+  if (template.templateScope !== "document_submission") return false;
+
+  const rawCategories =
+    Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+      ? template.templateCategories
+      : (template as any).template_category && Array.isArray((template as any).template_category)
+      ? (template as any).template_category
+      : (template as any).category
+      ? [(template as any).category]
+      : [];
+  const effectiveRawCategories =
+    rawCategories.length > 0 ? rawCategories : [deriveTemplateCategory(template.name)];
+  const categories = effectiveRawCategories.map((cat: string) => String(cat).trim().toLowerCase());
+  if (!categories.includes("yorp")) return false;
+
+  const scope = template.scope;
+  return !scope || scope === "registration" || scope === "both";
+}
+
+export const isMatchingFileForTemplate = (
+  file: SubmissionFile,
+  template: TemplateRecord,
+): boolean =>
+  file.documentTypeId === template.id ||
+  (Boolean(template.databaseId) && file.documentTypeId === template.databaseId);
 
 export function resolveRegistrationPrerequisites({
   profile,
@@ -32,7 +62,7 @@ export function resolveRegistrationPrerequisites({
   const approvedDocuments = requiredTemplates.filter((template) =>
     documentFiles.some(
       (file) =>
-        file.documentTypeId === template.id &&
+        isMatchingFileForTemplate(file, template) &&
         approvedDocumentStatuses.has(file.adminStatus),
     ),
   ).length;

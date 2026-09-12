@@ -12,7 +12,7 @@ const normalizeEnvValue = (value: string | undefined) => {
   return trimmed;
 };
 
-const supabaseUrl = normalizeEnvValue(import.meta.env.VITE_SUPABASE_URL);
+export const supabaseUrl = normalizeEnvValue(import.meta.env.VITE_SUPABASE_URL);
 const supabaseAnonKey = normalizeEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY);
 const supabaseProjectRef = (() => {
   try {

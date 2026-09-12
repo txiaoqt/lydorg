@@ -562,7 +562,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       </h3>
                       {/* Status Badge in its own dedicated row directly below title */}
                       <div className="pt-0.5 shrink-0">
-                        <PortalStatusBadge status={report.status} />
+                        <PortalStatusBadge status={report.status} deadlineAt={report.deadlineAt} />
                       </div>
                     </div>
                   </div>
@@ -677,7 +677,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                         {/* Column 2: Status Badge */}
                         <td className="py-3.5 px-4">
-                          <PortalStatusBadge status={report.status} />
+                          <PortalStatusBadge status={report.status} deadlineAt={report.deadlineAt} />
                         </td>
 
                         {/* Column 3: Released Budget */}
@@ -779,7 +779,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                           {selectedBudget?.activityTitle || "Liquidation Report"}
                         </SheetTitle>
                         <div className="flex items-center gap-2 pt-0.5">
-                          <PortalStatusBadge status={selectedReport.status} />
+                          <PortalStatusBadge status={selectedReport.status} deadlineAt={selectedReport.deadlineAt} />
                         </div>
                         <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5">
                           {selectedBudget?.purposeCategory || "General Purpose"} • {selectedBudget?.venue || "Pasig City"}
@@ -915,7 +915,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </DialogTitle>
                         {/* Row 3: Status Badge + Supporting Metadata */}
                         <div className="flex items-center flex-wrap gap-2 pt-0.5">
-                          <PortalStatusBadge status={selectedReport.status} />
+                          <PortalStatusBadge status={selectedReport.status} deadlineAt={selectedReport.deadlineAt} />
                           <span className="text-muted-foreground/40 hidden xs:inline">•</span>
                           <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate max-w-[220px] sm:max-w-xs">
                             {selectedBudget?.purposeCategory || "General Purpose"} • {selectedBudget?.venue || "Pasig City"}

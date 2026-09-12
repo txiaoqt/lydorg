@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ADMIN_SESSION_CHANGE_EVENT,
   readAdminSession,
@@ -28,13 +28,61 @@ import {
   type YPOPOrgActivity,
   type YPOPOrgActivityFile,
   type YPOPPeriod,
+  deriveTemplateCategory,
+  isSystemTemplateCategory,
   legacyRemovedTemplateNames,
+  normalizeTemplateCategoryKey,
   seedState,
 } from "./lydo-connect-data";
 import { loadAdminPortalSupabaseState, loadLydoConnectSupabaseState } from "./lydo-connect-supabase";
-import { supabase } from "./supabase";
+import { supabase, supabaseAuthStorageKey } from "./supabase";
 
-const STORAGE_KEY = "lydo-connect-state-v1";
+export type AccountIdentity =
+  | { type: "admin"; id: string; token: string }
+  | { type: "user"; id: string }
+  | { type: "anonymous" };
+
+export const getAccountIdentityKey = (identity: AccountIdentity): string => {
+  if (identity.type === "admin") return `admin:${identity.id}`;
+  if (identity.type === "user") return `user:${identity.id}`;
+  return "anonymous";
+};
+
+export const getStorageKeyForIdentity = (identity: AccountIdentity): string =>
+  `lydo-connect-state-v1:${getAccountIdentityKey(identity)}`;
+
+export const isSameIdentity = (a: AccountIdentity, b: AccountIdentity): boolean => {
+  if (a.type !== b.type) return false;
+  if (a.type === "admin" && b.type === "admin") return a.id === b.id && a.token === b.token;
+  if (a.type === "user" && b.type === "user") return a.id === b.id;
+  if (a.type === "anonymous" && b.type === "anonymous") return true;
+  return false;
+};
+
+export const readSynchronousAuthUserId = (): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(supabaseAuthStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+export const resolveInitialIdentity = (): AccountIdentity => {
+  const admin = readAdminSession();
+  if (admin?.sessionToken) {
+    return { type: "admin", id: admin.id, token: admin.sessionToken };
+  }
+  const userId = readSynchronousAuthUserId();
+  if (userId) {
+    return { type: "user", id: userId };
+  }
+  return { type: "anonymous" };
+};
+
 const legacySeedIds = new Set([
   // old prototype IDs
   "org-lydo-001",
@@ -84,8 +132,84 @@ const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
 ]);
 const liquidationUnlockedBudgetStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
 
+export const clearAccountScopedState = (base: LydoConnectState): LydoConnectState => ({
+  ...base,
+  organizationProfiles: [],
+  documentSubmissions: [],
+  documentSubmissionFiles: [],
+  budgetRequests: [],
+  budgetRequestFiles: [],
+  liquidationReports: [],
+  liquidationReportFiles: [],
+  complianceRemarks: [],
+  notifications: [],
+  activityLogs: [],
+  inquiries: [],
+  ypopEntries: [],
+  ypopFiles: [],
+  ypopEventParticipations: [],
+  ypopEventFiles: [],
+  ypopOrgActivities: [],
+  ypopOrgActivityFiles: [],
+  customTemplateCategories: base.customTemplateCategories ?? [],
+});
+
+export const normalizeTemplates = (templates: TemplateRecord[]): TemplateRecord[] => {
+  const map = new Map<string, TemplateRecord>();
+  for (const template of templates ?? []) {
+    if (!template || legacyRemovedTemplateNames.has(template.name)) continue;
+    const identityKey = template.databaseId || template.id;
+    const normalized: TemplateRecord = {
+      ...template,
+      templateCategories:
+        Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+          ? template.templateCategories.filter(Boolean)
+          : [deriveTemplateCategory(template.name)],
+      templateFileSize: template.templateFileSize ?? null,
+    };
+    map.set(identityKey, normalized);
+  }
+  return Array.from(map.values());
+};
+
+const normalizeInitialSeedState = (seed: LydoSeedState): LydoConnectState => ({
+  ...seed,
+  organizationProfiles: seed.organizationProfiles.filter((item) => !legacySeedIds.has(item.id)),
+  documentSubmissions: seed.documentSubmissions.filter((item) => !legacySeedIds.has(item.id)),
+  documentSubmissionFiles: seed.documentSubmissionFiles.filter((item) => !legacySeedIds.has(item.id)),
+  budgetRequests: seed.budgetRequests.filter((item) => !legacySeedIds.has(item.id)),
+  budgetRequestFiles: seed.budgetRequestFiles.filter((item) => !legacySeedIds.has(item.id)),
+  liquidationReports: seed.liquidationReports.filter((item) => !legacySeedIds.has(item.id)),
+  liquidationReportFiles: seed.liquidationReportFiles.filter((item) => !legacySeedIds.has(item.id)),
+  newsReleases: seed.newsReleases.filter((item) => !legacySeedIds.has(item.id)),
+  transparencyPosts: seed.transparencyPosts.filter((item) => !legacySeedIds.has(item.id)),
+  complianceRemarks: seed.complianceRemarks.filter((item) => !legacySeedIds.has(item.id)),
+  notifications: seed.notifications.filter((item) => !legacySeedIds.has(item.id)),
+  activityLogs: seed.activityLogs.filter((item) => !legacySeedIds.has(item.id)),
+  inquiries: seed.inquiries.filter((item) => !legacySeedIds.has(item.id)),
+  templates: normalizeTemplates(seed.templates),
+  ypopEntries: seed.ypopEntries.filter((item) => !legacySeedIds.has(item.id)),
+  ypopFiles: seed.ypopFiles.filter((item) => !legacySeedIds.has(item.id)),
+  ypopEventParticipations: seed.ypopEventParticipations.filter((item) => !legacySeedIds.has(item.id)),
+  ypopEventFiles: seed.ypopEventFiles.filter((item) => !legacySeedIds.has(item.id)),
+  ypopOrgActivities: seed.ypopOrgActivities.filter((item) => !legacySeedIds.has(item.id)),
+  ypopOrgActivityFiles: seed.ypopOrgActivityFiles.filter((item) => !legacySeedIds.has(item.id)),
+  ypopCityActivities: seed.ypopCityActivities.filter((item) => !legacySeedIds.has(item.id)),
+  ypopPeriods: seed.ypopPeriods.filter((item) => !legacySeedIds.has(item.id)),
+  customTemplateCategories: Array.isArray(seed.customTemplateCategories)
+    ? Array.from(
+        new Set(
+          seed.customTemplateCategories
+            .map(normalizeTemplateCategoryKey)
+            .filter((k) => Boolean(k) && !isSystemTemplateCategory(k)),
+        ),
+      )
+    : [],
+});
+
 type LydoConnectContextValue = {
   state: LydoConnectState;
+  resetAccountState: () => void;
   mergeRemoteState: (snapshot: Partial<LydoConnectState>) => void;
   createTemplate: (template: TemplateRecord) => void;
   removeTemplate: (id: string) => void;
@@ -140,136 +264,128 @@ type LydoConnectContextValue = {
   createYPOPPeriod: (period: YPOPPeriod) => void;
   updateYPOPPeriod: (id: string, patch: UpdatePatch<YPOPPeriod>) => void;
   deleteYPOPPeriod: (id: string) => void;
+  addCustomTemplateCategory: (category: string) => void;
+  removeCustomTemplateCategory: (category: string) => void;
 };
 
 const LydoConnectContext = createContext<LydoConnectContextValue | undefined>(undefined);
 
-const readState = (): LydoConnectState => {
-  if (typeof window === "undefined") return seedState;
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return seedState;
+export const readState = (identity?: AccountIdentity): LydoConnectState => {
+  const targetIdentity = identity ?? resolveInitialIdentity();
+  const baseState = normalizeInitialSeedState(seedState);
+
+  if (typeof window === "undefined") {
+    return clearAccountScopedState(baseState);
+  }
+
+  // Clean up legacy global key if present to prevent cross-account leakage
+  try {
+    window.localStorage.removeItem("lydo-connect-state-v1");
+  } catch {
+    // ignore storage removal error
+  }
+
+  const storageKey = getStorageKeyForIdentity(targetIdentity);
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) {
+    if (targetIdentity.type === "admin") {
+      return {
+        ...baseState,
+        organizationProfiles: seedState.organizationProfiles.map(normalizeOrganizationProfile),
+      };
+    }
+    return clearAccountScopedState(baseState);
+  }
 
   try {
     const parsed = JSON.parse(raw) as Partial<LydoConnectState>;
+
+    if (targetIdentity.type === "anonymous") {
+      return clearAccountScopedState({
+        ...baseState,
+        ...parsed,
+      });
+    }
+
     return {
-      ...seedState,
+      ...baseState,
       ...parsed,
-      organizationProfiles: ((parsed.organizationProfiles ?? seedState.organizationProfiles) as OrganizationProfile[])
-        .filter((item) => !legacySeedIds.has(item.id))
-        .map((item) => {
-          if (import.meta.env.DEV) {
-            const seed = seedState.organizationProfiles.find((s) => s.id === item.id);
-            if (seed) return normalizeOrganizationProfile({ ...seed });
-          }
-          return normalizeOrganizationProfile(item);
-        }),
-      documentSubmissions: ((parsed.documentSubmissions ?? seedState.documentSubmissions) as DocumentSubmission[]).filter(
+      organizationProfiles: targetIdentity.type === "admin"
+        ? (Array.isArray(parsed.organizationProfiles) && parsed.organizationProfiles.length > 0
+            ? parsed.organizationProfiles.map(normalizeOrganizationProfile)
+            : seedState.organizationProfiles.map(normalizeOrganizationProfile))
+        : ((parsed.organizationProfiles ?? []) as OrganizationProfile[])
+            .filter((item) => !legacySeedIds.has(item.id))
+            .filter((item) => item.userId === targetIdentity.id)
+            .map(normalizeOrganizationProfile),
+      documentSubmissions: ((parsed.documentSubmissions ?? []) as DocumentSubmission[]).filter(
         (item) => !legacySeedIds.has(item.id),
       ),
-      documentSubmissionFiles: (() => {
-        const stored = ((parsed.documentSubmissionFiles ?? []) as SubmissionFile[])
-          .filter(item => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.submissionId));
-        const storedIds = new Set(stored.map(f => f.id));
-        return [...stored, ...seedState.documentSubmissionFiles.filter(f => !storedIds.has(f.id) && !legacySeedIds.has(f.id))];
-      })(),
-      budgetRequests: (() => {
-        const stored = ((parsed.budgetRequests ?? []) as BudgetRequest[])
-          .filter(item => !legacySeedIds.has(item.id));
-        const storedIds = new Set(stored.map(r => r.id));
-        const merged = stored.map(r => {
-          const seedEntry = seedState.budgetRequests.find(s => s.id === r.id);
-          if (!seedEntry) return r;
-          return {
-            ...r,
-            revisionHistory: r.revisionHistory?.length ? r.revisionHistory : seedEntry.revisionHistory,
-            userNote: r.userNote !== undefined ? r.userNote : seedEntry.userNote,
-          };
-        });
-        return [...merged, ...seedState.budgetRequests.filter(s => !storedIds.has(s.id) && !legacySeedIds.has(s.id))];
-      })(),
-      budgetRequestFiles: ((parsed.budgetRequestFiles ?? seedState.budgetRequestFiles) as BudgetRequestFile[]).filter(
+      documentSubmissionFiles: ((parsed.documentSubmissionFiles ?? []) as SubmissionFile[]).filter(
+        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.submissionId),
+      ),
+      budgetRequests: ((parsed.budgetRequests ?? []) as BudgetRequest[]).filter(
+        (item) => !legacySeedIds.has(item.id),
+      ),
+      budgetRequestFiles: ((parsed.budgetRequestFiles ?? []) as BudgetRequestFile[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.budgetRequestId),
       ),
-      liquidationReports: (() => {
-        const stored = ((parsed.liquidationReports ?? []) as LiquidationReport[]).filter(
-          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.budgetRequestId),
-        );
-        const storedIds = new Set(stored.map((r) => r.id));
-        const merged = stored.map((r) => {
-          const seedEntry = seedState.liquidationReports.find((s) => s.id === r.id);
-          if (!seedEntry) return r;
-          return { ...r, revisionHistory: r.revisionHistory?.length ? r.revisionHistory : seedEntry.revisionHistory };
-        });
-        return [...merged, ...seedState.liquidationReports.filter((s) => !storedIds.has(s.id) && !legacySeedIds.has(s.id))];
-      })(),
-      liquidationReportFiles: ((parsed.liquidationReportFiles ?? seedState.liquidationReportFiles) as LiquidationReportFile[]).filter(
+      liquidationReports: ((parsed.liquidationReports ?? []) as LiquidationReport[]).filter(
+        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.budgetRequestId),
+      ),
+      liquidationReportFiles: ((parsed.liquidationReportFiles ?? []) as LiquidationReportFile[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.liquidationReportId),
       ),
-      newsReleases: ((parsed.newsReleases ?? seedState.newsReleases) as NewsRelease[]).filter(
+      newsReleases: ((parsed.newsReleases ?? baseState.newsReleases) as NewsRelease[]).filter(
         (item) => !legacySeedIds.has(item.id),
       ),
-      transparencyPosts: ((parsed.transparencyPosts ?? seedState.transparencyPosts) as TransparencyPost[]).filter(
+      transparencyPosts: ((parsed.transparencyPosts ?? baseState.transparencyPosts) as TransparencyPost[]).filter(
         (item) => !legacySeedIds.has(item.id),
       ),
-      complianceRemarks: ((parsed.complianceRemarks ?? seedState.complianceRemarks) as ComplianceRemark[]).filter(
+      complianceRemarks: ((parsed.complianceRemarks ?? []) as ComplianceRemark[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
       ),
-      notifications: (() => {
-        const stored = ((parsed.notifications ?? []) as NotificationRecord[]).filter(
-          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
-        );
-        const storedIds = new Set(stored.map((n) => n.id));
-        return [...stored, ...seedState.notifications.filter((n) => !storedIds.has(n.id))];
-      })(),
-      activityLogs: (() => {
-        const stored = ((parsed.activityLogs ?? []) as ActivityLog[]).filter(
-          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
-        );
-        const storedIds = new Set(stored.map((l) => l.id));
-        return [...stored, ...seedState.activityLogs.filter((l) => !storedIds.has(l.id))];
-      })(),
-      inquiries: ((parsed.inquiries ?? seedState.inquiries) as InquiryRecord[]).filter(
+      notifications: ((parsed.notifications ?? []) as NotificationRecord[]).filter(
+        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
+      ),
+      activityLogs: ((parsed.activityLogs ?? []) as ActivityLog[]).filter(
+        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
+      ),
+      inquiries: ((parsed.inquiries ?? []) as InquiryRecord[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.organizationId),
       ),
-      templates: (parsed.templates ?? seedState.templates).filter((template) => !legacyRemovedTemplateNames.has(template.name)),
-      ypopEntries: (() => {
-        const stored = ((parsed.ypopEntries ?? []) as YPOPEntry[]).filter((e) => !legacySeedIds.has(e.id));
-        const storedIds = new Set(stored.map((e) => e.id));
-        return [...stored, ...seedState.ypopEntries.filter((e) => !storedIds.has(e.id) && !legacySeedIds.has(e.id))];
-      })(),
-      ypopFiles: ((parsed.ypopFiles ?? seedState.ypopFiles) as YPOPFile[]).filter((f) => !legacySeedIds.has(f.id)),
-      ypopEventParticipations: (() => {
-        const stored = ((parsed.ypopEventParticipations ?? []) as YPOPEventParticipation[]).filter((p) => !legacySeedIds.has(p.id));
-        const storedIds = new Set(stored.map((p) => p.id));
-        return [
-          ...stored,
-          ...seedState.ypopEventParticipations.filter((p) => !storedIds.has(p.id) && !legacySeedIds.has(p.id)),
-        ];
-      })(),
-      ypopEventFiles: ((parsed.ypopEventFiles ?? seedState.ypopEventFiles) as YPOPEventFile[]).filter((f) => !legacySeedIds.has(f.id)),
-      ypopOrgActivities: (() => {
-        const stored = ((parsed.ypopOrgActivities ?? []) as YPOPOrgActivity[]).filter((activity) => !legacySeedIds.has(activity.id));
-        const storedIds = new Set(stored.map((activity) => activity.id));
-        return [
-          ...stored,
-          ...seedState.ypopOrgActivities.filter((activity) => !storedIds.has(activity.id) && !legacySeedIds.has(activity.id)),
-        ];
-      })(),
-      ypopOrgActivityFiles: ((parsed.ypopOrgActivityFiles ?? seedState.ypopOrgActivityFiles) as YPOPOrgActivityFile[]).filter((file) => !legacySeedIds.has(file.id)),
-      ypopCityActivities: (() => {
-        const stored = ((parsed.ypopCityActivities ?? []) as YPOPCityActivity[]).filter((a) => !legacySeedIds.has(a.id));
-        const storedIds = new Set(stored.map((a) => a.id));
-        return [...stored, ...seedState.ypopCityActivities.filter((a) => !storedIds.has(a.id) && !legacySeedIds.has(a.id))];
-      })(),
-      ypopPeriods: (() => {
-        if (Array.isArray(parsed.ypopPeriods)) {
-          return (parsed.ypopPeriods as YPOPPeriod[]).filter((p) => !legacySeedIds.has(p.id));
-        }
-        return seedState.ypopPeriods.filter((p) => !legacySeedIds.has(p.id));
-      })(),
+      templates: normalizeTemplates(parsed.templates ?? baseState.templates),
+      ypopEntries: ((parsed.ypopEntries ?? []) as YPOPEntry[]).filter((e) => !legacySeedIds.has(e.id)),
+      ypopFiles: ((parsed.ypopFiles ?? []) as YPOPFile[]).filter((f) => !legacySeedIds.has(f.id)),
+      ypopEventParticipations: ((parsed.ypopEventParticipations ?? []) as YPOPEventParticipation[]).filter(
+        (p) => !legacySeedIds.has(p.id),
+      ),
+      ypopEventFiles: ((parsed.ypopEventFiles ?? []) as YPOPEventFile[]).filter((f) => !legacySeedIds.has(f.id)),
+      ypopOrgActivities: ((parsed.ypopOrgActivities ?? []) as YPOPOrgActivity[]).filter(
+        (activity) => !legacySeedIds.has(activity.id),
+      ),
+      ypopOrgActivityFiles: ((parsed.ypopOrgActivityFiles ?? []) as YPOPOrgActivityFile[]).filter(
+        (file) => !legacySeedIds.has(file.id),
+      ),
+      ypopCityActivities: Array.isArray(parsed.ypopCityActivities)
+        ? (parsed.ypopCityActivities as YPOPCityActivity[]).filter((a) => !legacySeedIds.has(a.id))
+        : baseState.ypopCityActivities.filter((a) => !legacySeedIds.has(a.id)),
+      ypopPeriods: Array.isArray(parsed.ypopPeriods)
+        ? (parsed.ypopPeriods as YPOPPeriod[]).filter((p) => !legacySeedIds.has(p.id))
+        : baseState.ypopPeriods.filter((p) => !legacySeedIds.has(p.id)),
+      customTemplateCategories: Array.from(
+        new Set(
+          [
+            ...(Array.isArray(parsed.customTemplateCategories) ? parsed.customTemplateCategories : []),
+            ...(baseState.customTemplateCategories ?? []),
+          ]
+            .map(normalizeTemplateCategoryKey)
+            .filter((k) => Boolean(k) && !isSystemTemplateCategory(k)),
+        ),
+      ),
     };
   } catch {
-    return seedState;
+    return clearAccountScopedState(baseState);
   }
 };
 
@@ -338,20 +454,29 @@ export const reconcileYpopEventParticipations = (
     return merged.filter((p) => validCityActivityIds.has(p.activityId));
   }
 
-  const coveredOrgIds = new Set((snapshotOrgs ?? []).map((o) => o.id));
   const remoteById = new Map<string, YPOPEventParticipation>();
   remoteItems.forEach((item) => remoteById.set(item.id, item));
 
-  const preservedOtherOrgs = coveredOrgIds.size > 0
-    ? currentItems.filter((item) => !coveredOrgIds.has(item.organizationId) && !remoteById.has(item.id))
-    : currentItems.filter((item) => !remoteById.has(item.id));
+  if (snapshotOrgs !== undefined) {
+    const coveredOrgIds = new Set(snapshotOrgs.map((o) => o.id));
+    const localSameOrg = currentItems.filter(
+      (item) => coveredOrgIds.has(item.organizationId) && !remoteById.has(item.id),
+    );
+    const mergedRemote = remoteItems
+      .filter((remoteItem) => coveredOrgIds.has(remoteItem.organizationId))
+      .map((remoteItem) => {
+        const localItem = currentById.get(remoteItem.id);
+        return pickNewerYpopRecord(localItem, remoteItem);
+      });
+    return [...localSameOrg, ...mergedRemote].filter((p) => validCityActivityIds.has(p.activityId));
+  }
 
+  const localItems = currentItems.filter((item) => !remoteById.has(item.id));
   const mergedRemote = remoteItems.map((remoteItem) => {
     const localItem = currentById.get(remoteItem.id);
     return pickNewerYpopRecord(localItem, remoteItem);
   });
-
-  return [...preservedOtherOrgs, ...mergedRemote].filter((p) => validCityActivityIds.has(p.activityId));
+  return [...localItems, ...mergedRemote].filter((p) => validCityActivityIds.has(p.activityId));
 };
 
 export const reconcileYpopOrgActivities = (
@@ -376,20 +501,29 @@ export const reconcileYpopOrgActivities = (
     return merged.filter((a) => validEntryIds.has(a.ypopEntryId));
   }
 
-  const coveredOrgIds = new Set((snapshotOrgs ?? []).map((o) => o.id));
   const remoteById = new Map<string, YPOPOrgActivity>();
   remoteItems.forEach((item) => remoteById.set(item.id, item));
 
-  const preservedOtherOrgs = coveredOrgIds.size > 0
-    ? currentItems.filter((item) => !coveredOrgIds.has(item.organizationId) && !remoteById.has(item.id))
-    : currentItems.filter((item) => !remoteById.has(item.id));
+  if (snapshotOrgs !== undefined) {
+    const coveredOrgIds = new Set(snapshotOrgs.map((o) => o.id));
+    const localSameOrg = currentItems.filter(
+      (item) => coveredOrgIds.has(item.organizationId) && !remoteById.has(item.id),
+    );
+    const mergedRemote = remoteItems
+      .filter((remoteItem) => coveredOrgIds.has(remoteItem.organizationId))
+      .map((remoteItem) => {
+        const localItem = currentById.get(remoteItem.id);
+        return pickNewerYpopRecord(localItem, remoteItem);
+      });
+    return [...localSameOrg, ...mergedRemote].filter((a) => validEntryIds.has(a.ypopEntryId));
+  }
 
+  const localItems = currentItems.filter((item) => !remoteById.has(item.id));
   const mergedRemote = remoteItems.map((remoteItem) => {
     const localItem = currentById.get(remoteItem.id);
     return pickNewerYpopRecord(localItem, remoteItem);
   });
-
-  return [...preservedOtherOrgs, ...mergedRemote].filter((a) => validEntryIds.has(a.ypopEntryId));
+  return [...localItems, ...mergedRemote].filter((a) => validEntryIds.has(a.ypopEntryId));
 };
 
 export const reconcileYpopEntries = (
@@ -442,11 +576,11 @@ export const reconcileYpopEventFiles = (
   remoteFiles.forEach((f) => remoteById.set(f.id, f));
 
   const coveredParticipationIds = new Set(participations.map((p) => p.id));
-  const otherFiles = currentFiles.filter(
-    (f) => !coveredParticipationIds.has(f.participationId) && !remoteById.has(f.id),
+  const sameParticipationFiles = currentFiles.filter(
+    (f) => coveredParticipationIds.has(f.participationId) && !remoteById.has(f.id),
   );
 
-  return [...otherFiles, ...remoteFiles];
+  return [...sameParticipationFiles, ...remoteFiles];
 };
 
 export const reconcileYpopOrgActivityFiles = (
@@ -478,11 +612,11 @@ export const reconcileYpopOrgActivityFiles = (
   remoteFiles.forEach((f) => remoteById.set(f.id, f));
 
   const coveredActivityIds = new Set(orgActivities.map((a) => a.id));
-  const otherFiles = currentFiles.filter(
-    (f) => !coveredActivityIds.has(f.orgActivityId) && !remoteById.has(f.id),
+  const sameActivityFiles = currentFiles.filter(
+    (f) => coveredActivityIds.has(f.orgActivityId) && !remoteById.has(f.id),
   );
 
-  return [...otherFiles, ...remoteFiles];
+  return [...sameActivityFiles, ...remoteFiles];
 };
 
 const syncLiquidationReportForBudget = (
@@ -535,13 +669,65 @@ const normalizeOrganizationProfile = (profile: OrganizationProfile): Organizatio
   advocacies: profile.advocacies ?? [],
 });
 
+const SYNC_INTERVAL_MS = 30000;
+const EVENT_COOLDOWN_MS = 10000;
+const STORAGE_SYNC_COOLDOWN_MS = 15000;
+
+const hasActiveSession = async (): Promise<boolean> => {
+  if (readAdminSession()) return true;
+  if (!supabase) return false;
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return Boolean(session?.user);
+  } catch {
+    return false;
+  }
+};
+
 export const LydoConnectProvider = ({ children }: { children: React.ReactNode }) => {
-  const [state, setState] = useState<LydoConnectState>(() => readState());
+  const initialIdentity = resolveInitialIdentity();
+  const [state, setState] = useState<LydoConnectState>(() => readState(initialIdentity));
+  const activeIdentityRef = useRef<AccountIdentity>(initialIdentity);
+  const hasPendingSyncRef = useRef(false);
   const syncSequenceRef = useRef({ dispatched: 0, resolved: 0 });
+  const isSyncingRef = useRef(false);
+  const lastSyncTimeRef = useRef(0);
+  const lastStoredStateRef = useRef<string>("");
+
+  const resetAccountState = useCallback((nextIdentity?: AccountIdentity) => {
+    const currentIdentity = activeIdentityRef.current;
+    if (typeof window !== "undefined" && (currentIdentity.type === "user" || currentIdentity.type === "admin")) {
+      try {
+        window.localStorage.removeItem(getStorageKeyForIdentity(currentIdentity));
+      } catch {
+        // ignore storage removal error
+      }
+    }
+    const resolvedNext = nextIdentity ?? { type: "anonymous" };
+    activeIdentityRef.current = resolvedNext;
+    lastStoredStateRef.current = "";
+    syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
+    const nextState = readState(resolvedNext);
+    setState(nextState);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      const currentIdentity = activeIdentityRef.current;
+      const targetKey = getStorageKeyForIdentity(currentIdentity);
+      const toPersist = currentIdentity.type === "anonymous" ? clearAccountScopedState(state) : state;
+      const serialized = JSON.stringify(toPersist);
+      if (serialized === lastStoredStateRef.current) {
+        return;
+      }
+      lastStoredStateRef.current = serialized;
+      window.localStorage.setItem(targetKey, serialized);
+    } catch {
+      // ignore storage serialization error
+    }
   }, [state]);
 
   useEffect(() => {
@@ -550,19 +736,61 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     let active = true;
 
     const syncState = async () => {
+      if (isSyncingRef.current) {
+        hasPendingSyncRef.current = true;
+        return;
+      }
+      isSyncingRef.current = true;
+      lastSyncTimeRef.current = Date.now();
       const seq = ++syncSequenceRef.current.dispatched;
+      const requestIdentity: AccountIdentity = { ...activeIdentityRef.current };
+
       try {
-        const adminSnapshotPromise = readAdminSession() ? loadAdminPortalSupabaseState() : Promise.resolve(null);
-        const userSnapshotPromise = loadLydoConnectSupabaseState();
-        const [adminSnapshot, userSnapshot] = await Promise.all([adminSnapshotPromise, userSnapshotPromise]);
-        const snapshot = adminSnapshot ?? userSnapshot;
+        const isAdmin = requestIdentity.type === "admin";
+        let snapshot: Partial<LydoSeedState> | null = null;
+        if (isAdmin) {
+          snapshot = await loadAdminPortalSupabaseState();
+        }
+        if (!snapshot) {
+          snapshot = await loadLydoConnectSupabaseState();
+        }
         if (!active || !snapshot) return;
+
+        // Discard stale response if identity changed while sync was in flight
+        if (!isSameIdentity(requestIdentity, activeIdentityRef.current)) {
+          return;
+        }
+
         if (seq < syncSequenceRef.current.resolved) {
-          // Discard stale out-of-order response
+          // Discard stale out-of-order response for the same account
           return;
         }
         syncSequenceRef.current.resolved = seq;
+
+        // Discard snapshot if user mode and loaded organization belongs to another user
+        if (requestIdentity.type === "user" && snapshot.organizationProfiles && snapshot.organizationProfiles.length > 0) {
+          const primaryProfile = snapshot.organizationProfiles[0];
+          if (primaryProfile.userId && primaryProfile.userId !== requestIdentity.id) {
+            return;
+          }
+        }
+
         setState((current) => {
+          if (!isSameIdentity(requestIdentity, activeIdentityRef.current)) {
+            return current;
+          }
+
+          if (requestIdentity.type === "anonymous") {
+            return clearAccountScopedState({
+              ...current,
+              templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
+              newsReleases: snapshot.newsReleases ?? current.newsReleases,
+              transparencyPosts: snapshot.transparencyPosts ?? current.transparencyPosts,
+              ypopPeriods: snapshot.ypopPeriods ?? current.ypopPeriods,
+              ypopCityActivities: snapshot.ypopCityActivities ?? current.ypopCityActivities,
+            });
+          }
+
           const nextYpopPeriods = snapshot.ypopPeriods ?? current.ypopPeriods;
           const validSemesterKeys = new Set(nextYpopPeriods.map((p) => p.semesterKey));
           const prunedCityActivities = (snapshot.ypopCityActivities ?? current.ypopCityActivities).filter(
@@ -580,13 +808,14 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             current.ypopEventParticipations,
             snapshot.ypopEventParticipations,
             snapshot.organizationProfiles,
-            Boolean(readAdminSession()),
+            isAdmin,
             validCityActivityIds,
           );
 
           return {
             ...current,
             ...snapshot,
+            templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
             notifications: snapshot.notifications
               ? snapshot.notifications.map((remoteNotification) => {
                   const localNotification = current.notifications.find((item) => item.id === remoteNotification.id);
@@ -606,52 +835,162 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
               current.ypopEventFiles,
               snapshot.ypopEventFiles,
               nextEventParticipations,
-              Boolean(readAdminSession()),
+              isAdmin,
             ),
             ypopOrgActivities: reconcileYpopOrgActivities(
               current.ypopOrgActivities,
               snapshot.ypopOrgActivities,
               snapshot.organizationProfiles,
-              Boolean(readAdminSession()),
+              isAdmin,
               validEntryIds,
             ),
             ypopOrgActivityFiles: reconcileYpopOrgActivityFiles(
               current.ypopOrgActivityFiles,
               snapshot.ypopOrgActivityFiles,
               current.ypopOrgActivities,
-              Boolean(readAdminSession()),
+              isAdmin,
             ),
           };
         });
       } catch (error) {
         console.error("Failed to sync Y-TRACE state from Supabase:", error);
+      } finally {
+        isSyncingRef.current = false;
+        if (hasPendingSyncRef.current && active) {
+          hasPendingSyncRef.current = false;
+          void syncState();
+        }
       }
     };
 
     void syncState();
-    const syncInterval = window.setInterval(() => {
+    const syncInterval = window.setInterval(async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+      const hasSession = await hasActiveSession();
+      if (!hasSession) {
+        return;
+      }
       void syncState();
-    }, 5000);
+    }, SYNC_INTERVAL_MS);
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT") {
+        resetAccountState({ type: "anonymous" });
+        void syncState();
+        return;
+      }
+
+      if (event === "SIGNED_IN") {
+        const admin = readAdminSession();
+        const nextIdentity: AccountIdentity = admin?.id
+          ? { type: "admin", id: admin.id }
+          : session?.user?.id
+          ? { type: "user", id: session.user.id }
+          : { type: "anonymous" };
+
+        if (!isSameIdentity(nextIdentity, activeIdentityRef.current)) {
+          syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
+          activeIdentityRef.current = nextIdentity;
+          const cached = readState(nextIdentity);
+          setState(cached);
+          lastStoredStateRef.current = JSON.stringify(cached);
+        }
+        void syncState();
+        return;
+      }
+
+      if (event === "TOKEN_REFRESHED") {
+        const refreshedUserId = session?.user?.id;
+        if (refreshedUserId && activeIdentityRef.current.type === "user" && activeIdentityRef.current.id === refreshedUserId) {
+          return;
+        }
+        if (refreshedUserId) {
+          activeIdentityRef.current = { type: "user", id: refreshedUserId };
+        }
+        return;
+      }
+
+      if (event === "USER_UPDATED") {
+        void syncState();
+        return;
+      }
+
       void syncState();
     });
+
     const handleAdminSessionChange = () => {
+      const admin = readAdminSession();
+      const currentUserId = readSynchronousAuthUserId();
+      const nextIdentity: AccountIdentity = admin?.id
+        ? { type: "admin", id: admin.id }
+        : currentUserId
+        ? { type: "user", id: currentUserId }
+        : { type: "anonymous" };
+
+      if (!isSameIdentity(nextIdentity, activeIdentityRef.current)) {
+        if (activeIdentityRef.current.type === "admin") {
+          try {
+            window.localStorage.removeItem(getStorageKeyForIdentity(activeIdentityRef.current));
+          } catch {
+            // ignore storage removal error
+          }
+        }
+        syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
+        activeIdentityRef.current = nextIdentity;
+        const nextState = readState(nextIdentity);
+        setState(nextState);
+        lastStoredStateRef.current = JSON.stringify(nextState);
+      }
       void syncState();
     };
-    const handleWindowFocus = () => {
+
+    const handleAuthReset = () => {
+      resetAccountState({ type: "anonymous" });
+    };
+
+    const handleWindowFocus = async () => {
+      const now = Date.now();
+      if (now - lastSyncTimeRef.current < EVENT_COOLDOWN_MS) {
+        return;
+      }
+      const hasSession = await hasActiveSession();
+      if (!hasSession) {
+        return;
+      }
       void syncState();
     };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+
+    const handleVisibilityChange = async () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        const now = Date.now();
+        if (now - lastSyncTimeRef.current < EVENT_COOLDOWN_MS) {
+          return;
+        }
+        const hasSession = await hasActiveSession();
+        if (!hasSession) {
+          return;
+        }
         void syncState();
       }
     };
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
+
+    const handleStorageChange = async (e: StorageEvent) => {
+      const currentKey = getStorageKeyForIdentity(activeIdentityRef.current);
+      if (e.key === currentKey && e.newValue) {
+        if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+          return;
+        }
+        const now = Date.now();
+        if (now - lastSyncTimeRef.current < STORAGE_SYNC_COOLDOWN_MS) {
+          return;
+        }
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed && Array.isArray(parsed.ypopPeriods)) {
+            const hasSession = await hasActiveSession();
+            if (!hasSession) return;
             void syncState();
           }
         } catch {
@@ -659,7 +998,9 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         }
       }
     };
+
     window.addEventListener(ADMIN_SESSION_CHANGE_EVENT, handleAdminSessionChange);
+    window.addEventListener("lydo-auth-reset", handleAuthReset);
     window.addEventListener("focus", handleWindowFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("storage", handleStorageChange);
@@ -669,18 +1010,35 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       window.clearInterval(syncInterval);
       authListener.subscription.unsubscribe();
       window.removeEventListener(ADMIN_SESSION_CHANGE_EVENT, handleAdminSessionChange);
+      window.removeEventListener("lydo-auth-reset", handleAuthReset);
       window.removeEventListener("focus", handleWindowFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [resetAccountState]);
 
   const value = useMemo<LydoConnectContextValue>(
     () => ({
       state,
+      resetAccountState,
       mergeRemoteState: (snapshot) => {
+        const isAdmin = Boolean(readAdminSession());
+        const currentIdentity = activeIdentityRef.current;
+
+        // Discard snapshot if user mode and loaded organization belongs to another user
+        if (!isAdmin && currentIdentity.type === "user" && snapshot.organizationProfiles && snapshot.organizationProfiles.length > 0) {
+          const profileUserId = snapshot.organizationProfiles[0]?.userId;
+          if (profileUserId && profileUserId !== currentIdentity.id) {
+            return;
+          }
+        }
+
         syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
         setState((current) => {
+          if (!isSameIdentity(currentIdentity, activeIdentityRef.current)) {
+            return current;
+          }
+
           const mergedYpopPeriods = snapshot.ypopPeriods ?? current.ypopPeriods;
           const validSemesterKeys = new Set(mergedYpopPeriods.map((p) => p.semesterKey));
           const mergedYpopCityActivities = (snapshot.ypopCityActivities ?? current.ypopCityActivities).filter(
@@ -709,33 +1067,49 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             current.ypopEventParticipations,
             snapshot.ypopEventParticipations,
             snapshot.organizationProfiles,
-            Boolean(readAdminSession()),
+            isAdmin,
             validCityActivityIds,
           );
           const mergedYpopEventFiles = reconcileYpopEventFiles(
             current.ypopEventFiles,
             snapshot.ypopEventFiles,
             mergedYpopEventParticipations,
-            Boolean(readAdminSession()),
+            isAdmin,
           );
           const mergedYpopOrgActivities = reconcileYpopOrgActivities(
             current.ypopOrgActivities,
             snapshot.ypopOrgActivities,
             snapshot.organizationProfiles,
-            Boolean(readAdminSession()),
+            isAdmin,
             validEntryIds,
           );
           const mergedYpopOrgActivityFiles = reconcileYpopOrgActivityFiles(
             current.ypopOrgActivityFiles,
             snapshot.ypopOrgActivityFiles,
             mergedYpopOrgActivities,
-            Boolean(readAdminSession()),
+            isAdmin,
           );
-          const mergedInquiries = snapshot.inquiries ? mergeById(current.inquiries, snapshot.inquiries) : current.inquiries;
+
+          let mergedInquiries = current.inquiries;
+          if (snapshot.inquiries) {
+            if (isAdmin) {
+              mergedInquiries = mergeById(current.inquiries, snapshot.inquiries);
+            } else {
+              const activeOrgId = (snapshot.organizationProfiles?.[0] ?? current.organizationProfiles[0])?.id;
+              if (activeOrgId) {
+                const currentSameOrg = current.inquiries.filter((inq) => inq.organizationId === activeOrgId);
+                const remoteSameOrg = snapshot.inquiries.filter((inq) => inq.organizationId === activeOrgId);
+                mergedInquiries = mergeById(currentSameOrg, remoteSameOrg);
+              } else {
+                mergedInquiries = snapshot.inquiries;
+              }
+            }
+          }
 
           return {
             ...current,
             ...snapshot,
+            templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
             notifications: mergedNotifications,
             ypopFiles: mergedYpopFiles.filter((f) => validEntryIds.has(f.ypopEntryId)),
             ypopEventParticipations: mergedYpopEventParticipations,
@@ -746,13 +1120,37 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             ypopPeriods: mergedYpopPeriods,
             ypopCityActivities: mergedYpopCityActivities,
             ypopEntries: mergedYpopEntries,
+            customTemplateCategories: Array.isArray(snapshot.customTemplateCategories)
+              ? snapshot.customTemplateCategories
+              : (current.customTemplateCategories ?? []),
           };
         });
+      },
+      addCustomTemplateCategory: (category) => {
+        const normalized = normalizeTemplateCategoryKey(category);
+        if (!normalized || isSystemTemplateCategory(normalized)) return;
+        setState((current) => {
+          const currentCats = current.customTemplateCategories ?? [];
+          if (currentCats.includes(normalized)) return current;
+          return {
+            ...current,
+            customTemplateCategories: [...currentCats, normalized],
+          };
+        });
+      },
+      removeCustomTemplateCategory: (category) => {
+        const normalized = normalizeTemplateCategoryKey(category);
+        setState((current) => ({
+          ...current,
+          customTemplateCategories: (current.customTemplateCategories ?? []).filter(
+            (cat) => cat !== normalized,
+          ),
+        }));
       },
       createTemplate: (template) =>
         setState((current) => ({
           ...current,
-          templates: [...current.templates, template].sort((left, right) => left.sortOrder - right.sortOrder),
+          templates: normalizeTemplates([...current.templates, template]).sort((left, right) => left.sortOrder - right.sortOrder),
         })),
       removeTemplate: (id) =>
         setState((current) => ({
@@ -969,7 +1367,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       updateTemplate: (id, patch) =>
         setState((current) => ({
           ...current,
-          templates: applyPatch(current.templates, id, patch),
+          templates: normalizeTemplates(applyPatch(current.templates, id, patch)),
         })),
       createNotification: (notification) =>
         setState((current) => ({
@@ -1257,7 +1655,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           };
         }),
     }),
-    [state],
+    [state, resetAccountState],
   );
 
   return <LydoConnectContext.Provider value={value}>{children}</LydoConnectContext.Provider>;

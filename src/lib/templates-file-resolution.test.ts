@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { requiredDocumentTypes, otherDocumentTypes, seedState } from "./lydo-connect-data";
-import { getDocumentSchemaForSlot } from "./ocr/documentSchemas";
 import JSZip from "jszip";
 
 describe("Forms & Templates: 6+2 Separation and Seed Integrity", () => {
@@ -39,25 +38,6 @@ describe("Forms & Templates: 6+2 Separation and Seed Integrity", () => {
       expect(t.templateFileUrl).toMatch(/^storage:\/\/template-files\//);
       expect(t.templateFileUrl.startsWith("#")).toBe(false);
       expect(t.templateFileName).toBeTruthy();
-    });
-  });
-
-  it("matches OCR schemas for all required document names with or without year prefix", () => {
-    const requiredNames = [
-      "Constitution and By-Laws",
-      "NYC YORP Registration Form (Form B)",
-      "2026 NYC YORP Registration Form (Form B)",
-      "YORP Directory of Officers and Adviser",
-      "2026 YORP Directory of Officers and Adviser",
-      "YORP List of Members in Good Standing",
-      "2026 YORP List of Members in Good Standing",
-      "Pasig City YORP Registration Form (Form A)",
-      "PCYDO YORP Data Request Form",
-    ];
-
-    requiredNames.forEach((name) => {
-      const schema = getDocumentSchemaForSlot(name);
-      expect(schema).not.toBeNull();
     });
   });
 

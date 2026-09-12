@@ -1059,7 +1059,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     : "text-muted-foreground hover:text-foreground hover:bg-card/50"
                 )}
               >
-                Under Review ({underReviewCount})
+                Pending Review ({underReviewCount})
               </button>
               <button
                 type="button"

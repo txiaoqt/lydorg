@@ -11,6 +11,8 @@ import { getProfileCompletionPercent } from "./pwaPortalMetrics";
 import { PWA_ROUTES } from "../pwaRoutes";
 import { isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import {
+  isMatchingFileForTemplate,
+  isRegistrationRequirementTemplate,
   resolveBudgetWorkflowEligibility,
   resolveLiquidationWorkflowEligibility,
   resolveYpopWorkflowEligibility,
@@ -40,23 +42,25 @@ export function usePwaPortalData() {
   const organizationId = profile?.id ?? "";
 
   const data = useMemo(() => {
-    const templates = [...state.templates]
-      .filter((item) => item.isActive && item.templateActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-    const requiredTemplates = templates.filter((item) => item.templateScope === "document_submission");
+    const requiredTemplates = [...state.templates]
+      .filter(isRegistrationRequirementTemplate)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     const submission = state.documentSubmissions.find((item) => item.organizationId === organizationId) ?? null;
     const documentFiles = submission
       ? state.documentSubmissionFiles.filter((item) => item.submissionId === submission.id)
       : [];
-    const documentFileByType = new Map(documentFiles.map((item) => [item.documentTypeId, item]));
     const requiredDocumentFiles = requiredTemplates
-      .map((template) => documentFileByType.get(template.id))
+      .map((template) =>
+        documentFiles.find((file) => isMatchingFileForTemplate(file, template)),
+      )
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
     const approvedDocuments = requiredDocumentFiles.filter((item) => approvedDocumentStatuses.has(item.adminStatus)).length;
     const underReviewDocuments = requiredDocumentFiles.filter((item) => underReviewDocumentStatuses.has(item.adminStatus)).length;
     const revisionDocuments = requiredDocumentFiles.filter((item) => revisionDocumentStatuses.has(item.adminStatus));
     const draftDocuments = requiredDocumentFiles.filter((item) => item.adminStatus === "draft").length;
-    const missingDocuments = requiredTemplates.filter((template) => !documentFileByType.has(template.id)).length;
+    const missingDocuments = requiredTemplates.filter(
+      (template) => !documentFiles.some((file) => isMatchingFileForTemplate(file, template)),
+    ).length;
     const documentPercent = requiredTemplates.length
       ? Math.round((approvedDocuments / requiredTemplates.length) * 100)
       : 0;

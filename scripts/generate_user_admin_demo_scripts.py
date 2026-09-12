@@ -280,7 +280,7 @@ def build_user_document() -> Document:
         [
             ("1", "Dashboard", "Overall portal orientation and workflow status"),
             ("2", "Organization Profile", "Initial compliance setup and profile verification"),
-            ("3", "Document Submissions", "Uploading, OCR review, and admin approval flow"),
+            ("3", "Document Submissions", "Uploading, submission confirmation, and admin approval flow"),
             ("4", "Budget Requests", "Funding request creation, attachment, and review states"),
             ("5", "Liquidation Reports", "Post-activity reporting and liquidation follow-through"),
             ("6", "YPOP Incentive", "Semester-based incentive submission and qualification logic"),
@@ -334,24 +334,24 @@ def build_user_document() -> Document:
         ),
         DemoSection(
             number="3",
-            title="Document Submissions and OCR-Assisted Review",
+            title="Document Submissions and Review",
             goal="Ipakita kung paano sinusupport ng portal ang structured document submission at user-side validation bago ito makarating sa admin.",
             actions=[
                 "Buksan ang Document Submissions section.",
                 "Ipakita ang listahan ng required templates tulad ng Constitution and By-Laws, Form B, officers and adviser list, members in good standing, Form A, at data request form.",
                 "Mag-open ng isang upload slot at i-explain na PDF ang default, habang may specific slots na puwedeng PDF or XLSX.",
-                "Ipakita ang OCR review modal kung available sa demo data, pati ang confirmation bago mag-submit for admin review.",
+                "Ipakita ang submission confirmation modal bago mag-submit for admin review.",
                 "Ipakita rin ang approved, needs revision, or rejected states kung merong sample entries.",
             ],
             script_lines=[
                 "Sa document submission flow, hindi pinapasa ng system ang burden sa user nang walang guidance. Nakalista na agad ang required documents at may corresponding template slots pa para mas malinaw kung ano ang kulang.",
-                "Isang importanteng feature dito ay ang OCR-assisted review. Bago tuluyang i-submit ang file, may pagkakataon ang user na makita ang extracted text or detected details para ma-double check kung tama ang na-upload.",
+                "Bago tuluyang i-submit ang file, may confirmation step ang user para ma-double check kung tama ang na-upload.",
                 "Sa practical use, malaking tulong ito para mabawasan ang mali, maling file, o unreadable submissions bago pa ito i-review ng admin.",
                 "Kapag naisumite na, ang document ay magkakaroon ng admin-facing status tulad ng under review, needs revision, approved, o rejected. Ibig sabihin, transparent sa user kung ano ang nangyayari sa submission niya.",
             ],
             key_points=[
                 "May guided list ng documentary requirements.",
-                "May OCR-assisted checking bago final submission.",
+                "May confirmation checking bago final submission.",
                 "Transparent ang review lifecycle sa user through visible submission statuses and remarks.",
             ],
         ),
