@@ -31,6 +31,10 @@ import type {
   PublicOrganizationDirectoryItem,
   PublicBudgetSource,
   PublicBudgetSnapshotSettings,
+  AnnualBudgetAllocation,
+  BudgetPurposeCategory,
+  BudgetMonitoringSummary,
+  PublicBudgetSummary,
 } from "./lydo-connect-data";
 import {
   DEFAULT_ORG_LED_TIERS,
@@ -201,6 +205,7 @@ type BudgetRequestRow = {
   released_amount: number | string;
   release_date: string | null;
   purpose_category: string | null;
+  fiscal_year?: number | null;
   status: BudgetRequest["status"];
   remarks: string | null;
   admin_remarks: string | null;
@@ -670,6 +675,7 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   releasedAmount: normalizeNumeric(row.released_amount),
   releaseDate: formatDateOnly(row.release_date),
   purposeCategory: row.purpose_category ?? "",
+  fiscalYear: row.fiscal_year ?? (row.activity_date ? new Date(row.activity_date).getFullYear() : (row.created_at ? new Date(row.created_at).getFullYear() : 2026)),
   status: row.status,
   remarks: row.remarks ?? "",
   adminRemarks: row.admin_remarks ?? "",
@@ -2277,6 +2283,7 @@ export const createBudgetRequestInSupabase = async (params: {
     released_amount: params.budgetRequest.releasedAmount,
     release_date: params.budgetRequest.releaseDate || null,
     purpose_category: params.budgetRequest.purposeCategory.trim(),
+    fiscal_year: params.budgetRequest.fiscalYear || (params.budgetRequest.activityDate ? new Date(params.budgetRequest.activityDate).getFullYear() : new Date().getFullYear()),
     status: params.budgetRequest.status,
     remarks: params.budgetRequest.remarks.trim() || null,
     admin_remarks: params.budgetRequest.adminRemarks?.trim() || "",
@@ -2351,6 +2358,7 @@ export const updateBudgetRequestInSupabase = async (
   if (patch.releasedAmount !== undefined) payload.released_amount = patch.releasedAmount;
   if (patch.releaseDate !== undefined) payload.release_date = patch.releaseDate || null;
   if (patch.purposeCategory !== undefined) payload.purpose_category = patch.purposeCategory.trim();
+  if (patch.fiscalYear !== undefined) payload.fiscal_year = patch.fiscalYear;
   if (patch.status !== undefined) payload.status = patch.status;
   if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
   if (patch.adminRemarks !== undefined) payload.admin_remarks = normalizedAdminRemarks ?? "";
@@ -2857,8 +2865,72 @@ export class DuplicateUsernameError extends Error {
   }
 }
 
+export type AdminInviteErrorPayload = {
+  error?: string;
+  code?: string;
+};
+
+export const extractEdgeFunctionError = async (
+  error: unknown,
+  fallbackMessage: string,
+): Promise<{ message: string; code?: string }> => {
+  const context = (error as { context?: unknown })?.context;
+  if (context instanceof Response) {
+    try {
+      const payload = (await context.clone().json()) as AdminInviteErrorPayload;
+      if (payload?.error) {
+        return { message: payload.error, code: payload.code };
+      }
+    } catch {
+      // Body could not be parsed as JSON, fall through
+    }
+  }
+  const directMessage = (error as Error)?.message;
+  if (directMessage && !/non-2xx status code/i.test(directMessage)) {
+    return { message: directMessage };
+  }
+  return { message: fallbackMessage };
+};
+
 const isDuplicateUsernameError = (error: { code?: string; message?: string } | null) =>
-  Boolean(error) && /username/i.test(error?.message ?? "") && /duplicate key value violates unique constraint/i.test(error?.message ?? "");
+  error?.code === "username_exists" ||
+  (Boolean(error) && /username/i.test(error?.message ?? "") && /duplicate/i.test(error?.message ?? ""));
+
+const isDuplicateAdminEmailError = (error: { code?: string; message?: string } | null) =>
+  error?.code === "admin_email_exists" ||
+  (Boolean(error) && (error?.code === "23505" || /duplicate key value violates unique constraint/i.test(error?.message ?? "")));
+
+export type AdminEmailCheckResult = {
+  status: "available" | "user_exists" | "admin_exists" | "shadow_admin";
+  message?: string;
+};
+
+export const checkAdminEmailAvailabilityInSupabase = async (
+  email: string,
+): Promise<AdminEmailCheckResult> => {
+  if (!supabase) return { status: "available" };
+  const adminSession = readAdminSession();
+  if (!adminSession) return { status: "available" };
+
+  try {
+    const { data, error } = await supabase.functions.invoke("admin-invite", {
+      body: {
+        action: "check_email",
+        session_token: adminSession.sessionToken,
+        email: email.trim(),
+      },
+    });
+
+    if (error) {
+      const extracted = await extractEdgeFunctionError(error, "Unable to verify email.");
+      return { status: "available", message: extracted.message };
+    }
+
+    return (data as AdminEmailCheckResult) ?? { status: "available" };
+  } catch {
+    return { status: "available" };
+  }
+};
 
 export const createAdministratorInSupabase = async (params: {
   displayName: string;
@@ -2884,17 +2956,33 @@ export const createAdministratorInSupabase = async (params: {
     },
   });
 
-  const responseError = (data as { error?: string } | null)?.error;
-  if (responseError && isDuplicateUsernameError({ message: responseError })) {
-    throw new DuplicateUsernameError();
+  if (error) {
+    const extracted = await extractEdgeFunctionError(error, "Failed to create the administrator account.");
+    if (isDuplicateUsernameError({ code: extracted.code, message: extracted.message })) {
+      throw new DuplicateUsernameError();
+    }
+    if (isDuplicateAdminEmailError({ code: extracted.code, message: extracted.message })) {
+      throw new Error("An administrator with that email already exists. Please use a different email address.");
+    }
+    throw new Error(extracted.message);
   }
-  if (responseError && isDuplicateNameError({ message: responseError })) {
-    throw new Error(`An administrator with that email already exists. Please use a different email address.`);
+
+  const responsePayload = data as { error?: string; code?: string; administrator?: AdministratorRow } | null;
+  const responseError = responsePayload?.error;
+  if (responseError) {
+    if (isDuplicateUsernameError({ code: responsePayload?.code, message: responseError })) {
+      throw new DuplicateUsernameError();
+    }
+    if (isDuplicateAdminEmailError({ code: responsePayload?.code, message: responseError })) {
+      throw new Error("An administrator with that email already exists. Please use a different email address.");
+    }
+    throw new Error(responseError);
   }
-  if (error || responseError || !(data as { administrator?: AdministratorRow })?.administrator) {
-    throw new Error(responseError ?? error?.message ?? "Failed to create the administrator account.");
+
+  if (!responsePayload?.administrator) {
+    throw new Error("Failed to create the administrator account.");
   }
-  return mapAdministrator((data as { administrator: AdministratorRow }).administrator);
+  return mapAdministrator(responsePayload.administrator);
 };
 
 export const setInitialAdminPasswordInSupabase = async (newPassword: string): Promise<{ username: string }> => {
@@ -2932,8 +3020,13 @@ export const resendAdminInviteInSupabase = async (adminId: string): Promise<void
     },
   });
 
+  if (error) {
+    const extracted = await extractEdgeFunctionError(error, "Failed to resend the invite.");
+    throw new Error(extracted.message);
+  }
+
   const responseError = (data as { error?: string } | null)?.error;
-  if (error || responseError) throw new Error(responseError ?? error?.message ?? "Failed to resend the invite.");
+  if (responseError) throw new Error(responseError);
 };
 
 export const updateAdministratorInSupabase = async (params: {
@@ -5014,4 +5107,332 @@ export const evaluateAccreditationNotificationEventsInSupabase = async (): Promi
     expiredCount: payload.expired_count ?? 0,
   };
 };
+
+/**
+ * Annual Budget Allocations & Budget Monitoring RPC Helpers
+ */
+export const adminGetAnnualBudgetAllocationsFromSupabase = async (): Promise<AnnualBudgetAllocation[]> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_annual_budget_allocations", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[]).map((row) => ({
+    id: row.id,
+    fiscalYear: row.fiscal_year,
+    totalAmount: normalizeNumeric(row.total_amount),
+    statutoryBaselineNotes: row.statutory_baseline_notes ?? null,
+    isActive: Boolean(row.is_active),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+};
+
+export const adminSaveAnnualBudgetAllocationInSupabase = async (params: {
+  fiscalYear: number;
+  totalAmount: number;
+  statutoryBaselineNotes?: string | null;
+  isActive?: boolean;
+}): Promise<AnnualBudgetAllocation> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_save_annual_budget_allocation", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: params.fiscalYear,
+    _total_amount: params.totalAmount,
+    _statutory_baseline_notes: params.statutoryBaselineNotes ?? null,
+    _is_active: params.isActive ?? true,
+  });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as any;
+  if (!row) throw new Error("Failed to save annual budget allocation.");
+  return {
+    id: row.id,
+    fiscalYear: row.fiscal_year,
+    totalAmount: normalizeNumeric(row.total_amount),
+    statutoryBaselineNotes: row.statutory_baseline_notes ?? null,
+    isActive: Boolean(row.is_active),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+export const adminGetBudgetMonitoringSummaryFromSupabase = async (
+  fiscalYear: number,
+): Promise<BudgetMonitoringSummary> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_budget_monitoring_summary", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: fiscalYear,
+  });
+  if (error) throw new Error(error.message);
+  const res = (data ?? {}) as any;
+  return {
+    fiscalYear: res.fiscal_year ?? fiscalYear,
+    isConfigured: Boolean(res.is_configured),
+    totalFyBudget: res.total_fy_budget !== null && res.total_fy_budget !== undefined ? normalizeNumeric(res.total_fy_budget) : null,
+    statutoryBaselineNotes: res.statutory_baseline_notes ?? null,
+    approvedBudget: normalizeNumeric(res.approved_budget),
+    releasedBudget: normalizeNumeric(res.released_budget),
+    liquidatedBudget: normalizeNumeric(res.liquidated_budget),
+    pendingDisbursement: normalizeNumeric(res.pending_disbursement),
+    activeInField: normalizeNumeric(res.active_in_field),
+    remainingHeadroom: res.remaining_headroom !== null && res.remaining_headroom !== undefined ? normalizeNumeric(res.remaining_headroom) : null,
+    isDeficit: Boolean(res.is_deficit),
+    deficitAmount: normalizeNumeric(res.deficit_amount),
+    totalRequests: res.total_requests ?? 0,
+    releasedRequests: res.released_requests ?? 0,
+    liquidatedRequests: res.liquidated_requests ?? 0,
+    categoryBreakdown: ((res.category_breakdown ?? []) as any[]).map((c) => ({
+      category: c.category ?? "General / Uncategorized",
+      approvedAmount: normalizeNumeric(c.approved_amount),
+      releasedAmount: normalizeNumeric(c.released_amount),
+      requestCount: c.request_count ?? 0,
+    })),
+  };
+};
+
+export const getBudgetPurposeCategoriesFromSupabase = async (): Promise<BudgetPurposeCategory[]> => {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_budget_purpose_categories");
+  if (error) {
+    const fallback = await supabase
+      .from("budget_purpose_categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (fallback.error) return [];
+    return ((fallback.data ?? []) as any[]).map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description ?? null,
+      sortOrder: r.sort_order ?? 0,
+      isActive: Boolean(r.is_active),
+    }));
+  }
+  return ((data ?? []) as any[]).map((r) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description ?? null,
+    sortOrder: r.sort_order ?? 0,
+    isActive: Boolean(r.is_active),
+  }));
+};
+
+export const adminGetBudgetPurposeCategoriesFromSupabase = async (): Promise<BudgetPurposeCategory[]> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_budget_purpose_categories", {
+    _session_token: adminSession.sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[]).map((r) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description ?? null,
+    sortOrder: r.sort_order ?? 0,
+    isActive: Boolean(r.is_active),
+  }));
+};
+
+export const adminSaveBudgetPurposeCategoryInSupabase = async (params: {
+  name: string;
+  description?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+}): Promise<BudgetPurposeCategory> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_save_budget_purpose_category", {
+    _session_token: adminSession.sessionToken,
+    _name: params.name,
+    _description: params.description ?? null,
+    _sort_order: params.sortOrder ?? 0,
+    _is_active: params.isActive ?? true,
+  });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as any;
+  if (!row) throw new Error("Failed to save budget purpose category.");
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? null,
+    sortOrder: row.sort_order ?? 0,
+    isActive: Boolean(row.is_active),
+  };
+};
+
+export const getUnconfiguredPublicBudgetSummary = (targetYear: number): PublicBudgetSummary => ({
+  fiscalYear: targetYear,
+  isConfigured: false,
+  annualBudget: null,
+  approvedBudget: 0,
+  releasedBudget: 0,
+  liquidatedBudget: 0,
+  remainingHeadroom: null,
+  isDeficit: false,
+  deficitAmount: 0,
+  percentCommitted: null,
+  percentReleased: null,
+  percentLiquidated: null,
+  purposeCategories: [],
+  districtAllocations: [],
+  availableFiscalYears: [],
+  lastUpdated: new Date().toISOString(),
+});
+
+export const getPublicBudgetSummaryFromSupabase = async (
+  fiscalYear?: number,
+): Promise<PublicBudgetSummary> => {
+  const currentYear = new Date().getFullYear();
+  const targetYear = fiscalYear ?? currentYear;
+
+  try {
+    if (!supabase) {
+      console.warn("Supabase client is not configured, returning safe fallback summary.");
+      return getUnconfiguredPublicBudgetSummary(targetYear);
+    }
+    const { data, error } = await supabase.rpc("get_public_budget_monitoring_summary", {
+      _fiscal_year: fiscalYear ?? null,
+    });
+    if (error) {
+      console.warn("Failed to fetch public budget summary from RPC, returning safe fallback:", error.message);
+      return getUnconfiguredPublicBudgetSummary(targetYear);
+    }
+    const res = (data ?? {}) as any;
+    return {
+      fiscalYear: res.fiscal_year ?? res.fiscalYear ?? targetYear,
+      isConfigured: Boolean(res.is_configured ?? res.isConfigured),
+      annualBudget:
+        res.annual_budget !== null && res.annual_budget !== undefined
+          ? normalizeNumeric(res.annual_budget)
+          : res.annualBudget !== null && res.annualBudget !== undefined
+          ? normalizeNumeric(res.annualBudget)
+          : null,
+      approvedBudget: normalizeNumeric(res.approved_budget ?? res.approvedBudget),
+      releasedBudget: normalizeNumeric(res.released_budget ?? res.releasedBudget),
+      liquidatedBudget: normalizeNumeric(res.liquidated_budget ?? res.liquidatedBudget),
+      remainingHeadroom:
+        res.remaining_headroom !== null && res.remaining_headroom !== undefined
+          ? normalizeNumeric(res.remaining_headroom)
+          : res.remainingHeadroom !== null && res.remainingHeadroom !== undefined
+          ? normalizeNumeric(res.remainingHeadroom)
+          : null,
+      isDeficit: Boolean(res.is_deficit ?? res.isDeficit),
+      deficitAmount: normalizeNumeric(res.deficit_amount ?? res.deficitAmount),
+      percentCommitted:
+        res.percent_committed !== null && res.percent_committed !== undefined
+          ? normalizeNumeric(res.percent_committed)
+          : res.percentCommitted !== null && res.percentCommitted !== undefined
+          ? normalizeNumeric(res.percentCommitted)
+          : null,
+      percentReleased:
+        res.percent_released !== null && res.percent_released !== undefined
+          ? normalizeNumeric(res.percent_released)
+          : res.percentReleased !== null && res.percentReleased !== undefined
+          ? normalizeNumeric(res.percentReleased)
+          : null,
+      percentLiquidated:
+        res.percent_liquidated !== null && res.percent_liquidated !== undefined
+          ? normalizeNumeric(res.percent_liquidated)
+          : res.percentLiquidated !== null && res.percentLiquidated !== undefined
+          ? normalizeNumeric(res.percentLiquidated)
+          : null,
+      purposeCategories: (((res.purpose_categories ?? res.purposeCategories) ?? []) as any[]).map((c) => ({
+        category: c.category ?? "Other Community Programs",
+        amount: normalizeNumeric(c.amount),
+        percentage: normalizeNumeric(c.percentage),
+      })),
+      districtAllocations: (res.district_allocations ?? res.districtAllocations)
+        ? (((res.district_allocations ?? res.districtAllocations) as any[]).map((d) => ({
+            district: d.district,
+            amount: normalizeNumeric(d.amount),
+            percentage: normalizeNumeric(d.percentage),
+          })))
+        : undefined,
+      availableFiscalYears: res.available_fiscal_years ?? res.availableFiscalYears ?? undefined,
+      lastUpdated: res.last_updated ?? res.lastUpdated ?? new Date().toISOString(),
+    };
+  } catch (err: any) {
+    console.warn("Unexpected exception fetching public budget summary, returning safe fallback:", err);
+    return getUnconfiguredPublicBudgetSummary(targetYear);
+  }
+};
+
+export interface AdminBudgetRequestsDeleteResult {
+  deletedCount: number;
+  storageWarning?: string;
+  deletedRequestIds?: string[];
+}
+
+export const deleteAdminBudgetRequestsInSupabase = async (
+  requestIds: string[]
+): Promise<AdminBudgetRequestsDeleteResult> => {
+  if (!requestIds || !requestIds.length) {
+    return { deletedCount: 0 };
+  }
+
+  const adminSession = getAuthenticatedAdminSession();
+  if (!adminSession?.sessionToken) {
+    throw new Error("Admin session is invalid or expired. Please sign in again.");
+  }
+
+  const { data, error } = await supabase!.rpc("admin_bulk_delete_budget_requests", {
+    _session_token: adminSession.sessionToken,
+    _request_ids: requestIds,
+  });
+
+  if (error) {
+    throw new Error(error.message || "Failed to delete budget requests.");
+  }
+
+  const deletedCount = Number(data?.deleted_count ?? 0);
+  const budgetFilePaths = Array.isArray(data?.budget_file_paths) ? (data.budget_file_paths as string[]) : [];
+  const liquidationFilePaths = Array.isArray(data?.liquidation_file_paths) ? (data.liquidation_file_paths as string[]) : [];
+  const deletedRequestIds = Array.isArray(data?.deleted_request_ids) ? (data.deleted_request_ids as string[]) : [];
+
+  let storageWarning: string | undefined;
+  const failedCleanups: string[] = [];
+
+  const cleanPathsOrUris = async (bucket: string, entries: string[]) => {
+    if (!entries.length) return;
+    const paths: string[] = [];
+    for (const entry of entries) {
+      if (!entry) continue;
+      const parsed = parseStorageUri(entry);
+      if (parsed) {
+        paths.push(parsed.path);
+      } else if (entry.startsWith("http://") || entry.startsWith("https://")) {
+        const extracted = extractPublicStoragePath(entry, bucket);
+        if (extracted) paths.push(extracted);
+      } else {
+        paths.push(entry);
+      }
+    }
+    if (paths.length > 0) {
+      try {
+        const { error: storageError } = await supabase!.storage.from(bucket).remove(paths);
+        if (storageError) {
+          console.warn(`Storage removal error for bucket ${bucket}:`, storageError);
+          failedCleanups.push(bucket);
+        }
+      } catch (storageErr) {
+        console.warn(`Storage removal exception for bucket ${bucket}:`, storageErr);
+        failedCleanups.push(bucket);
+      }
+    }
+  };
+
+  await cleanPathsOrUris(BUDGET_REQUEST_FILES_BUCKET, budgetFilePaths);
+  await cleanPathsOrUris(LIQUIDATION_REPORT_FILES_BUCKET, liquidationFilePaths);
+
+  if (failedCleanups.length > 0) {
+    storageWarning = "Some stored files could not be removed and may require cleanup.";
+  }
+
+  return {
+    deletedCount,
+    storageWarning,
+    deletedRequestIds,
+  };
+};
+
+
 

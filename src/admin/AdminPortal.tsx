@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./admin-inquiries.css";
 import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
@@ -54,7 +54,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, isSystemTemplateCategory, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
-import { isLiquidationOverdue, statusLabelMap } from "@/lib/lydo-connect-data";
+import { isLiquidationOverdue, statusLabelMap, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
 import { StatsCard } from "@/admin/components/StatsCard";
@@ -81,6 +81,10 @@ import {
   type OrganizationBudgetRequestRow,
 } from "@/admin/components/OrganizationBudgetDrawer";
 import { PublicBudgetSnapshotConfigPage } from "@/admin/components/PublicBudgetSnapshotConfigPage";
+import { BudgetMonitoringOverview } from "@/admin/components/BudgetMonitoringOverview";
+import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
+import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
+import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase } from "@/lib/lydo-connect-supabase";
 import {
   LiquidationReportsTable,
   LiquidationStatusLabel,
@@ -726,6 +730,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [editingAdministratorId, setEditingAdministratorId] = useState<string | null>(null);
   const [administratorDisplayNameDraft, setAdministratorDisplayNameDraft] = useState("");
   const [administratorEmailDraft, setAdministratorEmailDraft] = useState("");
+  const [administratorEmailError, setAdministratorEmailError] = useState<string | null>(null);
   const [administratorUsernameDraft, setAdministratorUsernameDraft] = useState("");
   const [administratorRoleIdDraft, setAdministratorRoleIdDraft] = useState<number | null>(null);
   const [administratorUnitIdDraft, setAdministratorUnitIdDraft] = useState<number | null>(null);
@@ -864,6 +869,9 @@ export default function AdminPortal({ section }: { section: string }) {
   const [budgetRequestsDistrictFilter, setBudgetRequestsDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [budgetRequestsBarangayFilter, setBudgetRequestsBarangayFilter] = useState("all");
   const [budgetRequestsClassificationFilter, setBudgetRequestsClassificationFilter] = useState("all");
+  const [selectedBudgetRequestIds, setSelectedBudgetRequestIds] = useState<Set<string>>(new Set());
+  const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
+  const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
   const [liquidationReportsSearch, setLiquidationReportsSearch] = useState("");
   const [liquidationReportsStatusFilter, setLiquidationReportsStatusFilter] = useState<LiquidationReportsStatusFilter>("all");
   const [liquidationReportsDistrictFilter, setLiquidationReportsDistrictFilter] = useState<"all" | PasigDistrict>("all");
@@ -1370,10 +1378,78 @@ export default function AdminPortal({ section }: { section: string }) {
         const rightTime = new Date(right.updatedAt || right.createdAt).getTime();
         return rightTime - leftTime;
       })[0] ?? null;
+  const [annualAllocations, setAnnualAllocations] = useState<AnnualBudgetAllocation[]>([]);
+  const [selectedFiscalYear, setSelectedFiscalYear] = useState<number>(new Date().getFullYear());
+  const [isConfigureAnnualBudgetModalOpen, setIsConfigureAnnualBudgetModalOpen] = useState<boolean>(false);
+
+  const loadAnnualBudgetAllocations = useCallback(async () => {
+    try {
+      const rows = await adminGetAnnualBudgetAllocationsFromSupabase();
+      setAnnualAllocations(rows);
+    } catch {
+      // Gracefully retain current
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAnnualBudgetAllocations();
+  }, [loadAnnualBudgetAllocations]);
+
+  const getBudgetRequestFiscalYear = useCallback((r: BudgetRequest): number => {
+    if (typeof r.fiscalYear === "number" && r.fiscalYear >= 2000 && r.fiscalYear <= 2100) {
+      return r.fiscalYear;
+    }
+    if (r.releaseDate) {
+      const yr = new Date(r.releaseDate).getFullYear();
+      if (!Number.isNaN(yr)) return yr;
+    }
+    if (r.activityDate) {
+      const yr = new Date(r.activityDate).getFullYear();
+      if (!Number.isNaN(yr)) return yr;
+    }
+    if (r.createdAt) {
+      const yr = new Date(r.createdAt).getFullYear();
+      if (!Number.isNaN(yr)) return yr;
+    }
+    return 2026;
+  }, []);
+
+  const availableFiscalYears = useMemo(() => {
+    const years = new Set<number>();
+    years.add(new Date().getFullYear());
+    annualAllocations.forEach((a) => years.add(a.fiscalYear));
+    state.budgetRequests.forEach((req) => {
+      years.add(getBudgetRequestFiscalYear(req));
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }, [annualAllocations, state.budgetRequests, getBudgetRequestFiscalYear]);
+
+  const selectedFYAllocation = useMemo(() => {
+    return (
+      annualAllocations.find((a) => a.fiscalYear === selectedFiscalYear && a.isActive) ??
+      annualAllocations.find((a) => a.fiscalYear === selectedFiscalYear) ??
+      null
+    );
+  }, [annualAllocations, selectedFiscalYear]);
+
+  const annualAllocation = selectedFYAllocation ? selectedFYAllocation.totalAmount : null;
+  const annualAllocationFiscalYear = selectedFiscalYear;
+
+  const fyBudgetRequests = useMemo(() => {
+    return state.budgetRequests.filter((r) => getBudgetRequestFiscalYear(r) === selectedFiscalYear);
+  }, [state.budgetRequests, selectedFiscalYear, getBudgetRequestFiscalYear]);
+
+  const fyLiquidationReports = useMemo(() => {
+    return state.liquidationReports.filter((report) => {
+      const related = state.budgetRequests.find((r) => r.id === report.budgetRequestId);
+      return related ? getBudgetRequestFiscalYear(related) === selectedFiscalYear : false;
+    });
+  }, [state.budgetRequests, state.liquidationReports, selectedFiscalYear, getBudgetRequestFiscalYear]);
+
   const budgetMonitoringEntries = useMemo<BudgetMonitoringEntry[]>(() => {
     const now = new Date();
 
-    return state.budgetRequests
+    return fyBudgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .map((request) => {
         const liquidation = getLatestLiquidationReportForBudgetRequest(request.id);
@@ -1449,7 +1525,7 @@ export default function AdminPortal({ section }: { section: string }) {
         }
         return right.approvedAmount - left.approvedAmount;
       });
-  }, [budgetReleaseStatuses, state.budgetRequests, state.liquidationReports, state.organizationProfiles]);
+  }, [budgetReleaseStatuses, fyBudgetRequests, state.organizationProfiles, getLatestLiquidationReportForBudgetRequest]);
   const filteredAdminBudgetRequests = useMemo(() => {
     const query = budgetRequestsSearch.trim().toLowerCase();
     return state.budgetRequests.filter((request) => {
@@ -1702,7 +1778,7 @@ export default function AdminPortal({ section }: { section: string }) {
     const grouped = new Map<string, BarangayAllocationEntry>();
     const organizationIdsByGroup = new Map<string, Set<string>>();
 
-    state.budgetRequests
+    fyBudgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .forEach((request) => {
         const organization = organizationProfileById.get(request.organizationId) ?? null;
@@ -1712,7 +1788,7 @@ export default function AdminPortal({ section }: { section: string }) {
         const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
         const remainingAmount = Math.max(approvedAmount - releasedAmount, 0);
         const utilizationRate = approvedAmount > 0 ? Math.round((releasedAmount / approvedAmount) * 100) : 0;
-        const isLiquidated = state.liquidationReports.some(
+        const isLiquidated = fyLiquidationReports.some(
           (lr) => lr.budgetRequestId === request.id && lr.status === "completed_liquidated",
         );
         const liquidatedAmount = isLiquidated ? releasedAmount : 0;
@@ -1751,7 +1827,7 @@ export default function AdminPortal({ section }: { section: string }) {
       if (left.releasedAmount !== right.releasedAmount) return right.releasedAmount - left.releasedAmount;
       return left.barangay.localeCompare(right.barangay);
     });
-  }, [organizationProfileById, state.budgetRequests, state.liquidationReports]);
+  }, [organizationProfileById, fyBudgetRequests, fyLiquidationReports]);
   const budgetAllocationDistrictOptions = useMemo(
     () =>
       Array.from(new Set(state.organizationProfiles.map((organization) => organization.district?.trim()).filter((value): value is string => Boolean(value))))
@@ -1813,7 +1889,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
     const grouped = new Map<string, BarangayAllocationOrganizationDetail>();
 
-    state.budgetRequests
+    fyBudgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .forEach((request) => {
         const organization = organizationProfileById.get(request.organizationId);
@@ -1865,7 +1941,7 @@ export default function AdminPortal({ section }: { section: string }) {
       if (right.releasedAmount !== left.releasedAmount) return right.releasedAmount - left.releasedAmount;
       return left.organizationName.localeCompare(right.organizationName);
     });
-  }, [organizationProfileById, selectedBudgetAllocation, state.budgetRequests]);
+  }, [organizationProfileById, selectedBudgetAllocation, fyBudgetRequests]);
   const budgetAllocationSummary = useMemo(() => {
     const totalApproved = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.approvedAmount, 0);
     const totalReleased = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.releasedAmount, 0);
@@ -1935,7 +2011,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const allocationOrganizationNamesByGroup = useMemo(() => {
     const grouped = new Map<string, Set<string>>();
 
-    state.budgetRequests
+    fyBudgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .forEach((request) => {
         const organization = organizationProfileById.get(request.organizationId);
@@ -1949,7 +2025,7 @@ export default function AdminPortal({ section }: { section: string }) {
       });
 
     return grouped;
-  }, [organizationProfileById, state.budgetRequests]);
+  }, [organizationProfileById, fyBudgetRequests]);
   const budgetRequestExportRows = useMemo<BudgetRequestExportRow[]>(
     () =>
       filteredAdminBudgetRequests.map((request) => {
@@ -2018,6 +2094,7 @@ export default function AdminPortal({ section }: { section: string }) {
     budgetRequestsSearch,
     budgetRequestsStatusFilter,
   ]);
+
   const budgetMonitoringExportFilters = useMemo(() => {
     const summary: string[] = [];
     if (budgetMonitoringSearch.trim()) summary.push(`Search: "${budgetMonitoringSearch.trim()}"`);
@@ -2074,6 +2151,7 @@ export default function AdminPortal({ section }: { section: string }) {
           config: budgetMonitoringExportConfig,
           rows: budgetMonitoringExportRows,
           metadataLines: [
+            `Fiscal Year: FY ${selectedFiscalYear}`,
             `Total Monitored Records: ${budgetMonitoringExportRows.length}`,
             `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
             `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
@@ -2245,84 +2323,59 @@ export default function AdminPortal({ section }: { section: string }) {
       .filter((group) => group.items.length > 0);
   }, [overviewStats, pendingRenewalsCount, pendingYpop, user]);
 
-  const [annualAllocation, setAnnualAllocation] = useState<number | null>(null);
-  const [annualAllocationFiscalYear, setAnnualAllocationFiscalYear] = useState<number | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-    if (!isSupabaseConfigured || !supabase) return;
-
-    void supabase
-      .from("barangay_financials")
-      .select("barangay_id,fiscal_year,month_no,sk_budget")
-      .order("fiscal_year", { ascending: false })
-      .order("month_no", { ascending: false })
-      .then(({ data, error }) => {
-        if (!isActive || error || !data) return;
-        const latestByBarangay = new Map<string, { fiscalYear: number; skBudget: number }>();
-        for (const row of data as Array<{ barangay_id: string; fiscal_year: number; sk_budget: number }>) {
-          if (!latestByBarangay.has(row.barangay_id)) {
-            latestByBarangay.set(row.barangay_id, { fiscalYear: row.fiscal_year, skBudget: Number(row.sk_budget ?? 0) });
-          }
-        }
-        const entries = Array.from(latestByBarangay.values());
-        const fiscalYear = entries.length ? Math.max(...entries.map((entry) => entry.fiscalYear)) : null;
-        const total = entries
-          .filter((entry) => entry.fiscalYear === fiscalYear)
-          .reduce((sum, entry) => sum + entry.skBudget, 0);
-        setAnnualAllocation(total);
-        setAnnualAllocationFiscalYear(fiscalYear);
-      })
-      .catch(() => {
-        // Safely suppress errors when barangay_financials table is unavailable
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
   const totalLiquidated = useMemo(
     () =>
-      state.liquidationReports
+      fyLiquidationReports
         .filter((report) => report.status === "completed_liquidated")
         .reduce((sum, report) => {
-          const relatedBudgetRequest = state.budgetRequests.find((request) => request.id === report.budgetRequestId);
+          const relatedBudgetRequest = fyBudgetRequests.find((request) => request.id === report.budgetRequestId);
           return sum + (relatedBudgetRequest?.releasedAmount ?? 0);
         }, 0),
-    [state.liquidationReports, state.budgetRequests],
+    [fyLiquidationReports, fyBudgetRequests],
   );
 
   const budgetApprovedTotal = useMemo(
     () =>
-      state.budgetRequests
+      fyBudgetRequests
         .filter((r) => ["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
         .reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0),
-    [state.budgetRequests],
+    [fyBudgetRequests],
   );
 
   const purposeCategoryBreakdown = useMemo(() => {
-    const totals = new Map<string, number>();
-    state.budgetRequests
+    const totals = new Map<string, { approvedAmount: number; releasedAmount: number; count: number }>();
+    fyBudgetRequests
       .filter((r) => ["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
       .forEach((r) => {
-        const category = (r.purposeCategory || "").trim() || "General Purpose";
-        const amount = r.approvedAmount || r.requestedAmount || 0;
-        totals.set(category, (totals.get(category) ?? 0) + amount);
+        const category = (r.purposeCategory || "").trim() || "General / Uncategorized";
+        const app = r.approvedAmount || r.requestedAmount || 0;
+        const rel = r.releasedAmount || 0;
+        const prev = totals.get(category) ?? { approvedAmount: 0, releasedAmount: 0, count: 0 };
+        totals.set(category, {
+          approvedAmount: prev.approvedAmount + app,
+          releasedAmount: prev.releasedAmount + rel,
+          count: prev.count + 1,
+        });
       });
     return Array.from(totals.entries())
-      .map(([category, amount]) => ({ category, amount }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [state.budgetRequests]);
+      .map(([category, d]) => ({
+        category,
+        amount: d.approvedAmount,
+        approvedAmount: d.approvedAmount,
+        releasedAmount: d.releasedAmount,
+        count: d.count,
+      }))
+      .sort((a, b) => b.approvedAmount - a.approvedAmount);
+  }, [fyBudgetRequests]);
 
   const organizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
     return state.organizationProfiles
       .map((org) => {
-        const orgRequests = state.budgetRequests.filter((r) => r.organizationId === org.id);
+        const orgRequests = fyBudgetRequests.filter((r) => r.organizationId === org.id);
         const totalRequested = orgRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0);
         const totalReleased = orgRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
         const totalLiquidated = orgRequests.reduce((sum, r) => {
-          const isLiquidated = state.liquidationReports.some(
+          const isLiquidated = fyLiquidationReports.some(
             (lr) => lr.budgetRequestId === r.id && lr.status === "completed_liquidated",
           );
           return sum + (isLiquidated ? r.releasedAmount || 0 : 0);
@@ -2339,20 +2392,20 @@ export default function AdminPortal({ section }: { section: string }) {
         };
       })
       .filter((row) => row.totalRequested > 0);
-  }, [state.organizationProfiles, state.budgetRequests, state.liquidationReports]);
+  }, [state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
 
   const organizationBudgetDetail = useMemo<OrganizationBudgetDetail | null>(() => {
     if (!selectedOrganizationBudgetDetailId) return null;
     const org = state.organizationProfiles.find((o) => o.id === selectedOrganizationBudgetDetailId);
     if (!org) return null;
-    const orgRequests = state.budgetRequests.filter((r) => r.organizationId === org.id);
+    const orgRequests = fyBudgetRequests.filter((r) => r.organizationId === org.id);
     const requests: OrganizationBudgetRequestRow[] = orgRequests.map((r) => ({
       id: r.id,
       activityTitle: r.activityTitle,
-      referenceCode: buildPublicRecordCode("BR", r, state.budgetRequests),
+      referenceCode: buildPublicRecordCode("BR", r, fyBudgetRequests),
       releasedAmount: r.releasedAmount || 0,
       status: r.status,
-      isLiquidated: state.liquidationReports.some((lr) => lr.budgetRequestId === r.id && lr.status === "completed_liquidated"),
+      isLiquidated: fyLiquidationReports.some((lr) => lr.budgetRequestId === r.id && lr.status === "completed_liquidated"),
     }));
     const registrationDate = new Date(org.verifiedAt || org.createdAt);
     return {
@@ -2369,7 +2422,7 @@ export default function AdminPortal({ section }: { section: string }) {
       completedCount: requests.filter((r) => r.isLiquidated || r.status === "completed").length,
       requests,
     };
-  }, [selectedOrganizationBudgetDetailId, state.organizationProfiles, state.budgetRequests, state.liquidationReports]);
+  }, [selectedOrganizationBudgetDetailId, state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
 
   useEffect(() => {
     let isActive = true;
@@ -2881,6 +2934,63 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
+  const selectedBudgetRequests = useMemo(() => {
+    return state.budgetRequests.filter((r) => selectedBudgetRequestIds.has(r.id));
+  }, [state.budgetRequests, selectedBudgetRequestIds]);
+
+  const hasReleasedOrCompletedSelected = useMemo(() => {
+    return selectedBudgetRequests.some((r) => r.status === "budget_released" || r.status === "completed");
+  }, [selectedBudgetRequests]);
+
+  const hasPreReleaseAdvancedStageSelected = useMemo(() => {
+    return selectedBudgetRequests.some((r) => r.status === "approved_for_ftf_green" || r.status === "hard_copy_submitted");
+  }, [selectedBudgetRequests]);
+
+  const associatedLiquidationCount = useMemo(() => {
+    const selectedIds = selectedBudgetRequestIds;
+    if (selectedIds.size === 0) return 0;
+    return (state.liquidationReports || []).filter((lr) => selectedIds.has(lr.budgetRequestId)).length;
+  }, [state.liquidationReports, selectedBudgetRequestIds]);
+
+  const handleInitiateBudgetRequestsDelete = useCallback(() => {
+    if (selectedBudgetRequestIds.size === 0) return;
+    setIsDeleteBudgetRequestsModalOpen(true);
+  }, [selectedBudgetRequestIds.size]);
+
+  const handleConfirmBudgetRequestsDelete = useCallback(async () => {
+    const idsToDelete = Array.from(selectedBudgetRequestIds);
+    if (!idsToDelete.length) return;
+
+    try {
+      setIsDeletingBudgetRequests(true);
+      const result = await deleteAdminBudgetRequestsInSupabase(idsToDelete);
+      await refreshAdminState();
+      setSelectedBudgetRequestIds(new Set());
+      if (result.storageWarning) {
+        toast({
+          title: "Budget Requests Deleted",
+          description: `${result.deletedCount} budget request(s) deleted. ${result.storageWarning}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Budget Requests Deleted",
+          description: `Successfully deleted ${result.deletedCount} budget request(s).`,
+        });
+      }
+    } catch (err: any) {
+      console.error("Failed to delete budget requests:", err);
+      toast({
+        title: "Deletion Failed",
+        description: err?.message || "Failed to delete the selected budget requests.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingBudgetRequests(false);
+      setIsDeleteBudgetRequestsModalOpen(false);
+    }
+  }, [selectedBudgetRequestIds, refreshAdminState]);
+
   useEffect(() => {
     let isActive = true;
 
@@ -2945,6 +3055,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setEditingAdministratorId(null);
     setAdministratorDisplayNameDraft("");
     setAdministratorEmailDraft("");
+    setAdministratorEmailError(null);
     setAdministratorUsernameDraft("");
     setAdministratorRoleIdDraft(null);
     setAdministratorUnitIdDraft(null);
@@ -2955,6 +3066,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setEditingAdministratorId(administrator.id);
     setAdministratorDisplayNameDraft(administrator.displayName);
     setAdministratorEmailDraft(administrator.email);
+    setAdministratorEmailError(null);
     setAdministratorUsernameDraft(administrator.username);
     setAdministratorRoleIdDraft(administratorRoles.find((role) => role.code === administrator.roleCode)?.id ?? null);
     setAdministratorUnitIdDraft(administratorUnits.find((unit) => unit.code === administrator.unitCode)?.id ?? null);
@@ -2982,6 +3094,7 @@ export default function AdminPortal({ section }: { section: string }) {
     }
 
     setSavingAdministrator(true);
+    setAdministratorEmailError(null);
     try {
       let attempt = 0;
       for (;;) {
@@ -3010,9 +3123,13 @@ export default function AdminPortal({ section }: { section: string }) {
       resetAdministratorForm();
       await refreshAdministrators();
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Please try again.";
+      if (/email/i.test(message) || /organization/i.test(message) || /administrator/i.test(message)) {
+        setAdministratorEmailError(message);
+      }
       toast({
         title: "Unable to add administrator",
-        description: error instanceof Error ? error.message : "Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -9046,6 +9163,107 @@ export default function AdminPortal({ section }: { section: string }) {
               classificationFilter={budgetRequestsClassificationFilter}
               onClassificationFilterChange={setBudgetRequestsClassificationFilter}
               onReview={(requestId) => openBudgetRequestDetails(requestId)}
+              selectedRequestIds={selectedBudgetRequestIds}
+              onSelectedRequestIdsChange={setSelectedBudgetRequestIds}
+              onDeleteSelected={handleInitiateBudgetRequestsDelete}
+              isDeleting={isDeletingBudgetRequests}
+            />
+
+            {/* Permanent deletion confirmation modal */}
+            <DangerConfirmDialog
+              open={isDeleteBudgetRequestsModalOpen}
+              onOpenChange={setIsDeleteBudgetRequestsModalOpen}
+              icon={Trash2}
+              variant="danger"
+              warningTone={hasReleasedOrCompletedSelected ? "danger" : "caution"}
+              title={selectedBudgetRequests.length === 1 ? "Delete Budget Request?" : `Delete ${selectedBudgetRequests.length} Budget Requests?`}
+              description={
+                <span>
+                  You are about to permanently delete{" "}
+                  <strong>
+                    {selectedBudgetRequests.length} {selectedBudgetRequests.length === 1 ? "budget request" : "budget requests"}
+                  </strong>.
+                </span>
+              }
+              content={
+                <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    Selected Requests:
+                  </p>
+                  <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto font-segoe text-xs text-slate-700 pr-1">
+                    {selectedBudgetRequests.map((req) => {
+                      const amount = Math.round(Number(req.releasedAmount || req.approvedAmount || req.requestedAmount || 0));
+                      const statusLabel =
+                        req.status === "completed"
+                          ? "Completed"
+                          : req.status === "budget_released"
+                          ? "Budget Released"
+                          : req.status === "approved_for_ftf_green"
+                          ? "Onsite Required"
+                          : req.status === "hard_copy_submitted"
+                          ? "Hardcopy Submitted"
+                          : req.status === "needs_revision"
+                          ? "Needs Revision"
+                          : req.status === "rejected_red"
+                          ? "Rejected"
+                          : req.status === "under_review"
+                          ? "Under Review"
+                          : "Submitted";
+
+                      return (
+                        <li key={req.id} className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 last:border-b-0 last:pb-0">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-900 truncate">{req.activityTitle}</span>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
+                              <span>{budgetOrganizationsById[req.organizationId]?.organizationName ?? "Organization"}</span>
+                              <span>•</span>
+                              <span className="font-medium text-slate-700">{statusLabel}</span>
+                            </div>
+                          </div>
+                          <span className="shrink-0 font-mono font-semibold text-slate-800">
+                            ₱{amount.toLocaleString()}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <div className="mt-2 border-t border-slate-200 pt-2.5 font-segoe text-xs text-slate-600 space-y-1">
+                    <p className="font-semibold text-slate-700">Permanent Impact:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
+                      <li>{selectedBudgetRequests.length} Budget Request record(s) will be permanently removed.</li>
+                      <li>Associated submission documents will be deleted from secure storage.</li>
+                      {associatedLiquidationCount > 0 ? (
+                        <li>{associatedLiquidationCount} associated Liquidation Report(s) and documents will be permanently removed.</li>
+                      ) : null}
+                      <li>Related operational notifications will be safely removed.</li>
+                      <li>An immutable administrative audit log of this deletion will be preserved.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              warning={
+                hasReleasedOrCompletedSelected ? (
+                  <span>
+                    <strong>Financial lifecycle warning:</strong> One or more selected requests have already reached a released or completed stage. Deleting them will remove their associated liquidation workflow and financial records from the active system. Continue only if this deletion is intentional.
+                  </span>
+                ) : hasPreReleaseAdvancedStageSelected ? (
+                  <span>
+                    <strong>Notice:</strong> One or more selected requests have already passed initial administrative review (Onsite Required / Hardcopy Submitted) and are approaching the financial disbursement stage.
+                  </span>
+                ) : (
+                  "This action is permanent and cannot be undone."
+                )
+              }
+              confirmLabel={
+                isDeletingBudgetRequests
+                  ? "Deleting..."
+                  : selectedBudgetRequests.length === 1
+                  ? "Delete Budget Request"
+                  : `Delete ${selectedBudgetRequests.length} Budget Requests`
+              }
+              confirmDisabled={isDeletingBudgetRequests}
+              onConfirm={handleConfirmBudgetRequestsDelete}
             />
           </div>
         );
@@ -9907,14 +10125,14 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   ) : null}
 
-                  {selectedLiquidationReport.status === "pending_activity_completion" && liquidationFiles.length === 0 ? (
+                  {selectedLiquidationReport.status === "pending_activity_completion" ? (
                     <div className="rounded-md border border-border-warning-subtle bg-bg-warning-subtle p-4 text-xs text-text-warning-secondary">
                       <p className="font-semibold text-sm text-text-warning-secondary">Pending Activity Completion</p>
                       <p className="mt-1 text-xs text-slate-600 leading-[140%]">
                         The organization has not yet submitted its liquidation report. Liquidation documents can be submitted once the project activity is completed.
                       </p>
                     </div>
-                  ) : (selectedLiquidationReport.status === "not_started" || selectedLiquidationReport.status === "draft") && liquidationFiles.length === 0 ? (
+                  ) : selectedLiquidationReport.status === "not_started" || selectedLiquidationReport.status === "draft" ? (
                     <div className="rounded-md border border-border-closed-subtle bg-neutral-100 p-4 text-xs text-neutral-tertiary">
                       <p className="font-semibold text-sm text-text-default">Liquidation Not Yet Submitted</p>
                       <p className="mt-1 text-xs text-slate-600 leading-[140%]">
@@ -9929,9 +10147,6 @@ export default function AdminPortal({ section }: { section: string }) {
                           {(selectedLiquidationReport.status === "submitted" ||
                             selectedLiquidationReport.status === "under_review" ||
                             selectedLiquidationReport.status === "needs_revision" ||
-                            selectedLiquidationReport.status === "pending_activity_completion" ||
-                            selectedLiquidationReport.status === "not_started" ||
-                            selectedLiquidationReport.status === "draft" ||
                             selectedLiquidationReport.status === "overdue") && (
                             <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
                           )}
@@ -9941,9 +10156,6 @@ export default function AdminPortal({ section }: { section: string }) {
                           {(selectedLiquidationReport.status === "submitted" ||
                             selectedLiquidationReport.status === "under_review" ||
                             selectedLiquidationReport.status === "needs_revision" ||
-                            selectedLiquidationReport.status === "pending_activity_completion" ||
-                            selectedLiquidationReport.status === "not_started" ||
-                            selectedLiquidationReport.status === "draft" ||
                             selectedLiquidationReport.status === "overdue") ? (
                             <button
                               type="button"
@@ -9960,9 +10172,6 @@ export default function AdminPortal({ section }: { section: string }) {
                         (selectedLiquidationReport.status === "submitted" ||
                           selectedLiquidationReport.status === "under_review" ||
                           selectedLiquidationReport.status === "needs_revision" ||
-                          selectedLiquidationReport.status === "pending_activity_completion" ||
-                          selectedLiquidationReport.status === "not_started" ||
-                          selectedLiquidationReport.status === "draft" ||
                           selectedLiquidationReport.status === "overdue") ? (
                           <div
                             ref={liquidationDecisionHelpPanelRef}
@@ -9980,12 +10189,9 @@ export default function AdminPortal({ section }: { section: string }) {
                       </div>
 
                       <div className="flex flex-col gap-3 pt-4">
-                        {/* Reviewable Stage: submitted, under_review, overdue, or pending with files */}
+                        {/* Reviewable Stage: submitted, under_review, overdue, or needs_revision with active unreviewed files */}
                         {(selectedLiquidationReport.status === "submitted" ||
                           selectedLiquidationReport.status === "under_review" ||
-                          (selectedLiquidationReport.status === "pending_activity_completion" && liquidationFiles.length > 0) ||
-                          (selectedLiquidationReport.status === "not_started" && liquidationFiles.length > 0) ||
-                          (selectedLiquidationReport.status === "draft" && liquidationFiles.length > 0) ||
                           (selectedLiquidationReport.status === "needs_revision" && liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review")) ||
                           selectedLiquidationReport.status === "overdue") && (
                           renderLiquidationDocumentReviewControls(
@@ -10320,10 +10526,14 @@ export default function AdminPortal({ section }: { section: string }) {
         const approvedBudget = budgetApprovedTotal;
         const pendingDisbursement = Math.max(approvedBudget - releasedBudget, 0);
         const activeInField = Math.max(releasedBudget - liquidatedBudget, 0);
-        const remainingHeadroom = Math.max(totalFYBudget - releasedBudget, 0);
+        const rawHeadroom = annualAllocation !== null ? annualAllocation - approvedBudget : 0;
+        const remainingHeadroom = rawHeadroom;
         const percentClearedOfReleased = releasedBudget > 0 ? Math.round((liquidatedBudget / releasedBudget) * 100) : 0;
-        const percentAvailable = totalFYBudget > 0 ? ((remainingHeadroom / totalFYBudget) * 100).toFixed(1) : "0.0";
-        const utilizationBarTotal = Math.max(totalFYBudget, releasedBudget);
+        const percentAvailable =
+          annualAllocation !== null && annualAllocation > 0
+            ? ((Math.max(remainingHeadroom, 0) / annualAllocation) * 100).toFixed(1)
+            : "0.0";
+        const utilizationBarTotal = Math.max(annualAllocation ?? 0, approvedBudget, releasedBudget, 1);
         const rawLiquidatedPct = utilizationBarTotal > 0 ? (liquidatedBudget / utilizationBarTotal) * 100 : 0;
         const liquidatedPct = liquidatedBudget > 0 ? Math.min(Math.max(rawLiquidatedPct, 1), 100) : 0;
         const rawActiveInFieldPct = utilizationBarTotal > 0 ? (activeInField / utilizationBarTotal) * 100 : 0;
@@ -10331,176 +10541,7 @@ export default function AdminPortal({ section }: { section: string }) {
           activeInField > 0 ? Math.min(Math.max(rawActiveInFieldPct, 1), 100 - liquidatedPct) : 0;
         const remainingPct = Math.max(100 - liquidatedPct - activeInFieldPct, 0);
 
-        const purposeColors = ["#3F81EA", "#62B4F5"];
-        const categorizedTotal = purposeCategoryBreakdown.reduce((sum, entry) => sum + entry.amount, 0);
-        const unallocatedAmount = Math.max(totalFYBudget - categorizedTotal, 0);
-        const donutData =
-          totalFYBudget > 0
-            ? [
-                ...purposeCategoryBreakdown.map((entry, index) => ({
-                  name: entry.category,
-                  value: entry.amount,
-                  color: purposeColors[index % purposeColors.length],
-                })),
-                ...(unallocatedAmount > 0 ? [{ name: "Unallocated", value: unallocatedAmount, color: "#E3E3E3" }] : []),
-              ]
-            : [{ name: "Default", value: 1, color: "#62B4F5" }];
 
-        const budgetSnapshotSections = (
-          <>
-                  <div className="rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-segoe text-[11px] font-semibold leading-[140%] text-slate-500">
-                        Budget Utilization Progress
-                      </p>
-                      <p className="font-segoe text-[11px] font-semibold leading-[140%] text-slate-500">
-                        Total FY Allocation:{" "}
-                        <span className="font-cascadia">{formatPesoAmount(totalFYBudget)}</span>
-                      </p>
-                    </div>
-
-                    <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-bg-progress-track">
-                      <div className="h-full bg-bg-success-default" style={{ width: `${liquidatedPct}%` }} />
-                      <div className="h-full bg-public-bg-brand" style={{ width: `${activeInFieldPct}%` }} />
-                      <div className="h-full bg-[#B8DFFD]" style={{ width: `${remainingPct}%` }} />
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-4">
-                        <span className="flex items-center gap-1.5 font-segoe text-[11px] font-semibold leading-none text-text-default">
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-bg-success-default" />
-                          Liquidated &amp; Cleared:{" "}
-                          <span className="font-cascadia text-bg-success-default">{formatPesoAmount(liquidatedBudget)}</span>
-                        </span>
-                        <span className="flex items-center gap-1.5 font-segoe text-[11px] font-semibold leading-none text-text-default">
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-public-bg-brand" />
-                          Active in Field:{" "}
-                          <span className="font-cascadia">{formatPesoAmount(activeInField)}</span>
-                        </span>
-                        <span className="flex items-center gap-1.5 font-segoe text-[11px] font-semibold leading-none text-text-default">
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-[#B8DFFD]" />
-                          Remaining Headroom:{" "}
-                          <span className="font-cascadia">{formatPesoAmount(remainingHeadroom)}</span>
-                        </span>
-                      </div>
-                      <p className="font-segoe text-[11px] font-semibold leading-none text-slate-500">
-                        {percentAvailable}% Available for New YPOP Grants
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <p className="font-segoe text-[11px] font-semibold leading-[140%] text-slate-500">Budget Lifecycle Progression</p>
-                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
-                      <div className="flex h-full flex-col gap-2 rounded-md border border-slate-300 bg-slate-50 p-4">
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Total FY Budget</p>
-                        <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
-                          {formatPesoAmount(totalFYBudget)}
-                        </p>
-                        <p className="font-segoe text-xs font-normal leading-[140%] text-slate-500">Total annual allocation</p>
-                        <div className="mt-auto flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2">
-                          <p className="whitespace-nowrap font-segoe text-[10px] font-normal leading-[140%] text-slate-500">100% Statutory Baseline</p>
-                        </div>
-                      </div>
-
-                      <div className="flex h-full flex-col gap-2 rounded-md border border-[#C0D4F5] bg-[#F1F6FD] p-4">
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved Budget</p>
-                        <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-border-info-tertiary">
-                          {formatPesoAmount(approvedBudget)}
-                        </p>
-                        <p className="font-segoe text-xs font-normal leading-[140%] text-slate-500">Approved by administrators</p>
-                        <div className="mt-auto flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2">
-                          <p className="whitespace-nowrap font-cascadia text-[10px] font-semibold text-text-default">{formatPesoAmount(pendingDisbursement)}</p>
-                          <p className="whitespace-nowrap font-segoe text-[10px] font-normal leading-[140%] text-slate-500">Pending Disbursement</p>
-                        </div>
-                      </div>
-
-                      <div className="flex h-full flex-col gap-2 rounded-md border border-cyan-200 bg-cyan-50 p-4">
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Released Budget</p>
-                        <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-cyan-700">
-                          {formatPesoAmount(releasedBudget)}
-                        </p>
-                        <p className="font-segoe text-xs font-normal leading-[140%] text-slate-500">Disbursed to organizations</p>
-                        <div className="mt-auto flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2">
-                          <p className="whitespace-nowrap font-cascadia text-[10px] font-semibold text-text-default">{formatPesoAmount(activeInField)}</p>
-                          <p className="whitespace-nowrap font-segoe text-[10px] font-normal leading-[140%] text-slate-500">Active in Field</p>
-                        </div>
-                      </div>
-
-                      <div className="flex h-full flex-col gap-2 rounded-md border border-[#AFF4C6] bg-[#EBFFEE] p-4">
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Liquidated Budget</p>
-                        <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-[#02542D]">
-                          {formatPesoAmount(liquidatedBudget)}
-                        </p>
-                        <p className="font-segoe text-xs font-normal leading-[140%] text-slate-500">Audited with official receipts</p>
-                        <div className="mt-auto flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2">
-                          <p className="whitespace-nowrap font-segoe text-[10px] font-semibold text-[#02542D]">{percentClearedOfReleased}% of Released</p>
-                          <p className="whitespace-nowrap font-segoe text-[10px] font-normal leading-[140%] text-slate-500">Cleared</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-300 pt-5">
-                    <div className="border-b border-slate-300 pb-5">
-                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Allocation Breakdown</p>
-                      <p className="mt-1 font-segoe text-[13px] font-normal leading-none text-slate-500">
-                        How this fiscal year's {formatPesoAmount(totalFYBudget)} total is divided, by purpose — independent of how much has been spent so far.
-                      </p>
-                    </div>
-
-                    {purposeCategoryBreakdown.length ? (
-                      <div className="flex flex-col gap-8 pt-8 lg:flex-row lg:items-center">
-                        <div className="relative h-[247px] w-[247px] shrink-0">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie data={donutData} dataKey="value" innerRadius={85} outerRadius={123} paddingAngle={donutData.length > 1 ? 2 : 0} stroke="none">
-                                {donutData.map((entry) => (
-                                  <Cell key={entry.name} fill={entry.color} />
-                                ))}
-                              </Pie>
-                            </PieChart>
-                          </ResponsiveContainer>
-                          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                            <p className="font-cascadia text-[29px] font-semibold leading-none text-public-text-brand">
-                              {formatCompactPeso(totalFYBudget)}
-                            </p>
-                            <p className="mt-1 font-segoe text-xs font-normal text-slate-500">
-                              Total FY {annualAllocationFiscalYear ?? "—"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-1 flex-col gap-3">
-                          {purposeCategoryBreakdown.map((entry, index) => {
-                            const pct = totalFYBudget > 0 ? Math.round((entry.amount / totalFYBudget) * 100) : 0;
-                            const color = purposeColors[index % purposeColors.length];
-                            return (
-                              <div
-                                key={entry.category}
-                                className="flex items-center justify-between gap-3 rounded-md border border-slate-300 bg-admin-surface p-4"
-                              >
-                                <div className="flex items-center gap-2.5">
-                                  <span className="h-4 w-4 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                                  <p className="font-segoe text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
-                                    {entry.category}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                  <p className="font-cascadia text-[13px] font-semibold text-text-default">{formatPesoAmount(entry.amount)}</p>
-                                  <p className="font-segoe text-[11px] font-normal text-slate-500">{pct}%</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="pt-8 font-segoe text-sm text-slate-500">No approved budget requests yet to break down by purpose.</p>
-                    )}
-                  </div>
-          </>
-        );
 
         return (
           <div className="space-y-4">
@@ -10550,7 +10591,7 @@ export default function AdminPortal({ section }: { section: string }) {
               {(["overview", "barangay-allocation", "public"] as const).map((tab) => {
                 const isActive = budgetMonitoringTab === tab;
                 const Icon = tab === "overview" ? PieChartIcon : tab === "barangay-allocation" ? MapPin : Globe;
-                const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : "Public";
+                const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : "Public Preview";
                 return (
                   <button
                     key={tab}
@@ -10572,34 +10613,30 @@ export default function AdminPortal({ section }: { section: string }) {
 
             {budgetMonitoringTab === "overview" ? (
               <>
-              <div className="rounded-md border border-slate-300 bg-admin-surface">
-                <div className="flex items-center justify-between gap-3 border-b border-slate-300 px-6 py-5">
-                  <div className="flex flex-col gap-1">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Snapshot</p>
-                    <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
-                      Budget allocation, release progression, and audit clearance.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="flex h-10 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
-                  >
-                    FY 2026
-                    <ChevronDown className="h-4 w-4 text-[#b3b3b3]" strokeWidth={1.6} />
-                  </button>
-                </div>
+                <BudgetMonitoringOverview
+                  selectedFiscalYear={selectedFiscalYear}
+                  onSelectFiscalYear={setSelectedFiscalYear}
+                  availableFiscalYears={availableFiscalYears}
+                  annualAllocation={selectedFYAllocation}
+                  onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
+                  approvedBudget={budgetApprovedTotal}
+                  releasedBudget={budgetMonitoringAnalysis.totalReleased}
+                  liquidatedBudget={totalLiquidated}
+                  pendingDisbursement={Math.max(budgetApprovedTotal - budgetMonitoringAnalysis.totalReleased, 0)}
+                  activeInField={Math.max(budgetMonitoringAnalysis.totalReleased - totalLiquidated, 0)}
+                  categoryBreakdown={purposeCategoryBreakdown}
+                  formatPesoAmount={formatPesoAmount}
+                  formatCompactPeso={formatCompactPeso}
+                />
 
-                <div className="space-y-5 p-6">{budgetSnapshotSections}</div>
-              </div>
-
-              <OrganizationFundingTable
-                rows={organizationFundingRows}
-                searchValue={organizationFundingSearch}
-                onSearchChange={setOrganizationFundingSearch}
-                classificationFilter={organizationFundingClassificationFilter}
-                onClassificationFilterChange={setOrganizationFundingClassificationFilter}
-                onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
-              />
+                <OrganizationFundingTable
+                  rows={organizationFundingRows}
+                  searchValue={organizationFundingSearch}
+                  onSearchChange={setOrganizationFundingSearch}
+                  classificationFilter={organizationFundingClassificationFilter}
+                  onClassificationFilterChange={setOrganizationFundingClassificationFilter}
+                  onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
+                />
               </>
             ) : budgetMonitoringTab === "barangay-allocation" ? (
               selectedBudgetAllocation ? (
@@ -10885,41 +10922,31 @@ export default function AdminPortal({ section }: { section: string }) {
               </>
               )
             ) : budgetMonitoringTab === "public" ? (
-              <div className="rounded-md border border-slate-300 bg-admin-surface">
-                <div className="flex items-center justify-between gap-3 border-b border-slate-300 px-6 py-5">
-                  <div className="flex flex-col gap-1">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Snapshot</p>
-                    <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
-                      Budget allocation, release progression, and audit clearance.
-                    </p>
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-admin-surface p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-public-bg-brand/10 text-public-text-brand">
+                      <Globe className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="font-segoe text-sm font-bold text-text-default">Public Portal Preview</h2>
+                      <p className="font-segoe text-xs text-slate-500">
+                        Live preview of the shared budget transparency overview published to citizens and youth organizations.
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsConfiguringPublicSnapshot(true)}
-                      className="flex h-10 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-text-info-strong bg-bg-info-tertiary px-4 py-2 font-segoe text-public-fs-body-sm font-normal text-text-info-strong transition-colors hover:bg-bg-info-secondary"
-                    >
-                      <Settings className="h-4 w-4 shrink-0" strokeWidth={1.6} />
-                      Configure
-                    </button>
-                    <button
-                      type="button"
-                      className="flex h-10 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
-                    >
-                      FY 2026
-                      <ChevronDown className="h-4 w-4 text-[#b3b3b3]" strokeWidth={1.6} />
-                    </button>
-                  </div>
+                  <a
+                    href="/budget-transparency"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50"
+                  >
+                    Open Live Public Page <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
                 </div>
 
-                <div className="space-y-5 p-6">
-                  <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                    <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-brand">
-                      <span className="font-bold">This is what visitors see</span> on the Public Portal&rsquo;s Budget Monitoring page.
-                    </p>
-                  </div>
-                  {budgetSnapshotSections}
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <PublicBudgetOverview />
                 </div>
               </div>
             ) : null}
@@ -11316,7 +11343,11 @@ export default function AdminPortal({ section }: { section: string }) {
               displayName={administratorDisplayNameDraft}
               onDisplayNameChange={setAdministratorDisplayNameDraft}
               email={administratorEmailDraft}
-              onEmailChange={setAdministratorEmailDraft}
+              onEmailChange={(value) => {
+                setAdministratorEmailDraft(value);
+                setAdministratorEmailError(null);
+              }}
+              emailError={administratorEmailError}
               existingEmails={administrators.map((administrator) => administrator.email.toLowerCase())}
               roleOptions={administratorRoles}
               roleId={administratorRoleIdDraft}
@@ -14026,6 +14057,23 @@ export default function AdminPortal({ section }: { section: string }) {
         currentFile={downloadDialogCurrentFile}
         allFiles={downloadDialogAllFiles}
         zipName={downloadDialogZipName}
+      />
+      <ConfigureAnnualBudgetModal
+        open={isConfigureAnnualBudgetModalOpen}
+        onOpenChange={setIsConfigureAnnualBudgetModalOpen}
+        fiscalYear={selectedFiscalYear}
+        existingAllocation={selectedFYAllocation}
+        onSaved={(saved) => {
+          setAnnualAllocations((prev) => {
+            const idx = prev.findIndex((a) => a.fiscalYear === saved.fiscalYear);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = saved;
+              return next;
+            }
+            return [saved, ...prev];
+          });
+        }}
       />
     </>
   );

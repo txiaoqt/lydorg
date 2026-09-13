@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ADMIN_PERMISSION_GROUPS } from "@/lib/admin-permissions";
 import type { AdminRoleRecord } from "@/lib/lydo-connect-data";
+import { checkAdminEmailAvailabilityInSupabase } from "@/lib/lydo-connect-supabase";
 
 const FIELD_CLASS =
   "flex h-8 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled";
@@ -61,6 +62,7 @@ type AdministratorFormDialogProps = {
   saving: boolean;
   onCancel: () => void;
   onSave: () => void;
+  emailError?: string | null;
 };
 
 export const AdministratorFormDialog = ({
@@ -84,8 +86,10 @@ export const AdministratorFormDialog = ({
   saving,
   onCancel,
   onSave,
+  emailError,
 }: AdministratorFormDialogProps) => {
   const [accessPreviewExpanded, setAccessPreviewExpanded] = useState(false);
+  const [preflightError, setPreflightError] = useState<string | null>(null);
 
   const selectedRole = roleOptions.find((role) => role.id === roleId) ?? null;
   const selectedUnit = unitOptions.find((unit) => unit.id === unitId) ?? null;
@@ -93,6 +97,38 @@ export const AdministratorFormDialog = ({
 
   const trimmedEmail = email.trim().toLowerCase();
   const isDuplicateEmail = mode === "create" && trimmedEmail !== "" && existingEmails.includes(trimmedEmail);
+
+  useEffect(() => {
+    setPreflightError(null);
+    if (mode !== "create" || !trimmedEmail || isDuplicateEmail) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return;
+
+    let active = true;
+    const timer = setTimeout(async () => {
+      try {
+        const result = await checkAdminEmailAvailabilityInSupabase(trimmedEmail);
+        if (!active) return;
+        if (result.status === "user_exists") {
+          setPreflightError("This email address is already registered to an organization account. Please use a different email address.");
+        } else if (result.status === "admin_exists") {
+          setPreflightError("An administrator with this email already exists.");
+        } else {
+          setPreflightError(null);
+        }
+      } catch {
+        // Preflight is best-effort; authoritative validation occurs on submit
+      }
+    }, 400);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [mode, trimmedEmail, isDuplicateEmail]);
+
+  const activeEmailError = isDuplicateEmail
+    ? "An administrator with this email already exists."
+    : emailError || preflightError;
 
   return (
     <Dialog open={mode === "create" || mode === "edit"} onOpenChange={(open) => (!open ? onCancel() : undefined)}>
@@ -160,13 +196,16 @@ export const AdministratorFormDialog = ({
             <input
               type="email"
               value={email}
-              onChange={(event) => onEmailChange(event.target.value)}
+              onChange={(event) => {
+                setPreflightError(null);
+                onEmailChange(event.target.value);
+              }}
               placeholder="e.g. name@example.com"
               disabled={mode === "edit"}
               className={cn(
                 FIELD_CLASS,
                 mode === "edit" && "border-slate-300 bg-bg-neutral-subtle text-text-default",
-                isDuplicateEmail && "border-icon-danger-secondary",
+                Boolean(activeEmailError) && "border-icon-danger-secondary",
               )}
             />
             {mode === "edit" ? (
@@ -174,9 +213,9 @@ export const AdministratorFormDialog = ({
                 Official email addresses cannot be altered after account creation to maintain audit logs and security
                 integrity.
               </p>
-            ) : isDuplicateEmail ? (
+            ) : activeEmailError ? (
               <p className="font-segoe text-[11px] font-normal leading-[140%] text-icon-danger-secondary">
-                An administrator with this email already exists.
+                {activeEmailError}
               </p>
             ) : null}
           </div>
@@ -361,7 +400,7 @@ export const AdministratorFormDialog = ({
           <button
             type="button"
             onClick={onSave}
-            disabled={saving || isDuplicateEmail}
+            disabled={saving || Boolean(activeEmailError)}
             className="flex h-11 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
           >
             {mode === "edit" ? (

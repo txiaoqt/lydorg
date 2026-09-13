@@ -20,8 +20,10 @@ import {
   ArrowRight,
   Download,
   ExternalLink,
-  Loader2
+  Loader2,
+  ChevronDown
 } from "lucide-react";
+import { getBudgetPurposeCategoriesFromSupabase } from "@/lib/lydo-connect-supabase";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
 import { Card } from "@/components/ui/card";
@@ -176,6 +178,40 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   const internalFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const DEFAULT_CANONICAL_CATEGORIES = [
+    "Leadership & Governance",
+    "Sports, Fitness & Recreation",
+    "Arts, Culture & Heritage",
+    "Environmental Protection & Climate Action",
+    "Education, Digital Literacy & Technology",
+    "Health, Mental Wellness & Anti-Drug Advocacy",
+    "Community Outreach & Social Inclusion",
+    "Economic Empowerment & Livelihood",
+    "Other / Custom Purpose",
+  ];
+
+  const [canonicalCategories, setCanonicalCategories] = useState<string[]>(DEFAULT_CANONICAL_CATEGORIES);
+  const [isCustomCategory, setIsCustomCategory] = useState<boolean>(false);
+
+  useEffect(() => {
+    let active = true;
+    void getBudgetPurposeCategoriesFromSupabase()
+      .then((cats) => {
+        if (!active || !cats.length) return;
+        const names = cats.filter((c) => c.isActive).map((c) => c.name);
+        if (!names.includes("Other / Custom Purpose")) {
+          names.push("Other / Custom Purpose");
+        }
+        setCanonicalCategories(names);
+      })
+      .catch(() => {
+        // Fallback to defaults
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const fileInputRef = budgetFileInputRef || internalFileInputRef;
   const [internalDraftFile, setInternalDraftFile] = useState<File | null>(null);
   const activeBudgetFileDraft = budgetFileDraft !== undefined ? budgetFileDraft : internalDraftFile;
@@ -500,14 +536,68 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-foreground">Purpose & Category</label>
-                    <Input
-                      type="text"
-                      placeholder="e.g. Leadership & Capability Building"
-                      value={newPurposeCategory}
-                      onChange={(e) => setNewPurposeCategory(e.target.value)}
-                      className="h-10 text-xs rounded-xl bg-background border-border/80"
-                    />
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-foreground">
+                        Purpose &amp; Category <span className="text-red-500">*</span>
+                      </label>
+                      {isCustomCategory && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomCategory(false);
+                            setNewPurposeCategory(canonicalCategories[0] || "Leadership & Governance");
+                          }}
+                          className="text-[11px] font-semibold text-primary hover:underline"
+                        >
+                          Choose standard
+                        </button>
+                      )}
+                    </div>
+
+                    {!isCustomCategory ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex h-10 w-full items-center justify-between rounded-xl border border-border/80 bg-background px-3 text-xs font-medium text-foreground hover:bg-muted/40 focus:outline-none"
+                          >
+                            <span className="truncate">
+                              {newPurposeCategory || "Select canonical purpose..."}
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-80 max-h-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
+                          {canonicalCategories.map((cat) => (
+                            <DropdownMenuItem
+                              key={cat}
+                              onClick={() => {
+                                if (cat === "Other / Custom Purpose") {
+                                  setIsCustomCategory(true);
+                                  setNewPurposeCategory("");
+                                } else {
+                                  setNewPurposeCategory(cat);
+                                }
+                              }}
+                              className={cn(
+                                "cursor-pointer rounded-lg px-3 py-2 text-xs font-medium text-foreground hover:bg-muted focus:bg-muted",
+                                newPurposeCategory === cat && "bg-primary/10 text-primary font-bold"
+                              )}
+                            >
+                              {cat}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <Input
+                        type="text"
+                        placeholder="Specify custom purpose / category..."
+                        value={newPurposeCategory}
+                        onChange={(e) => setNewPurposeCategory(e.target.value)}
+                        className="h-10 text-xs rounded-xl bg-background border-border/80"
+                      />
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-foreground">Requested Budget Amount (₱) <span className="text-red-500">*</span></label>

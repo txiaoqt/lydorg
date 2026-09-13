@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Eye, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -41,6 +41,10 @@ type BudgetRequestsTableProps = {
   classificationFilter: string;
   onClassificationFilterChange: (value: string) => void;
   onReview: (requestId: string) => void;
+  selectedRequestIds?: Set<string>;
+  onSelectedRequestIdsChange?: (selectedIds: Set<string>) => void;
+  onDeleteSelected?: () => void;
+  isDeleting?: boolean;
 };
 
 const STATUS_TABS: { value: BudgetRequestsStatusFilter; label: string }[] = [
@@ -154,8 +158,33 @@ export const BudgetRequestsTable = ({
   classificationFilter,
   onClassificationFilterChange,
   onReview,
+  selectedRequestIds,
+  onSelectedRequestIdsChange,
+  onDeleteSelected,
+  isDeleting = false,
 }: BudgetRequestsTableProps) => {
   const [page, setPage] = useState(0);
+  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
+  const selectedIds = selectedRequestIds ?? internalSelectedIds;
+  const setSelectedIds = onSelectedRequestIdsChange ?? setInternalSelectedIds;
+
+  // Clear selection whenever filters or pagination change
+  useEffect(() => {
+    if (selectedIds.size > 0) {
+      setSelectedIds(new Set());
+    }
+  }, [searchValue, statusFilter, districtFilter, barangayFilter, classificationFilter, page]);
+
+  // Keyboard accessibility: Escape to clear selection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedIds.size > 0) {
+        setSelectedIds(new Set());
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIds, setSelectedIds]);
 
   const barangayOptions = useMemo(
     () => getBarangayOptionsForDistrict(districtFilter),
@@ -176,6 +205,40 @@ export const BudgetRequestsTable = ({
     () => requests.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
     [requests, clampedPage],
   );
+
+  const visibleRowIds = useMemo(() => pageItems.map((r) => r.id), [pageItems]);
+  const pageSelectedCount = useMemo(
+    () => pageItems.filter((r) => selectedIds.has(r.id)).length,
+    [pageItems, selectedIds],
+  );
+  const isAllPageSelected = pageItems.length > 0 && pageSelectedCount === pageItems.length;
+  const isIndeterminate = pageSelectedCount > 0 && pageSelectedCount < pageItems.length;
+
+  const handleToggleSelectAll = () => {
+    if (isAllPageSelected) {
+      const next = new Set(selectedIds);
+      for (const id of visibleRowIds) {
+        next.delete(id);
+      }
+      setSelectedIds(next);
+    } else {
+      const next = new Set(selectedIds);
+      for (const id of visibleRowIds) {
+        next.add(id);
+      }
+      setSelectedIds(next);
+    }
+  };
+
+  const handleToggleRow = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
 
   const changePage = (next: number) => {
     setPage(Math.max(0, Math.min(next, totalPages - 1)));
@@ -352,13 +415,56 @@ export const BudgetRequestsTable = ({
         </DropdownMenu>
       </div>
 
+      {/* Contextual selection action bar */}
+      {selectedIds.size > 0 && (
+        <div
+          role="region"
+          aria-label="Selection actions"
+          className="flex items-center justify-between gap-4 border-b border-slate-300 bg-slate-50/95 px-4 py-2.5 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex items-center rounded-full bg-slate-200/80 px-2.5 py-0.5 font-segoe text-xs font-semibold text-slate-800">
+              {selectedIds.size} {selectedIds.size === 1 ? "request" : "requests"} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="font-segoe text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors px-2 py-1 rounded hover:bg-slate-200/60"
+            >
+              Clear selection
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onDeleteSelected}
+              disabled={isDeleting}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50/80 px-3 font-segoe text-xs font-semibold text-red-700 transition-all hover:bg-red-100 hover:border-red-400 active:scale-[0.98] disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5 shrink-0 text-red-600" strokeWidth={1.6} />
+              Delete selected
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table content with horizontal containment */}
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[840px]">
           {/* Column headers */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-            <span className="w-6 shrink-0">
-              <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
+            <span className="w-6 shrink-0 flex items-center justify-center">
+              <input
+                type="checkbox"
+                ref={(el) => {
+                  if (el) el.indeterminate = isIndeterminate;
+                }}
+                checked={isAllPageSelected}
+                onChange={handleToggleSelectAll}
+                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer"
+                aria-label="Select all visible requests on current page"
+              />
             </span>
             <span className="w-[13%]">Reference ID</span>
             <span className="w-[24%]">Project &amp; Organization</span>
@@ -379,14 +485,24 @@ export const BudgetRequestsTable = ({
               const organization = organizationsById[request.organizationId];
               const submittedDate = new Date(request.createdAt);
               const isValidDate = !Number.isNaN(submittedDate.getTime());
+              const isSelected = selectedIds.has(request.id);
 
               return (
                 <div
                   key={request.id}
-                  className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
+                  className={cn(
+                    "flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50",
+                    isSelected && "bg-blue-50/40 border-l-2 border-l-public-bg-brand"
+                  )}
                 >
-                  <span className="w-6 shrink-0">
-                    <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
+                  <span className="w-6 shrink-0 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleToggleRow(request.id)}
+                      className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer"
+                      aria-label={`Select ${request.activityTitle}`}
+                    />
                   </span>
 
                   <div className="flex w-[13%] items-center">

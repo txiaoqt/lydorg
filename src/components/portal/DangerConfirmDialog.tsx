@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { AlertTriangle, Info, Loader, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 type DangerConfirmDialogProps = {
   open: boolean;
@@ -59,6 +59,7 @@ export const DangerConfirmDialog = ({
   <Dialog open={open} onOpenChange={(next) => (isConfirming ? undefined : onOpenChange(next))}>
     <DialogContent
       hideCloseButton
+      aria-describedby={description ? undefined : undefined}
       className={cn(
         "w-[420px] sm:w-[420px] max-w-[calc(100vw-2rem)] h-auto sm:h-auto min-h-[336px] max-h-[calc(100dvh-2rem)] overflow-y-auto gap-6 rounded-md sm:rounded-md border border-slate-300 bg-admin-surface p-6 sm:p-6 shadow-lg",
         className,
@@ -111,9 +112,11 @@ export const DangerConfirmDialog = ({
       </div>
 
       {description ? (
-        <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-text-default">
-          {description}
-        </p>
+        <DialogDescription asChild>
+          <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-text-default">
+            {description}
+          </div>
+        </DialogDescription>
       ) : null}
 
       {content}
@@ -122,30 +125,30 @@ export const DangerConfirmDialog = ({
         variant === "info" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-brand-info-border bg-brand-info-subtle p-6">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-            <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-public-bg-brand">
+            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-public-bg-brand">
               {warning}
-            </p>
+            </div>
           </div>
         ) : variant === "success" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-6">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-positive-secondary" strokeWidth={1.6} />
-            <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-positive-secondary">
+            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-positive-secondary">
               {warning}
-            </p>
+            </div>
           </div>
         ) : warningTone === "danger" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-danger-subtle bg-danger-subtle p-6">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />
-            <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-icon-danger-secondary">
+            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-icon-danger-secondary">
               {warning}
-            </p>
+            </div>
           </div>
         ) : (
           <div className="flex items-start gap-2.5 rounded-md border border-border-warning-subtle bg-amber-50 p-6">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-text-warning-secondary" strokeWidth={1.6} />
-            <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-text-warning-secondary">
+            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-text-warning-secondary">
               {warning}
-            </p>
+            </div>
           </div>
         )
       ) : null}

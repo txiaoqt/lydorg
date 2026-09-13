@@ -93,6 +93,7 @@ import { UserPortalYPOPWorkspaceView } from "@/components/portal/UserPortalYPOPW
 import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 import { UserPortalNewsWorkspaceView } from "@/components/portal/UserPortalNewsWorkspaceView";
 import { UserPortalRenewalWorkspaceView } from "@/components/portal/UserPortalRenewalWorkspaceView";
+import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
 import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
@@ -488,6 +489,7 @@ const createBlankBudgetRequest = (organizationId: string, submittedBy: string): 
   id: `budget-${organizationId || "draft"}-${Date.now()}`,
   organizationId,
   submittedBy,
+  fiscalYear: new Date().getFullYear(),
   activityTitle: "",
   activityDescription: "",
   activityDate: "",
@@ -496,7 +498,7 @@ const createBlankBudgetRequest = (organizationId: string, submittedBy: string): 
   approvedAmount: 0,
   releasedAmount: 0,
   releaseDate: "",
-  purposeCategory: "",
+  purposeCategory: "Leadership & Governance",
   status: "draft",
   remarks: "",
   adminRemarks: "",
@@ -542,6 +544,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [budgetUserNoteDrafts, setBudgetUserNoteDrafts] = useState<Record<string, string>>({});
   const [liquidationNotesByReportId, setLiquidationNotesByReportId] = useState<Record<string, string>>({});
   const [submittingLiquidationId, setSubmittingLiquidationId] = useState<string | null>(null);
+  const [liquidationFileDraftByReportId, setLiquidationFileDraftByReportId] = useState<Record<string, File>>({});
   const [liquidationSearch, setLiquidationSearch] = useState("");
   const [liquidationStatusFilter, setLiquidationStatusFilter] = useState<"all" | LiquidationStatus>("all");
   const [liquidationDateRangeFilter, setLiquidationDateRangeFilter] = useState<"all" | "30d" | "90d" | "year">("all");
@@ -2279,6 +2282,7 @@ export default function UserPortal({ section }: { section: string }) {
       ...budgetForm,
       organizationId: currentProfile.id,
       submittedBy: user.id,
+      fiscalYear: budgetForm.fiscalYear || new Date().getFullYear(),
       activityTitle: budgetForm.activityTitle.trim(),
       activityDescription: budgetForm.activityDescription.trim(),
       activityDate: budgetForm.activityDate,
@@ -2458,53 +2462,33 @@ export default function UserPortal({ section }: { section: string }) {
         });
         return;
       }
-      const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
-      const canReplaceExistingFiles =
-        report.status === "needs_revision" || report.status === "rejected_red";
-      const shouldReplaceExistingFiles = canReplaceExistingFiles && existingFiles.length > 0;
 
-      if (existingFiles.length > 0 && !shouldReplaceExistingFiles) {
-        toast({
-          title: "Only one file allowed",
-          description: "Remove the current file first before uploading another document.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (shouldReplaceExistingFiles) {
-        for (const existingFile of existingFiles) {
-          await deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl);
-        }
-      }
-
-      await createLiquidationReportFileInSupabase({
-        liquidationReportId: report.id,
-        file: selectedFile,
-      });
-
-      await updateLiquidationReportInSupabase(report.id, {
-        status: "submitted",
-      });
-
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
-      if (remoteSnapshot) {
-        mergeRemoteState(remoteSnapshot);
-      }
+      // Stage file locally in draft state. DO NOT upload to Storage or mutate Supabase records yet.
+      setLiquidationFileDraftByReportId((prev) => ({
+        ...prev,
+        [report.id]: selectedFile,
+      }));
 
       toast({
-        title: "Liquidation files uploaded",
-        description: shouldReplaceExistingFiles
-          ? "The previous liquidation files were replaced with the new upload."
-          : "The post-activity document was attached to the liquidation record.",
+        title: "File staged for review",
+        description: "Preview your document and click Submit for Review when ready.",
       });
     } catch (error) {
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "The liquidation files could not be uploaded.",
+        description: error instanceof Error ? error.message : "The liquidation files could not be staged.",
         variant: "destructive",
       });
     }
+  };
+
+  const handleClearLiquidationFileDraft = (reportId: string) => {
+    setLiquidationFileDraftByReportId((prev) => {
+      if (!prev[reportId]) return prev;
+      const next = { ...prev };
+      delete next[reportId];
+      return next;
+    });
   };
 
   const handleDeleteLiquidationFile = async (file: LiquidationReportFile) => {
@@ -2562,29 +2546,92 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const handleSubmitLiquidation = async (report: LiquidationReport) => {
-    const attachedFiles = liquidationFilesByReportId.get(report.id) ?? [];
-    const hasAttachedPdf = attachedFiles.some((file) => file.fileType === "application/pdf" && /\.pdf$/i.test(file.fileName));
-    if (!hasAttachedPdf) {
+    const canEditSubmission = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(report.status);
+    if (!canEditSubmission) {
       toast({
-        title: report.status === "needs_revision" || report.status === "overdue" || report.status === "rejected_red"
-          ? "Attachment required for resubmission"
-          : "Attachment required",
-        description:
-          "Please upload a liquidation file before submitting this report.",
+        title: "Submission locked",
+        description: "This liquidation report is currently under review and cannot be modified.",
         variant: "destructive",
       });
       return;
     }
 
+    const stagedFile = liquidationFileDraftByReportId[report.id];
+    const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
+    const isNeedsRevision = report.status === "needs_revision" || report.status === "rejected_red";
+
+    if (!stagedFile && existingFiles.length === 0) {
+      toast({
+        title: isNeedsRevision ? "Attachment required for resubmission" : "Attachment required",
+        description: "Please upload a liquidation file before submitting this report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNeedsRevision && !stagedFile) {
+      toast({
+        title: "Replacement document required",
+        description: "Please select a corrected liquidation PDF report before resubmitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (stagedFile) {
+      const uploadError = await validatePdfUpload(stagedFile);
+      if (uploadError) {
+        toast({
+          title: "PDF required",
+          description: uploadError,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setSubmittingLiquidationId(report.id);
     try {
+      if (stagedFile) {
+        if (existingFiles.length > 0) {
+          for (const existingFile of existingFiles) {
+            await deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl);
+          }
+        }
+
+        await createLiquidationReportFileInSupabase({
+          liquidationReportId: report.id,
+          file: stagedFile,
+        });
+      }
+
       await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
-      setLiquidationNotesByReportId((prev) => { const next = { ...prev }; delete next[report.id]; return next; });
+      setLiquidationNotesByReportId((prev) => {
+        const next = { ...prev };
+        delete next[report.id];
+        return next;
+      });
+      setLiquidationFileDraftByReportId((prev) => {
+        const next = { ...prev };
+        delete next[report.id];
+        return next;
+      });
+
       const remoteSnapshot = await loadLydoConnectSupabaseState();
-      if (remoteSnapshot) mergeRemoteState(remoteSnapshot);
-      toast({ title: "Liquidation submitted", description: "Your documents have been submitted. The admin will review them shortly." });
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+
+      toast({
+        title: isNeedsRevision ? "Liquidation resubmitted" : "Liquidation submitted",
+        description: "Your documents have been submitted. The admin will review them shortly.",
+      });
     } catch (error) {
-      toast({ title: "Submit failed", description: error instanceof Error ? error.message : "Something went wrong.", variant: "destructive" });
+      toast({
+        title: "Submit failed",
+        description: error instanceof Error ? error.message : "Something went wrong while submitting the liquidation report.",
+        variant: "destructive",
+      });
     } finally {
       setSubmittingLiquidationId(null);
     }
@@ -3144,6 +3191,8 @@ export default function UserPortal({ section }: { section: string }) {
             liquidationNotesByReportId={liquidationNotesByReportId}
             setLiquidationNotesByReportId={setLiquidationNotesByReportId}
             submittingLiquidationId={submittingLiquidationId}
+            liquidationFileDraftByReportId={liquidationFileDraftByReportId}
+            onClearLiquidationFileDraft={handleClearLiquidationFileDraft}
             liquidationFileInputRef={liquidationFileInputRef}
             liquidationUploadTargetId={liquidationUploadTargetId}
             setLiquidationUploadTargetId={setLiquidationUploadTargetId}
@@ -3215,6 +3264,12 @@ export default function UserPortal({ section }: { section: string }) {
             createYPOPOrgActivityFile={createYPOPOrgActivityFile}
             deleteYPOPOrgActivityFile={deleteYPOPOrgActivityFile}
           />
+        );
+      case "public-transparency":
+        return (
+          <div className="space-y-6">
+            <PublicBudgetOverview />
+          </div>
         );
       default:
         return (

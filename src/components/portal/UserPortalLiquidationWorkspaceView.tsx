@@ -45,6 +45,7 @@ import { computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
+import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
 
 export interface UserPortalLiquidationWorkspaceViewProps {
   liquidationWorkflowEligibility?: any;
@@ -55,6 +56,8 @@ export interface UserPortalLiquidationWorkspaceViewProps {
   liquidationNotesByReportId: Record<string, string>;
   setLiquidationNotesByReportId: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   submittingLiquidationId: string | null;
+  liquidationFileDraftByReportId?: Record<string, File>;
+  onClearLiquidationFileDraft?: (reportId: string) => void;
   liquidationFileInputRef: React.RefObject<HTMLInputElement>;
   liquidationUploadTargetId: string | null;
   setLiquidationUploadTargetId: (id: string | null) => void;
@@ -103,10 +106,14 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   liquidationReports,
   budgetRequests,
   liquidationFilesByReportId,
+  submittingLiquidationId,
+  liquidationFileDraftByReportId = {},
+  onClearLiquidationFileDraft,
   liquidationFileInputRef,
   liquidationUploadTargetId,
   setLiquidationUploadTargetId,
   handleLiquidationFileUpload,
+  handleSubmitLiquidation,
   navigate,
   searchParams = new URLSearchParams(),
   userRouteMap,
@@ -131,6 +138,21 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   const selectedReport = selectedReportId
     ? liquidationReports.find((r) => r.id === selectedReportId) ?? null
     : null;
+
+  const stagedDraftFile = selectedReport ? liquidationFileDraftByReportId[selectedReport.id] ?? null : null;
+  const [stagedPreviewUrl, setStagedPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!stagedDraftFile) {
+      setStagedPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(stagedDraftFile);
+    setStagedPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [stagedDraftFile]);
 
   const selectedFiles = selectedReport ? (liquidationFilesByReportId.get(selectedReport.id) ?? []) : [];
   const primaryModalFile = selectedFiles[0] ?? null;
@@ -749,7 +771,17 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
         {/* 6. Desktop Details Drawer (isDesktop ONLY) */}
         {isDesktop && (
-          <Sheet open={Boolean(selectedReport)} onOpenChange={(open) => { if (!open) closeLiquidationDetail(); }}>
+          <Sheet
+            open={Boolean(selectedReport)}
+            onOpenChange={(open) => {
+              if (!open) {
+                if (selectedReport && onClearLiquidationFileDraft) {
+                  onClearLiquidationFileDraft(selectedReport.id);
+                }
+                closeLiquidationDetail();
+              }
+            }}
+          >
             <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl">
               {selectedReport && (() => {
                 const selectedBudget = budgetRequests.find((req) => req.id === selectedReport.budgetRequestId) ?? null;
@@ -757,7 +789,25 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                 const primaryFile = files[0] ?? null;
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
-                const activePreviewUrl = resolvedModalPreviewUrl || primaryFile?.fileUrl || "";
+
+                const isEditable = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
+                const isNeedsRevision = selectedReport.status === "needs_revision" || selectedReport.status === "rejected_red";
+
+                const stagedDraft = liquidationFileDraftByReportId[selectedReport.id] ?? null;
+                const stagedFileItem = stagedDraft
+                  ? {
+                      id: `staged-${selectedReport.id}`,
+                      fileName: stagedDraft.name,
+                      fileUrl: stagedPreviewUrl || "",
+                      fileSize: stagedDraft.size,
+                      fileType: "application/pdf",
+                      isStaged: true,
+                      uploadedAt: null,
+                    }
+                  : null;
+
+                const activeFile = stagedFileItem || primaryFile;
+                const activePreviewUrl = stagedPreviewUrl || resolvedModalPreviewUrl || primaryFile?.fileUrl || "";
 
                 return (
                   <>
@@ -813,11 +863,121 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </div>
                       </div>
 
+                      {/* Staged Draft File Card (Only when a local draft is staged) */}
+                      {stagedDraft && (
+                        <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 p-3 sm:p-3.5 space-y-2.5 shadow-2xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-xs font-bold text-foreground">
+                                {isNeedsRevision ? "Staged Replacement File" : "Staged Report File"}
+                              </span>
+                              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                Not yet submitted
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setLiquidationUploadTargetId(selectedReport.id);
+                                liquidationFileInputRef.current?.click();
+                              }}
+                              className="h-7 px-2.5 rounded-lg text-xs font-semibold gap-1.5 border-border/80 hover:bg-muted text-foreground cursor-pointer shrink-0"
+                            >
+                              <FileUp className="h-3 w-3 text-primary" />
+                              <span>Change File</span>
+                            </Button>
+                          </div>
+
+                          <PortalAttachedFileRow
+                            file={{
+                              id: `staged-${selectedReport.id}`,
+                              fileName: stagedDraft.name,
+                              fileSize: stagedDraft.size,
+                              fileType: "application/pdf",
+                              isStaged: true,
+                            }}
+                            isActive={true}
+                            onSelect={() => {}}
+                            status="draft"
+                            statusLabel="Ready to Submit"
+                            canDelete={true}
+                            onDelete={() => {
+                              if (onClearLiquidationFileDraft) {
+                                onClearLiquidationFileDraft(selectedReport.id);
+                              }
+                            }}
+                            deleteTitle="Remove file"
+                            deleteAriaLabel="Remove file"
+                          />
+                        </div>
+                      )}
+
+                      {/* Needs Revision: Persisted File Context */}
+                      {isNeedsRevision && primaryFile && stagedDraft && (
+                        <div className="rounded-xl border border-border/60 bg-card/60 p-3 space-y-1.5">
+                          <span className="text-[11px] font-semibold text-muted-foreground">Current Submitted File (To be replaced)</span>
+                          <PortalAttachedFileRow
+                            file={{
+                              id: primaryFile.id,
+                              fileName: primaryFile.fileName,
+                              fileSize: primaryFile.fileSize,
+                              fileType: primaryFile.fileType,
+                              uploadedAt: primaryFile.uploadedAt,
+                              isStaged: false,
+                            }}
+                            isActive={false}
+                            onSelect={() => {}}
+                            status="needs_revision"
+                            statusLabel="Needs Revision"
+                            canDelete={false}
+                          />
+                        </div>
+                      )}
+
+                      {/* Needs Revision: Pending replacement file selection */}
+                      {isNeedsRevision && primaryFile && !stagedDraft && (
+                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Current Submitted File</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setLiquidationUploadTargetId(selectedReport.id);
+                                liquidationFileInputRef.current?.click();
+                              }}
+                              className="h-7 px-2.5 rounded-lg text-xs font-semibold gap-1.5 border-amber-500/30 hover:bg-amber-500/10 text-foreground cursor-pointer"
+                            >
+                              <FileUp className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                              <span>Select Replacement File</span>
+                            </Button>
+                          </div>
+                          <PortalAttachedFileRow
+                            file={{
+                              id: primaryFile.id,
+                              fileName: primaryFile.fileName,
+                              fileSize: primaryFile.fileSize,
+                              fileType: primaryFile.fileType,
+                              uploadedAt: primaryFile.uploadedAt,
+                              isStaged: false,
+                            }}
+                            isActive={true}
+                            onSelect={() => {}}
+                            status="needs_revision"
+                            statusLabel="Needs Revision"
+                            canDelete={false}
+                          />
+                        </div>
+                      )}
+
                       {/* Document Section (Primary Content) */}
                       <PortalDrawerDocumentSection
-                        file={primaryFile}
+                        file={activeFile}
                         previewUrl={activePreviewUrl}
-                        isDownloading={downloadingFileId === primaryFile?.id}
+                        isDownloading={downloadingFileId === activeFile?.id}
                         onDownloadFile={(url, name, id) => void handleDownloadLiquidationFile(url, name, id)}
                         formatDateTimeLabel={formatDateTimeLabel}
                         sectionTitle="Liquidation Document"
@@ -827,7 +987,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                           setLiquidationUploadTargetId(selectedReport.id);
                           liquidationFileInputRef.current?.click();
                         }}
-                        uploadButtonLabel="Upload Report File"
+                        uploadButtonLabel={isNeedsRevision ? "Select Replacement File" : "Upload Report File"}
                       />
 
                       {/* Secondary Details: Remarks if any */}
@@ -842,20 +1002,63 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                     </div>
 
                     {/* PINNED FOOTER */}
-                    <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                      <p className="text-xs text-muted-foreground font-medium truncate mr-2">
-                        Liquidation Report • LYDO Pasig City
-                      </p>
-                      <SheetClose asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
-                        >
-                          Close Drawer
-                        </Button>
-                      </SheetClose>
+                    <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
+                      {isEditable ? (
+                        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (onClearLiquidationFileDraft) {
+                                onClearLiquidationFileDraft(selectedReport.id);
+                              }
+                              closeLiquidationDetail();
+                            }}
+                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                          >
+                            Cancel
+                          </Button>
+
+                          <Button
+                            type="button"
+                            disabled={!stagedDraft || submittingLiquidationId === selectedReport.id}
+                            onClick={async () => {
+                              if (handleSubmitLiquidation) {
+                                await handleSubmitLiquidation(selectedReport);
+                              }
+                            }}
+                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                          >
+                            {submittingLiquidationId === selectedReport.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>{isNeedsRevision ? "Resubmitting..." : "Submitting..."}</span>
+                              </>
+                            ) : (
+                              <>
+                                <FileUp className="h-4 w-4" />
+                                <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                            Liquidation Report • LYDO Pasig City
+                          </p>
+                          <SheetClose asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                            >
+                              Close Drawer
+                            </Button>
+                          </SheetClose>
+                        </div>
+                      )}
                     </div>
                   </>
                 );
@@ -866,7 +1069,17 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
         {/* 7. Mobile Liquidation Report Modal (!isDesktop ONLY) */}
         {!isDesktop && (
-          <Dialog open={Boolean(selectedReport)} onOpenChange={(open) => { if (!open) closeLiquidationDetail(); }}>
+          <Dialog
+            open={Boolean(selectedReport)}
+            onOpenChange={(open) => {
+              if (!open) {
+                if (selectedReport && onClearLiquidationFileDraft) {
+                  onClearLiquidationFileDraft(selectedReport.id);
+                }
+                closeLiquidationDetail();
+              }
+            }}
+          >
             <DialogContent
               hideCloseButton={true}
               className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
@@ -877,7 +1090,25 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                 const primaryFile = selectedFiles[0] ?? null;
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
-                const activePreviewUrl = resolvedModalPreviewUrl || primaryFile?.fileUrl || "";
+
+                const isEditable = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
+                const isNeedsRevision = selectedReport.status === "needs_revision" || selectedReport.status === "rejected_red";
+
+                const stagedDraft = liquidationFileDraftByReportId[selectedReport.id] ?? null;
+                const stagedFileItem = stagedDraft
+                  ? {
+                      id: `staged-${selectedReport.id}`,
+                      fileName: stagedDraft.name,
+                      fileUrl: stagedPreviewUrl || "",
+                      fileSize: stagedDraft.size,
+                      fileType: "application/pdf",
+                      isStaged: true,
+                      uploadedAt: null,
+                    }
+                  : null;
+
+                const activeFile = stagedFileItem || primaryFile;
+                const activePreviewUrl = stagedPreviewUrl || resolvedModalPreviewUrl || primaryFile?.fileUrl || "";
 
                 return (
                   <>
@@ -901,7 +1132,12 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         <button
                           type="button"
                           aria-label="Close modal"
-                          onClick={() => closeLiquidationDetail()}
+                          onClick={() => {
+                            if (onClearLiquidationFileDraft) {
+                              onClearLiquidationFileDraft(selectedReport.id);
+                            }
+                            closeLiquidationDetail();
+                          }}
                           className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                           <X className="h-4 w-4" />
@@ -973,12 +1209,122 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </div>
                       </div>
 
+                      {/* Staged Draft File Card (Only when a local draft is staged) */}
+                      {stagedDraft && (
+                        <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 p-3 space-y-2 shadow-2xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-xs font-bold text-foreground truncate">
+                                {isNeedsRevision ? "Staged Replacement" : "Staged Report File"}
+                              </span>
+                              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">
+                                Draft
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setLiquidationUploadTargetId(selectedReport.id);
+                                liquidationFileInputRef.current?.click();
+                              }}
+                              className="h-7 px-2 rounded-lg text-xs font-semibold gap-1 border-border/80 hover:bg-muted text-foreground cursor-pointer shrink-0"
+                            >
+                              <FileUp className="h-3 w-3 text-primary" />
+                              <span>Change</span>
+                            </Button>
+                          </div>
+
+                          <PortalAttachedFileRow
+                            file={{
+                              id: `staged-${selectedReport.id}`,
+                              fileName: stagedDraft.name,
+                              fileSize: stagedDraft.size,
+                              fileType: "application/pdf",
+                              isStaged: true,
+                            }}
+                            isActive={true}
+                            onSelect={() => {}}
+                            status="draft"
+                            statusLabel="Ready to Submit"
+                            canDelete={true}
+                            onDelete={() => {
+                              if (onClearLiquidationFileDraft) {
+                                onClearLiquidationFileDraft(selectedReport.id);
+                              }
+                            }}
+                            deleteTitle="Remove file"
+                            deleteAriaLabel="Remove file"
+                          />
+                        </div>
+                      )}
+
+                      {/* Needs Revision: Persisted File Context */}
+                      {isNeedsRevision && primaryFile && stagedDraft && (
+                        <div className="rounded-xl border border-border/60 bg-card/60 p-2.5 space-y-1">
+                          <span className="text-[10px] font-semibold text-muted-foreground">Current Submitted File (To be replaced)</span>
+                          <PortalAttachedFileRow
+                            file={{
+                              id: primaryFile.id,
+                              fileName: primaryFile.fileName,
+                              fileSize: primaryFile.fileSize,
+                              fileType: primaryFile.fileType,
+                              uploadedAt: primaryFile.uploadedAt,
+                              isStaged: false,
+                            }}
+                            isActive={false}
+                            onSelect={() => {}}
+                            status="needs_revision"
+                            statusLabel="Needs Revision"
+                            canDelete={false}
+                          />
+                        </div>
+                      )}
+
+                      {/* Needs Revision: Pending replacement file selection */}
+                      {isNeedsRevision && primaryFile && !stagedDraft && (
+                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Current Submitted File</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setLiquidationUploadTargetId(selectedReport.id);
+                                liquidationFileInputRef.current?.click();
+                              }}
+                              className="h-7 px-2 rounded-lg text-xs font-semibold gap-1 border-amber-500/30 hover:bg-amber-500/10 text-foreground cursor-pointer"
+                            >
+                              <FileUp className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                              <span>Select Replacement</span>
+                            </Button>
+                          </div>
+                          <PortalAttachedFileRow
+                            file={{
+                              id: primaryFile.id,
+                              fileName: primaryFile.fileName,
+                              fileSize: primaryFile.fileSize,
+                              fileType: primaryFile.fileType,
+                              uploadedAt: primaryFile.uploadedAt,
+                              isStaged: false,
+                            }}
+                            isActive={true}
+                            onSelect={() => {}}
+                            status="needs_revision"
+                            statusLabel="Needs Revision"
+                            canDelete={false}
+                          />
+                        </div>
+                      )}
+
                       {/* Document Section (Primary Content) */}
                       <PortalDrawerDocumentSection
                         isMobile={true}
-                        file={primaryFile}
+                        file={activeFile}
                         previewUrl={activePreviewUrl}
-                        isDownloading={downloadingFileId === primaryFile?.id}
+                        isDownloading={downloadingFileId === activeFile?.id}
                         onDownloadFile={(url, name, id) => void handleDownloadLiquidationFile(url, name, id)}
                         formatDateTimeLabel={formatDateTimeLabel}
                         sectionTitle="Liquidation Document"
@@ -988,7 +1334,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                           setLiquidationUploadTargetId(selectedReport.id);
                           liquidationFileInputRef.current?.click();
                         }}
-                        uploadButtonLabel="Upload Report File"
+                        uploadButtonLabel={isNeedsRevision ? "Select Replacement File" : "Upload Report File"}
                       />
 
                       {/* Secondary Details: Remarks if any */}
@@ -1003,19 +1349,62 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                     </div>
 
                     {/* PINNED FOOTER */}
-                    <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
-                        Liquidation Report • LYDO Pasig City
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => closeLiquidationDetail()}
-                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        Close
-                      </Button>
+                    <div className="p-3 sm:px-5 sm:py-3 border-t border-border/70 bg-card shrink-0">
+                      {isEditable ? (
+                        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (onClearLiquidationFileDraft) {
+                                onClearLiquidationFileDraft(selectedReport.id);
+                              }
+                              closeLiquidationDetail();
+                            }}
+                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                          >
+                            Cancel
+                          </Button>
+
+                          <Button
+                            type="button"
+                            disabled={!stagedDraft || submittingLiquidationId === selectedReport.id}
+                            onClick={async () => {
+                              if (handleSubmitLiquidation) {
+                                await handleSubmitLiquidation(selectedReport);
+                              }
+                            }}
+                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                          >
+                            {submittingLiquidationId === selectedReport.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>{isNeedsRevision ? "Resubmitting..." : "Submitting..."}</span>
+                              </>
+                            ) : (
+                              <>
+                                <FileUp className="h-4 w-4" />
+                                <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
+                            Liquidation Report • LYDO Pasig City
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => closeLiquidationDetail()}
+                            className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0"
+                          >
+                            Close
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </>
                 );

@@ -21,6 +21,7 @@ import AdminCreatePassword from "./pages/AdminCreatePassword";
 const SiteMap = lazy(() => import("./pages/SiteMap"));
 import NewsReleaseRecord from "./pages/NewsReleaseRecord";
 const PublicTemplates = lazy(() => import("./pages/PublicTemplates"));
+const PublicBudgetTransparency = lazy(() => import("./pages/PublicBudgetTransparency"));
 const NewsReleases = lazy(() => import("./pages/NewsReleases"));
 import { usePolicyAgreement } from "./hooks/use-policy-agreement";
 import { TermsPrivacyAgreementModal } from "./components/TermsPrivacyAgreementModal";
@@ -70,7 +71,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   });
 
   const isPublicPath =
-    ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/advocacy"].includes(pathname) ||
+    ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/budget-transparency", "/advocacy"].includes(pathname) ||
     pathname.startsWith("/news-releases");
 
   if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password" && !isAdminCreatePasswordRoute) {
@@ -304,6 +305,7 @@ const App = () => (
                       )}
                       <Route path="/" element={<Suspense fallback={<PublicPageLoader />}><UserSurfaceRoot /></Suspense>} />
                       <Route path="/public-templates" element={<Suspense fallback={<PublicPageLoader />}><PublicTemplates /></Suspense>} />
+                      <Route path="/budget-transparency" element={<Suspense fallback={<PublicPageLoader />}><PublicBudgetTransparency /></Suspense>} />
                       <Route path="/about" element={<Suspense fallback={<PublicPageLoader />}><About /></Suspense>} />
                       <Route path="/faqs" element={<Suspense fallback={<PublicPageLoader />}><Faqs /></Suspense>} />
                       <Route path="/contacts" element={<Suspense fallback={<PublicPageLoader />}><Contacts /></Suspense>} />

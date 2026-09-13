@@ -898,6 +898,7 @@ export type BudgetRequest = {
   releasedAmount: number;
   releaseDate: string;
   purposeCategory: string;
+  fiscalYear?: number;
   status: BudgetRequestStatus;
   remarks: string;
   adminRemarks: string;
@@ -909,6 +910,81 @@ export type BudgetRequest = {
   revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
   budgetRequestType?: BudgetRequestType;
   ypopEntryId?: string;
+};
+
+export type AnnualBudgetAllocation = {
+  id: string;
+  fiscalYear: number;
+  totalAmount: number;
+  statutoryBaselineNotes?: string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type BudgetPurposeCategory = {
+  id: string;
+  name: string;
+  description?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+export type BudgetCategorySummary = {
+  category: string;
+  approvedAmount: number;
+  releasedAmount: number;
+  requestCount: number;
+};
+
+export type BudgetMonitoringSummary = {
+  fiscalYear: number;
+  isConfigured: boolean;
+  totalFyBudget: number | null;
+  statutoryBaselineNotes: string | null;
+  approvedBudget: number;
+  releasedBudget: number;
+  liquidatedBudget: number;
+  pendingDisbursement: number;
+  activeInField: number;
+  remainingHeadroom: number | null;
+  isDeficit: boolean;
+  deficitAmount: number;
+  totalRequests: number;
+  releasedRequests: number;
+  liquidatedRequests: number;
+  categoryBreakdown: BudgetCategorySummary[];
+};
+
+export type PublicPurposeCategory = {
+  category: string;
+  amount: number;
+  percentage: number;
+};
+
+export type PublicDistrictAllocation = {
+  district: string;
+  amount: number;
+  percentage: number;
+};
+
+export type PublicBudgetSummary = {
+  fiscalYear: number;
+  isConfigured: boolean;
+  annualBudget: number | null;
+  approvedBudget: number;
+  releasedBudget: number;
+  liquidatedBudget: number;
+  remainingHeadroom: number | null;
+  isDeficit: boolean;
+  deficitAmount: number;
+  percentCommitted: number | null;
+  percentReleased: number | null;
+  percentLiquidated: number | null;
+  purposeCategories: PublicPurposeCategory[];
+  districtAllocations?: PublicDistrictAllocation[];
+  availableFiscalYears?: number[];
+  lastUpdated: string;
 };
 
 export type LiquidationReportFile = {
