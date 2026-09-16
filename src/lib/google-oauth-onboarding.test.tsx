@@ -16,6 +16,13 @@ import {
 } from "@/lib/organization-profile-domain";
 import type { OrganizationProfile } from "@/lib/lydo-connect-data";
 
+import {
+  isPasswordRecoveryActive,
+  markPasswordRecoveryActive,
+  clearPasswordRecoveryState,
+  parsePasswordRecoveryUrl,
+} from "@/lib/password-recovery";
+
 // Mock ResizeObserver for jsdom
 window.ResizeObserver =
   window.ResizeObserver ||
@@ -60,7 +67,7 @@ vi.mock("@/lib/lydo-connect-supabase", () => ({
 let mockAuth = {
   isAuthenticated: false,
   isInitialized: true,
-  isPasswordRecoverySession: false,
+  isPasswordRecoverySession: undefined as boolean | undefined,
   role: "guest" as string,
   user: null as any,
   signIn: vi.fn(),
@@ -68,7 +75,19 @@ let mockAuth = {
 };
 
 vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => mockAuth,
+  useAuth: () => {
+    const recoveryActive =
+      mockAuth.isPasswordRecoverySession !== undefined
+        ? mockAuth.isPasswordRecoverySession
+        : isPasswordRecoveryActive({
+            url: typeof window !== "undefined" ? window.location.href : undefined,
+          });
+
+    return {
+      ...mockAuth,
+      isPasswordRecoverySession: recoveryActive,
+    };
+  },
 }));
 
 const mockToast = vi.fn();
@@ -79,6 +98,8 @@ vi.mock("@/hooks/use-toast", () => ({
 describe("Google OAuth & Onboarding Architecture Verification", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
+    window.sessionStorage.clear();
     mockGetUserIdentities.mockResolvedValue({
       data: { identities: [{ provider: "google" }] },
       error: null,
@@ -92,7 +113,7 @@ describe("Google OAuth & Onboarding Architecture Verification", () => {
     mockAuth = {
       isAuthenticated: false,
       isInitialized: true,
-      isPasswordRecoverySession: false,
+      isPasswordRecoverySession: undefined,
       role: "guest",
       user: null,
       signIn: vi.fn(),
@@ -844,5 +865,272 @@ describe("Y-TRACE Email/Password Credential Creation in Google Onboarding", () =
     expect(screen.getByText(/Admin sign in/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Continue with Google/i })).not.toBeInTheDocument();
     expect(screen.queryByTestId("ytrace-password-section")).not.toBeInTheDocument();
+  });
+
+  // TEST 10 — Google callback code does not enter recovery
+  it("TEST 10: Google callback code does not enter recovery", async () => {
+    const recoveryCheck = parsePasswordRecoveryUrl("https://example.com/auth/callback?code=test-oauth-code");
+    expect(recoveryCheck.hasRecoveryCredentials).toBe(false);
+
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-10", email: "user10@gmail.com", displayName: "User Ten" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?code=test-oauth-code"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/reset-password" element={<div data-testid="reset-screen">Reset Password</div>} />
+          <Route path="/google-onboarding" element={<div data-testid="onboarding-screen">Google Onboarding</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("reset-screen")).not.toBeInTheDocument();
+      expect(screen.getByTestId("onboarding-screen")).toBeInTheDocument();
+    });
+  });
+
+  // TEST 11 — Google complete profile -> dashboard
+  it("TEST 11: Google complete profile routes to /dashboard and never /reset-password", async () => {
+    const completeProfile: OrganizationProfile = {
+      id: "org-11",
+      userId: "google-user-11",
+      organizationName: "Complete Youth Org",
+      organizationEmail: "complete@pasig.gov.ph",
+      contactNumber: "09181234567",
+      district: "District I",
+      barangay: "Kapasigan",
+      isExistingOrganization: false,
+      organizationIdentifierNumber: "",
+      registrationType: "new_organization",
+      urn: "",
+      majorClassification: "Community Based" as any,
+      subClassification: "Youth Organization" as any,
+      advocacies: ["Education"],
+      adviserName: "Juan Dela Cruz",
+      representativeName: "Maria Clara",
+      address: "123 Pasig Blvd",
+      profileStatus: "verified",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-11", email: "complete@pasig.gov.ph", displayName: "Maria Clara" },
+    };
+    mockFetchProfile.mockResolvedValue(completeProfile);
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?code=valid-pkce-code"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/dashboard" element={<div data-testid="dashboard-screen">Dashboard</div>} />
+          <Route path="/reset-password" element={<div data-testid="reset-screen">Reset Password</div>} />
+          <Route path="/google-onboarding" element={<div data-testid="onboarding-screen">Onboarding</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("dashboard-screen")).toBeInTheDocument();
+      expect(screen.queryByTestId("reset-screen")).not.toBeInTheDocument();
+    });
+  });
+
+  // TEST 12 — Google incomplete/no profile -> google-onboarding
+  it("TEST 12: Google incomplete/no profile routes to /google-onboarding from callback", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-12", email: "neworg@gmail.com", displayName: "New Leader" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?code=fresh-code"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/dashboard" element={<div data-testid="dashboard-screen">Dashboard</div>} />
+          <Route path="/reset-password" element={<div data-testid="reset-screen">Reset Password</div>} />
+          <Route path="/google-onboarding" element={<div data-testid="onboarding-screen">Onboarding</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("onboarding-screen")).toBeInTheDocument();
+      expect(screen.queryByTestId("reset-screen")).not.toBeInTheDocument();
+    });
+  });
+
+  // TEST 13 — Google cancellation -> /signin
+  it("TEST 13: Google cancellation routes to /signin with informative message", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: false,
+      user: null,
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?error=access_denied&error_description=User+cancelled"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/reset-password" element={<div data-testid="reset-screen">Reset Password</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Sign in with Google was cancelled/i)).toBeInTheDocument();
+      expect(screen.queryByTestId("reset-screen")).not.toBeInTheDocument();
+    });
+  });
+
+  // TEST 14 — Google OAuth error -> /signin
+  it("TEST 14: Google OAuth error routes to /signin with descriptive error", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: false,
+      user: null,
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?error=server_error&error_description=OAuth+token+exchange+failed"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/reset-password" element={<div data-testid="reset-screen">Reset Password</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/OAuth token exchange failed/i)).toBeInTheDocument();
+      expect(screen.queryByTestId("reset-screen")).not.toBeInTheDocument();
+    });
+  });
+
+  // TEST 15 — Google + stale recovery storage -> normal OAuth flow
+  it("TEST 15: Google OAuth with stale recovery storage clears flags and completes normal flow", async () => {
+    // Set stale recovery flags in localStorage & sessionStorage
+    markPasswordRecoveryActive("stale-user-15");
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBe("1");
+
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const oauthPayload = btoa(JSON.stringify({ sub: "google-user-15", amr: [{ method: "oauth" }], exp: futureExp }));
+    const oauthJwt = `header.${oauthPayload}.signature`;
+
+    // Normal OAuth session clears recovery state
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://example.com/auth/callback?code=oauth-pkce-15",
+      eventName: "SIGNED_IN",
+      session: {
+        access_token: oauthJwt,
+        user: { id: "google-user-15" },
+      },
+    });
+
+    expect(isRecovery).toBe(false);
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-15", email: "test15@gmail.com", displayName: "OAuth User" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?code=oauth-pkce-15"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/reset-password" element={<div data-testid="reset-screen">Reset Password</div>} />
+          <Route path="/google-onboarding" element={<div data-testid="onboarding-screen">Google Onboarding</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("onboarding-screen")).toBeInTheDocument();
+      expect(screen.queryByTestId("reset-screen")).not.toBeInTheDocument();
+    });
+  });
+
+  // TEST 16 — Specific regression test for the trap
+  it("TEST 16: Stale recovery storage does not trap user on /reset-password during navigation (/about, /dashboard, /, /signin)", () => {
+    // Plant stale recovery flags
+    markPasswordRecoveryActive("stale-trap-user");
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBe("1");
+
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const oauthPayload = btoa(JSON.stringify({ sub: "google-user-16", amr: [{ method: "oauth" }], exp: futureExp }));
+    const oauthJwt = `header.${oauthPayload}.signature`;
+    const normalSession = { access_token: oauthJwt, user: { id: "google-user-16" } };
+
+    const testRoutes = ["/", "/about", "/dashboard", "/signin"];
+    for (const route of testRoutes) {
+      const isRecovery = isPasswordRecoveryActive({
+        url: `https://example.com${route}`,
+        session: normalSession,
+      });
+      expect(isRecovery).toBe(false);
+    }
+
+    // Stale flags are purged, user is completely free from the reset-password trap
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+    expect(window.sessionStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+  });
+
+  // TEST 17 — Password recovery regression: PASSWORD_RECOVERY event
+  it("TEST 17: Actual PASSWORD_RECOVERY event keeps user in recovery state", () => {
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://example.com/reset-password",
+      eventName: "PASSWORD_RECOVERY",
+      session: null,
+    });
+    expect(isRecovery).toBe(true);
+  });
+
+  // TEST 18 — Password recovery regression: Actual recovery JWT keeps recovery gate active
+  it("TEST 18: Actual recovery JWT keeps recovery gate active", () => {
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const recoveryPayload = btoa(JSON.stringify({ sub: "recovery-user", amr: [{ method: "recovery" }], exp: futureExp }));
+    const recoveryJwt = `header.${recoveryPayload}.signature`;
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://example.com/reset-password",
+      session: {
+        access_token: recoveryJwt,
+        user: { id: "recovery-user" },
+      },
+    });
+    expect(isRecovery).toBe(true);
+  });
+
+  // TEST 19 — Password recovery regression: Legitimate password recovery behaves as expected
+  it("TEST 19: Legitimate password recovery flow parses credentials and clears cleanly", () => {
+    const recoveryUrl = "https://example.com/reset-password?token_hash=real-hash&type=recovery";
+    const params = parsePasswordRecoveryUrl(recoveryUrl);
+    expect(params.hasRecoveryCredentials).toBe(true);
+    expect(params.tokenHash).toBe("real-hash");
+
+    markPasswordRecoveryActive("legit-user");
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBe("1");
+
+    clearPasswordRecoveryState();
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+    expect(window.sessionStorage.getItem("ytrace-active-password-recovery")).toBeNull();
   });
 });

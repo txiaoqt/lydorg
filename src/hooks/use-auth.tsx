@@ -162,15 +162,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
 
-      if (isRecovery) {
+      const isConfirmedNormalSession =
+        Boolean(session?.user && session?.access_token && !isRecoveryJwt(session.access_token)) &&
+        eventName !== "PASSWORD_RECOVERY";
+
+      if (isRecovery && !isConfirmedNormalSession) {
         markPasswordRecoveryActive(session?.user?.id);
         setIsPasswordRecoverySession(true);
       } else {
-        // Do NOT call clearPasswordRecoveryState() here.
-        // Recovery state is cleared exclusively by explicit user actions
-        // (signIn, signOut, successful password reset) to prevent a race
-        // condition where applySession in a new tab destroys the cross-tab
-        // localStorage marker before route guards can read it.
+        if (isConfirmedNormalSession) {
+          clearPasswordRecoveryState();
+        }
         setIsPasswordRecoverySession(false);
       }
 

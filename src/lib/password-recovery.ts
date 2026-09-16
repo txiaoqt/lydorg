@@ -29,9 +29,13 @@ export const parsePasswordRecoveryUrl = (href: string): PasswordRecoveryParams =
     hash.get("error") ||
     "";
 
-  const hasRecoveryError = Boolean(errorCode || errorMessage);
+  const isPasswordRecoveryPath =
+    url.pathname === "/reset-password" || url.pathname === "/admin/create-password";
+  const hasErrorParams = Boolean(errorCode || errorMessage);
+  const hasRecoveryError = hasErrorParams && (type === "recovery" || isPasswordRecoveryPath);
   const hasRecoveryCredentials =
-    !hasRecoveryError && (type === "recovery" || Boolean(code || tokenHash || (accessToken && refreshToken)));
+    !hasRecoveryError &&
+    (type === "recovery" || (isPasswordRecoveryPath && Boolean(code || tokenHash || (accessToken && refreshToken))));
 
   return {
     hasRecoveryCredentials,
@@ -136,7 +140,15 @@ export const isPasswordRecoveryActive = (params?: {
   // 3. Cryptographic JWT payload AMR inspection from current session parameter
   if (isRecoveryJwt(params?.session?.access_token)) return true;
 
-  // 4. If session is explicitly null and URL has no recovery credentials,
+  // 4. If a confirmed non-recovery authenticated session is active,
+  // stale recovery flags must NOT force the app into recovery.
+  // Purge any stale storage flags and return false.
+  if (params?.session?.access_token && !isRecoveryJwt(params.session.access_token)) {
+    clearPasswordRecoveryState();
+    return false;
+  }
+
+  // 5. If session is explicitly null and URL has no recovery credentials,
   // there is NO active recovery session anywhere in the browser.
   // Purge any stale storage flags left over from previously closed/abandoned tabs.
   if (params?.session === null) {
@@ -144,16 +156,21 @@ export const isPasswordRecoveryActive = (params?: {
     return false;
   }
 
-  // 5. If no explicit session was passed (e.g. initial synchronous check before async getSession()),
-  // inspect any Supabase recovery session stored in localStorage.
+  // 6. If no explicit session was passed (e.g. initial synchronous check before async getSession()),
+  // inspect any Supabase session stored in localStorage.
   if (params?.session === undefined) {
     const storedToken = getStoredSupabaseToken();
-    if (storedToken && isRecoveryJwt(storedToken)) {
-      return true;
+    if (storedToken) {
+      if (isRecoveryJwt(storedToken)) {
+        return true;
+      }
+      // Stored token is a confirmed normal authenticated session; purge stale recovery flags.
+      clearPasswordRecoveryState();
+      return false;
     }
   }
 
-  // 6. Shared cross-tab localStorage check (corroborated by timestamp validity)
+  // 7. Shared cross-tab localStorage check (corroborated by timestamp validity)
   try {
     const localFlag =
       window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY) === "1" ||
@@ -176,7 +193,7 @@ export const isPasswordRecoveryActive = (params?: {
     // Ignore storage exceptions
   }
 
-  // 7. Per-tab sessionStorage check
+  // 8. Per-tab sessionStorage check
   try {
     const sessionFlag =
       window.sessionStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY) === "1" ||

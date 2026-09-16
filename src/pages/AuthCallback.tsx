@@ -68,7 +68,13 @@ const AuthCallback = () => {
 
   useEffect(() => {
     if (!isInitialized || authError) return;
-    if (isPasswordRecoverySession) {
+
+    const searchParams = new URLSearchParams(location.search);
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const isExplicitRecovery =
+      searchParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
+
+    if (isPasswordRecoverySession && (isExplicitRecovery || !isAuthenticated)) {
       navigate("/reset-password", { replace: true });
       return;
     }

@@ -254,4 +254,68 @@ describe("Cross-Tab Password Recovery Security & Route Protection", () => {
     expect(isRecovery).toBe(false);
     expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBeNull();
   });
+
+  it("TEST 7: Stale recovery storage does not trap a valid OAuth session", () => {
+    markPasswordRecoveryActive("stale-user");
+    expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBe("1");
+
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const oauthPayload = btoa(JSON.stringify({ amr: [{ method: "oauth" }], exp: futureExp }));
+    const oauthJwt = `header.${oauthPayload}.signature`;
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/dashboard",
+      eventName: "SIGNED_IN",
+      session: {
+        access_token: oauthJwt,
+        user: { id: "google-user" },
+      },
+    });
+
+    expect(isRecovery).toBe(false);
+    expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(RECOVERY_STORAGE_KEY)).toBeNull();
+  });
+
+  it("TEST 8: Recovery tab remains protected while session has recovery AMR", () => {
+    markPasswordRecoveryActive("recovery-user");
+
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const recoveryPayload = btoa(JSON.stringify({ amr: [{ method: "recovery" }], exp: futureExp }));
+    const recoveryJwt = `header.${recoveryPayload}.signature`;
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/dashboard",
+      session: {
+        access_token: recoveryJwt,
+        user: { id: "recovery-user" },
+      },
+    });
+
+    expect(isRecovery).toBe(true);
+    expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBe("1");
+  });
+
+  it("TEST 9: Normal authenticated session in another tab clears stale recovery state", () => {
+    // Tab A left stale recovery flags in localStorage
+    markPasswordRecoveryActive("tab-a-user");
+    window.sessionStorage.clear(); // Simulate separate tab B
+
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const normalPayload = btoa(JSON.stringify({ amr: [{ method: "oauth" }], exp: futureExp }));
+    const normalJwt = `header.${normalPayload}.signature`;
+
+    // Tab B has a valid OAuth session and navigates to /dashboard
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://y-trace.local/dashboard",
+      session: {
+        access_token: normalJwt,
+        user: { id: "tab-b-user" },
+      },
+    });
+
+    expect(isRecovery).toBe(false);
+    expect(window.localStorage.getItem(RECOVERY_ACTIVE_LOCAL_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(RECOVERY_STORAGE_KEY)).toBeNull();
+  });
 });

@@ -44,6 +44,40 @@ describe("password recovery URL parsing", () => {
     expect(expiredQueryLink.hasRecoveryCredentials).toBe(false);
     expect(expiredQueryLink.errorCode).toBe("otp_expired");
   });
+
+  it("TEST 1: Google OAuth callback code is not treated as password recovery", () => {
+    const result = parsePasswordRecoveryUrl("https://example.com/auth/callback?code=test-oauth-code");
+    expect(result.hasRecoveryCredentials).toBe(false);
+    expect(result.hasRecoveryError).toBe(false);
+    expect(result.code).toBe("test-oauth-code");
+  });
+
+  it("TEST 2: OAuth callback code without type=recovery is never treated as recovery", () => {
+    const result = parsePasswordRecoveryUrl(
+      "https://example.com/auth/callback?code=79d490c2-5116-4ec4-9b2f-34cb2f57a62b",
+    );
+    expect(result.hasRecoveryCredentials).toBe(false);
+    expect(result.hasRecoveryError).toBe(false);
+  });
+
+  it("TEST 3: Actual password recovery token_hash with type=recovery remains recovery", () => {
+    const result = parsePasswordRecoveryUrl(
+      "https://example.com/reset-password?token_hash=valid-token-hash&type=recovery",
+    );
+    expect(result.hasRecoveryCredentials).toBe(true);
+    expect(result.hasRecoveryError).toBe(false);
+    expect(result.tokenHash).toBe("valid-token-hash");
+  });
+
+  it("TEST 4: Actual implicit password recovery access_token/refresh_token with type=recovery remains recovery", () => {
+    const result = parsePasswordRecoveryUrl(
+      "https://example.com/reset-password#access_token=valid-access&refresh_token=valid-refresh&type=recovery",
+    );
+    expect(result.hasRecoveryCredentials).toBe(true);
+    expect(result.hasRecoveryError).toBe(false);
+    expect(result.accessToken).toBe("valid-access");
+    expect(result.refreshToken).toBe("valid-refresh");
+  });
 });
 
 describe("isRecoveryJwt", () => {
@@ -137,5 +171,52 @@ describe("isPasswordRecoveryActive across tabs and lifecycle", () => {
         url: "https://example.com/reset-password#error=access_denied&error_code=otp_expired",
       }),
     ).toBe(false);
+  });
+
+  it("TEST 5: Normal OAuth session clears stale recovery flags", async () => {
+    const { isPasswordRecoveryActive, markPasswordRecoveryActive } = await import("./password-recovery");
+    // Set stale recovery flags in both storages
+    markPasswordRecoveryActive("user-stale");
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBe("1");
+    expect(window.sessionStorage.getItem("ytrace-active-password-recovery")).toBe("1");
+
+    // Provide a valid non-recovery OAuth session (amr: oauth)
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const oauthPayload = btoa(JSON.stringify({ sub: "google-user-1", amr: [{ method: "oauth" }], exp: futureExp }));
+    const oauthJwt = `header.${oauthPayload}.signature`;
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://example.com/dashboard",
+      eventName: "SIGNED_IN",
+      session: {
+        access_token: oauthJwt,
+        user: { id: "google-user-1" },
+      },
+    });
+
+    expect(isRecovery).toBe(false);
+    expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+    expect(window.localStorage.getItem("ytrace-recovery-session")).toBeNull();
+    expect(window.sessionStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+    expect(window.sessionStorage.getItem("ytrace-recovery-session")).toBeNull();
+  });
+
+  it("TEST 6: Genuine recovery session preserves recovery state even when recovery flags exist", async () => {
+    const { isPasswordRecoveryActive, markPasswordRecoveryActive } = await import("./password-recovery");
+    markPasswordRecoveryActive("user-recovery");
+
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const recoveryPayload = btoa(JSON.stringify({ sub: "user-recovery", amr: [{ method: "recovery" }], exp: futureExp }));
+    const recoveryJwt = `header.${recoveryPayload}.signature`;
+
+    const isRecovery = isPasswordRecoveryActive({
+      url: "https://example.com/reset-password",
+      session: {
+        access_token: recoveryJwt,
+        user: { id: "user-recovery" },
+      },
+    });
+
+    expect(isRecovery).toBe(true);
   });
 });
