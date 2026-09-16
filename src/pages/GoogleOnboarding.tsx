@@ -5,9 +5,13 @@ import {
   Award,
   Building2,
   Check,
+  CheckCircle2,
+  Eye,
+  EyeOff,
   Globe,
   Layers,
   Loader2,
+  Lock,
   LogOut,
   Mail,
   MapPin,
@@ -24,6 +28,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { isPasswordValid, validatePasswordCriteria } from "@/lib/password-policy";
 import {
   pasigDistrictBarangays,
   pasigDistrictOptions,
@@ -76,6 +82,101 @@ const GoogleIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+/**
+ * Detects whether the current Supabase user already has an email/password identity.
+ * Uses supabase.auth.getUserIdentities() to inspect linked auth identities.
+ */
+export const checkUserHasEmailIdentity = async (supabaseClient: typeof supabase): Promise<boolean> => {
+  if (!supabaseClient) return false;
+  try {
+    if (typeof supabaseClient.auth.getUserIdentities === "function") {
+      const { data, error } = await supabaseClient.auth.getUserIdentities();
+      if (!error && data?.identities) {
+        return data.identities.some((identity) => identity.provider === "email");
+      }
+    }
+    if (typeof supabaseClient.auth.getUser === "function") {
+      const { data } = await supabaseClient.auth.getUser();
+      if (data?.user?.identities) {
+        return data.user.identities.some((identity) => identity.provider === "email");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to check user identities:", err);
+  }
+  return false;
+};
+
+/**
+ * Creates/updates the Y-TRACE password for the currently authenticated Supabase user.
+ * Attaches the password to the existing Supabase auth user without signing them out
+ * or creating a new user account.
+ */
+export const createYTracePasswordForCurrentUser = async (
+  supabaseClient: typeof supabase,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabaseClient) {
+    return { success: false, error: "Authentication service is currently unavailable." };
+  }
+  if (!isPasswordValid(newPassword)) {
+    return {
+      success: false,
+      error: "Password does not meet Y-TRACE security requirements.",
+    };
+  }
+
+  try {
+    const { error } = await supabaseClient.auth.updateUser({
+      password: newPassword,
+    });
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to update password.";
+    return { success: false, error: message };
+  }
+};
+
+export const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
+  const criteria = useMemo(() => validatePasswordCriteria(password), [password]);
+
+  const items = [
+    { key: "length", label: "8–16 characters", valid: criteria.length },
+    { key: "uppercase", label: "Contains an uppercase letter (A–Z)", valid: criteria.uppercase },
+    { key: "lowercase", label: "Contains a lowercase letter (a–z)", valid: criteria.lowercase },
+    { key: "number", label: "Contains a number (0–9)", valid: criteria.number },
+    { key: "special", label: "Contains a special character (!@#$%...)", valid: criteria.special },
+  ];
+
+  if (!password) return null;
+
+  return (
+    <div
+      className="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs"
+      data-testid="password-criteria-checklist"
+    >
+      <p className="font-semibold text-muted-foreground">Password Requirements:</p>
+      <ul className="space-y-1">
+        {items.map((item) => (
+          <li key={item.key} className="flex items-center gap-2 transition-colors">
+            {item.valid ? (
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success text-green-600 dark:text-green-500" />
+            ) : (
+              <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-muted-foreground/40" />
+            )}
+            <span className={item.valid ? "font-medium text-foreground" : "text-muted-foreground"}>
+              {item.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const GoogleOnboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -87,6 +188,33 @@ const GoogleOnboarding = () => {
   const [urnAvailability, setUrnAvailability] = useState<"idle" | "checking" | "available" | "registered" | "error">("idle");
 
   const [profileDraft, setProfileDraft] = useState<OrganizationProfile | null>(null);
+
+  // Password creation state for Google users who don't have an email/password identity yet
+  const [hasEmailIdentity, setHasEmailIdentity] = useState<boolean | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordCreated, setPasswordCreated] = useState(false);
+  const [touchedPassword, setTouchedPassword] = useState(false);
+  const [touchedConfirmPassword, setTouchedConfirmPassword] = useState(false);
+
+  const needsPasswordCreation = hasEmailIdentity === false && !passwordCreated;
+
+  const confirmMatchHint = useMemo(() => {
+    if (!confirmPassword) return null;
+    if (password === confirmPassword && isPasswordValid(password)) {
+      return (
+        <p className="flex items-center gap-1 text-xs text-green-600 dark:text-green-500">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match
+        </p>
+      );
+    }
+    if (password !== confirmPassword) {
+      return <p className="text-xs text-destructive">Passwords do not match.</p>;
+    }
+    return null;
+  }, [password, confirmPassword]);
 
   // Load existing profile if any; if already complete, route to dashboard
   useEffect(() => {
@@ -100,10 +228,15 @@ const GoogleOnboarding = () => {
       }
 
       try {
-        const existing = await fetchOrganizationProfileInSupabase(user.id);
+        const [existing, hasEmail] = await Promise.all([
+          fetchOrganizationProfileInSupabase(user.id),
+          checkUserHasEmailIdentity(supabase),
+        ]);
         if (!active) return;
 
-        if (existing && isOrganizationProfileComplete(existing)) {
+        setHasEmailIdentity(hasEmail);
+
+        if (existing && isOrganizationProfileComplete(existing) && hasEmail) {
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -133,6 +266,7 @@ const GoogleOnboarding = () => {
           draft.representativeName = user.displayName;
         }
         setProfileDraft(draft);
+        setHasEmailIdentity(false);
       } finally {
         if (active) {
           setIsLoadingProfile(false);
@@ -212,6 +346,24 @@ const GoogleOnboarding = () => {
     if (!user?.id || !profileDraft || isSaving) return;
 
     setFormError(null);
+
+    // 0. Validate Y-TRACE Password if creation is required
+    if (needsPasswordCreation) {
+      if (!password) {
+        setFormError("Please enter a password for your Y-TRACE account.");
+        return;
+      }
+      if (!isPasswordValid(password)) {
+        setFormError(
+          "Password does not meet Y-TRACE security requirements. It must be 8–16 characters and contain uppercase, lowercase, numbers, and special characters.",
+        );
+        return;
+      }
+      if (password !== confirmPassword) {
+        setFormError("Passwords do not match. Please verify your confirmation password.");
+        return;
+      }
+    }
 
     // 1. Validate Organization Name
     const nameErr = validateOrganizationName(profileDraft.organizationName);
@@ -331,13 +483,27 @@ const GoogleOnboarding = () => {
 
     setIsSaving(true);
     try {
+      // If password creation is required, update password on existing Supabase auth user first
+      if (needsPasswordCreation && supabase) {
+        const { error: pwdErr } = await supabase.auth.updateUser({
+          password: password,
+        });
+        if (pwdErr) {
+          setFormError(pwdErr.message || "Failed to create Y-TRACE password. Please try again.");
+          setIsSaving(false);
+          return;
+        }
+        setPasswordCreated(true);
+        setHasEmailIdentity(true);
+      }
+
       const saved = await upsertOrganizationProfileInSupabase(payloadToSave);
       const isComplete = isOrganizationProfileComplete(saved);
 
       if (isComplete) {
         toast({
           title: "Registration completed!",
-          description: "Your organization profile has been submitted successfully.",
+          description: "Your organization profile and Y-TRACE password have been configured successfully.",
         });
         navigate("/dashboard", { replace: true });
       } else {
@@ -445,7 +611,7 @@ const GoogleOnboarding = () => {
         </Card>
 
         {/* Main Onboarding Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {formError && (
             <div
               className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-3 shadow-xs"
@@ -824,6 +990,106 @@ const GoogleOnboarding = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Section 6: Create Your Y-TRACE Password (Conditional for users without email/password identity) */}
+          {needsPasswordCreation && (
+            <Card className="border-border bg-card shadow-xs" data-testid="ytrace-password-section">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+                  <Lock className="h-4 w-4 text-primary" />
+                  <span>6. Create Your Y-TRACE Password</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Create a password so you can also sign in to Y-TRACE using your email address.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Password Field */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="ytrace-password" className="text-xs font-semibold">
+                      Password <span className="text-destructive">*</span>
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">{password.length}/16</span>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="ytrace-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a strong Y-TRACE password"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setFormError(null);
+                      }}
+                      onBlur={() => setTouchedPassword(true)}
+                      className="pr-10"
+                      autoComplete="new-password"
+                      maxLength={16}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {touchedPassword && !password ? (
+                    <p className="text-xs text-destructive">Password is required.</p>
+                  ) : null}
+                </div>
+
+                {/* Password Requirements Checklist */}
+                <PasswordCriteriaChecklist password={password} />
+
+                {/* Confirm Password Field */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="ytrace-confirm-password" className="text-xs font-semibold">
+                    Confirm Password <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="ytrace-confirm-password"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Re-enter your Y-TRACE password"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setFormError(null);
+                      }}
+                      onBlur={() => setTouchedConfirmPassword(true)}
+                      onPaste={(event) => {
+                        event.preventDefault();
+                        setFormError("For security, please manually retype your confirmation password.");
+                      }}
+                      className="pr-10"
+                      autoComplete="new-password"
+                      maxLength={16}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {touchedConfirmPassword && !confirmPassword ? (
+                    <p className="text-xs text-destructive">Please confirm your password.</p>
+                  ) : (
+                    confirmMatchHint
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Bar */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
