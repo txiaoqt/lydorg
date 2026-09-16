@@ -19,7 +19,7 @@ import {
 } from "@/user/pwa/pwaAuthFlow";
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
-import { getPasswordResetUrl } from "@/lib/auth-redirect";
+import { getAuthCallbackUrl, getPasswordResetUrl } from "@/lib/auth-redirect";
 
 type SignInProps = {
   forcedMode?: "user" | "admin";
@@ -59,6 +59,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [inlineError, setInlineError] = useState("");
 
   const { toast } = useToast();
@@ -81,6 +82,17 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   }, [location.search]);
 
   useEffect(() => {
+    const errorFromState = (location.state as { error?: string } | null)?.error;
+    const searchParams = new URLSearchParams(location.search);
+    const errorFromSearch = searchParams.get("error_description") || searchParams.get("error");
+    if (errorFromState) {
+      setInlineError(errorFromState);
+    } else if (errorFromSearch) {
+      setInlineError(errorFromSearch);
+    }
+  }, [location.state, location.search]);
+
+  useEffect(() => {
     if (!isInitialized || !isAuthenticated) return;
     if (isPasswordRecoverySession) {
       navigate("/reset-password", { replace: true });
@@ -95,11 +107,43 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   }, [isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow, role]);
 
   const canSubmit = isAdminMode
-    ? Boolean(username.trim() && password) && !isLoading
-    : Boolean(useSupabaseAuth && isInitialized && email.trim() && password) && !isLoading;
+    ? Boolean(username.trim() && password) && !isLoading && !isGoogleLoading
+    : Boolean(useSupabaseAuth && isInitialized && email.trim() && password) && !isLoading && !isGoogleLoading;
+
+  const handleGoogleSignIn = async () => {
+    if (isGoogleLoading || isLoading) return;
+    if (!supabase) {
+      setInlineError("Authentication service is currently unavailable.");
+      return;
+    }
+    setInlineError("");
+    setIsGoogleLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getAuthCallbackUrl({ pwaFlow: false }),
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
+      });
+
+      if (error) {
+        setIsGoogleLoading(false);
+        setInlineError(error.message || "Failed to initiate Google sign in.");
+      }
+    } catch (err) {
+      setIsGoogleLoading(false);
+      const message = err instanceof Error ? err.message : "Failed to initiate Google sign in.";
+      setInlineError(message);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isGoogleLoading) return;
     setInlineError("");
     setIsLoading(true);
 
@@ -469,18 +513,21 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              onClick={(e) => e.preventDefault()}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border bg-muted/30 text-muted-foreground cursor-not-allowed text-sm font-medium transition-colors select-none"
+              disabled={isGoogleLoading || isLoading || !useSupabaseAuth}
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/60 transition-colors text-sm font-medium shadow-xs disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div className="flex items-center gap-2.5">
-                <GoogleIcon className="h-4 w-4 shrink-0" />
-                <span>Continue with Google</span>
-              </div>
-              <span className="text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
-                Coming soon
-              </span>
+              {isGoogleLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span>Connecting to Google…</span>
+                </>
+              ) : (
+                <>
+                  <GoogleIcon className="h-4 w-4 shrink-0" />
+                  <span>Continue with Google</span>
+                </>
+              )}
             </button>
           </div>
 

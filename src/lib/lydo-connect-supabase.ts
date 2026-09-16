@@ -949,6 +949,13 @@ const fetchOrganizationProfile = async (userId: string) => {
   return (data as OrganizationProfileRow | null) ?? null;
 };
 
+export const fetchOrganizationProfileInSupabase = async (userId: string): Promise<OrganizationProfile | null> => {
+  if (!supabase) return null;
+  const row = await fetchOrganizationProfile(userId);
+  if (!row) return null;
+  return mapOrganizationProfile(row);
+};
+
 const fetchLatestSubmission = async (organizationId: string) => {
   const { data, error } = await supabase!
     .from("document_submissions")

@@ -103,3 +103,94 @@ export const getMissingEditableProfileRequirements = (profile?: Partial<Organiza
 
   return missing;
 };
+
+const normalizeText = (value?: string | null) => value?.trim() ?? "";
+
+export const createBlankOrganizationProfile = (
+  userId: string,
+  defaults?: Partial<
+    Pick<
+      OrganizationProfile,
+      | "organizationName"
+      | "organizationEmail"
+      | "contactNumber"
+      | "district"
+      | "barangay"
+      | "isExistingOrganization"
+      | "organizationIdentifierNumber"
+    >
+  >,
+): OrganizationProfile => ({
+  id: `draft-${userId || "organization"}`,
+  userId,
+  organizationName: defaults?.organizationName ?? "",
+  organizationEmail: defaults?.organizationEmail ?? "",
+  contactNumber: defaults?.contactNumber ?? "",
+  district: defaults?.district ?? "",
+  barangay: defaults?.barangay ?? "",
+  isExistingOrganization: defaults?.isExistingOrganization ?? false,
+  organizationIdentifierNumber: defaults?.organizationIdentifierNumber ?? "",
+  registrationType: defaults?.isExistingOrganization ? "existing_urn" : "new_organization",
+  urn: defaults?.organizationIdentifierNumber ?? "",
+  urnNormalized: defaults?.organizationIdentifierNumber?.trim().toUpperCase() ?? "",
+  urnReviewStatus: defaults?.isExistingOrganization ? "pending" : "not_applicable",
+  urnAdminRemarks: "",
+  urnReviewedBy: "",
+  urnReviewedAt: "",
+  verificationMethod: null,
+  majorClassification: "",
+  subClassification: "",
+  advocacies: [],
+  adviserName: "",
+  representativeName: "",
+  address: "",
+  facebookPageUrl: "",
+  profileStatus: "incomplete",
+  verifiedAt: "",
+  internalNotes: "",
+  yorpRegisteredYear: null,
+  yorpRenewedYear: null,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+export const createOrganizationProfileDraft = (
+  userId: string,
+  profile: OrganizationProfile | null,
+  defaults?: Partial<
+    Pick<
+      OrganizationProfile,
+      | "organizationName"
+      | "organizationEmail"
+      | "contactNumber"
+      | "district"
+      | "barangay"
+      | "isExistingOrganization"
+      | "organizationIdentifierNumber"
+    >
+  >,
+): OrganizationProfile => {
+  const blank = createBlankOrganizationProfile(userId, defaults);
+  if (!profile) return blank;
+
+  return {
+    ...blank,
+    ...profile,
+    organizationName: normalizeText(profile.organizationName) || blank.organizationName,
+    organizationEmail: normalizeText(profile.organizationEmail) || blank.organizationEmail,
+    contactNumber: normalizeText(profile.contactNumber) || blank.contactNumber,
+    district: normalizeText(profile.district) || blank.district,
+    barangay: normalizeText(profile.barangay) || blank.barangay,
+    isExistingOrganization: Boolean(profile.isExistingOrganization),
+    organizationIdentifierNumber: normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber,
+    majorClassification: normalizeText(profile.majorClassification) as OrganizationProfile["majorClassification"],
+    subClassification: normalizeText(profile.subClassification) as OrganizationProfile["subClassification"],
+    adviserName: normalizeText(profile.adviserName),
+    representativeName: normalizeText(profile.representativeName),
+    address: normalizeText(profile.address),
+    facebookPageUrl: normalizeText(profile.facebookPageUrl),
+    verifiedAt: normalizeText(profile.verifiedAt),
+    internalNotes: normalizeText(profile.internalNotes),
+    advocacies: Array.isArray(profile.advocacies) ? [...profile.advocacies] : [],
+  };
+};

@@ -248,8 +248,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: authUser.id,
         email: (profileResp.data?.email as string | undefined) ?? authUser.email ?? "",
         displayName:
-          (profileResp.data?.display_name as string | undefined) ??
-          (profileResp.data?.full_name as string | undefined) ??
+          (profileResp.data?.display_name as string | undefined)?.trim() ||
+          (profileResp.data?.full_name as string | undefined)?.trim() ||
           defaultDisplayName,
         profileHints: {
           contactNumber:

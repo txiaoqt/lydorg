@@ -28,6 +28,17 @@ vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: mockToast }),
 }));
 
+// Mock supabase
+const mockSignInWithOAuth = vi.fn().mockResolvedValue({ error: null });
+vi.mock("@/lib/supabase", () => ({
+  supabase: {
+    auth: {
+      signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
+    },
+  },
+  isSupabaseConfigured: () => true,
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -70,7 +81,6 @@ describe("SignIn Component", () => {
       expect(screen.getByText(/Forgot password\?/i)).toBeInTheDocument();
       expect(screen.getByText(/Don't have an account\?/i)).toBeInTheDocument();
       expect(screen.getByText(/Continue with Google/i)).toBeInTheDocument();
-      expect(screen.getByText(/Coming soon/i)).toBeInTheDocument();
       expect(screen.getByText(/Back to home/i)).toBeInTheDocument();
 
       // Slideshow carousel presence
@@ -104,7 +114,7 @@ describe("SignIn Component", () => {
       });
     });
 
-    it("Google button is UI-only, disabled, and cannot submit the form", () => {
+    it("renders active Google OAuth button and clicking it initiates Google sign-in", async () => {
       render(
         <MemoryRouter>
           <SignIn />
@@ -112,13 +122,18 @@ describe("SignIn Component", () => {
       );
 
       const googleBtn = screen.getByRole("button", { name: /Continue with Google/i });
-      expect(googleBtn).toBeDisabled();
+      expect(googleBtn).not.toBeDisabled();
       expect(googleBtn).toHaveAttribute("type", "button");
-      expect(googleBtn).toHaveAttribute("aria-disabled", "true");
-      expect(screen.getByText("Coming soon")).toBeInTheDocument();
 
       fireEvent.click(googleBtn);
-      expect(mockSignIn).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+          provider: "google",
+          options: expect.objectContaining({
+            queryParams: { prompt: "select_account" },
+          }),
+        });
+      });
     });
 
     it("renders slideshow with all 4 images, allows previous/next navigation and indicator selection", () => {

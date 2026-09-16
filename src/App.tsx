@@ -10,6 +10,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import VerifyEmail from "./pages/VerifyEmail";
 import AuthCallback from "./pages/AuthCallback";
+import GoogleOnboarding from "./pages/GoogleOnboarding";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import AdminPortal from "./admin/AdminPortal";
@@ -326,6 +327,7 @@ const App = () => (
                       <Route path="/signup" element={<SignUp />} />
                       <Route path="/verify-email" element={<VerifyEmail />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/google-onboarding" element={<RequireUser><GoogleOnboarding /></RequireUser>} />
                       <Route path="/dashboard" element={<RequireUser><UserPortalEntry section="dashboard" /></RequireUser>} />
                       <Route path="/organization-profile" element={<RequireUser><UserPortalEntry section="organization-profile" /></RequireUser>} />
                       <Route path="/document-submission" element={<RequireUser><UserPortalEntry section="document-submission" /></RequireUser>} />
