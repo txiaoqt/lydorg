@@ -34,8 +34,8 @@ import {
   philippineContactNumberPattern,
   isValidPersonName,
   isValidFacebookUrl,
+  mapOrganizationProfileError,
 } from "@/lib/organization-profile-domain";
-import { generateUniqueUrn } from "@/lib/urn-registration";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import { PwaBackButton } from "../PwaBackButton";
@@ -357,7 +357,16 @@ function ProfileOverview({ data }: { data: PortalData }) {
           <ProfileField label="Organization Type" value={profile?.isExistingOrganization ? "Existing Organization" : "New Organization"} />
           <ProfileField label="Location" value={locationLabel(profile)} />
           <ProfileField label="Classification" value={classificationLabel(profile)} />
-          <ProfileField label="Unique Registration Number (URN)" value={profile?.isExistingOrganization ? requiredValue(profile.organizationIdentifierNumber) : "Not required for this organization type"} />
+          <ProfileField
+            label="Unique Registration Number (URN)"
+            value={
+              profile?.isExistingOrganization
+                ? requiredValue(profile.organizationIdentifierNumber)
+                : profile?.urn
+                  ? profile.urn
+                  : "URN pending verification"
+            }
+          />
         </dl>
       </ProfileSection>
       <ProfileSection title="Leadership">
@@ -388,7 +397,14 @@ function ProfileDetails({ data }: { data: PortalData }) {
     ["Organization Information", [
       ["Organization Name", requiredValue(profile?.organizationName)],
       ["Organization Type", profile?.isExistingOrganization ? "Existing Organization" : "New Organization"],
-      ["Unique Registration Number (URN)", profile?.isExistingOrganization ? requiredValue(profile.organizationIdentifierNumber) : "Not required for this organization type"],
+      [
+        "Unique Registration Number (URN)",
+        profile?.isExistingOrganization
+          ? requiredValue(profile.organizationIdentifierNumber)
+          : profile?.urn
+            ? profile.urn
+            : "URN pending verification",
+      ],
     ]],
     ["Contact & Location", [
       ["Organization Email", requiredValue(profile?.organizationEmail)],
@@ -586,7 +602,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       return;
     }
     if (!next.isExistingOrganization && !next.organizationIdentifierNumber) {
-      next.organizationIdentifierNumber = generateUniqueUrn();
+      next.organizationIdentifierNumber = "";
     }
     setSaving(true);
     try {
@@ -603,11 +619,10 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       toast({ title: "Profile saved", description: "Your profile was updated and sent for admin review." });
       go(PWA_ROUTES.profile, { replace: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "The profile could not be saved.";
-      const isDuplicateUrn = /duplicate|unique|urn|organization_identifier_number/i.test(message);
+      const userFacingError = mapOrganizationProfileError(error, "The profile could not be saved.");
       toast({
-        title: isDuplicateUrn ? "URN already registered" : "Save failed",
-        description: isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : message,
+        title: /urn/i.test(userFacingError) ? "URN already registered" : "Save failed",
+        description: userFacingError,
         variant: "destructive",
       });
     } finally {
@@ -655,7 +670,10 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing Organization" : "New Organization"} readOnly /></EditorField>
                   <EditorField label="Unique Registration Number (URN)">
                     <Input
-                      value={draft.organizationIdentifierNumber || "Auto-generated upon registration"}
+                      value={
+                        draft.organizationIdentifierNumber ||
+                        (draft.isExistingOrganization ? "" : draft.urn || "URN pending verification")
+                      }
                       readOnly
                     />
                   </EditorField>

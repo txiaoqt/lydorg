@@ -29,11 +29,13 @@ import {
 import { OTP_ISSUED_AT_KEY } from "@/lib/verification-error";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 import {
-  generateUniqueUrn,
   normalizeUrn,
   validateUrn,
 } from "@/lib/urn-registration";
-import { sanitizeContactNumber } from "@/lib/organization-profile-domain";
+import {
+  mapOrganizationProfileError,
+  sanitizeContactNumber,
+} from "@/lib/organization-profile-domain";
 import { DUPLICATE_URN_ERROR_MESSAGE, checkSignupUrn, type UrnAvailability } from "@/lib/urn-validation";
 import { isPasswordValid, validatePasswordCriteria } from "@/lib/password-policy";
 import {
@@ -169,7 +171,7 @@ const SignUp = () => {
   const selectedDistrictName = district || "N/A";
   const normalizedIdentifierNumber = isExistingOrganization
     ? normalizeUrn(organizationIdentifierNumber)
-    : generateUniqueUrn();
+    : "";
   const urnError = isExistingOrganization ? validateUrn(organizationIdentifierNumber) : null;
   const isIdentifierValid = !urnError && urnAvailability !== "registered";
 
@@ -426,11 +428,11 @@ const SignUp = () => {
 
     if (result.error) {
       setIsConfirmOpen(false);
-      const isDuplicateUrn = /duplicate|unique|urn|organization_identifier_number/i.test(result.error);
-      setInlineError(isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : result.error);
+      const userFacingError = mapOrganizationProfileError(result.error, result.error);
+      setInlineError(userFacingError);
       toast({
-        title: isDuplicateUrn ? "URN already registered" : "Registration Error",
-        description: isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : result.error,
+        title: "Registration Error",
+        description: userFacingError,
         variant: "destructive",
       });
       return;

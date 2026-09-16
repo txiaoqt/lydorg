@@ -105,8 +105,9 @@ import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { cn } from "@/lib/utils";
 import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
-import { generateUniqueUrn, isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
+import { isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import { DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
+import { mapOrganizationProfileError } from "@/lib/organization-profile-domain";
 import {
   getOrganizationRenewalCountdown,
   resolveUserRenewalState,
@@ -410,39 +411,44 @@ const createBlankOrganizationProfile = (
       | "organizationIdentifierNumber"
     >
   >,
-): OrganizationProfile => ({
-  id: `draft-${userId || "organization"}`,
-  userId,
-  organizationName: defaults?.organizationName ?? "",
-  organizationEmail: defaults?.organizationEmail ?? "",
-  contactNumber: defaults?.contactNumber ?? "",
-  district: defaults?.district ?? "",
-  barangay: defaults?.barangay ?? "",
-  isExistingOrganization: defaults?.isExistingOrganization ?? false,
-  organizationIdentifierNumber: defaults?.organizationIdentifierNumber ?? "",
-  registrationType: defaults?.isExistingOrganization ? "existing_urn" : "new_organization",
-  urn: defaults?.organizationIdentifierNumber ?? "",
-  urnNormalized: defaults?.organizationIdentifierNumber?.trim().toUpperCase() ?? "",
-  urnReviewStatus: defaults?.isExistingOrganization ? "pending" : "not_applicable",
-  urnAdminRemarks: "",
-  urnReviewedBy: "",
-  urnReviewedAt: "",
-  verificationMethod: null,
-  majorClassification: "",
-  subClassification: "",
-  advocacies: [],
-  adviserName: "",
-  representativeName: "",
-  address: "",
-  facebookPageUrl: "",
-  profileStatus: "incomplete",
-  verifiedAt: "",
-  internalNotes: "",
-  yorpRegisteredYear: null,
-  yorpRenewedYear: null,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-});
+): OrganizationProfile => {
+  const isExisting = Boolean(defaults?.isExistingOrganization);
+  const existingIdentifier = isExisting ? (defaults?.organizationIdentifierNumber ?? "") : "";
+
+  return {
+    id: `draft-${userId || "organization"}`,
+    userId,
+    organizationName: defaults?.organizationName ?? "",
+    organizationEmail: defaults?.organizationEmail ?? "",
+    contactNumber: defaults?.contactNumber ?? "",
+    district: defaults?.district ?? "",
+    barangay: defaults?.barangay ?? "",
+    isExistingOrganization: isExisting,
+    organizationIdentifierNumber: existingIdentifier,
+    registrationType: isExisting ? "existing_urn" : "new_organization",
+    urn: existingIdentifier,
+    urnNormalized: existingIdentifier ? existingIdentifier.trim().toUpperCase() : "",
+    urnReviewStatus: isExisting ? "pending" : "not_applicable",
+    urnAdminRemarks: "",
+    urnReviewedBy: "",
+    urnReviewedAt: "",
+    verificationMethod: null,
+    majorClassification: "",
+    subClassification: "",
+    advocacies: [],
+    adviserName: "",
+    representativeName: "",
+    address: "",
+    facebookPageUrl: "",
+    profileStatus: "incomplete",
+    verifiedAt: "",
+    internalNotes: "",
+    yorpRegisteredYear: null,
+    yorpRenewedYear: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+};
 
 const createOrganizationProfileDraft = (
   userId: string,
@@ -459,9 +465,16 @@ const createOrganizationProfileDraft = (
       | "organizationIdentifierNumber"
     >
   >,
-) => {
+): OrganizationProfile => {
   const blank = createBlankOrganizationProfile(userId, defaults);
   if (!profile) return blank;
+
+  const isExisting = Boolean(profile.isExistingOrganization);
+  const identifier = isExisting
+    ? normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber
+    : profile.profileStatus === "verified"
+      ? normalizeText(profile.organizationIdentifierNumber)
+      : "";
 
   return {
     ...blank,
@@ -471,8 +484,12 @@ const createOrganizationProfileDraft = (
     contactNumber: normalizeText(profile.contactNumber) || blank.contactNumber,
     district: normalizeText(profile.district) || blank.district,
     barangay: normalizeText(profile.barangay) || blank.barangay,
-    isExistingOrganization: Boolean(profile.isExistingOrganization),
-    organizationIdentifierNumber: normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber,
+    isExistingOrganization: isExisting,
+    organizationIdentifierNumber: identifier,
+    registrationType: isExisting ? "existing_urn" : "new_organization",
+    urn: isExisting ? identifier : profile.profileStatus === "verified" ? profile.urn : "",
+    urnNormalized: isExisting && identifier ? identifier.trim().toUpperCase() : profile.profileStatus === "verified" ? (profile.urnNormalized || "") : "",
+    urnReviewStatus: isExisting ? profile.urnReviewStatus || "pending" : "not_applicable",
     majorClassification: normalizeText(profile.majorClassification) as OrganizationProfile["majorClassification"],
     subClassification: normalizeText(profile.subClassification) as OrganizationProfile["subClassification"],
     adviserName: normalizeText(profile.adviserName),
@@ -2157,7 +2174,7 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     if (!trimmedProfile.isExistingOrganization && !trimmedProfile.organizationIdentifierNumber) {
-      trimmedProfile.organizationIdentifierNumber = generateUniqueUrn();
+      trimmedProfile.organizationIdentifierNumber = "";
     }
 
     setSavingProfile(true);
@@ -2188,11 +2205,10 @@ export default function UserPortal({ section }: { section: string }) {
         description: "Your organization profile has been updated and sent for admin review.",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "The organization profile could not be saved.";
-      const isDuplicateUrn = /duplicate|unique|urn|organization_identifier_number/i.test(message);
+      const userFacingError = mapOrganizationProfileError(error, "The organization profile could not be saved.");
       toast({
-        title: isDuplicateUrn ? "URN already registered" : "Save failed",
-        description: isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : message,
+        title: /urn/i.test(userFacingError) ? "URN already registered" : "Save failed",
+        description: userFacingError,
         variant: "destructive",
       });
     } finally {

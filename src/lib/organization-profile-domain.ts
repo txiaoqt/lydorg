@@ -120,39 +120,44 @@ export const createBlankOrganizationProfile = (
       | "organizationIdentifierNumber"
     >
   >,
-): OrganizationProfile => ({
-  id: `draft-${userId || "organization"}`,
-  userId,
-  organizationName: defaults?.organizationName ?? "",
-  organizationEmail: defaults?.organizationEmail ?? "",
-  contactNumber: defaults?.contactNumber ?? "",
-  district: defaults?.district ?? "",
-  barangay: defaults?.barangay ?? "",
-  isExistingOrganization: defaults?.isExistingOrganization ?? false,
-  organizationIdentifierNumber: defaults?.organizationIdentifierNumber ?? "",
-  registrationType: defaults?.isExistingOrganization ? "existing_urn" : "new_organization",
-  urn: defaults?.organizationIdentifierNumber ?? "",
-  urnNormalized: defaults?.organizationIdentifierNumber?.trim().toUpperCase() ?? "",
-  urnReviewStatus: defaults?.isExistingOrganization ? "pending" : "not_applicable",
-  urnAdminRemarks: "",
-  urnReviewedBy: "",
-  urnReviewedAt: "",
-  verificationMethod: null,
-  majorClassification: "",
-  subClassification: "",
-  advocacies: [],
-  adviserName: "",
-  representativeName: "",
-  address: "",
-  facebookPageUrl: "",
-  profileStatus: "incomplete",
-  verifiedAt: "",
-  internalNotes: "",
-  yorpRegisteredYear: null,
-  yorpRenewedYear: null,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-});
+): OrganizationProfile => {
+  const isExisting = Boolean(defaults?.isExistingOrganization);
+  const existingIdentifier = isExisting ? (defaults?.organizationIdentifierNumber ?? "") : "";
+
+  return {
+    id: `draft-${userId || "organization"}`,
+    userId,
+    organizationName: defaults?.organizationName ?? "",
+    organizationEmail: defaults?.organizationEmail ?? "",
+    contactNumber: defaults?.contactNumber ?? "",
+    district: defaults?.district ?? "",
+    barangay: defaults?.barangay ?? "",
+    isExistingOrganization: isExisting,
+    organizationIdentifierNumber: existingIdentifier,
+    registrationType: isExisting ? "existing_urn" : "new_organization",
+    urn: existingIdentifier,
+    urnNormalized: existingIdentifier ? existingIdentifier.trim().toUpperCase() : "",
+    urnReviewStatus: isExisting ? "pending" : "not_applicable",
+    urnAdminRemarks: "",
+    urnReviewedBy: "",
+    urnReviewedAt: "",
+    verificationMethod: null,
+    majorClassification: "",
+    subClassification: "",
+    advocacies: [],
+    adviserName: "",
+    representativeName: "",
+    address: "",
+    facebookPageUrl: "",
+    profileStatus: "incomplete",
+    verifiedAt: "",
+    internalNotes: "",
+    yorpRegisteredYear: null,
+    yorpRenewedYear: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+};
 
 export const createOrganizationProfileDraft = (
   userId: string,
@@ -173,6 +178,13 @@ export const createOrganizationProfileDraft = (
   const blank = createBlankOrganizationProfile(userId, defaults);
   if (!profile) return blank;
 
+  const isExisting = Boolean(profile.isExistingOrganization);
+  const identifier = isExisting
+    ? normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber
+    : profile.profileStatus === "verified"
+      ? normalizeText(profile.organizationIdentifierNumber)
+      : "";
+
   return {
     ...blank,
     ...profile,
@@ -181,8 +193,12 @@ export const createOrganizationProfileDraft = (
     contactNumber: normalizeText(profile.contactNumber) || blank.contactNumber,
     district: normalizeText(profile.district) || blank.district,
     barangay: normalizeText(profile.barangay) || blank.barangay,
-    isExistingOrganization: Boolean(profile.isExistingOrganization),
-    organizationIdentifierNumber: normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber,
+    isExistingOrganization: isExisting,
+    organizationIdentifierNumber: identifier,
+    registrationType: isExisting ? "existing_urn" : "new_organization",
+    urn: isExisting ? identifier : profile.profileStatus === "verified" ? profile.urn : "",
+    urnNormalized: isExisting && identifier ? identifier.trim().toUpperCase() : profile.profileStatus === "verified" ? (profile.urnNormalized || "") : "",
+    urnReviewStatus: isExisting ? profile.urnReviewStatus || "pending" : "not_applicable",
     majorClassification: normalizeText(profile.majorClassification) as OrganizationProfile["majorClassification"],
     subClassification: normalizeText(profile.subClassification) as OrganizationProfile["subClassification"],
     adviserName: normalizeText(profile.adviserName),
@@ -193,4 +209,41 @@ export const createOrganizationProfileDraft = (
     internalNotes: normalizeText(profile.internalNotes),
     advocacies: Array.isArray(profile.advocacies) ? [...profile.advocacies] : [],
   };
+};
+
+export const mapOrganizationProfileError = (
+  error: unknown,
+  fallbackMessage = "Unable to save organization profile.",
+): string => {
+  const errObj = typeof error === "object" && error !== null ? (error as Record<string, unknown>) : {};
+  const errMessage =
+    error instanceof Error
+      ? error.message
+      : typeof errObj.message === "string"
+        ? errObj.message
+        : String(error ?? "");
+  const code = String(errObj.code || "");
+  const details = String(errObj.details || "");
+  const hint = String(errObj.hint || "");
+  const combined = `${code} ${errMessage} ${details} ${hint}`;
+
+  if (
+    combined.includes("uq_organization_profiles_reference_id") ||
+    combined.includes("organization_profiles_reference_id_key") ||
+    /reference_id/i.test(combined)
+  ) {
+    return "A registration reference conflict occurred. Please try again.";
+  }
+
+  if (
+    combined.includes("uq_organization_profiles_urn") ||
+    combined.includes("organization_profiles_urn_key") ||
+    combined.includes("urn_normalized") ||
+    /duplicate key.*(?:urn|organization_identifier)/i.test(combined) ||
+    /\bkey.*\(urn\)/i.test(combined)
+  ) {
+    return "This Unique Registration Number (URN) is already registered to another organization.";
+  }
+
+  return fallbackMessage;
 };

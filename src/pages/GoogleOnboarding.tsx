@@ -49,6 +49,7 @@ import {
   isOrganizationProfileComplete,
   isValidFacebookUrl,
   isValidPersonName,
+  mapOrganizationProfileError,
   organizationEmailPattern,
   philippineContactNumberPattern,
   sanitizeContactNumber,
@@ -58,7 +59,6 @@ import {
   fetchOrganizationProfileInSupabase,
   upsertOrganizationProfileInSupabase,
 } from "@/lib/lydo-connect-supabase";
-import { generateUniqueUrn } from "@/lib/urn-registration";
 import { checkSignupUrn, DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
 
 const GoogleIcon = ({ className }: { className?: string }) => (
@@ -454,9 +454,10 @@ const GoogleOnboarding = () => {
     }
 
     // Prepare profile payload
-    const finalIdentifier = profileDraft.isExistingOrganization
+    const isExisting = Boolean(profileDraft.isExistingOrganization);
+    const finalIdentifier = isExisting
       ? profileDraft.organizationIdentifierNumber.trim()
-      : profileDraft.organizationIdentifierNumber.trim() || generateUniqueUrn();
+      : "";
 
     const payloadToSave: OrganizationProfile = {
       ...profileDraft,
@@ -466,10 +467,12 @@ const GoogleOnboarding = () => {
       contactNumber: sanitizedContact,
       district: profileDraft.district.trim(),
       barangay: profileDraft.barangay.trim(),
-      isExistingOrganization: Boolean(profileDraft.isExistingOrganization),
+      isExistingOrganization: isExisting,
       organizationIdentifierNumber: finalIdentifier,
-      registrationType: profileDraft.isExistingOrganization ? "existing_urn" : "new_organization",
-      urn: finalIdentifier,
+      registrationType: isExisting ? "existing_urn" : "new_organization",
+      urn: isExisting ? finalIdentifier : "",
+      urnNormalized: isExisting && finalIdentifier ? finalIdentifier.toUpperCase() : "",
+      urnReviewStatus: isExisting ? "pending" : "not_applicable",
       majorClassification: profileDraft.majorClassification,
       subClassification: profileDraft.subClassification,
       advocacies: [...profileDraft.advocacies],
@@ -517,9 +520,7 @@ const GoogleOnboarding = () => {
       }
     } catch (err) {
       console.error("Failed to save organization profile:", err);
-      const msg = err instanceof Error ? err.message : "Failed to save organization profile.";
-      const isDuplicateUrn = /duplicate|unique|urn|organization_identifier_number/i.test(msg);
-      setFormError(isDuplicateUrn ? DUPLICATE_URN_ERROR_MESSAGE : msg);
+      setFormError(mapOrganizationProfileError(err, "Failed to save organization profile."));
     } finally {
       setIsSaving(false);
     }

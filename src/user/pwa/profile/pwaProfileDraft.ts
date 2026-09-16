@@ -9,20 +9,24 @@ type BlankProfileSource = {
 export const createBlankPwaOrganizationProfile = (
   data: BlankProfileSource,
   now = new Date().toISOString(),
-): OrganizationProfile => ({
-  id: `draft-${data.user?.id || "organization"}`,
-  userId: data.user?.id || "",
-  organizationName: data.organizationName === "Organization" ? "" : data.organizationName,
-  organizationEmail: data.user?.email || "",
-  contactNumber: data.user?.profileHints?.contactNumber?.trim() || "",
-  district: data.user?.profileHints?.district || "",
-  barangay: data.user?.profileHints?.barangay || "",
-  isExistingOrganization: Boolean(data.user?.profileHints?.isExistingOrganization),
-  organizationIdentifierNumber: data.user?.profileHints?.organizationIdentifierNumber || "",
-  registrationType: data.user?.profileHints?.isExistingOrganization ? "existing_urn" : "new_organization",
-  urn: data.user?.profileHints?.organizationIdentifierNumber || "",
-  urnNormalized: data.user?.profileHints?.organizationIdentifierNumber?.trim().toUpperCase() || "",
-  urnReviewStatus: data.user?.profileHints?.isExistingOrganization ? "pending" : "not_applicable",
+): OrganizationProfile => {
+  const isExisting = Boolean(data.user?.profileHints?.isExistingOrganization);
+  const existingIdentifier = isExisting ? (data.user?.profileHints?.organizationIdentifierNumber || "") : "";
+
+  return {
+    id: `draft-${data.user?.id || "organization"}`,
+    userId: data.user?.id || "",
+    organizationName: data.organizationName === "Organization" ? "" : data.organizationName,
+    organizationEmail: data.user?.email || "",
+    contactNumber: data.user?.profileHints?.contactNumber?.trim() || "",
+    district: data.user?.profileHints?.district || "",
+    barangay: data.user?.profileHints?.barangay || "",
+    isExistingOrganization: isExisting,
+    organizationIdentifierNumber: existingIdentifier,
+    registrationType: isExisting ? "existing_urn" : "new_organization",
+    urn: existingIdentifier,
+    urnNormalized: existingIdentifier ? existingIdentifier.trim().toUpperCase() : "",
+    urnReviewStatus: isExisting ? "pending" : "not_applicable",
   urnAdminRemarks: "",
   urnReviewedBy: "",
   urnReviewedAt: "",
@@ -42,4 +46,5 @@ export const createBlankPwaOrganizationProfile = (
   yorpRenewedYear: null,
   createdAt: now,
   updatedAt: now,
-});
+  };
+};

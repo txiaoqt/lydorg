@@ -1494,10 +1494,14 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     contact_number: profile.contactNumber.trim(),
     district: profile.district.trim(),
     barangay: profile.barangay.trim(),
-    is_existing_organization: profile.isExistingOrganization,
-    organization_identifier_number: profile.isExistingOrganization ? profile.organizationIdentifierNumber.trim() : "",
+    is_existing_organization: Boolean(profile.isExistingOrganization),
+    organization_identifier_number: profile.isExistingOrganization || profile.profileStatus === "verified"
+      ? (profile.organizationIdentifierNumber?.trim() || profile.urn?.trim() || "")
+      : "",
     registration_type: profile.registrationType,
-    urn: profile.registrationType === "existing_urn" ? profile.organizationIdentifierNumber.trim() : null,
+    urn: profile.isExistingOrganization || profile.profileStatus === "verified"
+      ? (profile.urn?.trim() || (profile.isExistingOrganization ? profile.organizationIdentifierNumber?.trim() : null) || null)
+      : null,
     major_classification: profile.majorClassification || null,
     sub_classification: profile.subClassification || null,
     advocacies: profile.advocacies,
