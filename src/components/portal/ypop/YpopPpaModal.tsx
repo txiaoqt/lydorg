@@ -373,7 +373,9 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         });
       }
       setCurrentActivity(targetActivity);
-      onActivitySaved(targetActivity);
+      if (!submitForReview) {
+        onActivitySaved(targetActivity);
+      }
 
       // STEP 2: Upload all staged pending files while in draft/needs_revision
       if (pendingFiles.length > 0) {

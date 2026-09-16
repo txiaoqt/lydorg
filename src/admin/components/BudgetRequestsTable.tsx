@@ -110,7 +110,15 @@ export const StatusPill = ({ status }: { status: BudgetRequest["status"] }) => {
   );
 };
 
-const AmountCell = ({ requestedAmount, approvedAmount }: { requestedAmount: number; approvedAmount: number }) => (
+const AmountCell = ({
+  requestedAmount,
+  approvedAmount,
+  releasedAmount,
+}: {
+  requestedAmount: number;
+  approvedAmount: number;
+  releasedAmount?: number;
+}) => (
   <div className="flex flex-col gap-1">
     <p className="flex items-center gap-6 font-segoe text-xs leading-[140%] text-slate-500">
       <span className="w-16 shrink-0">Requested</span>
@@ -140,6 +148,12 @@ const AmountCell = ({ requestedAmount, approvedAmount }: { requestedAmount: numb
         <span className="italic text-slate-400">Pending</span>
       </p>
     )}
+    {releasedAmount ? (
+      <p className="flex items-center gap-6 font-segoe text-xs leading-[140%] text-slate-500">
+        <span className="w-16 shrink-0">Released</span>
+        <span className="font-semibold text-role-blue-text">{formatBudgetCurrency(releasedAmount)}</span>
+      </p>
+    ) : null}
   </div>
 );
 
@@ -519,7 +533,11 @@ export const BudgetRequestsTable = ({
                   </div>
 
                   <div className="flex w-[19%] items-center">
-                    <AmountCell requestedAmount={request.requestedAmount} approvedAmount={request.approvedAmount} />
+                    <AmountCell
+                      requestedAmount={request.requestedAmount}
+                      approvedAmount={request.approvedAmount}
+                      releasedAmount={request.releasedAmount}
+                    />
                   </div>
 
                   <div className="flex w-[11%] items-center">

@@ -1343,6 +1343,22 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     }
   })();
 
+  const adminTemplatesPromise = (async (): Promise<TemplateRecord[] | null> => {
+    try {
+      const { data, error } = await supabase!
+        .from("required_document_types")
+        .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,scope,template_scope,template_category,template_file_size,updated_at")
+        .order("sort_order", { ascending: true });
+      if (error || !data) return null;
+      return (data as RequiredDocumentTypeRow[])
+        .map(mapTemplate)
+        .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
+    } catch (err) {
+      console.warn("admin templates query unavailable; falling back to snapshot data.", err);
+      return null;
+    }
+  })();
+
   const { data, error } = await supabase.rpc("get_admin_portal_snapshot", {
     _session_token: adminSession.sessionToken,
   });
@@ -1394,6 +1410,7 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     ypopEventFileRows,
     ypopOrgActivityRows,
     ypopOrgActivityFileRows,
+    adminTemplateRows,
   ] = await Promise.all([
     inquiriesPromise,
     ypopPeriodsPromise,
@@ -1403,7 +1420,16 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     ypopEventFilesPromise,
     ypopOrgActivitiesPromise,
     ypopOrgActivityFilesPromise,
+    adminTemplatesPromise,
   ]);
+  if (adminTemplateRows && adminTemplateRows.length > 0) {
+    const hasInactiveInSnapshot = (remoteState.templates ?? []).some((t) => !t.isActive);
+    if (!hasInactiveInSnapshot && adminTemplateRows.some((t) => !t.isActive)) {
+      remoteState.templates = adminTemplateRows;
+    } else if (!remoteState.templates || remoteState.templates.length === 0) {
+      remoteState.templates = adminTemplateRows;
+    }
+  }
   if (inquiryRows.length > 0 || !remoteState.inquiries?.length) {
     remoteState.inquiries = inquiryRows.map(mapInquiry);
   }

@@ -2387,6 +2387,61 @@ export default function UserPortal({ section }: { section: string }) {
     }
   };
 
+  const handleReplaceBudgetFile = async (budgetRequestId: string, file: File) => {
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+      toast({
+        title: "PDF only",
+        description: "Please upload a PDF file for the revised budget proposal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // 1. Upload/replace proposal file in Supabase storage & budget_request_files table
+      await uploadBudgetRequestFileToSupabase(budgetRequestId, file);
+
+      // 2. Update parent budget request: status = "under_review", clear active adminRemarks, append revision history
+      const existing = budgetRequests.find((req) => req.id === budgetRequestId);
+      const now = new Date().toISOString();
+      const existingHistory = existing?.revisionHistory ?? [];
+      const updatedHistory = [
+        ...existingHistory,
+        {
+          action: "under_review",
+          adminRemarks: "",
+          changedAt: now,
+        },
+      ];
+
+      await updateBudgetRequestInSupabase(budgetRequestId, {
+        status: "under_review",
+        adminRemarks: "",
+        revisionHistory: updatedHistory,
+      });
+
+      // 3. Refresh and merge remote state using the existing Y-TRACE synchronization mechanism
+      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+
+      // 4. Success toast
+      toast({
+        title: "Revised proposal uploaded",
+        description: "Revised proposal uploaded. The admin will review your updated document.",
+      });
+    } catch (error) {
+      console.error("Failed to replace budget request proposal file:", error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload revised proposal. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const handleDeleteBudgetRequest = (request: BudgetRequest) => {
     if (approvedBudgetStatuses.has(request.status)) {
       toast({
@@ -3178,6 +3233,7 @@ export default function UserPortal({ section }: { section: string }) {
               e.preventDefault();
               await saveBudgetRequest(isDraft ? "draft" : "submitted");
             }}
+            onReplaceBudgetFile={handleReplaceBudgetFile}
           />
         );
       case "liquidation-reporting":

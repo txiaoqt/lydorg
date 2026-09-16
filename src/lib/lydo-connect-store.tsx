@@ -1473,7 +1473,10 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
         setState((current) => ({
           ...current,
-          ypopOrgActivities: [activity, ...current.ypopOrgActivities],
+          ypopOrgActivities: [
+            activity,
+            ...current.ypopOrgActivities.filter((a) => a.id !== activity.id),
+          ],
         }));
       },
       updateYPOPOrgActivity: (id, patch) => {

@@ -21,7 +21,8 @@ import {
   Download,
   ExternalLink,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 import { getBudgetPurposeCategoriesFromSupabase } from "@/lib/lydo-connect-supabase";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,7 @@ export interface UserPortalBudgetWorkspaceViewProps {
   newRemarks: string;
   setNewRemarks: (val: string) => void;
   handleCreateOrUpdateBudgetRequest: (event: React.FormEvent, isDraft?: boolean) => Promise<void>;
+  onReplaceBudgetFile?: (budgetRequestId: string, file: File) => Promise<void>;
 }
 
 export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceViewProps> = ({
@@ -165,6 +167,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   newRemarks,
   setNewRemarks,
   handleCreateOrUpdateBudgetRequest,
+  onReplaceBudgetFile,
 }) => {
   const isDesktop = useIsDesktop();
   const [searchQuery, setSearchQuery] = useState("");
@@ -178,6 +181,26 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   const internalFileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const replaceFileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [isReplacingBudgetFile, setIsReplacingBudgetFile] = useState<boolean>(false);
+
+  const handleTriggerReplaceBudgetFile = () => {
+    replaceFileInputRef.current?.click();
+  };
+
+  const handleReplaceFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedRequest || !onReplaceBudgetFile) return;
+    try {
+      setIsReplacingBudgetFile(true);
+      await onReplaceBudgetFile(selectedRequest.id, file);
+    } catch (err) {
+      console.error("Failed to replace budget proposal file:", err);
+    } finally {
+      setIsReplacingBudgetFile(false);
+      if (e.target) e.target.value = "";
+    }
+  };
 
   const DEFAULT_CANONICAL_CATEGORIES = [
     "Leadership & Governance",
@@ -1489,10 +1512,46 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                   {/* SCROLLABLE BODY */}
                   <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                    {/* Admin Revision Feedback (Needs Revision Callout) */}
+                    {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (
+                      <div className="rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 shadow-2xs">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                          <span>Admin Revision Feedback</span>
+                        </div>
+                        <p className="text-xs leading-relaxed pl-5 font-normal italic">
+                          "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
+                        </p>
+                        {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
+                          <div className="pt-1 pl-5">
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isReplacingBudgetFile}
+                              onClick={handleTriggerReplaceBudgetFile}
+                              className="h-8 px-3 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                            >
+                              {isReplacingBudgetFile ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  <span>Uploading Revised Proposal...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FileUp className="h-3.5 w-3.5" />
+                                  <span>Upload Revised Proposal</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Key Summary: Financial Overview */}
                     <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
                       <p className="text-xs font-bold text-foreground">Financial Overview</p>
-                      <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
+                      <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border/40">
                         <div>
                           <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Requested Amount</span>
                           <span className="font-bold text-foreground text-sm tabular-nums">
@@ -1500,12 +1559,18 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold tracking-wider">Approved / Released</span>
+                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold tracking-wider">Approved Amount</span>
                           <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm tabular-nums">
-                            {selectedRequest.approvedAmount
+                            {selectedRequest.approvedAmount != null && Number(selectedRequest.approvedAmount) > 0
                               ? formatCurrency(selectedRequest.approvedAmount)
-                              : selectedRequest.releasedAmount
-                              ? formatCurrency(selectedRequest.releasedAmount)
+                              : "Pending"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-teal-600 dark:text-teal-400 uppercase font-semibold tracking-wider">Released Amount</span>
+                          <span className="font-bold text-teal-600 dark:text-teal-400 text-sm tabular-nums">
+                            {selectedRequest.status === "budget_released" || (selectedRequest.releasedAmount != null && Number(selectedRequest.releasedAmount) > 0)
+                              ? formatCurrency(selectedRequest.releasedAmount || selectedRequest.approvedAmount || 0)
                               : "Pending"}
                           </span>
                         </div>
@@ -1566,16 +1631,39 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     <p className="text-xs text-muted-foreground font-medium truncate mr-2">
                       Budget Request • LYDO Pasig City
                     </p>
-                    <SheetClose asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
-                      >
-                        Close Drawer
-                      </Button>
-                    </SheetClose>
+                    <div className="flex items-center gap-2">
+                      {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={isReplacingBudgetFile}
+                          onClick={handleTriggerReplaceBudgetFile}
+                          className="h-8.5 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-semibold gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                        >
+                          {isReplacingBudgetFile ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileUp className="h-3.5 w-3.5" />
+                              <span>Upload Revised Proposal</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      <SheetClose asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                        >
+                          Close Drawer
+                        </Button>
+                      </SheetClose>
+                    </div>
                   </div>
                 </>
               );
@@ -1646,25 +1734,67 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                   {/* SCROLLABLE BODY */}
                   <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                    {/* Admin Revision Feedback (Needs Revision Callout) */}
+                    {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (
+                      <div className="rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 shadow-2xs">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                          <span>Admin Revision Feedback</span>
+                        </div>
+                        <p className="text-xs leading-relaxed pl-5 font-normal italic">
+                          "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
+                        </p>
+                        {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
+                          <div className="pt-1 pl-5">
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isReplacingBudgetFile}
+                              onClick={handleTriggerReplaceBudgetFile}
+                              className="h-8.5 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                            >
+                              {isReplacingBudgetFile ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  <span>Uploading Revised Proposal...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FileUp className="h-3.5 w-3.5" />
+                                  <span>Upload Revised Proposal</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Key Summary: Financial Overview */}
                     <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-foreground tracking-tight">Financial Overview</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/50">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 text-xs pt-2 border-t border-border/50">
                         <div>
                           <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Requested Amount</span>
-                          <span className="font-bold font-mono text-foreground text-sm sm:text-base tabular-nums leading-tight mt-0.5 block">
+                          <span className="font-bold font-mono text-foreground text-xs sm:text-sm tabular-nums leading-tight mt-0.5 block">
                             {formatCurrency(selectedRequest.requestedAmount || 0)}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider">Approved / Released</span>
-                          <span className="font-extrabold font-mono text-emerald-600 dark:text-emerald-400 text-sm sm:text-base tabular-nums leading-tight mt-0.5 block">
-                            {selectedRequest.approvedAmount
+                          <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider">Approved Amount</span>
+                          <span className="font-extrabold font-mono text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm tabular-nums leading-tight mt-0.5 block">
+                            {selectedRequest.approvedAmount != null && Number(selectedRequest.approvedAmount) > 0
                               ? formatCurrency(selectedRequest.approvedAmount)
-                              : selectedRequest.releasedAmount
-                              ? formatCurrency(selectedRequest.releasedAmount)
+                              : "Pending"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-teal-600 dark:text-teal-400 uppercase font-bold tracking-wider">Released Amount</span>
+                          <span className="font-extrabold font-mono text-teal-600 dark:text-teal-400 text-xs sm:text-sm tabular-nums leading-tight mt-0.5 block">
+                            {selectedRequest.status === "budget_released" || (selectedRequest.releasedAmount != null && Number(selectedRequest.releasedAmount) > 0)
+                              ? formatCurrency(selectedRequest.releasedAmount || selectedRequest.approvedAmount || 0)
                               : "Pending"}
                           </span>
                         </div>
@@ -1726,15 +1856,38 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
                       Budget Request • LYDO Pasig City
                     </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => closeBudgetDetail()}
-                      className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      Close
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={isReplacingBudgetFile}
+                          onClick={handleTriggerReplaceBudgetFile}
+                          className="h-8.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-semibold gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                        >
+                          {isReplacingBudgetFile ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileUp className="h-3.5 w-3.5" />
+                              <span>Upload Revised Proposal</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => closeBudgetDetail()}
+                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        Close
+                      </Button>
+                    </div>
                   </div>
                 </>
               );
@@ -1742,6 +1895,16 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Hidden File Input for Budget Proposal Replacement */}
+      <input
+        ref={replaceFileInputRef}
+        type="file"
+        accept=".pdf,application/pdf"
+        className="hidden"
+        data-testid="replace-budget-file-input"
+        onChange={handleReplaceFileInputChange}
+      />
     </div>
     </FeatureGate>
   );

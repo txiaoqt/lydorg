@@ -827,6 +827,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [selectedBudgetReviewFileIds, setSelectedBudgetReviewFileIds] = useState<string[]>([]);
   const [budgetBulkDecision, setBudgetBulkDecision] = useState<BudgetReviewDecision>("approve");
   const [budgetBulkRemark, setBudgetBulkRemark] = useState("");
+  const [budgetApprovedAmountDraft, setBudgetApprovedAmountDraft] = useState("");
   const [isBudgetDecisionHelpOpen, setIsBudgetDecisionHelpOpen] = useState(false);
   const budgetDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
   const budgetDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
@@ -2578,7 +2579,13 @@ export default function AdminPortal({ section }: { section: string }) {
     setSelectedBudgetFileId(null);
     setBudgetBulkDecision("approve");
     setBudgetBulkRemark("");
-  }, [selectedBudgetRequestId]);
+    if (selectedBudgetRequest) {
+      const initialAmt = selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0;
+      setBudgetApprovedAmountDraft(initialAmt > 0 ? String(initialAmt) : "");
+    } else {
+      setBudgetApprovedAmountDraft("");
+    }
+  }, [selectedBudgetRequestId, selectedBudgetRequest]);
 
   useEffect(() => {
     if (selectedBudgetReviewFileIds.length > 1 && budgetBulkDecision !== "approve") {
@@ -5729,18 +5736,23 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    const template = activeTemplates.find((entry) => entry.id === templateId);
+    const template =
+      activeTemplates.find((entry) => entry.id === templateId) ||
+      state.templates.find((entry) => entry.id === templateId);
     if (!template) return;
 
     try {
       await deleteTemplateRecordInSupabase(template.databaseId, template.name);
-      removeTemplate(template.id);
+      updateTemplate(template.id, {
+        isActive: false,
+        templateActive: false,
+      });
       await appendAuditLog("Archived file", "template", template.databaseId, `Archived file "${template.name}".`);
       await refreshAdminState();
       if (editingTemplateId === template.id || templateModalMode === "delete") {
         resetTemplateForm();
       }
-      toast({ title: "File archived", description: `${template.name} was archived and hidden from Forms & Templates.` });
+      toast({ title: "File archived", description: `${template.name} was archived.` });
     } catch (error) {
       toast({
         title: "Archive failed",
@@ -8072,8 +8084,15 @@ export default function AdminPortal({ section }: { section: string }) {
             (file) => selectedBudgetReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
           );
           const budgetDecisionRequiresRemarkNow = budgetDecisionRequiresRemark(budgetBulkDecision);
+          const parsedApprovedAmount = Number(budgetApprovedAmountDraft);
+          const isApprovedAmountValid =
+            budgetBulkDecision !== "approve" ||
+            (budgetApprovedAmountDraft.trim() !== "" &&
+              !Number.isNaN(parsedApprovedAmount) &&
+              parsedApprovedAmount > 0);
           const isBudgetDecisionConfirmDisabled =
             budgetReviewSubmitting ||
+            !isApprovedAmountValid ||
             (budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim());
 
           const submitBudgetReviewDecisions = async () => {
@@ -8140,7 +8159,10 @@ export default function AdminPortal({ section }: { section: string }) {
             if (targetParentStatus !== selectedBudgetRequest.status) {
               const budgetHistoryNow = new Date().toISOString();
               const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
-              const approvedAmount = Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
+              const approvedAmountNum =
+                budgetBulkDecision === "approve" && budgetApprovedAmountDraft.trim() && !Number.isNaN(Number(budgetApprovedAmountDraft))
+                  ? Number(budgetApprovedAmountDraft)
+                  : Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
 
               const parentPatch: Partial<BudgetRequest> = {
                 status: targetParentStatus,
@@ -8151,7 +8173,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 ],
                 ...(targetParentStatus === "approved_for_ftf_green"
                   ? {
-                      approvedAmount,
+                      approvedAmount: approvedAmountNum,
                       goSignalAt: budgetHistoryNow,
                     }
                   : {}),
@@ -8163,25 +8185,28 @@ export default function AdminPortal({ section }: { section: string }) {
                 await refreshAdminState();
 
                 if (targetParentStatus === "approved_for_ftf_green") {
+                  const formattedApproved = `₱${approvedAmountNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  const formattedRequested = `₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
                   void appendAuditLog(
                     "Approved budget request",
                     "budget_request",
                     selectedBudgetRequest.id,
-                    `Marked budget request "${selectedBudgetRequest.activityTitle}" as approved for face-to-face submission.`,
+                    `Marked budget request "${selectedBudgetRequest.activityTitle}" as approved with approved amount ${formattedApproved} (Requested: ${formattedRequested}).`,
                     selectedBudgetRequest.organizationId,
                   ).catch(console.error);
                   notifyOrganizationUser({
                     userId: selectedBudgetOrganization?.userId ?? "",
                     organizationId: selectedBudgetRequest.organizationId,
                     title: "Budget request approved",
-                    message: "The admin approved your budget request and issued the go signal for the next step.",
+                    message: `Your budget request for '${selectedBudgetRequest.activityTitle}' has been approved for ${formattedApproved}. Please prepare your hard copy requirements for face-to-face submission.`,
                     type: "budget_go_signal",
                     relatedType: "budget_request",
                     relatedId: selectedBudgetRequest.id,
                   });
                   toast({
                     title: "Budget approved",
-                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget request is now marked green.`,
+                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget request is now marked green for ${formattedApproved}.`,
                   });
                 } else if (targetParentStatus === "needs_revision") {
                   void appendAuditLog(
@@ -8503,6 +8528,22 @@ export default function AdminPortal({ section }: { section: string }) {
                           {`₱${Math.round(selectedBudgetRequest.requestedAmount).toLocaleString()}`}
                         </p>
                       </div>
+                      {selectedBudgetRequest.approvedAmount ? (
+                        <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Approved Amount</p>
+                          <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-positive-secondary">
+                            {`₱${Math.round(selectedBudgetRequest.approvedAmount).toLocaleString()}`}
+                          </p>
+                        </div>
+                      ) : null}
+                      {selectedBudgetRequest.releasedAmount ? (
+                        <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Released Amount</p>
+                          <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-role-blue-text">
+                            {`₱${Math.round(selectedBudgetRequest.releasedAmount).toLocaleString()}`}
+                          </p>
+                        </div>
+                      ) : null}
                       <div className="flex items-center justify-between py-2">
                         <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Liquidation</span>
                         {linkedLiquidation ? (
@@ -8890,6 +8931,60 @@ export default function AdminPortal({ section }: { section: string }) {
                             </Select>
                           </div>
 
+                          {budgetBulkDecision === "approve" && (
+                            <div className="space-y-2.5 rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                              <div className="flex items-center justify-between">
+                                <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
+                                <span className="font-mono text-[13px] font-bold text-text-default">
+                                  {`₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label htmlFor="budget-approved-amount-input" className="font-segoe text-[13px] font-medium text-text-default">
+                                  Approved Amount (₱) <span className="text-destructive">*</span>
+                                </label>
+                                <Input
+                                  id="budget-approved-amount-input"
+                                  data-testid="admin-approved-amount-input"
+                                  type="number"
+                                  step="0.01"
+                                  min="0.01"
+                                  value={budgetApprovedAmountDraft}
+                                  onChange={(event) => setBudgetApprovedAmountDraft(event.target.value)}
+                                  placeholder="0.00"
+                                  className="h-8 border-slate-300 font-mono text-[13px]"
+                                />
+                                {(() => {
+                                  const parsedApproved = Number(budgetApprovedAmountDraft);
+                                  const reqAmount = selectedBudgetRequest.requestedAmount || 0;
+                                  if (!budgetApprovedAmountDraft.trim() || Number.isNaN(parsedApproved) || parsedApproved <= 0) {
+                                    return (
+                                      <p className="text-[11px] text-destructive">
+                                        Approved amount is required and must be greater than 0.
+                                      </p>
+                                    );
+                                  }
+                                  const diff = reqAmount - parsedApproved;
+                                  if (diff > 0.001) {
+                                    return (
+                                      <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                                        Approved amount is ₱{diff.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} less than requested.
+                                      </p>
+                                    );
+                                  }
+                                  if (diff < -0.001) {
+                                    return (
+                                      <p className="text-[11px] font-medium text-blue-700 dark:text-blue-400">
+                                        Approved amount exceeds the requested amount.
+                                      </p>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          )}
+
                           {(budgetBulkDecision === "needs_revision" || budgetBulkDecision === "reject") && (
                             <div className="flex flex-col gap-1.5">
                               <label className="font-segoe text-[13px] text-text-default">
@@ -9065,7 +9160,9 @@ export default function AdminPortal({ section }: { section: string }) {
                         <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Proposal</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                            {budgetBulkDecision === "approve" ? "Approved Amount" : "Remarks"}
+                          </p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           <div className="grid grid-cols-3 gap-2">
@@ -9074,7 +9171,9 @@ export default function AdminPortal({ section }: { section: string }) {
                               {budgetReviewDecisionLabel[budgetBulkDecision]}
                             </p>
                             <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                              {budgetBulkRemark.trim() || "—"}
+                              {budgetBulkDecision === "approve"
+                                ? `₱${Number(budgetApprovedAmountDraft || selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : budgetBulkRemark.trim() || "—"}
                             </p>
                           </div>
                         </div>
