@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, Download, FileSpreadsheet, FileText, Loader2, Table2, X, type LucideIcon } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  RectangleHorizontal,
+  RectangleVertical,
+  Table2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -8,7 +20,20 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { ExportFormat } from "@/lib/report-export";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  PDF_PAPER_SIZE_OPTIONS,
+  type ExportFormat,
+  type PdfOrientation,
+  type PdfPaperSize,
+  type PdfPageConfig,
+} from "@/lib/report-export";
 
 export interface AdminExportOption {
   format: ExportFormat | string;
@@ -16,7 +41,7 @@ export interface AdminExportOption {
   description?: string;
   icon?: LucideIcon;
   disabled?: boolean;
-  onExport?: () => Promise<void> | void;
+  onExport?: (pageConfig?: PdfPageConfig) => Promise<void> | void;
 }
 
 export interface AdminExportDialogProps {
@@ -26,7 +51,9 @@ export interface AdminExportDialogProps {
   reportTitle?: string;
   description?: string;
   options?: AdminExportOption[];
-  onExport?: (format: ExportFormat) => Promise<void> | void;
+  onExport?: (format: ExportFormat, pageConfig?: PdfPageConfig) => Promise<void> | void;
+  initialPaperSize?: PdfPaperSize;
+  initialOrientation?: PdfOrientation;
 }
 
 const DEFAULT_FORMAT_CONFIGS: Record<
@@ -68,14 +95,23 @@ export function AdminExportDialog({
   description,
   options = DEFAULT_OPTIONS,
   onExport,
+  initialPaperSize = "a4",
+  initialOrientation = "portrait",
 }: AdminExportDialogProps) {
-  const [loadingFormat, setLoadingFormat] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
+  const [paperSize, setPaperSize] = useState<PdfPaperSize>(initialPaperSize);
+  const [orientation, setOrientation] = useState<PdfOrientation>(initialOrientation);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!open) {
-      setLoadingFormat(null);
+    if (open) {
+      const initialFormat = options[0]?.format ?? "pdf";
+      setSelectedFormat(initialFormat);
+      setPaperSize(initialPaperSize);
+      setOrientation(initialOrientation);
+      setIsSubmitting(false);
     }
-  }, [open]);
+  }, [open, options, initialPaperSize, initialOrientation]);
 
   const resolvedTitle =
     title ??
@@ -86,28 +122,33 @@ export function AdminExportDialog({
       : "Export Data");
 
   const resolvedDescription =
-    description ?? "Choose the file format for this export matching the current filters.";
+    description ?? "Choose the file format and page configuration for this export.";
 
-  const handleSelect = async (option: AdminExportOption) => {
-    if (loadingFormat) return;
-    setLoadingFormat(option.format);
+  const handleGenerate = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      if (option.onExport) {
-        await option.onExport();
+      const pageConfig: PdfPageConfig = { paperSize, orientation };
+      const currentOption = options.find((opt) => opt.format === selectedFormat);
+
+      if (currentOption?.onExport) {
+        await currentOption.onExport(pageConfig);
       } else if (onExport) {
-        await onExport(option.format as ExportFormat);
+        await onExport(selectedFormat as ExportFormat, pageConfig);
       }
       onOpenChange(false);
     } finally {
-      setLoadingFormat(null);
+      setIsSubmitting(false);
     }
   };
 
+  const isPdf = selectedFormat === "pdf";
+
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !loadingFormat && onOpenChange(nextOpen)}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !isSubmitting && onOpenChange(nextOpen)}>
       <DialogContent
         hideCloseButton
-        className="flex w-[440px] sm:w-[440px] max-w-[calc(100vw-2rem)] h-auto sm:h-auto max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto gap-5 rounded-lg border border-slate-300 bg-admin-surface p-6 shadow-lg"
+        className="flex w-[460px] sm:w-[460px] max-w-[calc(100vw-2rem)] h-auto max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto gap-5 rounded-lg border border-slate-300 bg-admin-surface p-6 shadow-lg"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 pb-4">
@@ -128,7 +169,7 @@ export function AdminExportDialog({
             <button
               type="button"
               aria-label="Close"
-              disabled={loadingFormat !== null}
+              disabled={isSubmitting}
               className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border-0 bg-transparent text-slate-400 shadow-none transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50"
             >
               <X className="h-4 w-4" strokeWidth={2} />
@@ -136,69 +177,179 @@ export function AdminExportDialog({
           </DialogClose>
         </div>
 
-        {/* Format Options */}
+        {/* Format Selection Cards */}
         <div className="flex flex-col gap-2.5">
-          {options.map((option) => {
-            const formatKey = option.format;
-            const isLoading = loadingFormat === formatKey;
-            const isDisabled = (loadingFormat !== null && !isLoading) || option.disabled;
-            const defaultConfig = DEFAULT_FORMAT_CONFIGS[formatKey as ExportFormat];
-            const Icon = option.icon ?? (defaultConfig?.icon ?? FileText);
-            const itemTitle = option.title ?? (defaultConfig?.title ?? `Export as ${formatKey.toUpperCase()}`);
-            const itemDesc = option.description ?? (defaultConfig?.description ?? `Export records as ${formatKey.toUpperCase()} file.`);
+          <label className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Export Format
+          </label>
+          <div className="flex flex-col gap-2">
+            {options.map((option) => {
+              const formatKey = option.format;
+              const isSelected = selectedFormat === formatKey;
+              const isDisabled = (isSubmitting && !isSelected) || option.disabled;
+              const defaultConfig = DEFAULT_FORMAT_CONFIGS[formatKey as ExportFormat];
+              const Icon = option.icon ?? (defaultConfig?.icon ?? FileText);
+              const itemTitle = option.title ?? (defaultConfig?.title ?? `Export as ${formatKey.toUpperCase()}`);
+              const itemDesc =
+                option.description ??
+                (defaultConfig?.description ?? `Export records as ${formatKey.toUpperCase()} file.`);
 
-            return (
-              <button
-                key={formatKey}
-                type="button"
-                disabled={isDisabled || isLoading}
-                onClick={() => void handleSelect(option)}
-                className={cn(
-                  "group relative flex min-h-[62px] w-full items-center gap-3.5 rounded-lg border border-slate-200 bg-admin-surface px-4 py-3 text-left transition-all duration-150",
-                  "hover:border-slate-300 hover:bg-slate-50/80 active:scale-[0.99]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-1",
-                  "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:bg-admin-surface disabled:active:scale-100"
-                )}
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-200/70 group-hover:text-slate-900 group-disabled:bg-slate-100 group-disabled:text-slate-400">
-                  <Icon className="h-5 w-5" strokeWidth={1.75} />
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <p className="font-segoe text-[13.5px] font-semibold leading-tight text-text-default group-disabled:text-slate-400">
-                    {isLoading ? "Exporting..." : itemTitle}
-                  </p>
-                  <p className="font-segoe text-[11.5px] font-normal leading-normal text-slate-500 group-disabled:text-slate-400">
-                    {itemDesc}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center justify-center pl-1">
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-icon-info-secondary" strokeWidth={2} />
-                  ) : (
-                    <ChevronRight
-                      className="h-4 w-4 text-slate-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-slate-700 group-disabled:text-slate-300 group-disabled:group-hover:translate-x-0"
-                      strokeWidth={1.75}
-                    />
+              return (
+                <button
+                  key={formatKey}
+                  type="button"
+                  disabled={isDisabled || isSubmitting}
+                  onClick={() => setSelectedFormat(formatKey)}
+                  className={cn(
+                    "group relative flex min-h-[58px] w-full items-center gap-3.5 rounded-lg border px-4 py-2.5 text-left transition-all duration-150",
+                    isSelected
+                      ? "border-sky-600 bg-sky-50/60 ring-1 ring-sky-600/30"
+                      : "border-slate-200 bg-admin-surface hover:border-slate-300 hover:bg-slate-50/80",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-1",
+                    "disabled:cursor-not-allowed disabled:opacity-60"
                   )}
-                </div>
-              </button>
-            );
-          })}
+                >
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors",
+                      isSelected
+                        ? "bg-sky-600 text-white"
+                        : "bg-slate-100 text-slate-700 group-hover:bg-slate-200/70 group-hover:text-slate-900"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <p className="font-segoe text-[13.5px] font-semibold leading-tight text-text-default">
+                      {itemTitle}
+                    </p>
+                    <p className="font-segoe text-[11.5px] font-normal leading-normal text-slate-500">
+                      {itemDesc}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center justify-center pl-1">
+                    {isSelected ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-white">
+                        <Check className="h-3 w-3" strokeWidth={2.5} />
+                      </div>
+                    ) : (
+                      <ChevronRight
+                        className="h-4 w-4 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-slate-500"
+                        strokeWidth={1.75}
+                      />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end pt-1">
+        {/* PDF Page Setup Options (Visible only when PDF is selected) */}
+        {isPdf && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50/75 p-4 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <span className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-600">
+                Page Setup
+              </span>
+              <span className="font-segoe text-[11px] text-slate-400">PDF layout options</span>
+            </div>
+
+            {/* Paper Size Selector */}
+            <div className="space-y-1.5">
+              <label htmlFor="pdf-paper-size" className="font-segoe text-xs font-medium text-slate-700">
+                Paper Size
+              </label>
+              <Select
+                value={paperSize}
+                onValueChange={(value) => setPaperSize(value as PdfPaperSize)}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="pdf-paper-size" className="h-9 w-full border-slate-300 bg-admin-surface text-xs font-normal">
+                  <SelectValue placeholder="Select paper size" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {PDF_PAPER_SIZE_OPTIONS.map((option) => (
+                    <SelectItem key={option.id} value={option.id} className="text-xs">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium text-slate-800">{option.label}</span>
+                        <span className="text-[11px] text-slate-400">({option.dimensions})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Orientation Selector */}
+            <div className="space-y-1.5">
+              <label className="font-segoe text-xs font-medium text-slate-700">Orientation</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => setOrientation("portrait")}
+                  className={cn(
+                    "flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-medium transition-colors",
+                    orientation === "portrait"
+                      ? "border-sky-600 bg-sky-600 text-white shadow-xs"
+                      : "border-slate-300 bg-admin-surface text-slate-700 hover:bg-slate-100"
+                  )}
+                >
+                  <RectangleVertical className="h-3.5 w-3.5" />
+                  Portrait
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => setOrientation("landscape")}
+                  className={cn(
+                    "flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-medium transition-colors",
+                    orientation === "landscape"
+                      ? "border-sky-600 bg-sky-600 text-white shadow-xs"
+                      : "border-slate-300 bg-admin-surface text-slate-700 hover:bg-slate-100"
+                  )}
+                >
+                  <RectangleHorizontal className="h-3.5 w-3.5" />
+                  Landscape
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer Actions */}
+        <div className="flex items-center justify-end gap-2.5 pt-1 border-t border-slate-100">
           <DialogClose asChild>
             <button
               type="button"
-              disabled={loadingFormat !== null}
-              className="h-10 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-sm font-medium text-text-default shadow-none transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50"
+              disabled={isSubmitting}
+              className="h-9 rounded-md border border-slate-300 bg-admin-surface px-4 font-segoe text-xs font-medium text-text-default shadow-none transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50"
             >
               Cancel
             </button>
           </DialogClose>
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => void handleGenerate()}
+            className="flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-5 font-segoe text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="h-3.5 w-3.5" />
+                Generate Export
+              </>
+            )}
+          </button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+

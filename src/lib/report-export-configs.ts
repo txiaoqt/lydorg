@@ -8,20 +8,21 @@ import {
 } from "@/lib/report-export";
 
 export type YorpRegistryExportRow = {
-  no?: number;
-  urn: string;
   organizationName: string;
   majorClassification: string;
-  subClassification: string;
-  advocacyThemes: string[];
-  district: string;
-  barangay: string;
+  address: string;
+  urn: string;
   registrationDate: string;
   expiryDate: string;
-  status: string;
-  contactNumbers: string[];
-  emails: string[];
   // Backward compatibility fields for test mocks / legacy objects
+  no?: number;
+  subClassification?: string;
+  advocacyThemes?: string[];
+  district?: string;
+  barangay?: string;
+  status?: string;
+  contactNumbers?: string[];
+  emails?: string[];
   yorpUniqueRegistrationNumber?: string;
   classification?: string;
   officialContactNumber?: string;
@@ -105,42 +106,17 @@ export const mapOrganizationProfileToYorpExportRow = (
   const rawExpDate =
     "org" in input && input.expiryDate
       ? input.expiryDate
+      : organization.accreditationExpiresAt
+      ? organization.accreditationExpiresAt
       : regDateObj && !Number.isNaN(regDateObj.getTime())
       ? addYears(regDateObj, 3)
       : null;
 
-  const rawStatus =
-    "org" in input && input.yorpStatus
-      ? input.yorpStatus
-      : rawExpDate && !Number.isNaN(new Date(rawExpDate).getTime())
-      ? new Date(rawExpDate).getTime() < Date.now()
-        ? "expired"
-        : "active"
-      : organization.profileStatus === "verified"
-      ? "active"
-      : organization.profileStatus || "active";
-
-  const statusLabel =
-    rawStatus === "active"
-      ? "Active"
-      : rawStatus === "expiring_soon"
-      ? "Expiring Soon"
-      : rawStatus === "expired"
-      ? "Expired"
-      : rawStatus;
-
-  const district =
-    (organization.district || "").trim() || resolveDistrictFromBarangay(organization.barangay);
-
   return {
-    no: (index ?? 0) + 1,
-    urn: (organization.urn || "").trim(),
     organizationName: (organization.organizationName || "").trim(),
     majorClassification: normalizeClassificationLabel(organization.majorClassification || ""),
-    subClassification: (organization.subClassification || "Not Specified").trim(),
-    advocacyThemes: Array.isArray(organization.advocacies) ? organization.advocacies : [],
-    district,
-    barangay: (organization.barangay || "").trim(),
+    address: (organization.address || "").trim(),
+    urn: (organization.urn || "").trim(),
     registrationDate:
       regDateObj && !Number.isNaN(regDateObj.getTime())
         ? formatDateDisplay(regDateObj.toISOString())
@@ -149,9 +125,6 @@ export const mapOrganizationProfileToYorpExportRow = (
       rawExpDate && !Number.isNaN(new Date(rawExpDate).getTime())
         ? formatDateDisplay(new Date(rawExpDate).toISOString())
         : "",
-    status: statusLabel,
-    contactNumbers: normalizeMultiValue(organization.contactNumber),
-    emails: normalizeMultiValue(organization.organizationEmail),
   };
 };
 
@@ -162,92 +135,58 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
   footerText: "Pasig City Youth Development Office - YORP Registry",
   xlsxSheetName: "YORP Registry",
-  pdfFontSize: 6,
-  pdfCellPadding: 2,
   columns: [
     {
       label: "No.",
-      value: (row, index) => row.no ?? index + 1,
-      pdfWidth: 17,
+      value: (_row, index) => index + 1,
+      pdfWidth: 24,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxType: "integer",
       xlsxWidth: 6,
+      xlsxMinWidth: 5,
+      xlsxMaxWidth: 8,
+      xlsxType: "integer",
     },
     {
-      label: "URN",
-      value: (row) => row.urn || row.yorpUniqueRegistrationNumber || "",
-      pdfWidth: 42,
-      pdfAlign: "left",
-      xlsxWidth: 18,
-      xlsxWrap: true,
-    },
-    {
-      label: "Name of Organization",
+      label: "Name of the Organization",
       value: (row) => row.organizationName || "",
-      pdfWidth: 72,
-      xlsxWidth: 32,
-      xlsxMinWidth: 24,
-      xlsxMaxWidth: 40,
+      pdfWidth: 136,
+      xlsxWidth: 34,
+      xlsxMinWidth: 26,
+      xlsxMaxWidth: 45,
       xlsxWrap: true,
     },
     {
       label: "Major Classification",
       value: (row) => normalizeClassificationLabel(row.majorClassification || row.classification || ""),
-      pdfWidth: 44,
-      xlsxWidth: 20,
-      xlsxMinWidth: 16,
-      xlsxMaxWidth: 24,
-      xlsxWrap: true,
-    },
-    {
-      label: "Sub-classification",
-      value: (row) => row.subClassification || "Not Specified",
-      pdfWidth: 44,
-      xlsxWidth: 20,
-      xlsxMinWidth: 16,
-      xlsxMaxWidth: 24,
-      xlsxWrap: true,
-    },
-    {
-      label: "Advocacy Themes",
-      value: (row) => {
-        const themes = row.advocacyThemes ?? row.advocacies ?? [];
-        return Array.isArray(themes) ? themes : [themes];
-      },
-      csvValue: (row) => {
-        const themes = row.advocacyThemes ?? row.advocacies ?? [];
-        return Array.isArray(themes) ? themes.join("; ") : String(themes);
-      },
-      pdfValue: (row) => {
-        const themes = row.advocacyThemes ?? row.advocacies ?? [];
-        return Array.isArray(themes) ? themes.join(", ") : String(themes);
-      },
-      xlsxValue: (row) => {
-        const themes = row.advocacyThemes ?? row.advocacies ?? [];
-        return Array.isArray(themes) ? themes.join("\n") : String(themes);
-      },
-      pdfWidth: 46,
-      xlsxWidth: 26,
-      xlsxWrap: true,
-    },
-    {
-      label: "District",
-      value: (row) => row.district || resolveDistrictFromBarangay(row.barangay),
-      pdfWidth: 32,
+      pdfWidth: 74,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxWidth: 12,
-    },
-    {
-      label: "Barangay",
-      value: (row) => row.barangay || "",
-      pdfWidth: 38,
-      xlsxWidth: 18,
+      xlsxWidth: 22,
+      xlsxMinWidth: 18,
+      xlsxMaxWidth: 26,
       xlsxWrap: true,
     },
     {
-      label: "Registration Date",
+      label: "Address",
+      value: (row) => row.address || "",
+      pdfWidth: 135,
+      xlsxWidth: 34,
+      xlsxMinWidth: 26,
+      xlsxMaxWidth: 45,
+      xlsxWrap: true,
+    },
+    {
+      label: "URN",
+      value: (row) => row.urn || row.yorpUniqueRegistrationNumber || "",
+      pdfWidth: 62,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 20,
+      xlsxWrap: true,
+    },
+    {
+      label: "Date of Registration",
       value: (row) =>
         row.registrationDate ||
         (row.approvedAt
@@ -255,66 +194,18 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
           : row.createdAt
           ? formatDateDisplay(row.createdAt)
           : ""),
-      pdfWidth: 38,
+      pdfWidth: 52,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxWidth: 16,
+      xlsxWidth: 18,
     },
     {
-      label: "Expiry Date",
+      label: "Date of Expiration",
       value: (row) => row.expiryDate || (row.validUntil ? formatDateDisplay(row.validUntil) : ""),
-      pdfWidth: 38,
+      pdfWidth: 52,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxWidth: 16,
-    },
-    {
-      label: "Status",
-      value: (row) => row.status || "Active",
-      pdfWidth: 30,
-      pdfAlign: "center",
-      xlsxAlign: "center",
-      xlsxWidth: 14,
-    },
-    {
-      label: "Contact Numbers",
-      value: (row) => {
-        if (row.contactNumbers?.length) return row.contactNumbers;
-        if (row.officialContactNumber) return normalizeMultiValue(row.officialContactNumber);
-        return [];
-      },
-      pdfWidth: 44,
-      preserveSpreadsheetText: true,
-      xlsxValue: (row) => {
-        const numbers = row.contactNumbers?.length
-          ? row.contactNumbers
-          : row.officialContactNumber
-          ? normalizeMultiValue(row.officialContactNumber)
-          : [];
-        return numbers.join("\n");
-      },
-      xlsxType: "text",
-      xlsxWidth: 20,
-      xlsxWrap: true,
-    },
-    {
-      label: "Emails",
-      value: (row) => {
-        if (row.emails?.length) return row.emails;
-        if (row.officialEmailAddress) return normalizeMultiValue(row.officialEmailAddress);
-        return [];
-      },
-      pdfWidth: 46,
-      xlsxValue: (row) => {
-        const emails = row.emails?.length
-          ? row.emails
-          : row.officialEmailAddress
-          ? normalizeMultiValue(row.officialEmailAddress)
-          : [];
-        return emails.join("\n");
-      },
-      xlsxWidth: 28,
-      xlsxWrap: true,
+      xlsxWidth: 18,
     },
   ],
 };

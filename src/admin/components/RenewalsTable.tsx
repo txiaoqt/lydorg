@@ -55,27 +55,18 @@ export type RenewalsTableProps = {
 
 const STATUS_TABS: { value: RenewalStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "submitted", label: "Submitted" },
+  { value: "approved", label: "Verified" },
   { value: "pending_review", label: "Pending Review" },
   { value: "needs_revision", label: "Needs Revision" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
 ];
 
 const PAGE_SIZE = 10;
 
 export const RenewalStatusPill = ({ status }: { status: OrganizationRenewalStatus }) => {
-  if (status === "submitted") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-sky-700">
-        Submitted
-      </span>
-    );
-  }
   if (status === "approved") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
-        Approved
+        Verified
       </span>
     );
   }
@@ -93,15 +84,8 @@ export const RenewalStatusPill = ({ status }: { status: OrganizationRenewalStatu
       </span>
     );
   }
-  if (status === "under_review" || status === "resubmitted") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
-        Pending Review
-      </span>
-    );
-  }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
     </span>
   );

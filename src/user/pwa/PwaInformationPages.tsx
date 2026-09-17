@@ -42,7 +42,7 @@ export function PwaAboutPage() {
         <article>
           <span className="pwa-menu-icon"><Users aria-hidden="true" /></span>
           <div>
-            <h3>Organization Representatives</h3>
+            <h3>Heads of Organization</h3>
             <p>Manage their organization profile, submissions, budgets, and liquidation requirements.</p>
           </div>
         </article>

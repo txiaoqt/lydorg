@@ -161,12 +161,12 @@ export function PwaOrganizationDirectory() {
         <Sheet>
           <SheetTrigger asChild><Button variant="outline"><SlidersHorizontal aria-hidden="true" />Filters</Button></SheetTrigger>
           <SheetContent side="bottom" className="pwa-directory-filter-sheet">
-            <SheetHeader><SheetTitle>Filter Organizations</SheetTitle><SheetDescription>Narrow results by location, classification, or advocacy.</SheetDescription></SheetHeader>
+            <SheetHeader><SheetTitle>Filter Organizations</SheetTitle><SheetDescription>Narrow results by location, classification, or Center of Youth Participation.</SheetDescription></SheetHeader>
             <div className="pwa-directory-filter-fields">
               <label>District<select value={district} onChange={(event) => setDistrict(event.target.value)}><option value="all">All districts</option>{options.districts.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
               <label>Barangay<select value={barangay} onChange={(event) => setBarangay(event.target.value)}><option value="all">All barangays</option>{options.barangays.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
               <label>Classification<select value={classification} onChange={(event) => setClassification(event.target.value)}><option value="all">All classifications</option>{options.classifications.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
-              <label>Advocacy<select value={advocacy} onChange={(event) => setAdvocacy(event.target.value)}><option value="all">All advocacies</option>{options.advocacies.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
+              <label>Center of Youth Participation<select value={advocacy} onChange={(event) => setAdvocacy(event.target.value)}><option value="all">All Centers of Youth Participation</option>{options.advocacies.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
             </div>
             {filtersActive ? <Button variant="outline" onClick={clearFilters}>Clear all filters</Button> : null}
           </SheetContent>
@@ -220,7 +220,7 @@ export function PwaOrganizationDirectoryProfile() {
           <AdvocacyTags values={organization.advocacies} limit={4} />
           {(organization.representativeName || organization.adviserName || organization.yorpRegisteredYear) ? <dl className="pwa-directory-public-meta">
             {organization.yorpRegisteredYear ? <div><dt>YORP Member Since</dt><dd>{organization.yorpRegisteredYear}</dd></div> : null}
-            {organization.representativeName ? <div><dt>Representative</dt><dd>{organization.representativeName}</dd></div> : null}
+            {organization.representativeName ? <div><dt>Head of Organization</dt><dd>{organization.representativeName}</dd></div> : null}
             {organization.adviserName ? <div><dt>Adviser</dt><dd>{organization.adviserName}</dd></div> : null}
           </dl> : null}
         </section>

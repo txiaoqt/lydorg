@@ -119,7 +119,7 @@ import {
   type BudgetMonitoringExportRow,
   type BudgetRequestExportRow,
 } from "@/lib/report-export-configs";
-import { exportReport, formatCurrencyPdf, type ExportFormat } from "@/lib/report-export";
+import { exportReport, formatCurrencyPdf, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
 import {
   activityLogExportConfig,
   getFriendlyAuditAction,
@@ -1633,7 +1633,12 @@ export default function AdminPortal({ section }: { section: string }) {
           .join(" ")
           .toLowerCase()
           .includes(query);
-      const matchesStatus = registrationStatusFilter === "all" || org.profileStatus === registrationStatusFilter;
+      const matchesStatus =
+        registrationStatusFilter === "all"
+          ? true
+          : registrationStatusFilter === "pending_review"
+          ? org.profileStatus === "pending_review" || org.profileStatus === "incomplete"
+          : org.profileStatus === registrationStatusFilter;
       const matchesDistrict = registrationDistrictFilter === "all" || org.district === registrationDistrictFilter;
       const matchesBarangay = registrationBarangayFilter === "all" || org.barangay === registrationBarangayFilter;
       const matchesClassification =
@@ -1659,12 +1664,15 @@ export default function AdminPortal({ section }: { section: string }) {
           .toLowerCase()
           .includes(query);
       const matchesStatus =
-        renewalStatusFilter === "all" ||
-        (renewalStatusFilter === "submitted" && entry.renewalStatus === "submitted") ||
-        (renewalStatusFilter === "pending_review" && (entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted")) ||
-        (renewalStatusFilter === "needs_revision" && entry.renewalStatus === "needs_revision") ||
-        (renewalStatusFilter === "approved" && entry.renewalStatus === "approved") ||
-        (renewalStatusFilter === "rejected" && entry.renewalStatus === "rejected");
+        renewalStatusFilter === "all"
+          ? true
+          : renewalStatusFilter === "approved"
+          ? entry.renewalStatus === "approved"
+          : renewalStatusFilter === "pending_review"
+          ? entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted" || entry.renewalStatus === "submitted"
+          : renewalStatusFilter === "needs_revision"
+          ? entry.renewalStatus === "needs_revision"
+          : entry.renewalStatus === renewalStatusFilter;
       const matchesDistrict = renewalDistrictFilter === "all" || entry.district === renewalDistrictFilter;
       const matchesBarangay = renewalBarangayFilter === "all" || entry.barangay === renewalBarangayFilter;
       const matchesClassification =
@@ -2118,7 +2126,7 @@ export default function AdminPortal({ section }: { section: string }) {
     if (budgetAllocationBarangayFilter !== "all") summary.push(`Barangay: ${budgetAllocationBarangayFilter}`);
     return summary;
   }, [budgetAllocationBarangayFilter, budgetAllocationDistrictFilter]);
-  const handleReportExport = async (format: ExportFormat) => {
+  const handleReportExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
     try {
       if (activeReportExport === "budget-requests") {
         if (!budgetRequestExportRows.length) {
@@ -2128,23 +2136,27 @@ export default function AdminPortal({ section }: { section: string }) {
         const totalApproved = budgetRequestExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
         const totalReleased = budgetRequestExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
 
-        await exportReport(format, {
-          config: budgetRequestExportConfig,
-          rows: budgetRequestExportRows,
-          metadataLines: [
-            `Total Requests: ${budgetRequestExportRows.length}`,
-            `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
-            `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
-          ],
-          filterSummaryLines: budgetRequestExportFilters,
-          totalsRow:
-            format === "pdf"
-              ? buildBudgetRequestPdfTotalsRow(budgetRequestExportRows)
-              : format === "csv"
-              ? undefined
-              : buildBudgetRequestTotalsRow(budgetRequestExportRows),
-          xlsxTotalsRow: format === "xlsx" ? buildBudgetRequestXlsxTotalsRow(budgetRequestExportRows) : undefined,
-        });
+        await exportReport(
+          format,
+          {
+            config: budgetRequestExportConfig,
+            rows: budgetRequestExportRows,
+            metadataLines: [
+              `Total Requests: ${budgetRequestExportRows.length}`,
+              `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
+              `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
+            ],
+            filterSummaryLines: budgetRequestExportFilters,
+            totalsRow:
+              format === "pdf"
+                ? buildBudgetRequestPdfTotalsRow(budgetRequestExportRows)
+                : format === "csv"
+                ? undefined
+                : buildBudgetRequestTotalsRow(budgetRequestExportRows),
+            xlsxTotalsRow: format === "xlsx" ? buildBudgetRequestXlsxTotalsRow(budgetRequestExportRows) : undefined,
+          },
+          pageConfig,
+        );
         toast({ title: "Export Ready", description: `The budget request ${format.toUpperCase()} export has been downloaded.` });
         return;
       }
@@ -2158,25 +2170,29 @@ export default function AdminPortal({ section }: { section: string }) {
         const totalReleased = budgetMonitoringExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
         const totalRemaining = budgetMonitoringExportRows.reduce((sum, row) => sum + row.remainingAmount, 0);
 
-        await exportReport(format, {
-          config: budgetMonitoringExportConfig,
-          rows: budgetMonitoringExportRows,
-          metadataLines: [
-            `Fiscal Year: FY ${selectedFiscalYear}`,
-            `Total Monitored Records: ${budgetMonitoringExportRows.length}`,
-            `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
-            `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
-            `Total Remaining Amount: ${formatCurrencyPdf(totalRemaining)}`,
-          ],
-          filterSummaryLines: budgetMonitoringExportFilters,
-          totalsRow:
-            format === "pdf"
-              ? buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows)
-              : format === "csv"
-              ? undefined
-              : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
-          xlsxTotalsRow: format === "xlsx" ? buildBudgetMonitoringXlsxTotalsRow(budgetMonitoringExportRows) : undefined,
-        });
+        await exportReport(
+          format,
+          {
+            config: budgetMonitoringExportConfig,
+            rows: budgetMonitoringExportRows,
+            metadataLines: [
+              `Fiscal Year: FY ${selectedFiscalYear}`,
+              `Total Monitored Records: ${budgetMonitoringExportRows.length}`,
+              `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
+              `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
+              `Total Remaining Amount: ${formatCurrencyPdf(totalRemaining)}`,
+            ],
+            filterSummaryLines: budgetMonitoringExportFilters,
+            totalsRow:
+              format === "pdf"
+                ? buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows)
+                : format === "csv"
+                ? undefined
+                : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
+            xlsxTotalsRow: format === "xlsx" ? buildBudgetMonitoringXlsxTotalsRow(budgetMonitoringExportRows) : undefined,
+          },
+          pageConfig,
+        );
         toast({ title: "Export Ready", description: `The Budget Monitoring ${format.toUpperCase()} export has been downloaded.` });
         return;
       }
@@ -2187,24 +2203,28 @@ export default function AdminPortal({ section }: { section: string }) {
           return;
         }
 
-        await exportReport(format, {
-          config: allocationByBarangayExportConfig,
-          rows: allocationByBarangayExportRows,
-          metadataLines: [
-            `Total Barangays: ${budgetAllocationSummary.barangayCount}`,
-            `Total Organizations: ${allocationByBarangayExportRows.reduce((sum, row) => sum + row.organizationNames.length, 0)}`,
-            `Total Approved Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalApproved)}`,
-            `Total Released Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalReleased)}`,
-          ],
-          filterSummaryLines: allocationExportFilters,
-          totalsRow:
-            format === "pdf"
-              ? buildAllocationPdfTotalsRow(allocationByBarangayExportRows)
-              : format === "csv"
-              ? undefined
-              : buildAllocationTotalsRow(allocationByBarangayExportRows),
-          xlsxTotalsRow: format === "xlsx" ? buildAllocationXlsxTotalsRow(allocationByBarangayExportRows) : undefined,
-        });
+        await exportReport(
+          format,
+          {
+            config: allocationByBarangayExportConfig,
+            rows: allocationByBarangayExportRows,
+            metadataLines: [
+              `Total Barangays: ${budgetAllocationSummary.barangayCount}`,
+              `Total Organizations: ${allocationByBarangayExportRows.reduce((sum, row) => sum + row.organizationNames.length, 0)}`,
+              `Total Approved Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalApproved)}`,
+              `Total Released Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalReleased)}`,
+            ],
+            filterSummaryLines: allocationExportFilters,
+            totalsRow:
+              format === "pdf"
+                ? buildAllocationPdfTotalsRow(allocationByBarangayExportRows)
+                : format === "csv"
+                ? undefined
+                : buildAllocationTotalsRow(allocationByBarangayExportRows),
+            xlsxTotalsRow: format === "xlsx" ? buildAllocationXlsxTotalsRow(allocationByBarangayExportRows) : undefined,
+          },
+          pageConfig,
+        );
         toast({ title: "Export Ready", description: `The allocation by barangay ${format.toUpperCase()} export has been downloaded.` });
       }
     } catch (error) {
@@ -3281,32 +3301,41 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
-  const handleExportAdministrators = async (format: ExportFormat) => {
+  const handleExportAdministrators = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
     if (!filteredAdministrators.length) {
       toast({ title: "No administrators found", description: "Try changing the selected filters." });
       return;
     }
     try {
-      await exportReport(format, {
-        config: {
-          title: "Administrators",
-          filenamePrefix: "administrators",
-          columns: [
-            { label: "Display Name", value: (row: AdministratorRecord) => row.displayName, pdfWidth: 100, xlsxWidth: 24 },
-            { label: "Email", value: (row: AdministratorRecord) => row.email, pdfWidth: 130, xlsxWidth: 28 },
-            { label: "Username", value: (row: AdministratorRecord) => row.username, pdfWidth: 90, xlsxWidth: 18 },
-            { label: "Role", value: (row: AdministratorRecord) => row.roleLabel ?? "", pdfWidth: 70, xlsxWidth: 16 },
-            { label: "Unit", value: (row: AdministratorRecord) => row.unitLabel ?? "", pdfWidth: 110, xlsxWidth: 24 },
-            {
-              label: "Status",
-              value: (row: AdministratorRecord) => (row.isActive ? "Active" : "Suspended"),
-              pdfWidth: 60,
-              xlsxWidth: 14,
-            },
+      await exportReport(
+        format,
+        {
+          config: {
+            title: "Administrators",
+            filenamePrefix: "administrators",
+            columns: [
+              { label: "Display Name", value: (row: AdministratorRecord) => row.displayName, pdfWidth: 100, xlsxWidth: 24 },
+              { label: "Email", value: (row: AdministratorRecord) => row.email, pdfWidth: 130, xlsxWidth: 28 },
+              { label: "Username", value: (row: AdministratorRecord) => row.username, pdfWidth: 90, xlsxWidth: 18 },
+              { label: "Role", value: (row: AdministratorRecord) => row.roleLabel ?? "", pdfWidth: 70, xlsxWidth: 16 },
+              { label: "Unit", value: (row: AdministratorRecord) => row.unitLabel ?? "", pdfWidth: 110, xlsxWidth: 24 },
+              {
+                label: "Status",
+                value: (row: AdministratorRecord) => (row.isActive ? "Active" : "Suspended"),
+                pdfWidth: 60,
+                xlsxWidth: 14,
+              },
+            ],
+          },
+          rows: filteredAdministrators,
+          metadataLines: [
+            `Total Administrators: ${filteredAdministrators.length}`,
+            `Active Accounts: ${filteredAdministrators.filter((a) => a.isActive).length}`,
+            `Suspended Accounts: ${filteredAdministrators.filter((a) => !a.isActive).length}`,
           ],
         },
-        rows: filteredAdministrators,
-      });
+        pageConfig,
+      );
       toast({ title: "Export Ready", description: `The administrators ${format.toUpperCase()} export has been downloaded.` });
     } catch (error) {
       console.error("Unable to export administrators:", error);
@@ -6656,7 +6685,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <RegistrationContactBox
                         icon={UserRound}
-                        label="REPRESENTATIVE"
+                        label="HEAD OF ORGANIZATION"
                         title={selectedOrg.representativeName || "N/A"}
                         description={`Adviser: ${selectedOrg.adviserName || "N/A"}`}
                       />
@@ -7086,14 +7115,13 @@ export default function AdminPortal({ section }: { section: string }) {
           documentCountsByOrgId[org.id] = { submitted: submittedCount, required: templateDocuments.length };
         }
 
-        const submittedCount = state.organizationProfiles.filter((org) => org.profileStatus === "incomplete").length;
-        const receivedTodayCount = state.organizationProfiles.filter((org) => {
-          if (org.profileStatus !== "incomplete") return false;
-          const createdDate = new Date(org.createdAt);
-          return !Number.isNaN(createdDate.getTime()) && createdDate.toDateString() === new Date().toDateString();
-        }).length;
-        const pendingReviewCount = state.organizationProfiles.filter((org) => org.profileStatus === "pending_review").length;
-        const profilesNeedingRevisionCount = state.organizationProfiles.filter((org) => org.profileStatus === "needs_update").length;
+        const verifiedCount = state.organizationProfiles.filter((org) => org.profileStatus === "verified").length;
+        const pendingReviewCount = state.organizationProfiles.filter(
+          (org) => org.profileStatus === "pending_review" || org.profileStatus === "incomplete",
+        ).length;
+        const profilesNeedingRevisionCount = state.organizationProfiles.filter(
+          (org) => org.profileStatus === "needs_update",
+        ).length;
 
         return (
           <div className="flex flex-col gap-4">
@@ -7101,18 +7129,16 @@ export default function AdminPortal({ section }: { section: string }) {
 
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <StatsCard
-                title="SUBMITTED"
-                value={submittedCount}
-                icon={Send}
-                trend="up"
-                trendLabel={`${receivedTodayCount} received today`}
-                description="New submissions awaiting review."
+                title="VERIFIED"
+                value={verifiedCount}
+                icon={CheckCircle2}
+                description="Accredited organizations with verified profiles."
               />
               <StatsCard
                 title="PENDING REVIEW"
                 value={pendingReviewCount}
                 icon={Clock}
-                description="Submissions being evaluated."
+                description="Submissions currently being evaluated."
               />
               <StatsCard
                 title="NEEDS REVISION"
@@ -7509,7 +7535,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       </p>
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Representative</p>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Head of Organization</p>
                       <p className="mt-1 font-segoe text-sm text-text-default">
                         {[selectedOrg.repFirstName, selectedOrg.repLastName].filter(Boolean).join(" ") || "—"}
                       </p>
@@ -8064,9 +8090,9 @@ export default function AdminPortal({ section }: { section: string }) {
           );
         }
 
-        const submittedRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus === "submitted").length;
+        const verifiedRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus === "approved").length;
         const pendingReviewRenewalsCount = adminRenewalsQueue.filter(
-          (r) => r.renewalStatus === "under_review" || r.renewalStatus === "resubmitted",
+          (r) => r.renewalStatus === "under_review" || r.renewalStatus === "resubmitted" || r.renewalStatus === "submitted",
         ).length;
         const needsRevisionRenewalsCount = adminRenewalsQueue.filter(
           (r) => r.renewalStatus === "needs_revision",
@@ -8081,10 +8107,10 @@ export default function AdminPortal({ section }: { section: string }) {
 
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <StatsCard
-                title="SUBMITTED"
-                value={submittedRenewalsCount}
-                icon={Send}
-                description="New renewal submissions awaiting review."
+                title="VERIFIED"
+                value={verifiedRenewalsCount}
+                icon={CheckCircle2}
+                description="Approved renewal applications."
               />
               <StatsCard
                 title="PENDING REVIEW"
@@ -8592,7 +8618,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Representative</span>
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Head of Organization</span>
                           <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
                             {selectedBudgetOrganization?.representativeName || "—"}
                           </span>
@@ -11714,7 +11740,7 @@ export default function AdminPortal({ section }: { section: string }) {
               .toLowerCase();
             return haystack.includes(activitySearchTerm);
           });
-        const handleActivityExport = async (format: ExportFormat) => {
+        const handleActivityExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
           if (!filteredLogs.length) {
             toast({
               title: "No activity records found",
@@ -11733,22 +11759,26 @@ export default function AdminPortal({ section }: { section: string }) {
                 organization: organizationName,
               });
             });
-            await exportReport(format, {
-              config: activityLogExportConfig,
-              rows,
-              metadataLines: [
-                "Generated by: Administrator",
-                `Records: ${rows.length}`,
-              ],
-              filterSummaryLines: [
-                `Category: ${activityLogFilter === "all" ? "All" : getFriendlyAuditCategory(activityLogFilter)}`,
-                `Time Range: ${
-                  activityDateFilter === "all"
-                    ? "All time"
-                    : `Last ${activityDateFilter.replace("d", "")} days`
-                }`,
-              ],
-            });
+            await exportReport(
+              format,
+              {
+                config: activityLogExportConfig,
+                rows,
+                metadataLines: [
+                  "Generated by: Administrator",
+                  `Records: ${rows.length}`,
+                ],
+                filterSummaryLines: [
+                  `Category: ${activityLogFilter === "all" ? "All" : getFriendlyAuditCategory(activityLogFilter)}`,
+                  `Time Range: ${
+                    activityDateFilter === "all"
+                      ? "All time"
+                      : `Last ${activityDateFilter.replace("d", "")} days`
+                  }`,
+                ],
+              },
+              pageConfig,
+            );
             toast({
               title: "Export Ready",
               description: `The activity log ${format.toUpperCase()} export has been downloaded.`,

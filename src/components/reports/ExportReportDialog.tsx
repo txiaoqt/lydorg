@@ -1,14 +1,16 @@
 import { AdminExportDialog, type AdminExportOption, type AdminExportDialogProps } from "@/admin/components/AdminExportDialog";
-import type { ExportFormat } from "@/lib/report-export";
+import type { ExportFormat, PdfPageConfig, PdfPaperSize, PdfOrientation } from "@/lib/report-export";
 
 export type ExportReportDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reportTitle?: string;
   title?: string;
-  onExport: (format: ExportFormat) => Promise<void>;
+  onExport: (format: ExportFormat, pageConfig?: PdfPageConfig) => Promise<void> | void;
   description?: string;
   options?: AdminExportOption[];
+  initialPaperSize?: PdfPaperSize;
+  initialOrientation?: PdfOrientation;
 };
 
 export function ExportReportDialog(props: ExportReportDialogProps) {
@@ -16,3 +18,4 @@ export function ExportReportDialog(props: ExportReportDialogProps) {
 }
 
 export type { AdminExportOption, AdminExportDialogProps };
+

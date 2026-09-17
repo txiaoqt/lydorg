@@ -195,12 +195,12 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs">
                   <div className="space-y-0.5">
                     <dt className="text-[11px] font-semibold text-muted-foreground">
-                      Authorized Representative
+                      Authorized Head of Organization
                     </dt>
                     <dd className="font-bold text-foreground text-sm flex items-center gap-1.5 pt-0.5">
                       <User className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
                       <span className="truncate">
-                        {profile?.representativeName || "Unassigned Representative"}
+                        {profile?.representativeName || "Unassigned Head of Organization"}
                       </span>
                     </dd>
                   </div>
@@ -254,13 +254,13 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                   )}
                 </dl>
 
-                {/* Advocacy Focus Areas (Restrained Tag List) */}
+                {/* Centers of Youth Participation (Restrained Tag List) */}
                 {hasAdvocacies && (
                   <>
                     <div className="h-px bg-border/40" />
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-semibold text-muted-foreground">
-                        Advocacy Focus Areas
+                        Centers of Youth Participation
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {profile.advocacies!.map((adv: string) => (

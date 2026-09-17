@@ -2146,8 +2146,8 @@ export default function UserPortal({ section }: { section: string }) {
     if (trimmedProfile.representativeName && !isValidPersonName(trimmedProfile.representativeName)) {
       setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
       toast({
-        title: "Invalid Representative Name",
-        description: "Representative name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.). Numbers and special symbols are not allowed.",
+        title: "Invalid Head of Organization Name",
+        description: "Head of organization name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.). Numbers and special symbols are not allowed.",
         variant: "destructive",
       });
       return;

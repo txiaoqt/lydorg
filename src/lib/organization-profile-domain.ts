@@ -77,8 +77,8 @@ export const getMissingEditableProfileRequirements = (profile?: Partial<Organiza
   if (!profile) {
     return [
       "Select Major and Sub Classification",
-      "Select at least one Advocacy Focus Area",
-      "Add Official Representative Name",
+      "Select at least one Center of Youth Participation",
+      "Add Official Head of Organization Name",
       "Add Official Adviser Name",
       "Add Complete Address",
     ];
@@ -89,10 +89,10 @@ export const getMissingEditableProfileRequirements = (profile?: Partial<Organiza
     missing.push("Select Major and Sub Classification");
   }
   if (!profile.advocacies?.length) {
-    missing.push("Select at least one Advocacy Focus Area");
+    missing.push("Select at least one Center of Youth Participation");
   }
   if (!profile.representativeName?.trim()) {
-    missing.push("Add Official Representative Name");
+    missing.push("Add Official Head of Organization Name");
   }
   if (!profile.adviserName?.trim()) {
     missing.push("Add Official Adviser Name");

@@ -38,7 +38,7 @@ import {
   mapOrganizationProfileToYorpExportRow,
   yorpRegistryExportConfig,
 } from "@/lib/report-export-configs";
-import { exportReport, type ExportFormat } from "@/lib/report-export";
+import { exportReport, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
 import { toast } from "@/hooks/use-toast";
 
 const yorpStatusFilterLabel: Record<YorpStatusFilter, string> = {
@@ -185,19 +185,23 @@ export function YorpRegistryPage() {
     }
   };
 
-  const handleExport = async (format: ExportFormat) => {
+  const handleExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
     if (!exportRows.length) {
       toast({ title: "No Data", description: "No YORP records match the current filters." });
       return;
     }
 
     try {
-      await exportReport(format, {
-        config: yorpRegistryExportConfig,
-        rows: exportRows,
-        metadataLines: [`Total Records: ${exportRows.length}`],
-        filterSummaryLines: exportFilterSummary,
-      });
+      await exportReport(
+        format,
+        {
+          config: yorpRegistryExportConfig,
+          rows: exportRows,
+          metadataLines: [`Total Records: ${exportRows.length}`],
+          filterSummaryLines: exportFilterSummary,
+        },
+        pageConfig,
+      );
       toast({
         title: "Export Ready",
         description: `The YORP Registry ${format.toUpperCase()} export has been downloaded.`,

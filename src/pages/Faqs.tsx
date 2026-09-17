@@ -26,7 +26,7 @@ const faqs: { question: string; answer: string; category: FaqCategory }[] = [
   {
     question: "Who can create an account?",
     answer:
-      "Only organization representatives can register an account. Each account is tied to one youth organization. If your organization already has a Unique Registration Number (URN), select the previously registered organization option during sign-up.",
+      "Only heads of organizations can register an account. Each account is tied to one youth organization. If your organization already has a Unique Registration Number (URN), select the previously registered organization option during sign-up.",
     category: "getting-started",
   },
   {

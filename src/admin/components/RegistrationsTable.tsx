@@ -38,10 +38,9 @@ type RegistrationsTableProps = {
 
 const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "incomplete", label: "Submitted" },
-  { value: "pending_review", label: "Pending Review" },
   { value: "verified", label: "Verified" },
-  { value: "needs_update", label: "Rejected" },
+  { value: "pending_review", label: "Pending Review" },
+  { value: "needs_update", label: "Needs Revision" },
 ];
 
 const PAGE_SIZE = 10;
@@ -57,11 +56,11 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
   if (status === "needs_update") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
-        Rejected
+        Needs Revision
       </span>
     );
   }
-  if (status === "pending_review") {
+  if (status === "pending_review" || status === "incomplete") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Pending Review
@@ -70,7 +69,7 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
-      Submitted
+      Pending Review
     </span>
   );
 };

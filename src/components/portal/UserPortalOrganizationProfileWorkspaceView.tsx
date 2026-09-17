@@ -161,7 +161,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <span>{profileSubClass}</span>
               </p>
 
-              {/* Row 3: Location & Representative */}
+              {/* Row 3: Location & Head of Organization */}
               <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-0.5 text-xs text-muted-foreground font-medium pt-0.5 leading-snug">
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -230,7 +230,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
               { id: "overview", label: "Overview" },
               { id: "organization-details", label: "Organization Details" },
               { id: "classification", label: "Classification" },
-              { id: "advocacy", label: "Advocacy" },
+              { id: "advocacy", label: "Centers of Youth Participation" },
               { id: "contacts-socials", label: "Contacts & Socials" },
               { id: "ypop-participation", label: "YPOP Participation" },
             ].map((tab) => (
@@ -261,7 +261,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <PenSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Edit Organization Profile
               </h2>
               <p className="text-xs text-muted-foreground">
-                Update organization details, classification, advocacies, and leadership info.
+                Update organization details, classification, centers of youth participation, and leadership info.
               </p>
             </div>
             <Button
@@ -389,12 +389,12 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
           </div>
 
-          {/* Section 3: Advocacies */}
+          {/* Section 3: Centers of Youth Participation */}
           <div className="space-y-3.5 sm:space-y-4 pt-3 border-t border-border/40">
             <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-              <Award className="h-3.5 w-3.5" /> 3. Advocacy Focus Areas
+              <Award className="h-3.5 w-3.5" /> 3. Centers of Youth Participation
             </h3>
-            <p className="text-xs text-muted-foreground">Select all advocacies that apply to your organization.</p>
+            <p className="text-xs text-muted-foreground">Select all centers of youth participation that apply to your organization.</p>
             <div className="flex flex-wrap gap-2 sm:gap-2.5">
               {advocacyOptions.map((advocacy) => {
                 const isSelected = profileDraft.advocacies?.includes(advocacy);
@@ -421,16 +421,16 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
           {/* Section 4: Leadership */}
           <div className="space-y-3.5 sm:space-y-4 pt-3 border-t border-border/40">
             <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" /> 4. Leadership & Representatives
+              <Users className="h-3.5 w-3.5" /> 4. Leadership & Head of Organization
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Representative Name</label>
+                <label className="text-xs font-semibold text-foreground">Head of Organization Name</label>
                 <Input
                   value={profileDraft.representativeName || ""}
                   onChange={(e) => onFieldChange("representativeName", e.target.value)}
                   className="h-9 text-xs rounded-xl bg-background border-border"
-                  placeholder="Official Representative Name"
+                  placeholder="Official Head of Organization Name"
                 />
               </div>
               <div className="space-y-1.5">
@@ -562,8 +562,8 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                       </p>
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Representative</span>
-                      <p className="font-bold text-foreground text-sm truncate">{profile.representativeName || "Unassigned Representative"}</p>
+                      <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
+                      <p className="font-bold text-foreground text-sm truncate">{profile.representativeName || "Unassigned Head of Organization"}</p>
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
@@ -673,7 +673,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
           {activeProfileTab === "advocacy" && (
             <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
               <div className="border-b border-border/40 pb-2.5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Advocacy Focus Areas</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Centers of Youth Participation</h3>
                 <p className="text-xs text-muted-foreground/80 mt-0.5">Selected areas of engagement and public community initiatives.</p>
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-2.5">
@@ -694,12 +694,12 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" /> Leadership & Representatives
+                  <Users className="h-4 w-4 text-primary" /> Leadership & Head of Organization
                 </h3>
                 <div className="space-y-3 text-xs">
                   <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground">Representative</span>
-                    <p className="font-bold text-foreground text-sm">{profile.representativeName || "Unassigned Representative"}</p>
+                    <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
+                    <p className="font-bold text-foreground text-sm">{profile.representativeName || "Unassigned Head of Organization"}</p>
                   </div>
                   <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                     <span className="text-xs font-semibold text-muted-foreground">Adviser</span>

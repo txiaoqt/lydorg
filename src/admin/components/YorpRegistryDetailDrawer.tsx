@@ -42,7 +42,7 @@ type TabKey = "overview" | "representatives" | "location" | "ypop" | "contact";
 
 const TABS: { value: TabKey; label: string }[] = [
   { value: "overview", label: "Overview" },
-  { value: "representatives", label: "Representatives" },
+  { value: "representatives", label: "Head of Organization" },
   { value: "location", label: "Location" },
   { value: "ypop", label: "YPOP" },
   { value: "contact", label: "Contact" },
@@ -485,7 +485,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col gap-2 rounded-md border border-border-panel-subtle bg-bg-panel-subtle px-4 py-3">
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
-                            Advocacy
+                            Centers of Youth Participation
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {org.advocacies.length ? (
@@ -506,7 +506,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                 <div className="grid grid-cols-2 gap-2.5">
                   <RepresentativeCard
                     icon={User}
-                    title="Representative"
+                    title="Head of Organization"
                     name={org.representativeName}
                     email={org.organizationEmail}
                     phone={org.contactNumber}

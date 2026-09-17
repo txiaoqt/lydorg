@@ -39,10 +39,10 @@ export function PwaProfile({ data }: { data: PortalData }) {
   return <div className="pwa-stack">
     <section className="pwa-card pwa-profile-hero"><span className="pwa-large-avatar">{data.organizationName.charAt(0).toUpperCase()}</span><div><h2>{data.organizationName}</h2><StatusBadge status={profile?.profileStatus ?? "incomplete"} /><strong>{data.profilePercent}% complete</strong></div></section>
     <section className="pwa-card pwa-detail-list">
-      <div><UserRound /><span><small>Representative</small><strong>{profile?.representativeName || "Not set"}</strong></span></div>
+      <div><UserRound /><span><small>Head of Organization</small><strong>{profile?.representativeName || "Not set"}</strong></span></div>
       <div><ShieldCheck /><span><small>Classification</small><strong>{[profile?.majorClassification, profile?.subClassification].filter(Boolean).join(" · ") || "Not set"}</strong></span></div>
       <div><MapPin /><span><small>Location</small><strong>{[profile?.barangay, profile?.district].filter(Boolean).join(" · ") || "Not set"}</strong></span></div>
-      <div><Medal /><span><small>Advocacy Areas</small><strong>{profile?.advocacies.join(", ") || "Not set"}</strong></span></div>
+      <div><Medal /><span><small>Centers of Youth Participation</small><strong>{profile?.advocacies.join(", ") || "Not set"}</strong></span></div>
     </section>
   </div>;
 }

@@ -10,6 +10,78 @@ import {
 
 export type ExportFormat = "csv" | "pdf" | "xlsx";
 
+export type PdfPaperSize = "a4" | "letter" | "long_bond" | "legal" | "a3" | "tabloid";
+export type PdfOrientation = "portrait" | "landscape";
+
+export type PdfPageConfig = {
+  paperSize?: PdfPaperSize;
+  orientation?: PdfOrientation;
+};
+
+export type PaperSizeOption = {
+  id: PdfPaperSize;
+  label: string;
+  dimensions: string;
+  description: string;
+};
+
+export const PDF_PAPER_SIZE_OPTIONS: PaperSizeOption[] = [
+  {
+    id: "a4",
+    label: "A4",
+    dimensions: "210 × 297 mm",
+    description: "Standard A4 (210 × 297 mm)",
+  },
+  {
+    id: "letter",
+    label: "Short Bond (Letter)",
+    dimensions: "8.5 × 11 in",
+    description: "Short Bond / Letter (8.5 × 11 in)",
+  },
+  {
+    id: "long_bond",
+    label: "Long Bond (Folio)",
+    dimensions: "8.5 × 13 in",
+    description: "Philippine Long Bond (8.5 × 13 in)",
+  },
+  {
+    id: "legal",
+    label: "Legal",
+    dimensions: "8.5 × 14 in",
+    description: "US Legal (8.5 × 14 in)",
+  },
+  {
+    id: "a3",
+    label: "A3",
+    dimensions: "297 × 420 mm",
+    description: "Large A3 (297 × 420 mm)",
+  },
+  {
+    id: "tabloid",
+    label: "Tabloid",
+    dimensions: "11 × 17 in",
+    description: "Tabloid / Ledger (11 × 17 in)",
+  },
+];
+
+export const getJsPdfFormat = (paperSize: PdfPaperSize): string | [number, number] => {
+  switch (paperSize) {
+    case "letter":
+      return "letter";
+    case "legal":
+      return "legal";
+    case "a3":
+      return "a3";
+    case "tabloid":
+      return "tabloid";
+    case "long_bond":
+      return [612, 936]; // 8.5 x 13 inches (Folio) in points
+    case "a4":
+    default:
+      return "a4";
+  }
+};
+
 export type ReportCellValue = string | number | Array<string | number> | null | undefined;
 
 export type ReportColumn<Row> = {
@@ -35,7 +107,8 @@ export type ReportExportConfig<Row> = {
   title: string;
   filenamePrefix: string;
   columns: ReportColumn<Row>[];
-  orientation?: "portrait" | "landscape";
+  orientation?: PdfOrientation;
+  paperSize?: PdfPaperSize;
   logoUrl?: string;
   headerTitle?: string;
   footerText?: string;
@@ -52,6 +125,7 @@ export type ReportExportOptions<Row> = {
   metadataLines?: string[];
   totalsRow?: ReportCellValue[];
   xlsxTotalsRow?: ReportCellValue[];
+  pageConfig?: PdfPageConfig;
 };
 
 const DEFAULT_HEADER_TITLE = "PASIG CITY YOUTH DEVELOPMENT OFFICE";
@@ -350,12 +424,20 @@ export const buildPdfHeaderLayout = async <Row,>(
  * the template background drawn FIRST (behind all dynamic content and tables).
  */
 export const applyOfficialTemplateBackground = (doc: jsPDF) => {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-
   const drawBackground = () => {
     try {
-      doc.addImage(PCYDO_A4_TEMPLATE_DATA_URL, "JPEG", 0, 0, pageWidth, pageHeight);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const isA4Portrait = Math.abs(pageWidth - 595.28) < 10 && Math.abs(pageHeight - 841.89) < 10;
+
+      if (isA4Portrait) {
+        doc.addImage(PCYDO_A4_TEMPLATE_DATA_URL, "JPEG", 0, 0, pageWidth, pageHeight);
+      } else {
+        const headerHeight = pageWidth / PCYDO_HEADER_ASPECT_RATIO;
+        const footerHeight = pageWidth / PCYDO_FOOTER_ASPECT_RATIO;
+        doc.addImage(PCYDO_HEADER_DATA_URL, "JPEG", 0, 0, pageWidth, headerHeight);
+        doc.addImage(PCYDO_FOOTER_DATA_URL, "JPEG", 0, pageHeight - footerHeight, pageWidth, footerHeight);
+      }
     } catch {
       // Fallback if image rendering fails
     }
@@ -391,7 +473,7 @@ export const renderPdfPageDecoration = (
   doc.setFontSize(8);
   doc.setTextColor(...PDF_COLORS.muted);
 
-  const footerTextY = layout.pageHeight - 64;
+  const footerTextY = layout.pageHeight - layout.footerHeight - 6;
   doc.text(layout.footerText, layout.marginLeft, footerTextY);
   doc.text(`Page ${pageNumber} of ${totalPages}`, layout.pageWidth - layout.marginRight, footerTextY, {
     align: "right",
@@ -430,11 +512,15 @@ export const exportReportAsCsv = async <Row,>(options: ReportExportOptions<Row>)
 };
 
 export const generateReportPdfDocument = async <Row,>(options: ReportExportOptions<Row>) => {
-  const { config, rows, totalsRow } = options;
+  const { config, rows, totalsRow, pageConfig } = options;
+  const paperSize: PdfPaperSize = pageConfig?.paperSize ?? config.paperSize ?? "a4";
+  const orientation: PdfOrientation = pageConfig?.orientation ?? config.orientation ?? "portrait";
+
+  const jsPdfFormat = getJsPdfFormat(paperSize);
   const doc = new jsPDF({
-    orientation: config.orientation ?? "portrait",
+    orientation,
     unit: "pt",
-    format: "a4",
+    format: jsPdfFormat,
   });
   applyOfficialTemplateBackground(doc);
 
@@ -449,11 +535,39 @@ export const generateReportPdfDocument = async <Row,>(options: ReportExportOptio
 
   const marginLeft = 30;
   const marginRight = 30;
-  const marginBottom = 80;
   const headerLayout = await buildPdfHeaderLayout(doc, options, marginLeft, marginRight);
+  const marginBottom = headerLayout.footerHeight + 20;
 
   // Filter out any columns explicitly excluded from PDF
   const pdfColumns = config.columns.filter((column) => !column.excludeFromPdf);
+
+  // Calculate dynamic proportional column widths based on available table width
+  const availableTableWidth = headerLayout.pageWidth - marginLeft - marginRight;
+  const hasConfiguredWidths = pdfColumns.every((col) => typeof col.pdfWidth === "number" && col.pdfWidth > 0);
+  const totalConfiguredWidth = hasConfiguredWidths
+    ? pdfColumns.reduce((sum, col) => sum + (col.pdfWidth ?? 0), 0)
+    : 0;
+
+  const columnStyles = Object.fromEntries(
+    pdfColumns.map((column, index) => {
+      let cellWidth: number | "auto" = "auto";
+      if (typeof column.pdfWidth === "number" && column.pdfWidth > 0) {
+        if (totalConfiguredWidth > 0) {
+          cellWidth = (column.pdfWidth / totalConfiguredWidth) * availableTableWidth;
+        } else {
+          cellWidth = column.pdfWidth;
+        }
+      }
+      return [
+        index,
+        {
+          cellWidth,
+          halign: column.pdfAlign ?? "left",
+          valign: "middle" as const,
+        },
+      ];
+    }),
+  );
 
   // Map totalsRow to match pdfColumns if any columns were excluded
   let mappedTotalsRow: ReportCellValue[] | undefined = undefined;
@@ -493,6 +607,12 @@ export const generateReportPdfDocument = async <Row,>(options: ReportExportOptio
       overflow: "linebreak",
       font: useUnicodeFont ? PDF_FONT_REGULAR_NAME : "helvetica",
       fontStyle: "normal",
+      fillColor: false,
+    },
+    bodyStyles: {
+      fillColor: false,
+      textColor: [...PDF_COLORS.text],
+      font: useUnicodeFont ? PDF_FONT_REGULAR_NAME : "helvetica",
     },
     headStyles: {
       fillColor: [...PDF_COLORS.darkBlue],
@@ -503,24 +623,18 @@ export const generateReportPdfDocument = async <Row,>(options: ReportExportOptio
       valign: "middle",
     },
     footStyles: {
-      fillColor: [...PDF_COLORS.lightBlue],
+      fillColor: false,
       textColor: [...PDF_COLORS.text],
       font: useUnicodeFont ? PDF_FONT_BOLD_NAME : "helvetica",
       fontStyle: "bold",
+      valign: "middle",
+      lineWidth: 0.75,
+      lineColor: [...PDF_COLORS.border],
     },
     alternateRowStyles: {
-      fillColor: [...PDF_COLORS.zebra],
+      fillColor: false,
     },
-    columnStyles: Object.fromEntries(
-      pdfColumns.map((column, index) => [
-        index,
-        {
-          cellWidth: column.pdfWidth ?? "auto",
-          halign: column.pdfAlign ?? "left",
-          valign: "middle",
-        },
-      ]),
-    ),
+    columnStyles,
   });
 
   // Second pass: Decorate all pages with official PCYDO header, footer, metadata, and page numbers
@@ -811,7 +925,11 @@ export const exportReportAsXlsx = async <Row,>(options: ReportExportOptions<Row>
   );
 };
 
-export const exportReport = async <Row,>(format: ExportFormat, options: ReportExportOptions<Row>) => {
+export const exportReport = async <Row,>(
+  format: ExportFormat,
+  options: ReportExportOptions<Row>,
+  pageConfig?: PdfPageConfig,
+) => {
   if (format === "csv") {
     await exportReportAsCsv(options);
     return;
@@ -822,5 +940,8 @@ export const exportReport = async <Row,>(format: ExportFormat, options: ReportEx
     return;
   }
 
-  await exportReportAsPdf(options);
+  await exportReportAsPdf({
+    ...options,
+    pageConfig: pageConfig ?? options.pageConfig,
+  });
 };

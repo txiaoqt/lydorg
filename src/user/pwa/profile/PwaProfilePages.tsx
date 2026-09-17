@@ -371,7 +371,7 @@ function ProfileOverview({ data }: { data: PortalData }) {
       </ProfileSection>
       <ProfileSection title="Leadership">
         <dl className="pwa-profile-fields">
-          <ProfileField label="Representative" value={displayValue(profile?.representativeName)} />
+          <ProfileField label="Head of Organization" value={displayValue(profile?.representativeName)} />
           <ProfileField label="Adviser" value={displayValue(profile?.adviserName)} />
         </dl>
       </ProfileSection>
@@ -382,10 +382,10 @@ function ProfileOverview({ data }: { data: PortalData }) {
           <ProfileField label="Complete Address" value={displayValue(profile?.address)} />
         </dl>
       </ProfileSection>
-      <ProfileSection title="Advocacy Focus Areas">
+      <ProfileSection title="Centers of Youth Participation">
         {profile?.advocacies.length ? (
           <div className="pwa-profile-chips">{profile.advocacies.map((item) => <span key={item}>{item}</span>)}</div>
-        ) : <p className="pwa-profile-empty">Missing information. Add at least one advocacy in Edit Profile.</p>}
+        ) : <p className="pwa-profile-empty">Missing information. Add at least one Center of Youth Participation in Edit Profile.</p>}
       </ProfileSection>
     </div>
   );
@@ -418,7 +418,7 @@ function ProfileDetails({ data }: { data: PortalData }) {
       ["Sub-classification", profile?.subClassification ? formatSubClassificationLabel(profile.subClassification) : "Missing information"],
     ]],
     ["Leadership", [
-      ["Representative", displayValue(profile?.representativeName)],
+      ["Head of Organization", displayValue(profile?.representativeName)],
       ["Adviser", displayValue(profile?.adviserName)],
     ]],
   ] as const;
@@ -578,7 +578,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     };
     if (!next.organizationName || !next.organizationEmail || !next.contactNumber || !next.district || !next.barangay ||
       (next.isExistingOrganization && !next.organizationIdentifierNumber) || !next.majorClassification || !next.subClassification || !next.advocacies.length) {
-      toast({ title: "Complete the profile", description: "Fill in all required organization, location, classification, and advocacy information.", variant: "destructive" });
+      toast({ title: "Complete the profile", description: "Fill in all required organization, location, classification, and Centers of Youth Participation information.", variant: "destructive" });
       return;
     }
     if (!organizationEmailPattern.test(next.organizationEmail)) {
@@ -590,7 +590,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       return;
     }
     if (next.representativeName && !isValidPersonName(next.representativeName)) {
-      toast({ title: "Invalid Representative Name", description: "Representative name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.).", variant: "destructive" });
+      toast({ title: "Invalid Head of Organization Name", description: "Head of organization name must contain only letters, spaces, hyphens (-), apostrophes ('), and periods (.).", variant: "destructive" });
       return;
     }
     if (next.adviserName && !isValidPersonName(next.adviserName)) {
@@ -633,7 +633,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
   const sections = [
     { id: "basic", label: "Basic Information" },
     { id: "location", label: "Location & Classification" },
-    { id: "advocacy", label: "Advocacy Focus Areas" },
+    { id: "advocacy", label: "Centers of Youth Participation" },
     { id: "leadership", label: "Leadership" },
     { id: "contact", label: "Contact & Social" },
   ] as const;
@@ -698,7 +698,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
               ) : null}
               {section.id === "leadership" ? (
                 <div className="pwa-profile-editor-grid">
-                  <EditorField label="Representative"><Input value={draft.representativeName} onChange={(event) => setField("representativeName", event.target.value)} /></EditorField>
+                  <EditorField label="Head of Organization"><Input value={draft.representativeName} onChange={(event) => setField("representativeName", event.target.value)} /></EditorField>
                   <EditorField label="Adviser"><Input value={draft.adviserName} onChange={(event) => setField("adviserName", event.target.value)} /></EditorField>
                 </div>
               ) : null}
@@ -752,14 +752,14 @@ export function PwaProfilePublicPreview({ data }: { data: PortalData }) {
         {profile?.profileStatus === "verified" ? (
           <div className="pwa-directory-preferences">
             <label><span><strong>Visible in Organization Directory</strong><small>Other signed-in organizations can discover this public profile.</small></span><Switch disabled={savingVisibility} checked={Boolean(profile.directoryVisibility)} onCheckedChange={(checked) => void savePreferences({ visible: checked })} /></label>
-            <label><span><strong>Show representative name</strong><small>Optional personal information.</small></span><Switch disabled={savingVisibility || !profile.directoryVisibility} checked={Boolean(profile.directoryShowRepresentative)} onCheckedChange={(checked) => void savePreferences({ showRepresentative: checked })} /></label>
+            <label><span><strong>Show head of organization name</strong><small>Optional personal information.</small></span><Switch disabled={savingVisibility || !profile.directoryVisibility} checked={Boolean(profile.directoryShowRepresentative)} onCheckedChange={(checked) => void savePreferences({ showRepresentative: checked })} /></label>
             <label><span><strong>Show adviser name</strong><small>Optional personal information.</small></span><Switch disabled={savingVisibility || !profile.directoryVisibility} checked={Boolean(profile.directoryShowAdviser)} onCheckedChange={(checked) => void savePreferences({ showAdviser: checked })} /></label>
           </div>
         ) : <p className="pwa-profile-empty">Directory visibility becomes available after organization verification.</p>}
       </ProfileSection>
       <ProfileSection title="Public Organization Information">
         <dl className="pwa-profile-fields">
-          {profile?.directoryShowRepresentative ? <ProfileField label="Representative" value={displayValue(profile.representativeName)} /> : null}
+          {profile?.directoryShowRepresentative ? <ProfileField label="Head of Organization" value={displayValue(profile.representativeName)} /> : null}
           {profile?.directoryShowAdviser ? <ProfileField label="Adviser" value={displayValue(profile.adviserName)} /> : null}
           <ProfileField label="Classification" value={classificationLabel(profile)} />
           <ProfileField label="Location" value={locationLabel(profile)} />

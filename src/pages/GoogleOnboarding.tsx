@@ -25,9 +25,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
   pasigDistrictBarangays,
   pasigDistrictOptions,
@@ -163,6 +171,7 @@ const GoogleOnboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isInitialized, isAuthenticated, signOut } = useAuth();
+  const { upsertOrganizationProfile } = useLydoConnect();
 
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -194,6 +203,7 @@ const GoogleOnboarding = () => {
         if (!active) return;
 
         if (existing && isOrganizationProfileComplete(existing)) {
+          upsertOrganizationProfile(existing);
           clearGoogleOnboardingDraft(user.id);
           navigate("/dashboard", { replace: true });
           return;
@@ -403,17 +413,17 @@ const GoogleOnboarding = () => {
 
     // 7. Validate Advocacies
     if (!profileDraft.advocacies || profileDraft.advocacies.length === 0) {
-      setFormError("Please select at least one Advocacy Focus Area.");
+      setFormError("Please select at least one Center of Youth Participation.");
       return;
     }
 
     // 8. Validate Leadership
     if (!profileDraft.representativeName?.trim()) {
-      setFormError("Official Representative Name is required.");
+      setFormError("Official Head of Organization Name is required.");
       return;
     }
     if (!isValidPersonName(profileDraft.representativeName)) {
-      setFormError("Representative name contains invalid characters. Numbers and symbols are not allowed.");
+      setFormError("Head of organization name contains invalid characters. Numbers and symbols are not allowed.");
       return;
     }
     if (!profileDraft.adviserName?.trim()) {
@@ -472,6 +482,8 @@ const GoogleOnboarding = () => {
     try {
       const saved = await upsertOrganizationProfileInSupabase(payloadToSave);
       const isComplete = isOrganizationProfileComplete(saved);
+
+      upsertOrganizationProfile(saved);
 
       if (isComplete) {
         clearGoogleOnboardingDraft(user.id);
@@ -681,30 +693,34 @@ const GoogleOnboarding = () => {
                     <span>District</span>
                     <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <select
+                  <Select
+                    value={profileDraft.district || ""}
+                    onValueChange={(val) => handleDistrictChange(val)}
+                  >
+                    <SelectTrigger
                       id="org-district"
-                      value={profileDraft.district || ""}
-                      onChange={(e) => handleDistrictChange(e.target.value)}
                       className={cn(
-                        "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm transition-colors",
+                        "focus:ring-2 focus:ring-ring focus:ring-offset-1",
                         "disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground disabled:opacity-60",
                         !profileDraft.district ? "text-muted-foreground" : "text-foreground font-medium",
                       )}
-                      required
                     >
-                      <option value="" disabled hidden>
-                        Select District
-                      </option>
+                      <SelectValue placeholder="Select District" />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      sideOffset={4}
+                      className="max-h-[280px] w-[var(--radix-select-trigger-width)]"
+                    >
                       {pasigDistrictOptions.map((opt) => (
-                        <option key={opt} value={opt} className="text-foreground bg-card">
+                        <SelectItem key={opt} value={opt} className="cursor-pointer">
                           {opt}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-1.5">
@@ -713,31 +729,37 @@ const GoogleOnboarding = () => {
                     <span>Barangay</span>
                     <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <select
+                  <Select
+                    value={profileDraft.barangay || ""}
+                    onValueChange={(val) => handleFieldChange("barangay", val)}
+                    disabled={!profileDraft.district}
+                  >
+                    <SelectTrigger
                       id="org-barangay"
-                      value={profileDraft.barangay || ""}
-                      disabled={!profileDraft.district}
-                      onChange={(e) => handleFieldChange("barangay", e.target.value)}
                       className={cn(
-                        "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm transition-colors",
+                        "focus:ring-2 focus:ring-ring focus:ring-offset-1",
                         "disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground disabled:opacity-60",
                         !profileDraft.barangay ? "text-muted-foreground" : "text-foreground font-medium",
                       )}
-                      required
                     >
-                      <option value="" disabled hidden>
-                        {profileDraft.district ? "Select Barangay" : "Select District first"}
-                      </option>
+                      <SelectValue
+                        placeholder={profileDraft.district ? "Select Barangay" : "Select District first"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      sideOffset={4}
+                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] overflow-y-auto"
+                    >
                       {districtBarangays.map((b) => (
-                        <option key={b.id} value={b.name} className="text-foreground bg-card">
+                        <SelectItem key={b.id} value={b.name} className="cursor-pointer">
                           {b.name}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
@@ -905,16 +927,16 @@ const GoogleOnboarding = () => {
             </CardContent>
           </Card>
 
-          {/* Section 4: Advocacy Focus Areas */}
+          {/* Section 4: Centers of Youth Participation */}
           <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
             <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <Award className="h-4 w-4 text-primary" />
-                <span>4. Advocacy Focus Areas</span>
+                <span>4. Centers of Youth Participation</span>
                 <span className="text-destructive">*</span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Select at least one advocacy focus area championed by your organization.
+                Select at least one center of youth participation championed by your organization.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-5 sm:p-6 pt-0">
@@ -957,11 +979,11 @@ const GoogleOnboarding = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="rep-name" className="text-xs font-semibold">
-                    Official Representative Name <span className="text-destructive">*</span>
+                    Official Head of Organization Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="rep-name"
-                    placeholder="Full name of representative"
+                    placeholder="Full name of head of organization"
                     value={profileDraft.representativeName || ""}
                     onChange={(e) => handleFieldChange("representativeName", e.target.value)}
                     autoComplete="name"
@@ -969,7 +991,7 @@ const GoogleOnboarding = () => {
                     required
                   />
                   <span className="text-[10px] text-muted-foreground block">
-                    Authorized youth leader representing the organization.
+                    Authorized youth leader heading the organization.
                   </span>
                 </div>
 
