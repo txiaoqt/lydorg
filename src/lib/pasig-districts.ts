@@ -77,3 +77,56 @@ export const isBarangayInDistrict = (
       b.id.toLowerCase() === normalized,
   );
 };
+
+export const CANONICAL_PASIG_BARANGAYS: { ordinal: string; name: string }[] = [
+  { ordinal: "01", name: "Bagong Ilog" },
+  { ordinal: "02", name: "Bagong Katipunan" },
+  { ordinal: "03", name: "Bambang" },
+  { ordinal: "04", name: "Buting" },
+  { ordinal: "05", name: "Caniogan" },
+  { ordinal: "06", name: "Dela Paz" },
+  { ordinal: "07", name: "Kalawaan" },
+  { ordinal: "08", name: "Kapasigan" },
+  { ordinal: "09", name: "Kapitolyo" },
+  { ordinal: "10", name: "Malinao" },
+  { ordinal: "11", name: "Manggahan" },
+  { ordinal: "12", name: "Maybunga" },
+  { ordinal: "13", name: "Oranbo" },
+  { ordinal: "14", name: "Palatiw" },
+  { ordinal: "15", name: "Pinagbuhatan" },
+  { ordinal: "16", name: "Pineda" },
+  { ordinal: "17", name: "Rosario" },
+  { ordinal: "18", name: "Sagad" },
+  { ordinal: "19", name: "San Antonio" },
+  { ordinal: "20", name: "San Joaquin" },
+  { ordinal: "21", name: "San Jose" },
+  { ordinal: "22", name: "San Miguel" },
+  { ordinal: "23", name: "San Nicolas" },
+  { ordinal: "24", name: "Sta. Cruz" },
+  { ordinal: "25", name: "Sta. Lucia" },
+  { ordinal: "26", name: "Sta. Rosa" },
+  { ordinal: "27", name: "Santolan" },
+  { ordinal: "28", name: "Sto. Tomas" },
+  { ordinal: "29", name: "Sumilang" },
+  { ordinal: "30", name: "Ugong" },
+];
+
+export const normalizePasigBarangayName = (name?: string | null): string => {
+  if (!name) return "";
+  let clean = name.trim().toLowerCase();
+  clean = clean.replace(/^(barangay|brgy\.?)\s+/i, "").trim();
+  clean = clean.replace(/^santa\s+/i, "sta. ");
+  clean = clean.replace(/^sta\s+/i, "sta. ");
+  clean = clean.replace(/^santo\s+/i, "sto. ");
+  clean = clean.replace(/^sto\s+/i, "sto. ");
+  return clean;
+};
+
+export const getPasigBarangayOrdinal = (name?: string | null): string | null => {
+  const normalized = normalizePasigBarangayName(name);
+  if (!normalized) return null;
+  const match = CANONICAL_PASIG_BARANGAYS.find(
+    (b) => normalizePasigBarangayName(b.name) === normalized,
+  );
+  return match ? match.ordinal : null;
+};

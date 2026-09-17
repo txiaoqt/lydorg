@@ -43,6 +43,7 @@ import {
   IS_USER_SURFACE,
   USER_SIGNIN_PATH,
 } from "./lib/deployment-surface";
+import { AdminDesktopGate } from "./components/portal/AdminDesktopGate";
 
 const queryClient = new QueryClient();
 
@@ -116,7 +117,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   );
 };
 
-const RequireAdmin = ({ children }: { children: JSX.Element }) => {
+export const RequireAdmin = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isPasswordRecoverySession, role } = useAuth();
   const { pathname } = useLocation();
   if (!isInitialized) return <AdminPageLoader />;
@@ -125,7 +126,7 @@ const RequireAdmin = ({ children }: { children: JSX.Element }) => {
     return <Navigate to="/reset-password" replace />;
   }
   if (role !== "admin") return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
-  return children;
+  return <AdminDesktopGate>{children}</AdminDesktopGate>;
 };
 
 const RequireUser = ({ children }: { children: JSX.Element }) => {
@@ -249,9 +250,9 @@ const App = () => (
               <Routes>
                   {IS_ADMIN_SURFACE ? (
                     <>
-                      <Route path={ADMIN_SIGNIN_PATH} element={<SignIn forcedMode="admin" />} />
+                      <Route path={ADMIN_SIGNIN_PATH} element={<AdminDesktopGate><SignIn forcedMode="admin" /></AdminDesktopGate>} />
                       <Route path={USER_SIGNIN_PATH} element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
-                      <Route path="/admin/create-password" element={<AdminCreatePassword />} />
+                      <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
                       <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                       <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                       <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />
@@ -279,7 +280,7 @@ const App = () => (
                     <>
                       {IS_COMBINED_SURFACE ? (
                         <>
-                          <Route path="/admin/create-password" element={<AdminCreatePassword />} />
+                          <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
                           <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                           <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                           <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />

@@ -2347,7 +2347,7 @@ export default function UserPortal({ section }: { section: string }) {
     if (!budgetFileDraft && !existingBudgetFile) {
       toast({
         title: "Attach the required document",
-        description: "Please upload the detailed budget document before saving the request.",
+        description: "Please upload the detailed project proposal before saving the request.",
         variant: "destructive",
       });
       return;

@@ -1,4 +1,5 @@
 import type { OrganizationProfile } from "@/lib/lydo-connect-data";
+import { addYears } from "date-fns";
 import {
   formatCurrencyCsv,
   formatDateDisplay,
@@ -7,11 +8,28 @@ import {
 } from "@/lib/report-export";
 
 export type YorpRegistryExportRow = {
+  no?: number;
+  urn: string;
   organizationName: string;
-  barangay: string;
   majorClassification: string;
+  subClassification: string;
+  advocacyThemes: string[];
+  district: string;
+  barangay: string;
+  registrationDate: string;
+  expiryDate: string;
+  status: string;
   contactNumbers: string[];
   emails: string[];
+  // Backward compatibility fields for test mocks / legacy objects
+  yorpUniqueRegistrationNumber?: string;
+  classification?: string;
+  officialContactNumber?: string;
+  officialEmailAddress?: string;
+  approvedAt?: string | null;
+  validUntil?: string | null;
+  createdAt?: string | null;
+  advocacies?: string[];
 };
 
 export type BudgetRequestExportRow = {
@@ -30,11 +48,29 @@ export type AllocationByBarangayExportRow = {
   releasedAmount: number;
 };
 
-const normalizeMultiValue = (value: string) =>
-  value
+const normalizeMultiValue = (value?: string | null) =>
+  (value || "")
     .split(/[;\n,]+/g)
     .map((part) => part.trim())
     .filter(Boolean);
+
+const DISTRICT_2_BARANGAYS = new Set([
+  "dela paz",
+  "manggahan",
+  "maybunga",
+  "pinagbuhatan",
+  "rosario",
+  "san miguel",
+  "sta. lucia",
+  "santa lucia",
+  "santolan",
+]);
+
+export const resolveDistrictFromBarangay = (barangay?: string | null): string => {
+  if (!barangay) return "District I";
+  const clean = barangay.trim().toLowerCase().replace(/^(barangay|brgy\.?)\s+/i, "");
+  return DISTRICT_2_BARANGAYS.has(clean) ? "District II" : "District I";
+};
 
 export const normalizeClassificationLabel = (value: string) => {
   const normalized = value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -47,77 +83,237 @@ export const normalizeClassificationLabel = (value: string) => {
   return value.trim();
 };
 
-export const mapOrganizationProfileToYorpExportRow = (organization: OrganizationProfile): YorpRegistryExportRow => ({
-  organizationName: organization.organizationName.trim(),
-  barangay: organization.barangay.trim(),
-  majorClassification: normalizeClassificationLabel(organization.majorClassification || ""),
-  contactNumbers: normalizeMultiValue(organization.contactNumber),
-  emails: normalizeMultiValue(organization.organizationEmail),
-});
+export type YorpRegistryExportInput =
+  | OrganizationProfile
+  | {
+      org: OrganizationProfile;
+      registrationDate?: Date | string | null;
+      expiryDate?: Date | string | null;
+      yorpStatus?: string | null;
+    };
+
+export const mapOrganizationProfileToYorpExportRow = (
+  input: YorpRegistryExportInput,
+  index?: number,
+): YorpRegistryExportRow => {
+  const organization = "org" in input ? input.org : input;
+  const rawRegDate =
+    "org" in input && input.registrationDate
+      ? input.registrationDate
+      : organization.verifiedAt || organization.createdAt;
+  const regDateObj = rawRegDate ? new Date(rawRegDate) : null;
+  const rawExpDate =
+    "org" in input && input.expiryDate
+      ? input.expiryDate
+      : regDateObj && !Number.isNaN(regDateObj.getTime())
+      ? addYears(regDateObj, 3)
+      : null;
+
+  const rawStatus =
+    "org" in input && input.yorpStatus
+      ? input.yorpStatus
+      : rawExpDate && !Number.isNaN(new Date(rawExpDate).getTime())
+      ? new Date(rawExpDate).getTime() < Date.now()
+        ? "expired"
+        : "active"
+      : organization.profileStatus === "verified"
+      ? "active"
+      : organization.profileStatus || "active";
+
+  const statusLabel =
+    rawStatus === "active"
+      ? "Active"
+      : rawStatus === "expiring_soon"
+      ? "Expiring Soon"
+      : rawStatus === "expired"
+      ? "Expired"
+      : rawStatus;
+
+  const district =
+    (organization.district || "").trim() || resolveDistrictFromBarangay(organization.barangay);
+
+  return {
+    no: (index ?? 0) + 1,
+    urn: (organization.urn || "").trim(),
+    organizationName: (organization.organizationName || "").trim(),
+    majorClassification: normalizeClassificationLabel(organization.majorClassification || ""),
+    subClassification: (organization.subClassification || "Not Specified").trim(),
+    advocacyThemes: Array.isArray(organization.advocacies) ? organization.advocacies : [],
+    district,
+    barangay: (organization.barangay || "").trim(),
+    registrationDate:
+      regDateObj && !Number.isNaN(regDateObj.getTime())
+        ? formatDateDisplay(regDateObj.toISOString())
+        : "",
+    expiryDate:
+      rawExpDate && !Number.isNaN(new Date(rawExpDate).getTime())
+        ? formatDateDisplay(new Date(rawExpDate).toISOString())
+        : "",
+    status: statusLabel,
+    contactNumbers: normalizeMultiValue(organization.contactNumber),
+    emails: normalizeMultiValue(organization.organizationEmail),
+  };
+};
 
 export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow> = {
   title: "YORP Registry",
-  filenamePrefix: "yorp-registry",
+  filenamePrefix: "YORP_Registry_Master",
   orientation: "portrait",
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
   footerText: "Pasig City Youth Development Office - YORP Registry",
   xlsxSheetName: "YORP Registry",
+  pdfFontSize: 6,
+  pdfCellPadding: 2,
   columns: [
     {
       label: "No.",
-      value: (_row, index) => index + 1,
-      pdfWidth: 26,
+      value: (row, index) => row.no ?? index + 1,
+      pdfWidth: 17,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxType: "integer",
-      xlsxWidth: 8,
+      xlsxWidth: 6,
+    },
+    {
+      label: "URN",
+      value: (row) => row.urn || row.yorpUniqueRegistrationNumber || "",
+      pdfWidth: 42,
+      pdfAlign: "left",
+      xlsxWidth: 18,
+      xlsxWrap: true,
     },
     {
       label: "Name of Organization",
-      value: (row) => row.organizationName,
-      pdfWidth: 144,
-      xlsxWidth: 35,
+      value: (row) => row.organizationName || "",
+      pdfWidth: 72,
+      xlsxWidth: 32,
       xlsxMinWidth: 24,
       xlsxMaxWidth: 40,
       xlsxWrap: true,
     },
     {
-      label: "Barangay",
-      value: (row) => row.barangay,
-      pdfWidth: 68,
+      label: "Major Classification",
+      value: (row) => normalizeClassificationLabel(row.majorClassification || row.classification || ""),
+      pdfWidth: 44,
       xlsxWidth: 20,
       xlsxMinWidth: 16,
       xlsxMaxWidth: 24,
-    },
-    {
-      label: "Major Classification",
-      value: (row) => row.majorClassification,
-      pdfWidth: 86,
-      xlsxWidth: 25,
-      xlsxMinWidth: 18,
-      xlsxMaxWidth: 28,
       xlsxWrap: true,
     },
     {
+      label: "Sub-classification",
+      value: (row) => row.subClassification || "Not Specified",
+      pdfWidth: 44,
+      xlsxWidth: 20,
+      xlsxMinWidth: 16,
+      xlsxMaxWidth: 24,
+      xlsxWrap: true,
+    },
+    {
+      label: "Advocacy Themes",
+      value: (row) => {
+        const themes = row.advocacyThemes ?? row.advocacies ?? [];
+        return Array.isArray(themes) ? themes : [themes];
+      },
+      csvValue: (row) => {
+        const themes = row.advocacyThemes ?? row.advocacies ?? [];
+        return Array.isArray(themes) ? themes.join("; ") : String(themes);
+      },
+      pdfValue: (row) => {
+        const themes = row.advocacyThemes ?? row.advocacies ?? [];
+        return Array.isArray(themes) ? themes.join(", ") : String(themes);
+      },
+      xlsxValue: (row) => {
+        const themes = row.advocacyThemes ?? row.advocacies ?? [];
+        return Array.isArray(themes) ? themes.join("\n") : String(themes);
+      },
+      pdfWidth: 46,
+      xlsxWidth: 26,
+      xlsxWrap: true,
+    },
+    {
+      label: "District",
+      value: (row) => row.district || resolveDistrictFromBarangay(row.barangay),
+      pdfWidth: 32,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 12,
+    },
+    {
+      label: "Barangay",
+      value: (row) => row.barangay || "",
+      pdfWidth: 38,
+      xlsxWidth: 18,
+      xlsxWrap: true,
+    },
+    {
+      label: "Registration Date",
+      value: (row) =>
+        row.registrationDate ||
+        (row.approvedAt
+          ? formatDateDisplay(row.approvedAt)
+          : row.createdAt
+          ? formatDateDisplay(row.createdAt)
+          : ""),
+      pdfWidth: 38,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+    },
+    {
+      label: "Expiry Date",
+      value: (row) => row.expiryDate || (row.validUntil ? formatDateDisplay(row.validUntil) : ""),
+      pdfWidth: 38,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+    },
+    {
+      label: "Status",
+      value: (row) => row.status || "Active",
+      pdfWidth: 30,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 14,
+    },
+    {
       label: "Contact Numbers",
-      value: (row) => row.contactNumbers,
-      pdfWidth: 90,
+      value: (row) => {
+        if (row.contactNumbers?.length) return row.contactNumbers;
+        if (row.officialContactNumber) return normalizeMultiValue(row.officialContactNumber);
+        return [];
+      },
+      pdfWidth: 44,
       preserveSpreadsheetText: true,
-      xlsxValue: (row) => row.contactNumbers.join("\n"),
+      xlsxValue: (row) => {
+        const numbers = row.contactNumbers?.length
+          ? row.contactNumbers
+          : row.officialContactNumber
+          ? normalizeMultiValue(row.officialContactNumber)
+          : [];
+        return numbers.join("\n");
+      },
       xlsxType: "text",
-      xlsxWidth: 24,
-      xlsxMinWidth: 20,
-      xlsxMaxWidth: 26,
+      xlsxWidth: 20,
       xlsxWrap: true,
     },
     {
       label: "Emails",
-      value: (row) => row.emails,
-      pdfWidth: 120,
-      xlsxValue: (row) => row.emails.join("\n"),
-      xlsxWidth: 40,
-      xlsxMinWidth: 28,
-      xlsxMaxWidth: 44,
+      value: (row) => {
+        if (row.emails?.length) return row.emails;
+        if (row.officialEmailAddress) return normalizeMultiValue(row.officialEmailAddress);
+        return [];
+      },
+      pdfWidth: 46,
+      xlsxValue: (row) => {
+        const emails = row.emails?.length
+          ? row.emails
+          : row.officialEmailAddress
+          ? normalizeMultiValue(row.officialEmailAddress)
+          : [];
+        return emails.join("\n");
+      },
+      xlsxWidth: 28,
       xlsxWrap: true,
     },
   ],

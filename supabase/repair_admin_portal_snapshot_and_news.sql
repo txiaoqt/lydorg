@@ -6,9 +6,6 @@ alter table if exists public.organization_profiles
   add column if not exists is_existing_organization boolean not null default false,
   add column if not exists organization_identifier_number text not null default '';
 
-alter table if exists public.document_submission_files
-  add column if not exists ocr_metadata jsonb;
-
 create or replace function public.get_admin_portal_snapshot(_session_token text)
 returns jsonb
 language plpgsql
@@ -55,13 +52,9 @@ begin
             'file_name', dsf.file_name,
             'file_type', dsf.file_type,
             'file_size', dsf.file_size,
-            'ocr_text', dsf.ocr_text,
-            'ocr_status', dsf.ocr_status,
-            'ocr_confidence', dsf.ocr_confidence,
             'validation_status', dsf.validation_status,
             'admin_status', dsf.admin_status,
             'admin_remarks', dsf.admin_remarks,
-            'ocr_metadata', dsf.ocr_metadata,
             'uploaded_at', dsf.uploaded_at,
             'reviewed_at', dsf.reviewed_at,
             'created_at', dsf.created_at,
@@ -608,6 +601,176 @@ begin
 end;
 $$;
 
+create or replace function public.evaluate_and_apply_automatic_registration_verification(
+  _organization_id uuid,
+  _admin_id uuid default null
+)
+returns table (
+  verified boolean,
+  urn text,
+  already_verified boolean,
+  reason text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _target_org public.organization_profiles%rowtype;
+  _reg_submission_id uuid;
+  _required_type_ids uuid[];
+  _required_count int;
+  _approved_count int;
+  _effective_verified_at timestamptz := clock_timestamp();
+  _official_urn text;
+  _start_date date;
+  _end_date date;
+begin
+  select * into _target_org
+  from public.organization_profiles
+  where id = _organization_id
+  for update;
+
+  if not found then
+    return query select false, null::text, false, 'Organization profile not found.';
+    return;
+  end if;
+
+  if _target_org.profile_status = 'verified'::public.profile_status then
+    return query select true, _target_org.urn, true, 'Organization is already verified.';
+    return;
+  end if;
+
+  if _target_org.profile_status not in ('pending_review', 'incomplete', 'needs_update') then
+    return query select false, null::text, false, format('Organization status "%s" is not eligible for verification.', _target_org.profile_status);
+    return;
+  end if;
+
+  if _target_org.registration_type = 'existing_urn' then
+    return query select false, null::text, false, 'Existing URN registrations follow dedicated URN review workflow.';
+    return;
+  end if;
+
+  select ds.id into _reg_submission_id
+  from public.document_submissions ds
+  where ds.organization_id = _organization_id
+    and ds.renewal_id is null
+    and (ds.submission_scope is null or ds.submission_scope = 'registration')
+  order by ds.created_at desc
+  limit 1;
+
+  if _reg_submission_id is null then
+    return query select false, null::text, false, 'No active registration document submission found for this organization.';
+    return;
+  end if;
+
+  select coalesce(array_agg(rdt.id), '{}')
+  into _required_type_ids
+  from public.required_document_types rdt
+  where rdt.is_active = true
+    and coalesce(rdt.is_required, true) = true
+    and coalesce(rdt.template_scope, 'document_submission') = 'document_submission'
+    and (rdt.scope is null or rdt.scope in ('registration', 'both'))
+    and (
+      rdt.template_category is null
+      or rdt.template_category = '{}'
+      or 'yorp' = any(rdt.template_category)
+    );
+
+  _required_count := cardinality(_required_type_ids);
+
+  if _required_count = 0 then
+    return query select false, null::text, false, 'No active required registration document types are configured in the system.';
+    return;
+  end if;
+
+  select count(distinct dsf.document_type_id)
+  into _approved_count
+  from public.document_submission_files dsf
+  where dsf.submission_id = _reg_submission_id
+    and dsf.document_type_id = any(_required_type_ids)
+    and dsf.admin_status = 'approved_green';
+
+  if _approved_count < _required_count then
+    return query select false, null::text, false,
+      format('Incomplete: %s of %s required registration documents approved.', _approved_count, _required_count);
+    return;
+  end if;
+
+  _start_date := date(_effective_verified_at);
+  _end_date := (_start_date + interval '3 years')::date;
+
+  if _target_org.urn is not null and trim(_target_org.urn) <> '' then
+    _official_urn := trim(_target_org.urn);
+  elsif _target_org.is_existing_organization and _target_org.organization_identifier_number is not null and trim(_target_org.organization_identifier_number) <> '' then
+    _official_urn := trim(_target_org.organization_identifier_number);
+  else
+    _official_urn := public.generate_unique_urn(_target_org.barangay, _effective_verified_at);
+  end if;
+
+  update public.organization_profiles
+  set
+    profile_status = 'verified'::public.profile_status,
+    verified_at = _effective_verified_at,
+    urn = _official_urn,
+    urn_normalized = public.normalize_urn(_official_urn),
+    organization_identifier_number = _official_urn,
+    urn_review_status = 'verified'::public.urn_review_status,
+    verification_method = coalesce(_target_org.verification_method, 'documents'::public.verification_method),
+    updated_at = _effective_verified_at
+  where id = _organization_id;
+
+  if not exists (
+    select 1 from public.organization_accreditations
+    where organization_id = _organization_id and term_number = 1
+  ) then
+    insert into public.organization_accreditations (
+      organization_id,
+      term_number,
+      start_date,
+      end_date,
+      certificate_urn,
+      status,
+      is_legacy_inferred,
+      approved_by,
+      approved_at,
+      created_at
+    ) values (
+      _organization_id,
+      1,
+      _start_date,
+      _end_date,
+      _official_urn,
+      'active',
+      false,
+      _admin_id,
+      _effective_verified_at,
+      _effective_verified_at
+    );
+  end if;
+
+  insert into public.activity_logs (
+    actor_user_id,
+    action,
+    related_type,
+    related_id,
+    details,
+    organization_id,
+    created_at
+  ) values (
+    _admin_id,
+    'Verified organization',
+    'organization_profile',
+    _organization_id,
+    format('Organization automatically verified after all required registration documents were approved. Official URN: %s.', _official_urn),
+    _organization_id,
+    _effective_verified_at
+  );
+
+  return query select true, _official_urn, false, 'Organization automatically verified successfully.';
+end;
+$$;
+
 create or replace function public.update_admin_document_submission_file_review(
   _session_token text,
   _file_id uuid,
@@ -621,8 +784,10 @@ set search_path = public
 as $$
 declare
   _admin_id uuid;
-  _reviewed_at timestamptz := now();
+  _reviewed_at timestamptz := clock_timestamp();
   _submission_id uuid;
+  _renewal_id uuid;
+  _org_id uuid;
   _document_name text;
   _overall_status public.document_submission_status;
   _overall_remarks text;
@@ -650,6 +815,11 @@ begin
     raise exception 'Document submission file was not found.';
   end if;
 
+  select ds.organization_id, ds.renewal_id
+  into _org_id, _renewal_id
+  from public.document_submissions ds
+  where ds.id = _submission_id;
+
   update public.document_submission_files
   set
     admin_status = _status,
@@ -657,6 +827,17 @@ begin
     reviewed_at = _reviewed_at,
     updated_at = _reviewed_at
   where document_submission_files.id = _file_id;
+
+  if _renewal_id is not null then
+    update public.organization_renewals
+    set
+      status = 'under_review',
+      reviewed_by = _admin_id,
+      reviewed_at = _reviewed_at,
+      updated_at = _reviewed_at
+    where id = _renewal_id
+      and status in ('submitted', 'resubmitted');
+  end if;
 
   select
     case
@@ -696,11 +877,15 @@ begin
   update public.document_submissions
   set
     status = _overall_status,
-    reviewed_by = null,
+    reviewed_by = _admin_id,
     reviewed_at = _reviewed_at,
     overall_remarks = _overall_remarks,
     updated_at = _reviewed_at
   where document_submissions.id = _submission_id;
+
+  if _renewal_id is null and _status = 'approved_green' and _org_id is not null then
+    perform public.evaluate_and_apply_automatic_registration_verification(_org_id, _admin_id);
+  end if;
 
   return query
   select *
@@ -721,16 +906,27 @@ begin
   end if;
 
   if new.profile_status = 'verified' then
-    insert into public.notifications (user_id, organization_id, title, message, type, related_type, related_id)
-    values (
-      new.user_id,
-      new.id,
-      'Registration verified',
-      'The admin verified your organization registration.',
-      'completed',
-      'organization_profile',
-      new.id
-    );
+    if not exists (
+      select 1 from public.notifications
+      where organization_id = new.id
+        and type = 'completed'
+        and related_type = 'organization_profile'
+    ) then
+      insert into public.notifications (user_id, organization_id, title, message, type, related_type, related_id)
+      values (
+        new.user_id,
+        new.id,
+        'Registration verified',
+        case
+          when new.urn is not null and trim(new.urn) <> ''
+            then format('The admin verified your organization registration. Official URN: %s.', new.urn)
+          else 'The admin verified your organization registration.'
+        end,
+        'completed',
+        'organization_profile',
+        new.id
+      );
+    end if;
   elsif new.profile_status = 'needs_update' then
     insert into public.notifications (user_id, organization_id, title, message, type, related_type, related_id)
     values (

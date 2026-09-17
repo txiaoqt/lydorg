@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { addDays, addYears } from "date-fns";
-import { AlertTriangle, Award, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
+import { AlertTriangle, Award, BarChart3, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
 import "./yorp-registry.css";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
+import { YorpQuarterlyReportDialog } from "@/components/reports/YorpQuarterlyReportDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AdminPageHeader } from "@/components/portal/AdminPageHeader";
@@ -73,6 +74,7 @@ export function YorpRegistryPage() {
   const [classificationFilter, setClassificationFilter] = useState("all");
   const [selectedEntry, setSelectedEntry] = useState<YorpRegistryEntry | null>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<OrganizationProfile | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletingOrganization, setDeletingOrganization] = useState(false);
@@ -115,7 +117,7 @@ export function YorpRegistryPage() {
   }, [registryEntries, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
 
   const exportRows = useMemo(
-    () => filtered.map(({ org }) => mapOrganizationProfileToYorpExportRow(org)),
+    () => filtered.map((entry, index) => mapOrganizationProfileToYorpExportRow(entry, index)),
     [filtered],
   );
 
@@ -217,15 +219,24 @@ export function YorpRegistryPage() {
         title="YORP Registry"
         description="View accredited youth organizations."
         action={
-          <Button
-            variant="outline"
-            onClick={() => setExportDialogOpen(true)}
-            disabled={filtered.length === 0}
-            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
-          >
-            <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
-            Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setExportDialogOpen(true)}
+              disabled={filtered.length === 0}
+              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+              Export
+            </Button>
+            <Button
+              onClick={() => setReportDialogOpen(true)}
+              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary text-primary-foreground px-4 py-3 font-segoe text-public-fs-body-sm transition-colors hover:bg-primary/90"
+            >
+              <BarChart3 className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+              Reports
+            </Button>
+          </div>
         }
       />
 
@@ -407,6 +418,11 @@ export function YorpRegistryPage() {
         reportTitle="YORP Registry"
         description="Export all YORP records matching the current search and filters."
         onExport={handleExport}
+      />
+
+      <YorpQuarterlyReportDialog
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
       />
     </div>
   );

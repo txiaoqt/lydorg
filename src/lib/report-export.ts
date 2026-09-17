@@ -5,6 +5,7 @@ import {
   PCYDO_FOOTER_DATA_URL,
   PCYDO_HEADER_ASPECT_RATIO,
   PCYDO_FOOTER_ASPECT_RATIO,
+  PCYDO_A4_TEMPLATE_DATA_URL,
 } from "./report-letterhead-assets";
 
 export type ExportFormat = "csv" | "pdf" | "xlsx";
@@ -61,7 +62,7 @@ const PDF_FONT_REGULAR_NAME = "SegoeUI";
 const PDF_FONT_BOLD_NAME = "SegoeUIBold";
 const PDF_FONT_REGULAR_URL = "/fonts/segoeui.ttf";
 const PDF_FONT_BOLD_URL = "/fonts/segoeuib.ttf";
-const PDF_COLORS = {
+export const PDF_COLORS = {
   darkBlue: [22, 54, 98] as const,
   lightBlue: [240, 244, 248] as const,
   border: [190, 198, 210] as const,
@@ -79,8 +80,10 @@ const formatFilenameDate = (date = new Date()) =>
     day: "2-digit",
   }).format(date);
 
-export const getExportFilename = (filenamePrefix: string, format: ExportFormat) =>
-  `${filenamePrefix}-${formatFilenameDate()}.${format}`;
+export const getExportFilename = (filenamePrefix: string, format: ExportFormat) => {
+  const separator = filenamePrefix.includes("_") ? "_" : "-";
+  return `${filenamePrefix}${separator}${formatFilenameDate()}.${format}`;
+};
 
 export const formatReportGeneratedAt = (date = new Date()) =>
   new Intl.DateTimeFormat("en-PH", {
@@ -156,7 +159,7 @@ const sanitizeForSpreadsheet = (value: string, preserveSpreadsheetText?: boolean
 const toCsvCell = (value: string) => `"${value.replace(/"/g, "\"\"")}"`;
 const toPdfCell = (value: ReportCellValue) => normalizeCellParts(value).join("\n");
 
-const downloadBlob = (blob: Blob, filename: string) => {
+export const downloadBlob = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -277,7 +280,7 @@ export const buildCsvContent = <Row,>({ config, rows, totalsRow }: ReportExportO
   return `\uFEFF${[headerRow, ...bodyRows, ...footerRows].map((row) => row.join(",")).join("\r\n")}`;
 };
 
-type PdfHeaderLayout = {
+export type PdfHeaderLayout = {
   headerTitle: string;
   reportTitle: string;
   footerText: string;
@@ -293,7 +296,7 @@ type PdfHeaderLayout = {
   continuationTop: number;
 };
 
-const buildPdfHeaderLayout = async <Row,>(
+export const buildPdfHeaderLayout = async <Row,>(
   doc: jsPDF,
   options: ReportExportOptions<Row>,
   marginLeft: number,
@@ -339,7 +342,40 @@ const buildPdfHeaderLayout = async <Row,>(
   };
 };
 
-const renderPdfPageDecoration = (
+/**
+ * Applies the authoritative PCYDO A4 letterhead template background to the document.
+ * Draws the high-resolution rasterized template background (preserving the authentic
+ * header logos, diagonal PCYDO YORP watermark, and footer line/branding) on the current page
+ * and installs an addPage hook so every subsequently created page automatically gets
+ * the template background drawn FIRST (behind all dynamic content and tables).
+ */
+export const applyOfficialTemplateBackground = (doc: jsPDF) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const drawBackground = () => {
+    try {
+      doc.addImage(PCYDO_A4_TEMPLATE_DATA_URL, "JPEG", 0, 0, pageWidth, pageHeight);
+    } catch {
+      // Fallback if image rendering fails
+    }
+  };
+
+  const hookedDoc = doc as jsPDF & { __yTraceTemplateBgHooked?: boolean };
+  if (!hookedDoc.__yTraceTemplateBgHooked) {
+    hookedDoc.__yTraceTemplateBgHooked = true;
+    drawBackground();
+
+    const originalAddPage = doc.addPage.bind(doc);
+    doc.addPage = function (...args: any[]) {
+      const res = originalAddPage.apply(this, args as any);
+      drawBackground();
+      return res;
+    };
+  }
+};
+
+export const renderPdfPageDecoration = (
   doc: jsPDF,
   layout: PdfHeaderLayout,
   pageNumber: number,
@@ -350,33 +386,7 @@ const renderPdfPageDecoration = (
   const boldFont = useUnicodeFont ? PDF_FONT_BOLD_NAME : "helvetica";
   doc.setCharSpace(0);
 
-  // 1. Official PCYDO Letterhead Header (rendered at full width on all pages)
-  try {
-    doc.addImage(PCYDO_HEADER_DATA_URL, "JPEG", 0, 0, layout.pageWidth, layout.headerHeight);
-  } catch {
-    doc.setFont(boldFont, "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(...PDF_COLORS.darkBlue);
-    doc.text(layout.headerTitle, layout.marginLeft, 24);
-  }
-
-  // 2. Official PCYDO Letterhead Footer (rendered at bottom of all pages)
-  try {
-    doc.addImage(
-      PCYDO_FOOTER_DATA_URL,
-      "JPEG",
-      0,
-      layout.pageHeight - layout.footerHeight,
-      layout.pageWidth,
-      layout.footerHeight,
-    );
-  } catch {
-    doc.setDrawColor(...PDF_COLORS.divider);
-    doc.setLineWidth(0.8);
-    doc.line(layout.marginLeft, layout.pageHeight - 34, layout.pageWidth - layout.marginRight, layout.pageHeight - 34);
-  }
-
-  // 3. Report-specific footer text and page numbering (placed in clear area above footer divider)
+  // 1. Dynamic report-specific footer text and page numbering (placed in safe area above template footer)
   doc.setFont(regularFont, "normal");
   doc.setFontSize(8);
   doc.setTextColor(...PDF_COLORS.muted);
@@ -387,7 +397,7 @@ const renderPdfPageDecoration = (
     align: "right",
   });
 
-  // 4. Page 1 header elements: Report Title, Metadata, Filter Summary, and Divider Line
+  // 2. Page 1 header elements: Report Title, Metadata, Filter Summary, and Divider Line
   if (pageNumber === 1) {
     const titleY = layout.headerHeight + 14;
     doc.setFont(boldFont, "bold");
@@ -426,6 +436,7 @@ export const generateReportPdfDocument = async <Row,>(options: ReportExportOptio
     unit: "pt",
     format: "a4",
   });
+  applyOfficialTemplateBackground(doc);
 
   if (config.pdfUseUnicodeFont) {
     await ensurePdfFonts(doc);
@@ -581,7 +592,7 @@ type ExcelCellShape = {
   numFmt?: string;
 };
 
-const resolveExcelJsWorkbook = async () => {
+export const resolveExcelJsWorkbook = async () => {
   const excelJsModule = (await import("exceljs")) as ExcelJsModuleShape;
   const workbookCtor = excelJsModule.Workbook ?? excelJsModule.default?.Workbook;
 

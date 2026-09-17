@@ -40,7 +40,7 @@ const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
   { value: "incomplete", label: "Submitted" },
   { value: "pending_review", label: "Pending Review" },
-  { value: "verified", label: "Approved" },
+  { value: "verified", label: "Verified" },
   { value: "needs_update", label: "Rejected" },
 ];
 
@@ -50,7 +50,7 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
   if (status === "verified") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
-        Approved
+        Verified
       </span>
     );
   }
@@ -341,8 +341,13 @@ export const RegistrationsTable = ({
                     <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
                   </span>
 
-                  <div className="flex w-[14%] items-center">
+                  <div className="flex w-[14%] flex-col justify-center gap-1">
                     <ReferenceCodeChip code={org.referenceId || "—"} />
+                    {org.urn ? (
+                      <span className="font-cascadia text-[11px] font-semibold text-positive-secondary">
+                        URN: {org.urn}
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="flex w-[20%] min-w-0 flex-col gap-0.5">

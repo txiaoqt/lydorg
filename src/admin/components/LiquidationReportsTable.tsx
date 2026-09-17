@@ -384,13 +384,10 @@ export const LiquidationReportsTable = ({
         <div className="min-w-[840px]">
           {/* Column headers */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-            <span className="w-6 shrink-0">
-              <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
-            </span>
-            <span className="w-[13%]">Reference ID</span>
-            <span className="w-[24%]">Organization &amp; Project</span>
-            <span className="w-[15%]">Linked Request</span>
-            <span className="w-[13%]">Deadline</span>
+            <span className="w-[15%]">Reference ID</span>
+            <span className="w-[26%]">Organization &amp; Project</span>
+            <span className="w-[16%]">Linked Request</span>
+            <span className="w-[14%]">Deadline</span>
             <span className="w-[14%]">Status</span>
             <span className="w-[90px] shrink-0">Actions</span>
           </div>
@@ -411,15 +408,11 @@ export const LiquidationReportsTable = ({
                   key={report.id}
                   className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
                 >
-                  <span className="w-6 shrink-0">
-                    <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
-                  </span>
-
-                  <div className="flex w-[13%] items-center">
+                  <div className="flex w-[15%] items-center">
                     <ReferenceCodeChip code={buildPublicRecordCode("LR", report, allReports)} className="w-[109px] rounded" />
                   </div>
 
-                  <div className="flex w-[24%] min-w-0 flex-col gap-0.5">
+                  <div className="flex w-[26%] min-w-0 flex-col gap-0.5">
                     <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
                       {linkedBudget?.activityTitle ?? "Approved budget"}
                     </p>
@@ -428,7 +421,7 @@ export const LiquidationReportsTable = ({
                     </p>
                   </div>
 
-                  <div className="flex w-[15%] items-center">
+                  <div className="flex w-[16%] items-center">
                     {linkedBudget ? (
                       <button
                         type="button"
@@ -443,7 +436,7 @@ export const LiquidationReportsTable = ({
                     )}
                   </div>
 
-                  <div className="flex w-[13%] items-center">
+                  <div className="flex w-[14%] items-center">
                     <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">{formatShortDate(report.deadlineAt)}</p>
                   </div>
 

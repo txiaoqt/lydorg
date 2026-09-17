@@ -711,7 +711,7 @@ const SignUp = () => {
                     </div>
                     <Input
                       id="organizationIdentifierNumber"
-                      placeholder="PCYDO-XXXX-XXXX"
+                      placeholder="17-26-010"
                       value={organizationIdentifierNumber}
                       onChange={(e) => setOrganizationIdentifierNumber(e.target.value.toUpperCase())}
                       onInput={(e) => { e.currentTarget.value = e.currentTarget.value.toUpperCase(); }}

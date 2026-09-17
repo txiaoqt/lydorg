@@ -9,10 +9,12 @@ describe("URN Validation & Uniqueness Domain Logic", () => {
   });
 
   it("validates URN format syntax strictly", () => {
+    expect(validateUrn("17-26-010")).toBeNull();
+    expect(validateUrn("01-26-001")).toBeNull();
     expect(validateUrn("PCYDO-AB12-CD34")).toBeNull();
     expect(validateUrn("pcydo-ab12-cd34")).toBeNull(); // normalized inside validateUrn
     expect(validateUrn("INVALID-URN")).toBe(
-      "Please enter a valid Unique Registration Number (URN) in the format PCYDO-XXXX-XXXX.",
+      "Please enter a valid Unique Registration Number (URN) in the format BB-YY-NNN (e.g., 17-26-010).",
     );
   });
 

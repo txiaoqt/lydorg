@@ -285,7 +285,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
 
                 return (
                   <div
-                    key={template.id}
+                    key={`${group.category}-${template.databaseId || template.id || template.name}`}
                     className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 last:border-b-0"
                   >
                     <div className="flex w-[28%] items-start gap-2.5">
@@ -342,6 +342,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                         >
                           <DropdownMenuItem
                             className={cn(MENU_ITEM_CLASS, "text-public-text-neutral-default focus:bg-neutral-hover-subtle focus:text-public-text-neutral-default")}
+                            onSelect={() => onEdit(template)}
                             onClick={() => onEdit(template)}
                           >
                             <Pencil className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.6} />
@@ -350,6 +351,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                           {template.isActive ? (
                             <DropdownMenuItem
                               className={cn(MENU_ITEM_CLASS, "text-public-text-neutral-default focus:bg-neutral-hover-subtle focus:text-public-text-neutral-default")}
+                              onSelect={() => onArchive(template)}
                               onClick={() => onArchive(template)}
                             >
                               <Archive className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.6} />
@@ -358,6 +360,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                           ) : (
                             <DropdownMenuItem
                               className={cn(MENU_ITEM_CLASS, "text-public-text-neutral-default focus:bg-neutral-hover-subtle focus:text-public-text-neutral-default")}
+                              onSelect={() => onRestore(template)}
                               onClick={() => onRestore(template)}
                             >
                               <Archive className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.6} />
@@ -366,6 +369,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                           )}
                           <DropdownMenuItem
                             className={cn(MENU_ITEM_CLASS, "text-icon-danger-secondary focus:bg-danger-subtle focus:text-icon-danger-secondary")}
+                            onSelect={() => onDelete(template)}
                             onClick={() => onDelete(template)}
                           >
                             <Trash2 className="h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />

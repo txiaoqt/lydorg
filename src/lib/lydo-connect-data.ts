@@ -60,6 +60,18 @@ export type YPOPStatus =
 
 export type InquiryStatus = "pending_review" | "reviewed" | "closed";
 
+export const normalizeInquiryStatus = (status?: string | null): InquiryStatus => {
+  if (!status) return "pending_review";
+  const normalized = status.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalized === "closed" || normalized === "resolved") {
+    return "closed";
+  }
+  if (normalized === "reviewed" || normalized === "responded" || normalized === "in_review") {
+    return "reviewed";
+  }
+  return "pending_review";
+};
+
 const getReferenceDateSegment = (value?: string) => {
   const date = value ? new Date(value) : new Date();
   const safeDate = Number.isNaN(date.getTime()) ? new Date() : date;
@@ -757,6 +769,8 @@ export type OrganizationAccreditationRecord = {
   approvedBy: string | null;
   approvedAt: string;
   createdAt: string;
+  revokedAt?: string | null;
+  revocationReason?: string | null;
 };
 
 export type RenewalApplicationStatus =
@@ -780,6 +794,83 @@ export type OrganizationRenewalRecord = {
   adminRemarks: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type YorpQuarterlyMetrics = {
+  registered_verified_at_quarter_end: number;
+  applications_received: number;
+  applications_approved: number;
+  approval_rate: number | null;
+};
+
+export type YorpMajorClassificationBreakdown = {
+  label: string;
+  count: number;
+  percentage: number;
+};
+
+export type YorpSubClassificationBreakdown = {
+  label: string;
+  count: number;
+  percentage: number;
+};
+
+export type YorpOrganizationalLevelBreakdown = {
+  label: string;
+  count: number;
+  percentage: number;
+};
+
+export type YorpAdvocacyBreakdown = {
+  theme: string;
+  count: number;
+  percentage: number;
+};
+
+export type YorpDistrictBreakdown = {
+  district: string;
+  count: number;
+  percentage: number;
+};
+
+export type YorpBarangayBreakdown = {
+  ordinal: string;
+  barangay: string;
+  district: string;
+  count: number;
+  percentage: number;
+};
+
+export type YorpGeographyBreakdown = {
+  districts: YorpDistrictBreakdown[];
+  barangays: YorpBarangayBreakdown[];
+};
+
+export type YorpQuarterlyDisaggregation = {
+  major_classification: YorpMajorClassificationBreakdown[];
+  sub_classification: YorpSubClassificationBreakdown[];
+  organizational_level: YorpOrganizationalLevelBreakdown[];
+  advocacy_themes: YorpAdvocacyBreakdown[];
+  geography: YorpGeographyBreakdown;
+};
+
+export type YorpQuarterlyReportMetadata = {
+  classification_note: string;
+  organizational_level_note: string;
+  advocacy_note: string;
+  generated_at: string;
+};
+
+export type YorpQuarterlyReport = {
+  year: number;
+  quarter: number;
+  timezone: string;
+  quarter_start: string;
+  quarter_end: string;
+  quarter_end_date: string;
+  metrics: YorpQuarterlyMetrics;
+  disaggregation: YorpQuarterlyDisaggregation;
+  metadata: YorpQuarterlyReportMetadata;
 };
 
 export type OrganizationProfile = {
@@ -2505,6 +2596,7 @@ export const statusLabelMap: Record<string, string> = {
   rejected: "Rejected",
   reviewed: "Reviewed",
   closed: "Closed",
+  responded: "Responded",
   open: "Open",
   upcoming: "Upcoming",
   ongoing: "Ongoing",

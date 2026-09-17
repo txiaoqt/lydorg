@@ -31,6 +31,7 @@ import {
   deriveTemplateCategory,
   isSystemTemplateCategory,
   legacyRemovedTemplateNames,
+  normalizeInquiryStatus,
   normalizeTemplateCategoryKey,
   seedState,
 } from "./lydo-connect-data";
@@ -155,10 +156,9 @@ export const clearAccountScopedState = (base: LydoConnectState): LydoConnectStat
 });
 
 export const normalizeTemplates = (templates: TemplateRecord[]): TemplateRecord[] => {
-  const map = new Map<string, TemplateRecord>();
+  const byIdentity = new Map<string, TemplateRecord>();
   for (const template of templates ?? []) {
     if (!template || legacyRemovedTemplateNames.has(template.name)) continue;
-    const identityKey = template.databaseId || template.id;
     const normalized: TemplateRecord = {
       ...template,
       templateCategories:
@@ -167,9 +167,32 @@ export const normalizeTemplates = (templates: TemplateRecord[]): TemplateRecord[
           : [deriveTemplateCategory(template.name)],
       templateFileSize: template.templateFileSize ?? null,
     };
-    map.set(identityKey, normalized);
+
+    const nameKey = template.name.trim().toLowerCase();
+    const existing =
+      byIdentity.get(nameKey) ||
+      (template.databaseId ? byIdentity.get(template.databaseId) : undefined) ||
+      byIdentity.get(template.id);
+
+    if (existing) {
+      const merged: TemplateRecord = {
+        ...existing,
+        ...normalized,
+        databaseId: normalized.databaseId || existing.databaseId,
+        id: normalized.id || existing.id,
+      };
+      if (existing.databaseId) byIdentity.delete(existing.databaseId);
+      if (existing.id) byIdentity.delete(existing.id);
+      byIdentity.set(nameKey, merged);
+      if (merged.databaseId) byIdentity.set(merged.databaseId, merged);
+      if (merged.id) byIdentity.set(merged.id, merged);
+    } else {
+      byIdentity.set(nameKey, normalized);
+      if (normalized.databaseId) byIdentity.set(normalized.databaseId, normalized);
+      if (normalized.id) byIdentity.set(normalized.id, normalized);
+    }
   }
-  return Array.from(map.values());
+  return Array.from(new Set(byIdentity.values()));
 };
 
 const normalizeInitialSeedState = (seed: LydoSeedState): LydoConnectState => ({
@@ -351,9 +374,14 @@ export const readState = (identity?: AccountIdentity): LydoConnectState => {
       activityLogs: ((parsed.activityLogs ?? []) as ActivityLog[]).filter(
         (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.relatedId),
       ),
-      inquiries: ((parsed.inquiries ?? []) as InquiryRecord[]).filter(
-        (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.organizationId),
-      ),
+      inquiries: ((parsed.inquiries ?? []) as InquiryRecord[])
+        .filter(
+          (item) => !legacySeedIds.has(item.id) && !legacySeedIds.has(item.organizationId),
+        )
+        .map((item) => ({
+          ...item,
+          status: normalizeInquiryStatus(item.status),
+        })),
       templates: normalizeTemplates(parsed.templates ?? baseState.templates),
       ypopEntries: ((parsed.ypopEntries ?? []) as YPOPEntry[]).filter((e) => !legacySeedIds.has(e.id)),
       ypopFiles: ((parsed.ypopFiles ?? []) as YPOPFile[]).filter((f) => !legacySeedIds.has(f.id)),
@@ -1155,7 +1183,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       removeTemplate: (id) =>
         setState((current) => ({
           ...current,
-          templates: current.templates.filter((template) => template.id !== id),
+          templates: current.templates.filter((template) => template.id !== id && template.databaseId !== id),
         })),
       updateOrganizationProfile: (id, patch) =>
         setState((current) => ({
@@ -1354,20 +1382,26 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       createInquiry: (inquiry) =>
         setState((current) => ({
           ...current,
-          inquiries: [inquiry, ...current.inquiries],
+          inquiries: [{ ...inquiry, status: normalizeInquiryStatus(inquiry.status) }, ...current.inquiries],
         })),
       updateInquiry: (id, patch) =>
         setState((current) => ({
           ...current,
           inquiries: applyPatch(current.inquiries, id, patch).map((inquiry) => ({
             ...inquiry,
+            status: normalizeInquiryStatus(inquiry.status),
             updatedAt: inquiry.id === id ? new Date().toISOString() : inquiry.updatedAt,
           })),
         })),
       updateTemplate: (id, patch) =>
         setState((current) => ({
           ...current,
-          templates: normalizeTemplates(applyPatch(current.templates, id, patch)),
+          templates: normalizeTemplates(
+            current.templates.map((template) => {
+              if (template.id !== id && template.databaseId !== id) return template;
+              return typeof patch === "function" ? patch(template) : { ...template, ...patch };
+            }),
+          ),
         })),
       createNotification: (notification) =>
         setState((current) => ({

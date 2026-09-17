@@ -23,13 +23,20 @@ describe("URN registration", () => {
   });
 
   it("accepts only the complete required URN format", () => {
+    expect(validateUrn("17-26-010")).toBeNull();
+    expect(validateUrn("01-26-001")).toBeNull();
+    expect(validateUrn("30-26-999")).toBeNull();
     expect(validateUrn("PCYDO-2025-0012")).toBeNull();
   });
 
   it("generates valid unique URNs matching the project format", () => {
-    const urn = generateUniqueUrn();
-    expect(urn).toMatch(/^PCYDO-\d{4}-[A-Z0-9]{4}$/);
-    expect(validateUrn(urn)).toBeNull();
+    const defaultUrn = generateUniqueUrn();
+    expect(defaultUrn).toMatch(/^\d{2}-\d{2}-\d{3}$/);
+    expect(validateUrn(defaultUrn)).toBeNull();
+
+    const rosarioUrn = generateUniqueUrn("Rosario", 2026, 10);
+    expect(rosarioUrn).toBe("17-26-010");
+    expect(validateUrn(rosarioUrn)).toBeNull();
   });
 });
 

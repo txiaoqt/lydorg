@@ -51,13 +51,9 @@ begin
             'file_name', dsf.file_name,
             'file_type', dsf.file_type,
             'file_size', dsf.file_size,
-            'ocr_text', dsf.ocr_text,
-            'ocr_status', dsf.ocr_status,
-            'ocr_confidence', dsf.ocr_confidence,
             'validation_status', dsf.validation_status,
             'admin_status', dsf.admin_status,
             'admin_remarks', dsf.admin_remarks,
-            'ocr_metadata', dsf.ocr_metadata,
             'uploaded_at', dsf.uploaded_at,
             'reviewed_at', dsf.reviewed_at,
             'created_at', dsf.created_at,
@@ -197,7 +193,6 @@ set search_path = public
 as $$
 declare
   _admin_id uuid;
-  _referenced_file_count int;
 begin
   select vat.admin_id
   into _admin_id
@@ -208,14 +203,9 @@ begin
     raise exception 'Admin account is not authorized.';
   end if;
 
-  select count(*)
-  into _referenced_file_count
-  from public.document_submission_files
+  update public.document_submission_files
+  set document_type_id = null
   where document_submission_files.document_type_id = _template_id;
-
-  if _referenced_file_count > 0 then
-    raise exception 'This template has submitted documents attached and can''t be permanently deleted — archive it instead.';
-  end if;
 
   delete from public.required_document_types
   where required_document_types.id = _template_id;

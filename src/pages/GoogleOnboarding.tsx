@@ -6,9 +6,11 @@ import {
   Building2,
   Check,
   CheckCircle2,
+  ChevronDown,
   Eye,
   EyeOff,
   Globe,
+  Info,
   Layers,
   Loader2,
   Lock,
@@ -19,6 +21,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,15 +158,15 @@ export const PasswordCriteriaChecklist = ({ password }: { password: string }) =>
 
   return (
     <div
-      className="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs"
+      className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3.5 text-xs transition-colors"
       data-testid="password-criteria-checklist"
     >
       <p className="font-semibold text-muted-foreground">Password Requirements:</p>
-      <ul className="space-y-1">
+      <ul className="space-y-1.5">
         {items.map((item) => (
           <li key={item.key} className="flex items-center gap-2 transition-colors">
             {item.valid ? (
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success text-green-600 dark:text-green-500" />
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-500" />
             ) : (
               <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-muted-foreground/40" />
             )}
@@ -205,13 +208,13 @@ const GoogleOnboarding = () => {
     if (!confirmPassword) return null;
     if (password === confirmPassword && isPasswordValid(password)) {
       return (
-        <p className="flex items-center gap-1 text-xs text-green-600 dark:text-green-500">
+        <p className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-500 font-medium">
           <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match
         </p>
       );
     }
     if (password !== confirmPassword) {
-      return <p className="text-xs text-destructive">Passwords do not match.</p>;
+      return <p className="text-xs text-destructive font-medium">Passwords do not match.</p>;
     }
     return null;
   }, [password, confirmPassword]);
@@ -541,13 +544,13 @@ const GoogleOnboarding = () => {
   if (!profileDraft) {
     return (
       <div className="min-h-screen bg-background grid place-items-center px-4 text-center">
-        <Card className="max-w-md w-full p-6 text-center space-y-4">
+        <Card className="max-w-md w-full p-6 text-center space-y-4 rounded-2xl border border-border/80 shadow-sm">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
           <h2 className="text-lg font-heading font-semibold">Unable to load profile session</h2>
           <p className="text-sm text-muted-foreground">
             We could not establish your registration session. Please sign in again.
           </p>
-          <Button onClick={handleSignOut} className="w-full">
+          <Button onClick={handleSignOut} className="w-full h-10 font-semibold">
             Return to Sign In
           </Button>
         </Card>
@@ -560,14 +563,14 @@ const GoogleOnboarding = () => {
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Top bar with Brand Logo and Sign out */}
         <div className="flex items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-2">
+          <Link to="/" className="inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <BrandLogo showText={false} className="h-10 w-auto" />
           </Link>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSignOut}
-            className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+            className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-9 px-3 transition-colors active:scale-[0.98]"
           >
             <LogOut className="h-3.5 w-3.5" />
             <span>Sign out</span>
@@ -575,10 +578,10 @@ const GoogleOnboarding = () => {
         </div>
 
         {/* Header Card */}
-        <Card className="border-border bg-card shadow-sm">
-          <CardHeader className="pb-4">
+        <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
+          <CardHeader className="p-5 sm:p-6 pb-4">
             <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-0.5 text-xs font-medium text-primary">
                   <GoogleIcon className="h-3.5 w-3.5 shrink-0" />
                   <span>Google Account Authenticated</span>
@@ -586,7 +589,7 @@ const GoogleOnboarding = () => {
                 <CardTitle className="text-2xl sm:text-3xl font-heading font-bold text-foreground tracking-tight pt-1">
                   Complete Your Y-TRACE Organization Registration
                 </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
+                <CardDescription className="text-sm text-muted-foreground leading-relaxed">
                   Your Google account has been authenticated successfully. Complete your organization information to
                   continue using Y-TRACE.
                 </CardDescription>
@@ -596,7 +599,7 @@ const GoogleOnboarding = () => {
             {/* Authenticated user badge */}
             <div className="mt-4 p-3 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5 truncate">
-                <div className="h-7 w-7 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold uppercase shrink-0">
+                <div className="h-7 w-7 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold uppercase shrink-0 ring-1 ring-primary/20">
                   {user?.displayName ? user.displayName.charAt(0) : "G"}
                 </div>
                 <div className="truncate">
@@ -604,7 +607,7 @@ const GoogleOnboarding = () => {
                   <p className="text-muted-foreground truncate">{user?.email || "No email available"}</p>
                 </div>
               </div>
-              <span className="text-[11px] font-medium text-muted-foreground hidden sm:inline-block">
+              <span className="text-[11px] font-medium text-muted-foreground hidden sm:inline-block rounded-md bg-background/80 border border-border/50 px-2 py-0.5">
                 Role: Organization User
               </span>
             </div>
@@ -621,14 +624,14 @@ const GoogleOnboarding = () => {
               <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Unable to complete registration</p>
-                <p className="mt-0.5">{formError}</p>
+                <p className="mt-0.5 text-xs text-destructive/90">{formError}</p>
               </div>
             </div>
           )}
 
           {/* Section 1: Basic Information */}
-          <Card className="border-border bg-card shadow-xs">
-            <CardHeader className="pb-3">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <Building2 className="h-4 w-4 text-primary" />
                 <span>1. Organization Details</span>
@@ -637,14 +640,14 @@ const GoogleOnboarding = () => {
                 Official legal or operating details of your youth organization.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
               {/* Organization Name */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="org-name" className="text-xs font-semibold">
                     Organization Name <span className="text-destructive">*</span>
                   </Label>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[10px] font-mono text-muted-foreground">
                     {profileDraft.organizationName?.length || 0}/100
                   </span>
                 </div>
@@ -654,6 +657,8 @@ const GoogleOnboarding = () => {
                   value={profileDraft.organizationName || ""}
                   maxLength={100}
                   onChange={(e) => handleFieldChange("organizationName", e.target.value)}
+                  autoComplete="organization"
+                  className="h-10 text-sm"
                   required
                 />
               </div>
@@ -672,6 +677,8 @@ const GoogleOnboarding = () => {
                     placeholder="org@example.com"
                     value={profileDraft.organizationEmail || ""}
                     onChange={(e) => handleFieldChange("organizationEmail", e.target.value)}
+                    autoComplete="email"
+                    className="h-10 text-sm"
                     required
                   />
                 </div>
@@ -691,6 +698,8 @@ const GoogleOnboarding = () => {
                     placeholder="09171234567"
                     value={profileDraft.contactNumber || ""}
                     onChange={(e) => handleFieldChange("contactNumber", sanitizeContactNumber(e.target.value))}
+                    autoComplete="tel"
+                    className="h-10 text-sm"
                     required
                   />
                 </div>
@@ -704,58 +713,76 @@ const GoogleOnboarding = () => {
                     <span>District</span>
                     <span className="text-destructive">*</span>
                   </Label>
-                  <select
-                    id="org-district"
-                    value={profileDraft.district || ""}
-                    onChange={(e) => handleDistrictChange(e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    required
-                  >
-                    <option value="">Select District</option>
-                    {pasigDistrictOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                  <div className="relative">
+                    <select
+                      id="org-district"
+                      value={profileDraft.district || ""}
+                      onChange={(e) => handleDistrictChange(e.target.value)}
+                      className={cn(
+                        "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                        !profileDraft.district ? "text-muted-foreground" : "text-foreground font-medium",
+                      )}
+                      required
+                    >
+                      <option value="" disabled hidden>
+                        Select District
                       </option>
-                    ))}
-                  </select>
+                      {pasigDistrictOptions.map((opt) => (
+                        <option key={opt} value={opt} className="text-foreground bg-card">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="org-barangay" className="text-xs font-semibold">
                     Barangay <span className="text-destructive">*</span>
                   </Label>
-                  <select
-                    id="org-barangay"
-                    value={profileDraft.barangay || ""}
-                    disabled={!profileDraft.district}
-                    onChange={(e) => handleFieldChange("barangay", e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    required
-                  >
-                    <option value="">
-                      {profileDraft.district ? "Select Barangay" : "Select District first"}
-                    </option>
-                    {districtBarangays.map((b) => (
-                      <option key={b.id} value={b.name}>
-                        {b.name}
+                  <div className="relative">
+                    <select
+                      id="org-barangay"
+                      value={profileDraft.barangay || ""}
+                      disabled={!profileDraft.district}
+                      onChange={(e) => handleFieldChange("barangay", e.target.value)}
+                      className={cn(
+                        "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60",
+                        !profileDraft.barangay ? "text-muted-foreground" : "text-foreground font-medium",
+                      )}
+                      required
+                    >
+                      <option value="" disabled hidden>
+                        {profileDraft.district ? "Select Barangay" : "Select District first"}
                       </option>
-                    ))}
-                  </select>
+                      {districtBarangays.map((b) => (
+                        <option key={b.id} value={b.name} className="text-foreground bg-card">
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Section 2: Registration Type (URN) */}
-          <Card className="border-border bg-card shadow-xs">
-            <CardHeader className="pb-3">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <ShieldCheck className="h-4 w-4 text-primary" />
                 <span>2. Organization Registration Type</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3 rounded-xl border border-border/80 p-3.5 bg-muted/20">
+            <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
+              <div className="flex items-start gap-3.5 rounded-xl border border-border/80 p-4 bg-muted/20 transition-colors hover:bg-muted/30">
                 <Checkbox
                   id="is-existing-org"
                   checked={profileDraft.isExistingOrganization}
@@ -770,10 +797,10 @@ const GoogleOnboarding = () => {
                   className="mt-0.5"
                 />
                 <div className="space-y-1">
-                  <Label htmlFor="is-existing-org" className="text-sm font-semibold cursor-pointer">
+                  <Label htmlFor="is-existing-org" className="text-sm font-semibold cursor-pointer text-foreground">
                     We already have a Unique Registration Number (URN)
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     Select this option if your organization was previously registered with the Pasig City Local Youth
                     Development Office (LYDO) and already holds an assigned URN.
                   </p>
@@ -790,100 +817,127 @@ const GoogleOnboarding = () => {
                     placeholder="e.g. LYDO-PASIG-2024-0012"
                     value={profileDraft.organizationIdentifierNumber || ""}
                     onChange={(e) => handleFieldChange("organizationIdentifierNumber", e.target.value.toUpperCase())}
-                    className="font-mono text-sm"
+                    autoComplete="off"
+                    className="font-mono text-sm tracking-wide uppercase h-10"
                     required
                   />
                   {urnAvailability === "checking" && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Verifying URN availability…
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                      <Loader2 className="h-3 w-3 animate-spin text-primary" /> Verifying URN availability…
                     </p>
                   )}
                   {urnAvailability === "registered" && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" /> {DUPLICATE_URN_ERROR_MESSAGE}
+                    <p className="text-xs text-destructive flex items-center gap-1.5 font-medium">
+                      <AlertCircle className="h-3.5 w-3.5" /> {DUPLICATE_URN_ERROR_MESSAGE}
                     </p>
                   )}
                   {urnAvailability === "available" && (
-                    <p className="text-xs text-green-600 flex items-center gap-1">
-                      <Check className="h-3 w-3" /> URN is available for verification.
+                    <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5 font-medium">
+                      <Check className="h-3.5 w-3.5" /> URN is available for verification.
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="p-3 rounded-lg bg-muted/40 border border-dashed border-border text-xs text-muted-foreground">
-                  A new Unique Registration Number (URN) will be automatically generated and assigned to your
-                  organization upon registration.
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-muted/30 border border-dashed border-border/80 text-xs text-muted-foreground leading-relaxed">
+                  <Info className="h-4 w-4 shrink-0 text-muted-foreground/80 mt-0.5" />
+                  <span>
+                    A new Unique Registration Number (URN) will be automatically generated and assigned to your
+                    organization upon registration review.
+                  </span>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Section 3: Classification */}
-          <Card className="border-border bg-card shadow-xs">
-            <CardHeader className="pb-3">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <Layers className="h-4 w-4 text-primary" />
                 <span>3. Organization Classification</span>
               </CardTitle>
+              <CardDescription className="text-xs">
+                Select the major category and operational sub-classification for your organization.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="major-class" className="text-xs font-semibold">
                     Major Classification <span className="text-destructive">*</span>
                   </Label>
-                  <select
-                    id="major-class"
-                    value={profileDraft.majorClassification || ""}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        "majorClassification",
-                        e.target.value as OrganizationProfile["majorClassification"],
-                      )
-                    }
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    required
-                  >
-                    <option value="">Select Major Classification</option>
-                    {majorClassificationOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                  <div className="relative">
+                    <select
+                      id="major-class"
+                      value={profileDraft.majorClassification || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          "majorClassification",
+                          e.target.value as OrganizationProfile["majorClassification"],
+                        )
+                      }
+                      className={cn(
+                        "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                        !profileDraft.majorClassification ? "text-muted-foreground" : "text-foreground font-medium",
+                      )}
+                      required
+                    >
+                      <option value="" disabled hidden>
+                        Select Major Classification
                       </option>
-                    ))}
-                  </select>
+                      {majorClassificationOptions.map((opt) => (
+                        <option key={opt} value={opt} className="text-foreground bg-card">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="sub-class" className="text-xs font-semibold">
                     Sub Classification <span className="text-destructive">*</span>
                   </Label>
-                  <select
-                    id="sub-class"
-                    value={profileDraft.subClassification || ""}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        "subClassification",
-                        e.target.value as OrganizationProfile["subClassification"],
-                      )
-                    }
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    required
-                  >
-                    <option value="">Select Sub Classification</option>
-                    {subClassificationOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {formatSubClassificationLabel(opt)}
+                  <div className="relative">
+                    <select
+                      id="sub-class"
+                      value={profileDraft.subClassification || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          "subClassification",
+                          e.target.value as OrganizationProfile["subClassification"],
+                        )
+                      }
+                      className={cn(
+                        "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                        !profileDraft.subClassification ? "text-muted-foreground" : "text-foreground font-medium",
+                      )}
+                      required
+                    >
+                      <option value="" disabled hidden>
+                        Select Sub Classification
                       </option>
-                    ))}
-                  </select>
+                      {subClassificationOptions.map((opt) => (
+                        <option key={opt} value={opt} className="text-foreground bg-card">
+                          {formatSubClassificationLabel(opt)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Section 4: Advocacy Focus Areas */}
-          <Card className="border-border bg-card shadow-xs">
-            <CardHeader className="pb-3">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <Award className="h-4 w-4 text-primary" />
                 <span>4. Advocacy Focus Areas</span>
@@ -893,7 +947,7 @@ const GoogleOnboarding = () => {
                 Select at least one advocacy focus area championed by your organization.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5 sm:p-6 pt-0">
               <div className="flex flex-wrap gap-2">
                 {advocacyOptions.map((advocacy) => {
                   const isSelected = profileDraft.advocacies?.includes(advocacy);
@@ -902,11 +956,12 @@ const GoogleOnboarding = () => {
                       key={advocacy}
                       type="button"
                       onClick={() => toggleAdvocacy(advocacy)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 flex items-center gap-1.5 border cursor-pointer select-none ${
+                      className={cn(
+                        "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 flex items-center gap-1.5 border cursor-pointer select-none active:scale-[0.97]",
                         isSelected
                           ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                          : "bg-background text-muted-foreground border-border hover:bg-muted/70 hover:text-foreground"
-                      }`}
+                          : "bg-card text-muted-foreground border-border/80 hover:bg-muted/60 hover:text-foreground hover:border-border",
+                      )}
                     >
                       {isSelected && <Check className="h-3.5 w-3.5 text-primary-foreground shrink-0" />}
                       <span className="capitalize">{advocacy}</span>
@@ -918,14 +973,17 @@ const GoogleOnboarding = () => {
           </Card>
 
           {/* Section 5: Leadership & Location */}
-          <Card className="border-border bg-card shadow-xs">
-            <CardHeader className="pb-3">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <User className="h-4 w-4 text-primary" />
                 <span>5. Leadership & Headquarters</span>
               </CardTitle>
+              <CardDescription className="text-xs">
+                Authorized youth leaders and physical headquarters location in Pasig City.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="rep-name" className="text-xs font-semibold">
@@ -936,9 +994,11 @@ const GoogleOnboarding = () => {
                     placeholder="Full name of representative"
                     value={profileDraft.representativeName || ""}
                     onChange={(e) => handleFieldChange("representativeName", e.target.value)}
+                    autoComplete="name"
+                    className="h-10 text-sm"
                     required
                   />
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground block">
                     Authorized youth leader representing the organization.
                   </span>
                 </div>
@@ -952,9 +1012,11 @@ const GoogleOnboarding = () => {
                     placeholder="Full name of organization adviser"
                     value={profileDraft.adviserName || ""}
                     onChange={(e) => handleFieldChange("adviserName", e.target.value)}
+                    autoComplete="name"
+                    className="h-10 text-sm"
                     required
                   />
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground block">
                     Faculty, community leader, or designated adult adviser.
                   </span>
                 </div>
@@ -970,7 +1032,8 @@ const GoogleOnboarding = () => {
                   placeholder="Room/Unit, Street Address, Barangay, Pasig City"
                   value={profileDraft.address || ""}
                   onChange={(e) => handleFieldChange("address", e.target.value)}
-                  className="min-h-[75px] text-sm"
+                  autoComplete="street-address"
+                  className="min-h-[80px] text-sm resize-y"
                   required
                 />
               </div>
@@ -987,6 +1050,8 @@ const GoogleOnboarding = () => {
                   placeholder="https://facebook.com/yourorganization"
                   value={profileDraft.facebookPageUrl || ""}
                   onChange={(e) => handleFieldChange("facebookPageUrl", e.target.value)}
+                  autoComplete="url"
+                  className="h-10 text-sm"
                 />
               </div>
             </CardContent>
@@ -994,8 +1059,8 @@ const GoogleOnboarding = () => {
 
           {/* Section 6: Create Your Y-TRACE Password (Conditional for users without email/password identity) */}
           {needsPasswordCreation && (
-            <Card className="border-border bg-card shadow-xs" data-testid="ytrace-password-section">
-              <CardHeader className="pb-3">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-xs" data-testid="ytrace-password-section">
+              <CardHeader className="p-5 sm:p-6 pb-3">
                 <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                   <Lock className="h-4 w-4 text-primary" />
                   <span>6. Create Your Y-TRACE Password</span>
@@ -1004,14 +1069,14 @@ const GoogleOnboarding = () => {
                   Create a password so you can also sign in to Y-TRACE using your email address.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
                 {/* Password Field */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="ytrace-password" className="text-xs font-semibold">
                       Password <span className="text-destructive">*</span>
                     </Label>
-                    <span className="text-[10px] text-muted-foreground">{password.length}/16</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">{password.length}/16</span>
                   </div>
                   <div className="relative">
                     <Input
@@ -1025,7 +1090,7 @@ const GoogleOnboarding = () => {
                         setFormError(null);
                       }}
                       onBlur={() => setTouchedPassword(true)}
-                      className="pr-10"
+                      className="pr-10 h-10 text-sm"
                       autoComplete="new-password"
                       maxLength={16}
                       required
@@ -1033,14 +1098,14 @@ const GoogleOnboarding = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {touchedPassword && !password ? (
-                    <p className="text-xs text-destructive">Password is required.</p>
+                    <p className="text-xs text-destructive font-medium">Password is required.</p>
                   ) : null}
                 </div>
 
@@ -1068,7 +1133,7 @@ const GoogleOnboarding = () => {
                         event.preventDefault();
                         setFormError("For security, please manually retype your confirmation password.");
                       }}
-                      className="pr-10"
+                      className="pr-10 h-10 text-sm"
                       autoComplete="new-password"
                       maxLength={16}
                       required
@@ -1076,14 +1141,14 @@ const GoogleOnboarding = () => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {touchedConfirmPassword && !confirmPassword ? (
-                    <p className="text-xs text-destructive">Please confirm your password.</p>
+                    <p className="text-xs text-destructive font-medium">Please confirm your password.</p>
                   ) : (
                     confirmMatchHint
                   )}
@@ -1093,20 +1158,20 @@ const GoogleOnboarding = () => {
           )}
 
           {/* Action Bar */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={handleSignOut}
               disabled={isSaving}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto h-11 px-5 font-medium transition-transform active:scale-[0.98]"
             >
               Cancel & Sign Out
             </Button>
             <Button
               type="submit"
               disabled={isSaving || urnAvailability === "checking" || urnAvailability === "registered"}
-              className="w-full sm:w-auto min-w-[220px] font-semibold h-11"
+              className="w-full sm:w-auto min-w-[240px] font-semibold h-11 text-sm shadow-xs transition-transform active:scale-[0.98]"
             >
               {isSaving ? (
                 <>

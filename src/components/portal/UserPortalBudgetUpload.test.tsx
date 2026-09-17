@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { UserPortalBudgetWorkspaceView } from "./UserPortalBudgetWorkspaceView";
 
 describe("UserPortalBudgetWorkspaceView - Budget Request Document Upload Area", () => {
@@ -62,10 +62,11 @@ describe("UserPortalBudgetWorkspaceView - Budget Request Document Upload Area", 
     handleCreateOrUpdateBudgetRequest: vi.fn(),
   };
 
-  it("1. renders the Detailed Budget Document upload section in Create Mode", () => {
+  it("1. renders the Detailed Project Proposal upload section in Create Mode", () => {
     render(<UserPortalBudgetWorkspaceView {...baseProps} />);
 
-    expect(screen.getByText("Detailed Budget Document")).toBeDefined();
+    expect(screen.getByText("Detailed Project Proposal")).toBeDefined();
+    expect(screen.getByText("Upload your orgs detailed project budget proposal for administrative review")).toBeDefined();
     expect(screen.getByText("PDF Only")).toBeDefined();
     expect(screen.getByTestId("budget-file-dropzone")).toBeDefined();
     expect(screen.getByTestId("browse-budget-file-button")).toBeDefined();
@@ -223,7 +224,7 @@ describe("UserPortalBudgetWorkspaceView - Budget Request Document Upload Area", 
     expect(screen.getByText("itemized-budget-breakdown.pdf")).toBeDefined();
   });
 
-  it("9. form submit triggers handleCreateOrUpdateBudgetRequest", () => {
+  it("9. form submit triggers handleCreateOrUpdateBudgetRequest", async () => {
     const handleSubmitMock = vi.fn((e) => e.preventDefault());
     const draftFile = new File(["content"], "budget.pdf", { type: "application/pdf" });
 
@@ -236,7 +237,9 @@ describe("UserPortalBudgetWorkspaceView - Budget Request Document Upload Area", 
     );
 
     const submitBtn = screen.getByText("Submit Proposal →");
-    fireEvent.click(submitBtn);
+    await act(async () => {
+      fireEvent.click(submitBtn);
+    });
 
     expect(handleSubmitMock).toHaveBeenCalled();
   });

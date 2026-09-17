@@ -15,7 +15,7 @@ describe("TC018: Persistent URN Ownership, Normalization & Uniqueness Verificati
 
   it("Scenario A: Allows signup for new unique URN format", () => {
     const candidateUrn = generateUniqueUrn();
-    expect(candidateUrn).toMatch(/^PCYDO-\d{4}-[A-Z0-9]{4}$/);
+    expect(candidateUrn).toMatch(/^\d{2}-\d{2}-\d{3}$/);
     expect(validateUrn(candidateUrn)).toBeNull();
   });
 

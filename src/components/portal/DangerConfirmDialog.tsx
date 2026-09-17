@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AlertTriangle, Info, Loader, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -42,15 +42,34 @@ export const DangerConfirmDialog = ({
 }: DangerConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const handleConfirmClick = () => {
-    const result = onConfirm();
-    if (result && typeof (result as Promise<void>).then === "function") {
-      setIsConfirming(true);
-      (result as Promise<void>).finally(() => {
-        setIsConfirming(false);
-        onOpenChange(false);
-      });
-    } else {
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        if (typeof document !== "undefined" && document.body.style.pointerEvents === "none") {
+          document.body.style.pointerEvents = "";
+        }
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof document !== "undefined" && document.body.style.pointerEvents === "none") {
+        document.body.style.pointerEvents = "";
+      }
+    };
+  }, []);
+
+  const handleConfirmClick = async () => {
+    try {
+      const result = onConfirm();
+      if (result && typeof (result as Promise<void>).then === "function") {
+        setIsConfirming(true);
+        await result;
+      }
+    } finally {
+      setIsConfirming(false);
       onOpenChange(false);
     }
   };

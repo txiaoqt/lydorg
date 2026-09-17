@@ -53,7 +53,7 @@ import { type DownloadableFile } from "@/lib/document-compression";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, isSystemTemplateCategory, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
@@ -184,7 +184,7 @@ import {
   adminRequestRenewalRevisionInSupabase,
   adminRejectRenewalInSupabase,
 } from "@/lib/lydo-connect-supabase";
-import { validateUrn, generateUniqueUrn } from "@/lib/urn-registration";
+import { validateUrn } from "@/lib/urn-registration";
 import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile } from "@/lib/lydo-connect-data";
 
 const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
@@ -484,7 +484,7 @@ type PendingAdminConfirmation =
     }
   | {
       kind: "profile";
-      action: "verify" | "needs_update";
+      action: "needs_update";
       organizationId: string;
       organizationName: string;
       userId: string;
@@ -813,6 +813,11 @@ export default function AdminPortal({ section }: { section: string }) {
   const [renewalDecisionRemarksDraft, setRenewalDecisionRemarksDraft] = useState("");
   const [renewalDecisionSubmitting, setRenewalDecisionSubmitting] = useState(false);
   const [selectedBudgetRequestId, setSelectedBudgetRequestId] = useState<string | null>(null);
+  const [selectedBudgetRequestSnapshot, setSelectedBudgetRequestSnapshot] = useState<BudgetRequest | null>(null);
+  const [isBudgetApprovedAmountDirty, setIsBudgetApprovedAmountDirty] = useState(false);
+  const [isBudgetDecisionDirty, setIsBudgetDecisionDirty] = useState(false);
+  const [isBudgetRemarkDirty, setIsBudgetRemarkDirty] = useState(false);
+  const lastInitializedBudgetIdRef = useRef<string | null>(null);
   const [budgetInfoCollapsed, setBudgetInfoCollapsed] = useState(true);
   const [budgetActivityVisibleCount, setBudgetActivityVisibleCount] = useState(4);
   const [isBudgetActivityPopoverOpen, setIsBudgetActivityPopoverOpen] = useState(false);
@@ -1165,8 +1170,11 @@ export default function AdminPortal({ section }: { section: string }) {
     [state.transparencyPosts],
   );
   const selectedBudgetRequest = useMemo(
-    () => state.budgetRequests.find((item) => item.id === selectedBudgetRequestId) ?? null,
-    [selectedBudgetRequestId, state.budgetRequests],
+    () =>
+      selectedBudgetRequestSnapshot ??
+      state.budgetRequests.find((item) => item.id === selectedBudgetRequestId) ??
+      null,
+    [selectedBudgetRequestId, selectedBudgetRequestSnapshot, state.budgetRequests],
   );
   const selectedBudgetRequestFiles = useMemo(
     () =>
@@ -1729,15 +1737,17 @@ export default function AdminPortal({ section }: { section: string }) {
             .join(" ")
             .toLowerCase()
             .includes(query);
-        const matchesStatus = inquiryStatusFilter === "all" || inquiry.status === inquiryStatusFilter;
+        const normalizedInquiryStatus = normalizeInquiryStatus(inquiry.status);
+        const matchesStatus = inquiryStatusFilter === "all" || normalizedInquiryStatus === inquiryStatusFilter;
         const matchesCategory = inquiryCategoryFilter === "all" || deriveInquiryCategory(inquiry) === inquiryCategoryFilter;
         return matchesSearch && matchesStatus && matchesCategory;
       })
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }, [inquirySearch, inquiryStatusFilter, inquiryCategoryFilter, state.inquiries]);
   const openInquiryDetails = (inquiry: InquiryRecord) => {
-    setSelectedInquiry(inquiry);
-    setInquiryStatusDraft(inquiry.status);
+    const normalizedStatus = normalizeInquiryStatus(inquiry.status);
+    setSelectedInquiry({ ...inquiry, status: normalizedStatus });
+    setInquiryStatusDraft(normalizedStatus);
     setInquiryAdminRemarksDraft(inquiry.adminRemarks);
   };
   const budgetMonitoringAnalysis = useMemo(() => {
@@ -2572,20 +2582,52 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [selectedRenewalId]);
 
   useEffect(() => {
-    setBudgetInfoCollapsed(true);
-    setBudgetActivityVisibleCount(4);
-    setIsBudgetActivityPopoverOpen(false);
-    setSelectedBudgetReviewFileIds([]);
-    setSelectedBudgetFileId(null);
-    setBudgetBulkDecision("approve");
-    setBudgetBulkRemark("");
+    if (!selectedBudgetRequestId) {
+      lastInitializedBudgetIdRef.current = null;
+      setIsBudgetApprovedAmountDirty(false);
+      setIsBudgetDecisionDirty(false);
+      setIsBudgetRemarkDirty(false);
+      setBudgetApprovedAmountDraft("");
+      setBudgetBulkDecision("approve");
+      setBudgetBulkRemark("");
+      setSelectedBudgetReviewFileIds([]);
+      setSelectedBudgetFileId(null);
+      return;
+    }
+
+    // If already initialized for this request ID, do NOT reset form fields
+    if (lastInitializedBudgetIdRef.current === selectedBudgetRequestId) {
+      // Synchronize only clean fields if remote server record changed while Admin has not edited them
+      if (selectedBudgetRequest && !isBudgetApprovedAmountDirty) {
+        const initialAmt = selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0;
+        setBudgetApprovedAmountDraft(initialAmt > 0 ? String(initialAmt) : "");
+      }
+      return;
+    }
+
+    // Newly opened budget request: initialize review panel once
     if (selectedBudgetRequest) {
+      lastInitializedBudgetIdRef.current = selectedBudgetRequestId;
+      setBudgetInfoCollapsed(true);
+      setBudgetActivityVisibleCount(4);
+      setIsBudgetActivityPopoverOpen(false);
+      setSelectedBudgetReviewFileIds([]);
+      setSelectedBudgetFileId(null);
+      setBudgetBulkDecision("approve");
+      setBudgetBulkRemark("");
       const initialAmt = selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0;
       setBudgetApprovedAmountDraft(initialAmt > 0 ? String(initialAmt) : "");
-    } else {
-      setBudgetApprovedAmountDraft("");
+      setIsBudgetApprovedAmountDirty(false);
+      setIsBudgetDecisionDirty(false);
+      setIsBudgetRemarkDirty(false);
     }
-  }, [selectedBudgetRequestId, selectedBudgetRequest]);
+  }, [
+    selectedBudgetRequestId,
+    selectedBudgetRequest?.id,
+    selectedBudgetRequest?.approvedAmount,
+    selectedBudgetRequest?.requestedAmount,
+    isBudgetApprovedAmountDirty,
+  ]);
 
   useEffect(() => {
     if (selectedBudgetReviewFileIds.length > 1 && budgetBulkDecision !== "approve") {
@@ -2939,6 +2981,7 @@ export default function AdminPortal({ section }: { section: string }) {
     } catch (err) {
       console.error("Failed to load renewals or accreditations in refreshAdminState:", err);
     }
+    return remoteSnapshot;
   };
 
   const selectedBudgetRequests = useMemo(() => {
@@ -3549,7 +3592,7 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       }
 
-      await refreshAdminState();
+      const freshSnapshot = await refreshAdminState();
 
       for (const file of successfulFiles) {
         if (decision === "approve") {
@@ -3611,10 +3654,20 @@ export default function AdminPortal({ section }: { section: string }) {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Review completed",
-          description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were updated successfully.`,
-        });
+        const freshlyUpdatedOrg = freshSnapshot?.organizationProfiles.find(
+          (o) => o.id === selectedRegistrationProfile.id,
+        );
+        if (freshlyUpdatedOrg?.profileStatus === "verified") {
+          toast({
+            title: "Organization automatically verified",
+            description: `All required documents approved. Official URN: ${freshlyUpdatedOrg.urn || "Assigned"}.`,
+          });
+        } else {
+          toast({
+            title: "Review completed",
+            description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were updated successfully.`,
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -3776,9 +3829,9 @@ export default function AdminPortal({ section }: { section: string }) {
       setRenewalCertificateUrnError("Certificate URN is required.");
       return;
     }
-    const validation = validateUrn(urn);
-    if (!validation.isValid) {
-      setRenewalCertificateUrnError(validation.error || "Invalid URN format (expected LYDO-PASIG-XXXX-XXXX).");
+    const urnError = validateUrn(urn);
+    if (urnError) {
+      setRenewalCertificateUrnError(urnError);
       return;
     }
     setRenewalCertificateUrnError("");
@@ -4021,18 +4074,6 @@ export default function AdminPortal({ section }: { section: string }) {
         description: `Click the checkbox to acknowledge this rejection before marking ${pendingAdminConfirmation.fileName} as rejected.`,
         checkboxLabel: "I acknowledge this rejection action.",
         confirmLabel: "Reject Submission",
-        showCommentBox: false,
-        commentLabel: "",
-        commentPlaceholder: "",
-      };
-    }
-
-    if (pendingAdminConfirmation.action === "verify") {
-      return {
-        title: "Confirm Organization Verification",
-        description: `Click the checkbox to acknowledge this approval before verifying ${pendingAdminConfirmation.organizationName}.`,
-        checkboxLabel: "I acknowledge this verification action.",
-        confirmLabel: "Mark Verified",
         showCommentBox: false,
         commentLabel: "",
         commentPlaceholder: "",
@@ -5178,67 +5219,22 @@ export default function AdminPortal({ section }: { section: string }) {
           });
         }
       } else {
-        if (pendingAdminConfirmation.action === "verify") {
-          const organizationSubmission =
-            state.documentSubmissions.find((item) => item.organizationId === pendingAdminConfirmation.organizationId) ?? null;
-          const organizationFiles = organizationSubmission
-            ? state.documentSubmissionFiles.filter(
-                (file) => file.submissionId === organizationSubmission.id && validDocumentTypeIds.has(file.documentTypeId),
-              )
-            : [];
-          const approvedDocumentCount = organizationFiles.filter((file) => file.adminStatus === "approved_green").length;
-          const allRequiredDocumentsApproved =
-            organizationFiles.length === templateDocuments.length && approvedDocumentCount === templateDocuments.length;
-          const selectedOrganization =
-            state.organizationProfiles.find((item) => item.id === pendingAdminConfirmation.organizationId) ?? null;
-          const canVerifyWithoutDocuments =
-            Boolean(selectedOrganization?.isExistingOrganization) &&
-            Boolean(selectedOrganization?.organizationIdentifierNumber.trim());
-
-          if (!allRequiredDocumentsApproved && !canVerifyWithoutDocuments) {
-            toast({
-              title: "Verification unavailable",
-              description: `Please approve all ${templateDocuments.length} submitted documents before marking this organization verified.`,
-              variant: "destructive",
-            });
-            return;
-          }
-
-          const verifiedAt = new Date().toISOString();
-          await updateOrganizationProfileReviewInSupabase(pendingAdminConfirmation.organizationId, {
-            profileStatus: "verified",
-            verifiedAt,
-          });
-          await refreshAdminState();
-          await appendAuditLog(
-            "Verified organization",
-            "organization_profile",
-            pendingAdminConfirmation.organizationId,
-            `Marked ${pendingAdminConfirmation.organizationName} as verified on ${formatVerifiedDateLabel(verifiedAt)}.`,
-            pendingAdminConfirmation.organizationId,
-          );
-          toast({
-            title: "Organization verified",
-            description: `${pendingAdminConfirmation.organizationName} is now marked as verified.`,
-          });
-        } else {
-          await updateOrganizationProfileReviewInSupabase(pendingAdminConfirmation.organizationId, {
-            profileStatus: "needs_update",
-            verifiedAt: "",
-          });
-          await refreshAdminState();
-          await appendAuditLog(
-            "Marked needs update",
-            "organization_profile",
-            pendingAdminConfirmation.organizationId,
-            `Marked ${pendingAdminConfirmation.organizationName} for an organization profile update.`,
-            pendingAdminConfirmation.organizationId,
-          );
-          toast({
-            title: "Organization marked for update",
-            description: `${pendingAdminConfirmation.organizationName} needs to update the submitted profile details.`,
-          });
-        }
+        await updateOrganizationProfileReviewInSupabase(pendingAdminConfirmation.organizationId, {
+          profileStatus: "needs_update",
+          verifiedAt: "",
+        });
+        await refreshAdminState();
+        await appendAuditLog(
+          "Marked needs update",
+          "organization_profile",
+          pendingAdminConfirmation.organizationId,
+          `Marked ${pendingAdminConfirmation.organizationName} for an organization profile update.`,
+          pendingAdminConfirmation.organizationId,
+        );
+        toast({
+          title: "Organization marked for update",
+          description: `${pendingAdminConfirmation.organizationName} needs to update the submitted profile details.`,
+        });
       }
 
       setPendingAdminConfirmation(null);
@@ -5737,8 +5733,8 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const handleDeleteTemplate = async (templateId: string) => {
     const template =
-      activeTemplates.find((entry) => entry.id === templateId) ||
-      state.templates.find((entry) => entry.id === templateId);
+      activeTemplates.find((entry) => entry.id === templateId || entry.databaseId === templateId) ||
+      state.templates.find((entry) => entry.id === templateId || entry.databaseId === templateId);
     if (!template) return;
 
     try {
@@ -5747,9 +5743,16 @@ export default function AdminPortal({ section }: { section: string }) {
         isActive: false,
         templateActive: false,
       });
+      updateTemplate(template.databaseId, {
+        isActive: false,
+        templateActive: false,
+      });
+      if (pendingArchiveTemplate?.id === template.id || pendingArchiveTemplate?.databaseId === template.databaseId) {
+        setPendingArchiveTemplate(null);
+      }
       await appendAuditLog("Archived file", "template", template.databaseId, `Archived file "${template.name}".`);
       await refreshAdminState();
-      if (editingTemplateId === template.id || templateModalMode === "delete") {
+      if (editingTemplateId === template.id || editingTemplateId === template.databaseId || templateModalMode === "delete") {
         resetTemplateForm();
       }
       toast({ title: "File archived", description: `${template.name} was archived.` });
@@ -5763,12 +5766,18 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const handleRestoreTemplate = async (templateId: string) => {
-    const template = state.templates.find((entry) => entry.id === templateId);
+    const template =
+      state.templates.find((entry) => entry.id === templateId || entry.databaseId === templateId) ||
+      activeTemplates.find((entry) => entry.id === templateId || entry.databaseId === templateId);
     if (!template) return;
 
     try {
       const restoredTemplate = await reactivateTemplateRecordInSupabase(template.databaseId, template.name);
       updateTemplate(template.id, restoredTemplate);
+      updateTemplate(template.databaseId, restoredTemplate);
+      if (pendingRestoreTemplate?.id === template.id || pendingRestoreTemplate?.databaseId === template.databaseId) {
+        setPendingRestoreTemplate(null);
+      }
       await appendAuditLog("Restored file", "template", template.databaseId, `Restored file "${template.name}".`);
       await refreshAdminState();
       toast({ title: "File restored", description: `${template.name} is active again.` });
@@ -5782,14 +5791,28 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const handlePermanentlyDeleteTemplate = async (templateId: string) => {
-    const template = state.templates.find((entry) => entry.id === templateId);
+    const template =
+      state.templates.find((entry) => entry.id === templateId || entry.databaseId === templateId) ||
+      activeTemplates.find((entry) => entry.id === templateId || entry.databaseId === templateId);
     if (!template) return;
 
     try {
       await permanentlyDeleteTemplateRecordInSupabase(template.databaseId, template.name);
       removeTemplate(template.id);
+      removeTemplate(template.databaseId);
+      if (editingTemplateId === template.id || editingTemplateId === template.databaseId) {
+        resetTemplateForm();
+      }
+      if (previewTemplate?.id === template.id || previewTemplate?.databaseId === template.databaseId) {
+        setPreviewTemplate(null);
+      }
+      if (pendingDeleteTemplate?.id === template.id || pendingDeleteTemplate?.databaseId === template.databaseId) {
+        setPendingDeleteTemplate(null);
+      }
       await appendAuditLog("Deleted file", "template", template.databaseId, `Permanently deleted file "${template.name}".`);
       await refreshAdminState();
+      removeTemplate(template.id);
+      removeTemplate(template.databaseId);
       toast({ title: "File deleted", description: `${template.name} was permanently removed.` });
     } catch (error) {
       toast({
@@ -5860,6 +5883,8 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const openBudgetRequestDetails = (requestId: string) => {
+    const req = state.budgetRequests.find((item) => item.id === requestId) ?? null;
+    setSelectedBudgetRequestSnapshot(req);
     const requestFiles = [...state.budgetRequestFiles]
       .filter((file) => file.budgetRequestId === requestId)
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
@@ -5873,6 +5898,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const closeBudgetRequestDetails = () => {
     setSelectedBudgetRequestId(null);
+    setSelectedBudgetRequestSnapshot(null);
     setSelectedBudgetFileId(null);
     setBudgetPreviewUrl("");
     setBudgetPreviewTitle("");
@@ -6243,9 +6269,9 @@ export default function AdminPortal({ section }: { section: string }) {
       }
       case "inquiries": {
         const totalInquiries = state.inquiries.length;
-        const openInquiries = state.inquiries.filter((inquiry) => inquiry.status === "pending_review").length;
-        const respondedInquiries = state.inquiries.filter((inquiry) => inquiry.status === "reviewed").length;
-        const closedInquiries = state.inquiries.filter((inquiry) => inquiry.status === "closed").length;
+        const openInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "pending_review").length;
+        const respondedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "reviewed").length;
+        const closedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "closed").length;
 
         return (
           <div className="admin-inquiries-page space-y-3 lg:space-y-5">
@@ -6301,6 +6327,7 @@ export default function AdminPortal({ section }: { section: string }) {
         );
         const approvedDocumentCount = selectedFiles.filter((file) => file.adminStatus === "approved_green").length;
         const allRequiredDocumentsApproved = selectedFiles.length === templateDocuments.length && approvedDocumentCount === templateDocuments.length;
+        const isAutoVerified = selectedOrg?.profileStatus === "verified";
         const submittedDocumentCount = selectedFiles.length;
         const reviewedDocumentCount = selectedFiles.filter((file) => file.adminStatus !== "submitted" && file.adminStatus !== "under_admin_review").length;
         const needsRevisionCount = selectedFiles.filter((file) => file.adminStatus === "needs_revision").length;
@@ -6498,10 +6525,30 @@ export default function AdminPortal({ section }: { section: string }) {
               </div>
 
               <div className="mt-4 space-y-4">
+                {isAutoVerified ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-success-subtle bg-bg-success-subtle p-3.5 text-positive-secondary">
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle className="h-5 w-5 shrink-0 text-positive-secondary" strokeWidth={1.8} />
+                      <div>
+                        <p className="font-segoe text-sm font-semibold leading-tight">Organization Verified</p>
+                        <p className="font-segoe text-xs text-text-default">
+                          All required registration documents have been approved. Official deterministic URN has been generated and assigned.
+                        </p>
+                      </div>
+                    </div>
+                    {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                      <span className="shrink-0 rounded border border-border-success-subtle bg-admin-surface px-2.5 py-1 font-cascadia text-xs font-bold text-positive-secondary shadow-xs">
+                        URN: {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
                     <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">
+                      {approvedDocumentCount} / {templateDocuments.length}
+                    </p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
                     <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
@@ -6557,6 +6604,11 @@ export default function AdminPortal({ section }: { section: string }) {
                       {selectedOrg.organizationName}
                     </h1>
                     <ReferenceCodeChip code={selectedOrg.referenceId || "—"} />
+                    {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                      <span className="inline-flex items-center gap-1 rounded border border-border-success-subtle bg-bg-success-subtle px-2 py-0.5 font-cascadia text-xs font-semibold text-positive-secondary">
+                        URN: {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                      </span>
+                    ) : null}
                     {selectedOrg.majorClassification ? <CategoryChip category={selectedOrg.majorClassification} /> : null}
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -6873,73 +6925,102 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
 
                   <div className="flex flex-col gap-2 pt-4">
-                    {selectedBulkFiles.length === 0 ? (
-                      <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                        <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                    {isAutoVerified ? (
+                      <div className="flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
+                        <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
+                        <div>
+                          <p className="font-segoe text-sm font-semibold text-positive-secondary">
+                            Registration Verified
+                          </p>
+                          <p className="mt-0.5 font-segoe text-xs text-text-default">
+                            All required registration documents have been approved. This organization is officially registered.
+                          </p>
+                        </div>
+                        {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                          <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
+                            <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                            <span className="font-cascadia text-base font-bold text-positive-secondary">
+                              {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                            </span>
+                          </div>
+                        ) : null}
+                        {selectedOrg.verifiedAt ? (
+                          <p className="font-segoe text-[11px] text-slate-500">
+                            Verified on {formatVerifiedDateLabel(selectedOrg.verifiedAt)}
+                          </p>
+                        ) : null}
                       </div>
                     ) : (
-                      <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                        <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
-                          {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
-                        </p>
-                      </div>
+                      <>
+                        {selectedBulkFiles.length === 0 ? (
+                          <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                            <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                            <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                            <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                            <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                              {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                          <Select
+                            value={registrationBulkDecision}
+                            onValueChange={(value) => setRegistrationBulkDecision(value as RegistrationReviewDecision)}
+                            disabled={selectedBulkFiles.length === 0}
+                          >
+                            <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="approve">Approve</SelectItem>
+                              <SelectItem
+                                value="needs_revision"
+                                disabled={selectedBulkFiles.length > 1}
+                                className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                              >
+                                Request Revision
+                              </SelectItem>
+                              <SelectItem
+                                value="reject"
+                                disabled={selectedBulkFiles.length > 1}
+                                className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                              >
+                                Reject
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">
+                              Remarks <span className="text-destructive">*</span>
+                            </label>
+                            <Textarea
+                              value={registrationBulkRemark}
+                              onChange={(event) => setRegistrationBulkRemark(event.target.value)}
+                              placeholder="Explain the reason or required action..."
+                              rows={3}
+                              className="resize-none text-[13px]"
+                            />
+                          </div>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          disabled={isRegistrationDecisionConfirmDisabled}
+                          onClick={() => setIsRegistrationDecisionConfirmOpen(true)}
+                          className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                        >
+                          Confirm
+                        </button>
+                      </>
                     )}
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="font-segoe text-[13px] text-text-default">Decision</label>
-                      <Select
-                        value={registrationBulkDecision}
-                        onValueChange={(value) => setRegistrationBulkDecision(value as RegistrationReviewDecision)}
-                        disabled={selectedBulkFiles.length === 0}
-                      >
-                        <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="approve">Approve</SelectItem>
-                          <SelectItem
-                            value="needs_revision"
-                            disabled={selectedBulkFiles.length > 1}
-                            className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                          >
-                            Request Revision
-                          </SelectItem>
-                          <SelectItem
-                            value="reject"
-                            disabled={selectedBulkFiles.length > 1}
-                            className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                          >
-                            Reject
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
-                      <div className="flex flex-col gap-1.5">
-                        <label className="font-segoe text-[13px] text-text-default">
-                          Remarks <span className="text-destructive">*</span>
-                        </label>
-                        <Textarea
-                          value={registrationBulkRemark}
-                          onChange={(event) => setRegistrationBulkRemark(event.target.value)}
-                          placeholder="Explain the reason or required action..."
-                          rows={3}
-                          className="resize-none text-[13px]"
-                        />
-                      </div>
-                    ) : null}
-
-                    <button
-                      type="button"
-                      disabled={isRegistrationDecisionConfirmDisabled}
-                      onClick={() => setIsRegistrationDecisionConfirmOpen(true)}
-                      className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
-                    >
-                      Confirm
-                    </button>
                   </div>
                 </div>
 
@@ -7342,11 +7423,11 @@ export default function AdminPortal({ section }: { section: string }) {
                       <button
                         type="button"
                         onClick={() => {
-                          const existingUrn = selectedOrg.urn || "";
+                          const existingUrn = selectedOrg.urn || selectedOrg.organizationIdentifierNumber || "";
                           const candidateUrn =
-                            existingUrn && validateUrn(existingUrn).isValid
+                            existingUrn && !validateUrn(existingUrn)
                               ? existingUrn
-                              : generateUniqueUrn(selectedOrg.majorClassification || "YOUTH_ORGANIZATION");
+                              : (selectedOrg.urn || selectedOrg.organizationIdentifierNumber || "");
                           setRenewalCertificateUrnDraft(candidateUrn);
                           setRenewalCertificateUrnError("");
                           setRenewalDecisionRemarksDraft("");
@@ -7820,14 +7901,14 @@ export default function AdminPortal({ section }: { section: string }) {
                               setRenewalCertificateUrnDraft(e.target.value);
                               setRenewalCertificateUrnError("");
                             }}
-                            placeholder="LYDO-PASIG-XXXX-XXXX"
+                            placeholder="17-26-010"
                             className="font-cascadia text-sm uppercase"
                           />
                           {renewalCertificateUrnError ? (
                             <p className="font-segoe text-xs text-destructive">{renewalCertificateUrnError}</p>
                           ) : (
                             <p className="font-segoe text-[11px] text-slate-400">
-                              Format: LYDO-PASIG-YYYY-XXXX (e.g. {generateUniqueUrn(selectedOrg.majorClassification || "YOUTH_ORGANIZATION")})
+                              Format: BB-YY-NNN (e.g. 17-26-010)
                             </p>
                           )}
                         </div>
@@ -8282,6 +8363,11 @@ export default function AdminPortal({ section }: { section: string }) {
             setSelectedBudgetReviewFileIds([]);
             setBudgetBulkRemark("");
             setIsBudgetDecisionConfirmOpen(false);
+            setIsBudgetApprovedAmountDirty(false);
+            setIsBudgetDecisionDirty(false);
+            setIsBudgetRemarkDirty(false);
+            lastInitializedBudgetIdRef.current = null;
+            setSelectedBudgetRequestSnapshot(null);
           };
 
           const submitBudgetLifecycleDecision = async () => {
@@ -8918,7 +9004,10 @@ export default function AdminPortal({ section }: { section: string }) {
                             <label className="font-segoe text-[13px] text-text-default">Decision</label>
                             <Select
                               value={budgetBulkDecision}
-                              onValueChange={(value) => setBudgetBulkDecision(value as BudgetReviewDecision)}
+                              onValueChange={(value) => {
+                                setBudgetBulkDecision(value as BudgetReviewDecision);
+                                setIsBudgetDecisionDirty(true);
+                              }}
                             >
                               <SelectTrigger className="h-8 border-slate-300 text-[13px]">
                                 <SelectValue />
@@ -8950,7 +9039,11 @@ export default function AdminPortal({ section }: { section: string }) {
                                   step="0.01"
                                   min="0.01"
                                   value={budgetApprovedAmountDraft}
-                                  onChange={(event) => setBudgetApprovedAmountDraft(event.target.value)}
+                                  onChange={(event) => {
+                                    setBudgetApprovedAmountDraft(event.target.value);
+                                    setIsBudgetApprovedAmountDirty(true);
+                                  }}
+                                  onWheel={(event) => event.currentTarget.blur()}
                                   placeholder="0.00"
                                   className="h-8 border-slate-300 font-mono text-[13px]"
                                 />
@@ -8992,7 +9085,10 @@ export default function AdminPortal({ section }: { section: string }) {
                               </label>
                               <Textarea
                                 value={budgetBulkRemark}
-                                onChange={(event) => setBudgetBulkRemark(event.target.value)}
+                                onChange={(event) => {
+                                  setBudgetBulkRemark(event.target.value);
+                                  setIsBudgetRemarkDirty(true);
+                                }}
                                 placeholder={
                                   budgetBulkDecision === "needs_revision"
                                     ? "Explain required revisions or document corrections..."
@@ -9220,7 +9316,6 @@ export default function AdminPortal({ section }: { section: string }) {
                   size="sm"
                   onClick={() => {
                     setActiveReportExport("budget-requests");
-                    setReportExportDialogOpen(true);
                   }}
                   className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100"
                 >
@@ -10458,11 +10553,6 @@ export default function AdminPortal({ section }: { section: string }) {
         {
           const liquidationOrganizationsById = Object.fromEntries(state.organizationProfiles.map((org) => [org.id, org]));
           const liquidationBudgetRequestsById = Object.fromEntries(state.budgetRequests.map((request) => [request.id, request]));
-          const submittedLiquidationCount = visibleLiquidationReports.filter((r) => r.status === "submitted").length;
-          const todayDateString = new Date().toDateString();
-          const submittedTodayCount = visibleLiquidationReports.filter(
-            (r) => r.status === "submitted" && new Date(r.createdAt).toDateString() === todayDateString,
-          ).length;
           const pendingReviewLiquidationCount = visibleLiquidationReports.filter(
             (r) => r.status === "submitted" || r.status === "under_review",
           ).length;
@@ -10477,14 +10567,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 description="Review financial accountability documents for released funds."
               />
 
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                <StatsCard
-                  title="SUBMITTED"
-                  value={submittedLiquidationCount}
-                  icon={Send}
-                  trendLabel={submittedTodayCount ? `+${submittedTodayCount} received today` : undefined}
-                  description="New submissions awaiting review."
-                />
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <StatsCard
                   title="PENDING REVIEW"
                   value={pendingReviewLiquidationCount}
@@ -11214,9 +11297,10 @@ export default function AdminPortal({ section }: { section: string }) {
               }
               confirmLabel="Confirm Archive"
               confirmIcon={Archive}
-              onConfirm={() => {
-                if (pendingArchiveTemplate) void handleDeleteTemplate(pendingArchiveTemplate.id);
-                setPendingArchiveTemplate(null);
+              onConfirm={async () => {
+                if (pendingArchiveTemplate) {
+                  await handleDeleteTemplate(pendingArchiveTemplate.id);
+                }
               }}
             />
             <DangerConfirmDialog
@@ -11235,16 +11319,17 @@ export default function AdminPortal({ section }: { section: string }) {
               }
               warning={
                 <>
-                  This file will be permanently removed from the <span className="font-semibold">Forms &amp; Templates</span>{" "}
-                  list available to users and cannot be recovered.
+                  This template will be permanently removed from the <span className="font-semibold">Forms &amp; Templates</span>{" "}
+                  list. Any previously submitted organization documents referencing this template will remain safely preserved in their records.
                 </>
               }
               warningTone="danger"
               confirmLabel="Delete File"
               confirmIcon={Trash2}
-              onConfirm={() => {
-                if (pendingDeleteTemplate) void handlePermanentlyDeleteTemplate(pendingDeleteTemplate.id);
-                setPendingDeleteTemplate(null);
+              onConfirm={async () => {
+                if (pendingDeleteTemplate) {
+                  await handlePermanentlyDeleteTemplate(pendingDeleteTemplate.id);
+                }
               }}
             />
             <DangerConfirmDialog
@@ -11270,9 +11355,10 @@ export default function AdminPortal({ section }: { section: string }) {
               }
               confirmLabel="Confirm Restore"
               confirmIcon={Archive}
-              onConfirm={() => {
-                if (pendingRestoreTemplate) void handleRestoreTemplate(pendingRestoreTemplate.id);
-                setPendingRestoreTemplate(null);
+              onConfirm={async () => {
+                if (pendingRestoreTemplate) {
+                  await handleRestoreTemplate(pendingRestoreTemplate.id);
+                }
               }}
             />
             <DangerConfirmDialog
@@ -11691,7 +11777,7 @@ export default function AdminPortal({ section }: { section: string }) {
               open={activityExportDialogOpen}
               onOpenChange={setActivityExportDialogOpen}
               reportTitle="Activity Logs"
-              description="Export all activity records matching the current category and time-range filters."
+              description="Export activity records matching the current category and time filters."
               onExport={handleActivityExport}
             />
           </div>
@@ -14138,15 +14224,15 @@ export default function AdminPortal({ section }: { section: string }) {
           activeReportExport === "allocation-by-barangay"
             ? "Allocation by Barangay"
             : activeReportExport === "budget-monitoring"
-            ? "Budget Monitoring Report"
-            : "Budget Request Report"
+            ? "Budget Monitoring"
+            : "Budget Requests"
         }
         description={
           activeReportExport === "allocation-by-barangay"
-            ? "Export all barangay allocation rows matching the current district and barangay filters."
+            ? "Export all barangay allocation records matching the current filters."
             : activeReportExport === "budget-monitoring"
             ? "Export monitored budget activities, utilization rates, and liquidation statuses matching the current filters."
-            : "Export all budget request rows matching the current filters."
+            : "Export budget request records matching the current filters."
         }
         onExport={handleReportExport}
       />

@@ -35,6 +35,7 @@ import type {
   BudgetPurposeCategory,
   BudgetMonitoringSummary,
   PublicBudgetSummary,
+  YorpQuarterlyReport,
 } from "./lydo-connect-data";
 import {
   DEFAULT_ORG_LED_TIERS,
@@ -44,6 +45,7 @@ import {
   createTemplateLocalId,
   deriveTemplateCategory,
   legacyRemovedTemplateNames,
+  normalizeInquiryStatus,
   normalizeYpopCityLedPoints,
   otherDocumentTypes,
   requiredDocumentTypes,
@@ -131,6 +133,8 @@ type OrganizationAccreditationRow = {
   approved_by: string | null;
   approved_at: string;
   created_at: string;
+  revoked_at?: string | null;
+  revocation_reason?: string | null;
 };
 
 type OrganizationRenewalRow = {
@@ -448,7 +452,7 @@ type InquiryRow = {
   email: string;
   subject: string;
   description: string;
-  status: InquiryRecord["status"];
+  status: string;
   admin_remarks: string | null;
   reviewed_at: string | null;
   created_at: string;
@@ -820,7 +824,7 @@ const mapInquiry = (row: InquiryRow): InquiryRecord => ({
   email: row.email,
   subject: row.subject,
   description: row.description,
-  status: row.status as InquiryRecord["status"],
+  status: normalizeInquiryStatus(row.status),
   adminRemarks: row.admin_remarks ?? "",
   reviewedAt: row.reviewed_at ?? "",
   createdAt: row.created_at,
@@ -1429,13 +1433,8 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     ypopOrgActivityFilesPromise,
     adminTemplatesPromise,
   ]);
-  if (adminTemplateRows && adminTemplateRows.length > 0) {
-    const hasInactiveInSnapshot = (remoteState.templates ?? []).some((t) => !t.isActive);
-    if (!hasInactiveInSnapshot && adminTemplateRows.some((t) => !t.isActive)) {
-      remoteState.templates = adminTemplateRows;
-    } else if (!remoteState.templates || remoteState.templates.length === 0) {
-      remoteState.templates = adminTemplateRows;
-    }
+  if (adminTemplateRows !== null) {
+    remoteState.templates = adminTemplateRows;
   }
   if (inquiryRows.length > 0 || !remoteState.inquiries?.length) {
     remoteState.inquiries = inquiryRows.map(mapInquiry);
@@ -1521,7 +1520,7 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
   const { data, error } = await supabase
     .from("organization_profiles")
     .upsert(payload, { onConflict: "user_id" })
-    .select("id,user_id,organization_name,organization_email,contact_number,district,barangay,is_existing_organization,organization_identifier_number,registration_type,urn,urn_normalized,urn_review_status,urn_admin_remarks,urn_reviewed_by,urn_reviewed_at,verification_method,major_classification,sub_classification,advocacies,adviser_name,representative_name,address,facebook_page_url,profile_image_url,directory_visibility,directory_show_representative,directory_show_adviser,profile_status,verified_at,internal_notes,yorp_registered_year,yorp_renewed_year,created_at,updated_at")
+    .select("id,reference_id,user_id,organization_name,organization_email,contact_number,district,barangay,is_existing_organization,organization_identifier_number,registration_type,urn,urn_normalized,urn_review_status,urn_admin_remarks,urn_reviewed_by,urn_reviewed_at,verification_method,major_classification,sub_classification,advocacies,adviser_name,representative_name,address,facebook_page_url,profile_image_url,directory_visibility,directory_show_representative,directory_show_adviser,profile_status,verified_at,internal_notes,yorp_registered_year,yorp_renewed_year,created_at,updated_at")
     .single();
 
   if (error || !data) {
@@ -1814,12 +1813,14 @@ export const submitOrganizationDocumentToSupabase = async (params: {
     await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
   }
 
+  const firstSubmittedAt = submission.submitted_at ?? (submitMode === "review" ? submittedAt : null);
+
   await supabase
     .from("document_submissions")
     .update({
       status: submitMode === "draft" ? "draft" : "under_admin_review",
       user_confirmed: submitMode === "review",
-      submitted_at: submitMode === "review" ? submittedAt : null,
+      submitted_at: firstSubmittedAt,
       updated_at: submittedAt,
     })
     .eq("id", submission.id);
@@ -1910,7 +1911,7 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: submission, error: submissionError } = await supabase!
     .from("document_submissions")
-    .select("id,status")
+    .select("id,status,submitted_at")
     .eq("id", submissionId)
     .eq("organization_id", organizationProfile.id)
     .single();
@@ -1942,9 +1943,11 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
   const { error: filesError } = await filesQuery;
   if (filesError) throw new Error(filesError.message);
 
+  const firstSubmittedAt = submission.submitted_at || submittedAt;
+
   const { error: updateError } = await supabase!
     .from("document_submissions")
-    .update({ status: "under_admin_review", user_confirmed: true, submitted_at: submittedAt, updated_at: submittedAt })
+    .update({ status: "under_admin_review", user_confirmed: true, submitted_at: firstSubmittedAt, updated_at: submittedAt })
     .eq("id", submissionId);
   if (updateError) throw new Error(updateError.message);
 };
@@ -4634,6 +4637,8 @@ export const mapOrganizationAccreditation = (
   approvedBy: row.approved_by,
   approvedAt: row.approved_at,
   createdAt: row.created_at,
+  revokedAt: row.revoked_at ?? null,
+  revocationReason: row.revocation_reason ?? null,
 });
 
 export const mapOrganizationRenewal = (
@@ -4659,7 +4664,7 @@ export const fetchAllOrganizationAccreditationsInSupabase = async (): Promise<Or
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("organization_accreditations")
-    .select("id,organization_id,term_number,start_date,end_date,certificate_urn,status,is_legacy_inferred,approved_by,approved_at,created_at")
+    .select("id,organization_id,term_number,start_date,end_date,certificate_urn,status,is_legacy_inferred,approved_by,approved_at,created_at,revoked_at,revocation_reason")
     .order("term_number", { ascending: true });
 
   if (error) {
@@ -4678,12 +4683,52 @@ export const fetchOrganizationAccreditationsInSupabase = async (
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("organization_accreditations")
-    .select("id,organization_id,term_number,start_date,end_date,certificate_urn,status,is_legacy_inferred,approved_by,approved_at,created_at")
+    .select("id,organization_id,term_number,start_date,end_date,certificate_urn,status,is_legacy_inferred,approved_by,approved_at,created_at,revoked_at,revocation_reason")
     .eq("organization_id", organizationId)
     .order("term_number", { ascending: true });
 
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => mapOrganizationAccreditation(row as OrganizationAccreditationRow));
+};
+
+/**
+ * Authoritatively revokes an active accreditation term via admin RPC.
+ */
+export const revokeOrganizationAccreditationInSupabase = async (params: {
+  accreditationId: string;
+  reason?: string;
+  revokedAt?: string;
+}): Promise<OrganizationAccreditationRecord> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("revoke_organization_accreditation", {
+    _session_token: adminSession.sessionToken,
+    _accreditation_id: params.accreditationId,
+    _revocation_reason: params.reason ?? null,
+    _revoked_at: params.revokedAt ?? null,
+  });
+
+  if (error) throw new Error(error?.message ?? "Failed to revoke accreditation.");
+  return mapOrganizationAccreditation(data as OrganizationAccreditationRow);
+};
+
+/**
+ * Fetches the authoritative Section 35 YORP Quarterly Report from the database RPC.
+ */
+export const fetchYorpQuarterlyReportInSupabase = async (
+  year: number,
+  quarter: number,
+): Promise<YorpQuarterlyReport> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("get_yorp_quarterly_report", {
+    _session_token: adminSession.sessionToken,
+    _year: year,
+    _quarter: quarter,
+  });
+
+  if (error) throw new Error(error?.message ?? "Failed to fetch YORP quarterly report.");
+  if (!data) throw new Error("No data returned from YORP quarterly report RPC.");
+
+  return data as YorpQuarterlyReport;
 };
 
 /**

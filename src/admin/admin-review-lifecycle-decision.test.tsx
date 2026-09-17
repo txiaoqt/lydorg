@@ -1142,4 +1142,203 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       expect(statusLabelMap[budget.status]).toBe("Budget Released");
     });
   });
+
+  describe("PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION", () => {
+    it("TEST 21: Mouse wheel event on focused Approved Amount blurs and does not modify numeric value", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-wheel-test",
+        organizationId: "org-1",
+        activityTitle: "Community Project",
+        activityDate: "2026-10-25",
+        requestedAmount: 122131,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-wheel",
+        budgetRequestId: "br-wheel-test",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      await renderAdminPortal("budget-utilization");
+
+      const input = screen.getByTestId("admin-approved-amount-input") as HTMLInputElement;
+      expect(input).toBeDefined();
+
+      // Initial value matches requestedAmount
+      expect(input.value).toBe("122131");
+
+      // Admin types 122130.99
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: "122130.99" } });
+      expect(input.value).toBe("122130.99");
+
+      // Warning message is displayed
+      expect(screen.getByText(/Approved amount is ₱0\.01 less than requested\./i)).toBeDefined();
+
+      // Dispatch wheel scroll upward
+      const blurSpy = vi.spyOn(input, "blur");
+      fireEvent.wheel(input, { deltaY: -100 });
+      expect(blurSpy).toHaveBeenCalled();
+      expect(input.value).toBe("122130.99");
+
+      // Dispatch wheel scroll downward
+      fireEvent.wheel(input, { deltaY: 100 });
+      expect(input.value).toBe("122130.99");
+
+      // Value remained 122130.99 and warning is still present
+      expect(screen.getByText(/Approved amount is ₱0\.01 less than requested\./i)).toBeDefined();
+    });
+
+    it("TEST 22: Background refresh does NOT overwrite dirty Approved Amount, Decision, or Remarks", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-refresh-guard",
+        organizationId: "org-1",
+        activityTitle: "Youth Festival",
+        activityDate: "2026-11-01",
+        requestedAmount: 122131,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-refresh",
+        budgetRequestId: "br-refresh-guard",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      await renderAdminPortal("budget-utilization");
+
+      const input = screen.getByTestId("admin-approved-amount-input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "122130.99" } });
+      expect(input.value).toBe("122130.99");
+      expect(screen.getByText(/Approved amount is ₱0\.01 less than requested\./i)).toBeDefined();
+
+      // Simulate a background state rehydration/snapshot update by updating currentBudgetRequests with new object references
+      currentBudgetRequests = [{ ...budgetReq, requestedAmount: 122131, updatedAt: new Date().toISOString() }];
+
+      // Trigger re-render by dispatching storage event or re-render trigger
+      window.dispatchEvent(new Event("lydo-admin-session-change"));
+
+      // Wait a tick and verify value and warning NEVER reverted
+      await waitFor(() => {
+        expect(input.value).toBe("122130.99");
+        expect(screen.getByText(/Approved amount is ₱0\.01 less than requested\./i)).toBeDefined();
+      });
+    });
+
+    it("TEST 23: Submission sends the exact locally edited Approved Amount 122130.99", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-submit-value",
+        organizationId: "org-1",
+        activityTitle: "Leadership Summit",
+        activityDate: "2026-10-15",
+        requestedAmount: 122131,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-submit-v",
+        budgetRequestId: "br-submit-value",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      await renderAdminPortal("budget-utilization");
+
+      const input = screen.getByTestId("admin-approved-amount-input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "122130.99" } });
+      expect(input.value).toBe("122130.99");
+
+      // Click Confirm Document Decision
+      const confirmDocDecisionBtn = screen.getByRole("button", { name: /confirm document decision/i });
+      fireEvent.click(confirmDocDecisionBtn);
+
+      // Verify the confirmation preview shows ₱122,130.99
+      expect(screen.getByText(/₱122,130\.99/)).toBeDefined();
+
+      // Submit review
+      const submitReviewBtn = await screen.findByRole("button", { name: /submit review/i });
+      fireEvent.click(submitReviewBtn);
+
+      // Verify backend update received 122130.99 exactly (NOT 122131, NOT null)
+      await waitFor(() => {
+        expect(updateBudgetRequestInSupabase).toHaveBeenCalledWith(
+          "br-submit-value",
+          expect.objectContaining({
+            status: "approved_for_ftf_green",
+            approvedAmount: 122130.99,
+          })
+        );
+      });
+    });
+
+    it("TEST 24: Opening Budget Review does NOT schedule review-specific periodic refresh timers", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-no-timer-test",
+        organizationId: "org-1",
+        activityTitle: "Youth Arts Festival",
+        activityDate: "2026-11-15",
+        requestedAmount: 85000,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-no-timer",
+        budgetRequestId: "br-no-timer-test",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      const initialIntervalCount = vi.isFakeTimers() ? 0 : 0;
+      const setIntervalSpy = vi.spyOn(window, "setInterval");
+
+      await renderAdminPortal("budget-utilization");
+
+      // Verify that NO interval or polling was registered by Budget Review workspace for refreshing
+      const budgetReviewRefreshIntervals = setIntervalSpy.mock.calls.filter((call) => {
+        const fnStr = call[0]?.toString() || "";
+        return fnStr.includes("budget") || fnStr.includes("Budget") || fnStr.includes("ApprovedAmount");
+      });
+      expect(budgetReviewRefreshIntervals.length).toBe(0);
+      setIntervalSpy.mockRestore();
+    });
+  });
 });

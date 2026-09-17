@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { deriveInquiryCategory, INQUIRY_CATEGORY_OPTIONS, type InquiryRecord } from "@/lib/lydo-connect-data";
+import { deriveInquiryCategory, INQUIRY_CATEGORY_OPTIONS, normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
 import { toast } from "@/hooks/use-toast";
 import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
 
@@ -38,14 +38,15 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
 const PAGE_SIZE = 10;
 
 export const StatusPill = ({ status }: { status: InquiryRecord["status"] }) => {
-  if (status === "pending_review") {
+  const normalized = normalizeInquiryStatus(status);
+  if (normalized === "pending_review") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
         Open
       </span>
     );
   }
-  if (status === "reviewed") {
+  if (normalized === "reviewed") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Responded

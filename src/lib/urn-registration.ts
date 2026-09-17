@@ -1,5 +1,7 @@
 import type { OrganizationProfile } from "./lydo-connect-data";
 
+import { getPasigBarangayOrdinal } from "./pasig-districts";
+
 export type RegistrationType = "new_organization" | "existing_urn";
 export type UrnReviewStatus =
   | "not_applicable"
@@ -10,12 +12,17 @@ export type UrnReviewStatus =
 export type VerificationMethod = "documents" | "urn" | null;
 
 export const URN_MAX_LENGTH = 80;
-const URN_PATTERN = /^PCYDO-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+export const URN_PATTERN = /^(\d{2}-\d{2}-\d{3}|PCYDO-[A-Z0-9]{4}-[A-Z0-9]{4})$/;
 
-export const generateUniqueUrn = (): string => {
-  const year = new Date().getFullYear();
-  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase().padStart(4, "X");
-  return `PCYDO-${year}-${randomPart}`;
+export const generateUniqueUrn = (
+  barangay?: string,
+  year?: number,
+  sequence: number = 10,
+): string => {
+  const bb = (barangay && getPasigBarangayOrdinal(barangay)) || "17";
+  const yy = String(year || new Date().getFullYear()).slice(-2);
+  const nnn = String(sequence).padStart(3, "0");
+  return `${bb}-${yy}-${nnn}`;
 };
 
 export const normalizeUrn = (value: string) =>
@@ -34,7 +41,7 @@ export const validateUrn = (value: string): string | null => {
     /[<>]/.test(normalized) ||
     !URN_PATTERN.test(normalized)
   ) {
-    return "Please enter a valid Unique Registration Number (URN) in the format PCYDO-XXXX-XXXX.";
+    return "Please enter a valid Unique Registration Number (URN) in the format BB-YY-NNN (e.g., 17-26-010).";
   }
   return null;
 };

@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import SignIn from "./SignIn";
 import AuthImageSlideshow, { getInitialSlideIndex, resetLastInitialIndex } from "@/components/auth/AuthImageSlideshow";
+import { ADMIN_DESKTOP_MIN_WIDTH } from "@/hooks/use-admin-desktop-viewport";
 
 // Mock useAuth
 const mockSignIn = vi.fn();
@@ -16,6 +17,16 @@ let mockAuthValue = {
   signUp: vi.fn(),
   signOut: vi.fn(),
 };
+
+vi.mock("@/lib/deployment-surface", () => ({
+  DEPLOY_SURFACE: "combined",
+  IS_USER_SURFACE: false,
+  IS_ADMIN_SURFACE: false,
+  IS_COMBINED_SURFACE: true,
+  ADMIN_SIGNIN_PATH: "/admin/signin",
+  USER_SIGNIN_PATH: "/signin",
+  EFFECTIVE_ADMIN_SIGNIN_PATH: "/signin",
+}));
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => mockAuthValue,
@@ -50,9 +61,27 @@ vi.mock("react-router-dom", async () => {
 });
 
 describe("SignIn Component", () => {
+  const originalInnerWidth = window.innerWidth;
+  const originalMatchMedia = window.matchMedia;
+
+  const setViewportWidth = (width: number) => {
+    window.innerWidth = width;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: width >= ADMIN_DESKTOP_MIN_WIDTH,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetLastInitialIndex();
+    setViewportWidth(1280);
     mockSignIn.mockResolvedValue({});
     mockAuthValue = {
       signIn: mockSignIn,
@@ -64,6 +93,12 @@ describe("SignIn Component", () => {
       signUp: vi.fn(),
       signOut: vi.fn(),
     };
+  });
+
+  afterEach(() => {
+    window.innerWidth = originalInnerWidth;
+    window.matchMedia = originalMatchMedia;
+    vi.restoreAllMocks();
   });
 
   describe("Organization Sign In (Modern SaaS UI)", () => {
@@ -298,6 +333,224 @@ describe("SignIn Component", () => {
         });
         expect(mockNavigate).toHaveBeenCalledWith("/admin", { replace: true });
       });
+    });
+  });
+
+  describe("Admin Sign-In Desktop/Laptop Viewport Gating (forcedMode='admin')", () => {
+    it("renders Admin sign-in form at supported desktop viewport (1280px)", () => {
+      setViewportWidth(1280);
+
+      render(
+        <MemoryRouter>
+          <SignIn forcedMode="admin" />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByText("Admin sign in")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Admin Username/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Sign In$/i })).toBeInTheDocument();
+      expect(screen.queryByText("Desktop Display Required")).not.toBeInTheDocument();
+    });
+
+    it("renders Admin sign-in form on exact threshold boundary (1024px)", () => {
+      setViewportWidth(1024);
+
+      render(
+        <MemoryRouter>
+          <SignIn forcedMode="admin" />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByText("Admin sign in")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Admin Username/i)).toBeInTheDocument();
+      expect(screen.queryByText("Desktop Display Required")).not.toBeInTheDocument();
+    });
+
+    it("blocks Admin sign-in form and renders warning screen at 1023px viewport", () => {
+      setViewportWidth(1023);
+
+      render(
+        <MemoryRouter>
+          <SignIn forcedMode="admin" />
+        </MemoryRouter>,
+      );
+
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Admin Username/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/^Password$/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^Sign In$/i })).not.toBeInTheDocument();
+
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.getByText(/Current Viewport:/i)).toHaveTextContent("1023px");
+      expect(
+        screen.getByText(
+          /The Y-TRACE Admin Portal is designed for desktop and laptop computers to support detailed data tables/i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("blocks Admin sign-in form and renders warning screen at tablet viewport (768px)", () => {
+      setViewportWidth(768);
+
+      render(
+        <MemoryRouter>
+          <SignIn forcedMode="admin" />
+        </MemoryRouter>,
+      );
+
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Admin Username/i)).not.toBeInTheDocument();
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.getByText(/Current Viewport:/i)).toHaveTextContent("768px");
+    });
+
+    it("blocks Admin sign-in form and renders warning screen at mobile viewport (375px)", () => {
+      setViewportWidth(375);
+
+      render(
+        <MemoryRouter>
+          <SignIn forcedMode="admin" />
+        </MemoryRouter>,
+      );
+
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Admin Username/i)).not.toBeInTheDocument();
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.getByText(/Current Viewport:/i)).toHaveTextContent("375px");
+    });
+  });
+
+  describe("Combined /signin Route Access Type Switching and Live Viewport Adaptation", () => {
+    it("renders Organization sign-in at 768px without warning", () => {
+      setViewportWidth(768);
+
+      render(
+        <MemoryRouter>
+          <SignIn />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByText("Welcome back")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Email address/i)).toBeInTheDocument();
+      expect(screen.queryByText("Desktop Display Required")).not.toBeInTheDocument();
+    });
+
+    it("switching User → Admin at 768px immediately blocks Admin form and displays warning", () => {
+      setViewportWidth(768);
+
+      render(
+        <MemoryRouter>
+          <SignIn />
+        </MemoryRouter>,
+      );
+
+      // Initially in User/Organization mode
+      expect(screen.getByText("Welcome back")).toBeInTheDocument();
+
+      // Switch to Admin mode
+      const adminButton = screen.getByRole("button", { name: /^Admin$/i });
+      fireEvent.click(adminButton);
+
+      // Warning screen is shown, Admin form inputs are NOT rendered
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Admin Username/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^Sign In$/i })).not.toBeInTheDocument();
+    });
+
+    it("displays warning screen in Admin mode below 1024px with no interactive action buttons or links", () => {
+      setViewportWidth(768);
+
+      render(
+        <MemoryRouter>
+          <SignIn />
+        </MemoryRouter>,
+      );
+
+      // Switch to Admin mode below 1024px
+      fireEvent.click(screen.getByRole("button", { name: /^Admin$/i }));
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+
+      // Assert warning screen is strictly informational with NO buttons or links
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+      expect(screen.queryByText(/back to home/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/sign out/i)).not.toBeInTheDocument();
+    });
+
+    it("renders Admin sign-in when switching to Administrator mode at 1280px", () => {
+      setViewportWidth(1280);
+
+      render(
+        <MemoryRouter>
+          <SignIn />
+        </MemoryRouter>,
+      );
+
+      // Initially in Organization mode
+      expect(screen.getByText("Welcome back")).toBeInTheDocument();
+
+      // Switch to Admin mode
+      fireEvent.click(screen.getByRole("button", { name: /^Admin$/i }));
+
+      // Admin form is rendered normally at 1280px
+      expect(screen.getByText("Admin sign in")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Admin Username/i)).toBeInTheDocument();
+      expect(screen.queryByText("Desktop Display Required")).not.toBeInTheDocument();
+    });
+
+    it("live window resize in Admin mode adapts seamlessly between warning and Admin sign-in form", () => {
+      setViewportWidth(768);
+
+      render(
+        <MemoryRouter>
+          <SignIn />
+        </MemoryRouter>,
+      );
+
+      // Switch to Admin at 768px
+      fireEvent.click(screen.getByRole("button", { name: /^Admin$/i }));
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+
+      // Live resize to 1280px
+      act(() => {
+        setViewportWidth(1280);
+        window.dispatchEvent(new Event("resize"));
+      });
+
+      // Admin form automatically appears without navigation or reload
+      expect(screen.getByText("Admin sign in")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Admin Username/i)).toBeInTheDocument();
+      expect(screen.queryByText("Desktop Display Required")).not.toBeInTheDocument();
+
+      // Live resize back down to 800px
+      act(() => {
+        setViewportWidth(800);
+        window.dispatchEvent(new Event("resize"));
+      });
+
+      // Warning screen immediately reappears
+      expect(screen.getByText("Desktop Display Required")).toBeInTheDocument();
+      expect(screen.queryByText("Admin sign in")).not.toBeInTheDocument();
+    });
+
+    it("Organization mode at mobile (375px) is completely unrestricted and unaffected", () => {
+      setViewportWidth(375);
+
+      render(
+        <MemoryRouter>
+          <SignIn />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByText("Welcome back")).toBeInTheDocument();
+      expect(screen.getByLabelText(/Email address/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Sign In$/i })).toBeInTheDocument();
+      expect(screen.queryByText("Desktop Display Required")).not.toBeInTheDocument();
     });
   });
 

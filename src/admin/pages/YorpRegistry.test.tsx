@@ -52,4 +52,26 @@ describe("YorpRegistry Page Export Action", () => {
     expect(screen.getByRole("heading", { name: "Export YORP Registry" })).toBeInTheDocument();
     expect(screen.getByText(/Export all YORP records matching the current search and filters/i)).toBeInTheDocument();
   });
+
+  it("renders the Reports button in the page header and opens the Section 35 Quarterly Reports dialog", async () => {
+    render(
+      <LydoConnectProvider>
+        <YorpRegistryPage />
+      </LydoConnectProvider>,
+    );
+
+    // Verify Reports button is rendered in the header action area
+    const reportsButton = screen.getByRole("button", { name: /reports/i });
+    expect(reportsButton).toBeInTheDocument();
+    expect(reportsButton).not.toBeDisabled();
+
+    // Click Reports button
+    fireEvent.click(reportsButton);
+
+    // Verify Section 35 Quarterly Reports dialog opens
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/Section 35 YORP Quarterly Reports/i)).toBeInTheDocument();
+    expect(screen.getByText(/Quarterly Summary/i)).toBeInTheDocument();
+    expect(screen.getByText(/Disaggregated Report/i)).toBeInTheDocument();
+  });
 });

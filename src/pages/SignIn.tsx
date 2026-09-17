@@ -20,6 +20,7 @@ import {
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 import { getAuthCallbackUrl, getPasswordResetUrl } from "@/lib/auth-redirect";
+import { AdminDesktopGate } from "@/components/portal/AdminDesktopGate";
 
 type SignInProps = {
   forcedMode?: "user" | "admin";
@@ -182,151 +183,162 @@ const SignIn = ({ forcedMode }: SignInProps) => {
      ───────────────────────────────────────────────────────────────────────────── */
   if (isAdminMode) {
     return (
-      <div
-        className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}
-        data-pwa-theme={pwaFlow ? pwaTheme : undefined}
-        style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
+      <AdminDesktopGate
+        onSwitchToUser={
+          roleSelectionEnabled
+            ? () => {
+                setMode("user");
+                setInlineError("");
+              }
+            : undefined
+        }
       >
-        {/* Background blobs */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-180px] left-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
-          <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
-        </div>
-
-        <div className="w-full max-w-md relative z-10">
-          {/* Logo */}
-          <div className="mb-7 text-left">
-            <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
-              <BrandLogo showText={false} />
-            </Link>
+        <div
+          className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}
+          data-pwa-theme={pwaFlow ? pwaTheme : undefined}
+          style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
+        >
+          {/* Background blobs */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[-180px] left-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
+            <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
           </div>
 
-          {/* Card */}
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-5 card-shadow"
-          >
-            <div>
-              <h1 className="text-2xl font-heading font-bold text-foreground">
-                Admin sign in
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Sign in to access the Y-TRACE administration portal and manage youth organization records.
-              </p>
+          <div className="w-full max-w-md relative z-10">
+            {/* Logo */}
+            <div className="mb-7 text-left">
+              <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
+                <BrandLogo showText={false} />
+              </Link>
             </div>
 
-            {/* Role toggle — only on combined surface */}
-            {roleSelectionEnabled && (
-              <div className="space-y-1.5">
-                <Label>Access type</Label>
-                <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-muted/50 p-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("user");
-                      setInlineError("");
-                    }}
-                    className="rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 text-muted-foreground hover:text-foreground"
-                  >
-                    Organization
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("admin");
-                      setInlineError("");
-                    }}
-                    className="rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 bg-primary text-primary-foreground shadow-sm"
-                  >
-                    Admin
-                  </button>
-                </div>
+            {/* Card */}
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-5 card-shadow"
+            >
+              <div>
+                <h1 className="text-2xl font-heading font-bold text-foreground">
+                  Admin sign in
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Sign in to access the Y-TRACE administration portal and manage youth organization records.
+                </p>
               </div>
-            )}
 
-            {/* Admin Username */}
-            <div className="space-y-1.5">
-              <Label htmlFor="username">Admin Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter admin username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setInlineError("");
-                }}
-                autoComplete="username"
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setInlineError("");
-                  }}
-                  className="pr-10"
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <div className="space-y-2.5 pt-1">
-              <Button
-                type="submit"
-                className="w-full font-semibold"
-                disabled={!canSubmit}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in…
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-
-              {/* Inline error */}
-              {inlineError && (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive space-y-1">
-                  <p>{inlineError}</p>
+              {/* Role toggle — only on combined surface */}
+              {roleSelectionEnabled && (
+                <div className="space-y-1.5">
+                  <Label>Access type</Label>
+                  <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-muted/50 p-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("user");
+                        setInlineError("");
+                      }}
+                      className="rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 text-muted-foreground hover:text-foreground"
+                    >
+                      Organization
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("admin");
+                        setInlineError("");
+                      }}
+                      className="rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 bg-primary text-primary-foreground shadow-sm"
+                    >
+                      Admin
+                    </button>
+                  </div>
                 </div>
               )}
-            </div>
-          </form>
 
-          {/* Below-card links */}
-          <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
-            <p>
-              <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
-                ← Back to {pwaFlow ? "welcome" : "home"}
-              </Link>
-            </p>
+              {/* Admin Username */}
+              <div className="space-y-1.5">
+                <Label htmlFor="username">Admin Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter admin username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setInlineError("");
+                  }}
+                  autoComplete="username"
+                  required
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setInlineError("");
+                    }}
+                    className="pr-10"
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <div className="space-y-2.5 pt-1">
+                <Button
+                  type="submit"
+                  className="w-full font-semibold"
+                  disabled={!canSubmit}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in…
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+
+                {/* Inline error */}
+                {inlineError && (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive space-y-1">
+                    <p>{inlineError}</p>
+                  </div>
+                )}
+              </div>
+            </form>
+
+            {/* Below-card links */}
+            <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
+              <p>
+                <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
+                  ← Back to {pwaFlow ? "welcome" : "home"}
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </AdminDesktopGate>
     );
   }
 

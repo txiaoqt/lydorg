@@ -3,7 +3,7 @@ import { Clock, Copy, X } from "lucide-react";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { deriveInquiryCategory, type InquiryRecord } from "@/lib/lydo-connect-data";
+import { deriveInquiryCategory, normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
 import { CategoryChip, ReferenceCodeChip, ReplyEmailButton, StatusPill } from "@/admin/components/InquiriesTable";
 
 type InquiryDetailDrawerProps = {
@@ -134,7 +134,7 @@ export const InquiryDetailDrawer = ({
                 </p>
                 <div className="flex gap-2">
                   {STATUS_ACTIONS.map((action) => {
-                    const active = inquiry.status === action.value;
+                    const active = normalizeInquiryStatus(inquiry.status) === action.value;
                     return (
                       <button
                         key={action.value}

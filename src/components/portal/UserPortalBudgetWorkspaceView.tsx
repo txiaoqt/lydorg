@@ -272,6 +272,39 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const existingBudgetFileRaw = editingBudgetRequest ? budgetFilesByRequestId.get(editingBudgetRequest.id) : null;
   const existingBudgetFile = Array.isArray(existingBudgetFileRaw) ? existingBudgetFileRaw[0] : (existingBudgetFileRaw ?? null);
 
+  const [isSubmittingProposal, setIsSubmittingProposal] = useState<boolean>(false);
+  const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
+
+  const isSubmitting = isSubmittingProposal || Boolean(submittingBudgetId);
+
+  const handleSubmitProposal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting || isSavingDraft) return;
+
+    setIsSubmittingProposal(true);
+    try {
+      await handleCreateOrUpdateBudgetRequest(e, false);
+    } catch (err) {
+      console.error("Budget request proposal submission failed:", err);
+    } finally {
+      setIsSubmittingProposal(false);
+    }
+  };
+
+  const handleSaveDraftClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isSubmitting || isSavingDraft) return;
+
+    setIsSavingDraft(true);
+    try {
+      await handleCreateOrUpdateBudgetRequest(e as any, true);
+    } catch (err) {
+      console.error("Budget request draft save failed:", err);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   const budgetRoutePath = userRouteMap["budget-request"] || userRouteMap["financial-grant"] || "/financial-grant";
   const selectedRequestId = searchParams.get("budgetRequestId") || searchParams.get("requestId");
   const selectedRequest = selectedRequestId
@@ -514,34 +547,18 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             </p>
           </div>
 
-          {/* Grant Qualification Summary Card */}
-          <Card className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between gap-4 shadow-xs">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Trophy className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-foreground">Active YPOP Qualification</h4>
-                <p className="text-[11px] text-muted-foreground">
-                  This request will be submitted under your organization's active Pasig City YPOP grant allocation.
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-extrabold text-primary bg-primary/10 px-3 py-1 rounded-full shrink-0">
-              Project Grant (PPA)
-            </span>
-          </Card>
-
           {/* Form Container */}
-          <form onSubmit={(e) => void handleCreateOrUpdateBudgetRequest(e, false)} className="space-y-6 pb-20">
+          <form onSubmit={handleSubmitProposal} className="space-y-6 pb-20">
             {/* Section 1: Activity Details */}
-            <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
-              <div className="border-b border-border/40 pb-3">
+            <Card className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="border-b border-border/40 pb-3 mb-1">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">1</span>
+                  <span className="h-6 w-6 rounded-md bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
+                    1
+                  </span>
                   Activity Details
                 </h3>
-                <p className="text-xs text-muted-foreground">Title, description, and purpose of your planned activity.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Title, description, and purpose of your planned activity.</p>
               </div>
 
               <div className="space-y-4">
@@ -553,7 +570,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     placeholder="e.g. Youth Leadership Seminar 2026"
                     value={newActivityTitle}
                     onChange={(e) => setNewActivityTitle(e.target.value)}
-                    className="h-10 text-xs rounded-xl bg-background border-border/80"
+                    className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
 
@@ -582,7 +599,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         <DropdownMenuTrigger asChild>
                           <button
                             type="button"
-                            className="flex h-10 w-full items-center justify-between rounded-xl border border-border/80 bg-background px-3 text-xs font-medium text-foreground hover:bg-muted/40 focus:outline-none"
+                            className="flex h-10 w-full items-center justify-between rounded-xl border border-border/80 bg-background px-3 text-xs font-medium text-foreground hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary/40"
                           >
                             <span className="truncate">
                               {newPurposeCategory || "Select canonical purpose..."}
@@ -618,7 +635,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         placeholder="Specify custom purpose / category..."
                         value={newPurposeCategory}
                         onChange={(e) => setNewPurposeCategory(e.target.value)}
-                        className="h-10 text-xs rounded-xl bg-background border-border/80"
+                        className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
                       />
                     )}
                   </div>
@@ -632,7 +649,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       placeholder="e.g. 50000"
                       value={newRequestedAmount}
                       onChange={(e) => setNewRequestedAmount(e.target.value)}
-                      className="h-10 text-xs rounded-xl bg-background border-border/80 font-mono font-bold"
+                      className="h-10 text-xs rounded-xl bg-background border-border/80 font-mono font-bold focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
                   </div>
                 </div>
@@ -644,20 +661,22 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     placeholder="Briefly describe the objectives, expected outcomes, and target participants..."
                     value={newActivityDescription}
                     onChange={(e) => setNewActivityDescription(e.target.value)}
-                    className="text-xs rounded-xl bg-background border-border/80"
+                    className="text-xs rounded-xl bg-background border-border/80 resize-y min-h-[76px] focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
               </div>
             </Card>
 
             {/* Section 2: Schedule & Venue */}
-            <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
-              <div className="border-b border-border/40 pb-3">
+            <Card className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="border-b border-border/40 pb-3 mb-1">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">2</span>
+                  <span className="h-6 w-6 rounded-md bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
+                    2
+                  </span>
                   Schedule & Location
                 </h3>
-                <p className="text-xs text-muted-foreground">Target execution date and location details.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Target execution date and location details.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -667,7 +686,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     type="date"
                     value={newActivityDate}
                     onChange={(e) => setNewActivityDate(e.target.value)}
-                    className="h-10 text-xs rounded-xl bg-background border-border/80"
+                    className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -677,7 +696,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     placeholder="e.g. Pasig City Youth Center, Oranbo"
                     value={newVenue}
                     onChange={(e) => setNewVenue(e.target.value)}
-                    className="h-10 text-xs rounded-xl bg-background border-border/80"
+                    className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
               </div>
@@ -689,25 +708,27 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   placeholder="Any additional remarks for the reviewing officer..."
                   value={newRemarks}
                   onChange={(e) => setNewRemarks(e.target.value)}
-                  className="text-xs rounded-xl bg-background border-border/80"
+                  className="text-xs rounded-xl bg-background border-border/80 resize-y min-h-[64px] focus-visible:ring-1 focus-visible:ring-primary/40"
                 />
               </div>
             </Card>
 
-            {/* Section 3: Detailed Budget Document */}
-            <Card className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-xs">
-              <div className="border-b border-border/40 pb-3">
+            {/* Section 3: Detailed Project Proposal */}
+            <Card className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="border-b border-border/40 pb-3.5 mb-1">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">3</span>
-                    Detailed Budget Document <span className="text-red-500">*</span>
+                    <span className="h-6 w-6 rounded-md bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
+                      3
+                    </span>
+                    Detailed Project Proposal <span className="text-red-500">*</span>
                   </h3>
                   <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/40">
                     PDF Only
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Upload your organization&apos;s itemized budget breakdown proposal for administrative review.
+                  Upload your orgs detailed project budget proposal for administrative review
                 </p>
               </div>
 
@@ -756,7 +777,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         variant="outline"
                         size="sm"
                         onClick={() => fileInputRef.current?.click()}
-                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer"
+                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer active:scale-[0.98] transition-all"
                         data-testid="replace-budget-file-button"
                       >
                         <FileUp className="h-3.5 w-3.5 mr-1" />
@@ -767,7 +788,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         variant="ghost"
                         size="sm"
                         onClick={handleClearDraft}
-                        className="h-8 text-xs font-semibold px-2.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                        className="h-8 text-xs font-semibold px-2.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer active:scale-[0.98] transition-all"
                         data-testid="remove-budget-file-button"
                         title="Remove selected file"
                       >
@@ -813,7 +834,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                               openFile(existingBudgetFile.fileUrl, existingBudgetFile.fileName);
                             }
                           }}
-                          className="h-8 text-xs font-semibold px-3 rounded-lg text-primary hover:bg-primary/10 cursor-pointer"
+                          className="h-8 text-xs font-semibold px-3 rounded-lg text-primary hover:bg-primary/10 cursor-pointer active:scale-[0.98] transition-all"
                           data-testid="view-existing-budget-file-button"
                         >
                           <Eye className="h-3.5 w-3.5 mr-1" />
@@ -825,7 +846,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         variant="outline"
                         size="sm"
                         onClick={() => fileInputRef.current?.click()}
-                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer"
+                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer active:scale-[0.98] transition-all"
                         data-testid="replace-existing-budget-file-button"
                       >
                         <FileUp className="h-3.5 w-3.5 mr-1" />
@@ -841,11 +862,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   className="rounded-2xl border-2 border-dashed border-border/80 hover:border-primary/60 bg-muted/20 hover:bg-muted/30 p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
                   data-testid="budget-file-dropzone"
                 >
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-105 transition-transform duration-200 shadow-2xs">
-                    <FileUp className="h-6 w-6" />
+                  <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform duration-200 border border-primary/20 shadow-2xs">
+                    <FileUp className="h-5 w-5" />
                   </div>
                   <h4 className="text-xs sm:text-sm font-bold text-foreground mb-1">
-                    Select Detailed Budget Document
+                    Select Detailed Project Proposal
                   </h4>
                   <p className="text-[11px] sm:text-xs text-muted-foreground max-w-sm mb-4 leading-relaxed">
                     Click to browse your device. Attach the itemized line-item budget table for this activity.
@@ -859,7 +880,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         e.stopPropagation();
                         fileInputRef.current?.click();
                       }}
-                      className="h-9 px-4 rounded-xl text-xs font-semibold border-border/80 shadow-2xs group-hover:border-primary/40 cursor-pointer"
+                      className="h-9 px-4 rounded-xl text-xs font-semibold border-border/80 shadow-2xs group-hover:border-primary/40 cursor-pointer active:scale-[0.98] transition-all"
                       data-testid="browse-budget-file-button"
                     >
                       Browse PDF File
@@ -873,33 +894,60 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             </Card>
 
             {/* Form Actions Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-border/40">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
+                disabled={isSubmitting || isSavingDraft}
                 onClick={() => {
+                  if (isSubmitting || isSavingDraft) return;
                   setShowBudgetForm(false);
                   startEditingBudgetRequest(null);
                 }}
-                className="w-full sm:w-auto h-10 rounded-xl border-border text-xs font-semibold px-5 cursor-pointer"
+                className="w-full sm:w-auto h-10 rounded-xl text-xs font-semibold px-4 text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                data-testid="cancel-budget-form-button"
               >
                 Cancel
               </Button>
 
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={(e) => void handleCreateOrUpdateBudgetRequest(e, true)}
-                  className="w-full sm:w-auto h-10 rounded-xl border-border text-xs font-semibold px-5 cursor-pointer"
+                  disabled={isSubmitting || isSavingDraft}
+                  onClick={handleSaveDraftClick}
+                  className="w-full sm:w-auto h-10 rounded-xl border-border/80 hover:bg-muted/40 text-xs font-semibold px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                  data-testid="save-budget-draft-button"
                 >
-                  Save Draft
+                  {isSavingDraft ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                      <span>Saving Draft...</span>
+                    </span>
+                  ) : (
+                    <span>Save Draft</span>
+                  )}
                 </Button>
                 <Button
                   type="submit"
-                  className="w-full sm:w-auto h-10 rounded-xl bg-primary text-primary-foreground text-xs font-bold px-6 shadow-2xs cursor-pointer"
+                  disabled={isSubmitting || isSavingDraft}
+                  aria-busy={isSubmitting}
+                  className={cn(
+                    "w-full sm:w-auto sm:min-w-[190px] h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold px-6 shadow-xs cursor-pointer transition-all active:scale-[0.98] group",
+                    (isSubmitting || isSavingDraft) && "cursor-not-allowed opacity-80"
+                  )}
+                  data-testid="submit-budget-proposal-button"
                 >
-                  {editingBudgetRequest ? "Update Proposal" : "Submit Proposal →"}
+                  {isSubmitting ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin shrink-0 text-primary-foreground" />
+                      <span>Submitting Proposal...</span>
+                    </span>
+                  ) : editingBudgetRequest ? (
+                    "Update Proposal"
+                  ) : (
+                    "Submit Proposal →"
+                  )}
                 </Button>
               </div>
             </div>
