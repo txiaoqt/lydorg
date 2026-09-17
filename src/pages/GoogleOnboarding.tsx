@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -7,13 +7,10 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
-  Eye,
-  EyeOff,
   Globe,
   Info,
   Layers,
   Loader2,
-  Lock,
   LogOut,
   Mail,
   MapPin,
@@ -31,8 +28,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
-import { isPasswordValid, validatePasswordCriteria } from "@/lib/password-policy";
 import {
   pasigDistrictBarangays,
   pasigDistrictOptions,
@@ -85,99 +80,83 @@ const GoogleIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-/**
- * Detects whether the current Supabase user already has an email/password identity.
- * Uses supabase.auth.getUserIdentities() to inspect linked auth identities.
- */
-export const checkUserHasEmailIdentity = async (supabaseClient: typeof supabase): Promise<boolean> => {
-  if (!supabaseClient) return false;
-  try {
-    if (typeof supabaseClient.auth.getUserIdentities === "function") {
-      const { data, error } = await supabaseClient.auth.getUserIdentities();
-      if (!error && data?.identities) {
-        return data.identities.some((identity) => identity.provider === "email");
-      }
-    }
-    if (typeof supabaseClient.auth.getUser === "function") {
-      const { data } = await supabaseClient.auth.getUser();
-      if (data?.user?.identities) {
-        return data.user.identities.some((identity) => identity.provider === "email");
-      }
-    }
-  } catch (err) {
-    console.error("Failed to check user identities:", err);
-  }
-  return false;
+export interface GoogleOnboardingDraftData {
+  version: 1;
+  savedAt: string;
+  organizationName?: string;
+  organizationEmail?: string;
+  contactNumber?: string;
+  district?: string;
+  barangay?: string;
+  isExistingOrganization?: boolean;
+  organizationIdentifierNumber?: string;
+  majorClassification?: string;
+  subClassification?: string;
+  advocacies?: Advocacy[];
+  representativeName?: string;
+  adviserName?: string;
+  address?: string;
+  facebookPageUrl?: string;
+}
+
+export const ONBOARDING_DRAFT_KEY_PREFIX = "ytrace-google-onboarding-draft:";
+
+export const getGoogleOnboardingDraftStorageKey = (userId: string): string => {
+  return `${ONBOARDING_DRAFT_KEY_PREFIX}${userId}`;
 };
 
-/**
- * Creates/updates the Y-TRACE password for the currently authenticated Supabase user.
- * Attaches the password to the existing Supabase auth user without signing them out
- * or creating a new user account.
- */
-export const createYTracePasswordForCurrentUser = async (
-  supabaseClient: typeof supabase,
-  newPassword: string,
-): Promise<{ success: boolean; error?: string }> => {
-  if (!supabaseClient) {
-    return { success: false, error: "Authentication service is currently unavailable." };
+export const loadGoogleOnboardingDraft = (userId: string): GoogleOnboardingDraftData | null => {
+  if (typeof window === "undefined" || !userId) return null;
+  try {
+    const raw = window.localStorage.getItem(getGoogleOnboardingDraftStorageKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.version === 1) {
+      return parsed as GoogleOnboardingDraftData;
+    }
+  } catch (err) {
+    console.warn("Failed to load Google onboarding draft from localStorage:", err);
   }
-  if (!isPasswordValid(newPassword)) {
-    return {
-      success: false,
-      error: "Password does not meet Y-TRACE security requirements.",
+  return null;
+};
+
+export const saveGoogleOnboardingDraft = (
+  userId: string,
+  profile: Partial<OrganizationProfile>,
+): void => {
+  if (typeof window === "undefined" || !userId) return;
+  try {
+    const draft: GoogleOnboardingDraftData = {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      organizationName: profile.organizationName || "",
+      organizationEmail: profile.organizationEmail || "",
+      contactNumber: profile.contactNumber || "",
+      district: profile.district || "",
+      barangay: profile.barangay || "",
+      isExistingOrganization: Boolean(profile.isExistingOrganization),
+      organizationIdentifierNumber: profile.organizationIdentifierNumber || "",
+      majorClassification: profile.majorClassification || "",
+      subClassification: profile.subClassification || "",
+      advocacies: profile.advocacies || [],
+      representativeName: profile.representativeName || "",
+      adviserName: profile.adviserName || "",
+      address: profile.address || "",
+      facebookPageUrl: profile.facebookPageUrl || "",
     };
-  }
-
-  try {
-    const { error } = await supabaseClient.auth.updateUser({
-      password: newPassword,
-    });
-    if (error) {
-      return { success: false, error: error.message };
-    }
-    return { success: true };
+    window.localStorage.setItem(getGoogleOnboardingDraftStorageKey(userId), JSON.stringify(draft));
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to update password.";
-    return { success: false, error: message };
+    console.warn("Failed to save Google onboarding draft to localStorage:", err);
   }
 };
 
-export const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
-  const criteria = useMemo(() => validatePasswordCriteria(password), [password]);
-
-  const items = [
-    { key: "length", label: "8–16 characters", valid: criteria.length },
-    { key: "uppercase", label: "Contains an uppercase letter (A–Z)", valid: criteria.uppercase },
-    { key: "lowercase", label: "Contains a lowercase letter (a–z)", valid: criteria.lowercase },
-    { key: "number", label: "Contains a number (0–9)", valid: criteria.number },
-    { key: "special", label: "Contains a special character (!@#$%...)", valid: criteria.special },
-  ];
-
-  if (!password) return null;
-
-  return (
-    <div
-      className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3.5 text-xs transition-colors"
-      data-testid="password-criteria-checklist"
-    >
-      <p className="font-semibold text-muted-foreground">Password Requirements:</p>
-      <ul className="space-y-1.5">
-        {items.map((item) => (
-          <li key={item.key} className="flex items-center gap-2 transition-colors">
-            {item.valid ? (
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-500" />
-            ) : (
-              <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-muted-foreground/40" />
-            )}
-            <span className={item.valid ? "font-medium text-foreground" : "text-muted-foreground"}>
-              {item.label}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+export const clearGoogleOnboardingDraft = (userId: string): void => {
+  if (typeof window === "undefined" || !userId) return;
+  try {
+    window.localStorage.removeItem(getGoogleOnboardingDraftStorageKey(userId));
+  } catch (err) {
+    console.warn("Failed to clear Google onboarding draft from localStorage:", err);
+  }
 };
 
 const GoogleOnboarding = () => {
@@ -191,35 +170,10 @@ const GoogleOnboarding = () => {
   const [urnAvailability, setUrnAvailability] = useState<"idle" | "checking" | "available" | "registered" | "error">("idle");
 
   const [profileDraft, setProfileDraft] = useState<OrganizationProfile | null>(null);
+  const profileDraftUserIdRef = useRef<string | null>(null);
+  const isLoadedRef = useRef(false);
 
-  // Password creation state for Google users who don't have an email/password identity yet
-  const [hasEmailIdentity, setHasEmailIdentity] = useState<boolean | null>(null);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordCreated, setPasswordCreated] = useState(false);
-  const [touchedPassword, setTouchedPassword] = useState(false);
-  const [touchedConfirmPassword, setTouchedConfirmPassword] = useState(false);
-
-  const needsPasswordCreation = hasEmailIdentity === false && !passwordCreated;
-
-  const confirmMatchHint = useMemo(() => {
-    if (!confirmPassword) return null;
-    if (password === confirmPassword && isPasswordValid(password)) {
-      return (
-        <p className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-500 font-medium">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Passwords match
-        </p>
-      );
-    }
-    if (password !== confirmPassword) {
-      return <p className="text-xs text-destructive font-medium">Passwords do not match.</p>;
-    }
-    return null;
-  }, [password, confirmPassword]);
-
-  // Load existing profile if any; if already complete, route to dashboard
+  // Load existing profile and local draft; if already complete, route to dashboard
   useEffect(() => {
     let active = true;
 
@@ -230,46 +184,85 @@ const GoogleOnboarding = () => {
         return;
       }
 
+      // If already initialized for this same user.id, avoid wiping in-progress in-memory form on token refresh
+      if (isLoadedRef.current && profileDraftUserIdRef.current === user.id) {
+        return;
+      }
+
       try {
-        const [existing, hasEmail] = await Promise.all([
-          fetchOrganizationProfileInSupabase(user.id),
-          checkUserHasEmailIdentity(supabase),
-        ]);
+        const existing = await fetchOrganizationProfileInSupabase(user.id);
         if (!active) return;
 
-        setHasEmailIdentity(hasEmail);
-
-        if (existing && isOrganizationProfileComplete(existing) && hasEmail) {
+        if (existing && isOrganizationProfileComplete(existing)) {
+          clearGoogleOnboardingDraft(user.id);
           navigate("/dashboard", { replace: true });
           return;
         }
 
+        const localDraft = loadGoogleOnboardingDraft(user.id);
+
         const draft = createOrganizationProfileDraft(user.id, existing, {
-          organizationEmail: existing?.organizationEmail || user.email || "",
-          organizationName: existing?.organizationName || "",
-          contactNumber: existing?.contactNumber || "",
-          district: existing?.district || "",
-          barangay: existing?.barangay || "",
-          isExistingOrganization: existing?.isExistingOrganization ?? false,
-          organizationIdentifierNumber: existing?.organizationIdentifierNumber || "",
+          organizationEmail: localDraft?.organizationEmail || existing?.organizationEmail || user.email || "",
+          organizationName: localDraft?.organizationName || existing?.organizationName || "",
+          contactNumber: localDraft?.contactNumber || existing?.contactNumber || "",
+          district: localDraft?.district || existing?.district || "",
+          barangay: localDraft?.barangay || existing?.barangay || "",
+          isExistingOrganization: localDraft?.isExistingOrganization ?? existing?.isExistingOrganization ?? false,
+          organizationIdentifierNumber: localDraft?.organizationIdentifierNumber || existing?.organizationIdentifierNumber || "",
         });
 
-        if (!draft.representativeName && user.displayName) {
+        if (localDraft?.majorClassification) {
+          draft.majorClassification = localDraft.majorClassification;
+        }
+        if (localDraft?.subClassification) {
+          draft.subClassification = localDraft.subClassification;
+        }
+        if (localDraft?.advocacies && localDraft.advocacies.length > 0) {
+          draft.advocacies = localDraft.advocacies;
+        }
+        if (localDraft?.representativeName) {
+          draft.representativeName = localDraft.representativeName;
+        } else if (!draft.representativeName && user.displayName) {
           draft.representativeName = user.displayName;
         }
+        if (localDraft?.adviserName) {
+          draft.adviserName = localDraft.adviserName;
+        }
+        if (localDraft?.address) {
+          draft.address = localDraft.address;
+        }
+        if (localDraft?.facebookPageUrl) {
+          draft.facebookPageUrl = localDraft.facebookPageUrl;
+        }
 
+        profileDraftUserIdRef.current = user.id;
+        isLoadedRef.current = true;
         setProfileDraft(draft);
       } catch (err) {
         if (!active) return;
         console.error("Failed to load organization profile:", err);
+        const localDraft = loadGoogleOnboardingDraft(user.id);
         const draft = createOrganizationProfileDraft(user.id, null, {
-          organizationEmail: user.email || "",
+          organizationEmail: localDraft?.organizationEmail || user.email || "",
+          organizationName: localDraft?.organizationName || "",
+          contactNumber: localDraft?.contactNumber || "",
+          district: localDraft?.district || "",
+          barangay: localDraft?.barangay || "",
+          isExistingOrganization: localDraft?.isExistingOrganization ?? false,
+          organizationIdentifierNumber: localDraft?.organizationIdentifierNumber || "",
         });
-        if (user.displayName) {
-          draft.representativeName = user.displayName;
-        }
+        if (localDraft?.majorClassification) draft.majorClassification = localDraft.majorClassification;
+        if (localDraft?.subClassification) draft.subClassification = localDraft.subClassification;
+        if (localDraft?.advocacies && localDraft.advocacies.length > 0) draft.advocacies = localDraft.advocacies;
+        if (localDraft?.representativeName) draft.representativeName = localDraft.representativeName;
+        else if (user.displayName) draft.representativeName = user.displayName;
+        if (localDraft?.adviserName) draft.adviserName = localDraft.adviserName;
+        if (localDraft?.address) draft.address = localDraft.address;
+        if (localDraft?.facebookPageUrl) draft.facebookPageUrl = localDraft.facebookPageUrl;
+
+        profileDraftUserIdRef.current = user.id;
+        isLoadedRef.current = true;
         setProfileDraft(draft);
-        setHasEmailIdentity(false);
       } finally {
         if (active) {
           setIsLoadingProfile(false);
@@ -282,7 +275,13 @@ const GoogleOnboarding = () => {
     return () => {
       active = false;
     };
-  }, [isInitialized, navigate, user]);
+  }, [isInitialized, navigate, user?.id]);
+
+  // Persist form draft automatically to localStorage whenever the user modifies fields
+  useEffect(() => {
+    if (!profileDraft || !user?.id || !isLoadedRef.current) return;
+    saveGoogleOnboardingDraft(user.id, profileDraft);
+  }, [profileDraft, user?.id]);
 
   const districtBarangays = useMemo(() => {
     if (!profileDraft?.district) return [];
@@ -349,24 +348,6 @@ const GoogleOnboarding = () => {
     if (!user?.id || !profileDraft || isSaving) return;
 
     setFormError(null);
-
-    // 0. Validate Y-TRACE Password if creation is required
-    if (needsPasswordCreation) {
-      if (!password) {
-        setFormError("Please enter a password for your Y-TRACE account.");
-        return;
-      }
-      if (!isPasswordValid(password)) {
-        setFormError(
-          "Password does not meet Y-TRACE security requirements. It must be 8–16 characters and contain uppercase, lowercase, numbers, and special characters.",
-        );
-        return;
-      }
-      if (password !== confirmPassword) {
-        setFormError("Passwords do not match. Please verify your confirmation password.");
-        return;
-      }
-    }
 
     // 1. Validate Organization Name
     const nameErr = validateOrganizationName(profileDraft.organizationName);
@@ -489,27 +470,14 @@ const GoogleOnboarding = () => {
 
     setIsSaving(true);
     try {
-      // If password creation is required, update password on existing Supabase auth user first
-      if (needsPasswordCreation && supabase) {
-        const { error: pwdErr } = await supabase.auth.updateUser({
-          password: password,
-        });
-        if (pwdErr) {
-          setFormError(pwdErr.message || "Failed to create Y-TRACE password. Please try again.");
-          setIsSaving(false);
-          return;
-        }
-        setPasswordCreated(true);
-        setHasEmailIdentity(true);
-      }
-
       const saved = await upsertOrganizationProfileInSupabase(payloadToSave);
       const isComplete = isOrganizationProfileComplete(saved);
 
       if (isComplete) {
+        clearGoogleOnboardingDraft(user.id);
         toast({
           title: "Registration completed!",
-          description: "Your organization profile and Y-TRACE password have been configured successfully.",
+          description: "Your organization profile has been submitted successfully.",
         });
         navigate("/dashboard", { replace: true });
       } else {
@@ -706,10 +674,10 @@ const GoogleOnboarding = () => {
               </div>
 
               {/* District and Barangay */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="org-district" className="text-xs font-semibold flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <span>District</span>
                     <span className="text-destructive">*</span>
                   </Label>
@@ -721,7 +689,7 @@ const GoogleOnboarding = () => {
                       className={cn(
                         "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                        "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                        "disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground disabled:opacity-60",
                         !profileDraft.district ? "text-muted-foreground" : "text-foreground font-medium",
                       )}
                       required
@@ -740,8 +708,10 @@ const GoogleOnboarding = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="org-barangay" className="text-xs font-semibold">
-                    Barangay <span className="text-destructive">*</span>
+                  <Label htmlFor="org-barangay" className="text-xs font-semibold flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span>Barangay</span>
+                    <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <select
@@ -752,7 +722,7 @@ const GoogleOnboarding = () => {
                       className={cn(
                         "h-10 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-sm transition-colors",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                        "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60",
+                        "disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground disabled:opacity-60",
                         !profileDraft.barangay ? "text-muted-foreground" : "text-foreground font-medium",
                       )}
                       required
@@ -1056,106 +1026,6 @@ const GoogleOnboarding = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Section 6: Create Your Y-TRACE Password (Conditional for users without email/password identity) */}
-          {needsPasswordCreation && (
-            <Card className="rounded-2xl border border-border/80 bg-card shadow-xs" data-testid="ytrace-password-section">
-              <CardHeader className="p-5 sm:p-6 pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
-                  <Lock className="h-4 w-4 text-primary" />
-                  <span>6. Create Your Y-TRACE Password</span>
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Create a password so you can also sign in to Y-TRACE using your email address.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
-                {/* Password Field */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="ytrace-password" className="text-xs font-semibold">
-                      Password <span className="text-destructive">*</span>
-                    </Label>
-                    <span className="text-[10px] font-mono text-muted-foreground">{password.length}/16</span>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="ytrace-password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a strong Y-TRACE password"
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setFormError(null);
-                      }}
-                      onBlur={() => setTouchedPassword(true)}
-                      className="pr-10 h-10 text-sm"
-                      autoComplete="new-password"
-                      maxLength={16}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {touchedPassword && !password ? (
-                    <p className="text-xs text-destructive font-medium">Password is required.</p>
-                  ) : null}
-                </div>
-
-                {/* Password Requirements Checklist */}
-                <PasswordCriteriaChecklist password={password} />
-
-                {/* Confirm Password Field */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="ytrace-confirm-password" className="text-xs font-semibold">
-                    Confirm Password <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="ytrace-confirm-password"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Re-enter your Y-TRACE password"
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        setFormError(null);
-                      }}
-                      onBlur={() => setTouchedConfirmPassword(true)}
-                      onPaste={(event) => {
-                        event.preventDefault();
-                        setFormError("For security, please manually retype your confirmation password.");
-                      }}
-                      className="pr-10 h-10 text-sm"
-                      autoComplete="new-password"
-                      maxLength={16}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 bg-transparent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {touchedConfirmPassword && !confirmPassword ? (
-                    <p className="text-xs text-destructive font-medium">Please confirm your password.</p>
-                  ) : (
-                    confirmMatchHint
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Action Bar */}
           <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3">

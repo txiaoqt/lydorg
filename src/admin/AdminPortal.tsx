@@ -7033,27 +7033,30 @@ export default function AdminPortal({ section }: { section: string }) {
                   description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
                   content={
                     <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                      <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                      <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
                         <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
                         <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
                         <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                       </div>
                       <div className="flex flex-col gap-2 pt-2">
-                        {selectedBulkFiles.map((entry) => (
-                          <div key={entry.file.id} className="grid grid-cols-3 gap-2">
-                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                              {entry.documentType.name}
-                            </p>
-                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                              {registrationReviewDecisionLabel[registrationBulkDecision]}
-                            </p>
-                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                              {selectedBulkFiles.length === 1 && decisionRequiresRemark
-                                ? registrationBulkRemark.trim() || "—"
-                                : "—"}
-                            </p>
-                          </div>
-                        ))}
+                        {selectedBulkFiles.map((entry) => {
+                          const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
+                            ? registrationBulkRemark.trim() || "—"
+                            : "—";
+                          return (
+                            <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                              <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                {entry.documentType.name}
+                              </p>
+                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                {registrationReviewDecisionLabel[registrationBulkDecision]}
+                              </p>
+                              <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                {remarkText}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   }
@@ -7847,27 +7850,30 @@ export default function AdminPortal({ section }: { section: string }) {
                     description="Review your decisions and remarks before submitting. These will be applied to the renewal files below and shown to the organization in their portal."
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                        <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
-                          {selectedBulkFiles.map((entry) => (
-                            <div key={entry.file.id} className="grid grid-cols-3 gap-2">
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {entry.documentType.name}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {registrationReviewDecisionLabel[renewalBulkDecision]}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {selectedBulkFiles.length === 1 && decisionRequiresRemark
-                                  ? renewalBulkRemark.trim() || "—"
-                                  : "—"}
-                              </p>
-                            </div>
-                          ))}
+                          {selectedBulkFiles.map((entry) => {
+                            const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
+                              ? renewalBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                  {entry.documentType.name}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {registrationReviewDecisionLabel[renewalBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     }
@@ -9253,7 +9259,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     description="Review your decisions and remarks before submitting. These will be applied to the proposal and shown to the organization in their portal."
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                        <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Proposal</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
@@ -9261,17 +9267,24 @@ export default function AdminPortal({ section }: { section: string }) {
                           </p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
-                          <div className="grid grid-cols-3 gap-2">
-                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">{selectedBudgetRequest.activityTitle}</p>
-                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                              {budgetReviewDecisionLabel[budgetBulkDecision]}
-                            </p>
-                            <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                              {budgetBulkDecision === "approve"
-                                ? `₱${Number(budgetApprovedAmountDraft || selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                : budgetBulkRemark.trim() || "—"}
-                            </p>
-                          </div>
+                          {(() => {
+                            const thirdColValue = budgetBulkDecision === "approve"
+                              ? `₱${Number(budgetApprovedAmountDraft || selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : budgetBulkRemark.trim() || "—";
+                            return (
+                              <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={selectedBudgetRequest.activityTitle}>
+                                  {selectedBudgetRequest.activityTitle}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {budgetReviewDecisionLabel[budgetBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={thirdColValue !== "—" ? thirdColValue : undefined}>
+                                  {thirdColValue}
+                                </p>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     }
@@ -10517,25 +10530,30 @@ export default function AdminPortal({ section }: { section: string }) {
                     description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                        <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
-                          {selectedLiquidationReviewFiles.map((file) => (
-                            <div key={file.id} className="grid grid-cols-3 gap-2">
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">{file.fileName}</p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {budgetReviewDecisionLabel[liquidationBulkDecision]}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow
-                                  ? liquidationBulkRemark.trim() || "—"
-                                  : "—"}
-                              </p>
-                            </div>
-                          ))}
+                          {selectedLiquidationReviewFiles.map((file) => {
+                            const remarkText = selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow
+                              ? liquidationBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={file.fileName}>
+                                  {file.fileName}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {budgetReviewDecisionLabel[liquidationBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     }
@@ -12739,29 +12757,34 @@ export default function AdminPortal({ section }: { section: string }) {
                     description="Review your decisions and remarks before submitting. These will be applied below and shown to the organization in their portal."
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                        <div className="grid grid-cols-3 gap-2 border-b border-slate-300 pb-2">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
                           <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
-                          {selectedBulkGroups.map((group) => (
-                            <div key={group.id} className="grid grid-cols-3 gap-2">
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">{group.title}</p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {entryReviewBulkDecision === "approve"
-                                  ? entryReviewTab === "city_led" ? "Verify" : "Approve"
-                                  : entryReviewBulkDecision === "needs_revision"
-                                    ? "Request Revision"
-                                    : "Reject"}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default">
-                                {selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark
-                                  ? entryReviewBulkRemark.trim() || "—"
-                                  : "—"}
-                              </p>
-                            </div>
-                          ))}
+                          {selectedBulkGroups.map((group) => {
+                            const remarkText = selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark
+                              ? entryReviewBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={group.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={group.title}>
+                                  {group.title}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {entryReviewBulkDecision === "approve"
+                                    ? entryReviewTab === "city_led" ? "Verify" : "Approve"
+                                    : entryReviewBulkDecision === "needs_revision"
+                                      ? "Request Revision"
+                                      : "Reject"}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     }
