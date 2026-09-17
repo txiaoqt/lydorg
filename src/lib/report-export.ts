@@ -6,6 +6,8 @@ import {
   PCYDO_HEADER_ASPECT_RATIO,
   PCYDO_FOOTER_ASPECT_RATIO,
   PCYDO_A4_TEMPLATE_DATA_URL,
+  PCYDO_WATERMARK_DATA_URL,
+  PCYDO_WATERMARK_ASPECT_RATIO,
 } from "./report-letterhead-assets";
 
 export type ExportFormat = "csv" | "pdf" | "xlsx";
@@ -437,6 +439,25 @@ export const applyOfficialTemplateBackground = (doc: jsPDF) => {
         const footerHeight = pageWidth / PCYDO_FOOTER_ASPECT_RATIO;
         doc.addImage(PCYDO_HEADER_DATA_URL, "JPEG", 0, 0, pageWidth, headerHeight);
         doc.addImage(PCYDO_FOOTER_DATA_URL, "JPEG", 0, pageHeight - footerHeight, pageWidth, footerHeight);
+
+        // Watermark in the middle between header and footer:
+        // Derive proportional dimensions from page width and available vertical height without stretching/distortion
+        const availableHeight = pageHeight - headerHeight - footerHeight;
+        const maxWmWidth = pageWidth * 0.65;
+        const maxWmHeight = availableHeight * 0.70;
+
+        let wmWidth = maxWmWidth;
+        let wmHeight = wmWidth / PCYDO_WATERMARK_ASPECT_RATIO;
+
+        if (wmHeight > maxWmHeight) {
+          wmHeight = maxWmHeight;
+          wmWidth = wmHeight * PCYDO_WATERMARK_ASPECT_RATIO;
+        }
+
+        const wmX = (pageWidth - wmWidth) / 2;
+        const wmY = headerHeight + (availableHeight - wmHeight) / 2;
+
+        doc.addImage(PCYDO_WATERMARK_DATA_URL, "PNG", wmX, wmY, wmWidth, wmHeight);
       }
     } catch {
       // Fallback if image rendering fails
