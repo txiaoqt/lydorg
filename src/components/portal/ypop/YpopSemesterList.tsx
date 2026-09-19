@@ -379,7 +379,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                           </div>
                           <Progress
                             value={Math.min(100, liveScore.totalScore)}
-                            className="h-1.5 bg-muted/80"
+                            className="h-1.5 bg-slate-200 dark:bg-slate-700"
                           />
                         </div>
                       </td>

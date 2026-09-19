@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
 import type { UserFacingRenewalState } from "@/lib/organization-renewal";
+import { getInquiryReferenceCode } from "@/lib/lydo-connect-data";
 
 export interface UserPortalRedesignViewProps {
   profile: any;
@@ -475,20 +476,6 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
                   {activeTask.description}
                 </p>
-
-                {/* Workflow Progress Indicator if active */}
-                <div className="pt-2 max-w-md space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                    <span>Workflow Completion</span>
-                    <span className="text-foreground font-bold">
-                      {stepsCompleted >= 3 ? "100%" : `${Math.round((stepsCompleted / 3) * 100)}%`}
-                    </span>
-                  </div>
-                  <Progress
-                    value={stepsCompleted >= 3 ? 100 : Math.round((stepsCompleted / 3) * 100)}
-                    className="h-1.5 bg-muted"
-                  />
-                </div>
               </div>
             ) : isVerified ? (
               <div className="space-y-1">
@@ -769,9 +756,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
               {inquiries && inquiries.length > 0 ? (
                 <div className="space-y-1.5 max-h-[148px] overflow-y-auto pr-0.5">
                   {inquiries.slice(0, 3).map((inq) => {
-                    const inquiryCodeDisplay =
-                      inq.inquiryCode ||
-                      `INQ-2026-${(inq.id || "001").slice(-4).toUpperCase()}`;
+                    const inquiryCodeDisplay = getInquiryReferenceCode(inq, inquiries as any);
                     const readableStatus = formatInquiryStatusLabel(inq.status);
 
                     return (

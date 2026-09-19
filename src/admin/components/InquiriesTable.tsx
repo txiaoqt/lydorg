@@ -1,19 +1,12 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Copy, Mail, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Copy, Mail, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { deriveInquiryCategory, INQUIRY_CATEGORY_OPTIONS, normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
+import { normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
 import { toast } from "@/hooks/use-toast";
 import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
 
 type StatusFilter = "all" | InquiryRecord["status"];
-type CategoryFilter = "all" | (typeof INQUIRY_CATEGORY_OPTIONS)[number];
 
 type InquiriesTableProps = {
   inquiries: InquiryRecord[];
@@ -22,8 +15,6 @@ type InquiriesTableProps = {
   onSearchChange: (value: string) => void;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
-  categoryFilter: CategoryFilter;
-  onCategoryFilterChange: (value: CategoryFilter) => void;
   onSelectInquiry: (inquiry: InquiryRecord) => void;
   onMarkResponded: (inquiry: InquiryRecord) => void | Promise<void>;
 };
@@ -123,8 +114,6 @@ export const InquiriesTable = ({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-  categoryFilter,
-  onCategoryFilterChange,
   onSelectInquiry,
   onMarkResponded,
 }: InquiriesTableProps) => {
@@ -144,7 +133,7 @@ export const InquiriesTable = ({
 
   return (
     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
-      {/* Header: search + status tabs + category dropdown */}
+      {/* Header: search + status tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
         <div className="flex h-10 min-w-[120px] flex-1 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3.5 py-2.5">
           <Search className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -182,47 +171,6 @@ export const InquiriesTable = ({
             );
           })}
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-            >
-              <span className="whitespace-nowrap">{categoryFilter === "all" ? "All categories" : categoryFilter}</span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[156px] rounded-b-md rounded-t-none border-slate-300 p-0">
-            <DropdownMenuItem
-              onClick={() => {
-                onCategoryFilterChange("all");
-                setPage(0);
-              }}
-              className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                categoryFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
-              )}
-            >
-              All categories
-            </DropdownMenuItem>
-            {INQUIRY_CATEGORY_OPTIONS.map((category) => (
-              <DropdownMenuItem
-                key={category}
-                onClick={() => {
-                  onCategoryFilterChange(category);
-                  setPage(0);
-                }}
-                className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                  categoryFilter === category && "bg-bg-info-tertiary text-public-text-brand",
-                )}
-              >
-                {category}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Column headers */}
@@ -244,7 +192,6 @@ export const InquiriesTable = ({
       ) : (
         pageItems.map((inquiry) => {
           const code = getReferenceCode(inquiry);
-          const category = deriveInquiryCategory(inquiry);
           const date = new Date(inquiry.createdAt);
           const isValidDate = !Number.isNaN(date.getTime());
 
@@ -270,7 +217,6 @@ export const InquiriesTable = ({
                   {inquiry.subject}
                 </p>
                 <p className="line-clamp-1 font-segoe text-xs leading-[140%] text-slate-500">{inquiry.description}</p>
-                <CategoryChip category={category} />
               </div>
 
               <div className="flex w-[15%] flex-col gap-1">

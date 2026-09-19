@@ -315,10 +315,10 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                               participation.status === "verified"
                                 ? "Verified"
                                 : participation.status === "needs_revision"
-                                ? "Needs Revision"
-                                : participation.status === "draft"
-                                ? "Draft"
-                                : undefined
+                                  ? "Needs Revision"
+                                  : participation.status === "draft"
+                                    ? "Draft"
+                                    : undefined
                             }
                           />
                         ) : (
@@ -341,8 +341,8 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                             isNeedsRevision
                               ? "border border-amber-500/40 dark:border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/60 dark:hover:border-amber-500/50 hover:text-amber-900 dark:hover:text-amber-100 font-semibold shadow-2xs focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2"
                               : participation && filesCount > 0
-                              ? "border border-border/80 bg-background hover:bg-muted text-foreground font-medium"
-                              : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs font-medium"
+                                ? "border border-border/80 bg-background hover:bg-muted text-foreground font-medium"
+                                : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs font-medium"
                           )}
                         >
                           {isNeedsRevision ? (
@@ -356,8 +356,8 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                             {isNeedsRevision
                               ? "Resolve Revision"
                               : participation && filesCount > 0
-                              ? "View Proof & Details"
-                              : "Submit Attendance Proof"}
+                                ? "View Proof & Details"
+                                : "Submit Proof of Attendance"}
                           </span>
                         </Button>
                       </td>

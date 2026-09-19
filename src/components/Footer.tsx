@@ -39,6 +39,7 @@ const Footer = () => {
               <div className="grid grid-cols-2 sm:flex sm:flex-col gap-2 sm:gap-[12px]">
                 <Link to="/" className={mobileLinkClass}>Home</Link>
                 <Link to="/about" className={mobileLinkClass}>About</Link>
+                <Link to="/budget-transparency" className={mobileLinkClass}>Budget Transparency</Link>
                 <Link to="/public-templates" className={mobileLinkClass}>Forms &amp; Templates</Link>
                 <Link to="/news-releases" className={mobileLinkClass}>News Releases</Link>
                 <Link to="/faqs" className={mobileLinkClass}>FAQs</Link>
@@ -111,12 +112,13 @@ const Footer = () => {
             </h4>
             <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
               <Link to="/" className={desktopLinkClass}>Home</Link>
-              <Link to="/faqs" className={desktopLinkClass}>FAQs</Link>
+              <Link to="/news-releases" className={desktopLinkClass}>News Releases</Link>
               <Link to="/about" className={desktopLinkClass}>About</Link>
+              <Link to="/faqs" className={desktopLinkClass}>FAQs</Link>
+              <Link to="/budget-transparency" className={desktopLinkClass}>Budget Transparency</Link>
               <Link to="/contacts" className={desktopLinkClass}>Contacts</Link>
               <Link to="/public-templates" className={desktopLinkClass}>Forms &amp; Templates</Link>
               <Link to="/site-map" className={desktopLinkClass}>Site Map</Link>
-              <Link to="/news-releases" className={desktopLinkClass}>News Releases</Link>
             </div>
           </div>
 

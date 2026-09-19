@@ -693,7 +693,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               </div>
               <p className="text-xs font-semibold text-primary">Click to browse file</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground">
-                Supports PDF, DOCX, and XLSX documents up to 10 MB
+                Supports PDF, DOCX, XLSX, JPG, JPEG, and PNG files up to 10 MB
               </p>
             </div>
           </>
@@ -701,7 +701,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
 
         {/* Attached Files List - Single mechanism: Clicking an attached file selects it */}
         {allFiles.length > 0 && (
-          <div className="space-y-2">
+          <div
+            className={cn(
+              "space-y-2",
+              allFiles.length > 3 && "max-h-[196px] overflow-y-auto pr-1 overscroll-contain py-0.5"
+            )}
+          >
             {allFiles.map((file) => {
               const isActive = activeFile?.id === file.id;
               return (

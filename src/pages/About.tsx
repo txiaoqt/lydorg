@@ -23,7 +23,7 @@ const aboutCards = [
   {
     icon: FileText,
     title: "Access Official Forms",
-    description: "Download templates required for registration, budgets, and activity reports.",
+    description: "Download official forms and templates required for registration, renewal, and compliance submissions.",
   },
   {
     icon: Send,
@@ -60,13 +60,13 @@ const programCards = [
     icon: Users,
     tag: "YORP",
     title: "Youth Organization Registration Program",
-    description: "A government-mandated program requiring all youth organizations to formally register with PCYDO and maintain updated compliance records.",
+    description: "The official registration, accreditation, and renewal program requiring youth organizations to formally register with PCYDO and maintain verified compliance standing.",
   },
   {
     icon: Award,
     tag: "YPOP",
     title: "Youth Participation Organization Passport",
-    description: "An accreditation program that recognizes active youth organizations and grants eligibility for government-funded programs and activities.",
+    description: "A youth participation program tracking engagement in City-Led Activities and Organization-Led PPAs through proof submission, validation, and points accumulation.",
   },
 ];
 
@@ -79,7 +79,7 @@ const featureCards = [
   {
     icon: FileText,
     title: "Compliance Submission",
-    description: "Submit required compliance documents such as financial reports, activity logs, and officer updates directly through the portal.",
+    description: "Submit required registration, compliance, and renewal documents directly through the portal for PCYDO review and verification.",
   },
   {
     icon: ClipboardList,

@@ -501,7 +501,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               {uploading ? "Uploading files..." : "Click to browse file"}
             </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground">
-              Supports PDF, DOCX, and XLSX documents up to 10 MB
+              Supports PDF, DOCX, XLSX, JPG, JPEG, and PNG files up to 10 MB
             </p>
           </div>
         )}
@@ -516,7 +516,12 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         {files.length > 0 && (
           <div className="space-y-3">
             {/* Attached Files List - Single mechanism: Clicking an attached file selects it */}
-            <div className="space-y-2">
+            <div
+              className={cn(
+                "space-y-2",
+                files.length > 3 && "max-h-[196px] overflow-y-auto pr-1 overscroll-contain py-0.5"
+              )}
+            >
               {files.map((file) => {
                 const isActive = activeFile?.id === file.id;
                 return (

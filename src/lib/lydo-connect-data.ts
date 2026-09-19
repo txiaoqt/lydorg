@@ -102,6 +102,15 @@ export const buildPublicRecordCode = <T extends { id: string; createdAt: string 
   return `${prefix}-${dateSegment}${suffix}`;
 };
 
+export const getInquiryReferenceCode = (
+  inquiry: (Pick<InquiryRecord, "id" | "createdAt"> & { inquiryCode?: string }) | null | undefined,
+  inquiries: Array<Pick<InquiryRecord, "id" | "createdAt">> = [],
+): string => {
+  if (!inquiry) return "INQ-PENDING";
+  if (inquiry.inquiryCode) return inquiry.inquiryCode;
+  return buildPublicRecordCode("INQ", inquiry, inquiries.length > 0 ? inquiries : [inquiry]);
+};
+
 export type YPOPEntry = {
   id: string;
   organizationId: string;
@@ -1243,6 +1252,7 @@ export type PublicOrganizationActivity = {
 
 export type InquiryRecord = {
   id: string;
+  inquiryCode?: string;
   organizationId: string;
   submittedBy: string;
   submitterName: string;

@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import {
   Bell,
+  Check,
+  CheckCheck,
   CheckCircle2,
   Clock,
   FileText,
@@ -8,11 +10,13 @@ import {
   CalendarDays,
   Medal,
   Megaphone,
-  Check,
   Search,
   ChevronRight,
-  Filter,
-  Sparkles,
+  RefreshCw,
+  UserCheck,
+  Coins,
+  Receipt,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,7 +24,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { NotificationRecord } from "@/lib/lydo-connect-data";
-import { formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
 
 export interface UserPortalNotificationsWorkspaceViewProps {
   notifications: NotificationRecord[];
@@ -31,24 +34,59 @@ export interface UserPortalNotificationsWorkspaceViewProps {
   formatShortPortalDate?: (dateStr: string) => string;
 }
 
-const getNotificationIcon = (relatedType?: string, type?: string) => {
+interface NotificationTypeVisuals {
+  icon: React.ComponentType<{ className?: string }>;
+  tone: string;
+}
+
+const getNotificationVisuals = (relatedType?: string, type?: string): NotificationTypeVisuals => {
   const norm = (relatedType || type || "").toLowerCase();
   if (norm.includes("document") || norm.includes("submission") || norm.includes("cbl")) {
-    return FileText;
+    return {
+      icon: FileText,
+      tone: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    };
   }
   if (norm.includes("budget") || norm.includes("grant") || norm.includes("financial")) {
-    return ClipboardList;
+    return {
+      icon: Coins,
+      tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    };
   }
-  if (norm.includes("liquidation") || norm.includes("expense") || norm.includes("report")) {
-    return CalendarDays;
+  if (norm.includes("liquidation") || norm.includes("expense") || norm.includes("receipt")) {
+    return {
+      icon: Receipt,
+      tone: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    };
+  }
+  if (norm.includes("renewal") || norm.includes("accreditation")) {
+    return {
+      icon: RefreshCw,
+      tone: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+    };
+  }
+  if (norm.includes("registration") || norm.includes("profile") || norm.includes("org")) {
+    return {
+      icon: UserCheck,
+      tone: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    };
   }
   if (norm.includes("ypop") || norm.includes("incentive") || norm.includes("score")) {
-    return Medal;
+    return {
+      icon: Medal,
+      tone: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    };
   }
   if (norm.includes("news") || norm.includes("announcement") || norm.includes("release")) {
-    return Megaphone;
+    return {
+      icon: Megaphone,
+      tone: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    };
   }
-  return Bell;
+  return {
+    icon: Bell,
+    tone: "bg-primary/10 text-primary border-primary/20",
+  };
 };
 
 const getTargetRoute = (
@@ -64,23 +102,57 @@ const getTargetRoute = (
   if (norm.includes("budget") || norm.includes("grant") || norm.includes("financial")) {
     return { route: userRouteMap?.["budget-request"] || "/budget-request", label: "View Budget" };
   }
-  if (norm.includes("liquidation") || norm.includes("expense") || norm.includes("report")) {
+  if (norm.includes("liquidation") || norm.includes("expense") || norm.includes("receipt") || norm.includes("report")) {
     return { route: userRouteMap?.["liquidation-reporting"] || "/liquidation-reporting", label: "View Liquidation" };
   }
-  if (norm.includes("ypop") || norm.includes("incentive") || norm.includes("city_activity") || norm.includes("announcement")) {
-    const basePath = userRouteMap?.["ypop"] || "/portal?section=ypop";
+  if (norm.includes("renewal") || norm.includes("accreditation")) {
+    return { route: userRouteMap?.["organization-renewal"] || "/organization-renewal", label: "View Renewal" };
+  }
+  if (norm.includes("registration") || norm.includes("profile") || norm.includes("org")) {
+    return { route: userRouteMap?.["organization-profile"] || "/organization-profile", label: "View Profile" };
+  }
+  if (norm.includes("ypop") || norm.includes("incentive") || norm.includes("city_activity") || norm.includes("activity")) {
+    const basePath = userRouteMap?.["ypop"] || "/ypop";
     const route = relatedId
       ? `${basePath}${basePath.includes("?") ? "&" : "?"}activityId=${encodeURIComponent(relatedId)}`
       : basePath;
     return { route, label: "View Activity" };
   }
-  if (norm.includes("news") || norm.includes("release")) {
+  if (norm.includes("news") || norm.includes("release") || norm.includes("announcement")) {
     return { route: userRouteMap?.["news-releases"] || "/portal-news-releases", label: "View News" };
   }
-  if (norm.includes("profile") || norm.includes("org")) {
-    return { route: userRouteMap?.["organization-profile"] || "/organization-profile", label: "View Profile" };
-  }
   return null;
+};
+
+const formatNotificationTime = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHour < 24 && now.getDate() === date.getDate()) {
+    const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" });
+    return `Today at ${timeStr}`;
+  }
+  if (diffDay === 1 || (diffDay < 2 && now.getDate() !== date.getDate())) {
+    const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" });
+    return `Yesterday at ${timeStr}`;
+  }
+
+  const isCurrentYear = now.getFullYear() === date.getFullYear();
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: isCurrentYear ? undefined : "numeric",
+    timeZone: "Asia/Manila",
+  });
 };
 
 export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificationsWorkspaceViewProps> = ({
@@ -114,7 +186,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
           n.message.toLowerCase().includes(q)
         );
       })
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [notifications, filter, searchQuery]);
 
   const handleMarkAll = async () => {
@@ -127,32 +199,47 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
     }
   };
 
+  const handleNotificationClick = async (notification: NotificationRecord) => {
+    if (!notification.isRead && onMarkRead) {
+      await onMarkRead(notification.id);
+    }
+    const target = getTargetRoute(
+      notification.relatedType,
+      notification.type,
+      userRouteMap,
+      notification.relatedId
+    );
+    if (target) {
+      navigate(target.route);
+    }
+  };
+
   return (
-    <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-4 sm:space-y-6 max-w-[1440px] mx-auto pt-0 pb-6 sm:py-2">
+    <div className="bg-background text-foreground transition-colors duration-200 font-sans space-y-4 sm:space-y-6 max-w-[1440px] mx-auto pt-0 pb-8 sm:py-2">
       {/* 1. Hero Workspace Header */}
-      <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-3">
+      <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-5 sm:p-7 rounded-2xl border border-border/60 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-[640px]">
+          <div className="space-y-1.5 max-w-[720px]">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-primary">Notification Center</span>
+              <span className="text-xs font-semibold tracking-wide uppercase text-primary">Notification Center</span>
               <span className="text-muted-foreground/30">•</span>
               <span className="text-xs text-muted-foreground">LYDO Y-TRACE</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                 Notifications
               </h1>
               {unreadCount > 0 && (
                 <Badge
                   variant="outline"
-                  className="bg-primary/10 text-primary border-primary/20 text-xs font-bold px-2.5 py-0.5 rounded-full"
+                  className="bg-primary/10 text-primary border-primary/25 text-xs font-bold px-2.5 py-0.5 rounded-full shadow-2xs"
                 >
                   {unreadCount} unread
                 </Badge>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium pt-0.5">
-              Stay updated on compliance reviews, budget approvals, and announcements.
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium leading-relaxed">
+              Stay updated on important announcements, reviews, approvals, budget updates, and other Y-TRACE activity.
             </p>
           </div>
 
@@ -167,8 +254,8 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
                 disabled={isMarkingAll}
                 className="rounded-xl border-border text-foreground text-xs font-semibold h-9 px-3.5 shadow-2xs hover:bg-accent transition-all cursor-pointer"
               >
-                <Check className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                {isMarkingAll ? "Updating..." : "Mark All as Read"}
+                <CheckCheck className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                {isMarkingAll ? "Updating..." : "Mark all as read"}
               </Button>
             </div>
           )}
@@ -178,12 +265,12 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
       {/* 2. Filter Tabs and Search Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card border border-border/60 p-2 sm:p-2.5 rounded-2xl shadow-xs">
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-accent/20 p-1 rounded-xl border border-border/40">
+        <div className="flex items-center gap-1.5 bg-accent/25 p-1 rounded-xl border border-border/40 overflow-x-auto">
           <button
             type="button"
             onClick={() => setFilter("all")}
             className={cn(
-              "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+              "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
               filter === "all"
                 ? "bg-primary text-primary-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/60"
@@ -195,13 +282,13 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
             type="button"
             onClick={() => setFilter("unread")}
             className={cn(
-              "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
               filter === "unread"
                 ? "bg-primary text-primary-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/60"
             )}
           >
-            Unread
+            <span>Unread</span>
             {unreadCount > 0 && (
               <span
                 className={cn(
@@ -217,7 +304,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
             type="button"
             onClick={() => setFilter("read")}
             className={cn(
-              "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+              "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
               filter === "read"
                 ? "bg-primary text-primary-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/60"
@@ -234,45 +321,60 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search notifications..."
-            className="pl-9 h-8.5 text-xs rounded-xl bg-background border-border"
+            className="pl-9 pr-8 h-9 text-xs rounded-xl bg-background border-border"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* 3. Notification List Cards */}
       <div className="space-y-2.5">
         {filteredNotifications.length === 0 ? (
-          <Card className="rounded-2xl border border-dashed border-border/80 bg-card p-10 text-center space-y-3">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-              <Bell className="h-6 w-6" />
+          <Card className="rounded-2xl border border-dashed border-border/80 bg-card p-10 sm:p-14 text-center space-y-3.5">
+            <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto ring-8 ring-primary/5">
+              <Bell className="h-7 w-7" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-foreground">
-                {filter === "unread" ? "No unread notifications" : "No notifications found"}
+            <div className="space-y-1.5 max-w-md mx-auto">
+              <h3 className="text-base font-bold text-foreground">
+                {filter === "unread" ? "No unread notifications" : "No notifications yet"}
               </h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 {searchQuery
                   ? "No notifications matched your search term. Try adjusting your query."
                   : filter === "unread"
-                  ? "You are all caught up! There are no pending unread notifications."
-                  : "Notifications regarding your submissions, verification updates, and budget requests will appear here."}
+                  ? "You’re all caught up. No pending unread notifications."
+                  : "You’re all caught up. Important updates and activity related to your organization will appear here."}
               </p>
             </div>
-            {filter !== "all" && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setFilter("all")}
-                className="rounded-xl text-xs h-8 font-semibold mt-2"
-              >
-                View All Notifications
-              </Button>
+            {(filter !== "all" || searchQuery) && (
+              <div className="pt-1.5 flex justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFilter("all");
+                    setSearchQuery("");
+                  }}
+                  className="h-9.5 sm:h-10 px-5 rounded-xl border border-border/80 bg-background hover:bg-muted text-foreground text-xs sm:text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  View All Notifications
+                </Button>
+              </div>
             )}
           </Card>
         ) : (
           filteredNotifications.map((notification) => {
-            const IconComponent = getNotificationIcon(notification.relatedType, notification.type);
+            const visual = getNotificationVisuals(notification.relatedType, notification.type);
+            const IconComponent = visual.icon;
             const targetAction = getTargetRoute(
               notification.relatedType,
               notification.type,
@@ -283,21 +385,30 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
             return (
               <Card
                 key={notification.id}
+                onClick={() => handleNotificationClick(notification)}
                 className={cn(
-                  "rounded-2xl border transition-all duration-200 p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 group shadow-2xs hover:shadow-xs",
+                  "rounded-2xl border transition-all duration-200 p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 group cursor-pointer",
                   notification.isRead
-                    ? "bg-card border-border/60 hover:bg-accent/15"
-                    : "bg-card border-primary/30 ring-1 ring-primary/15 hover:border-primary/50"
+                    ? "bg-card border-border/60 hover:bg-accent/20 hover:border-border shadow-2xs"
+                    : "bg-primary/[0.03] dark:bg-primary/[0.06] border-primary/25 hover:border-primary/45 shadow-xs"
                 )}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    void handleNotificationClick(notification);
+                  }
+                }}
               >
                 <div className="flex items-start gap-3.5 min-w-0 flex-1">
                   {/* Category / Tone Icon */}
                   <div
                     className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 transition-transform group-hover:scale-105",
+                      "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 transition-transform group-hover:scale-105 border",
                       notification.isRead
-                        ? "bg-muted text-muted-foreground border border-border/50"
-                        : "bg-primary/15 text-primary border border-primary/25 shadow-2xs"
+                        ? "bg-muted text-muted-foreground border-border/50"
+                        : visual.tone
                     )}
                   >
                     <IconComponent className="h-5 w-5" />
@@ -310,27 +421,34 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
                         className={cn(
                           "text-xs sm:text-sm leading-snug break-words",
                           notification.isRead
-                            ? "font-semibold text-foreground/90"
-                            : "font-extrabold text-foreground"
+                            ? "font-semibold text-foreground/85"
+                            : "font-bold text-foreground"
                         )}
                       >
                         {notification.title}
                       </h3>
                       {!notification.isRead && (
-                        <span className="inline-block h-2 w-2 rounded-full bg-primary shrink-0 animate-pulse" />
+                        <span
+                          className="inline-block h-2 w-2 rounded-full bg-primary shrink-0 animate-pulse"
+                          title="Unread notification"
+                        />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                       {notification.message}
                     </p>
-                    <p className="text-[11px] text-muted-foreground/70 font-medium pt-0.5">
-                      {formatFullActivityTimestamp(notification.createdAt)}
-                    </p>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground/75 font-medium pt-0.5">
+                      <Clock className="h-3 w-3" />
+                      <span>{formatNotificationTime(notification.createdAt)}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Right Action Buttons */}
-                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center w-full sm:w-auto justify-end pt-1 sm:pt-0 border-t border-border/30 sm:border-t-0">
+                <div
+                  className="flex items-center gap-2 shrink-0 self-end sm:self-center w-full sm:w-auto justify-end pt-1 sm:pt-0 border-t border-border/30 sm:border-t-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {!notification.isRead && onMarkRead && (
                     <Button
                       type="button"
@@ -339,7 +457,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
                       onClick={() => onMarkRead(notification.id)}
                       className="rounded-xl text-xs h-8 text-muted-foreground hover:text-foreground cursor-pointer font-medium"
                     >
-                      Mark Read
+                      Mark read
                     </Button>
                   )}
                   {targetAction && (
@@ -347,7 +465,12 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
                       type="button"
                       variant={notification.isRead ? "outline" : "default"}
                       size="sm"
-                      onClick={() => navigate(targetAction.route)}
+                      onClick={() => {
+                        if (!notification.isRead && onMarkRead) {
+                          void onMarkRead(notification.id);
+                        }
+                        navigate(targetAction.route);
+                      }}
                       className={cn(
                         "rounded-xl text-xs h-8 font-semibold gap-1 transition-all cursor-pointer",
                         notification.isRead
@@ -368,4 +491,6 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
     </div>
   );
 };
+
 export default UserPortalNotificationsWorkspaceView;
+

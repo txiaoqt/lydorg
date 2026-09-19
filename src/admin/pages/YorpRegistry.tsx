@@ -455,9 +455,16 @@ export function YorpRegistryPage() {
                 )}
               </div>
 
-              <p className="admin-organization-delete-dialog__permanent-warning">
-                This action is permanent and cannot be undone.
-              </p>
+              <div className="admin-organization-delete-dialog__warning-card" role="note">
+                <div className="admin-organization-delete-dialog__warning-icon-wrapper" aria-hidden="true">
+                  <AlertTriangle className="admin-organization-delete-dialog__warning-icon" />
+                </div>
+                <div className="admin-organization-delete-dialog__warning-content">
+                  <p className="admin-organization-delete-dialog__warning-title">
+                    This action is permanent and cannot be undone.
+                  </p>
+                </div>
+              </div>
 
               {deleteError ? (
                 <div className="admin-organization-delete-dialog__error" role="alert">

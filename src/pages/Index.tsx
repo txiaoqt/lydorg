@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Phone, Send, Shield, Users } from "lucide-react";
+import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Phone, Send, Shield, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -24,7 +24,7 @@ const faqs = [
   {
     id: 2,
     question: "What documents are required for compliance submission?",
-    answer: "Required documents include your registration form, financial statements, activity reports, and officer information. Download the templates from the Forms & Templates section.",
+    answer: "Required registration documents include the Constitution and By-Laws, NYC YORP Registration Form (Form B), Directory of Officers and Adviser, List of Members in Good Standing, Pasig City YORP Registration Form (Form A), and PCYDO YORP Data Request Form. Download official templates from the Forms & Templates section.",
   },
   {
     id: 3,
@@ -56,10 +56,11 @@ const overviewCards = [
 ];
 
 const quickLinks = [
-  { icon: Info,       title: "About",             description: "Learn about PCYDO and its mandate for Pasig City youth organizations.",       href: "/about" },
-  { icon: FileText,   title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.",    href: "/public-templates" },
-  { icon: Globe,      title: "News Releases",     description: "Stay updated with the latest official announcements and events from PCYDO.",   href: "/news-releases" },
-  { icon: HelpCircle, title: "FAQs",              description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
+  { icon: Info,       title: "About",               description: "Learn about PCYDO and its mandate for Pasig City youth organizations.",       href: "/about" },
+  { icon: Banknote,   title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.",  href: "/budget-transparency" },
+  { icon: FileText,   title: "Forms & Templates",   description: "Download official forms and document templates for compliance submission.",    href: "/public-templates" },
+  { icon: Globe,      title: "News Releases",       description: "Stay updated with the latest official announcements and events from PCYDO.",   href: "/news-releases" },
+  { icon: HelpCircle, title: "FAQs",                description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
 ];
 
 const Index = () => {
@@ -301,7 +302,7 @@ const Index = () => {
           </div>
 
           {/* Cards grid */}
-          <div className="grid gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {quickLinks.map(({ icon: Icon, title, description, href }) => (
               <Link
                 key={href}

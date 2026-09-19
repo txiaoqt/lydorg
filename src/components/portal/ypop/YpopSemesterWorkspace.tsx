@@ -324,7 +324,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
               </div>
               <Progress
                 value={Math.min(100, liveScore.totalScore)}
-                className="h-2 bg-muted/80"
+                className="h-2 bg-slate-200 dark:bg-slate-700"
               />
             </div>
           </div>

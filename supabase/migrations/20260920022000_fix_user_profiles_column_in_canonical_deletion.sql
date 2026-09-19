@@ -1,5 +1,5 @@
--- Migration: 20260920021000_fix_canonical_deletion_rpc_admin_table.sql
--- Purpose: Corrects the admin table reference from admin_users to admin_accounts and fixes user_profiles user_id PK reference in delete_organization_account_canonical()
+-- Migration: 20260920022000_fix_user_profiles_column_in_canonical_deletion.sql
+-- Purpose: Corrects the user_profiles table delete statement to use user_id instead of id, corrects ypop_org_activities table name, and ensures clean cleanup in delete_organization_account_canonical()
 
 create or replace function public.delete_organization_account_canonical(
   _session_token text,
@@ -158,4 +158,3 @@ begin
   );
 end;
 $$;
-

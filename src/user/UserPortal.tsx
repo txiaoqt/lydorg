@@ -93,6 +93,7 @@ import { UserPortalYPOPWorkspaceView } from "@/components/portal/UserPortalYPOPW
 import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 import { UserPortalNewsWorkspaceView } from "@/components/portal/UserPortalNewsWorkspaceView";
 import { UserPortalRenewalWorkspaceView } from "@/components/portal/UserPortalRenewalWorkspaceView";
+import { UserPortalNotificationsWorkspaceView } from "@/components/portal/UserPortalNotificationsWorkspaceView";
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
 import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
@@ -167,6 +168,7 @@ import {
   buildVerifiedYpopAttendance,
   computeYpopScore,
   buildPublicRecordCode,
+  getInquiryReferenceCode,
   getYpopCityLedPoints,
   getApprovedYpopOrgActivityCount,
   normalizeYpopCityLedPoints,
@@ -3477,6 +3479,17 @@ export default function UserPortal({ section }: { section: string }) {
             <PublicBudgetOverview />
           </div>
         );
+      case "notifications":
+        return (
+          <UserPortalNotificationsWorkspaceView
+            notifications={userNotifications}
+            onMarkRead={handleMarkNotificationRead}
+            onMarkAllRead={() => void handleMarkAllNotificationsRead()}
+            navigate={navigate}
+            userRouteMap={userRouteMap}
+            formatShortPortalDate={formatShortPortalDate}
+          />
+        );
       default:
         return (
           <PortalEmptyState
@@ -4551,8 +4564,8 @@ export default function UserPortal({ section }: { section: string }) {
         </AlertDialogContent>
       </AlertDialog>
       <Dialog open={inquiryListModalOpen} onOpenChange={setInquiryListModalOpen}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[580px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-6 rounded-2xl gap-4">
-          <DialogHeader className="pr-6 space-y-1 text-left">
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[580px] h-[520px] sm:h-[540px] max-h-[calc(100dvh-2rem)] flex flex-col p-5 sm:p-6 rounded-2xl gap-4 overflow-hidden">
+          <DialogHeader className="pr-6 space-y-1 text-left shrink-0">
             <DialogTitle className="text-lg font-bold text-foreground">
               Submitted Inquiries
             </DialogTitle>
@@ -4562,7 +4575,7 @@ export default function UserPortal({ section }: { section: string }) {
           </DialogHeader>
 
           {/* Status Segmented Filter */}
-          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/60 overflow-x-auto [scrollbar-width:none]">
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/60 overflow-x-auto [scrollbar-width:none] shrink-0">
             {(
               [
                 { key: "all", label: "All", count: inquiryCounts.all },
@@ -4587,51 +4600,54 @@ export default function UserPortal({ section }: { section: string }) {
             ))}
           </div>
 
-          {/* Inquiries List or Empty State */}
-          {filteredInquiries.length > 0 ? (
-            <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-0.5">
-              {filteredInquiries.map((inquiry) => (
-                <DashboardInquiryItem
-                  key={inquiry.id}
-                  title={inquiry.subject || "General Inquiry"}
-                  timestamp={formatDateTimeLabel(inquiry.createdAt)}
-                  status={<PortalStatusBadge status={inquiry.status} />}
-                  onClick={() => {
-                    setInquiryListModalOpen(false);
-                    setSelectedInquiry(inquiry);
-                  }}
-                  showChevron
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-border/80 bg-accent/10 p-6 text-center space-y-2 my-2">
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <CircleHelp className="h-5 w-5" />
+          {/* Inquiries List or Empty State in Stable Content Viewport */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            {filteredInquiries.length > 0 ? (
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
+                {filteredInquiries.map((inquiry) => (
+                  <DashboardInquiryItem
+                    key={inquiry.id}
+                    code={getInquiryReferenceCode(inquiry, state.inquiries)}
+                    title={inquiry.subject || "General Inquiry"}
+                    timestamp={formatDateTimeLabel(inquiry.createdAt)}
+                    status={<PortalStatusBadge status={inquiry.status} />}
+                    onClick={() => {
+                      setInquiryListModalOpen(false);
+                      setSelectedInquiry(inquiry);
+                    }}
+                    showChevron
+                  />
+                ))}
               </div>
-              <h4 className="text-sm font-bold text-foreground">
-                {inquiryStatusFilter === "all"
-                  ? "No submitted inquiries"
-                  : `No ${inquiryStatusFilter === "open" ? "open" : inquiryStatusFilter === "responded" ? "responded" : "closed"} inquiries`}
-              </h4>
-              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                {inquiryStatusFilter === "all"
-                  ? "You have not submitted any inquiries yet. Direct questions to the PCYDO team anytime."
-                  : `There are currently no inquiries matching the "${inquiryStatusFilter === "open" ? "Open" : inquiryStatusFilter === "responded" ? "Responded" : "Closed"}" status.`}
-              </p>
-              {inquiryStatusFilter !== "all" && inquiryHistory.length > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setInquiryStatusFilter("all")}
-                  className="mt-2 text-xs font-semibold rounded-lg h-8 cursor-pointer"
-                >
-                  View all inquiries
-                </Button>
-              )}
-            </div>
-          )}
+            ) : (
+              <div className="flex-1 min-h-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-accent/10 p-6 text-center space-y-2">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                  <CircleHelp className="h-5 w-5" />
+                </div>
+                <h4 className="text-sm font-bold text-foreground">
+                  {inquiryStatusFilter === "all"
+                    ? "No submitted inquiries"
+                    : `No ${inquiryStatusFilter === "open" ? "open" : inquiryStatusFilter === "responded" ? "responded" : "closed"} inquiries`}
+                </h4>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                  {inquiryStatusFilter === "all"
+                    ? "You have not submitted any inquiries yet. Direct questions to the PCYDO team anytime."
+                    : `There are currently no inquiries matching the "${inquiryStatusFilter === "open" ? "Open" : inquiryStatusFilter === "responded" ? "Responded" : "Closed"}" status.`}
+                </p>
+                {inquiryStatusFilter !== "all" && inquiryHistory.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInquiryStatusFilter("all")}
+                    className="mt-2 text-xs font-semibold rounded-lg h-8 cursor-pointer"
+                  >
+                    View all inquiries
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -4661,8 +4677,7 @@ export default function UserPortal({ section }: { section: string }) {
                 <>
                   <span className="text-muted-foreground/40 text-xs">•</span>
                   <span className="text-xs font-mono font-bold text-muted-foreground">
-                    {selectedInquiry.inquiryCode ||
-                      buildPublicRecordCode("INQ", selectedInquiry, inquiryHistory)}
+                    {getInquiryReferenceCode(selectedInquiry, state.inquiries)}
                   </span>
                 </>
               ) : null}
@@ -4891,12 +4906,14 @@ function DashboardActionRow({
 }
 
 function DashboardInquiryItem({
+  code,
   title,
   timestamp,
   status,
   onClick,
   showChevron = false,
 }: {
+  code?: string;
   title: string;
   timestamp: string;
   status: React.ReactNode;
@@ -4907,11 +4924,21 @@ function DashboardInquiryItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-[1.05rem] border border-border/70 bg-background px-4 py-3 text-left shadow-sm transition-colors hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:px-3.5 lg:py-3"
+      className="flex w-full items-center gap-3 rounded-[1.05rem] border border-border/70 bg-background px-4 py-3 text-left shadow-sm transition-colors hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:px-3.5 lg:py-3 cursor-pointer"
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 truncate pr-2 text-sm font-semibold text-foreground">{title}</p>
+          <div className="min-w-0 flex-1 flex items-center gap-1.5 pr-2">
+            {code ? (
+              <>
+                <span className="text-xs font-mono font-bold text-primary shrink-0">
+                  {code}
+                </span>
+                <span className="text-muted-foreground/40 text-xs shrink-0">•</span>
+              </>
+            ) : null}
+            <p className="min-w-0 truncate text-sm font-semibold text-foreground">{title}</p>
+          </div>
           <div className="shrink-0">{status}</div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{timestamp}</p>

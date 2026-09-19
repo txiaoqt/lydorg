@@ -42,9 +42,15 @@ const faqs: { question: string; answer: string; category: FaqCategory }[] = [
     category: "documents",
   },
   {
+    question: "What documents are required for organization registration?",
+    answer:
+      "Official registration documents include the Constitution and By-Laws, NYC YORP Registration Form (Form B), YORP Directory of Officers and Adviser, YORP List of Members in Good Standing, Pasig City YORP Registration Form (Form A), and PCYDO YORP Data Request Form.",
+    category: "documents",
+  },
+  {
     question: "Where can I download the official forms and templates?",
     answer:
-      "Published templates are available from the public Templates page and inside the portal's Templates area. Document submission templates and other shared reference files will appear there once the admin uploads them.",
+      "Official forms, templates, and reference documents are available on the public Forms & Templates page and inside the organization portal. Available documents are dynamically published and updated by the PCYDO team.",
     category: "documents",
   },
   {

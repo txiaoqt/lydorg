@@ -8,7 +8,7 @@ import BrandLogo from "@/components/BrandLogo";
 import AuthImageSlideshow from "@/components/auth/AuthImageSlideshow";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { IS_ADMIN_SURFACE, IS_USER_SURFACE } from "@/lib/deployment-surface";
+import { IS_ADMIN_SURFACE, IS_COMBINED_SURFACE, IS_USER_SURFACE } from "@/lib/deployment-surface";
 import { supabase } from "@/lib/supabase";
 import {
   beginPwaAuthFlow,
@@ -328,14 +328,16 @@ const SignIn = ({ forcedMode }: SignInProps) => {
               </div>
             </form>
 
-            {/* Below-card links */}
-            <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
-              <p>
-                <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
-                  ← Back to {pwaFlow ? "welcome" : "home"}
-                </Link>
-              </p>
-            </div>
+            {/* Below-card links — only rendered on combined deployment surface */}
+            {IS_COMBINED_SURFACE && (
+              <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
+                <p>
+                  <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
+                    ← Back to {pwaFlow ? "welcome" : "home"}
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </AdminDesktopGate>

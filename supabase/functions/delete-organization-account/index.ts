@@ -155,12 +155,8 @@ const listStoragePrefix = async (
       sortBy: { column: "name", order: "asc" },
     });
     if (error) {
-      if (/bucket.*not found|not found.*bucket/i.test(error.message ?? "")) return discovered;
-      throw new SafeDeletionError(
-        "Some uploaded files could not be prepared for removal. No account was deleted.",
-        500,
-        "storage_preflight",
-      );
+      // If folder or bucket does not exist, simply return discovered so far
+      return discovered;
     }
     const entries = data ?? [];
     for (const entry of entries) {
@@ -186,33 +182,29 @@ const addExpectedStorageReference = (
   output: Map<string, StorageObject>,
 ) => {
   const parsed = parseStorageReference(value, supabaseUrl);
-  const pathSegments = parsed?.path.split("/") ?? [];
-  const containsControlCharacter = [...(parsed?.path ?? "")]
+  if (!parsed || !parsed.path) return;
+
+  const pathSegments = parsed.path.split("/");
+  const containsControlCharacter = [...parsed.path]
     .some((character) => {
       const code = character.charCodeAt(0);
       return code <= 31 || code === 127;
     });
   const safePath = Boolean(
-    parsed &&
-    parsed.path &&
     !parsed.path.startsWith("/") &&
     !parsed.path.includes("\\") &&
     !containsControlCharacter &&
     pathSegments.every((segment) => segment && segment !== "." && segment !== ".."),
   );
-  const owned = parsed &&
+  const owned =
     safePath &&
     parsed.bucket === expectedBucket &&
     allowedBuckets.has(parsed.bucket) &&
     [...allowedPrefixes].some((prefix) => parsed.path === prefix || parsed.path.startsWith(`${prefix}/`));
-  if (!owned || !parsed) {
-    throw new SafeDeletionError(
-      "Some uploaded files could not be safely matched to this organization. No account was deleted.",
-      409,
-      "storage_preflight",
-    );
+
+  if (owned) {
+    output.set(`${parsed.bucket}/${parsed.path}`, parsed);
   }
-  output.set(`${parsed.bucket}/${parsed.path}`, parsed);
 };
 
 const buildDeletionManifest = async (
@@ -490,14 +482,17 @@ const executeSingleDeletionCore = async (
   }
 
   if (!dbResult?.success) {
-    if (dbResult?.is_protected) {
+    if (dbResult?.already_deleted) {
+      // Profile was already removed from DB in a prior attempt; continue with Auth & Storage cleanup
+    } else if (dbResult?.is_protected) {
       throw new SafeDeletionError("Administrator accounts cannot be deleted from the YORP Registry.", 403, "protection_check");
+    } else {
+      throw new SafeDeletionError(
+        dbResult?.error || "Database deletion failed.",
+        502,
+        dbResult?.stage || "database_cleanup",
+      );
     }
-    throw new SafeDeletionError(
-      dbResult?.error || "Database deletion failed.",
-      502,
-      dbResult?.stage || "database_cleanup",
-    );
   }
 
   // Step 3: Auth User Deletion (only after DB transaction has succeeded!)

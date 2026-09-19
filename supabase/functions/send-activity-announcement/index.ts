@@ -261,7 +261,7 @@ Deno.serve(async (req) => {
   const action = payload.action ?? "send";
   const sessionToken = (payload.session_token as string) ?? "";
   const activityId = (payload.activity_id as string) ?? "";
-  const siteUrl = (payload.site_url as string) || Deno.env.get("SITE_URL") || "https://ytrace.pasigcity.gov.ph";
+  const siteUrl = (payload.site_url as string) || Deno.env.get("SITE_URL") || "https://ytrace.app";
   const idempotencyKey = (payload.idempotency_key as string) || `announcement-${activityId}`;
 
   // 2. Authorize Admin
@@ -426,8 +426,8 @@ Deno.serve(async (req) => {
 
   // 6. Brevo Transactional Email Integration
   const brevoApiKey = Deno.env.get("BREVO_API_KEY") || Deno.env.get("SMTP_API_KEY");
-  const senderEmail = Deno.env.get("BREVO_SENDER_EMAIL") || "notifications@pasigcity.gov.ph";
-  const senderName = Deno.env.get("BREVO_SENDER_NAME") || "Y-TRACE Pasig City";
+  const senderEmail = Deno.env.get("BREVO_SENDER_EMAIL") || "noreply@ytrace.app";
+  const senderName = Deno.env.get("BREVO_SENDER_NAME") || "Y-TRACE";
 
   let successfulCount = 0;
   let failedCount = 0;

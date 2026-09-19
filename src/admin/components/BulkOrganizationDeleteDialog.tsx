@@ -370,9 +370,19 @@ export function BulkOrganizationDeleteDialog({
               ) : null}
             </div>
 
-            <p className="admin-organization-delete-dialog__permanent-warning">
-              This action is permanent and cannot be undone. Accounts will not be deactivated; they will be completely erased.
-            </p>
+            <div className="admin-organization-delete-dialog__warning-card" role="note">
+              <div className="admin-organization-delete-dialog__warning-icon-wrapper" aria-hidden="true">
+                <AlertTriangle className="admin-organization-delete-dialog__warning-icon" />
+              </div>
+              <div className="admin-organization-delete-dialog__warning-content">
+                <p className="admin-organization-delete-dialog__warning-title">
+                  This action is permanent and cannot be undone.
+                </p>
+                <p className="admin-organization-delete-dialog__warning-description">
+                  Accounts will not be deactivated; they will be completely erased.
+                </p>
+              </div>
+            </div>
 
             {preflightError && (
               <div className="admin-organization-delete-dialog__error" role="alert">

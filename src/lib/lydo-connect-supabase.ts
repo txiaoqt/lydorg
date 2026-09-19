@@ -3471,15 +3471,68 @@ export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: stri
   if (error) throw new Error(error.message);
 };
 
-export const resolveSupabaseFileUrl = async (value: string) => {
+const resolvedFileUrlCache = new Map<string, { url: string; expiresAt: number }>();
+const missingStorageObjectsCache = new Set<string>();
+
+export const resolveSupabaseFileUrl = async (value: string): Promise<string> => {
   if (!supabase || !value) return value;
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("data:")
+  ) {
+    return trimmed;
+  }
 
-  const parsed = parseStorageUri(value);
-  if (!parsed) return value;
+  const parsed = parseStorageUri(trimmed);
+  if (!parsed) return trimmed;
 
-  const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
-  if (error || !data?.signedUrl) throw new Error(error?.message ?? "Failed to create a file URL.");
-  return data.signedUrl;
+  const cacheKey = `${parsed.bucket}/${parsed.path}`;
+
+  // Check negative cache (known non-existent files)
+  if (missingStorageObjectsCache.has(cacheKey)) {
+    return "";
+  }
+
+  // Check valid active cache
+  const cached = resolvedFileUrlCache.get(cacheKey);
+  const now = Date.now();
+  if (cached && cached.expiresAt > now + 60000) {
+    return cached.url;
+  }
+
+  try {
+    const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
+    if (error) {
+      const msg = (error.message || "").toLowerCase();
+      const code = String((error as { statusCode?: string | number }).statusCode || "");
+      if (
+        code === "404" ||
+        code === "400" ||
+        msg.includes("not found") ||
+        msg.includes("not_found") ||
+        msg.includes("object not found") ||
+        msg.includes("does not exist") ||
+        msg.includes("bucket not found")
+      ) {
+        missingStorageObjectsCache.add(cacheKey);
+        return "";
+      }
+      console.warn(`Storage URL resolution notice for ${cacheKey}:`, error.message);
+      return "";
+    }
+    if (data?.signedUrl) {
+      resolvedFileUrlCache.set(cacheKey, { url: data.signedUrl, expiresAt: now + 3500000 });
+      return data.signedUrl;
+    }
+    return "";
+  } catch (err) {
+    console.warn(`Storage URL resolution exception for ${cacheKey}:`, err);
+    return "";
+  }
 };
 
 // ─── YPOP Org-side mutations ──────────────────────────────────

@@ -53,7 +53,7 @@ import { type DownloadableFile } from "@/lib/document-compression";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveInquiryCategory, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, INQUIRY_CATEGORY_OPTIONS, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
@@ -770,7 +770,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
   const [inquirySearch, setInquirySearch] = useState("");
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | InquiryRecord["status"]>("all");
-  const [inquiryCategoryFilter, setInquiryCategoryFilter] = useState<"all" | (typeof INQUIRY_CATEGORY_OPTIONS)[number]>("all");
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
   const [replyDialogInquiry, setReplyDialogInquiry] = useState<InquiryRecord | null>(null);
   const [inquiryStatusDraft, setInquiryStatusDraft] = useState<InquiryRecord["status"]>("pending_review");
@@ -1775,19 +1774,29 @@ export default function AdminPortal({ section }: { section: string }) {
     const query = inquirySearch.trim().toLowerCase();
     return [...state.inquiries]
       .filter((inquiry) => {
+        const referenceCode = getInquiryReferenceCode(inquiry, state.inquiries);
         const matchesSearch =
           !query ||
-          [inquiry.submitterName, inquiry.organizationName, inquiry.email, inquiry.subject, inquiry.description]
+          [
+            referenceCode,
+            inquiry.id,
+            (inquiry as any).inquiryCode,
+            inquiry.submitterName,
+            inquiry.organizationName,
+            inquiry.email,
+            inquiry.subject,
+            inquiry.description,
+          ]
+            .filter(Boolean)
             .join(" ")
             .toLowerCase()
             .includes(query);
         const normalizedInquiryStatus = normalizeInquiryStatus(inquiry.status);
         const matchesStatus = inquiryStatusFilter === "all" || normalizedInquiryStatus === inquiryStatusFilter;
-        const matchesCategory = inquiryCategoryFilter === "all" || deriveInquiryCategory(inquiry) === inquiryCategoryFilter;
-        return matchesSearch && matchesStatus && matchesCategory;
+        return matchesSearch && matchesStatus;
       })
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-  }, [inquirySearch, inquiryStatusFilter, inquiryCategoryFilter, state.inquiries]);
+  }, [inquirySearch, inquiryStatusFilter, state.inquiries]);
   const openInquiryDetails = (inquiry: InquiryRecord) => {
     const normalizedStatus = normalizeInquiryStatus(inquiry.status);
     setSelectedInquiry({ ...inquiry, status: normalizedStatus });
@@ -2493,13 +2502,16 @@ export default function AdminPortal({ section }: { section: string }) {
 
   useEffect(() => {
     let isActive = true;
-    const filesWithUploads = [...state.documentSubmissionFiles, ...localRenewalFiles].filter((file) => file.fileUrl.trim());
+    const activeFiles = selectedRegistrationId
+      ? selectedRegistrationFiles
+      : selectedRenewalId
+      ? localRenewalFiles
+      : [];
+    const filesWithUploads = activeFiles.filter((file) => file.fileUrl && file.fileUrl.trim());
 
     if (!filesWithUploads.length) {
       documentPreviewSourceRef.current = {};
-      if (Object.keys(documentPreviewUrls).length > 0) {
-        setDocumentPreviewUrls({});
-      }
+      setDocumentPreviewUrls((prev) => (Object.keys(prev).length > 0 ? {} : prev));
       return;
     }
 
@@ -2508,13 +2520,13 @@ export default function AdminPortal({ section }: { section: string }) {
       const nextSources: Record<string, string> = {};
       const filesToResolve = filesWithUploads.filter((file) => {
         const existingSource = documentPreviewSourceRef.current[file.id];
-        if (existingSource === file.fileUrl && documentPreviewUrls[file.id]) {
-          nextUrls[file.id] = documentPreviewUrls[file.id];
-          nextSources[file.id] = existingSource;
+        if (existingSource === file.fileUrl) {
           return false;
         }
         return true;
       });
+
+      if (!filesToResolve.length) return;
 
       const resolvedEntries = await Promise.all(
         filesToResolve.map(async (file) => {
@@ -2532,21 +2544,21 @@ export default function AdminPortal({ section }: { section: string }) {
         nextUrls[fileId] = resolvedUrl;
         nextSources[fileId] = sourceUrl;
       }
-      const hasChanged =
-        Object.keys(nextUrls).length !== Object.keys(documentPreviewUrls).length ||
-        Object.entries(nextUrls).some(([fileId, resolvedUrl]) => documentPreviewUrls[fileId] !== resolvedUrl);
-      if (!hasChanged) {
-        documentPreviewSourceRef.current = nextSources;
-        return;
-      }
-      documentPreviewSourceRef.current = nextSources;
-      setDocumentPreviewUrls(nextUrls);
+
+      documentPreviewSourceRef.current = { ...documentPreviewSourceRef.current, ...nextSources };
+      setDocumentPreviewUrls((current) => {
+        const merged = { ...current, ...nextUrls };
+        const hasChanged =
+          Object.keys(merged).length !== Object.keys(current).length ||
+          Object.entries(merged).some(([fileId, resolvedUrl]) => current[fileId] !== resolvedUrl);
+        return hasChanged ? merged : current;
+      });
     })();
 
     return () => {
       isActive = false;
     };
-  }, [documentPreviewUrls, state.documentSubmissionFiles, localRenewalFiles]);
+  }, [selectedRegistrationId, selectedRegistrationFiles, selectedRenewalId, localRenewalFiles]);
 
   useEffect(() => {
     const firstReviewableFile = templateDocuments
@@ -6372,13 +6384,11 @@ export default function AdminPortal({ section }: { section: string }) {
 
             <InquiriesTable
               inquiries={filteredInquiries}
-              getReferenceCode={(inquiry) => buildPublicRecordCode("INQ", inquiry, state.inquiries)}
+              getReferenceCode={(inquiry) => getInquiryReferenceCode(inquiry, state.inquiries)}
               searchValue={inquirySearch}
               onSearchChange={setInquirySearch}
               statusFilter={inquiryStatusFilter}
               onStatusFilterChange={setInquiryStatusFilter}
-              categoryFilter={inquiryCategoryFilter}
-              onCategoryFilterChange={setInquiryCategoryFilter}
               onSelectInquiry={openInquiryDetails}
               onMarkResponded={handleMarkInquiryResponded}
             />
@@ -14120,7 +14130,7 @@ export default function AdminPortal({ section }: { section: string }) {
       </Dialog>
       <InquiryDetailDrawer
         inquiry={selectedInquiry}
-        referenceCode={selectedInquiry ? buildPublicRecordCode("INQ", selectedInquiry, state.inquiries) : ""}
+        referenceCode={selectedInquiry ? getInquiryReferenceCode(selectedInquiry, state.inquiries) : ""}
         onOpenChange={(open) => {
           if (!open && !savingInquiryStatus) setSelectedInquiry(null);
         }}

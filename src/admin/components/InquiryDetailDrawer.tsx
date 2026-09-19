@@ -3,8 +3,8 @@ import { Clock, Copy, X } from "lucide-react";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { deriveInquiryCategory, normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
-import { CategoryChip, ReferenceCodeChip, ReplyEmailButton, StatusPill } from "@/admin/components/InquiriesTable";
+import { normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
+import { ReferenceCodeChip, ReplyEmailButton, StatusPill } from "@/admin/components/InquiriesTable";
 
 type InquiryDetailDrawerProps = {
   inquiry: InquiryRecord | null;
@@ -104,20 +104,10 @@ export const InquiryDetailDrawer = ({
                 </div>
               </SectionCard>
 
-              <SectionCard title="Subject &amp; Category">
-                <div className="flex items-start gap-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 font-segoe text-sm font-semibold leading-[140%] text-text-default">
-                      {inquiry.subject}
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <CategoryChip
-                      category={deriveInquiryCategory(inquiry)}
-                      className="h-[26px] min-w-[52px] w-fit shrink-0 justify-center gap-1 rounded-[4px] border px-2 py-0 font-segoe text-sm font-semibold leading-none"
-                    />
-                  </div>
-                </div>
+              <SectionCard title="Subject">
+                <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                  {inquiry.subject}
+                </p>
               </SectionCard>
 
               <SectionCard title="Message">
