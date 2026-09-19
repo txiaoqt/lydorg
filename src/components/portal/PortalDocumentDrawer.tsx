@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { isApprovedRegistrationDocument } from "@/lib/document-file-access";
-import type { SubmissionFile } from "@/lib/lydo-connect-data";
+import { type SubmissionFile, resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 
 export interface PortalDocumentDrawerProps {
   open: boolean;
@@ -178,7 +178,10 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
 
   const handleDownload = async () => {
     const downloadFileName = isTemplate
-      ? rawTemplateFileName
+      ? resolveCleanTemplateDownloadFileName(
+          resolvedTemplateTitle || templateTitle || previewTitle || documentTypeName || "Official Template",
+          rawTemplateFileName || previewUrl || file?.fileUrl
+        )
       : file?.fileName || `${resolvedDocumentTitle}.pdf`;
 
     if (onDownloadFile) {
@@ -878,8 +881,8 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
           {renderDesktopDocumentPreview()}
 
           {/* PINNED FOOTER */}
-          <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-            <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+          <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
               {resolvedFooterStatus}
             </p>
             <SheetClose asChild>
@@ -887,7 +890,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 px-4.5 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 hover:border-border text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
               >
                 Close Drawer
               </Button>
@@ -928,8 +931,8 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
         {renderMobileDocumentPreview()}
 
         {/* PINNED FOOTER */}
-        <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-          <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
+        <div className="h-14 py-2.5 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+          <p className="text-xs text-muted-foreground font-medium truncate mr-3">
             {resolvedFooterStatus}
           </p>
           <Button
@@ -937,7 +940,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
           >
             Close
           </Button>

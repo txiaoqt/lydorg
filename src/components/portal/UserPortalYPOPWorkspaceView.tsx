@@ -90,6 +90,19 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
   const organizationId = currentProfile?.id ?? "";
   const userId = user?.id ?? currentProfile?.userId ?? "";
 
+  // Check for deep-linked activityId in URL
+  const deepLinkedActivityId = React.useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.search) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("activityId");
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, []);
+
   // Semester selection state
   const [selectedSemesterKey, setSelectedSemesterKey] = useState<string | null>(() => {
     if (initialSemesterKey !== undefined) {
@@ -102,12 +115,29 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
         if (sem && periods.some((p) => p.semesterKey === sem)) {
           return sem;
         }
+        const actId = params.get("activityId");
+        if (actId) {
+          const matched = cityActivities.find((a) => a.id === actId);
+          if (matched && periods.some((p) => p.semesterKey === matched.semesterKey)) {
+            return matched.semesterKey;
+          }
+        }
       } catch {
         /* ignore invalid url state */
       }
     }
     return null;
   });
+
+  // Automatically select semester if deep-linked activity is loaded asynchronously
+  React.useEffect(() => {
+    if (deepLinkedActivityId && !selectedSemesterKey && cityActivities.length > 0) {
+      const matched = cityActivities.find((a) => a.id === deepLinkedActivityId);
+      if (matched && periods.some((p) => p.semesterKey === matched.semesterKey)) {
+        setSelectedSemesterKey(matched.semesterKey);
+      }
+    }
+  }, [deepLinkedActivityId, selectedSemesterKey, cityActivities, periods]);
 
   const handleSelectSemester = (semesterKey: string) => {
     setSelectedSemesterKey(semesterKey);
@@ -193,6 +223,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
             entry={selectedEntry}
             allEntries={entries}
             cityActivities={cityActivities}
+            initialActivityId={deepLinkedActivityId}
             participations={participations}
             eventFiles={eventFiles}
             orgActivities={orgActivities}

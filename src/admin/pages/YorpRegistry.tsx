@@ -25,6 +25,7 @@ import {
   type YorpStatusFilter,
 } from "@/admin/components/YorpRegistryTable";
 import { YorpRegistryDetailDrawer } from "@/admin/components/YorpRegistryDetailDrawer";
+import { BulkOrganizationDeleteDialog } from "@/admin/components/BulkOrganizationDeleteDialog";
 import { type PasigDistrict } from "@/lib/pasig-districts";
 import { type OrganizationProfile } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -32,6 +33,7 @@ import {
   ORGANIZATION_DELETION_CATEGORIES,
   organizationDeletionConfirmationMatches,
   permanentlyDeleteOrganizationAccount,
+  type BulkOrganizationDeletionResult,
 } from "@/lib/admin-organization-deletion";
 import { loadAdminPortalSupabaseState } from "@/lib/lydo-connect-supabase";
 import {
@@ -75,10 +77,12 @@ export function YorpRegistryPage() {
   const [selectedEntry, setSelectedEntry] = useState<YorpRegistryEntry | null>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [selectedOrgIds, setSelectedOrgIds] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<OrganizationProfile | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletingOrganization, setDeletingOrganization] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const deleteConfirmationInputRef = useRef<HTMLInputElement>(null);
 
   const registryEntries = useMemo<YorpRegistryEntry[]>(() => {
@@ -91,6 +95,14 @@ export function YorpRegistryPage() {
         return { org, registrationDate, expiryDate, yorpStatus: getYorpStatus(expiryDate, now) };
       });
   }, [orgs]);
+
+  const selectedBulkOrgs = useMemo(
+    () =>
+      registryEntries
+        .filter((entry) => selectedOrgIds.has(entry.org.id))
+        .map((entry) => entry.org),
+    [registryEntries, selectedOrgIds],
+  );
 
   const stats = useMemo(
     () => ({
@@ -137,6 +149,18 @@ export function YorpRegistryPage() {
     setDeleteTarget(organization);
   };
 
+  const handleDeleteSelected = () => {
+    if (selectedOrgIds.size === 0) return;
+    if (selectedOrgIds.size === 1) {
+      const [targetId] = Array.from(selectedOrgIds);
+      const targetEntry = registryEntries.find((entry) => entry.org.id === targetId);
+      if (!targetEntry) return;
+      openDeleteDialog(targetEntry.org);
+    } else {
+      setBulkDeleteDialogOpen(true);
+    }
+  };
+
   const closeDeleteDialog = () => {
     if (deletingOrganization) return;
     setDeleteTarget(null);
@@ -161,11 +185,17 @@ export function YorpRegistryPage() {
         deleteConfirmation,
       );
       removeOrganizationAccountFromCache(deleteTarget.id);
+      setSelectedOrgIds((current) => {
+        const next = new Set(current);
+        next.delete(deleteTarget.id);
+        return next;
+      });
       setSelectedEntry(null);
       setDeleteTarget(null);
       setDeleteConfirmation("");
       toast({
         title: "Organization account permanently deleted.",
+        description: `Account and associated records for ${deleteTarget.organizationName} have been removed.`,
       });
 
       try {
@@ -182,6 +212,39 @@ export function YorpRegistryPage() {
       );
     } finally {
       setDeletingOrganization(false);
+    }
+  };
+
+  const handleBulkDeletionComplete = async (result: BulkOrganizationDeletionResult) => {
+    const deletedIds: string[] = [];
+    for (const item of result.results) {
+      if (item.status === "deleted" || item.status === "deleted_with_storage_cleanup_pending") {
+        removeOrganizationAccountFromCache(item.organizationId);
+        deletedIds.push(item.organizationId);
+      }
+    }
+
+    if (deletedIds.length > 0) {
+      setSelectedOrgIds((current) => {
+        const next = new Set(current);
+        deletedIds.forEach((id) => next.delete(id));
+        return next;
+      });
+      setSelectedEntry(null);
+    }
+
+    if (result.deletedCount > 0) {
+      toast({
+        title: "Bulk deletion completed.",
+        description: `${result.deletedCount} organization ${result.deletedCount === 1 ? "account" : "accounts"} permanently deleted.`,
+      });
+    }
+
+    try {
+      const snapshot = await loadAdminPortalSupabaseState();
+      if (snapshot) mergeRemoteState(snapshot);
+    } catch (refreshError) {
+      console.error("Failed to refresh admin state after bulk organization deletion:", refreshError);
     }
   };
 
@@ -288,6 +351,10 @@ export function YorpRegistryPage() {
           const found = registryEntries.find((registryEntry) => registryEntry.org.id === organizationId);
           if (found) setSelectedEntry(found);
         }}
+        selectedOrgIds={selectedOrgIds}
+        onSelectedOrgIdsChange={setSelectedOrgIds}
+        onDeleteSelected={handleDeleteSelected}
+        isDeleting={deletingOrganization}
       />
 
       <YorpRegistryDetailDrawer
@@ -359,6 +426,18 @@ export function YorpRegistryPage() {
                   )}
                   aria-describedby="organization-delete-instruction organization-delete-mismatch"
                   onChange={(event) => setDeleteConfirmation(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      !deletingOrganization &&
+                      deleteTarget.id &&
+                      deleteTarget.organizationName &&
+                      organizationDeletionConfirmationMatches(deleteConfirmation, deleteTarget.organizationName)
+                    ) {
+                      event.preventDefault();
+                      void confirmPermanentDeletion();
+                    }
+                  }}
                   placeholder={deleteTarget.organizationName}
                 />
                 {deleteConfirmation &&
@@ -387,7 +466,11 @@ export function YorpRegistryPage() {
               ) : null}
 
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={deletingOrganization} onClick={closeDeleteDialog}>
+                <AlertDialogCancel
+                  disabled={deletingOrganization}
+                  onClick={closeDeleteDialog}
+                  className="font-segoe active:scale-[0.98] transition-transform"
+                >
                   Cancel
                 </AlertDialogCancel>
                 <Button
@@ -403,6 +486,7 @@ export function YorpRegistryPage() {
                     )
                   }
                   onClick={() => void confirmPermanentDeletion()}
+                  className="font-segoe active:scale-[0.98] transition-transform"
                 >
                   {deletingOrganization ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />Deleting organization account…</>
@@ -415,6 +499,13 @@ export function YorpRegistryPage() {
           ) : null}
         </AlertDialogContent>
       </AlertDialog>
+
+      <BulkOrganizationDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        selectedOrganizations={selectedBulkOrgs}
+        onDeletionComplete={handleBulkDeletionComplete}
+      />
 
       <ExportReportDialog
         open={exportDialogOpen}

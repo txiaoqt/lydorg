@@ -53,6 +53,7 @@ export interface YpopSemesterWorkspaceProps {
   entry: YPOPEntry | null;
   allEntries: YPOPEntry[];
   cityActivities: YPOPCityActivity[];
+  initialActivityId?: string | null;
   participations: YPOPEventParticipation[];
   eventFiles: YPOPEventFile[];
   orgActivities: YPOPOrgActivity[];
@@ -82,6 +83,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
   entry,
   allEntries,
   cityActivities,
+  initialActivityId,
   participations,
   eventFiles,
   orgActivities,
@@ -385,6 +387,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
         <YpopCityLedTab
           period={period}
           activities={semesterActivities}
+          initialActivityId={initialActivityId}
           participations={semesterParticipations}
           eventFiles={eventFiles}
           organizationId={organizationId}

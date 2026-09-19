@@ -23,6 +23,7 @@ import {
   Loader2,
   ChevronDown,
   AlertCircle,
+  FileEdit,
 } from "lucide-react";
 import { getBudgetPurposeCategoriesFromSupabase } from "@/lib/lydo-connect-supabase";
 import { Button } from "@/components/ui/button";
@@ -406,6 +407,12 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     );
   };
 
+  const isBudgetReleased = (status?: string) => {
+    if (!status) return false;
+    const s = status.toLowerCase().trim();
+    return s === "budget_released" || s === "completed";
+  };
+
   const isBudgetPending = (status?: string) => {
     if (!status) return false;
     const s = status.toLowerCase();
@@ -449,10 +456,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const underReviewCount = budgetMetrics.underReviewCount;
   const needsRevisionCount = budgetMetrics.needsRevisionCount;
   const approvedCount = budgetMetrics.approvedCount;
+  const releasedCount = budgetMetrics.releasedCount;
   const completionPercent = budgetMetrics.completionPercent;
 
   const totalReleasedAmount = budgetRequests.reduce((acc, r) => {
-    if (isBudgetApproved(r.status)) {
+    if (isBudgetReleased(r.status)) {
       return acc + (Number(r.releasedAmount) || Number(r.approvedAmount) || Number(r.requestedAmount) || 0);
     }
     return acc;
@@ -576,7 +584,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between min-h-[20px]">
                       <label className="text-xs font-bold text-foreground">
                         Purpose &amp; Category <span className="text-red-500">*</span>
                       </label>
@@ -607,7 +615,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-80 max-h-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
+                        <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[280px] max-h-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
                           {canonicalCategories.map((cat) => (
                             <DropdownMenuItem
                               key={cat}
@@ -640,24 +648,64 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-foreground">Requested Budget Amount (₱) <span className="text-red-500">*</span></label>
+                    <div className="flex items-center justify-between min-h-[20px]">
+                      <label className="text-xs font-bold text-foreground">
+                        Requested Budget Amount (₱) <span className="text-red-500">*</span>
+                      </label>
+                      <span className="text-[11px] text-muted-foreground font-normal">
+                        Max: ₱100,000
+                      </span>
+                    </div>
                     <Input
                       type="number"
                       required
-                      min="0"
+                      min="0.01"
+                      max="100000"
                       step="any"
                       placeholder="e.g. 50000"
                       value={newRequestedAmount}
-                      onChange={(e) => setNewRequestedAmount(e.target.value)}
-                      className="h-10 text-xs rounded-xl bg-background border-border/80 font-mono font-bold focus-visible:ring-1 focus-visible:ring-primary/40"
+                      onFocus={(e) => {
+                        if (e.target.value === "0") {
+                          e.target.select();
+                        }
+                      }}
+                      onClick={(e) => {
+                        if ((e.target as HTMLInputElement).value === "0") {
+                          (e.target as HTMLInputElement).select();
+                        }
+                      }}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) {
+                          val = val.replace(/^0+/, "");
+                          if (val === "" || val.startsWith(".")) {
+                            val = "0" + val;
+                          }
+                        }
+                        setNewRequestedAmount(val);
+                      }}
+                      className={cn(
+                        "h-10 text-xs rounded-xl bg-background border-border/80 font-mono font-bold focus-visible:ring-1 focus-visible:ring-primary/40",
+                        Number(newRequestedAmount) > 100000 && "border-destructive focus-visible:ring-destructive/40 text-destructive font-bold"
+                      )}
                     />
+                    {Number(newRequestedAmount) > 100000 ? (
+                      <p className="text-[11px] font-medium text-destructive flex items-center gap-1">
+                        Requested budget amount cannot exceed ₱100,000.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Maximum request: ₱100,000
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Activity Description</label>
+                  <label className="text-xs font-bold text-foreground">Activity Description <span className="text-red-500">*</span></label>
                   <Textarea
                     rows={3}
+                    required
                     placeholder="Briefly describe the objectives, expected outcomes, and target participants..."
                     value={newActivityDescription}
                     onChange={(e) => setNewActivityDescription(e.target.value)}
@@ -681,18 +729,28 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Target Activity Date</label>
+                  <div className="flex items-center justify-between min-h-[20px]">
+                    <label className="text-xs font-bold text-foreground">
+                      Target Activity Date <span className="text-red-500">*</span>
+                    </label>
+                  </div>
                   <Input
                     type="date"
+                    required
                     value={newActivityDate}
                     onChange={(e) => setNewActivityDate(e.target.value)}
                     className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Venue / Location</label>
+                  <div className="flex items-center justify-between min-h-[20px]">
+                    <label className="text-xs font-bold text-foreground">
+                      Venue / Location <span className="text-red-500">*</span>
+                    </label>
+                  </div>
                   <Input
                     type="text"
+                    required
                     placeholder="e.g. Pasig City Youth Center, Oranbo"
                     value={newVenue}
                     onChange={(e) => setNewVenue(e.target.value)}
@@ -702,7 +760,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Additional Remarks / Justification</label>
+                <label className="text-xs font-bold text-foreground">
+                  Additional Remarks / Justification <span className="text-muted-foreground font-normal text-[11px]">(Optional)</span>
+                </label>
                 <Textarea
                   rows={2}
                   placeholder="Any additional remarks for the reviewing officer..."
@@ -1009,7 +1069,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               <div className="flex items-start justify-between gap-2.5">
                 <div className="space-y-1 min-w-0">
                   <h3 className="text-sm sm:text-base font-bold text-foreground leading-snug tracking-tight">
-                    {approvedCount} of {totalRequests} Budget Requests Approved
+                    {releasedCount} of {totalRequests} Budget Requests Released
                   </h3>
                   <p className="text-[11px] text-muted-foreground leading-normal">
                     Overview of all financial grant proposals submitted for organization activities.
@@ -1062,9 +1122,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </div>
 
               <div className="p-3 text-center sm:text-left min-w-0">
-                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">Approved / Released</span>
-                <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight mt-0.5">{approvedCount}</div>
-                <p className="text-[10px] text-muted-foreground truncate hidden xs:block">Approved grant requests</p>
+                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">RELEASED</span>
+                <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight mt-0.5">{releasedCount}</div>
+                <p className="text-[10px] text-muted-foreground truncate hidden xs:block">Released grant requests</p>
               </div>
             </div>
 
@@ -1094,7 +1154,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 <div className="space-y-1">
                   <div className="flex items-center gap-2.5">
                     <h3 className="text-sm sm:text-base font-bold text-foreground">
-                      {approvedCount} of {totalRequests} Budget Requests Approved
+                      {releasedCount} of {totalRequests} Budget Requests Released
                     </h3>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary font-mono tabular-nums">
                       {completionPercent}%
@@ -1157,9 +1217,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
               <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
                 <div className="space-y-0.5 min-w-0">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Approved / Released</span>
-                  <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">{approvedCount}</div>
-                  <p className="text-[11px] text-muted-foreground truncate">Approved grant requests</p>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">RELEASED</span>
+                  <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">{releasedCount}</div>
+                  <p className="text-[11px] text-muted-foreground truncate">Released grant requests</p>
                 </div>
                 <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-4 w-4" />
@@ -1596,7 +1656,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       </div>
                     )}
 
-                    {/* Key Summary: Financial Overview */}
+                    {/* 1. Key Summary: Financial Overview */}
                     <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
                       <p className="text-xs font-bold text-foreground">Financial Overview</p>
                       <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border/40">
@@ -1625,7 +1685,63 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       </div>
                     </div>
 
-                    {/* Document Section (Primary Content) */}
+                    {/* 2. Activity Details */}
+                    <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2.5">
+                      <p className="text-xs font-bold text-foreground">Activity Details</p>
+                      <div className="space-y-3 text-xs pt-2 border-t border-border/40">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Activity Title</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block break-words">
+                              {selectedRequest.activityTitle || "Untitled Activity"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Purpose & Category</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                              {selectedRequest.purposeCategory || "General Purpose"}
+                            </span>
+                          </div>
+                        </div>
+                        {selectedRequest.activityDescription && (
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Activity Description</span>
+                            <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
+                              {selectedRequest.activityDescription}
+                            </p>
+                          </div>
+                        )}
+                        {selectedRequest.remarks && (
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Additional Remarks / Justification</span>
+                            <p className="leading-relaxed text-xs text-muted-foreground italic mt-0.5 whitespace-pre-wrap break-words">
+                              {selectedRequest.remarks}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 3. Schedule & Location */}
+                    <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
+                      <p className="text-xs font-bold text-foreground">Schedule & Location</p>
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Target Date</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                            {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Venue / Location</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedRequest.venue}>
+                            {selectedRequest.venue || "Pasig City"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Proposal Document / Document Preview */}
                     <PortalDrawerDocumentSection
                       file={primaryFile}
                       previewUrl={activePreviewUrl}
@@ -1636,81 +1752,39 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       emptyTitle="No proposal file attached"
                       emptyDescription="This budget request does not have an attached proposal document."
                     />
-
-                    {/* Secondary Details: Schedule & Location */}
-                    <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-2">
-                      <p className="text-xs font-bold text-foreground">Schedule & Location</p>
-                      <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Target Date</span>
-                          <span className="font-semibold text-foreground">
-                            {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Venue</span>
-                          <span className="font-semibold text-foreground truncate block" title={selectedRequest.venue}>
-                            {selectedRequest.venue || "Pasig City"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Secondary Details: Description & Remarks if any */}
-                    {(selectedRequest.activityDescription || selectedRequest.remarks || selectedRequest.description) && (
-                      <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-1.5 text-xs">
-                        <p className="font-bold text-foreground">Activity Details & Remarks</p>
-                        <div className="space-y-1 pt-1 border-t border-border/40 text-muted-foreground">
-                          {selectedRequest.activityDescription && (
-                            <p className="leading-relaxed">{selectedRequest.activityDescription}</p>
-                          )}
-                          {selectedRequest.remarks && (
-                            <p className="leading-relaxed italic text-[11px] text-muted-foreground/90">
-                              <span className="font-semibold not-italic">Remarks:</span> {selectedRequest.remarks}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   {/* PINNED FOOTER */}
-                  <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                    <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                  <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
                       Budget Request • LYDO Pasig City
                     </p>
-                    <div className="flex items-center gap-2">
-                      {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={isReplacingBudgetFile}
-                          onClick={handleTriggerReplaceBudgetFile}
-                          className="h-8.5 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-semibold gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
-                        >
-                          {isReplacingBudgetFile ? (
-                            <>
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              <span>Uploading...</span>
-                            </>
-                          ) : (
-                            <>
-                              <FileUp className="h-3.5 w-3.5" />
-                              <span>Upload Revised Proposal</span>
-                            </>
-                          )}
-                        </Button>
-                      )}
+                    <div className="flex items-center gap-2.5">
                       <SheetClose asChild>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                          className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
                         >
                           Close Drawer
                         </Button>
                       </SheetClose>
+                      {selectedRequest.status === "draft" && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            startEditingBudgetRequest(selectedRequest);
+                            closeBudgetDetail();
+                            setShowBudgetForm(true);
+                          }}
+                          className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center"
+                        >
+                          <FileEdit className="h-4 w-4" />
+                          <span>Edit Draft</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </>
@@ -1818,7 +1892,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       </div>
                     )}
 
-                    {/* Key Summary: Financial Overview */}
+                    {/* 1. Key Summary: Financial Overview */}
                     <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-foreground tracking-tight">Financial Overview</span>
@@ -1849,7 +1923,63 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       </div>
                     </div>
 
-                    {/* Document Section (Primary Content) */}
+                    {/* 2. Activity Details */}
+                    <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
+                      <p className="text-xs font-bold text-foreground">Activity Details</p>
+                      <div className="space-y-3 text-xs pt-2 border-t border-border/50">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Activity Title</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block break-words">
+                              {selectedRequest.activityTitle || "Untitled Activity"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Purpose & Category</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                              {selectedRequest.purposeCategory || "General Purpose"}
+                            </span>
+                          </div>
+                        </div>
+                        {selectedRequest.activityDescription && (
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Activity Description</span>
+                            <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
+                              {selectedRequest.activityDescription}
+                            </p>
+                          </div>
+                        )}
+                        {selectedRequest.remarks && (
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Additional Remarks / Justification</span>
+                            <p className="leading-relaxed text-xs text-muted-foreground italic mt-0.5 whitespace-pre-wrap break-words">
+                              {selectedRequest.remarks}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 3. Schedule & Location */}
+                    <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-2">
+                      <p className="text-xs font-bold text-foreground">Schedule & Location</p>
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Target Date</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                            {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Venue / Location</span>
+                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedRequest.venue}>
+                            {selectedRequest.venue || "Pasig City"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Proposal Document / Document Preview */}
                     <PortalDrawerDocumentSection
                       isMobile={true}
                       file={primaryFile}
@@ -1861,80 +1991,38 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       emptyTitle="No proposal file attached"
                       emptyDescription="This budget request does not have an attached proposal document."
                     />
-
-                    {/* Secondary Details: Schedule & Location */}
-                    <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-2">
-                      <p className="text-xs font-bold text-foreground">Schedule & Location</p>
-                      <div className="grid grid-cols-2 gap-3 text-xs pt-1.5 border-t border-border/40">
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Target Date</span>
-                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
-                            {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Venue</span>
-                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedRequest.venue}>
-                            {selectedRequest.venue || "Pasig City"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Secondary Details: Description & Remarks if any */}
-                    {(selectedRequest.activityDescription || selectedRequest.remarks || selectedRequest.description) && (
-                      <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-1.5 text-xs">
-                        <p className="text-xs font-bold text-foreground">Activity Details & Remarks</p>
-                        <div className="space-y-1 pt-1 border-t border-border/40 text-muted-foreground">
-                          {selectedRequest.activityDescription && (
-                            <p className="leading-relaxed text-xs">{selectedRequest.activityDescription}</p>
-                          )}
-                          {selectedRequest.remarks && (
-                            <p className="leading-relaxed italic text-[11px] text-muted-foreground/90">
-                              <span className="font-semibold not-italic">Remarks:</span> {selectedRequest.remarks}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   {/* PINNED FOOTER */}
-                  <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                    <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
+                  <div className="h-16 py-3 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+                    <p className="text-xs text-muted-foreground font-medium truncate mr-3">
                       Budget Request • LYDO Pasig City
                     </p>
                     <div className="flex items-center gap-2">
-                      {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={isReplacingBudgetFile}
-                          onClick={handleTriggerReplaceBudgetFile}
-                          className="h-8.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-semibold gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
-                        >
-                          {isReplacingBudgetFile ? (
-                            <>
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              <span>Uploading...</span>
-                            </>
-                          ) : (
-                            <>
-                              <FileUp className="h-3.5 w-3.5" />
-                              <span>Upload Revised Proposal</span>
-                            </>
-                          )}
-                        </Button>
-                      )}
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => closeBudgetDetail()}
-                        className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
                       >
-                        Close
+                        Close Drawer
                       </Button>
+                      {selectedRequest.status === "draft" && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            startEditingBudgetRequest(selectedRequest);
+                            closeBudgetDetail();
+                            setShowBudgetForm(true);
+                          }}
+                          className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center"
+                        >
+                          <FileEdit className="h-3.5 w-3.5" />
+                          <span>Edit Draft</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </>

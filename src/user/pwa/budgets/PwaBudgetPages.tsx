@@ -176,12 +176,12 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
   const save = async (status: "draft" | "submitted", event: FormEvent) => {
     event.preventDefault();
     const requestedAmount = Number(draft.requestedAmount);
-    if (!draft.activityTitle.trim() || !draft.activityDescription.trim() || !draft.activityDate || !draft.venue.trim() || !draft.purposeCategory.trim() || !draft.remarks.trim() || requestedAmount <= 0) {
-      toast({ title: "Complete the budget form", description: "All activity, amount, category, and remarks fields are required.", variant: "destructive" });
+    if (!draft.activityTitle.trim() || !draft.activityDescription.trim() || !draft.activityDate || !draft.venue.trim() || !draft.purposeCategory.trim() || requestedAmount <= 0) {
+      toast({ title: "Complete the budget form", description: "All activity, amount, and category fields are required.", variant: "destructive" });
       return;
     }
-    if (!Number.isInteger(requestedAmount) || requestedAmount % 1 !== 0) {
-      toast({ title: "Whole peso amount required", description: "Requested amount must be a whole peso number without decimals.", variant: "destructive" });
+    if (requestedAmount > 100000) {
+      toast({ title: "Requested budget amount cannot exceed ₱100,000", description: "The maximum allowable requested budget amount is ₱100,000.00.", variant: "destructive" });
       return;
     }
     if (!existingFile && !file) {
@@ -200,7 +200,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         activityDescription: draft.activityDescription.trim(),
         activityDate: draft.activityDate,
         venue: draft.venue.trim(),
-        requestedAmount: Math.round(requestedAmount),
+        requestedAmount: requestedAmount,
         approvedAmount: existing?.approvedAmount ?? 0,
         releasedAmount: existing?.releasedAmount ?? 0,
         releaseDate: existing?.releaseDate ?? "",
@@ -244,9 +244,9 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       </section>
       <section className="pwa-card">
         <h2>Budget details</h2>
-        <label>Requested amount <span className="pwa-prefix-input"><span>PHP</span><input type="number" min="1" step="1" inputMode="numeric" value={draft.requestedAmount} onKeyDown={(e) => { if (e.key === "." || e.key === "," || e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") e.preventDefault(); }} onChange={(event) => update("requestedAmount", event.target.value.replace(/[^0-9]/g, ""))} required /></span></label>
+        <label>Requested amount (Max: ₱100,000) <span className="pwa-prefix-input"><span>PHP</span><input type="number" min="0.01" max="100000" step="any" inputMode="decimal" value={draft.requestedAmount} onFocus={(e) => { if (e.target.value === "0") e.target.select(); }} onClick={(e) => { if ((e.target as HTMLInputElement).value === "0") (e.target as HTMLInputElement).select(); }} onChange={(event) => { let val = event.target.value; if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) { val = val.replace(/^0+/, ""); if (val === "" || val.startsWith(".")) { val = "0" + val; } } update("requestedAmount", val); }} required /></span></label>
         <label>Purpose / category <input value={draft.purposeCategory} onChange={(event) => update("purposeCategory", event.target.value)} required /></label>
-        <label>Remarks <textarea rows={3} value={draft.remarks} onChange={(event) => update("remarks", event.target.value)} required /></label>
+        <label>Remarks (Optional) <textarea rows={3} value={draft.remarks} onChange={(event) => update("remarks", event.target.value)} /></label>
       </section>
       <section className="pwa-card">
         <h2>Detailed budget PDF</h2>

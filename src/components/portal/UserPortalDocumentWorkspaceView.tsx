@@ -10,7 +10,8 @@ import {
   Search,
   Check,
   Filter,
-  Info
+  Info,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatActivityActionLabel, formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
+import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 
 import { FeatureGate } from "./FeatureGate";
 
@@ -297,8 +299,17 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               disabled={Boolean(downloadingAllTemplates)}
               className="rounded-full border-border/80 text-foreground hover:bg-accent h-9 px-4 text-xs font-semibold cursor-pointer justify-center"
             >
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              Download All Templates
+              {downloadingAllTemplates ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                  Preparing Templates…
+                </>
+              ) : (
+                <>
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                  Download All Templates
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -485,7 +496,11 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                 ? templatesById[doc.id] || (doc.databaseId ? templatesById[doc.databaseId] : null)
                 : null;
               const templateFileUrl = template?.templateFileUrl ?? doc.templateFileUrl ?? doc.fileUrl ?? "";
-              const templateFileName = template?.templateFileName || doc.templateFileName || docTitle;
+              const templateCleanTitle = docTitle || template?.name || "Official Template";
+              const templateDownloadName = resolveCleanTemplateDownloadFileName(
+                templateCleanTitle,
+                template?.templateFileName || doc.templateFileName || templateFileUrl
+              );
 
               // Authentic Upload Information Metadata
               const uploadDateRaw = submission?.uploadedAt || submission?.createdAt || submission?.updatedAt || submission?.reviewedAt;
@@ -571,21 +586,28 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                         </p>
                       </div>
                     </div>
-
-                    {/* Upload Information Metadata */}
-                    <div className="text-[11px] text-muted-foreground text-left sm:text-right shrink-0 pl-12 sm:pl-0">
-                      <span className="font-semibold text-foreground">{fileTypeLabel}</span>
-                      <span className="mx-1">•</span>
-                      <span>{uploadDateText}</span>
-                    </div>
                   </div>
 
-                  {/* Clean Bottom Action Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pt-2.5 border-t border-border/40 text-xs">
-                    <div className="text-[11px] text-muted-foreground/70 font-medium min-w-0">
+                  {/* Metadata & Actions Footer Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-border/40 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="font-semibold text-foreground bg-accent/60 px-2 py-0.5 rounded-md border border-border/40 text-[11px] shrink-0">
+                        {fileTypeLabel}
+                      </span>
+                      <span>•</span>
+                      <span className="truncate">{uploadDateText}</span>
+                      <span>•</span>
                       {isApproved ? (
                         <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                          Locked
+                          Locked from modification
+                        </span>
+                      ) : isUnderReview ? (
+                        <span className="text-purple-600 dark:text-purple-400 font-semibold">
+                          Awaiting Review
+                        </span>
+                      ) : isRevision ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                          Revision Requested
                         </span>
                       ) : isDraft ? (
                         <span className="text-blue-600 dark:text-blue-400 font-semibold">
@@ -607,11 +629,11 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                         size="sm"
                         onClick={() => {
                           if (openPreview) {
-                            void openPreview(templateFileUrl, templateFileName);
+                            void openPreview(templateFileUrl, templateCleanTitle);
                           } else if (previewDocument) {
                             void previewDocument(templateFileUrl || doc);
                           } else if (openFile && templateFileUrl) {
-                            void openFile(templateFileUrl, templateFileName);
+                            void openFile(templateFileUrl, templateDownloadName);
                           }
                         }}
                         className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center"

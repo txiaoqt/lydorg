@@ -2644,3 +2644,92 @@ export function isLiquidationOverdue(
   if (Number.isNaN(time) || time >= Date.now()) return false;
   return status !== "completed_liquidated";
 }
+
+/**
+ * Standardizes user-facing download filenames for templates and documents.
+ * Ensures clean, human-readable names (e.g. "Constitution and By-Laws.pdf")
+ * while stripping generated storage/timestamp prefixes and preserving correct extensions.
+ */
+export const resolveCleanTemplateDownloadFileName = (
+  templateOrName:
+    | {
+        name?: string;
+        title?: string;
+        templateFileName?: string;
+        templateFileUrl?: string;
+        templateUrl?: string;
+        fileName?: string;
+        fileUrl?: string;
+      }
+    | string
+    | null
+    | undefined,
+  fallbackUrlOrFileName?: string | null,
+): string => {
+  let rawTitle = "";
+  let rawFileName = "";
+  let rawUrl = "";
+
+  if (typeof templateOrName === "string") {
+    rawTitle = templateOrName;
+  } else if (templateOrName && typeof templateOrName === "object") {
+    rawTitle = templateOrName.name || templateOrName.title || "";
+    rawFileName = templateOrName.templateFileName || templateOrName.fileName || "";
+    rawUrl = templateOrName.templateFileUrl || templateOrName.templateUrl || templateOrName.fileUrl || "";
+  }
+
+  if (fallbackUrlOrFileName) {
+    if (fallbackUrlOrFileName.startsWith("http://") || fallbackUrlOrFileName.startsWith("https://") || fallbackUrlOrFileName.includes("/")) {
+      if (!rawUrl) rawUrl = fallbackUrlOrFileName;
+    } else {
+      if (!rawFileName) rawFileName = fallbackUrlOrFileName;
+    }
+  }
+
+  // 1. Determine authentic file extension
+  const sourceForExt = (rawFileName || rawUrl || fallbackUrlOrFileName || rawTitle || "").split(/[?#]/)[0];
+  const extMatch = sourceForExt.match(/\.([a-zA-Z0-9]{1,8})$/);
+  let ext = extMatch ? extMatch[1].toLowerCase() : "";
+
+  if (!ext || ext.length > 5) {
+    if (sourceForExt.toLowerCase().includes(".pdf")) ext = "pdf";
+    else if (sourceForExt.toLowerCase().includes(".docx")) ext = "docx";
+    else if (sourceForExt.toLowerCase().includes(".xlsx")) ext = "xlsx";
+    else if (sourceForExt.toLowerCase().includes(".csv")) ext = "csv";
+    else ext = "pdf";
+  }
+
+  // 2. Determine base title
+  let baseName = rawTitle.trim();
+  if (!baseName && rawFileName) {
+    baseName = rawFileName.trim();
+  }
+
+  // 3. Strip internal generated timestamp/numeric prefixes (e.g. "1782457726429-", "1782457726429_")
+  baseName = baseName.replace(/^\d{9,}[-_\s]+/, "");
+  baseName = baseName.replace(/^\d+[-_]/, "");
+
+  // 4. Strip duplicate extensions from baseName
+  baseName = baseName.replace(/\.[a-zA-Z0-9]{1,8}$/i, "");
+
+  // 5. Clean underscores and hyphens where safe
+  baseName = baseName.replace(/_/g, " ");
+  baseName = baseName.replace(/-and-/gi, " and ");
+  baseName = baseName.replace(/(\w)-(\w)/g, (match, p1, p2) => {
+    if (match.toLowerCase() === "by-laws" || match.toLowerCase() === "by-law") {
+      return match;
+    }
+    return `${p1} ${p2}`;
+  });
+  baseName = baseName.replace(/\bby\s+laws\b/gi, "By-Laws");
+
+  // 6. Strip illegal filesystem characters
+  baseName = baseName.replace(/[/\\?%*:|"<>]/g, "-");
+  baseName = baseName.replace(/\s+/g, " ").trim();
+
+  if (!baseName) {
+    baseName = "Official Template";
+  }
+
+  return `${baseName}.${ext}`;
+};

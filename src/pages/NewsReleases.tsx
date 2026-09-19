@@ -93,81 +93,121 @@ const NewsReleases = () => {
 
       {/* Content */}
       <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[64px] sm:pt-[48px] lg:px-[64px]">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 sm:gap-[24px] lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
 
-          {/* Facebook Feed Sidebar (desktop: left column, sticky; mobile: stacks below content) */}
-          <aside className="order-2 lg:sticky lg:top-24 lg:order-1">
-            <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Facebook className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col">
-                  <p className="font-segoe text-sm font-bold leading-tight text-foreground">Latest from Facebook</p>
-                  <p className="font-segoe text-[11px] text-muted-foreground">Real-time updates &amp; announcements</p>
-                </div>
+          {/* Primary Main Content Area: Toolbar + News Grid (Desktop: Left Column; Mobile: Top Section) */}
+          <div className="order-1 flex flex-col gap-4 sm:gap-6 min-w-0">
+
+            {/* Mobile Unified Toolbar: Single Search + [Category: All] [Visit Facebook] */}
+            <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
+              {/* Full-width Search Input */}
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Search news title, summary, keyword..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
+                />
               </div>
-              <div className="flex justify-center overflow-hidden rounded-xl border border-border/40">
-                <div
-                  className="fb-page"
-                  data-href={LYDO_FACEBOOK_URL}
-                  data-tabs="timeline"
-                  data-width="268"
-                  data-height="620"
-                  data-small-header="true"
-                  data-hide-cover="true"
-                  data-show-facepile="false"
+
+              {/* Row 2: Equal-width Action Buttons (50/50 split) */}
+              <div className="flex items-center gap-2">
+                {/* Category Action Button */}
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 flex-1 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
+                    >
+                      <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="truncate">
+                        {activeFilter === "all" ? "Category: All" : `Category: ${activeFilter}`}
+                      </span>
+                      <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-auto" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
+                    <DropdownMenuItem
+                      onClick={() => setActiveFilter("all")}
+                      className={cn(
+                        "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                        activeFilter === "all" && "bg-primary/10 text-primary font-bold"
+                      )}
+                    >
+                      <span>All Categories</span>
+                      <span className="text-[10px] text-muted-foreground">({releases?.length ?? 0})</span>
+                    </DropdownMenuItem>
+                    {availableCategories.map((cat) => {
+                      const count = (releases ?? []).filter((r) => r.category === cat).length;
+                      return (
+                        <DropdownMenuItem
+                          key={cat}
+                          onClick={() => setActiveFilter(cat)}
+                          className={cn(
+                            "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                            activeFilter === cat && "bg-primary/10 text-primary font-bold"
+                          )}
+                        >
+                          <span>{cat}</span>
+                          <span className="text-[10px] text-muted-foreground">({count})</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Visit Facebook Page Action Button */}
+                <a
+                  href={LYDO_FACEBOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-8 flex-1 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 transition-colors"
                 >
-                  <blockquote cite={LYDO_FACEBOOK_URL} className="fb-xfbml-parse-ignore">
-                    <a href={LYDO_FACEBOOK_URL} target="_blank" rel="noopener noreferrer">
-                      Local Youth Development Office Pasig City
-                    </a>
-                  </blockquote>
-                </div>
+                  <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="truncate">Visit Facebook</span>
+                </a>
               </div>
             </div>
-          </aside>
 
-          {/* Main Content: toolbar + news grid */}
-          <div className="order-1 flex flex-col gap-4 sm:gap-[24px] lg:order-2">
+            {/* Desktop Compact Horizontal Toolbar (visible on md and up) */}
+            <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs">
+              {/* Search Input (fills majority of width) */}
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Search news title, summary, keyword..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
+                />
+              </div>
 
-          {/* Mobile Unified Toolbar: Single Search + [Category: All] [Visit Facebook] */}
-          <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
-            {/* Full-width Search Input */}
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Search news title, summary, keyword..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
-              />
-            </div>
-
-            {/* Row 2: Equal-width Action Buttons (50/50 split) */}
-            <div className="flex items-center gap-2">
-              {/* Category Action Button */}
+              {/* Category Dropdown Button (compact content-width) */}
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8 flex-1 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
+                    className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
                   >
                     <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">
+                    <span>
                       {activeFilter === "all" ? "Category: All" : `Category: ${activeFilter}`}
                     </span>
-                    <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-auto" />
+                    <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
+                <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
                   <DropdownMenuItem
                     onClick={() => setActiveFilter("all")}
                     className={cn(
-                      "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                      "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
                       activeFilter === "all" && "bg-primary/10 text-primary font-bold"
                     )}
                   >
@@ -181,7 +221,7 @@ const NewsReleases = () => {
                         key={cat}
                         onClick={() => setActiveFilter(cat)}
                         className={cn(
-                          "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
+                          "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
                           activeFilter === cat && "bg-primary/10 text-primary font-bold"
                         )}
                       >
@@ -193,113 +233,103 @@ const NewsReleases = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Visit Facebook Page Action Button */}
+              {/* Visit Facebook Action Button (compact content-width) */}
               <a
                 href={LYDO_FACEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-8 flex-1 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 transition-colors"
+                className="h-9 shrink-0 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5 transition-colors"
               >
                 <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="truncate">Visit Facebook</span>
+                <span>Visit Facebook</span>
               </a>
             </div>
+
+            {/* News Cards Grid */}
+            {filteredReleases === null ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 py-1 sm:py-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-[300px] sm:h-[360px] lg:h-[370px] animate-pulse rounded-xl sm:rounded-[16px] lg:rounded-2xl bg-white border border-border/50" />
+                ))}
+              </div>
+            ) : filteredReleases.length === 0 ? (
+              <div className="rounded-xl sm:rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-5 py-12 text-center font-segoe text-xs sm:text-sm text-public-text-secondary">
+                {query || activeFilter !== "all"
+                  ? "No news releases match your search."
+                  : "No news releases published yet."}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 py-1 sm:py-2">
+                {filteredReleases.map((news) => (
+                  <PublicNewsReleaseCard key={news.id} news={news} />
+                ))}
+              </div>
+            )}
+
           </div>
 
-          {/* Desktop Compact Horizontal Toolbar (visible on md and up) */}
-          <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs">
-            {/* Search Input (fills majority of width) */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Search news title, summary, keyword..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
-              />
-            </div>
+          {/* Secondary Facebook Feed Sidebar (Desktop: Right column, sticky; Mobile: Stacks cleanly below news releases) */}
+          <aside className="order-2 lg:sticky lg:top-24 w-full">
+            <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-xs">
+              {/* Header */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1877F2]/10 text-[#1877F2]">
+                    <Facebook className="h-4 w-4 fill-current" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <p className="font-segoe text-sm font-bold leading-tight text-foreground truncate">Latest from Facebook</p>
+                    <p className="font-segoe text-[11px] text-muted-foreground truncate">Real-time updates &amp; notices</p>
+                  </div>
+                </div>
+                <a
+                  href={LYDO_FACEBOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                >
+                  <span>Visit Page</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
 
-            {/* Category Dropdown Button (compact content-width) */}
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
+              {/* Embed / Feed Container with Bounded Height & Clean Graceful Fallback */}
+              <div className="flex justify-center overflow-hidden rounded-xl border border-border/40 bg-slate-50/60 min-h-[460px] max-h-[500px]">
+                <div
+                  className="fb-page w-full flex justify-center"
+                  data-href={LYDO_FACEBOOK_URL}
+                  data-tabs="timeline"
+                  data-width="340"
+                  data-height="480"
+                  data-small-header="false"
+                  data-adapt-container-width="true"
+                  data-hide-cover="false"
+                  data-show-facepile="false"
                 >
-                  <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>
-                    {activeFilter === "all" ? "Category: All" : `Category: ${activeFilter}`}
-                  </span>
-                  <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
-                <DropdownMenuItem
-                  onClick={() => setActiveFilter("all")}
-                  className={cn(
-                    "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                    activeFilter === "all" && "bg-primary/10 text-primary font-bold"
-                  )}
-                >
-                  <span>All Categories</span>
-                  <span className="text-[10px] text-muted-foreground">({releases?.length ?? 0})</span>
-                </DropdownMenuItem>
-                {availableCategories.map((cat) => {
-                  const count = (releases ?? []).filter((r) => r.category === cat).length;
-                  return (
-                    <DropdownMenuItem
-                      key={cat}
-                      onClick={() => setActiveFilter(cat)}
-                      className={cn(
-                        "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                        activeFilter === cat && "bg-primary/10 text-primary font-bold"
-                      )}
+                  <blockquote cite={LYDO_FACEBOOK_URL} className="fb-xfbml-parse-ignore m-0 p-5 flex flex-col items-center justify-center text-center w-full h-full min-h-[440px] bg-white">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1877F2]/10 text-[#1877F2] mb-3.5 shadow-2xs">
+                      <Facebook className="h-7 w-7 fill-current" />
+                    </div>
+                    <p className="font-segoe text-sm font-bold text-foreground mb-1">
+                      Local Youth Development Office Pasig City
+                    </p>
+                    <p className="font-segoe text-xs text-muted-foreground max-w-[260px] mb-4 leading-relaxed">
+                      Stay connected with live event coverage, announcements, and youth advisories on our official Facebook page.
+                    </p>
+                    <a
+                      href={LYDO_FACEBOOK_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1877F2] hover:bg-[#1877F2]/90 text-white text-xs font-bold px-4 py-2 shadow-xs transition-colors"
                     >
-                      <span>{cat}</span>
-                      <span className="text-[10px] text-muted-foreground">({count})</span>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Visit Facebook Action Button (compact content-width) */}
-            <a
-              href={LYDO_FACEBOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-9 shrink-0 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5 transition-colors"
-            >
-              <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span>Visit Facebook</span>
-            </a>
-          </div>
-
-          {/* News Cards Grid */}
-          {filteredReleases === null ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-[300px] sm:h-[380px] lg:h-[380px] animate-pulse rounded-xl sm:rounded-[16px] lg:rounded-2xl bg-white border border-border/50" />
-              ))}
+                      <Facebook className="h-3.5 w-3.5 fill-current" />
+                      <span>Open Official Facebook Page</span>
+                    </a>
+                  </blockquote>
+                </div>
+              </div>
             </div>
-          ) : filteredReleases.length === 0 ? (
-            <div className="rounded-xl sm:rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-5 py-12 text-center font-segoe text-xs sm:text-sm text-public-text-secondary">
-              {query || activeFilter !== "all"
-                ? "No news releases match your search."
-                : "No news releases published yet."}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
-              {filteredReleases.map((news) => (
-                <PublicNewsReleaseCard key={news.id} news={news} />
-              ))}
-            </div>
-          )}
-
-          </div>
+          </aside>
 
         </div>
       </section>

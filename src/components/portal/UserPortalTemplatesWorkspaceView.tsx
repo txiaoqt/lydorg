@@ -27,6 +27,7 @@ import {
   formatTemplateCategoryDropdownLabel,
   orderTemplateCategories,
   deriveTemplateCategory,
+  resolveCleanTemplateDownloadFileName,
 } from "@/lib/lydo-connect-data";
 
 export interface UserPortalTemplatesWorkspaceViewProps {
@@ -34,6 +35,8 @@ export interface UserPortalTemplatesWorkspaceViewProps {
   openPreview?: (fileUrl: string, fileName: string) => void;
   openFile: (url: string, name: string) => void;
   formatShortPortalDate?: (dateStr: string) => string;
+  hideHeader?: boolean;
+  compactHeader?: boolean;
 }
 
 // Authentic File Format Resolver (PDF, DOCX, XLSX, ZIP, PNG, etc.)
@@ -111,6 +114,8 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
   openPreview,
   openFile,
   formatShortPortalDate,
+  hideHeader = false,
+  compactHeader = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -268,16 +273,10 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
             if (!response.ok) return;
 
             const blob = await response.blob();
-            const urlPath = tpl.fileUrl.split("?")[0];
-            let ext = urlPath.split(".").pop() || "pdf";
-            if (ext.length > 5 || ext === urlPath) {
-              if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) ext = "pdf";
-              else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) ext = "docx";
-              else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet")) ext = "xlsx";
-              else ext = "pdf";
-            }
-            const safeName = (tpl.title || `Template-${index + 1}`).replace(/[\\/:*?"<>|]/g, "_");
-            const fileName = safeName.endsWith(`.${ext}`) ? safeName : `${safeName}.${ext}`;
+            const fileName = resolveCleanTemplateDownloadFileName(
+              tpl.title || tpl.name || `Template-${index + 1}`,
+              tpl.templateFileName || tpl.fileUrl || resolvedUrl
+            );
 
             zip.file(fileName, blob);
             addedCount++;
@@ -336,19 +335,10 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
       if (!response.ok) throw new Error("Fetch failed");
 
       const blob = await response.blob();
-      let targetFileName = (tpl.title || "template-document").trim().replace(/[/\\?%*:|"<>]/g, "-");
-      const hasExt = /\.(pdf|docx?|xlsx?|pptx?|zip|png|jpe?g|txt|csv)$/i.test(targetFileName);
-      if (!hasExt) {
-        if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) {
-          targetFileName += ".pdf";
-        } else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) {
-          targetFileName += ".docx";
-        } else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet") || blob.type.includes("excel")) {
-          targetFileName += ".xlsx";
-        } else {
-          targetFileName += ".pdf";
-        }
-      }
+      const targetFileName = resolveCleanTemplateDownloadFileName(
+        tpl.title || tpl.name || "template-document",
+        tpl.templateFileName || tpl.fileUrl || resolvedUrl
+      );
 
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -373,19 +363,21 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
       {/* ============================================================= */}
       <div className="mobile-layout block lg:hidden space-y-4">
         {/* Mobile Hero Header */}
-        <div className="bg-gradient-to-r from-card via-blue-50/10 to-slate-50/40 dark:from-card dark:via-blue-950/10 dark:to-slate-900/40 p-4 rounded-2xl border border-border/60 shadow-xs space-y-2">
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-semibold text-primary">Public Templates</span>
-            <span className="text-muted-foreground/40">•</span>
-            <span className="text-muted-foreground">Document Explorer</span>
+        {!hideHeader && !compactHeader && (
+          <div className="bg-gradient-to-r from-card via-blue-50/10 to-slate-50/40 dark:from-card dark:via-blue-950/10 dark:to-slate-900/40 p-4 rounded-2xl border border-border/60 shadow-xs space-y-2">
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="font-semibold text-primary">Public Templates</span>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="text-muted-foreground">Document Explorer</span>
+            </div>
+            <h1 className="text-xl font-black tracking-tight text-foreground leading-snug break-words">
+              Official Document Templates
+            </h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Browse, inspect, and download official downloadable templates required for Pasig City youth organization registration.
+            </p>
           </div>
-          <h1 className="text-xl font-black tracking-tight text-foreground leading-snug break-words">
-            Official Document Templates
-          </h1>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Browse, inspect, and download official downloadable templates required for Pasig City youth organization registration.
-          </p>
-        </div>
+        )}
 
         {/* Mobile Search & Filter Toolbar */}
         <div className="bg-card border border-border/60 p-3 rounded-2xl shadow-xs space-y-2.5">
@@ -694,19 +686,21 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
       {/* ============================================================= */}
       <div className="desktop-layout hidden lg:block space-y-6">
         {/* Clean Hero Workspace Header */}
-        <div className="bg-gradient-to-r from-card via-blue-50/10 to-slate-50/40 dark:from-card dark:via-blue-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 sm:space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-primary">Public Templates</span>
-            <span className="text-muted-foreground/30">•</span>
-            <span className="text-xs text-muted-foreground">Document Explorer</span>
+        {!hideHeader && !compactHeader && (
+          <div className="bg-gradient-to-r from-card via-blue-50/10 to-slate-50/40 dark:from-card dark:via-blue-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 sm:space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-primary">Public Templates</span>
+              <span className="text-muted-foreground/30">•</span>
+              <span className="text-xs text-muted-foreground">Document Explorer</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+              Official Document Templates
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-[720px]">
+              Browse, inspect, and download official downloadable templates required for Pasig City youth organization registration.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-            Official Document Templates
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-[720px]">
-            Browse, inspect, and download official downloadable templates required for Pasig City youth organization registration.
-          </p>
-        </div>
+        )}
 
         {/* Unified Search & Category Toolbar */}
         <div className="flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
@@ -850,11 +844,11 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                     <thead>
                       <tr className="border-b border-border/70 bg-muted/10 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                         <th className="py-3 px-5">Document</th>
-                        <th className="py-3 px-4 text-center">Format</th>
-                        <th className="py-3 px-4">Category</th>
-                        <th className="py-3 px-4">File Size</th>
-                        <th className="py-3 px-4">Updated</th>
-                        <th className="py-3 px-5 text-right">Actions</th>
+                        <th className="py-3 px-4 text-center w-[90px]">Format</th>
+                        <th className="py-3 px-4 w-[130px]">Category</th>
+                        <th className="py-3 px-4 w-[100px]">File Size</th>
+                        <th className="py-3 px-4 w-[150px]">Updated</th>
+                        <th className="py-3 px-5 text-right w-[190px] min-w-[190px]">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
@@ -905,12 +899,12 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                             </td>
 
                             {/* Column 2: Format */}
-                            <td className="py-3 px-4 text-center text-xs font-mono font-bold text-muted-foreground">
+                            <td className="py-3 px-4 text-center text-xs font-mono font-bold text-muted-foreground w-[90px]">
                               {fileFormat}
                             </td>
 
                             {/* Column 3: Category */}
-                            <td className="py-3 px-4 text-xs font-semibold text-muted-foreground">
+                            <td className="py-3 px-4 text-xs font-semibold text-muted-foreground w-[130px]">
                               <div className="flex flex-wrap items-center gap-1">
                                 {extractTemplateCategoryLabels(tpl).length > 0 ? (
                                   extractTemplateCategoryLabels(tpl).map((cat) => (
@@ -928,18 +922,18 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                             </td>
 
                             {/* Column 4: File Size */}
-                            <td className="py-3 px-4 text-xs font-mono text-muted-foreground">
+                            <td className="py-3 px-4 text-xs font-mono text-muted-foreground w-[100px]">
                               {fileSizeLabel}
                             </td>
 
                             {/* Column 5: Updated */}
-                            <td className="py-3 px-4 text-xs text-muted-foreground font-medium">
+                            <td className="py-3 px-4 text-xs text-muted-foreground font-medium w-[150px]">
                               {formattedTime}
                             </td>
 
                             {/* Column 6: Actions */}
                             <td
-                              className="py-3 px-5 text-right space-x-1.5"
+                              className="py-3 px-5 text-right space-x-1.5 whitespace-nowrap w-[190px] min-w-[190px]"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <Button
@@ -953,7 +947,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                     void openFile(tpl.fileUrl, tpl.title);
                                   }
                                 }}
-                                className="h-7 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg cursor-pointer"
+                                className="h-7 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg cursor-pointer shrink-0"
                               >
                                 <Eye className="mr-1 h-3.5 w-3.5" /> View
                               </Button>
@@ -962,15 +956,17 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                 size="sm"
                                 disabled={downloadingSingleId === tpl.id}
                                 onClick={() => void handleDownloadSingleTemplate(tpl)}
-                                className="h-7 text-xs font-bold rounded-lg bg-primary text-primary-foreground cursor-pointer gap-1"
+                                className="h-7 w-[116px] min-w-[116px] text-xs font-bold rounded-lg bg-primary text-primary-foreground cursor-pointer gap-1.5 justify-center shrink-0"
                               >
                                 {downloadingSingleId === tpl.id ? (
                                   <>
-                                    <Loader2 className="h-3 w-3 animate-spin" /> Downloading...
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                    <span>Downloading...</span>
                                   </>
                                 ) : (
                                   <>
-                                    <Download className="h-3.5 w-3.5" /> Download
+                                    <Download className="h-3.5 w-3.5 shrink-0" />
+                                    <span>Download</span>
                                   </>
                                 )}
                               </Button>

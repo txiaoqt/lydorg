@@ -99,7 +99,6 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const [activityDate, setActivityDate] = useState("");
   const [venue, setVenue] = useState("");
   const [narrativeReport, setNarrativeReport] = useState("");
-  const [remarks, setRemarks] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -124,14 +123,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       setActivityDate(activity.activityDate || "");
       setVenue(activity.venue || "");
       setNarrativeReport(activity.narrativeReport || "");
-      setRemarks("");
       setPendingFiles([]);
     } else {
       setActivityName("");
       setActivityDate(new Date().toISOString().split("T")[0]);
       setVenue("");
       setNarrativeReport("");
-      setRemarks("");
       setPendingFiles([]);
     }
   }, [activity, open]);
@@ -651,20 +648,6 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                 className="text-xs resize-none rounded-lg border-border/80"
               />
             </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="ppa-remarks" className="text-xs font-semibold text-foreground">
-                Remarks (Optional)
-              </Label>
-              <Textarea
-                id="ppa-remarks"
-                placeholder="Any additional remarks or notes for the admin reviewer..."
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                rows={2}
-                className="text-xs resize-none rounded-lg border-border/80"
-              />
-            </div>
           </div>
         </div>
       )}
@@ -837,10 +820,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
           </div>
 
           {/* PINNED FOOTER */}
-          <div className="h-14 py-2.5 px-5 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+          <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
             {isReadOnly ? (
               <>
-                <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
                   Organization PPA • LYDO Pasig City
                 </p>
                 <SheetClose asChild>
@@ -848,7 +831,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer active:scale-[0.98]"
+                    className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
                   >
                     Close Drawer
                   </Button>
@@ -861,7 +844,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0 active:scale-[0.98]"
+                    className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                   >
                     Cancel
                   </Button>
@@ -875,16 +858,17 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       size="sm"
                       disabled={saving || uploading}
                       onClick={() => void handleSave(false)}
-                      className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer active:scale-[0.98]"
+                      className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                     >
-                      Save as Draft
+                      {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      <span>Save as Draft</span>
                     </Button>
                   )}
                   <Button
                     type="button"
                     disabled={saving || uploading}
                     onClick={() => void handleSave(true)}
-                    className="h-8.5 px-4 sm:px-5 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                    className="h-9 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                   >
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                     <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
@@ -950,14 +934,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
           {isReadOnly ? (
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-muted-foreground font-medium truncate mr-2">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
                 Organization PPA • LYDO Pasig City
               </p>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
               >
                 Close Drawer
               </Button>
@@ -968,7 +952,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                className="w-full sm:w-auto h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
               >
                 Cancel
               </Button>

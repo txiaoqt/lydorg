@@ -793,8 +793,8 @@ const GoogleOnboarding = () => {
                     We already have a Unique Registration Number (URN)
                   </Label>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Select this option if your organization was previously registered with the Pasig City Local Youth
-                    Development Office (LYDO) and already holds an assigned URN.
+                    Select this option if your organization was previously registered with the Pasig City Youth
+                    Development Office (PCYDO) and already holds an assigned URN.
                   </p>
                 </div>
               </div>
@@ -806,7 +806,7 @@ const GoogleOnboarding = () => {
                   </Label>
                   <Input
                     id="urn-input"
-                    placeholder="e.g. LYDO-PASIG-2024-0012"
+                    placeholder="BB-YY-NNN"
                     value={profileDraft.organizationIdentifierNumber || ""}
                     onChange={(e) => handleFieldChange("organizationIdentifierNumber", e.target.value.toUpperCase())}
                     autoComplete="off"

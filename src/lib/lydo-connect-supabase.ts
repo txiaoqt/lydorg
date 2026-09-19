@@ -2311,6 +2311,10 @@ export const createBudgetRequestInSupabase = async (params: {
     throw new Error("A qualified YPOP validation in the active period is required before creating a budget request.");
   }
 
+  if (params.budgetRequest.requestedAmount > 100000) {
+    throw new Error("Requested budget amount cannot exceed ₱100,000.");
+  }
+
   const payload = {
     organization_id: organizationProfile.id,
     submitted_by: session.user.id,
@@ -2387,6 +2391,10 @@ export const updateBudgetRequestInSupabase = async (
   }
 
   await getAuthenticatedOrganizationContext();
+
+  if (patch.requestedAmount !== undefined && patch.requestedAmount > 100000) {
+    throw new Error("Requested budget amount cannot exceed ₱100,000.");
+  }
 
   const payload: Record<string, unknown> = {};
   if (patch.activityTitle !== undefined) payload.activity_title = patch.activityTitle.trim();
@@ -3179,19 +3187,21 @@ export const updateLiquidationReportInSupabase = async (
       .eq("organization_id", organizationProfile.id)
       .single();
     if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
-    if (patch.status !== "submitted" || !editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
+    if ((patch.status !== "submitted" && patch.status !== "draft") || !editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
       throw new Error("This liquidation status can only be changed by an administrator.");
     }
 
-    const { data: files, error: filesError } = await supabase
-      .from("liquidation_report_files")
-      .select("file_name,file_type")
-      .eq("liquidation_report_id", liquidationReportId);
-    if (filesError) throw new Error(filesError.message);
-    const hasPdf = ((files as Array<{ file_name: string; file_type: string }> | null) ?? []).some(
-      (file) => file.file_type === "application/pdf" && /\.pdf$/i.test(file.file_name),
-    );
-    if (!hasPdf) throw new Error("Attach a PDF before submitting this liquidation report.");
+    if (patch.status === "submitted") {
+      const { data: files, error: filesError } = await supabase
+        .from("liquidation_report_files")
+        .select("file_name,file_type")
+        .eq("liquidation_report_id", liquidationReportId);
+      if (filesError) throw new Error(filesError.message);
+      const hasPdf = ((files as Array<{ file_name: string; file_type: string }> | null) ?? []).some(
+        (file) => file.file_type === "application/pdf" && /\.pdf$/i.test(file.file_name),
+      );
+      if (!hasPdf) throw new Error("Attach a PDF before submitting this liquidation report.");
+    }
   }
 
   const payload: Record<string, unknown> = {};
@@ -4084,6 +4094,126 @@ export const adminDeleteYpopCityActivityFromSupabase = async (id: string): Promi
     _activity_id: id,
   });
   if (error) throw new Error(error.message);
+};
+
+export type ActivityAnnouncementRecipient = {
+  organization_id?: string;
+  organization_name: string;
+  organization_email: string;
+};
+
+export type ActivityAnnouncementResult = {
+  status: "sent" | "partial_failure" | "failed" | "already_sent" | "ready";
+  recipient_count?: number;
+  successful_count?: number;
+  failed_count?: number;
+  eligible_count?: number;
+  recipients?: ActivityAnnouncementRecipient[];
+  announcement_id?: string;
+  message?: string;
+  activity?: {
+    id: string;
+    name: string;
+    startDate?: string;
+    endDate?: string;
+    venue?: string;
+    points?: number;
+  };
+};
+
+export const adminPreflightCityActivityAnnouncement = async (activityId: string): Promise<ActivityAnnouncementResult> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.functions.invoke("send-activity-announcement", {
+    body: {
+      action: "preflight",
+      session_token: adminSession.sessionToken,
+      activity_id: activityId,
+      site_url: window.location.origin,
+    },
+  });
+
+  if (error) {
+    const extracted = await extractEdgeFunctionError(error, "Failed to run announcement preflight check.");
+    throw new Error(extracted.message);
+  }
+
+  const result = data as ActivityAnnouncementResult;
+  if (!result) {
+    throw new Error("Unable to load eligible recipients from announcement service.");
+  }
+  return result;
+};
+
+export const adminSendCityActivityAnnouncement = async (
+  activityId: string,
+  idempotencyKey?: string,
+): Promise<ActivityAnnouncementResult> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const stableKey = idempotencyKey || `announcement-${activityId}`;
+
+  const { data, error } = await supabase.functions.invoke("send-activity-announcement", {
+    body: {
+      action: "send",
+      session_token: adminSession.sessionToken,
+      activity_id: activityId,
+      site_url: window.location.origin,
+      idempotency_key: stableKey,
+    },
+  });
+
+  if (error) {
+    const extracted = await extractEdgeFunctionError(error, "Failed to dispatch activity announcement.");
+    throw new Error(extracted.message);
+  }
+
+  const result = data as ActivityAnnouncementResult;
+  if (!result) {
+    throw new Error("No response received from announcement service.");
+  }
+  return result;
+};
+
+export const adminGetActivityAnnouncementsFromSupabase = async (
+  activityId: string,
+): Promise<Array<{
+  id: string;
+  activityId: string;
+  sentBy: string | null;
+  recipientCount: number;
+  successfulCount: number;
+  failedCount: number;
+  status: string;
+  errorMessage: string | null;
+  createdAt: string;
+  sentAt: string | null;
+}>> => {
+  if (!supabase) return [];
+  const adminSession = getAuthenticatedAdminSession();
+  try {
+    const { data, error } = await supabase.rpc("admin_get_activity_announcements", {
+      _session_token: adminSession.sessionToken,
+      _activity_id: activityId,
+    });
+    if (error || !data) return [];
+    return (data as any[]).map((row) => ({
+      id: row.id,
+      activityId: row.activity_id,
+      sentBy: row.sent_by,
+      recipientCount: row.recipient_count ?? 0,
+      successfulCount: row.successful_count ?? 0,
+      failedCount: row.failed_count ?? 0,
+      status: row.status ?? "pending",
+      errorMessage: row.error_message ?? null,
+      createdAt: row.created_at,
+      sentAt: row.sent_at,
+    }));
+  } catch {
+    return [];
+  }
 };
 
 export const ensureAdminSessionInSupabase = async (sessionToken: string, username = "lydoadmin"): Promise<void> => {

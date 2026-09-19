@@ -163,6 +163,7 @@ import {
   subClassificationOptions,
   type OrganizationProfile,
   type InquiryRecord,
+  normalizeInquiryStatus,
   buildVerifiedYpopAttendance,
   computeYpopScore,
   buildPublicRecordCode,
@@ -177,6 +178,7 @@ import {
   YPOP_SCORE_THRESHOLD,
   formatTemplateCategoryDropdownLabel,
   deriveTemplateCategory,
+  resolveCleanTemplateDownloadFileName,
   type OrganizationRenewalRecord,
 } from "@/lib/lydo-connect-data";
 import {
@@ -561,6 +563,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [budgetUserNoteDrafts, setBudgetUserNoteDrafts] = useState<Record<string, string>>({});
   const [liquidationNotesByReportId, setLiquidationNotesByReportId] = useState<Record<string, string>>({});
   const [submittingLiquidationId, setSubmittingLiquidationId] = useState<string | null>(null);
+  const [savingLiquidationDraftId, setSavingLiquidationDraftId] = useState<string | null>(null);
   const [liquidationFileDraftByReportId, setLiquidationFileDraftByReportId] = useState<Record<string, File>>({});
   const [liquidationSearch, setLiquidationSearch] = useState("");
   const [liquidationStatusFilter, setLiquidationStatusFilter] = useState<"all" | LiquidationStatus>("all");
@@ -693,6 +696,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [confirmInquirySubmitOpen, setConfirmInquirySubmitOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
   const [inquiryListModalOpen, setInquiryListModalOpen] = useState(false);
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | "open" | "responded" | "closed">("all");
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
@@ -1193,6 +1197,36 @@ export default function UserPortal({ section }: { section: string }) {
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
     [currentProfile?.id, state.inquiries],
   );
+  const inquiryCounts = useMemo(() => {
+    let open = 0;
+    let responded = 0;
+    let closed = 0;
+    inquiryHistory.forEach((inquiry) => {
+      const status = normalizeInquiryStatus(inquiry.status);
+      if (status === "pending_review") open++;
+      else if (status === "reviewed") responded++;
+      else if (status === "closed") closed++;
+    });
+    return {
+      all: inquiryHistory.length,
+      open,
+      responded,
+      closed,
+    };
+  }, [inquiryHistory]);
+  const filteredInquiries = useMemo(() => {
+    if (inquiryStatusFilter === "all") return inquiryHistory;
+    if (inquiryStatusFilter === "open") {
+      return inquiryHistory.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "pending_review");
+    }
+    if (inquiryStatusFilter === "responded") {
+      return inquiryHistory.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "reviewed");
+    }
+    if (inquiryStatusFilter === "closed") {
+      return inquiryHistory.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "closed");
+    }
+    return inquiryHistory;
+  }, [inquiryHistory, inquiryStatusFilter]);
   const ypopEventParticipations = useMemo(
     () =>
       state.ypopEventParticipations
@@ -1396,17 +1430,7 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const getTemplateDownloadFileName = (template: { templateFileName?: string; templateFileUrl?: string; name: string }) => {
-    const storedName = template.templateFileName?.trim();
-    if (storedName && storedName.includes(".")) return storedName;
-
-    const urlSource = (template.templateFileUrl || "").split(/[?#]/)[0];
-    const urlFileName = urlSource.split("/").pop()?.trim();
-    if (urlFileName && urlFileName.includes(".")) return urlFileName;
-
-    const match = urlSource.match(/\.([a-z0-9]{1,8})$/i);
-    const ext = match ? match[1] : "";
-    const baseName = storedName || template.name;
-    return ext ? `${baseName}.${ext}` : baseName;
+    return resolveCleanTemplateDownloadFileName(template);
   };
 
   const handleDownloadTemplate = async (template: (typeof state.templates)[number]) => {
@@ -2322,22 +2346,52 @@ export default function UserPortal({ section }: { section: string }) {
       !nextBudgetRequest.activityDate ||
       !nextBudgetRequest.venue ||
       nextBudgetRequest.requestedAmount <= 0 ||
-      !nextBudgetRequest.purposeCategory ||
-      !nextBudgetRequest.remarks.trim()
+      !nextBudgetRequest.purposeCategory
     ) {
-      toast({
-        title: "Complete the budget form",
-        description:
-          "Activity title, description, proposed date, venue, requested amount, purpose/category, and remarks are required.",
-        variant: "destructive",
-      });
+      if (!nextBudgetRequest.activityTitle) {
+        toast({
+          title: "Activity Title is required",
+          description: "Please provide an activity title before saving.",
+          variant: "destructive",
+        });
+      } else if (!nextBudgetRequest.purposeCategory) {
+        toast({
+          title: "Purpose & Category is required",
+          description: "Please select or specify a category for this activity.",
+          variant: "destructive",
+        });
+      } else if (nextBudgetRequest.requestedAmount <= 0) {
+        toast({
+          title: "Requested Budget Amount is required",
+          description: "Please specify a requested budget amount greater than zero.",
+          variant: "destructive",
+        });
+      } else if (!nextBudgetRequest.activityDescription) {
+        toast({
+          title: "Activity Description is required",
+          description: "Please provide a description of the planned activity.",
+          variant: "destructive",
+        });
+      } else if (!nextBudgetRequest.activityDate) {
+        toast({
+          title: "Target Activity Date is required",
+          description: "Please specify the target date for the activity.",
+          variant: "destructive",
+        });
+      } else if (!nextBudgetRequest.venue) {
+        toast({
+          title: "Venue / Location is required",
+          description: "Please provide the planned venue or location.",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
-    if (!Number.isInteger(nextBudgetRequest.requestedAmount) || nextBudgetRequest.requestedAmount % 1 !== 0) {
+    if (nextBudgetRequest.requestedAmount > 100000) {
       toast({
-        title: "Whole peso amount required",
-        description: "Requested amount must be a whole peso number without decimals.",
+        title: "Requested budget amount cannot exceed ₱100,000",
+        description: "The maximum allowable requested budget amount is ₱100,000.00.",
         variant: "destructive",
       });
       return;
@@ -2542,7 +2596,7 @@ export default function UserPortal({ section }: { section: string }) {
 
       toast({
         title: "File staged for review",
-        description: "Preview your document and click Submit for Review when ready.",
+        description: "Preview your document and click Save as Draft or Submit for Review when ready.",
       });
     } catch (error) {
       toast({
@@ -2613,6 +2667,77 @@ export default function UserPortal({ section }: { section: string }) {
       setPendingDeleteConfirmation(null);
     } finally {
       setProcessingDeleteConfirmation(false);
+    }
+  };
+
+  const handleSaveLiquidationDraft = async (report: LiquidationReport) => {
+    const canEditSubmission = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(report.status);
+    if (!canEditSubmission) {
+      toast({
+        title: "Submission locked",
+        description: "This liquidation report is currently under review and cannot be modified.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const stagedFile = liquidationFileDraftByReportId[report.id];
+    const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
+
+    if (stagedFile) {
+      const uploadError = await validatePdfUpload(stagedFile);
+      if (uploadError) {
+        toast({
+          title: "PDF required",
+          description: uploadError,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setSavingLiquidationDraftId(report.id);
+    try {
+      if (stagedFile) {
+        if (existingFiles.length > 0) {
+          for (const existingFile of existingFiles) {
+            await deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl);
+          }
+        }
+
+        await createLiquidationReportFileInSupabase({
+          liquidationReportId: report.id,
+          file: stagedFile,
+        });
+
+        setLiquidationFileDraftByReportId((prev) => {
+          const next = { ...prev };
+          delete next[report.id];
+          return next;
+        });
+      }
+
+      if (report.status === "pending_activity_completion" || report.status === "not_started") {
+        await updateLiquidationReportInSupabase(report.id, { status: "draft" });
+      }
+
+      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+
+      toast({
+        title: "Draft saved",
+        description: "Your liquidation report progress and attached document have been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to save draft",
+        description: error instanceof Error ? error.message : "Something went wrong while saving your liquidation draft.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingLiquidationDraftId(null);
     }
   };
 
@@ -3263,12 +3388,14 @@ export default function UserPortal({ section }: { section: string }) {
             liquidationNotesByReportId={liquidationNotesByReportId}
             setLiquidationNotesByReportId={setLiquidationNotesByReportId}
             submittingLiquidationId={submittingLiquidationId}
+            savingLiquidationDraftId={savingLiquidationDraftId}
             liquidationFileDraftByReportId={liquidationFileDraftByReportId}
             onClearLiquidationFileDraft={handleClearLiquidationFileDraft}
             liquidationFileInputRef={liquidationFileInputRef}
             liquidationUploadTargetId={liquidationUploadTargetId}
             setLiquidationUploadTargetId={setLiquidationUploadTargetId}
             handleLiquidationFileUpload={handleLiquidationFileUpload}
+            handleSaveLiquidationDraft={handleSaveLiquidationDraft}
             handleSubmitLiquidation={handleSubmitLiquidation}
             handleDeleteLiquidationFile={handleDeleteLiquidationFile}
             openPreview={openPreview}
@@ -3306,12 +3433,19 @@ export default function UserPortal({ section }: { section: string }) {
             ypopOrgActivityFiles={state.ypopOrgActivityFiles}
             activeEntry={(() => {
               const currentOrgId = currentProfile?.id ?? "";
-              const semesterParam = typeof window !== "undefined" && window.location?.search
-                ? new URLSearchParams(window.location.search).get("semester")
+              const urlParams = typeof window !== "undefined" && window.location?.search
+                ? new URLSearchParams(window.location.search)
+                : null;
+              const semesterParam = urlParams?.get("semester");
+              const activityIdParam = urlParams?.get("activityId");
+              const matchedActivitySemester = activityIdParam
+                ? state.ypopCityActivities.find((a) => a.id === activityIdParam)?.semesterKey
                 : null;
               const targetSemesterKey = (semesterParam && state.ypopPeriods.some((p) => p.semesterKey === semesterParam))
                 ? semesterParam
-                : (state.ypopPeriods.find((p) => p.status === "open")?.semesterKey ?? state.ypopPeriods[0]?.semesterKey ?? null);
+                : (matchedActivitySemester && state.ypopPeriods.some((p) => p.semesterKey === matchedActivitySemester))
+                  ? matchedActivitySemester
+                  : (state.ypopPeriods.find((p) => p.status === "open")?.semesterKey ?? state.ypopPeriods[0]?.semesterKey ?? null);
 
               return targetSemesterKey
                 ? (state.ypopEntries.find((e) => e.organizationId === currentOrgId && e.semester === targetSemesterKey) ?? null)
@@ -3533,7 +3667,7 @@ export default function UserPortal({ section }: { section: string }) {
         previewEmptyMessage={previewEmptyMessage}
         organizationName={currentProfile?.organizationName || "Pasig City Organization"}
         onDownloadFile={async (url, name) => {
-          await downloadResolvedFile(url, name);
+          await downloadResolvedFile(url, resolveCleanTemplateDownloadFileName(name, url));
         }}
         onOpenInNewTab={(url) => {
           if (url) {
@@ -4417,54 +4551,170 @@ export default function UserPortal({ section }: { section: string }) {
         </AlertDialogContent>
       </AlertDialog>
       <Dialog open={inquiryListModalOpen} onOpenChange={setInquiryListModalOpen}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>All Inquiries</DialogTitle>
-            <DialogDescription>Tap an inquiry to view its full message.</DialogDescription>
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[580px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-6 rounded-2xl gap-4">
+          <DialogHeader className="pr-6 space-y-1 text-left">
+            <DialogTitle className="text-lg font-bold text-foreground">
+              Submitted Inquiries
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Filter by status and tap any inquiry to view its full details and admin response.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            {inquiryHistory.map((inquiry) => (
-              <DashboardInquiryItem
-                key={inquiry.id}
-                title={inquiry.subject}
-                timestamp={formatDateTimeLabel(inquiry.createdAt)}
-                status={<PortalStatusBadge status={inquiry.status} />}
-                onClick={() => {
-                  setInquiryListModalOpen(false);
-                  setSelectedInquiry(inquiry);
-                }}
-                showChevron
-              />
+
+          {/* Status Segmented Filter */}
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/60 overflow-x-auto [scrollbar-width:none]">
+            {(
+              [
+                { key: "all", label: "All", count: inquiryCounts.all },
+                { key: "open", label: "Open", count: inquiryCounts.open },
+                { key: "responded", label: "Responded", count: inquiryCounts.responded },
+                { key: "closed", label: "Closed", count: inquiryCounts.closed },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setInquiryStatusFilter(opt.key)}
+                className={cn(
+                  "flex-1 min-w-[70px] rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer text-center active:scale-[0.98]",
+                  inquiryStatusFilter === opt.key
+                    ? "bg-card text-foreground shadow-xs font-bold border border-border/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/40",
+                )}
+              >
+                {opt.label} ({opt.count})
+              </button>
             ))}
           </div>
+
+          {/* Inquiries List or Empty State */}
+          {filteredInquiries.length > 0 ? (
+            <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-0.5">
+              {filteredInquiries.map((inquiry) => (
+                <DashboardInquiryItem
+                  key={inquiry.id}
+                  title={inquiry.subject || "General Inquiry"}
+                  timestamp={formatDateTimeLabel(inquiry.createdAt)}
+                  status={<PortalStatusBadge status={inquiry.status} />}
+                  onClick={() => {
+                    setInquiryListModalOpen(false);
+                    setSelectedInquiry(inquiry);
+                  }}
+                  showChevron
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/80 bg-accent/10 p-6 text-center space-y-2 my-2">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <CircleHelp className="h-5 w-5" />
+              </div>
+              <h4 className="text-sm font-bold text-foreground">
+                {inquiryStatusFilter === "all"
+                  ? "No submitted inquiries"
+                  : `No ${inquiryStatusFilter === "open" ? "open" : inquiryStatusFilter === "responded" ? "responded" : "closed"} inquiries`}
+              </h4>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                {inquiryStatusFilter === "all"
+                  ? "You have not submitted any inquiries yet. Direct questions to the PCYDO team anytime."
+                  : `There are currently no inquiries matching the "${inquiryStatusFilter === "open" ? "Open" : inquiryStatusFilter === "responded" ? "Responded" : "Closed"}" status.`}
+              </p>
+              {inquiryStatusFilter !== "all" && inquiryHistory.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInquiryStatusFilter("all")}
+                  className="mt-2 text-xs font-semibold rounded-lg h-8 cursor-pointer"
+                >
+                  View all inquiries
+                </Button>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(selectedInquiry)} onOpenChange={(open) => { if (!open) setSelectedInquiry(null); }}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="break-words">{selectedInquiry?.subject || "Inquiry"}</DialogTitle>
-            <DialogDescription>Review your submitted inquiry details here.</DialogDescription>
+
+      <Dialog
+        open={Boolean(selectedInquiry)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedInquiry(null);
+        }}
+      >
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[580px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-6 rounded-2xl gap-4">
+          <DialogHeader className="pr-6 space-y-1 text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedInquiry(null);
+                  setInquiryListModalOpen(true);
+                }}
+                className="h-7 px-2 -ml-1.5 rounded-lg text-xs font-semibold text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors gap-1.5 shrink-0 cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back</span>
+              </Button>
+              {selectedInquiry ? (
+                <>
+                  <span className="text-muted-foreground/40 text-xs">•</span>
+                  <span className="text-xs font-mono font-bold text-muted-foreground">
+                    {selectedInquiry.inquiryCode ||
+                      buildPublicRecordCode("INQ", selectedInquiry, inquiryHistory)}
+                  </span>
+                </>
+              ) : null}
+            </div>
+            <DialogTitle className="break-words text-lg font-bold text-foreground leading-snug">
+              {selectedInquiry?.subject || "General Inquiry"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Review your submitted inquiry details and administrative response.
+            </DialogDescription>
           </DialogHeader>
+
           {selectedInquiry ? (
-            <div className="space-y-4">
-              <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-background p-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm text-muted-foreground">{formatDateTimeLabel(selectedInquiry.createdAt)}</p>
+            <div className="space-y-3.5 pt-0.5">
+              {/* Metadata Card: Created Date & Status */}
+              <div className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-muted/30 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span>
+                    Submitted on{" "}
+                    <strong className="font-semibold text-foreground">
+                      {formatDateTimeLabel(selectedInquiry.createdAt)}
+                    </strong>
+                  </span>
                 </div>
                 <div className="w-full sm:w-auto">
                   <PortalStatusBadge status={selectedInquiry.status} />
                 </div>
               </div>
-              <div className="rounded-xl border border-border/70 bg-background p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Message</p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
+
+              {/* Message Content */}
+              <div className="rounded-xl border border-border/70 bg-background p-4 space-y-1.5 shadow-2xs">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                  Inquiry Message
+                </p>
+                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
                   {selectedInquiry.description}
                 </p>
               </div>
+
+              {/* Admin Note / Response */}
               {selectedInquiry.adminRemarks ? (
-                <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Admin Note</p>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <CheckCircle2 className="h-3 w-3" />
+                    </span>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
+                      Admin Note / Response
+                    </p>
+                  </div>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
                     {selectedInquiry.adminRemarks}
                   </p>
                 </div>

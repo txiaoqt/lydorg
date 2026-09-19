@@ -38,6 +38,7 @@ import { YpopProofDrawer } from "./YpopProofDrawer";
 export interface YpopCityLedTabProps {
   period: YPOPPeriod;
   activities: YPOPCityActivity[];
+  initialActivityId?: string | null;
   participations: YPOPEventParticipation[];
   eventFiles: YPOPEventFile[];
   organizationId: string;
@@ -52,6 +53,7 @@ export interface YpopCityLedTabProps {
 export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
   period,
   activities,
+  initialActivityId,
   participations,
   eventFiles,
   organizationId,
@@ -66,6 +68,17 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [activeActivity, setActiveActivity] = useState<YPOPCityActivity | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Auto-open proof drawer when deep-linked with initialActivityId
+  React.useEffect(() => {
+    if (initialActivityId && activities.length > 0 && !activeActivity) {
+      const target = activities.find((a) => a.id === initialActivityId);
+      if (target) {
+        setActiveActivity(target);
+        setDrawerOpen(true);
+      }
+    }
+  }, [initialActivityId, activities, activeActivity]);
 
   // Category activity counts for filter labels
   const mandatoryCount = activities.filter(

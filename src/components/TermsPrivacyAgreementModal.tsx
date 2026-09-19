@@ -78,9 +78,19 @@ export const TermsPrivacyAgreementModal = ({
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
             <Tabs defaultValue="terms" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
-                <TabsTrigger value="terms">Terms of Service</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 h-11 p-1 rounded-xl border border-border bg-muted/50 gap-1">
+                <TabsTrigger
+                  value="privacy"
+                  className="h-9 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-150 data-[state=active]:bg-public-bg-brand data-[state=active]:text-white data-[state=active]:shadow-xs data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1"
+                >
+                  Privacy Policy
+                </TabsTrigger>
+                <TabsTrigger
+                  value="terms"
+                  className="h-9 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-150 data-[state=active]:bg-public-bg-brand data-[state=active]:text-white data-[state=active]:shadow-xs data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1"
+                >
+                  Terms of Service
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="terms" className="mt-3">
                 <ScrollArea className={`${isPwa ? "h-[34vh]" : "h-[44vh]"} rounded-lg border border-border bg-background p-4`}>

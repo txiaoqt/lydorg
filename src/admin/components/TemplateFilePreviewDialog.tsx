@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Download, ExternalLink, FileText, Megaphone, X } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import type { TemplateRecord } from "@/lib/lydo-connect-data";
+import { type TemplateRecord, resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { getTemplateFileFormat, formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 
@@ -119,7 +119,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
                     </a>
                     <a
                       href={resolvedUrl || undefined}
-                      download
+                      download={resolveCleanTemplateDownloadFileName(template.name, template.templateFileName || rawUrl || resolvedUrl)}
                       className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 py-2 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                     >
                       <Download className="h-4 w-4 shrink-0" strokeWidth={1.6} />

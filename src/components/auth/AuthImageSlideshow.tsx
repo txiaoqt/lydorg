@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,12 +47,23 @@ export function resetLastInitialIndex(): void {
   lastInitialIndex = -1;
 }
 
+export const AUTOPLAY_INTERVAL = 3000;
+export const DEFAULT_AUTOPLAY_INTERVAL_MS = AUTOPLAY_INTERVAL;
+export const DEFAULT_IDLE_AUTOPLAY_DELAY_MS = AUTOPLAY_INTERVAL;
+
 interface AuthImageSlideshowProps {
   className?: string;
   initialIndex?: number;
+  autoplayDelay?: number;
+  pauseOnReducedMotion?: boolean;
 }
 
-export default function AuthImageSlideshow({ className, initialIndex }: AuthImageSlideshowProps) {
+export default function AuthImageSlideshow({
+  className,
+  initialIndex,
+  autoplayDelay = AUTOPLAY_INTERVAL,
+  pauseOnReducedMotion = true,
+}: AuthImageSlideshowProps) {
   const [activeIndex, setActiveIndex] = useState(() =>
     typeof initialIndex === "number" && initialIndex >= 0 && initialIndex < LOGIN_SLIDES.length
       ? initialIndex
@@ -63,12 +74,35 @@ export default function AuthImageSlideshow({ className, initialIndex }: AuthImag
   const touchEndXRef = useRef<number | null>(null);
 
   const handlePrev = useCallback(() => {
+    if (LOGIN_SLIDES.length <= 1) return;
     setActiveIndex((prev) => (prev - 1 + LOGIN_SLIDES.length) % LOGIN_SLIDES.length);
   }, []);
 
   const handleNext = useCallback(() => {
+    if (LOGIN_SLIDES.length <= 1) return;
     setActiveIndex((prev) => (prev + 1) % LOGIN_SLIDES.length);
   }, []);
+
+  // Continuous Autoplay Lifecycle (Advances every 1 second continuously)
+  useEffect(() => {
+    if (LOGIN_SLIDES.length <= 1) return;
+
+    if (
+      pauseOnReducedMotion &&
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      handleNext();
+    }, autoplayDelay);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [activeIndex, autoplayDelay, handleNext, pauseOnReducedMotion]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

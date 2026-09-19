@@ -134,7 +134,7 @@ const Contacts = () => {
               </p>
               <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">
                 <span className="font-segoe text-sm font-semibold text-[#0E2F66]">
-                  Monday - Friday
+                  Monday - Thursday
                 </span>
                 <span className="font-segoe text-sm font-bold text-[#0E2F66]">
                   8:00 AM – 5:00 PM

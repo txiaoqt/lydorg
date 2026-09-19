@@ -12,6 +12,7 @@ import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import { PublicNewsReleaseCard } from "@/components/public/PublicNewsReleaseCard";
+import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 import { toast } from "@/hooks/use-toast";
 
 const faqs = [
@@ -151,19 +152,7 @@ const Index = () => {
       if (!response.ok) throw new Error("Failed to fetch file");
       const blob = await response.blob();
 
-      let targetFileName = fileName.trim().replace(/[/\\?%*:|"<>]/g, "-");
-      const hasExt = /\.(pdf|docx?|xlsx?|pptx?|zip|png|jpe?g|txt|csv)$/i.test(targetFileName);
-      if (!hasExt) {
-        if (resolvedUrl.toLowerCase().includes(".pdf") || blob.type.includes("pdf")) {
-          targetFileName += ".pdf";
-        } else if (resolvedUrl.toLowerCase().includes(".docx") || blob.type.includes("word")) {
-          targetFileName += ".docx";
-        } else if (resolvedUrl.toLowerCase().includes(".xlsx") || blob.type.includes("sheet") || blob.type.includes("excel")) {
-          targetFileName += ".xlsx";
-        } else {
-          targetFileName += ".pdf";
-        }
-      }
+      const targetFileName = resolveCleanTemplateDownloadFileName(fileName, fileUrl || resolvedUrl);
 
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");

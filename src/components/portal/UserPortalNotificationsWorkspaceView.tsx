@@ -54,7 +54,8 @@ const getNotificationIcon = (relatedType?: string, type?: string) => {
 const getTargetRoute = (
   relatedType?: string,
   type?: string,
-  userRouteMap?: Record<string, string>
+  userRouteMap?: Record<string, string>,
+  relatedId?: string
 ): { route: string; label: string } | null => {
   const norm = (relatedType || type || "").toLowerCase();
   if (norm.includes("document") || norm.includes("submission") || norm.includes("cbl")) {
@@ -66,10 +67,14 @@ const getTargetRoute = (
   if (norm.includes("liquidation") || norm.includes("expense") || norm.includes("report")) {
     return { route: userRouteMap?.["liquidation-reporting"] || "/liquidation-reporting", label: "View Liquidation" };
   }
-  if (norm.includes("ypop") || norm.includes("incentive")) {
-    return { route: userRouteMap?.["ypop"] || "/ypop", label: "View YPOP" };
+  if (norm.includes("ypop") || norm.includes("incentive") || norm.includes("city_activity") || norm.includes("announcement")) {
+    const basePath = userRouteMap?.["ypop"] || "/portal?section=ypop";
+    const route = relatedId
+      ? `${basePath}${basePath.includes("?") ? "&" : "?"}activityId=${encodeURIComponent(relatedId)}`
+      : basePath;
+    return { route, label: "View Activity" };
   }
-  if (norm.includes("news") || norm.includes("announcement")) {
+  if (norm.includes("news") || norm.includes("release")) {
     return { route: userRouteMap?.["news-releases"] || "/portal-news-releases", label: "View News" };
   }
   if (norm.includes("profile") || norm.includes("org")) {
@@ -268,7 +273,12 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
         ) : (
           filteredNotifications.map((notification) => {
             const IconComponent = getNotificationIcon(notification.relatedType, notification.type);
-            const targetAction = getTargetRoute(notification.relatedType, notification.type, userRouteMap);
+            const targetAction = getTargetRoute(
+              notification.relatedType,
+              notification.type,
+              userRouteMap,
+              notification.relatedId
+            );
 
             return (
               <Card

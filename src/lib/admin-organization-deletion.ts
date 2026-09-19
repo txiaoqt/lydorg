@@ -22,9 +22,50 @@ export type OrganizationDeletionCounts = {
 export type OrganizationDeletionResult = {
   success: true;
   organizationId: string;
+  organizationName?: string;
+  urn?: string | null;
+  status?: "deleted" | "deleted_with_storage_cleanup_pending";
   counts: OrganizationDeletionCounts;
   auditRecorded: boolean;
+  alreadyDeleted?: boolean;
 };
+
+export type BulkPreflightTarget = {
+  id: string;
+  name: string;
+  urn?: string;
+  allowed: boolean;
+  blockingReason?: string;
+};
+
+export type BulkPreflightResult = {
+  valid: boolean;
+  targets: BulkPreflightTarget[];
+  totalCount: number;
+  allowedCount: number;
+  blockedCount: number;
+};
+
+export type BulkItemResult = {
+  organizationId: string;
+  organizationName: string;
+  urn?: string;
+  status: "deleted" | "blocked" | "failed" | "deleted_with_storage_cleanup_pending";
+  reason?: string;
+  counts?: OrganizationDeletionCounts;
+  alreadyDeleted?: boolean;
+};
+
+export type BulkOrganizationDeletionResult = {
+  success: boolean;
+  total: number;
+  deletedCount: number;
+  blockedCount: number;
+  failedCount: number;
+  results: BulkItemResult[];
+};
+
+export const MAX_BULK_ORGANIZATION_DELETION_LIMIT = 25;
 
 export const ORGANIZATION_DELETION_CATEGORIES = [
   "Account and organization profile",
@@ -57,6 +98,9 @@ export const normalizeOrganizationDeletionConfirmation = (value: string) =>
 export const organizationDeletionConfirmationMatches = (entered: string, organizationName: string) =>
   normalizeOrganizationDeletionConfirmation(entered) ===
   normalizeOrganizationDeletionConfirmation(organizationName);
+
+export const bulkOrganizationDeletionConfirmationMatches = (entered: string) =>
+  normalizeOrganizationDeletionConfirmation(entered).toUpperCase() === "DELETE SELECTED";
 
 export const getOrganizationDeletionServiceError = (
   status: number | null,
@@ -92,16 +136,36 @@ const invokeDeletionFunction = async <T>(
     ? data as DeletionErrorPayload
     : null;
   const context = (error as { context?: unknown }).context;
-  const responseStatus = context instanceof Response ? context.status : null;
-  if (!payload && context instanceof Response) {
+  const isResponse = Boolean(context && typeof (context as { json?: unknown }).json === "function");
+  const responseStatus = isResponse ? (context as Response).status : null;
+  if (!payload && isResponse) {
     try {
-      payload = await context.clone().json() as DeletionErrorPayload;
+      const response = typeof (context as Response).clone === "function"
+        ? (context as Response).clone()
+        : (context as Response);
+      const parsed = await response.json();
+      if (parsed && typeof parsed === "object") {
+        payload = parsed as DeletionErrorPayload;
+      }
     } catch {
-      payload = null;
+      try {
+        const text = typeof (context as Response).clone === "function"
+          ? await (context as Response).clone().text()
+          : "";
+        if (text && !text.startsWith("<")) {
+          payload = { error: text };
+        }
+      } catch {
+        payload = null;
+      }
     }
   }
+  const fallbackWithSpecificError =
+    error instanceof Error && error.message && !error.message.includes("non-2xx status code")
+      ? error.message
+      : fallbackMessage;
   throw new OrganizationDeletionError(
-    getOrganizationDeletionServiceError(responseStatus, payload, fallbackMessage),
+    getOrganizationDeletionServiceError(responseStatus, payload, fallbackWithSpecificError),
     payload?.stage,
     payload?.retryable,
   );
@@ -114,4 +178,19 @@ export const permanentlyDeleteOrganizationAccount = (
   invokeDeletionFunction<OrganizationDeletionResult>(
     { action: "delete", organizationId, confirmationName },
     "The organization account could not be deleted. Please try again.",
+  );
+
+export const preflightBulkOrganizationDeletion = (organizationIds: string[]) =>
+  invokeDeletionFunction<BulkPreflightResult>(
+    { action: "bulk_preflight", organizationIds },
+    "The bulk organization preflight check could not be completed.",
+  );
+
+export const permanentlyDeleteBulkOrganizationAccounts = (
+  organizationIds: string[],
+  confirmationPhrase: string,
+) =>
+  invokeDeletionFunction<BulkOrganizationDeletionResult>(
+    { action: "bulk_delete", organizationIds, confirmationPhrase },
+    "The bulk organization account deletion could not be completed.",
   );

@@ -1,0 +1,11 @@
+# Supabase CLI project configuration
+project_id = "mqqaykksadotbrghbexz"
+
+[functions.send-activity-announcement]
+verify_jwt = false
+
+[functions.admin-invite]
+verify_jwt = false
+
+[functions.delete-organization-account]
+verify_jwt = false

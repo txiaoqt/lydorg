@@ -3,6 +3,7 @@ import type { BudgetRequest, LiquidationReport } from "./lydo-connect-data";
 export type BudgetStatusHelper = {
   totalRequests: number;
   approvedCount: number;
+  releasedCount: number;
   underReviewCount: number;
   needsRevisionCount: number;
   completionPercent: number;
@@ -19,6 +20,12 @@ export type LiquidationStatusHelper = {
   completionPercent: number;
   overviewLabel: string;
   helperText: string;
+};
+
+export const isBudgetReleasedStatus = (status?: string): boolean => {
+  if (!status) return false;
+  const s = status.toLowerCase().trim();
+  return s === "budget_released" || s === "completed";
 };
 
 export const isBudgetApprovedStatus = (status?: string): boolean => {
@@ -67,6 +74,7 @@ export const computeBudgetWorkflowMetrics = (
     return {
       totalRequests: 0,
       approvedCount: 0,
+      releasedCount: 0,
       underReviewCount: 0,
       needsRevisionCount: 0,
       completionPercent: 0,
@@ -76,25 +84,27 @@ export const computeBudgetWorkflowMetrics = (
   }
 
   const approvedCount = budgetRequests.filter((r) => isBudgetApprovedStatus(r.status)).length;
+  const releasedCount = budgetRequests.filter((r) => isBudgetReleasedStatus(r.status)).length;
   const underReviewCount = budgetRequests.filter((r) => isBudgetPendingStatus(r.status)).length;
   const needsRevisionCount = budgetRequests.filter((r) => isBudgetRevisionStatus(r.status)).length;
 
-  const completionPercent = Math.round((approvedCount / totalRequests) * 100);
+  const completionPercent = totalRequests > 0 ? Math.round((releasedCount / totalRequests) * 100) : 0;
 
-  let overviewLabel = `${approvedCount}/${totalRequests} Approved`;
-  if (completionPercent === 100) {
-    overviewLabel = "All Approved";
+  let overviewLabel = `${releasedCount}/${totalRequests} Released`;
+  if (completionPercent === 100 && totalRequests > 0) {
+    overviewLabel = "All Released";
   } else if (underReviewCount > 0) {
     overviewLabel = `${underReviewCount} In Review`;
   } else if (needsRevisionCount > 0) {
     overviewLabel = `${needsRevisionCount} Needs Action`;
   }
 
-  const helperText = `${approvedCount} of ${totalRequests} approved (${completionPercent}%)`;
+  const helperText = `${releasedCount} of ${totalRequests} released (${completionPercent}%)`;
 
   return {
     totalRequests,
     approvedCount,
+    releasedCount,
     underReviewCount,
     needsRevisionCount,
     completionPercent,

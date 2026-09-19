@@ -56,12 +56,14 @@ export interface UserPortalLiquidationWorkspaceViewProps {
   liquidationNotesByReportId: Record<string, string>;
   setLiquidationNotesByReportId: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   submittingLiquidationId: string | null;
+  savingLiquidationDraftId?: string | null;
   liquidationFileDraftByReportId?: Record<string, File>;
   onClearLiquidationFileDraft?: (reportId: string) => void;
   liquidationFileInputRef: React.RefObject<HTMLInputElement>;
   liquidationUploadTargetId: string | null;
   setLiquidationUploadTargetId: (id: string | null) => void;
   handleLiquidationFileUpload: (report: any, files: FileList | null) => Promise<void>;
+  handleSaveLiquidationDraft?: (report: any) => Promise<void>;
   handleSubmitLiquidation?: (report: any) => Promise<void>;
   handleDeleteLiquidationFile?: (file: any) => Promise<void>;
   handleLiquidationSubmit?: (reportId: string, noteValue?: string) => Promise<void>;
@@ -107,12 +109,14 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   budgetRequests,
   liquidationFilesByReportId,
   submittingLiquidationId,
+  savingLiquidationDraftId,
   liquidationFileDraftByReportId = {},
   onClearLiquidationFileDraft,
   liquidationFileInputRef,
   liquidationUploadTargetId,
   setLiquidationUploadTargetId,
   handleLiquidationFileUpload,
+  handleSaveLiquidationDraft,
   handleSubmitLiquidation,
   navigate,
   searchParams = new URLSearchParams(),
@@ -1004,7 +1008,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                     {/* PINNED FOOTER */}
                     <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
                       {isEditable ? (
-                        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                        <div className="flex items-center justify-between gap-3">
                           <Button
                             type="button"
                             variant="outline"
@@ -1014,33 +1018,57 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                               }
                               closeLiquidationDetail();
                             }}
-                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                            className="text-xs sm:text-sm font-semibold h-9 px-4 rounded-xl cursor-pointer border-border hover:bg-muted text-foreground transition-all duration-150 active:scale-[0.98] shrink-0"
                           >
                             Cancel
                           </Button>
 
-                          <Button
-                            type="button"
-                            disabled={!stagedDraft || submittingLiquidationId === selectedReport.id}
-                            onClick={async () => {
-                              if (handleSubmitLiquidation) {
-                                await handleSubmitLiquidation(selectedReport);
-                              }
-                            }}
-                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                          >
-                            {submittingLiquidationId === selectedReport.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>{isNeedsRevision ? "Resubmitting..." : "Submitting..."}</span>
-                              </>
-                            ) : (
-                              <>
-                                <FileUp className="h-4 w-4" />
-                                <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
-                              </>
-                            )}
-                          </Button>
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={savingLiquidationDraftId === selectedReport.id || submittingLiquidationId === selectedReport.id}
+                              onClick={async () => {
+                                if (handleSaveLiquidationDraft) {
+                                  await handleSaveLiquidationDraft(selectedReport);
+                                }
+                              }}
+                              className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
+                            >
+                              {savingLiquidationDraftId === selectedReport.id ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  <span>Saving Draft...</span>
+                                </>
+                              ) : (
+                                <span>Save as Draft</span>
+                              )}
+                            </Button>
+
+                            <Button
+                              type="button"
+                              disabled={(!stagedDraft && selectedFiles.length === 0) || (isNeedsRevision && !stagedDraft && selectedFiles.length === 0) || savingLiquidationDraftId === selectedReport.id || submittingLiquidationId === selectedReport.id}
+                              onClick={async () => {
+                                if (handleSubmitLiquidation) {
+                                  await handleSubmitLiquidation(selectedReport);
+                                }
+                              }}
+                              className="h-9 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                            >
+                              {submittingLiquidationId === selectedReport.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>{isNeedsRevision ? "Resubmitting..." : "Submitting..."}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FileUp className="h-4 w-4" />
+                                  <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-2">
@@ -1052,7 +1080,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="h-8.5 px-4 rounded-xl text-xs font-semibold border-border hover:bg-accent cursor-pointer shrink-0"
+                              className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
                             >
                               Close Drawer
                             </Button>
@@ -1361,37 +1389,60 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                               }
                               closeLiquidationDetail();
                             }}
-                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                            className="w-full sm:w-auto h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                           >
                             Cancel
                           </Button>
 
-                          <Button
-                            type="button"
-                            disabled={!stagedDraft || submittingLiquidationId === selectedReport.id}
-                            onClick={async () => {
-                              if (handleSubmitLiquidation) {
-                                await handleSubmitLiquidation(selectedReport);
-                              }
-                            }}
-                            className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                          >
-                            {submittingLiquidationId === selectedReport.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>{isNeedsRevision ? "Resubmitting..." : "Submitting..."}</span>
-                              </>
-                            ) : (
-                              <>
-                                <FileUp className="h-4 w-4" />
-                                <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
-                              </>
-                            )}
-                          </Button>
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={savingLiquidationDraftId === selectedReport.id || submittingLiquidationId === selectedReport.id}
+                              onClick={async () => {
+                                if (handleSaveLiquidationDraft) {
+                                  await handleSaveLiquidationDraft(selectedReport);
+                                }
+                              }}
+                              className="flex-1 sm:flex-initial text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground transition-all duration-150 active:scale-[0.98] justify-center"
+                            >
+                              {savingLiquidationDraftId === selectedReport.id ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  <span>Saving Draft...</span>
+                                </>
+                              ) : (
+                                <span>Save as Draft</span>
+                              )}
+                            </Button>
+
+                            <Button
+                              type="button"
+                              disabled={(!stagedDraft && selectedFiles.length === 0) || (isNeedsRevision && !stagedDraft && selectedFiles.length === 0) || savingLiquidationDraftId === selectedReport.id || submittingLiquidationId === selectedReport.id}
+                              onClick={async () => {
+                                if (handleSubmitLiquidation) {
+                                  await handleSubmitLiquidation(selectedReport);
+                                }
+                              }}
+                              className="flex-1 sm:flex-initial text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98] justify-center"
+                            >
+                              {submittingLiquidationId === selectedReport.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>{isNeedsRevision ? "Resubmitting..." : "Submitting..."}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FileUp className="h-4 w-4" />
+                                  <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
+                          <p className="text-xs text-muted-foreground font-medium truncate mr-2">
                             Liquidation Report • LYDO Pasig City
                           </p>
                           <Button
@@ -1399,9 +1450,9 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                             variant="outline"
                             size="sm"
                             onClick={() => closeLiquidationDetail()}
-                            className="h-8.5 px-4 rounded-xl text-xs font-semibold border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground shadow-2xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0"
+                            className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                           >
-                            Close
+                            Close Drawer
                           </Button>
                         </div>
                       )}

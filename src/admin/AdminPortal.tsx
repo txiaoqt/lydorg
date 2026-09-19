@@ -68,6 +68,7 @@ import { ActivityLogsTable, type ActivityDateFilter } from "@/admin/components/A
 import { TemplatesTable, type TemplateCategoryFilter, type TemplateStatusFilter } from "@/admin/components/TemplatesTable";
 import { TemplateFilePreviewDialog } from "@/admin/components/TemplateFilePreviewDialog";
 import { TemplateFormDialog, type TemplateWorkflowScope } from "@/admin/components/TemplateFormDialog";
+import { CityActivityAnnouncementDialog } from "@/admin/components/CityActivityAnnouncementDialog";
 import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
 import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
@@ -159,6 +160,7 @@ import {
   adminCreateYpopCityActivityInSupabase,
   adminUpdateYpopCityActivityInSupabase,
   adminDeleteYpopCityActivityFromSupabase,
+  adminGetActivityAnnouncementsFromSupabase,
   adminCreateYpopEntryInSupabase,
   adminUpdateYpopEntryInSupabase,
   adminUpdateYpopEventParticipationInSupabase,
@@ -467,7 +469,7 @@ const renderRegistrationDetailCard = (params: {
 );
 
 const budgetReleaseStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
-const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["draft", "submitted", "under_review", "needs_revision"]);
+const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["submitted", "under_review", "needs_revision"]);
 const liquidationApprovableStatuses = new Set<LiquidationReport["status"]>(["submitted", "under_review", "needs_revision"]);
 const liquidationLockedStatuses = new Set<LiquidationReport["status"]>(["completed_liquidated"]);
 
@@ -943,6 +945,36 @@ export default function AdminPortal({ section }: { section: string }) {
     setYpopActivityVisibleCount(4);
     setIsYpopActivityPopoverOpen(false);
   }, [selectedYpopId]);
+
+  // Activity Announcement Broadcast State
+  const [announcementTargetActivity, setAnnouncementTargetActivity] = useState<YPOPCityActivity | null>(null);
+  const [announcementDialogOpen, setAnnouncementDialogOpen] = useState(false);
+  const [sentAnnouncementsByActivityId, setSentAnnouncementsByActivityId] = useState<
+    Record<string, { status: string; recipientCount: number; sentAt?: string }>
+  >({});
+
+  useEffect(() => {
+    if (section === "ypop" && state.ypopCityActivities.length > 0) {
+      const activityIds = state.ypopCityActivities.map((a) => a.id);
+      adminGetActivityAnnouncementsFromSupabase(activityIds)
+        .then((records) => {
+          const map: Record<string, { status: string; recipientCount: number; sentAt?: string }> = {};
+          for (const r of records) {
+            if (r.status === "sent" || r.status === "partial_failure") {
+              map[r.activity_id] = {
+                status: r.status,
+                recipientCount: r.recipient_count,
+                sentAt: r.sent_at || r.created_at,
+              };
+            }
+          }
+          setSentAnnouncementsByActivityId(map);
+        })
+        .catch((err) => {
+          console.warn("Could not load activity announcements history:", err);
+        });
+    }
+  }, [section, state.ypopCityActivities]);
 
   useEffect(() => {
     let isActive = true;
@@ -1423,15 +1455,19 @@ export default function AdminPortal({ section }: { section: string }) {
     return 2026;
   }, []);
 
+  const adminBudgetRequests = useMemo(() => {
+    return state.budgetRequests.filter((r) => r.status !== "draft");
+  }, [state.budgetRequests]);
+
   const availableFiscalYears = useMemo(() => {
     const years = new Set<number>();
     years.add(new Date().getFullYear());
     annualAllocations.forEach((a) => years.add(a.fiscalYear));
-    state.budgetRequests.forEach((req) => {
+    adminBudgetRequests.forEach((req) => {
       years.add(getBudgetRequestFiscalYear(req));
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [annualAllocations, state.budgetRequests, getBudgetRequestFiscalYear]);
+  }, [annualAllocations, adminBudgetRequests, getBudgetRequestFiscalYear]);
 
   const selectedFYAllocation = useMemo(() => {
     return (
@@ -1445,8 +1481,8 @@ export default function AdminPortal({ section }: { section: string }) {
   const annualAllocationFiscalYear = selectedFiscalYear;
 
   const fyBudgetRequests = useMemo(() => {
-    return state.budgetRequests.filter((r) => getBudgetRequestFiscalYear(r) === selectedFiscalYear);
-  }, [state.budgetRequests, selectedFiscalYear, getBudgetRequestFiscalYear]);
+    return adminBudgetRequests.filter((r) => getBudgetRequestFiscalYear(r) === selectedFiscalYear);
+  }, [adminBudgetRequests, selectedFiscalYear, getBudgetRequestFiscalYear]);
 
   const fyLiquidationReports = useMemo(() => {
     return state.liquidationReports.filter((report) => {
@@ -1537,7 +1573,7 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [budgetReleaseStatuses, fyBudgetRequests, state.organizationProfiles, getLatestLiquidationReportForBudgetRequest]);
   const filteredAdminBudgetRequests = useMemo(() => {
     const query = budgetRequestsSearch.trim().toLowerCase();
-    return state.budgetRequests.filter((request) => {
+    return adminBudgetRequests.filter((request) => {
       const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
       const matchesSearch =
         !query ||
@@ -1545,7 +1581,7 @@ export default function AdminPortal({ section }: { section: string }) {
           request.activityTitle,
           requestOrganization?.organizationName ?? "",
           request.venue ?? "",
-          buildPublicRecordCode("BR", request, state.budgetRequests),
+          buildPublicRecordCode("BR", request, adminBudgetRequests),
         ]
           .join(" ")
           .toLowerCase()
@@ -1570,7 +1606,7 @@ export default function AdminPortal({ section }: { section: string }) {
     budgetRequestsDistrictFilter,
     budgetRequestsBarangayFilter,
     budgetRequestsClassificationFilter,
-    state.budgetRequests,
+    adminBudgetRequests,
     state.organizationProfiles,
   ]);
   const filteredVisibleLiquidationReports = useMemo(() => {
@@ -5913,6 +5949,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const openBudgetRequestDetails = (requestId: string) => {
     const req = state.budgetRequests.find((item) => item.id === requestId) ?? null;
+    if (!req || req.status === "draft") return;
     setSelectedBudgetRequestSnapshot(req);
     const requestFiles = [...state.budgetRequestFiles]
       .filter((file) => file.budgetRequestId === requestId)
@@ -6240,7 +6277,7 @@ export default function AdminPortal({ section }: { section: string }) {
               />
               <StatsCard
                 title="BUDGET REQUESTS"
-                value={state.budgetRequests.length}
+                value={adminBudgetRequests.length}
                 icon={Wallet}
                 trend="up"
                 trendLabel={`${overviewStats.pendingBudget} awaiting review`}
@@ -9383,7 +9420,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
             <BudgetRequestsTable
               requests={filteredAdminBudgetRequests}
-              allRequests={state.budgetRequests}
+              allRequests={adminBudgetRequests}
               organizationsById={budgetOrganizationsById}
               searchValue={budgetRequestsSearch}
               onSearchChange={setBudgetRequestsSearch}
@@ -13374,6 +13411,33 @@ export default function AdminPortal({ section }: { section: string }) {
                             <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
                               {normalizeYpopCityLedPoints(act.points, act.category)} pts
                             </span>
+                            {(() => {
+                              const announcementInfo = sentAnnouncementsByActivityId[act.id];
+                              return (
+                                <button
+                                  type="button"
+                                  aria-label="Send Announcement"
+                                  title={
+                                    announcementInfo
+                                      ? `Announced to ${announcementInfo.recipientCount} orgs`
+                                      : "Send announcement to verified active organizations"
+                                  }
+                                  onClick={() => {
+                                    setAnnouncementTargetActivity(act);
+                                    setAnnouncementDialogOpen(true);
+                                  }}
+                                  className={cn(
+                                    "flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-segoe text-xs font-semibold transition-colors",
+                                    announcementInfo
+                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                      : "border-slate-300 bg-admin-surface text-text-default hover:bg-slate-50 hover:text-public-bg-brand"
+                                  )}
+                                >
+                                  <Megaphone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+                                  <span>{announcementInfo ? "Announced" : "Send Announcement"}</span>
+                                </button>
+                              );
+                            })()}
                             <button
                               type="button"
                               aria-label="Edit activity"
@@ -14238,6 +14302,22 @@ export default function AdminPortal({ section }: { section: string }) {
         confirmLabel="Delete Activity"
         confirmIcon={Trash2}
         onConfirm={() => void confirmDeleteRecord()}
+      />
+      <CityActivityAnnouncementDialog
+        open={announcementDialogOpen}
+        onOpenChange={setAnnouncementDialogOpen}
+        activity={announcementTargetActivity}
+        previousAnnouncement={
+          announcementTargetActivity
+            ? sentAnnouncementsByActivityId[announcementTargetActivity.id] ?? null
+            : null
+        }
+        onAnnouncementSuccess={(activityId, result) => {
+          setSentAnnouncementsByActivityId((prev) => ({
+            ...prev,
+            [activityId]: result,
+          }));
+        }}
       />
       <DangerConfirmDialog
         variant="info"
