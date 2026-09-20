@@ -10,11 +10,13 @@ export interface DrawerAttachedFile {
   fileUrl: string;
   fileSize?: number;
   uploadedAt?: string | Date | null;
+  rawFile?: File | Blob | null;
 }
 
 export interface PortalDrawerDocumentSectionProps {
   file: DrawerAttachedFile | null;
   previewUrl: string;
+  previewFile?: File | Blob | null;
   isDownloading?: boolean;
   onDownloadFile: (url: string, fileName: string, fileId: string) => Promise<void> | void;
   formatDateTimeLabel?: (date: string | Date) => string;
@@ -34,6 +36,7 @@ export interface PortalDrawerDocumentSectionProps {
 export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionProps> = ({
   file,
   previewUrl,
+  previewFile,
   isDownloading = false,
   onDownloadFile,
   formatDateTimeLabel,
@@ -45,6 +48,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
   className,
   isMobile = false,
 }) => {
+  const effectivePreviewFile = previewFile || file?.rawFile || null;
   const safePreviewUrl = previewUrl || (file?.fileUrl && !file.fileUrl.startsWith("storage://") ? file.fileUrl : "");
 
   return (
@@ -127,6 +131,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
             <div className="rounded-xl border border-border/80 overflow-hidden bg-slate-100/70 dark:bg-slate-900/60 shadow-inner">
               <PortalDocumentViewer
                 previewUrl={safePreviewUrl}
+                previewFile={effectivePreviewFile}
                 previewTitle={file.fileName}
                 previewCanInline={true}
                 className="h-[360px] sm:h-[420px] overflow-y-auto p-2.5 sm:p-3"
@@ -197,6 +202,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
             <div className="rounded-xl border border-border/80 overflow-hidden bg-slate-100/70 dark:bg-slate-900/60 shadow-inner">
               <PortalDocumentViewer
                 previewUrl={safePreviewUrl}
+                previewFile={effectivePreviewFile}
                 previewTitle={file.fileName}
                 previewCanInline={true}
                 className="h-[360px] sm:h-[440px] overflow-y-auto p-3 sm:p-4"

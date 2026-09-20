@@ -133,12 +133,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localBlobUrlsRef = useRef<Map<string, string>>(new Map());
+  const localRawFilesRef = useRef<Map<string, File>>(new Map());
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
     return () => {
       localBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       localBlobUrlsRef.current.clear();
+      localRawFilesRef.current.clear();
     };
   }, []);
 
@@ -302,6 +304,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         });
         const blobUrl = URL.createObjectURL(file);
         localBlobUrlsRef.current.set(saved.id, blobUrl);
+        localRawFilesRef.current.set(saved.id, file);
         onFileCreated(saved);
         setSelectedFileId(saved.id);
       }
@@ -962,8 +965,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                 fileName: activeFile.fileName,
                 fileUrl: activeFile.fileUrl,
                 uploadedAt: activeFile.uploadedAt,
+                rawFile: activeFile.rawFile,
               }}
               previewUrl={resolvedPreviewUrl || (activeFile.fileUrl.startsWith("storage://") ? "" : activeFile.fileUrl)}
+              previewFile={activeFile.rawFile || localRawFilesRef.current.get(activeFile.id) || null}
               isDownloading={downloadingFileId === activeFile.id}
               onDownloadFile={(url, name, id) => void handleDownloadFile(url, name, id)}
               formatDateTimeLabel={(date) => new Date(date).toLocaleDateString()}

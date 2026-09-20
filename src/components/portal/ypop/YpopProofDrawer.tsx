@@ -117,12 +117,14 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localBlobUrlsRef = useRef<Map<string, string>>(new Map());
+  const localRawFilesRef = useRef<Map<string, File>>(new Map());
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
     return () => {
       localBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       localBlobUrlsRef.current.clear();
+      localRawFilesRef.current.clear();
     };
   }, []);
 
@@ -219,6 +221,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         });
         const blobUrl = URL.createObjectURL(file);
         localBlobUrlsRef.current.set(saved.id, blobUrl);
+        localRawFilesRef.current.set(saved.id, file);
         onFileCreated(saved);
         setSelectedFileId(saved.id);
       }
@@ -245,6 +248,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       URL.revokeObjectURL(localBlob);
       localBlobUrlsRef.current.delete(file.id);
     }
+    localRawFilesRef.current.delete(file.id);
 
     if (selectedFileId === file.id) {
       const remaining = files.filter((f) => f.id !== file.id);
@@ -639,6 +643,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                     uploadedAt: activeFile.uploadedAt,
                   }}
                   previewUrl={resolvedPreviewUrl || (activeFile.fileUrl.startsWith("storage://") ? "" : activeFile.fileUrl)}
+                  previewFile={localRawFilesRef.current.get(activeFile.id) || null}
                   isDownloading={downloadingFileId === activeFile.id}
                   onDownloadFile={(url, name, id) => void handleDownloadFile(url, name, id)}
                   formatDateTimeLabel={(date) => new Date(date).toLocaleDateString()}

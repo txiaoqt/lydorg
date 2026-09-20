@@ -148,7 +148,9 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNumber, c
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 
 export interface PortalDocumentViewerProps {
-  previewUrl: string;
+  previewUrl?: string;
+  previewFile?: File | Blob | null;
+  previewData?: ArrayBuffer | Uint8Array | null;
   previewTitle?: string;
   previewCanInline?: boolean;
   previewEmptyMessage?: string;
@@ -157,7 +159,9 @@ export interface PortalDocumentViewerProps {
 }
 
 export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
-  previewUrl,
+  previewUrl = "",
+  previewFile = null,
+  previewData = null,
   previewTitle,
   previewCanInline = true,
   previewEmptyMessage,
@@ -169,6 +173,7 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState(600);
+  const [localImageBlobUrl, setLocalImageBlobUrl] = useState<string>("");
   const [effectiveUrl, setEffectiveUrl] = useState<string>(() => {
     if (!previewUrl || previewUrl.startsWith("storage://")) return "";
     return previewUrl;
@@ -208,6 +213,25 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
     };
   }, [previewUrl]);
 
+  const isImageFile = Boolean(
+    (previewFile && previewFile.type?.startsWith("image/")) ||
+    (effectiveUrl && /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(effectiveUrl)) ||
+    (previewTitle && /\.(png|jpe?g|webp|gif|svg)$/i.test(previewTitle)) ||
+    (previewUrl && /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(previewUrl))
+  );
+
+  useEffect(() => {
+    if (previewFile && isImageFile && !effectiveUrl && !previewUrl) {
+      const url = URL.createObjectURL(previewFile);
+      setLocalImageBlobUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setLocalImageBlobUrl("");
+    }
+  }, [previewFile, isImageFile, effectiveUrl, previewUrl]);
+
   useEffect(() => {
     if (!scrollContainerRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -219,24 +243,23 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
     });
     observer.observe(scrollContainerRef.current);
     return () => observer.disconnect();
-  }, [effectiveUrl]);
+  }, [effectiveUrl, previewFile, previewData]);
 
   useEffect(() => {
     let isCancelled = false;
 
-    if (!effectiveUrl || !previewCanInline || effectiveUrl.startsWith("storage://")) {
+    if ((!effectiveUrl && !previewFile && !previewData) || !previewCanInline) {
       setPdfDoc(null);
       setPdfLoading(false);
       setPdfError(null);
       return;
     }
 
-    // Skip PDF loading if it is an image file
-    const isImage = Boolean(
-      /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(effectiveUrl) ||
-      (previewTitle && /\.(png|jpe?g|webp|gif|svg)$/i.test(previewTitle))
-    );
-    if (isImage) {
+    if (effectiveUrl.startsWith("storage://")) {
+      return;
+    }
+
+    if (isImageFile) {
       setPdfDoc(null);
       setPdfLoading(false);
       setPdfError(null);
@@ -248,14 +271,31 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
       setPdfError(null);
 
       try {
-        const response = await fetch(effectiveUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to load document (HTTP ${response.status})`);
+        let uint8Data: Uint8Array | null = null;
+
+        if (previewData) {
+          uint8Data = previewData instanceof Uint8Array ? previewData : new Uint8Array(previewData);
+        } else if (previewFile) {
+          const arrayBuffer = await previewFile.arrayBuffer();
+          if (isCancelled) return;
+          uint8Data = new Uint8Array(arrayBuffer);
+        } else if (effectiveUrl) {
+          const response = await fetch(effectiveUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to load document (HTTP ${response.status})`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          if (isCancelled) return;
+          uint8Data = new Uint8Array(arrayBuffer);
         }
-        const arrayBuffer = await response.arrayBuffer();
+
+        if (!uint8Data) {
+          throw new Error("No document data available for preview.");
+        }
+
         if (isCancelled) return;
 
-        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+        const loadingTask = pdfjsLib.getDocument({ data: uint8Data });
         const loadedDoc = await loadingTask.promise;
 
         if (!isCancelled) {
@@ -276,9 +316,15 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [effectiveUrl, previewCanInline, previewTitle]);
+  }, [effectiveUrl, previewFile, previewData, previewCanInline, previewTitle, isImageFile]);
 
   const handleOpenNewTab = () => {
+    if (previewFile) {
+      const tempUrl = URL.createObjectURL(previewFile);
+      window.open(tempUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(tempUrl), 60000);
+      return;
+    }
     const targetUrl = effectiveUrl || (previewUrl && !previewUrl.startsWith("storage://") ? previewUrl : "");
     if (targetUrl) {
       window.open(targetUrl, "_blank", "noopener,noreferrer");
@@ -286,6 +332,17 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
   };
 
   const handleDownload = async () => {
+    if (previewFile) {
+      const objectUrl = URL.createObjectURL(previewFile);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = previewTitle || (previewFile instanceof File ? previewFile.name : "document.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      return;
+    }
     const targetUrl = effectiveUrl || (previewUrl && !previewUrl.startsWith("storage://") ? previewUrl : "");
     if (!targetUrl || downloading) return;
     try {
@@ -311,28 +368,24 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
     }
   };
 
-  const isImageFile = Boolean(
-    effectiveUrl && (
-      /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(effectiveUrl) ||
-      (previewTitle && /\.(png|jpe?g|webp|gif|svg)$/i.test(previewTitle))
-    )
-  );
+  const hasSource = Boolean(previewUrl || effectiveUrl || previewFile || previewData);
+  const resolvedImageSrc = effectiveUrl || previewUrl || localImageBlobUrl;
 
   return (
     <div
       ref={scrollContainerRef}
       className={className || "flex-1 overflow-y-auto bg-[#F8FAFC] dark:bg-[#141E30] p-2.5 sm:p-4 rounded-xl border border-border/70 min-h-[260px]"}
     >
-      {previewUrl && isImageFile ? (
+      {hasSource && isImageFile ? (
         /* Direct Image Preview */
         <div className="flex items-center justify-center min-h-full p-2">
           <img
-            src={previewUrl}
+            src={resolvedImageSrc}
             alt={previewTitle || "Document Preview"}
             className="max-w-full max-h-[60vh] object-contain rounded-xl border border-border/60 shadow-sm bg-background"
           />
         </div>
-      ) : previewUrl && previewCanInline ? (
+      ) : hasSource && previewCanInline ? (
         /* Multi-Page Canvas PDF Preview */
         pdfLoading ? (
           <div className="flex h-full min-h-[220px] flex-col items-center justify-center p-8 text-center space-y-3 text-muted-foreground">
@@ -384,7 +437,7 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
             </div>
           </div>
         )
-      ) : previewUrl ? (
+      ) : hasSource ? (
         /* Genuine Fallback Empty State (DOCX, ZIP, etc.) */
         <div className="flex h-full min-h-[220px] flex-col items-center justify-center p-6 text-center space-y-3 max-w-md mx-auto">
           <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -431,7 +484,9 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
 export interface PortalDocumentPreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  previewUrl: string;
+  previewUrl?: string;
+  previewFile?: File | Blob | null;
+  previewData?: ArrayBuffer | Uint8Array | null;
   previewTitle: string;
   previewCanInline: boolean;
   previewEmptyMessage?: string;
@@ -449,7 +504,9 @@ export interface PortalDocumentPreviewModalProps {
 export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProps> = ({
   open,
   onOpenChange,
-  previewUrl,
+  previewUrl = "",
+  previewFile = null,
+  previewData = null,
   previewTitle,
   previewCanInline,
   previewEmptyMessage,
@@ -466,6 +523,17 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
+    if (previewFile) {
+      const objectUrl = URL.createObjectURL(previewFile);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = previewTitle || (previewFile instanceof File ? previewFile.name : "document.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      return;
+    }
     if (!previewUrl || downloading) return;
     try {
       setDownloading(true);
@@ -491,6 +559,12 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
   };
 
   const handleOpenNewTab = () => {
+    if (previewFile) {
+      const tempUrl = URL.createObjectURL(previewFile);
+      window.open(tempUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(tempUrl), 60000);
+      return;
+    }
     if (previewUrl) {
       window.open(previewUrl, "_blank", "noopener,noreferrer");
     }
@@ -551,7 +625,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
           <div className="flex items-center gap-2.5 shrink-0">
             {headerActions ? (
               headerActions
-            ) : previewUrl ? (
+            ) : previewUrl || previewFile || previewData ? (
               <>
                 <Button
                   type="button"
@@ -663,7 +737,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
             <div className="w-full pt-1 sm:pt-0">
               {headerActions}
             </div>
-          ) : previewUrl ? (
+          ) : previewUrl || previewFile || previewData ? (
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 shrink-0 w-full pt-1.5 pb-0.5">
               <Button
                 type="button"
@@ -702,6 +776,8 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
         {/* REUSABLE PDF VIEWER AREA */}
         <PortalDocumentViewer
           previewUrl={previewUrl}
+          previewFile={previewFile}
+          previewData={previewData}
           previewTitle={previewTitle}
           previewCanInline={previewCanInline}
           previewEmptyMessage={previewEmptyMessage}
