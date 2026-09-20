@@ -142,6 +142,14 @@ const Contacts = () => {
               </div>
               <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">
                 <span className="font-segoe text-sm font-normal text-slate-500">
+                  Friday
+                </span>
+                <span className="font-segoe text-sm font-medium text-slate-500">
+                  Closed
+                </span>
+              </div>
+              <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">
+                <span className="font-segoe text-sm font-normal text-slate-500">
                   Saturday
                 </span>
                 <span className="font-segoe text-sm font-medium text-slate-500">
