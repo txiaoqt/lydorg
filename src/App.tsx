@@ -276,9 +276,9 @@ const App = () => (
                     </>
                   ) : (
                     <>
+                      <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
                       {IS_COMBINED_SURFACE ? (
                         <>
-                          <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
                           <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                           <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                           <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />

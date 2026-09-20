@@ -141,47 +141,48 @@ const AdminCreatePassword = () => {
       }
 
       let exchangeError: string | null = null;
-      if (recovery.code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(recovery.code);
-        exchangeError = error?.message ?? null;
-      } else if (recovery.tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: recovery.tokenHash,
-          type: "invite",
-        });
-        exchangeError = error?.message ?? null;
-      } else if (recovery.accessToken && recovery.refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: recovery.accessToken,
-          refresh_token: recovery.refreshToken,
-        });
-        exchangeError = error?.message ?? null;
+      try {
+        if (recovery.code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(recovery.code);
+          if (error) exchangeError = error.message;
+        } else if (recovery.tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: recovery.tokenHash,
+            type: "invite",
+          });
+          if (error) exchangeError = error.message;
+        } else if (recovery.accessToken && recovery.refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: recovery.accessToken,
+            refresh_token: recovery.refreshToken,
+          });
+          if (error) exchangeError = error.message;
+        }
+      } catch (err) {
+        exchangeError = err instanceof Error ? err.message : "Unable to process invite credentials.";
       }
 
-      const { data } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (!active) return;
-      if (data.session) {
+
+      if (sessionData?.session?.user) {
         window.history.replaceState({}, document.title, window.location.pathname);
         setInlineError("");
         setMode("update");
         return;
       }
 
-      setInlineError(exchangeError || "This invite link is invalid or has expired.");
+      setInlineError(exchangeError || sessionError?.message || "This invite link is invalid or has expired.");
       setMode("invalid");
     };
 
-    if (recovery.hasRecoveryError) {
+    if (recovery.hasRecoveryError && recovery.errorMessage) {
+      setInlineError(recovery.errorMessage);
       setMode("invalid");
       return;
     }
 
-    if (recovery.hasRecoveryCredentials) {
-      void establishInviteSession();
-    } else {
-      setInlineError("This invite link is invalid or has expired.");
-      setMode("invalid");
-    }
+    void establishInviteSession();
 
     return () => {
       active = false;

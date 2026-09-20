@@ -9,6 +9,7 @@ import { normalizeUrn } from "@/lib/urn-registration";
 import { clearSupabaseAuthStorage, isInvalidRefreshTokenError } from "@/lib/auth-session-recovery";
 import {
   clearPasswordRecoveryState,
+  isInviteJwt,
   isPasswordRecoveryActive,
   isRecoveryJwt,
   markPasswordRecoveryActive,
@@ -248,6 +249,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             return related?.code;
           })
           .filter((code): code is string => Boolean(code)) ?? [];
+
+      const isInviteSession =
+        isInviteJwt(session.access_token) ||
+        Boolean(authUser.invited_at) ||
+        (typeof window !== "undefined" && window.location.pathname === "/admin/create-password");
+
+      const hasNoOrgOrRoleData = !profileResp.data && roleCodes.length === 0;
+
+      // Scoped guard: A transient shadow admin invitation session during password setup
+      // must NOT be classified as an ordinary organization youth user.
+      if (isInviteSession && hasNoOrgOrRoleData) {
+        setIsAuthenticated(false);
+        setRole("guest");
+        setUser(null);
+        setIsInitialized(true);
+        return;
+      }
 
       const resolvedRole = priorityRole(roleCodes);
       const resolvedUser: AuthUser = {

@@ -94,6 +94,47 @@ export const isRecoveryJwt = (accessToken?: string | null): boolean => {
 };
 
 /**
+ * Inspects a Supabase JWT access token to check if it was issued via an invitation flow.
+ * Supabase GoTrue includes an `amr` (Authentication Methods Reference) claim in the JWT payload,
+ * e.g., [{"method": "invite", "timestamp": ...}].
+ * Also verifies that the token has not expired.
+ */
+export const isInviteJwt = (accessToken?: string | null): boolean => {
+  if (!accessToken || typeof accessToken !== "string") return false;
+  try {
+    const parts = accessToken.split(".");
+    if (parts.length < 2) return false;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+
+    // Verify token expiration
+    if (typeof payload?.exp === "number") {
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp < now) {
+        return false;
+      }
+    }
+
+    if (Array.isArray(payload?.amr)) {
+      return payload.amr.some(
+        (entry: { method?: string } | string) =>
+          (typeof entry === "object" && entry?.method === "invite") || entry === "invite"
+      );
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Reads any Supabase access token stored in localStorage synchronously.
  */
 export const getStoredSupabaseToken = (): string | null => {

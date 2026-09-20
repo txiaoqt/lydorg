@@ -9,6 +9,8 @@ import {
 } from "@/user/pwa/pwaAuthFlow";
 import { fetchOrganizationProfileInSupabase } from "@/lib/lydo-connect-supabase";
 import { isOrganizationProfileComplete } from "@/lib/organization-profile-domain";
+import { isInviteJwt } from "@/lib/password-recovery";
+import { supabase } from "@/lib/supabase";
 
 const parseAuthError = (search?: string, hash?: string): string | null => {
   const searchSource = search || (typeof window !== "undefined" ? window.location.search : "");
@@ -71,6 +73,24 @@ const AuthCallback = () => {
 
     const searchParams = new URLSearchParams(location.search);
     const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+
+    // 1. Priority: Admin Invitation Flow Detection
+    const isExplicitInvite =
+      searchParams.get("type") === "invite" ||
+      hashParams.get("type") === "invite" ||
+      searchParams.get("next")?.includes("create-password") ||
+      hashParams.get("next")?.includes("create-password") ||
+      searchParams.get("redirect_to")?.includes("create-password") ||
+      hashParams.get("redirect_to")?.includes("create-password");
+
+    if (isExplicitInvite) {
+      const search = location.search || "";
+      const hash = location.hash || "";
+      navigate(`/admin/create-password${search}${hash}`, { replace: true });
+      return;
+    }
+
+    // 2. Priority: Password Recovery Flow Detection
     const isExplicitRecovery =
       searchParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
 
@@ -78,6 +98,17 @@ const AuthCallback = () => {
       navigate("/reset-password", { replace: true });
       return;
     }
+
+    // 3. Priority: Check if active session is an unconfirmed admin invite session
+    if (supabase) {
+      void supabase.auth.getSession().then(({ data }) => {
+        if (data?.session && (isInviteJwt(data.session.access_token) || Boolean(data.session.user?.invited_at))) {
+          navigate("/admin/create-password", { replace: true });
+        }
+      });
+    }
+
+    // 4. Priority: Normal Authenticated User Routing
     if (isAuthenticated) {
       if (role === "admin") {
         navigate("/admin", { replace: true });
@@ -113,6 +144,7 @@ const AuthCallback = () => {
         active = false;
       };
     }
+
     if (!hasAuthParams || readyToFallback) {
       navigate(pwaFlow ? pwaAuthRoute("/signin") : "/signin", {
         replace: true,
@@ -121,7 +153,7 @@ const AuthCallback = () => {
           : undefined,
       });
     }
-  }, [authError, hasAuthParams, isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow, readyToFallback, role, user]);
+  }, [authError, hasAuthParams, isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow, readyToFallback, role, user, location.search, location.hash]);
 
   useEffect(() => {
     if (!isInitialized || isAuthenticated || !hasAuthParams || authError) return;
