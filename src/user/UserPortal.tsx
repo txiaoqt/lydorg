@@ -2861,6 +2861,15 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (subject.length > 120) {
+      toast({
+        title: "Subject too long",
+        description: "Subject must be 120 characters or fewer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setConfirmInquirySubmitOpen(false);
     setSavingInquiry(true);
     try {

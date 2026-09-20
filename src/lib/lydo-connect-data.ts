@@ -1274,6 +1274,76 @@ export const DEFAULT_NEWS_CATEGORIES = ["YORP", "YPOP", "MOVE"] as const;
 export const NEWS_CATEGORY_OPTIONS = DEFAULT_NEWS_CATEGORIES;
 export type NewsCategory = string;
 
+export interface NewsCategoryRecord {
+  id: string;
+  name: string;
+  normalizedName: string;
+  isSystem: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const INITIAL_NEWS_CATEGORIES: NewsCategoryRecord[] = [
+  { id: "system-cat-yorp", name: "YORP", normalizedName: "yorp", isSystem: true },
+  { id: "system-cat-ypop", name: "YPOP", normalizedName: "ypop", isSystem: true },
+  { id: "system-cat-move", name: "MOVE", normalizedName: "move", isSystem: true },
+];
+
+export const getNewsCategoryUsage = (
+  categoryNameOrNormalized: string,
+  newsReleases: Array<Pick<NewsRelease, "category">> = [],
+): number => {
+  const target = categoryNameOrNormalized.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!target) return 0;
+  return newsReleases.filter((item) => {
+    if (!item.category || typeof item.category !== "string") return false;
+    const itemNorm = item.category.trim().toLowerCase().replace(/\s+/g, " ");
+    return itemNorm === target;
+  }).length;
+};
+
+export const buildAdminNewsCategoryOptions = (
+  newsCategories: NewsCategoryRecord[] = [],
+  newsReleases: Array<Pick<NewsRelease, "category">> = [],
+): NewsCategoryRecord[] => {
+  const seen = new Set<string>();
+  const result: NewsCategoryRecord[] = [];
+
+  // 1. Ensure system categories are present and first
+  for (const sys of INITIAL_NEWS_CATEGORIES) {
+    const existing = newsCategories.find((c) => c.normalizedName === sys.normalizedName);
+    const cat = existing ?? sys;
+    seen.add(cat.normalizedName);
+    result.push(cat);
+  }
+
+  // 2. Add registered custom categories from persistent registry
+  for (const cat of newsCategories) {
+    if (!seen.has(cat.normalizedName)) {
+      seen.add(cat.normalizedName);
+      result.push(cat);
+    }
+  }
+
+  // 3. Fallback: Any category present in newsReleases not yet registered
+  for (const nr of newsReleases) {
+    if (!nr.category) continue;
+    const trimmed = nr.category.trim();
+    const normalized = trimmed.toLowerCase().replace(/\s+/g, " ");
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      result.push({
+        id: `legacy-${normalized}`,
+        name: trimmed,
+        normalizedName: normalized,
+        isSystem: false,
+      });
+    }
+  }
+
+  return result;
+};
+
 export interface FacebookUrlValidationResult {
   isValid: boolean;
   error?: string;
@@ -1659,6 +1729,7 @@ export type LydoSeedState = {
   ypopCityActivities: YPOPCityActivity[];
   ypopPeriods: YPOPPeriod[];
   customTemplateCategories?: string[];
+  newsCategories?: NewsCategoryRecord[];
 };
 
 const nowIso = new Date().toISOString();
@@ -2533,6 +2604,7 @@ export const seedState: LydoSeedState = {
   ],
   inquiries: [],
   customTemplateCategories: [],
+  newsCategories: INITIAL_NEWS_CATEGORIES,
 };
 
 export const statusToneMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {

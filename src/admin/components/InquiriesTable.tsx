@@ -1,6 +1,6 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
-import { ChevronLeft, ChevronRight, Clock, Copy, Mail, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Copy, Mail, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { normalizeInquiryStatus, type InquiryRecord } from "@/lib/lydo-connect-data";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ type InquiriesTableProps = {
   onStatusFilterChange: (value: StatusFilter) => void;
   onSelectInquiry: (inquiry: InquiryRecord) => void;
   onMarkResponded: (inquiry: InquiryRecord) => void | Promise<void>;
+  onDeleteInquiry?: (inquiry: InquiryRecord) => void;
 };
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
@@ -107,6 +108,30 @@ export const ReplyEmailButton = ({
   </button>
 );
 
+export const DeleteInquiryButton = ({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) => (
+  <button
+    type="button"
+    aria-label="Delete Inquiry"
+    title="Delete Inquiry"
+    onClick={(event) => {
+      event.stopPropagation();
+      onClick();
+    }}
+    className={cn(
+      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-400 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 active:scale-95 cursor-pointer",
+      className,
+    )}
+  >
+    <Trash2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+  </button>
+);
+
 export const InquiriesTable = ({
   inquiries,
   getReferenceCode,
@@ -116,6 +141,7 @@ export const InquiriesTable = ({
   onStatusFilterChange,
   onSelectInquiry,
   onMarkResponded,
+  onDeleteInquiry,
 }: InquiriesTableProps) => {
   const [page, setPage] = useState(0);
   const [replyDialogInquiry, setReplyDialogInquiry] = useState<InquiryRecord | null>(null);
@@ -180,7 +206,7 @@ export const InquiriesTable = ({
         <span className="min-w-0 flex-1">Subject &amp; Preview</span>
         <span className="w-[15%]">Received</span>
         <span className="w-[10%]">Status</span>
-        <span className="w-[168px] shrink-0">Actions</span>
+        <span className="w-[185px] shrink-0 text-right pr-6">Actions</span>
       </div>
 
       {/* Rows */}
@@ -216,7 +242,7 @@ export const InquiriesTable = ({
                 <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
                   {inquiry.subject}
                 </p>
-                <p className="line-clamp-1 font-segoe text-xs leading-[140%] text-slate-500">{inquiry.description}</p>
+                <p className="line-clamp-1 break-words font-segoe text-xs leading-[140%] text-slate-500">{inquiry.description}</p>
               </div>
 
               <div className="flex w-[15%] flex-col gap-1">
@@ -233,8 +259,11 @@ export const InquiriesTable = ({
                 <StatusPill status={inquiry.status} />
               </div>
 
-              <div className="flex w-[168px] shrink-0 items-center gap-2">
+              <div className="flex w-[185px] shrink-0 items-center justify-end gap-1.5">
                 <ReplyEmailButton onClick={() => setReplyDialogInquiry(inquiry)} />
+                {onDeleteInquiry ? (
+                  <DeleteInquiryButton onClick={() => onDeleteInquiry(inquiry)} />
+                ) : null}
                 <ChevronRight
                   className="h-4 w-4 shrink-0 text-text-disabled transition-colors group-hover:text-icon-info-secondary"
                   strokeWidth={1.6}

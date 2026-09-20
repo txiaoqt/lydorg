@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export interface SubmitInquiryModalProps {
   open: boolean;
@@ -52,6 +53,8 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
   submittingInquiry = false,
   onSubmit,
 }) => {
+  const subjectLength = inquiryForm?.subject?.length || 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg p-0 gap-0 overflow-hidden rounded-2xl bg-card border border-border/80 shadow-2xl flex flex-col max-h-[90vh]">
@@ -136,18 +139,31 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="inquiry-subject" className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
-                  <span>Subject</span>
-                  <span className="text-destructive font-normal text-xs" aria-hidden="true">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="inquiry-subject" className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
+                    <span>Subject</span>
+                    <span className="text-destructive font-normal text-xs" aria-hidden="true">*</span>
+                  </Label>
+                  <span
+                    className={cn(
+                      "text-[10px] font-mono tracking-tight transition-colors",
+                      subjectLength >= 120
+                        ? "font-semibold text-amber-600 dark:text-amber-400"
+                        : "text-muted-foreground/70"
+                    )}
+                  >
+                    {subjectLength} / 120
+                  </span>
+                </div>
                 <Input
                   id="inquiry-subject"
                   required
+                  maxLength={120}
                   value={inquiryForm?.subject || ""}
                   onChange={(e) =>
                     setInquiryForm((prev) => ({
                       ...prev,
-                      subject: e.target.value,
+                      subject: e.target.value.slice(0, 120),
                     }))
                   }
                   placeholder="e.g. Question about liquidation requirement"

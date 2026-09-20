@@ -18,7 +18,13 @@ const allowedBuckets = new Set([
 
 const MAX_BULK_BATCH_SIZE = 25;
 
-type Action = "preflight" | "delete" | "bulk_preflight" | "bulk_delete";
+type Action =
+  | "preflight"
+  | "delete"
+  | "bulk_preflight"
+  | "bulk_delete"
+  | "registration_preflight"
+  | "registration_delete";
 
 type OrganizationTarget = {
   id: string;
@@ -26,6 +32,9 @@ type OrganizationTarget = {
   organization_name: string;
   organization_email: string;
   urn?: string | null;
+  profile_status?: string | null;
+  registration_type?: string | null;
+  is_existing_organization?: boolean | null;
 };
 
 type FileRow = { file_url?: string | null; revision_history?: unknown };
@@ -370,7 +379,7 @@ const validateOrganizationTarget = async (
 }> => {
   const { data: organization, error: organizationError } = await client
     .from("organization_profiles")
-    .select("id,user_id,organization_name,organization_email,urn")
+    .select("id,user_id,organization_name,organization_email,urn,profile_status,registration_type,is_existing_organization")
     .eq("id", organizationId)
     .maybeSingle();
 
@@ -446,10 +455,57 @@ const validateOrganizationTarget = async (
 };
 
 /**
+ * Validates whether the target organization is in an unverified registration stage
+ * and does not possess an existing local accreditation ledger.
+ */
+const verifyRegistrationEligibility = async (
+  client: ReturnType<typeof createClient>,
+  target: OrganizationTarget,
+) => {
+  const status = target.profile_status;
+  if (status === "verified") {
+    throw new SafeDeletionError(
+      "Verified organizations cannot be deleted from the Registrations workflow. Manage the organization through the YORP Registry instead.",
+      403,
+      "registration_eligibility",
+    );
+  }
+  if (status === "suspended_inactive") {
+    throw new SafeDeletionError(
+      "Suspended organizations cannot be deleted from the Registrations workflow.",
+      403,
+      "registration_eligibility",
+    );
+  }
+  if (!status || !["incomplete", "pending_review", "needs_update"].includes(status)) {
+    throw new SafeDeletionError(
+      "Only unverified registration-stage organizations can be deleted from the Registrations workflow.",
+      403,
+      "registration_eligibility",
+    );
+  }
+
+  // Check if a local accreditation record exists
+  const { data: accreditations, error: accreditationsError } = await client
+    .from("organization_accreditations")
+    .select("id")
+    .eq("organization_id", target.id)
+    .limit(1);
+
+  if (!accreditationsError && accreditations && accreditations.length > 0) {
+    throw new SafeDeletionError(
+      "This registration cannot be permanently deleted from the Registration workflow because an accreditation record is already associated with this account. Manage the organization through the YORP Registry/accreditation workflow instead.",
+      409,
+      "accreditation_safeguard",
+    );
+  }
+};
+
+/**
  * Shared core execution logic for deleting a single organization account.
  * Follows the safe sequence:
  * Step 1: In-Memory Storage Manifest Collection (before DB rows are deleted)
- * Step 2: Canonical Database Transaction (delete_organization_account_canonical RPC)
+ * Step 2: Canonical Database Transaction (delete_organization_account_canonical / delete_unverified_registration_account_canonical RPC)
  * Step 3: Auth User Deletion & Confirmation
  * Step 4: Storage Cleanup (ONLY after DB & Auth are confirmed gone)
  * Step 5: Verification
@@ -461,13 +517,14 @@ const executeSingleDeletionCore = async (
   adminId: string,
   target: OrganizationTarget,
   supabaseUrl: string,
-  operation: "single" | "bulk" = "single",
+  operation: "single" | "bulk" | "registration" = "single",
+  rpcName: "delete_organization_account_canonical" | "delete_unverified_registration_account_canonical" = "delete_organization_account_canonical",
 ) => {
   // Step 1: Collect storage manifest BEFORE database deletion removes references
   const manifest = await buildDeletionManifest(client, target, supabaseUrl);
 
   // Step 2: Canonical Database Transaction via RPC
-  const { data: dbResult, error: dbError } = await client.rpc("delete_organization_account_canonical", {
+  const { data: dbResult, error: dbError } = await client.rpc(rpcName, {
     _session_token: adminSessionToken,
     _organization_id: target.id,
   });
@@ -485,7 +542,7 @@ const executeSingleDeletionCore = async (
     if (dbResult?.already_deleted) {
       // Profile was already removed from DB in a prior attempt; continue with Auth & Storage cleanup
     } else if (dbResult?.is_protected) {
-      throw new SafeDeletionError("Administrator accounts cannot be deleted from the YORP Registry.", 403, "protection_check");
+      throw new SafeDeletionError("Administrator accounts cannot be deleted.", 403, "protection_check");
     } else {
       throw new SafeDeletionError(
         dbResult?.error || "Database deletion failed.",
@@ -618,7 +675,10 @@ Deno.serve(async (request) => {
     }
 
     const action = payload.action;
-    if (!action || !["preflight", "delete", "bulk_preflight", "bulk_delete"].includes(action)) {
+    if (
+      !action ||
+      !["preflight", "delete", "bulk_preflight", "bulk_delete", "registration_preflight", "registration_delete"].includes(action)
+    ) {
       throw new SafeDeletionError("The deletion request action is invalid.", 400, "request");
     }
 
@@ -849,7 +909,7 @@ Deno.serve(async (request) => {
     }
 
     // ==========================================
-    // ACTION: SINGLE PREFLIGHT / DELETE
+    // ACTION: SINGLE PREFLIGHT / DELETE / REGISTRATION PREFLIGHT / REGISTRATION DELETE
     // ==========================================
     const organizationId = payload.organizationId?.trim() ?? "";
     if (!uuidPattern.test(organizationId)) {
@@ -858,6 +918,7 @@ Deno.serve(async (request) => {
 
     const validation = await validateOrganizationTarget(client, organizationId);
 
+    // 1. REGISTRY PREFLIGHT
     if (action === "preflight") {
       if (!validation.target) {
         throw new SafeDeletionError("The organization could not be found.", 404, "validation");
@@ -872,7 +933,69 @@ Deno.serve(async (request) => {
       });
     }
 
-    // action === "delete"
+    // 2. REGISTRATION PREFLIGHT
+    if (action === "registration_preflight") {
+      if (!validation.target) {
+        throw new SafeDeletionError("The registration could not be found.", 404, "validation");
+      }
+      if (validation.isProtected) {
+        throw new SafeDeletionError("Administrator accounts cannot be deleted.", 403, "protection_check");
+      }
+      await verifyRegistrationEligibility(client, validation.target);
+      const manifest = await buildDeletionManifest(client, validation.target, supabaseUrl);
+      return json({
+        organization: { id: validation.target.id, name: validation.target.organization_name, urn: validation.target.urn },
+        counts: manifest.counts,
+      });
+    }
+
+    // 3. REGISTRATION DELETE
+    if (action === "registration_delete") {
+      if (!validation.target) {
+        if (validation.alreadyDeleted && validation.previousManifest?.organizationName) {
+          if (
+            normalizeConfirmation(payload.confirmationName ?? "") ===
+            normalizeConfirmation(validation.previousManifest.organizationName)
+          ) {
+            return json({
+              success: true,
+              organizationId,
+              counts: validation.previousManifest.counts,
+              auditRecorded: true,
+              alreadyDeleted: true,
+            });
+          }
+        }
+        throw new SafeDeletionError("The registration could not be found.", 404, "validation");
+      }
+
+      if (validation.isProtected) {
+        throw new SafeDeletionError("Administrator accounts cannot be deleted.", 403, "protection_check");
+      }
+
+      await verifyRegistrationEligibility(client, validation.target);
+
+      if (
+        normalizeConfirmation(payload.confirmationName ?? "") !==
+        normalizeConfirmation(validation.target.organization_name)
+      ) {
+        throw new SafeDeletionError("The organization name does not match.", 409, "confirmation");
+      }
+
+      const result = await executeSingleDeletionCore(
+        client,
+        adminSessionToken,
+        admin.admin_id,
+        validation.target,
+        supabaseUrl,
+        "registration",
+        "delete_unverified_registration_account_canonical",
+      );
+
+      return json(result);
+    }
+
+    // 4. REGISTRY SINGLE DELETE (action === "delete")
     if (!validation.target) {
       if (validation.alreadyDeleted && validation.previousManifest?.organizationName) {
         if (
@@ -909,6 +1032,7 @@ Deno.serve(async (request) => {
       validation.target,
       supabaseUrl,
       "single",
+      "delete_organization_account_canonical",
     );
 
     return json(result);

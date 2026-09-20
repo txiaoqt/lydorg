@@ -2,12 +2,21 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import "./admin-inquiries.css";
 import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
+import "./pages/yorp-registry.css";
 import { useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
+import {
+  preflightRegistrationDeletion,
+  permanentlyDeleteRegistrationAccount,
+  organizationDeletionConfirmationMatches,
+  ORGANIZATION_DELETION_CATEGORIES,
+  type OrganizationDeletionCounts,
+} from "@/lib/admin-organization-deletion";
 import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock, Clock3, Copy, CornerDownLeft, Download, Eye, EyeOff, ExternalLink, FileText, FolderOpen, Globe, History, Inbox, Info, Loader, Loader2, Lock, LogOut, Mail, MapPin, Medal, Megaphone, MessageSquare, MoreHorizontal, Newspaper, Pencil, Phone, PieChart as PieChartIcon, Plus, RefreshCw, Save, Search, Send, Settings, Shield, Trash2, TrendingUp, Trophy, Upload, UserCheck, UserPlus, UserRound, UserX, Users, Wallet, X, XCircle, type LucideIcon } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { addYears, format, parse } from "date-fns";
 import { Button } from "@/components/ui/button";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -37,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,7 +63,7 @@ import { type DownloadableFile } from "@/lib/document-compression";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
@@ -85,7 +95,7 @@ import { PublicBudgetSnapshotConfigPage } from "@/admin/components/PublicBudgetS
 import { BudgetMonitoringOverview } from "@/admin/components/BudgetMonitoringOverview";
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
 import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
-import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase } from "@/lib/lydo-connect-supabase";
+import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase } from "@/lib/lydo-connect-supabase";
 import {
   LiquidationReportsTable,
   LiquidationStatusLabel,
@@ -475,69 +485,69 @@ const liquidationLockedStatuses = new Set<LiquidationReport["status"]>(["complet
 
 type PendingAdminConfirmation =
   | {
-      kind: "document";
-      action: "approve" | "needs_revision" | "reject";
-      fileId: string;
-      submissionId: string;
-      organizationId: string;
-      organizationName: string;
-      fileName: string;
-      currentAdminRemarks: string;
-    }
+    kind: "document";
+    action: "approve" | "needs_revision" | "reject";
+    fileId: string;
+    submissionId: string;
+    organizationId: string;
+    organizationName: string;
+    fileName: string;
+    currentAdminRemarks: string;
+  }
   | {
-      kind: "profile";
-      action: "needs_update";
-      organizationId: string;
-      organizationName: string;
-      userId: string;
-    }
+    kind: "profile";
+    action: "needs_update";
+    organizationId: string;
+    organizationName: string;
+    userId: string;
+  }
   | {
-      kind: "budget";
-      action: "approve" | "submitted_hardcopy" | "cash_released" | "complete" | "needs_revision" | "reject";
-      budgetRequestId: string;
-      organizationId: string;
-      organizationName: string;
-      activityTitle: string;
-      requestedAmount: number;
-      currentStatus: BudgetRequest["status"];
-    }
+    kind: "budget";
+    action: "approve" | "submitted_hardcopy" | "cash_released" | "complete" | "needs_revision" | "reject";
+    budgetRequestId: string;
+    organizationId: string;
+    organizationName: string;
+    activityTitle: string;
+    requestedAmount: number;
+    currentStatus: BudgetRequest["status"];
+  }
   | {
-      kind: "liquidation";
-      action: "approve" | "submitted_hardcopy" | "complete" | "needs_revision" | "overdue";
-      liquidationReportId: string;
-      budgetRequestId: string;
-      organizationId: string;
-      organizationName: string;
-      activityTitle: string;
-      currentStatus: LiquidationReport["status"];
-    }
+    kind: "liquidation";
+    action: "approve" | "submitted_hardcopy" | "complete" | "needs_revision" | "overdue";
+    liquidationReportId: string;
+    budgetRequestId: string;
+    organizationId: string;
+    organizationName: string;
+    activityTitle: string;
+    currentStatus: LiquidationReport["status"];
+  }
   | {
-      kind: "transparency_post";
-      action: "publish" | "hide";
-      id: string;
-      title: string;
-    }
+    kind: "transparency_post";
+    action: "publish" | "hide";
+    id: string;
+    title: string;
+  }
   | {
-      kind: "ypop_event";
-      action: "verified" | "needs_revision" | "rejected";
-      participationId: string;
-      entryId: string;
-      activityId: string;
-      organizationId: string;
-      organizationName: string;
-      activityName: string;
-      currentAdminRemarks: string;
-    }
+    kind: "ypop_event";
+    action: "verified" | "needs_revision" | "rejected";
+    participationId: string;
+    entryId: string;
+    activityId: string;
+    organizationId: string;
+    organizationName: string;
+    activityName: string;
+    currentAdminRemarks: string;
+  }
   | {
-      kind: "ypop_org_activity";
-      action: "approved" | "needs_revision" | "rejected";
-      orgActivityId: string;
-      entryId: string;
-      organizationId: string;
-      organizationName: string;
-      activityName: string;
-      currentAdminRemarks: string;
-    };
+    kind: "ypop_org_activity";
+    action: "approved" | "needs_revision" | "rejected";
+    orgActivityId: string;
+    entryId: string;
+    organizationId: string;
+    organizationName: string;
+    activityName: string;
+    currentAdminRemarks: string;
+  };
 
 type RegistrationReviewDecision = "approve" | "needs_revision" | "reject";
 
@@ -563,26 +573,26 @@ const budgetDecisionRequiresRemark = (decision: BudgetReviewDecision) =>
 
 type PendingDeleteConfirmation =
   | {
-      kind: "news_release";
-      id: string;
-      title: string;
-    }
+    kind: "news_release";
+    id: string;
+    title: string;
+  }
   | {
-      kind: "transparency_post";
-      id: string;
-      title: string;
-    }
+    kind: "transparency_post";
+    id: string;
+    title: string;
+  }
   | {
-      kind: "ypop_period";
-      id: string;
-      title: string;
-      activityCount: number;
-    }
+    kind: "ypop_period";
+    id: string;
+    title: string;
+    activityCount: number;
+  }
   | {
-      kind: "ypop_city_activity";
-      id: string;
-      title: string;
-    };
+    kind: "ypop_city_activity";
+    id: string;
+    title: string;
+  };
 
 type BudgetMonitoringEntry = {
   budgetRequestId: string;
@@ -664,10 +674,19 @@ export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const { state, mergeRemoteState, updateOrganizationProfile, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory } =
+  const { state, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+  const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<Set<string>>(new Set());
+  const [registrationDeleteTarget, setRegistrationDeleteTarget] = useState<OrganizationProfile | null>(null);
+  const [registrationDeleteConfirmation, setRegistrationDeleteConfirmation] = useState("");
+  const [registrationDeleteLoading, setRegistrationDeleteLoading] = useState(false);
+  const [registrationDeletePreflightLoading, setRegistrationDeletePreflightLoading] = useState(false);
+  const [registrationDeleteCounts, setRegistrationDeleteCounts] = useState<OrganizationDeletionCounts | null>(null);
+  const [registrationDeleteError, setRegistrationDeleteError] = useState("");
+  const registrationDeleteInputRef = useRef<HTMLInputElement>(null);
   const [selectedRenewalId, setSelectedRenewalId] = useState<string | null>(null);
+
   const [adminRenewals, setAdminRenewals] = useState<OrganizationRenewalRecord[]>([]);
   const [adminAccreditations, setAdminAccreditations] = useState<OrganizationAccreditationRecord[]>([]);
   const [renewalRequiredDocuments, setRenewalRequiredDocuments] = useState<TemplateRecord[]>([]);
@@ -747,7 +766,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
   const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
   const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
-  const [customNewsCategories, setCustomNewsCategories] = useState<string[]>([]);
   const [savingNewsRelease, setSavingNewsRelease] = useState(false);
   const [transparencyModalMode, setTransparencyModalMode] = useState<"create" | "edit" | null>(null);
   const [editingTransparencyPostId, setEditingTransparencyPostId] = useState<string | null>(null);
@@ -1045,6 +1063,9 @@ export default function AdminPortal({ section }: { section: string }) {
   const [recentActivityDialogOpen, setRecentActivityDialogOpen] = useState(false);
   const [recentActivityDialogTitle, setRecentActivityDialogTitle] = useState("Recent Activity");
   const [recentActivityDialogEntries, setRecentActivityDialogEntries] = useState<RecentActivityEntry[]>([]);
+  const [inquiryToDelete, setInquiryToDelete] = useState<InquiryRecord | null>(null);
+  const [isDeletingInquiry, setIsDeletingInquiry] = useState(false);
+  const [deleteInquiryError, setDeleteInquiryError] = useState<string | null>(null);
 
   const profile = state.organizationProfiles[0] ?? null;
   const adminNotifications = state.notifications.filter((item) => item.userId === adminId);
@@ -1064,8 +1085,8 @@ export default function AdminPortal({ section }: { section: string }) {
           Array.isArray(template.templateCategories) && template.templateCategories.length > 0
             ? template.templateCategories
             : (template as any).template_category && Array.isArray((template as any).template_category)
-            ? (template as any).template_category
-            : [(template as any).category || deriveTemplateCategory(template.name)];
+              ? (template as any).template_category
+              : [(template as any).category || deriveTemplateCategory(template.name)];
         const categories = rawCategories.map((c: string) => c.toLowerCase().trim());
         if (!categories.includes("yorp")) return false;
         const scope = template.scope;
@@ -1085,11 +1106,11 @@ export default function AdminPortal({ section }: { section: string }) {
     () =>
       selectedRegistrationProfile
         ? state.documentSubmissions.find(
-            (submission) =>
-              submission.organizationId === selectedRegistrationProfile.id &&
-              (!submission.submissionScope || submission.submissionScope === "registration") &&
-              !submission.renewalId,
-          ) ?? null
+          (submission) =>
+            submission.organizationId === selectedRegistrationProfile.id &&
+            (!submission.submissionScope || submission.submissionScope === "registration") &&
+            !submission.renewalId,
+        ) ?? null
         : null,
     [selectedRegistrationProfile, state.documentSubmissions],
   );
@@ -1097,8 +1118,8 @@ export default function AdminPortal({ section }: { section: string }) {
     () =>
       selectedRegistrationSubmission
         ? state.documentSubmissionFiles
-            .filter((file) => file.submissionId === selectedRegistrationSubmission.id)
-            .sort((left, right) => left.documentTypeId.localeCompare(right.documentTypeId))
+          .filter((file) => file.submissionId === selectedRegistrationSubmission.id)
+          .sort((left, right) => left.documentTypeId.localeCompare(right.documentTypeId))
         : [],
     [selectedRegistrationSubmission, state.documentSubmissionFiles],
   );
@@ -1124,10 +1145,10 @@ export default function AdminPortal({ section }: { section: string }) {
     () =>
       selectedRenewal
         ? state.documentSubmissions.find(
-            (submission) =>
-              submission.renewalId === selectedRenewal.id ||
-              (submission.organizationId === selectedRenewal.organizationId && submission.submissionScope === "renewal"),
-          ) ?? null
+          (submission) =>
+            submission.renewalId === selectedRenewal.id ||
+            (submission.organizationId === selectedRenewal.organizationId && submission.submissionScope === "renewal"),
+        ) ?? null
         : null,
     [selectedRenewal, state.documentSubmissions],
   );
@@ -1156,8 +1177,8 @@ export default function AdminPortal({ section }: { section: string }) {
 
       const files = renewalSubmission
         ? state.documentSubmissionFiles.filter(
-            (f) => f.submissionId === renewalSubmission.id && f.adminStatus !== "draft",
-          )
+          (f) => f.submissionId === renewalSubmission.id && f.adminStatus !== "draft",
+        )
         : [];
 
       return {
@@ -1211,8 +1232,8 @@ export default function AdminPortal({ section }: { section: string }) {
     () =>
       selectedBudgetRequest
         ? [...state.budgetRequestFiles]
-            .filter((file) => file.budgetRequestId === selectedBudgetRequest.id)
-            .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+          .filter((file) => file.budgetRequestId === selectedBudgetRequest.id)
+          .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
         : [],
     [selectedBudgetRequest, state.budgetRequestFiles],
   );
@@ -1245,8 +1266,8 @@ export default function AdminPortal({ section }: { section: string }) {
     () =>
       selectedLiquidationReport
         ? [...state.liquidationReportFiles]
-            .filter((file) => file.liquidationReportId === selectedLiquidationReport.id)
-            .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+          .filter((file) => file.liquidationReportId === selectedLiquidationReport.id)
+          .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
         : [],
     [selectedLiquidationReport, state.liquidationReportFiles],
   );
@@ -1269,19 +1290,19 @@ export default function AdminPortal({ section }: { section: string }) {
         entry.action === "needs_revision" || entry.action === "rejected_red"
           ? "bg-rose-500"
           : entry.action === "approved_for_ftf_green" ||
-              entry.action === "hard_copy_submitted" ||
-              entry.action === "budget_released" ||
-              entry.action === "completed"
+            entry.action === "hard_copy_submitted" ||
+            entry.action === "budget_released" ||
+            entry.action === "completed"
             ? "bg-emerald-500"
             : "bg-amber-400";
       const title =
         entry.action === "needs_revision" ? "Revision Requested"
-        : entry.action === "rejected_red" ? "Rejected"
-        : entry.action === "approved_for_ftf_green" ? "Onsite Required"
-        : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
-        : entry.action === "budget_released" ? "Budget Released"
-        : entry.action === "completed" ? "Completed"
-        : entry.action.replaceAll("_", " ");
+          : entry.action === "rejected_red" ? "Rejected"
+            : entry.action === "approved_for_ftf_green" ? "Onsite Required"
+              : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+                : entry.action === "budget_released" ? "Budget Released"
+                  : entry.action === "completed" ? "Completed"
+                    : entry.action.replaceAll("_", " ");
       return {
         key: `budget-history-${idx}-${entry.changedAt}`,
         title,
@@ -1300,13 +1321,13 @@ export default function AdminPortal({ section }: { section: string }) {
       ...historyEntries,
       ...(selectedBudgetRequest.userNote
         ? [
-            {
-              key: `budget-note-${selectedBudgetRequest.id}`,
-              title: "Message from organization",
-              note: `"${selectedBudgetRequest.userNote}"`,
-              dotClassName: "bg-sky-500",
-            },
-          ]
+          {
+            key: `budget-note-${selectedBudgetRequest.id}`,
+            title: "Message from organization",
+            note: `"${selectedBudgetRequest.userNote}"`,
+            dotClassName: "bg-sky-500",
+          },
+        ]
         : []),
     ];
   }, [selectedBudgetRequest]);
@@ -1317,20 +1338,20 @@ export default function AdminPortal({ section }: { section: string }) {
         entry.action === "overdue" || entry.action === "rejected_red"
           ? "bg-rose-500"
           : entry.action === "approved_for_ftf_green" ||
-              entry.action === "completed_liquidated" ||
-              entry.action === "hard_copy_submitted"
+            entry.action === "completed_liquidated" ||
+            entry.action === "hard_copy_submitted"
             ? "bg-emerald-500"
             : entry.action === "submitted"
               ? "bg-muted-foreground/40"
               : "bg-amber-400";
       const title =
         entry.action === "overdue" ? "Marked Overdue"
-        : entry.action === "needs_revision" ? "Revision Requested"
-        : entry.action === "approved_for_ftf_green" ? "Approved"
-        : entry.action === "submitted" ? "Submitted"
-        : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
-        : entry.action === "completed_liquidated" ? "Liquidated"
-        : entry.action;
+          : entry.action === "needs_revision" ? "Revision Requested"
+            : entry.action === "approved_for_ftf_green" ? "Approved"
+              : entry.action === "submitted" ? "Submitted"
+                : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+                  : entry.action === "completed_liquidated" ? "Liquidated"
+                    : entry.action;
       return {
         key: `liquidation-history-${idx}-${entry.changedAt}`,
         title,
@@ -1672,8 +1693,8 @@ export default function AdminPortal({ section }: { section: string }) {
         registrationStatusFilter === "all"
           ? true
           : registrationStatusFilter === "pending_review"
-          ? org.profileStatus === "pending_review" || org.profileStatus === "incomplete"
-          : org.profileStatus === registrationStatusFilter;
+            ? org.profileStatus === "pending_review" || org.profileStatus === "incomplete"
+            : org.profileStatus === registrationStatusFilter;
       const matchesDistrict = registrationDistrictFilter === "all" || org.district === registrationDistrictFilter;
       const matchesBarangay = registrationBarangayFilter === "all" || org.barangay === registrationBarangayFilter;
       const matchesClassification =
@@ -1702,12 +1723,12 @@ export default function AdminPortal({ section }: { section: string }) {
         renewalStatusFilter === "all"
           ? true
           : renewalStatusFilter === "approved"
-          ? entry.renewalStatus === "approved"
-          : renewalStatusFilter === "pending_review"
-          ? entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted" || entry.renewalStatus === "submitted"
-          : renewalStatusFilter === "needs_revision"
-          ? entry.renewalStatus === "needs_revision"
-          : entry.renewalStatus === renewalStatusFilter;
+            ? entry.renewalStatus === "approved"
+            : renewalStatusFilter === "pending_review"
+              ? entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted" || entry.renewalStatus === "submitted"
+              : renewalStatusFilter === "needs_revision"
+                ? entry.renewalStatus === "needs_revision"
+                : entry.renewalStatus === renewalStatusFilter;
       const matchesDistrict = renewalDistrictFilter === "all" || entry.district === renewalDistrictFilter;
       const matchesBarangay = renewalBarangayFilter === "all" || entry.barangay === renewalBarangayFilter;
       const matchesClassification =
@@ -1766,9 +1787,13 @@ export default function AdminPortal({ section }: { section: string }) {
       ),
     [state.templates, state.customTemplateCategories],
   );
+  const newsCategoriesList = useMemo(
+    () => buildAdminNewsCategoryOptions(state.newsCategories ?? [], newsReleases),
+    [state.newsCategories, newsReleases],
+  );
   const newsCategoryOptions = useMemo(
-    () => deriveNewsCategories(newsReleases, customNewsCategories),
-    [newsReleases, customNewsCategories],
+    () => newsCategoriesList.map((c) => c.name),
+    [newsCategoriesList],
   );
   const filteredInquiries = useMemo(() => {
     const query = inquirySearch.trim().toLowerCase();
@@ -2050,26 +2075,26 @@ export default function AdminPortal({ section }: { section: string }) {
         row.riskLabel === "On Track"
           ? "bg-primary"
           : row.riskLabel === "Needs Attention"
-          ? "bg-amber-400"
-          : row.riskLabel === "Overdue"
-          ? "bg-rose-500"
-          : "bg-emerald-500",
+            ? "bg-amber-400"
+            : row.riskLabel === "Overdue"
+              ? "bg-rose-500"
+              : "bg-emerald-500",
       barClass:
         row.riskLabel === "On Track"
           ? "bg-primary"
           : row.riskLabel === "Needs Attention"
-          ? "bg-amber-400"
-          : row.riskLabel === "Overdue"
-          ? "bg-rose-500"
-          : "bg-emerald-500",
+            ? "bg-amber-400"
+            : row.riskLabel === "Overdue"
+              ? "bg-rose-500"
+              : "bg-emerald-500",
       chartColor:
         row.riskLabel === "On Track"
           ? "#2460A7"
           : row.riskLabel === "Needs Attention"
-          ? "#F59E0B"
-          : row.riskLabel === "Overdue"
-          ? "#F43F5E"
-          : "#10B981",
+            ? "#F59E0B"
+            : row.riskLabel === "Overdue"
+              ? "#F43F5E"
+              : "#10B981",
     }));
   }, [budgetMonitoringChartData, budgetMonitoringEntries.length]);
   const allocationOrganizationNamesByGroup = useMemo(() => {
@@ -2196,8 +2221,8 @@ export default function AdminPortal({ section }: { section: string }) {
               format === "pdf"
                 ? buildBudgetRequestPdfTotalsRow(budgetRequestExportRows)
                 : format === "csv"
-                ? undefined
-                : buildBudgetRequestTotalsRow(budgetRequestExportRows),
+                  ? undefined
+                  : buildBudgetRequestTotalsRow(budgetRequestExportRows),
             xlsxTotalsRow: format === "xlsx" ? buildBudgetRequestXlsxTotalsRow(budgetRequestExportRows) : undefined,
           },
           pageConfig,
@@ -2232,8 +2257,8 @@ export default function AdminPortal({ section }: { section: string }) {
               format === "pdf"
                 ? buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows)
                 : format === "csv"
-                ? undefined
-                : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
+                  ? undefined
+                  : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
             xlsxTotalsRow: format === "xlsx" ? buildBudgetMonitoringXlsxTotalsRow(budgetMonitoringExportRows) : undefined,
           },
           pageConfig,
@@ -2264,8 +2289,8 @@ export default function AdminPortal({ section }: { section: string }) {
               format === "pdf"
                 ? buildAllocationPdfTotalsRow(allocationByBarangayExportRows)
                 : format === "csv"
-                ? undefined
-                : buildAllocationTotalsRow(allocationByBarangayExportRows),
+                  ? undefined
+                  : buildAllocationTotalsRow(allocationByBarangayExportRows),
             xlsxTotalsRow: format === "xlsx" ? buildAllocationXlsxTotalsRow(allocationByBarangayExportRows) : undefined,
           },
           pageConfig,
@@ -2505,8 +2530,8 @@ export default function AdminPortal({ section }: { section: string }) {
     const activeFiles = selectedRegistrationId
       ? selectedRegistrationFiles
       : selectedRenewalId
-      ? localRenewalFiles
-      : [];
+        ? localRenewalFiles
+        : [];
     const filesWithUploads = activeFiles.filter((file) => file.fileUrl && file.fileUrl.trim());
 
     if (!filesWithUploads.length) {
@@ -3215,7 +3240,7 @@ export default function AdminPortal({ section }: { section: string }) {
     setAdministratorEmailError(null);
     try {
       let attempt = 0;
-      for (;;) {
+      for (; ;) {
         const candidateUsername = attempt === 0 ? baseUsername : `${baseUsername}${attempt + 1}`;
         try {
           await createAdministratorInSupabase({
@@ -3547,6 +3572,48 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
+  const handleInitiateDeleteInquiry = (inquiry: InquiryRecord) => {
+    setInquiryToDelete(inquiry);
+    setDeleteInquiryError(null);
+  };
+
+  const handleConfirmDeleteInquiry = async () => {
+    if (!inquiryToDelete || isDeletingInquiry) return;
+    setIsDeletingInquiry(true);
+    setDeleteInquiryError(null);
+
+    try {
+      const targetId = inquiryToDelete.id;
+      const refCode = getInquiryReferenceCode(inquiryToDelete, state.inquiries);
+      await deleteInquiryInSupabase(targetId);
+      removeInquiry(targetId);
+
+      if (selectedInquiry?.id === targetId) {
+        setSelectedInquiry(null);
+      }
+      if (replyDialogInquiry?.id === targetId) {
+        setReplyDialogInquiry(null);
+      }
+
+      setInquiryToDelete(null);
+      toast({
+        title: "Inquiry deleted",
+        description: `Inquiry ${refCode} has been permanently deleted.`,
+      });
+    } catch (error: any) {
+      console.error("Failed to delete inquiry:", error);
+      const message = error instanceof Error ? error.message : "Failed to delete inquiry. Please try again.";
+      setDeleteInquiryError(message);
+      toast({
+        title: "Deletion failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingInquiry(false);
+    }
+  };
+
   const notifyOrganizationUser = (params: {
     userId: string;
     organizationId: string;
@@ -3568,6 +3635,85 @@ export default function AdminPortal({ section }: { section: string }) {
       isRead: false,
       createdAt: new Date().toISOString(),
     });
+  };
+
+  const openRegistrationDeleteDialog = async (organization: OrganizationProfile) => {
+    setRegistrationDeleteTarget(organization);
+    setRegistrationDeleteConfirmation("");
+    setRegistrationDeleteError("");
+    setRegistrationDeleteCounts(null);
+    setRegistrationDeletePreflightLoading(true);
+
+    try {
+      const result = await preflightRegistrationDeletion(organization.id);
+      setRegistrationDeleteCounts(result.counts);
+    } catch (error) {
+      setRegistrationDeleteError(
+        error instanceof Error
+          ? error.message
+          : "The registration deletion preflight check could not be completed.",
+      );
+    } finally {
+      setRegistrationDeletePreflightLoading(false);
+    }
+  };
+
+  const closeRegistrationDeleteDialog = () => {
+    if (registrationDeleteLoading) return;
+    setRegistrationDeleteTarget(null);
+    setRegistrationDeleteConfirmation("");
+    setRegistrationDeleteError("");
+    setRegistrationDeleteCounts(null);
+  };
+
+  const confirmRegistrationPermanentDeletion = async () => {
+    if (
+      !registrationDeleteTarget ||
+      !organizationDeletionConfirmationMatches(
+        registrationDeleteConfirmation,
+        registrationDeleteTarget.organizationName,
+      ) ||
+      registrationDeleteLoading
+    ) {
+      return;
+    }
+
+    setRegistrationDeleteLoading(true);
+    setRegistrationDeleteError("");
+    try {
+      await permanentlyDeleteRegistrationAccount(
+        registrationDeleteTarget.id,
+        registrationDeleteConfirmation,
+      );
+      removeOrganizationAccountFromCache(registrationDeleteTarget.id);
+      setSelectedRegistrationId(null);
+      setSelectedRegistrationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(registrationDeleteTarget.id);
+        return next;
+      });
+      setRegistrationDeleteTarget(null);
+      setRegistrationDeleteConfirmation("");
+      toast({
+        title: "Registration account permanently deleted.",
+        description: `Account and associated records for ${registrationDeleteTarget.organizationName} have been removed.`,
+      });
+
+      try {
+        const snapshot = await loadAdminPortalSupabaseState();
+        if (snapshot) mergeRemoteState(snapshot);
+      } catch (refreshError) {
+        console.error("Failed to refresh admin state after registration deletion:", refreshError);
+      }
+    } catch (error) {
+      setRegistrationDeleteError(
+        error instanceof Error
+          ? error.message
+          : "The registration account could not be deleted. Please try again.",
+      );
+    } finally {
+      setRegistrationDeleteLoading(false);
+    }
   };
 
   const handleRegistrationSelectionChange = (nextRegistrationId: string | null) => {
@@ -3665,7 +3811,7 @@ export default function AdminPortal({ section }: { section: string }) {
       if (!successfulFiles.length) {
         throw new Error(
           failedResults.map((item) => item.error).filter(Boolean).join(" ") ||
-            "No document review decisions were saved. Please refresh and try again.",
+          "No document review decisions were saved. Please refresh and try again.",
         );
       }
 
@@ -3818,7 +3964,7 @@ export default function AdminPortal({ section }: { section: string }) {
       if (!successfulFiles.length) {
         throw new Error(
           failedResults.map((item) => item.error).filter(Boolean).join(" ") ||
-            "No document review decisions were saved. Please refresh and try again.",
+          "No document review decisions were saved. Please refresh and try again.",
         );
       }
 
@@ -5451,8 +5597,8 @@ export default function AdminPortal({ section }: { section: string }) {
         templateWorkflowScopeDraft === "registration"
           ? "registration"
           : templateWorkflowScopeDraft === "renewal"
-          ? "renewal"
-          : "both";
+            ? "renewal"
+            : "both";
 
       const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
       if (normalizedCategory && !isSystemTemplateCategory(normalizedCategory)) {
@@ -5638,6 +5784,45 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
+  const handleAddNewsCategory = async (newCatName: string) => {
+    try {
+      const created = await createNewsCategoryInSupabase(newCatName);
+      addNewsCategory(created);
+      await appendAuditLog("Created news category", "news_category", created.id, `Created news category "${created.name}".`);
+      toast({ title: "Category added", description: `Category "${created.name}" is now available.` });
+      return created.name;
+    } catch (err: any) {
+      toast({
+        title: "Failed to add category",
+        description: err.message || "The category could not be created.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const handleDeleteNewsCategory = async (cat: NewsCategoryRecord) => {
+    try {
+      await deleteNewsCategoryInSupabase(cat.id);
+      removeNewsCategory(cat.id);
+      if (newsCategoryDraft === cat.name) {
+        setNewsCategoryDraft("");
+      }
+      if (newsCategoryFilter === cat.name) {
+        setNewsCategoryFilter("all");
+      }
+      await appendAuditLog("Deleted news category", "news_category", cat.id, `Deleted news category "${cat.name}".`);
+      toast({ title: "Category deleted", description: `Category "${cat.name}" was removed successfully.` });
+    } catch (err: any) {
+      toast({
+        title: "Cannot delete category",
+        description: err.message || "Failed to delete category.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
   const handleDeleteNewsRelease = async (newsReleaseId: string) => {
     const newsRelease = newsReleases.find((entry) => entry.id === newsReleaseId);
     if (!newsRelease) return;
@@ -5705,7 +5890,7 @@ export default function AdminPortal({ section }: { section: string }) {
               ? "The news release could not be deleted."
               : pending.kind === "ypop_city_activity"
                 ? "The city-led activity could not be deleted."
-              : "The transparency post could not be deleted.",
+                : "The transparency post could not be deleted.",
         variant: "destructive",
       });
     }
@@ -5757,8 +5942,8 @@ export default function AdminPortal({ section }: { section: string }) {
         templateWorkflowScopeDraft === "registration"
           ? "registration"
           : templateWorkflowScopeDraft === "renewal"
-          ? "renewal"
-          : "both";
+            ? "renewal"
+            : "both";
 
       const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
       if (normalizedCategory && !isSystemTemplateCategory(normalizedCategory)) {
@@ -6391,6 +6576,7 @@ export default function AdminPortal({ section }: { section: string }) {
               onStatusFilterChange={setInquiryStatusFilter}
               onSelectInquiry={openInquiryDetails}
               onMarkResponded={handleMarkInquiryResponded}
+              onDeleteInquiry={handleInitiateDeleteInquiry}
             />
           </div>
         );
@@ -6446,6 +6632,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 profile={selectedOrg}
                 onBack={() => handleRegistrationSelectionChange(null)}
                 onReviewed={(updated) => updateOrganizationProfile(updated.id, updated)}
+                onDelete={() => void openRegistrationDeleteDialog(selectedOrg)}
               />
             );
           }
@@ -6478,10 +6665,10 @@ export default function AdminPortal({ section }: { section: string }) {
               const relatedFile = state.documentSubmissionFiles.find((file) => file.id === log.relatedId);
               const docName = relatedFile
                 ? templateDocuments.find(
-                    (doc) =>
-                      doc.id === relatedFile.documentTypeId ||
-                      (doc.databaseId && doc.databaseId === relatedFile.documentTypeId),
-                  )?.name ?? relatedFile.fileName
+                  (doc) =>
+                    doc.id === relatedFile.documentTypeId ||
+                    (doc.databaseId && doc.databaseId === relatedFile.documentTypeId),
+                )?.name ?? relatedFile.fileName
                 : "a document";
               const verb =
                 log.action === "Approved document submission"
@@ -6533,68 +6720,68 @@ export default function AdminPortal({ section }: { section: string }) {
                     <div
                       ref={registrationActivityPanelRef}
                       className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
-                  >
-                    <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
-                      <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
-                        Recent Activity
-                      </p>
-                      <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
-                        A log of recent actions taken on this organization.
-                      </p>
-                    </div>
-
-                    <div className="flex-1 space-y-3 overflow-y-auto p-4">
-                      {groupedActivityEntries.length ? (
-                        groupedActivityEntries.map((group) => (
-                          <div key={group.label} className="space-y-2">
-                            <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
-                              {group.label}
-                            </p>
-                            <div className="space-y-0">
-                              {group.entries.map((entry, index) => {
-                                const entryDate = new Date(entry.createdAt);
-                                const isValidEntryDate = !Number.isNaN(entryDate.getTime());
-                                return (
-                                  <div key={entry.id} className="relative flex gap-2.5 pb-3 last:pb-0">
-                                    {index < group.entries.length - 1 ? (
-                                      <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
-                                    ) : null}
-                                    <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
-                                      <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
-                                    </span>
-                                    <div className="min-w-0 flex-1 space-y-0.5">
-                                      <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
-                                        <span className="font-semibold">{entry.adminName}</span> {entry.verb}{" "}
-                                        <span className="font-semibold">{entry.docName}</span>.
-                                      </p>
-                                      <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
-                                        {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="py-6 text-center font-segoe text-sm text-slate-500">
-                          No activity recorded yet.
+                    >
+                      <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                          Recent Activity
                         </p>
-                      )}
-                    </div>
-
-                    {hasMoreActivityEntries ? (
-                      <div className="flex items-center justify-center border-t border-slate-300 p-4">
-                        <button
-                          type="button"
-                          onClick={() => setRegistrationActivityVisibleCount((current) => current + 4)}
-                          className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
-                        >
-                          Load older activity
-                        </button>
+                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          A log of recent actions taken on this organization.
+                        </p>
                       </div>
-                    ) : null}
+
+                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                        {groupedActivityEntries.length ? (
+                          groupedActivityEntries.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                {group.label}
+                              </p>
+                              <div className="space-y-0">
+                                {group.entries.map((entry, index) => {
+                                  const entryDate = new Date(entry.createdAt);
+                                  const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                  return (
+                                    <div key={entry.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                      {index < group.entries.length - 1 ? (
+                                        <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                      ) : null}
+                                      <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                        <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                      </span>
+                                      <div className="min-w-0 flex-1 space-y-0.5">
+                                        <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                          <span className="font-semibold">{entry.adminName}</span> {entry.verb}{" "}
+                                          <span className="font-semibold">{entry.docName}</span>.
+                                        </p>
+                                        <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                          {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                            No activity recorded yet.
+                          </p>
+                        )}
+                      </div>
+
+                      {hasMoreActivityEntries ? (
+                        <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                          <button
+                            type="button"
+                            onClick={() => setRegistrationActivityVisibleCount((current) => current + 4)}
+                            className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                          >
+                            Load older activity
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -6662,6 +6849,18 @@ export default function AdminPortal({ section }: { section: string }) {
                     {submittedDocumentCount}/{templateDocuments.length} Documents Submitted
                   </span>
                   <RegistrationStatusPill status={selectedOrg.profileStatus} />
+                  {selectedOrg.profileStatus !== "verified" && selectedOrg.profileStatus !== "suspended_inactive" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void openRegistrationDeleteDialog(selectedOrg)}
+                      className="h-9 gap-1.5 border-destructive/30 font-segoe text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete Registration
+                    </Button>
+                  ) : null}
                 </div>
               </div>
 
@@ -6871,277 +7070,305 @@ export default function AdminPortal({ section }: { section: string }) {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                  <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedRegistrationReviewFileIds(
-                            orderedSubmittedFiles
-                              .filter((entry) => entry.file.adminStatus !== "approved_green")
-                              .map((entry) => entry.file.id),
-                          )
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    {(() => {
+                      const selectableRegistrationFileIds = orderedSubmittedFiles
+                        .filter((entry) => entry.file.adminStatus !== "approved_green")
+                        .map((entry) => entry.file.id);
+                      const selectedRegistrationCount = selectableRegistrationFileIds.filter((id) =>
+                        selectedRegistrationReviewFileIds.includes(id),
+                      ).length;
+                      const isAllRegistrationSelected =
+                        selectableRegistrationFileIds.length > 0 &&
+                        selectedRegistrationCount === selectableRegistrationFileIds.length;
+                      const isRegistrationIndeterminate =
+                        selectedRegistrationCount > 0 &&
+                        selectedRegistrationCount < selectableRegistrationFileIds.length;
+                      const handleToggleSelectAllRegistration = () => {
+                        if (isAllRegistrationSelected) {
+                          setSelectedRegistrationReviewFileIds((current) =>
+                            current.filter((id) => !selectableRegistrationFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedRegistrationReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableRegistrationFileIds])),
+                          );
                         }
-                        className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
-                      >
-                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
-                        Select all
-                      </button>
-                    </div>
-                    <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
-                      Review the organization&rsquo;s submitted documents and select a document to preview.
-                    </p>
-                  </div>
+                      };
 
-                  <div className="space-y-0.5 pt-1">
-                    {orderedSubmittedFiles.length ? (
-                      orderedSubmittedFiles.map(({ documentType, file }) => {
-                        const isChecked = selectedRegistrationReviewFileIds.includes(file.id);
-                        const isActive = activeReviewEntry?.file.id === file.id;
-                        const uploadedDate = new Date(file.uploadedAt);
-                        const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
-                        const isLocked = file.adminStatus === "approved_green";
-
-                        return (
-                          <div
-                            key={file.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              setActiveRegistrationReviewFileId(file.id);
-                              if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
-                            }}
-                            onKeyDown={(event) => {
-                              if (event.key !== "Enter" && event.key !== " ") return;
-                              event.preventDefault();
-                              setActiveRegistrationReviewFileId(file.id);
-                              if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
-                            }}
-                            className={cn(
-                              "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
-                              isChecked
-                                ? "border border-border-info-tertiary bg-bg-info-tertiary"
-                                : isActive
-                                  ? "border border-transparent bg-slate-50"
-                                  : "border border-transparent hover:bg-slate-50",
-                            )}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              disabled={isLocked}
-                              onClick={(event) => event.stopPropagation()}
-                              onChange={() => {
-                                setSelectedRegistrationReviewFileIds((current) =>
-                                  current.includes(file.id)
-                                    ? current.filter((id) => id !== file.id)
-                                    : [...current, file.id],
-                                );
-                              }}
-                              className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                            <div className="min-w-0 flex-1 space-y-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
-                                  {documentType.name}
-                                </p>
-                                <DocumentQueueStatusPill status={file.adminStatus} />
-                              </div>
-                              <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
-                                {file.fileName}
-                              </p>
-                              <div className="flex items-center gap-2 pt-1">
-                                <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
-                                  Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
-                                </p>
-                                <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
-                                  {formatFileSize(file.fileSize)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
-                        No documents submitted yet.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                  <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
-                    <button
-                      type="button"
-                      ref={registrationDecisionHelpTriggerRef}
-                      onClick={() => setIsRegistrationDecisionHelpOpen((current) => !current)}
-                      aria-label="Review rules"
-                      className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
-                    >
-                      <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
-                    </button>
-                    {isRegistrationDecisionHelpOpen ? (
-                      <div
-                        ref={registrationDecisionHelpPanelRef}
-                        className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
-                      >
-                        <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                        <p className="font-segoe text-xs leading-[140%] text-text-default">
-                          <span className="font-semibold">Approve</span> — multiple files can be selected.
-                        </p>
-                        <p className="font-segoe text-xs leading-[140%] text-text-default">
-                          <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-4">
-                    {isAutoVerified ? (
-                      <div className="flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
-                        <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
-                        <div>
-                          <p className="font-segoe text-sm font-semibold text-positive-secondary">
-                            Registration Verified
-                          </p>
-                          <p className="mt-0.5 font-segoe text-xs text-text-default">
-                            All required registration documents have been approved. This organization is officially registered.
-                          </p>
-                        </div>
-                        {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
-                          <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
-                            <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
-                            <span className="font-cascadia text-base font-bold text-positive-secondary">
-                              {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
-                            </span>
-                          </div>
-                        ) : null}
-                        {selectedOrg.verifiedAt ? (
-                          <p className="font-segoe text-[11px] text-slate-500">
-                            Verified on {formatVerifiedDateLabel(selectedOrg.verifiedAt)}
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <>
-                        {selectedBulkFiles.length === 0 ? (
-                          <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
-                            <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                            <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
-                          </div>
-                        ) : (
-                          <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
-                            <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                            <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
-                              {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex flex-col gap-1.5">
-                          <label className="font-segoe text-[13px] text-text-default">Decision</label>
-                          <Select
-                            value={registrationBulkDecision}
-                            onValueChange={(value) => setRegistrationBulkDecision(value as RegistrationReviewDecision)}
-                            disabled={selectedBulkFiles.length === 0}
-                          >
-                            <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="approve">Approve</SelectItem>
-                              <SelectItem
-                                value="needs_revision"
-                                disabled={selectedBulkFiles.length > 1}
-                                className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                              >
-                                Request Revision
-                              </SelectItem>
-                              <SelectItem
-                                value="reject"
-                                disabled={selectedBulkFiles.length > 1}
-                                className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                              >
-                                Reject
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
-                          <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">
-                              Remarks <span className="text-destructive">*</span>
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isRegistrationIndeterminate;
+                                }}
+                                checked={isAllRegistrationSelected}
+                                disabled={selectableRegistrationFileIds.length === 0}
+                                onChange={handleToggleSelectAllRegistration}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
                             </label>
-                            <Textarea
-                              value={registrationBulkRemark}
-                              onChange={(event) => setRegistrationBulkRemark(event.target.value)}
-                              placeholder="Explain the reason or required action..."
-                              rows={3}
-                              className="resize-none text-[13px]"
-                            />
                           </div>
-                        ) : null}
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s submitted documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
 
-                        <button
-                          type="button"
-                          disabled={isRegistrationDecisionConfirmDisabled}
-                          onClick={() => setIsRegistrationDecisionConfirmOpen(true)}
-                          className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
-                        >
-                          Confirm
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                    <div className="space-y-0.5 pt-1">
+                      {orderedSubmittedFiles.length ? (
+                        orderedSubmittedFiles.map(({ documentType, file }) => {
+                          const isChecked = selectedRegistrationReviewFileIds.includes(file.id);
+                          const isActive = activeReviewEntry?.file.id === file.id;
+                          const uploadedDate = new Date(file.uploadedAt);
+                          const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                          const isLocked = file.adminStatus === "approved_green";
 
-                <DangerConfirmDialog
-                  open={isRegistrationDecisionConfirmOpen}
-                  onOpenChange={setIsRegistrationDecisionConfirmOpen}
-                  icon={CheckCircle}
-                  variant="info"
-                  title="Confirm Review Decision"
-                  description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
-                  content={
-                    <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                      <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
-                      </div>
-                      <div className="flex flex-col gap-2 pt-2">
-                        {selectedBulkFiles.map((entry) => {
-                          const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
-                            ? registrationBulkRemark.trim() || "—"
-                            : "—";
                           return (
-                            <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                              <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
-                                {entry.documentType.name}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
-                                {registrationReviewDecisionLabel[registrationBulkDecision]}
-                              </p>
-                              <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
-                                {remarkText}
-                              </p>
+                            <div
+                              key={file.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setActiveRegistrationReviewFileId(file.id);
+                                if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                setActiveRegistrationReviewFileId(file.id);
+                                if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
+                              }}
+                              className={cn(
+                                "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                                isChecked
+                                  ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                  : isActive
+                                    ? "border border-transparent bg-slate-50"
+                                    : "border border-transparent hover:bg-slate-50",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isLocked}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={() => {
+                                  setSelectedRegistrationReviewFileIds((current) =>
+                                    current.includes(file.id)
+                                      ? current.filter((id) => id !== file.id)
+                                      : [...current, file.id],
+                                  );
+                                }}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                    {documentType.name}
+                                  </p>
+                                  <DocumentQueueStatusPill status={file.adminStatus} />
+                                </div>
+                                <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                  {file.fileName}
+                                </p>
+                                <div className="flex items-center gap-2 pt-1">
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                  </p>
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    {formatFileSize(file.fileSize)}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           );
-                        })}
-                      </div>
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                          No documents submitted yet.
+                        </p>
+                      )}
                     </div>
-                  }
-                  warning="Once submitted, these decisions cannot be changed from this review."
-                  cancelLabel="Cancel"
-                  confirmLabel="Submit Review"
-                  confirmIcon={Send}
-                  onConfirm={submitRegistrationReviewDecisions}
-                />
+                  </div>
+
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                      <button
+                        type="button"
+                        ref={registrationDecisionHelpTriggerRef}
+                        onClick={() => setIsRegistrationDecisionHelpOpen((current) => !current)}
+                        aria-label="Review rules"
+                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                      >
+                        <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                      </button>
+                      {isRegistrationDecisionHelpOpen ? (
+                        <div
+                          ref={registrationDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Approve</span> — multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-4">
+                      {isAutoVerified ? (
+                        <div className="flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
+                          <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
+                          <div>
+                            <p className="font-segoe text-sm font-semibold text-positive-secondary">
+                              Registration Verified
+                            </p>
+                            <p className="mt-0.5 font-segoe text-xs text-text-default">
+                              All required registration documents have been approved. This organization is officially registered.
+                            </p>
+                          </div>
+                          {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                            <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
+                              <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                              <span className="font-cascadia text-base font-bold text-positive-secondary">
+                                {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                              </span>
+                            </div>
+                          ) : null}
+                          {selectedOrg.verifiedAt ? (
+                            <p className="font-segoe text-[11px] text-slate-500">
+                              Verified on {formatVerifiedDateLabel(selectedOrg.verifiedAt)}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <>
+                          {selectedBulkFiles.length === 0 ? (
+                            <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                              <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                              <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                                {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                            <Select
+                              value={registrationBulkDecision}
+                              onValueChange={(value) => setRegistrationBulkDecision(value as RegistrationReviewDecision)}
+                              disabled={selectedBulkFiles.length === 0}
+                            >
+                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="approve">Approve</SelectItem>
+                                <SelectItem
+                                  value="needs_revision"
+                                  disabled={selectedBulkFiles.length > 1}
+                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                                >
+                                  Request Revision
+                                </SelectItem>
+                                <SelectItem
+                                  value="reject"
+                                  disabled={selectedBulkFiles.length > 1}
+                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                                >
+                                  Reject
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
+                            <div className="flex flex-col gap-1.5">
+                              <label className="font-segoe text-[13px] text-text-default">
+                                Remarks <span className="text-destructive">*</span>
+                              </label>
+                              <Textarea
+                                value={registrationBulkRemark}
+                                onChange={(event) => setRegistrationBulkRemark(event.target.value)}
+                                placeholder="Explain the reason or required action..."
+                                rows={3}
+                                className="resize-none text-[13px]"
+                              />
+                            </div>
+                          ) : null}
+
+                          <button
+                            type="button"
+                            disabled={isRegistrationDecisionConfirmDisabled}
+                            onClick={() => setIsRegistrationDecisionConfirmOpen(true)}
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                          >
+                            Confirm
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <DangerConfirmDialog
+                    open={isRegistrationDecisionConfirmOpen}
+                    onOpenChange={setIsRegistrationDecisionConfirmOpen}
+                    icon={CheckCircle}
+                    variant="info"
+                    title="Confirm Review Decision"
+                    description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {selectedBulkFiles.map((entry) => {
+                            const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
+                              ? registrationBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                  {entry.documentType.name}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {registrationReviewDecisionLabel[registrationBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    }
+                    warning="Once submitted, these decisions cannot be changed from this review."
+                    cancelLabel="Cancel"
+                    confirmLabel="Submit Review"
+                    confirmIcon={Send}
+                    onConfirm={submitRegistrationReviewDecisions}
+                  />
                 </div>
               </div>
             </div>
@@ -7153,11 +7380,11 @@ export default function AdminPortal({ section }: { section: string }) {
           const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
           const submittedCount = orgSubmission
             ? state.documentSubmissionFiles.filter(
-                (file) =>
-                  file.submissionId === orgSubmission.id &&
-                  validDocumentTypeIds.has(file.documentTypeId) &&
-                  file.adminStatus !== "draft",
-              ).length
+              (file) =>
+                file.submissionId === orgSubmission.id &&
+                validDocumentTypeIds.has(file.documentTypeId) &&
+                file.adminStatus !== "draft",
+            ).length
             : 0;
           documentCountsByOrgId[org.id] = { submitted: submittedCount, required: templateDocuments.length };
         }
@@ -7209,6 +7436,9 @@ export default function AdminPortal({ section }: { section: string }) {
               classificationFilter={registrationClassificationFilter}
               onClassificationFilterChange={setRegistrationClassificationFilter}
               onReview={(organizationId) => handleRegistrationSelectionChange(organizationId)}
+              onDelete={(organization) => void openRegistrationDeleteDialog(organization)}
+              selectedOrgIds={selectedRegistrationIds}
+              onSelectedOrgIdsChange={setSelectedRegistrationIds}
             />
           </div>
         );
@@ -7302,16 +7532,16 @@ export default function AdminPortal({ section }: { section: string }) {
                   : "a document";
               const verb =
                 log.action === "Approved renewal document" ||
-                log.action === "Approved document submission" ||
-                log.action === "Approved organization renewal"
+                  log.action === "Approved document submission" ||
+                  log.action === "Approved organization renewal"
                   ? "approved"
                   : log.action === "Renewal document revision requested" ||
-                      log.action === "Document revision requested" ||
-                      log.action === "Requested renewal revision"
+                    log.action === "Document revision requested" ||
+                    log.action === "Requested renewal revision"
                     ? "requested revisions to"
                     : log.action === "Rejected renewal document" ||
-                        log.action === "Rejected document submission" ||
-                        log.action === "Rejected organization renewal"
+                      log.action === "Rejected document submission" ||
+                      log.action === "Rejected organization renewal"
                       ? "rejected"
                       : "updated";
               return { id: log.id, adminName, docName, verb, createdAt: log.createdAt };
@@ -7715,28 +7945,56 @@ export default function AdminPortal({ section }: { section: string }) {
                 {/* Right Column: Document Queue & Decision Box */}
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                    <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedRenewalReviewFileIds(
-                              orderedSubmittedFiles
-                                .filter((entry) => entry.file.adminStatus !== "approved_green")
-                                .map((entry) => entry.file.id),
-                            )
-                          }
-                          className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
-                        >
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
-                          Select all
-                        </button>
-                      </div>
-                      <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
-                        Review the organization&rsquo;s renewal documents and select a document to preview.
-                      </p>
-                    </div>
+                    {(() => {
+                      const selectableRenewalFileIds = orderedSubmittedFiles
+                        .filter((entry) => entry.file.adminStatus !== "approved_green")
+                        .map((entry) => entry.file.id);
+                      const selectedRenewalCount = selectableRenewalFileIds.filter((id) =>
+                        selectedRenewalReviewFileIds.includes(id),
+                      ).length;
+                      const isAllRenewalSelected =
+                        selectableRenewalFileIds.length > 0 &&
+                        selectedRenewalCount === selectableRenewalFileIds.length;
+                      const isRenewalIndeterminate =
+                        selectedRenewalCount > 0 &&
+                        selectedRenewalCount < selectableRenewalFileIds.length;
+                      const handleToggleSelectAllRenewal = () => {
+                        if (isAllRenewalSelected) {
+                          setSelectedRenewalReviewFileIds((current) =>
+                            current.filter((id) => !selectableRenewalFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedRenewalReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableRenewalFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isRenewalIndeterminate;
+                                }}
+                                checked={isAllRenewalSelected}
+                                disabled={selectableRenewalFileIds.length === 0}
+                                onChange={handleToggleSelectAllRenewal}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s renewal documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-0.5 pt-1">
                       {orderedSubmittedFiles.length ? (
@@ -8333,9 +8591,9 @@ export default function AdminPortal({ section }: { section: string }) {
                 ],
                 ...(targetParentStatus === "approved_for_ftf_green"
                   ? {
-                      approvedAmount: approvedAmountNum,
-                      goSignalAt: budgetHistoryNow,
-                    }
+                    approvedAmount: approvedAmountNum,
+                    goSignalAt: budgetHistoryNow,
+                  }
                   : {}),
               };
 
@@ -8933,26 +9191,56 @@ export default function AdminPortal({ section }: { section: string }) {
 
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                    <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedBudgetReviewFileIds(
-                              selectedBudgetRequestFiles.filter((file) => file.adminStatus !== "approved_green").map((file) => file.id),
-                            )
-                          }
-                          className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
-                        >
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
-                          Select all
-                        </button>
-                      </div>
-                      <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
-                        Review the organization's submitted documents and select a document to preview.
-                      </p>
-                    </div>
+                    {(() => {
+                      const selectableBudgetFileIds = selectedBudgetRequestFiles
+                        .filter((file) => file.adminStatus !== "approved_green")
+                        .map((file) => file.id);
+                      const selectedBudgetCount = selectableBudgetFileIds.filter((id) =>
+                        selectedBudgetReviewFileIds.includes(id),
+                      ).length;
+                      const isAllBudgetSelected =
+                        selectableBudgetFileIds.length > 0 &&
+                        selectedBudgetCount === selectableBudgetFileIds.length;
+                      const isBudgetIndeterminate =
+                        selectedBudgetCount > 0 &&
+                        selectedBudgetCount < selectableBudgetFileIds.length;
+                      const handleToggleSelectAllBudget = () => {
+                        if (isAllBudgetSelected) {
+                          setSelectedBudgetReviewFileIds((current) =>
+                            current.filter((id) => !selectableBudgetFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedBudgetReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableBudgetFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isBudgetIndeterminate;
+                                }}
+                                checked={isAllBudgetSelected}
+                                disabled={selectableBudgetFileIds.length === 0}
+                                onChange={handleToggleSelectAllBudget}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization's submitted documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-0.5 pt-1">
                       {selectedBudgetRequestFiles.length ? (
@@ -9027,8 +9315,8 @@ export default function AdminPortal({ section }: { section: string }) {
                         {(selectedBudgetRequest.status === "submitted" ||
                           selectedBudgetRequest.status === "under_review" ||
                           selectedBudgetRequest.status === "needs_revision") && (
-                          <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate documents and issue formal budget proposal determination.</p>
-                        )}
+                            <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate documents and issue formal budget proposal determination.</p>
+                          )}
                       </div>
                       <div className="flex items-center gap-2">
                         <BudgetStatusPill status={selectedBudgetRequest.status} />
@@ -9047,9 +9335,9 @@ export default function AdminPortal({ section }: { section: string }) {
                         ) : null}
                       </div>
                       {isBudgetDecisionHelpOpen &&
-                      (selectedBudgetRequest.status === "submitted" ||
-                        selectedBudgetRequest.status === "under_review" ||
-                        selectedBudgetRequest.status === "needs_revision") ? (
+                        (selectedBudgetRequest.status === "submitted" ||
+                          selectedBudgetRequest.status === "under_review" ||
+                          selectedBudgetRequest.status === "needs_revision") ? (
                         <div
                           ref={budgetDecisionHelpPanelRef}
                           className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
@@ -9069,126 +9357,126 @@ export default function AdminPortal({ section }: { section: string }) {
                       {/* Initial Review Stage: submitted or under_review */}
                       {(selectedBudgetRequest.status === "submitted" ||
                         selectedBudgetRequest.status === "under_review") && (
-                        <>
-                          {selectedBudgetReviewFiles.length > 0 ? (
-                            <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
-                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
-                                {selectedBudgetReviewFiles.length} document{selectedBudgetReviewFiles.length === 1 ? "" : "s"} selected.
-                              </p>
-                            </div>
-                          ) : null}
-
-                          <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
-                            <Select
-                              value={budgetBulkDecision}
-                              onValueChange={(value) => {
-                                setBudgetBulkDecision(value as BudgetReviewDecision);
-                                setIsBudgetDecisionDirty(true);
-                              }}
-                            >
-                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="approve">Approve</SelectItem>
-                                <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                                <SelectItem value="reject">Reject</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {budgetBulkDecision === "approve" && (
-                            <div className="space-y-2.5 rounded-md border border-slate-200 bg-slate-50/70 p-3">
-                              <div className="flex items-center justify-between">
-                                <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
-                                <span className="font-mono text-[13px] font-bold text-text-default">
-                                  {`₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                </span>
+                          <>
+                            {selectedBudgetReviewFiles.length > 0 ? (
+                              <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                                <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                                <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                                  {selectedBudgetReviewFiles.length} document{selectedBudgetReviewFiles.length === 1 ? "" : "s"} selected.
+                                </p>
                               </div>
-                              <div className="flex flex-col gap-1.5">
-                                <label htmlFor="budget-approved-amount-input" className="font-segoe text-[13px] font-medium text-text-default">
-                                  Approved Amount (₱) <span className="text-destructive">*</span>
-                                </label>
-                                <Input
-                                  id="budget-approved-amount-input"
-                                  data-testid="admin-approved-amount-input"
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  value={budgetApprovedAmountDraft}
-                                  onChange={(event) => {
-                                    setBudgetApprovedAmountDraft(event.target.value);
-                                    setIsBudgetApprovedAmountDirty(true);
-                                  }}
-                                  onWheel={(event) => event.currentTarget.blur()}
-                                  placeholder="0.00"
-                                  className="h-8 border-slate-300 font-mono text-[13px]"
-                                />
-                                {(() => {
-                                  const parsedApproved = Number(budgetApprovedAmountDraft);
-                                  const reqAmount = selectedBudgetRequest.requestedAmount || 0;
-                                  if (!budgetApprovedAmountDraft.trim() || Number.isNaN(parsedApproved) || parsedApproved <= 0) {
-                                    return (
-                                      <p className="text-[11px] text-destructive">
-                                        Approved amount is required and must be greater than 0.
-                                      </p>
-                                    );
-                                  }
-                                  const diff = reqAmount - parsedApproved;
-                                  if (diff > 0.001) {
-                                    return (
-                                      <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
-                                        Approved amount is ₱{diff.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} less than requested.
-                                      </p>
-                                    );
-                                  }
-                                  if (diff < -0.001) {
-                                    return (
-                                      <p className="text-[11px] font-medium text-blue-700 dark:text-blue-400">
-                                        Approved amount exceeds the requested amount.
-                                      </p>
-                                    );
-                                  }
-                                  return null;
-                                })()}
-                              </div>
-                            </div>
-                          )}
+                            ) : null}
 
-                          {(budgetBulkDecision === "needs_revision" || budgetBulkDecision === "reject") && (
                             <div className="flex flex-col gap-1.5">
-                              <label className="font-segoe text-[13px] text-text-default">
-                                Remarks <span className="text-destructive">*</span>
-                              </label>
-                              <Textarea
-                                value={budgetBulkRemark}
-                                onChange={(event) => {
-                                  setBudgetBulkRemark(event.target.value);
-                                  setIsBudgetRemarkDirty(true);
+                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                              <Select
+                                value={budgetBulkDecision}
+                                onValueChange={(value) => {
+                                  setBudgetBulkDecision(value as BudgetReviewDecision);
+                                  setIsBudgetDecisionDirty(true);
                                 }}
-                                placeholder={
-                                  budgetBulkDecision === "needs_revision"
-                                    ? "Explain required revisions or document corrections..."
-                                    : "Explain the reason for rejecting this budget request..."
-                                }
-                                rows={3}
-                                className="resize-none text-[13px]"
-                              />
+                              >
+                                <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="approve">Approve</SelectItem>
+                                  <SelectItem value="needs_revision">Needs Revision</SelectItem>
+                                  <SelectItem value="reject">Reject</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                          )}
 
-                          <button
-                            type="button"
-                            disabled={isBudgetDecisionConfirmDisabled}
-                            onClick={() => setIsBudgetDecisionConfirmOpen(true)}
-                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
-                          >
-                            Confirm Document Decision
-                          </button>
-                        </>
-                      )}
+                            {budgetBulkDecision === "approve" && (
+                              <div className="space-y-2.5 rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
+                                  <span className="font-mono text-[13px] font-bold text-text-default">
+                                    {`₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label htmlFor="budget-approved-amount-input" className="font-segoe text-[13px] font-medium text-text-default">
+                                    Approved Amount (₱) <span className="text-destructive">*</span>
+                                  </label>
+                                  <Input
+                                    id="budget-approved-amount-input"
+                                    data-testid="admin-approved-amount-input"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={budgetApprovedAmountDraft}
+                                    onChange={(event) => {
+                                      setBudgetApprovedAmountDraft(event.target.value);
+                                      setIsBudgetApprovedAmountDirty(true);
+                                    }}
+                                    onWheel={(event) => event.currentTarget.blur()}
+                                    placeholder="0.00"
+                                    className="h-8 border-slate-300 font-mono text-[13px]"
+                                  />
+                                  {(() => {
+                                    const parsedApproved = Number(budgetApprovedAmountDraft);
+                                    const reqAmount = selectedBudgetRequest.requestedAmount || 0;
+                                    if (!budgetApprovedAmountDraft.trim() || Number.isNaN(parsedApproved) || parsedApproved <= 0) {
+                                      return (
+                                        <p className="text-[11px] text-destructive">
+                                          Approved amount is required and must be greater than 0.
+                                        </p>
+                                      );
+                                    }
+                                    const diff = reqAmount - parsedApproved;
+                                    if (diff > 0.001) {
+                                      return (
+                                        <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                                          Approved amount is ₱{diff.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} less than requested.
+                                        </p>
+                                      );
+                                    }
+                                    if (diff < -0.001) {
+                                      return (
+                                        <p className="text-[11px] font-medium text-blue-700 dark:text-blue-400">
+                                          Approved amount exceeds the requested amount.
+                                        </p>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+
+                            {(budgetBulkDecision === "needs_revision" || budgetBulkDecision === "reject") && (
+                              <div className="flex flex-col gap-1.5">
+                                <label className="font-segoe text-[13px] text-text-default">
+                                  Remarks <span className="text-destructive">*</span>
+                                </label>
+                                <Textarea
+                                  value={budgetBulkRemark}
+                                  onChange={(event) => {
+                                    setBudgetBulkRemark(event.target.value);
+                                    setIsBudgetRemarkDirty(true);
+                                  }}
+                                  placeholder={
+                                    budgetBulkDecision === "needs_revision"
+                                      ? "Explain required revisions or document corrections..."
+                                      : "Explain the reason for rejecting this budget request..."
+                                  }
+                                  rows={3}
+                                  className="resize-none text-[13px]"
+                                />
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              disabled={isBudgetDecisionConfirmDisabled}
+                              onClick={() => setIsBudgetDecisionConfirmOpen(true)}
+                              className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                            >
+                              Confirm Document Decision
+                            </button>
+                          </>
+                        )}
 
                       {/* Needs Revision Stage */}
                       {selectedBudgetRequest.status === "needs_revision" && (
@@ -9477,18 +9765,18 @@ export default function AdminPortal({ section }: { section: string }) {
                         req.status === "completed"
                           ? "Completed"
                           : req.status === "budget_released"
-                          ? "Budget Released"
-                          : req.status === "approved_for_ftf_green"
-                          ? "Onsite Required"
-                          : req.status === "hard_copy_submitted"
-                          ? "Hardcopy Submitted"
-                          : req.status === "needs_revision"
-                          ? "Needs Revision"
-                          : req.status === "rejected_red"
-                          ? "Rejected"
-                          : req.status === "under_review"
-                          ? "Under Review"
-                          : "Submitted";
+                            ? "Budget Released"
+                            : req.status === "approved_for_ftf_green"
+                              ? "Onsite Required"
+                              : req.status === "hard_copy_submitted"
+                                ? "Hardcopy Submitted"
+                                : req.status === "needs_revision"
+                                  ? "Needs Revision"
+                                  : req.status === "rejected_red"
+                                    ? "Rejected"
+                                    : req.status === "under_review"
+                                      ? "Under Review"
+                                      : "Submitted";
 
                       return (
                         <li key={req.id} className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 last:border-b-0 last:pb-0">
@@ -9539,8 +9827,8 @@ export default function AdminPortal({ section }: { section: string }) {
                 isDeletingBudgetRequests
                   ? "Deleting..."
                   : selectedBudgetRequests.length === 1
-                  ? "Delete Budget Request"
-                  : `Delete ${selectedBudgetRequests.length} Budget Requests`
+                    ? "Delete Budget Request"
+                    : `Delete ${selectedBudgetRequests.length} Budget Requests`
               }
               confirmDisabled={isDeletingBudgetRequests}
               onConfirm={handleConfirmBudgetRequestsDelete}
@@ -10295,26 +10583,56 @@ export default function AdminPortal({ section }: { section: string }) {
 
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                    <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedLiquidationReviewFileIds(
-                              liquidationFiles.filter((file) => file.adminStatus !== "approved_green").map((file) => file.id),
-                            )
-                          }
-                          className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
-                        >
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
-                          Select all
-                        </button>
-                      </div>
-                      <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
-                        Review the organization&rsquo;s submitted liquidation documents and select one to preview.
-                      </p>
-                    </div>
+                    {(() => {
+                      const selectableLiquidationFileIds = liquidationFiles
+                        .filter((file) => file.adminStatus !== "approved_green")
+                        .map((file) => file.id);
+                      const selectedLiquidationCount = selectableLiquidationFileIds.filter((id) =>
+                        selectedLiquidationReviewFileIds.includes(id),
+                      ).length;
+                      const isAllLiquidationSelected =
+                        selectableLiquidationFileIds.length > 0 &&
+                        selectedLiquidationCount === selectableLiquidationFileIds.length;
+                      const isLiquidationIndeterminate =
+                        selectedLiquidationCount > 0 &&
+                        selectedLiquidationCount < selectableLiquidationFileIds.length;
+                      const handleToggleSelectAllLiquidation = () => {
+                        if (isAllLiquidationSelected) {
+                          setSelectedLiquidationReviewFileIds((current) =>
+                            current.filter((id) => !selectableLiquidationFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedLiquidationReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableLiquidationFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isLiquidationIndeterminate;
+                                }}
+                                checked={isAllLiquidationSelected}
+                                disabled={selectableLiquidationFileIds.length === 0}
+                                onChange={handleToggleSelectAllLiquidation}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s submitted liquidation documents and select one to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-0.5 pt-1">
                       {liquidationFiles.length ? (
@@ -10383,9 +10701,9 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
 
                   {selectedLiquidationReport.goSignalAt &&
-                  (selectedLiquidationReport.status === "approved_for_ftf_green" ||
-                    selectedLiquidationReport.status === "hard_copy_submitted" ||
-                    selectedLiquidationReport.status === "completed_liquidated") ? (
+                    (selectedLiquidationReport.status === "approved_for_ftf_green" ||
+                      selectedLiquidationReport.status === "hard_copy_submitted" ||
+                      selectedLiquidationReport.status === "completed_liquidated") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
                       <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
@@ -10395,8 +10713,8 @@ export default function AdminPortal({ section }: { section: string }) {
                   ) : null}
 
                   {selectedLiquidationReport.hardCopySubmittedAt &&
-                  (selectedLiquidationReport.status === "hard_copy_submitted" ||
-                    selectedLiquidationReport.status === "completed_liquidated") ? (
+                    (selectedLiquidationReport.status === "hard_copy_submitted" ||
+                      selectedLiquidationReport.status === "completed_liquidated") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
                       <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
@@ -10428,8 +10746,8 @@ export default function AdminPortal({ section }: { section: string }) {
                             selectedLiquidationReport.status === "under_review" ||
                             selectedLiquidationReport.status === "needs_revision" ||
                             selectedLiquidationReport.status === "overdue") && (
-                            <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
-                          )}
+                              <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                           <LiquidationStatusLabel status={selectedLiquidationReport.status} deadlineAt={selectedLiquidationReport.deadlineAt} />
@@ -10449,10 +10767,10 @@ export default function AdminPortal({ section }: { section: string }) {
                           ) : null}
                         </div>
                         {isLiquidationDecisionHelpOpen &&
-                        (selectedLiquidationReport.status === "submitted" ||
-                          selectedLiquidationReport.status === "under_review" ||
-                          selectedLiquidationReport.status === "needs_revision" ||
-                          selectedLiquidationReport.status === "overdue") ? (
+                          (selectedLiquidationReport.status === "submitted" ||
+                            selectedLiquidationReport.status === "under_review" ||
+                            selectedLiquidationReport.status === "needs_revision" ||
+                            selectedLiquidationReport.status === "overdue") ? (
                           <div
                             ref={liquidationDecisionHelpPanelRef}
                             className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
@@ -10474,26 +10792,26 @@ export default function AdminPortal({ section }: { section: string }) {
                           selectedLiquidationReport.status === "under_review" ||
                           (selectedLiquidationReport.status === "needs_revision" && liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review")) ||
                           selectedLiquidationReport.status === "overdue") && (
-                          renderLiquidationDocumentReviewControls(
-                            liquidationFiles.length > 0
-                              ? "All submitted documents have been reviewed."
-                              : "No documents submitted yet."
-                          )
-                        )}
+                            renderLiquidationDocumentReviewControls(
+                              liquidationFiles.length > 0
+                                ? "All submitted documents have been reviewed."
+                                : "No documents submitted yet."
+                            )
+                          )}
 
                         {/* Needs Revision stage awaiting organization action */}
                         {selectedLiquidationReport.status === "needs_revision" &&
                           !liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review") && (
-                          <div className="space-y-3">
-                            <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
-                              <p className="font-semibold">Revision Requested</p>
-                              <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected liquidation proofs or receipts from organization.</p>
-                              {selectedLiquidationReport.remarks ? (
-                                <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedLiquidationReport.remarks}</p>
-                              ) : null}
+                            <div className="space-y-3">
+                              <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
+                                <p className="font-semibold">Revision Requested</p>
+                                <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected liquidation proofs or receipts from organization.</p>
+                                {selectedLiquidationReport.remarks ? (
+                                  <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                                ) : null}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
                         {/* Approved for FTF stage (Onsite Required) */}
                         {selectedLiquidationReport.status === "approved_for_ftf_green" && (
@@ -10755,8 +11073,11 @@ export default function AdminPortal({ section }: { section: string }) {
               onDescriptionChange={setNewsDescriptionDraft}
               category={newsCategoryDraft}
               onCategoryChange={setNewsCategoryDraft}
+              categories={newsCategoriesList}
               categoryOptions={newsCategoryOptions}
-              onAddCategory={(newCat) => setCustomNewsCategories((prev) => [...prev, newCat])}
+              allNewsReleases={newsReleases}
+              onAddCategory={handleAddNewsCategory}
+              onDeleteCategory={handleDeleteNewsCategory}
               facebookPostUrl={newsFacebookPostUrlDraft}
               onFacebookPostUrlChange={setNewsFacebookPostUrlDraft}
               previewImageUrl={newsPreviewImageUrlDraft}
@@ -10822,407 +11143,407 @@ export default function AdminPortal({ section }: { section: string }) {
               <PublicBudgetSnapshotConfigPage onBack={() => setIsConfiguringPublicSnapshot(false)} />
             ) : (
               <>
-            {!selectedBudgetAllocation ? (
-              <>
-            <AdminPageHeader
-              title="Budget Monitoring"
-              description="Track budgets from request through liquidation."
-              action={
-                <div className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    disabled={
-                      budgetMonitoringTab === "barangay-allocation"
-                        ? !allocationByBarangayExportRows.length
-                        : !budgetMonitoringExportRows.length
-                    }
-                    onClick={() => {
-                      if (budgetMonitoringTab === "barangay-allocation") {
-                        setActiveReportExport("allocation-by-barangay");
-                      } else {
-                        setActiveReportExport("budget-monitoring");
-                      }
-                    }}
-                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
-                    Export
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/admin/budget-utilization")}
-                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
-                  >
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
-                    Review Budget Requests
-                  </button>
-                </div>
-              }
-            />
-
-            <div className="flex h-[52px] w-fit items-center gap-0 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1 shadow-sm">
-              {(["overview", "barangay-allocation", "public"] as const).map((tab) => {
-                const isActive = budgetMonitoringTab === tab;
-                const Icon = tab === "overview" ? PieChartIcon : tab === "barangay-allocation" ? MapPin : Globe;
-                const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : "Public Preview";
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setBudgetMonitoringTab(tab)}
-                    className={cn(
-                      "flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-sm font-semibold leading-[140%] transition-colors",
-                      isActive ? "bg-admin-surface text-public-text-brand" : "text-segmented-control-inactive-text",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.6} />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-              </>
-            ) : null}
-
-            {budgetMonitoringTab === "overview" ? (
-              <>
-                <BudgetMonitoringOverview
-                  selectedFiscalYear={selectedFiscalYear}
-                  onSelectFiscalYear={setSelectedFiscalYear}
-                  availableFiscalYears={availableFiscalYears}
-                  annualAllocation={selectedFYAllocation}
-                  onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
-                  approvedBudget={budgetApprovedTotal}
-                  releasedBudget={budgetMonitoringAnalysis.totalReleased}
-                  liquidatedBudget={totalLiquidated}
-                  pendingDisbursement={Math.max(budgetApprovedTotal - budgetMonitoringAnalysis.totalReleased, 0)}
-                  activeInField={Math.max(budgetMonitoringAnalysis.totalReleased - totalLiquidated, 0)}
-                  categoryBreakdown={purposeCategoryBreakdown}
-                  formatPesoAmount={formatPesoAmount}
-                  formatCompactPeso={formatCompactPeso}
-                />
-
-                <OrganizationFundingTable
-                  rows={organizationFundingRows}
-                  searchValue={organizationFundingSearch}
-                  onSearchChange={setOrganizationFundingSearch}
-                  classificationFilter={organizationFundingClassificationFilter}
-                  onClassificationFilterChange={setOrganizationFundingClassificationFilter}
-                  onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
-                />
-              </>
-            ) : budgetMonitoringTab === "barangay-allocation" ? (
-              selectedBudgetAllocation ? (
-                <div className="space-y-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedBudgetAllocation(null)}
-                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
-                  >
-                    <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
-                    Back to Allocation
-                  </button>
-
-                  <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface p-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
-                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
-                    </div>
-                    <h1 className="font-segoe text-lg font-semibold leading-none text-text-default">
-                      Barangay {selectedBudgetAllocation.barangay}
-                    </h1>
-                  </div>
-
-                  <OrganizationFundingTable
-                    rows={organizationFundingRows.filter((row) => row.barangay === selectedBudgetAllocation.barangay)}
-                    searchValue={barangayDetailSearch}
-                    onSearchChange={setBarangayDetailSearch}
-                    classificationFilter={barangayDetailClassificationFilter}
-                    onClassificationFilterChange={setBarangayDetailClassificationFilter}
-                    onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
-                  />
-                </div>
-              ) : (
-              <>
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                <StatsCard
-                  title="TOTAL RELEASED"
-                  value={formatPesoAmount(budgetAllocationSummary.totalReleased)}
-                  icon={Banknote}
-                  description="Cash released to organizations in this selection."
-                />
-                <StatsCard
-                  title="TOTAL LIQUIDATED"
-                  value={formatPesoAmount(budgetAllocationSummary.totalLiquidated)}
-                  icon={CheckCircle2}
-                  description="Released budgets audited and cleared."
-                />
-                <StatsCard
-                  title="UTILIZATION RATE"
-                  value={`${budgetAllocationSummary.liquidationUtilizationRate}%`}
-                  icon={TrendingUp}
-                  description="Share of released budgets already liquidated."
-                />
-              </div>
-
-              <div className="rounded-md border border-slate-300 bg-admin-surface shadow-sm">
-                <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
-                  <div className="flex h-10 min-w-[120px] flex-1 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3.5 py-2.5">
-                    <Search className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                    <input
-                      value={budgetAllocationSearch}
-                      onChange={(event) => setBudgetAllocationSearch(event.target.value)}
-                      placeholder="Search by district or barangay..."
-                      className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
-                    />
-                  </div>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-                      >
-                        <span className="truncate">{budgetAllocationDistrictFilter === "all" ? "All districts" : budgetAllocationDistrictFilter}</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[180px] rounded-b-md rounded-t-none border-slate-300 p-0">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setBudgetAllocationDistrictFilter("all");
-                          setBudgetAllocationBarangayFilter("all");
-                        }}
-                        className={cn(
-                          "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                          budgetAllocationDistrictFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
-                        )}
-                      >
-                        All districts
-                      </DropdownMenuItem>
-                      {budgetAllocationDistrictOptions.map((district) => (
-                        <DropdownMenuItem
-                          key={district}
-                          onClick={() => {
-                            setBudgetAllocationDistrictFilter(district);
-                            setBudgetAllocationBarangayFilter("all");
-                          }}
-                          className={cn(
-                            "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                            budgetAllocationDistrictFilter === district && "bg-bg-info-tertiary text-public-text-brand",
-                          )}
-                        >
-                          {district}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-                      >
-                        <span className="truncate">{budgetAllocationBarangayFilter === "all" ? "All barangays" : budgetAllocationBarangayFilter}</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[220px] rounded-b-md rounded-t-none border-slate-300 p-0">
-                      <DropdownMenuItem
-                        onClick={() => setBudgetAllocationBarangayFilter("all")}
-                        className={cn(
-                          "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                          budgetAllocationBarangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
-                        )}
-                      >
-                        All barangays
-                      </DropdownMenuItem>
-                      {budgetAllocationBarangayOptions.map((barangay) => (
-                        <DropdownMenuItem
-                          key={barangay}
-                          onClick={() => setBudgetAllocationBarangayFilter(barangay)}
-                          className={cn(
-                            "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                            budgetAllocationBarangayFilter === barangay && "bg-bg-info-tertiary text-public-text-brand",
-                          )}
-                        >
-                          {barangay}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-                  <span className="w-[22%]">Barangay</span>
-                  <span className="w-[15%]">Released</span>
-                  <span className="w-[15%]">Liquidated</span>
-                  <span className="w-[15%]">Remaining</span>
-                  <span className="w-[23%]">Utilization</span>
-                  <span className="w-[90px] shrink-0">Actions</span>
-                </div>
-
-                {groupedPagedBudgetAllocationRows.length === 0 ? (
-                  <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-                    <p className="font-segoe text-sm font-semibold text-text-default">No matching barangays</p>
-                    <p className="font-segoe text-xs text-slate-500">Try adjusting the search, district, or barangay filters.</p>
-                  </div>
-                ) : (
-                  groupedPagedBudgetAllocationRows.map((group) => {
-                    const isCollapsed = collapsedAllocationDistricts.includes(group.district);
-                    return (
-                      <div key={group.district} className="border-b border-slate-300 last:border-b-0">
-                        <div className="flex items-center justify-between gap-2 bg-slate-50 px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <p className="font-segoe text-xs font-semibold uppercase leading-none text-text-default">{group.district}</p>
-                            <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-1.5 py-0.5 font-segoe text-[10px] font-semibold leading-[140%] text-slate-500">
-                              {group.rows.length} barangay{group.rows.length === 1 ? "" : "s"} · {group.organizationCount} org{group.organizationCount === 1 ? "" : "s"}
-                            </span>
-                          </div>
+                {!selectedBudgetAllocation ? (
+                  <>
+                    <AdminPageHeader
+                      title="Budget Monitoring"
+                      description="Track budgets from request through liquidation."
+                      action={
+                        <div className="flex items-center gap-2.5">
                           <button
                             type="button"
-                            onClick={() =>
-                              setCollapsedAllocationDistricts((current) =>
-                                current.includes(group.district) ? current.filter((d) => d !== group.district) : [...current, group.district],
-                              )
+                            disabled={
+                              budgetMonitoringTab === "barangay-allocation"
+                                ? !allocationByBarangayExportRows.length
+                                : !budgetMonitoringExportRows.length
                             }
-                            className="flex shrink-0 items-center gap-1.5"
+                            onClick={() => {
+                              if (budgetMonitoringTab === "barangay-allocation") {
+                                setActiveReportExport("allocation-by-barangay");
+                              } else {
+                                setActiveReportExport("budget-monitoring");
+                              }
+                            }}
+                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                           >
-                            <span className="font-segoe text-[11px] font-semibold leading-none text-slate-500">
-                              {isCollapsed ? "Expand Details" : "Collapse Details"}
-                            </span>
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50">
-                              <ChevronDown className={cn("h-4 w-4 text-text-default transition-transform", isCollapsed && "-rotate-180")} strokeWidth={1.6} />
-                            </span>
+                            <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                            Export
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate("/admin/budget-utilization")}
+                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                          >
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                            Review Budget Requests
                           </button>
                         </div>
+                      }
+                    />
 
-                        {!isCollapsed
-                          ? group.rows.map((entry) => {
-                              const remaining = Math.max(entry.releasedAmount - entry.liquidatedAmount, 0);
-                              const rowUtilization = entry.releasedAmount > 0 ? Math.round((entry.liquidatedAmount / entry.releasedAmount) * 100) : 0;
-                              return (
-                                <div
-                                  key={`${entry.district}-${entry.barangay}`}
-                                  className="flex items-center justify-between gap-2 border-t border-slate-300 p-4 transition-colors hover:bg-slate-50"
-                                >
-                                  <div className="flex w-[22%] min-w-0 items-center gap-2">
-                                    <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">Brgy. {entry.barangay}</p>
-                                    <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
-                                      {entry.organizationCount} org{entry.organizationCount === 1 ? "" : "s"}
-                                    </span>
-                                  </div>
-                                  <div className="flex w-[15%] items-center">
-                                    <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.releasedAmount)}</p>
-                                  </div>
-                                  <div className="flex w-[15%] items-center">
-                                    <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.liquidatedAmount)}</p>
-                                  </div>
-                                  <div className="flex w-[15%] items-center">
-                                    <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(remaining)}</p>
-                                  </div>
-                                  <div className="flex w-[23%] items-center gap-2">
-                                    <div className="h-2 w-full max-w-[140px] overflow-hidden rounded-full bg-bg-progress-track">
-                                      <div className="h-full rounded-full bg-bg-success-default transition-all" style={{ width: `${Math.min(rowUtilization, 100)}%` }} />
-                                    </div>
-                                    <span className="shrink-0 font-segoe text-xs font-semibold text-text-default">{rowUtilization}%</span>
-                                  </div>
-                                  <div className="flex w-[90px] shrink-0 items-center">
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedBudgetAllocation(entry)}
-                                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
-                                    >
-                                      <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
-                                      View
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          : null}
-                      </div>
-                    );
-                  })
-                )}
-
-                <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-                  <p className="font-segoe text-[13px] text-text-neutral-tertiary">
-                    Showing <span className="text-text-default">{pagedBudgetAllocationRows.length}</span> of{" "}
-                    <span className="text-text-default">{filteredBudgetAllocationRows.length}</span> records
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBudgetAllocationMobilePage((page) => Math.max(1, page - 1))}
-                      disabled={budgetAllocationMobilePage === 1}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
-                    >
-                      <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
-                      Previous
-                    </button>
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: budgetAllocationMobilePageCount }, (_, index) => index)
-                        .slice(0, 5)
-                        .map((index) => (
+                    <div className="flex h-[52px] w-fit items-center gap-0 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1 shadow-sm">
+                      {(["overview", "barangay-allocation", "public"] as const).map((tab) => {
+                        const isActive = budgetMonitoringTab === tab;
+                        const Icon = tab === "overview" ? PieChartIcon : tab === "barangay-allocation" ? MapPin : Globe;
+                        const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : "Public Preview";
+                        return (
                           <button
-                            key={index}
+                            key={tab}
                             type="button"
-                            onClick={() => setBudgetAllocationMobilePage(index + 1)}
+                            onClick={() => setBudgetMonitoringTab(tab)}
                             className={cn(
-                              "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
-                              index + 1 === budgetAllocationMobilePage
-                                ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                                : "text-text-default hover:bg-slate-50",
+                              "flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-sm font-semibold leading-[140%] transition-colors",
+                              isActive ? "bg-admin-surface text-public-text-brand" : "text-segmented-control-inactive-text",
                             )}
                           >
-                            {index + 1}
+                            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                            {label}
                           </button>
-                        ))}
+                        );
+                      })}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setBudgetAllocationMobilePage((page) => Math.min(budgetAllocationMobilePageCount, page + 1))}
-                      disabled={budgetAllocationMobilePage >= budgetAllocationMobilePageCount}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" strokeWidth={1.6} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              </>
-              )
-            ) : budgetMonitoringTab === "public" ? (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-admin-surface p-4 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-public-bg-brand/10 text-public-text-brand">
-                      <Globe className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-segoe text-sm font-bold text-text-default">Public Portal Preview</h2>
-                      <p className="font-segoe text-xs text-slate-500">
-                        Live preview of the shared budget transparency overview published to citizens and youth organizations.
-                      </p>
-                    </div>
-                  </div>
-                  <a
-                    href="/budget-transparency"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50"
-                  >
-                    Open Live Public Page <ArrowUpRight className="h-3.5 w-3.5" />
-                  </a>
-                </div>
+                  </>
+                ) : null}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <PublicBudgetOverview />
-                </div>
-              </div>
-            ) : null}
+                {budgetMonitoringTab === "overview" ? (
+                  <>
+                    <BudgetMonitoringOverview
+                      selectedFiscalYear={selectedFiscalYear}
+                      onSelectFiscalYear={setSelectedFiscalYear}
+                      availableFiscalYears={availableFiscalYears}
+                      annualAllocation={selectedFYAllocation}
+                      onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
+                      approvedBudget={budgetApprovedTotal}
+                      releasedBudget={budgetMonitoringAnalysis.totalReleased}
+                      liquidatedBudget={totalLiquidated}
+                      pendingDisbursement={Math.max(budgetApprovedTotal - budgetMonitoringAnalysis.totalReleased, 0)}
+                      activeInField={Math.max(budgetMonitoringAnalysis.totalReleased - totalLiquidated, 0)}
+                      categoryBreakdown={purposeCategoryBreakdown}
+                      formatPesoAmount={formatPesoAmount}
+                      formatCompactPeso={formatCompactPeso}
+                    />
+
+                    <OrganizationFundingTable
+                      rows={organizationFundingRows}
+                      searchValue={organizationFundingSearch}
+                      onSearchChange={setOrganizationFundingSearch}
+                      classificationFilter={organizationFundingClassificationFilter}
+                      onClassificationFilterChange={setOrganizationFundingClassificationFilter}
+                      onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
+                    />
+                  </>
+                ) : budgetMonitoringTab === "barangay-allocation" ? (
+                  selectedBudgetAllocation ? (
+                    <div className="space-y-4">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBudgetAllocation(null)}
+                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                      >
+                        <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                        Back to Allocation
+                      </button>
+
+                      <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface p-4">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                          <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                        </div>
+                        <h1 className="font-segoe text-lg font-semibold leading-none text-text-default">
+                          Barangay {selectedBudgetAllocation.barangay}
+                        </h1>
+                      </div>
+
+                      <OrganizationFundingTable
+                        rows={organizationFundingRows.filter((row) => row.barangay === selectedBudgetAllocation.barangay)}
+                        searchValue={barangayDetailSearch}
+                        onSearchChange={setBarangayDetailSearch}
+                        classificationFilter={barangayDetailClassificationFilter}
+                        onClassificationFilterChange={setBarangayDetailClassificationFilter}
+                        onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                        <StatsCard
+                          title="TOTAL RELEASED"
+                          value={formatPesoAmount(budgetAllocationSummary.totalReleased)}
+                          icon={Banknote}
+                          description="Cash released to organizations in this selection."
+                        />
+                        <StatsCard
+                          title="TOTAL LIQUIDATED"
+                          value={formatPesoAmount(budgetAllocationSummary.totalLiquidated)}
+                          icon={CheckCircle2}
+                          description="Released budgets audited and cleared."
+                        />
+                        <StatsCard
+                          title="UTILIZATION RATE"
+                          value={`${budgetAllocationSummary.liquidationUtilizationRate}%`}
+                          icon={TrendingUp}
+                          description="Share of released budgets already liquidated."
+                        />
+                      </div>
+
+                      <div className="rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                        <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
+                          <div className="flex h-10 min-w-[120px] flex-1 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3.5 py-2.5">
+                            <Search className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                            <input
+                              value={budgetAllocationSearch}
+                              onChange={(event) => setBudgetAllocationSearch(event.target.value)}
+                              placeholder="Search by district or barangay..."
+                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+                            />
+                          </div>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+                              >
+                                <span className="truncate">{budgetAllocationDistrictFilter === "all" ? "All districts" : budgetAllocationDistrictFilter}</span>
+                                <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[180px] rounded-b-md rounded-t-none border-slate-300 p-0">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setBudgetAllocationDistrictFilter("all");
+                                  setBudgetAllocationBarangayFilter("all");
+                                }}
+                                className={cn(
+                                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                                  budgetAllocationDistrictFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
+                                )}
+                              >
+                                All districts
+                              </DropdownMenuItem>
+                              {budgetAllocationDistrictOptions.map((district) => (
+                                <DropdownMenuItem
+                                  key={district}
+                                  onClick={() => {
+                                    setBudgetAllocationDistrictFilter(district);
+                                    setBudgetAllocationBarangayFilter("all");
+                                  }}
+                                  className={cn(
+                                    "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                                    budgetAllocationDistrictFilter === district && "bg-bg-info-tertiary text-public-text-brand",
+                                  )}
+                                >
+                                  {district}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+                              >
+                                <span className="truncate">{budgetAllocationBarangayFilter === "all" ? "All barangays" : budgetAllocationBarangayFilter}</span>
+                                <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[220px] rounded-b-md rounded-t-none border-slate-300 p-0">
+                              <DropdownMenuItem
+                                onClick={() => setBudgetAllocationBarangayFilter("all")}
+                                className={cn(
+                                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                                  budgetAllocationBarangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
+                                )}
+                              >
+                                All barangays
+                              </DropdownMenuItem>
+                              {budgetAllocationBarangayOptions.map((barangay) => (
+                                <DropdownMenuItem
+                                  key={barangay}
+                                  onClick={() => setBudgetAllocationBarangayFilter(barangay)}
+                                  className={cn(
+                                    "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                                    budgetAllocationBarangayFilter === barangay && "bg-bg-info-tertiary text-public-text-brand",
+                                  )}
+                                >
+                                  {barangay}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+                          <span className="w-[22%]">Barangay</span>
+                          <span className="w-[15%]">Released</span>
+                          <span className="w-[15%]">Liquidated</span>
+                          <span className="w-[15%]">Remaining</span>
+                          <span className="w-[23%]">Utilization</span>
+                          <span className="w-[90px] shrink-0">Actions</span>
+                        </div>
+
+                        {groupedPagedBudgetAllocationRows.length === 0 ? (
+                          <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
+                            <p className="font-segoe text-sm font-semibold text-text-default">No matching barangays</p>
+                            <p className="font-segoe text-xs text-slate-500">Try adjusting the search, district, or barangay filters.</p>
+                          </div>
+                        ) : (
+                          groupedPagedBudgetAllocationRows.map((group) => {
+                            const isCollapsed = collapsedAllocationDistricts.includes(group.district);
+                            return (
+                              <div key={group.district} className="border-b border-slate-300 last:border-b-0">
+                                <div className="flex items-center justify-between gap-2 bg-slate-50 px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-segoe text-xs font-semibold uppercase leading-none text-text-default">{group.district}</p>
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-1.5 py-0.5 font-segoe text-[10px] font-semibold leading-[140%] text-slate-500">
+                                      {group.rows.length} barangay{group.rows.length === 1 ? "" : "s"} · {group.organizationCount} org{group.organizationCount === 1 ? "" : "s"}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setCollapsedAllocationDistricts((current) =>
+                                        current.includes(group.district) ? current.filter((d) => d !== group.district) : [...current, group.district],
+                                      )
+                                    }
+                                    className="flex shrink-0 items-center gap-1.5"
+                                  >
+                                    <span className="font-segoe text-[11px] font-semibold leading-none text-slate-500">
+                                      {isCollapsed ? "Expand Details" : "Collapse Details"}
+                                    </span>
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50">
+                                      <ChevronDown className={cn("h-4 w-4 text-text-default transition-transform", isCollapsed && "-rotate-180")} strokeWidth={1.6} />
+                                    </span>
+                                  </button>
+                                </div>
+
+                                {!isCollapsed
+                                  ? group.rows.map((entry) => {
+                                    const remaining = Math.max(entry.releasedAmount - entry.liquidatedAmount, 0);
+                                    const rowUtilization = entry.releasedAmount > 0 ? Math.round((entry.liquidatedAmount / entry.releasedAmount) * 100) : 0;
+                                    return (
+                                      <div
+                                        key={`${entry.district}-${entry.barangay}`}
+                                        className="flex items-center justify-between gap-2 border-t border-slate-300 p-4 transition-colors hover:bg-slate-50"
+                                      >
+                                        <div className="flex w-[22%] min-w-0 items-center gap-2">
+                                          <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">Brgy. {entry.barangay}</p>
+                                          <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                                            {entry.organizationCount} org{entry.organizationCount === 1 ? "" : "s"}
+                                          </span>
+                                        </div>
+                                        <div className="flex w-[15%] items-center">
+                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.releasedAmount)}</p>
+                                        </div>
+                                        <div className="flex w-[15%] items-center">
+                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.liquidatedAmount)}</p>
+                                        </div>
+                                        <div className="flex w-[15%] items-center">
+                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(remaining)}</p>
+                                        </div>
+                                        <div className="flex w-[23%] items-center gap-2">
+                                          <div className="h-2 w-full max-w-[140px] overflow-hidden rounded-full bg-bg-progress-track">
+                                            <div className="h-full rounded-full bg-bg-success-default transition-all" style={{ width: `${Math.min(rowUtilization, 100)}%` }} />
+                                          </div>
+                                          <span className="shrink-0 font-segoe text-xs font-semibold text-text-default">{rowUtilization}%</span>
+                                        </div>
+                                        <div className="flex w-[90px] shrink-0 items-center">
+                                          <button
+                                            type="button"
+                                            onClick={() => setSelectedBudgetAllocation(entry)}
+                                            className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                                          >
+                                            <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+                                            View
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                  : null}
+                              </div>
+                            );
+                          })
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
+                          <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+                            Showing <span className="text-text-default">{pagedBudgetAllocationRows.length}</span> of{" "}
+                            <span className="text-text-default">{filteredBudgetAllocationRows.length}</span> records
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setBudgetAllocationMobilePage((page) => Math.max(1, page - 1))}
+                              disabled={budgetAllocationMobilePage === 1}
+                              className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+                            >
+                              <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
+                              Previous
+                            </button>
+                            <div className="flex items-center gap-2">
+                              {Array.from({ length: budgetAllocationMobilePageCount }, (_, index) => index)
+                                .slice(0, 5)
+                                .map((index) => (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setBudgetAllocationMobilePage(index + 1)}
+                                    className={cn(
+                                      "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                                      index + 1 === budgetAllocationMobilePage
+                                        ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                        : "text-text-default hover:bg-slate-50",
+                                    )}
+                                  >
+                                    {index + 1}
+                                  </button>
+                                ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setBudgetAllocationMobilePage((page) => Math.min(budgetAllocationMobilePageCount, page + 1))}
+                              disabled={budgetAllocationMobilePage >= budgetAllocationMobilePageCount}
+                              className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+                            >
+                              Next
+                              <ChevronRight className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )
+                ) : budgetMonitoringTab === "public" ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-admin-surface p-4 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-public-bg-brand/10 text-public-text-brand">
+                          <Globe className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h2 className="font-segoe text-sm font-bold text-text-default">Public Portal Preview</h2>
+                          <p className="font-segoe text-xs text-slate-500">
+                            Live preview of the shared budget transparency overview published to citizens and youth organizations.
+                          </p>
+                        </div>
+                      </div>
+                      <a
+                        href="https://ytrace.app/budget-transparency"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50"
+                      >
+                        Open Live Public Page <ArrowUpRight className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                      <PublicBudgetOverview />
+                    </div>
+                  </div>
+                ) : null}
               </>
             )}
 
@@ -11817,10 +12138,9 @@ export default function AdminPortal({ section }: { section: string }) {
                 ],
                 filterSummaryLines: [
                   `Category: ${activityLogFilter === "all" ? "All" : getFriendlyAuditCategory(activityLogFilter)}`,
-                  `Time Range: ${
-                    activityDateFilter === "all"
-                      ? "All time"
-                      : `Last ${activityDateFilter.replace("d", "")} days`
+                  `Time Range: ${activityDateFilter === "all"
+                    ? "All time"
+                    : `Last ${activityDateFilter.replace("d", "")} days`
                   }`,
                 ],
               },
@@ -11969,36 +12289,36 @@ export default function AdminPortal({ section }: { section: string }) {
           const cityLedGroups: EntryReviewGroup[] = orgEventParticipations
             .filter((p) => p.status !== "draft")
             .map((participation) => {
-            const activity = semesterActivities.find((a) => a.id === participation.activityId);
-            const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : undefined;
-            return {
-              id: participation.id,
-              title: activity?.name || participation.activityName,
-              categoryLabel: category ? YPOP_CITY_LED_CATEGORY_LABELS[category] : undefined,
-              categoryPillClass: category ? entryReviewCategoryPillClasses[category] : undefined,
-              status: participation.status,
-              files: (eventFilesByParticipationId.get(participation.id) ?? []).map((f) => ({
+              const activity = semesterActivities.find((a) => a.id === participation.activityId);
+              const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : undefined;
+              return {
+                id: participation.id,
+                title: activity?.name || participation.activityName,
+                categoryLabel: category ? YPOP_CITY_LED_CATEGORY_LABELS[category] : undefined,
+                categoryPillClass: category ? entryReviewCategoryPillClasses[category] : undefined,
+                status: participation.status,
+                files: (eventFilesByParticipationId.get(participation.id) ?? []).map((f) => ({
+                  id: f.id,
+                  fileName: f.fileName,
+                  fileUrl: f.fileUrl,
+                  uploadedAt: f.uploadedAt,
+                })),
+              };
+            });
+
+          const orgLedGroups: EntryReviewGroup[] = orgActivities
+            .filter((activity) => activity.status !== "draft")
+            .map((activity) => ({
+              id: activity.id,
+              title: activity.activityName,
+              status: activity.status,
+              files: (orgActivityFilesByActivityId.get(activity.id) ?? []).map((f) => ({
                 id: f.id,
                 fileName: f.fileName,
                 fileUrl: f.fileUrl,
                 uploadedAt: f.uploadedAt,
               })),
-            };
-          });
-
-          const orgLedGroups: EntryReviewGroup[] = orgActivities
-            .filter((activity) => activity.status !== "draft")
-            .map((activity) => ({
-            id: activity.id,
-            title: activity.activityName,
-            status: activity.status,
-            files: (orgActivityFilesByActivityId.get(activity.id) ?? []).map((f) => ({
-              id: f.id,
-              fileName: f.fileName,
-              fileUrl: f.fileUrl,
-              uploadedAt: f.uploadedAt,
-            })),
-          }));
+            }));
 
           const activeReviewGroups = entryReviewTab === "city_led" ? cityLedGroups : orgLedGroups;
           const flattenedReviewFiles = activeReviewGroups.flatMap((group) => group.files);
@@ -12631,28 +12951,57 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
 
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                    <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedEntryReviewGroupIds(
-                              activeReviewGroups
-                                .filter((group) => group.status !== "verified" && group.status !== "approved")
-                                .map((group) => group.id),
-                            )
-                          }
-                          className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand"
-                        >
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-slate-500" />
-                          Select all
-                        </button>
-                      </div>
-                      <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
-                        Review the organization&rsquo;s submitted documents and select a document to preview.
-                      </p>
-                    </div>
+                    {(() => {
+                      const selectableEntryReviewGroups = activeReviewGroups.filter(
+                        (group) => group.status !== "verified" && group.status !== "approved",
+                      );
+                      const selectableEntryReviewGroupIds = selectableEntryReviewGroups.map((group) => group.id);
+                      const selectedEntryReviewCount = selectableEntryReviewGroupIds.filter((id) =>
+                        selectedEntryReviewGroupIds.includes(id),
+                      ).length;
+                      const isAllEntryReviewSelected =
+                        selectableEntryReviewGroupIds.length > 0 &&
+                        selectedEntryReviewCount === selectableEntryReviewGroupIds.length;
+                      const isEntryReviewIndeterminate =
+                        selectedEntryReviewCount > 0 &&
+                        selectedEntryReviewCount < selectableEntryReviewGroupIds.length;
+                      const handleToggleSelectAllEntryReview = () => {
+                        if (isAllEntryReviewSelected) {
+                          setSelectedEntryReviewGroupIds((current) =>
+                            current.filter((id) => !selectableEntryReviewGroupIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedEntryReviewGroupIds((current) =>
+                            Array.from(new Set([...current, ...selectableEntryReviewGroupIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isEntryReviewIndeterminate;
+                                }}
+                                checked={isAllEntryReviewSelected}
+                                disabled={selectableEntryReviewGroupIds.length === 0}
+                                onChange={handleToggleSelectAllEntryReview}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s submitted documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-2 pt-2">
                       {activeReviewGroups.length ? (
@@ -13079,77 +13428,77 @@ export default function AdminPortal({ section }: { section: string }) {
             const status = statusOverride ?? createPeriodForm.status;
             setSubmittingPeriodStatus(statusOverride === "draft" ? "draft" : "publish");
             try {
-            if (isEditMode && editingPeriodId) {
-              const deadline = createPeriodForm.validationDeadline.includes("T")
-                ? createPeriodForm.validationDeadline
-                : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
-              const patch = {
-                semesterLabel: generatedSemesterLabel,
-                validationDeadline: deadline,
-                status,
-                orgLedTiers: createPeriodOrgLedTiers,
-              };
-              if (status === "closed") {
-                try {
-                  const result = await adminCloseYpopSemesterInSupabase(editingPeriodId, patch);
-                  updateYPOPPeriod(result.period.id, result.period);
-                  result.evaluatedEntries.forEach((evaluatedEntry) => {
-                    updateYPOPEntry(evaluatedEntry.id, evaluatedEntry);
-                  });
-                  toast({
-                    title: "Semester closed & evaluated",
-                    description: `${generatedSemesterLabel} has been closed and participating organizations evaluated.`,
-                  });
-                } catch {
-                  const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
-                  updateYPOPPeriod(saved.id, saved);
+              if (isEditMode && editingPeriodId) {
+                const deadline = createPeriodForm.validationDeadline.includes("T")
+                  ? createPeriodForm.validationDeadline
+                  : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+                const patch = {
+                  semesterLabel: generatedSemesterLabel,
+                  validationDeadline: deadline,
+                  status,
+                  orgLedTiers: createPeriodOrgLedTiers,
+                };
+                if (status === "closed") {
+                  try {
+                    const result = await adminCloseYpopSemesterInSupabase(editingPeriodId, patch);
+                    updateYPOPPeriod(result.period.id, result.period);
+                    result.evaluatedEntries.forEach((evaluatedEntry) => {
+                      updateYPOPEntry(evaluatedEntry.id, evaluatedEntry);
+                    });
+                    toast({
+                      title: "Semester closed & evaluated",
+                      description: `${generatedSemesterLabel} has been closed and participating organizations evaluated.`,
+                    });
+                  } catch {
+                    const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                    updateYPOPPeriod(saved.id, saved);
+                    toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
+                  }
+                } else {
+                  try {
+                    const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                    updateYPOPPeriod(saved.id, saved);
+                  } catch {
+                    updateYPOPPeriod(editingPeriodId, patch);
+                  }
                   toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
                 }
+                resetForm();
+                setYpopAdminView("periods");
               } else {
+                const now = new Date().toISOString();
+                const deadline = createPeriodForm.validationDeadline.includes("T")
+                  ? createPeriodForm.validationDeadline
+                  : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+                const periodData = { semesterKey: generatedSemesterKey, semesterLabel: generatedSemesterLabel, validationDeadline: deadline, status, orgLedTiers: createPeriodOrgLedTiers };
+                let savedPeriodId: string;
                 try {
-                  const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
-                  updateYPOPPeriod(saved.id, saved);
-                } catch {
-                  updateYPOPPeriod(editingPeriodId, patch);
-                }
-                toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
-              }
-              resetForm();
-              setYpopAdminView("periods");
-            } else {
-              const now = new Date().toISOString();
-              const deadline = createPeriodForm.validationDeadline.includes("T")
-                ? createPeriodForm.validationDeadline
-                : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
-              const periodData = { semesterKey: generatedSemesterKey, semesterLabel: generatedSemesterLabel, validationDeadline: deadline, status, orgLedTiers: createPeriodOrgLedTiers };
-              let savedPeriodId: string;
-              try {
-                const saved = await adminCreateYpopPeriodInSupabase(periodData);
-                createYPOPPeriod({ ...saved });
-                savedPeriodId = saved.id;
-                for (let i = 0; i < createPeriodActivities.length; i++) {
-                  const act = createPeriodActivities[i];
-                  try {
-                    const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
-                    createYPOPCityActivity({ ...savedAct });
-                  } catch {
-                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                  const saved = await adminCreateYpopPeriodInSupabase(periodData);
+                  createYPOPPeriod({ ...saved });
+                  savedPeriodId = saved.id;
+                  for (let i = 0; i < createPeriodActivities.length; i++) {
+                    const act = createPeriodActivities[i];
+                    try {
+                      const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
+                      createYPOPCityActivity({ ...savedAct });
+                    } catch {
+                      createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                    }
                   }
+                } catch {
+                  const newId = `ypop-period-${Date.now()}`;
+                  createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
+                  createPeriodActivities.forEach((act, i) => {
+                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                  });
+                  savedPeriodId = newId;
                 }
-              } catch {
-                const newId = `ypop-period-${Date.now()}`;
-                createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
-                createPeriodActivities.forEach((act, i) => {
-                  createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
-                });
-                savedPeriodId = newId;
+                toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
+                setSelectedYpopPeriodId(savedPeriodId);
+                setYpopSubmissionFilter("all");
+                resetForm();
+                setYpopAdminView("period-detail");
               }
-              toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
-              setSelectedYpopPeriodId(savedPeriodId);
-              setYpopSubmissionFilter("all");
-              resetForm();
-              setYpopAdminView("period-detail");
-            }
             } finally {
               setSubmittingPeriodStatus(null);
             }
@@ -13210,13 +13559,13 @@ export default function AdminPortal({ section }: { section: string }) {
                 prev.map((a) =>
                   a.tempId === editingDraftTempId
                     ? {
-                        ...a,
-                        name: activityModalData.name.trim(),
-                        startDate,
-                        endDate,
-                        venue: activityModalData.venue.trim(),
-                        category: activityModalData.category,
-                      }
+                      ...a,
+                      name: activityModalData.name.trim(),
+                      startDate,
+                      endDate,
+                      venue: activityModalData.venue.trim(),
+                      category: activityModalData.category,
+                    }
                     : a,
                 ),
               );
@@ -14139,6 +14488,7 @@ export default function AdminPortal({ section }: { section: string }) {
           if (selectedInquiry) setReplyDialogInquiry(selectedInquiry);
           setSelectedInquiry(null);
         }}
+        onDeleteInquiry={handleInitiateDeleteInquiry}
         saving={savingInquiryStatus}
       />
       <ReplyEmailDialog
@@ -14155,6 +14505,105 @@ export default function AdminPortal({ section }: { section: string }) {
         }
         onMarkResponded={() => (replyDialogInquiry ? handleMarkInquiryResponded(replyDialogInquiry) : undefined)}
       />
+      <AlertDialog
+        open={Boolean(inquiryToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingInquiry) {
+            setInquiryToDelete(null);
+            setDeleteInquiryError(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden p-5 sm:p-6">
+          <AlertDialogHeader className="space-y-1.5 text-left">
+            <AlertDialogTitle className="font-segoe text-lg font-bold text-text-default">
+              Delete Inquiry
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-segoe text-sm text-slate-500">
+              Are you sure you want to delete this inquiry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {inquiryToDelete ? (
+            <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 font-segoe text-xs min-w-0 overflow-hidden">
+              {/* Reference ID */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                <span className="font-semibold text-slate-500 shrink-0 sm:w-24">Reference ID</span>
+                <div className="min-w-0 flex-1">
+                  <ReferenceCodeChip code={getInquiryReferenceCode(inquiryToDelete, state.inquiries)} />
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 min-w-0">
+                <span className="font-semibold text-slate-500 shrink-0 sm:w-24 sm:pt-0.5">Subject</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-text-default text-xs sm:text-[13px] leading-relaxed break-words [overflow-wrap:anywhere] whitespace-normal">
+                    {inquiryToDelete.subject || "General Inquiry"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sender */}
+              {inquiryToDelete.organizationName || inquiryToDelete.submitterName || inquiryToDelete.email ? (
+                <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 min-w-0">
+                  <span className="font-semibold text-slate-500 shrink-0 sm:w-24 sm:pt-0.5">Sender</span>
+                  <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                    {inquiryToDelete.organizationName || inquiryToDelete.submitterName ? (
+                      <p className="font-medium text-text-default text-xs sm:text-[13px] leading-snug break-words [overflow-wrap:anywhere] whitespace-normal">
+                        {inquiryToDelete.organizationName || inquiryToDelete.submitterName}
+                      </p>
+                    ) : null}
+                    {inquiryToDelete.email ? (
+                      <p className="text-slate-500 text-xs break-all leading-normal">
+                        {inquiryToDelete.email}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {deleteInquiryError ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 font-segoe text-xs text-rose-700 break-words" role="alert">
+              {deleteInquiryError}
+            </div>
+          ) : null}
+
+          <AlertDialogFooter className="mt-2 flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-2">
+            <AlertDialogCancel
+              disabled={isDeletingInquiry}
+              onClick={() => {
+                setInquiryToDelete(null);
+                setDeleteInquiryError(null);
+              }}
+              className="mt-0 font-segoe text-sm"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletingInquiry}
+              onClick={() => void handleConfirmDeleteInquiry()}
+              className="font-segoe text-sm active:scale-[0.98] transition-transform"
+            >
+              {isDeletingInquiry ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Delete Inquiry
+                </>
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -14367,15 +14816,15 @@ export default function AdminPortal({ section }: { section: string }) {
           activeReportExport === "allocation-by-barangay"
             ? "Allocation by Barangay"
             : activeReportExport === "budget-monitoring"
-            ? "Budget Monitoring"
-            : "Budget Requests"
+              ? "Budget Monitoring"
+              : "Budget Requests"
         }
         description={
           activeReportExport === "allocation-by-barangay"
             ? "Export all barangay allocation records matching the current filters."
             : activeReportExport === "budget-monitoring"
-            ? "Export monitored budget activities, utilization rates, and liquidation statuses matching the current filters."
-            : "Export budget request records matching the current filters."
+              ? "Export monitored budget activities, utilization rates, and liquidation statuses matching the current filters."
+              : "Export budget request records matching the current filters."
         }
         onExport={handleReportExport}
       />
@@ -14403,6 +14852,190 @@ export default function AdminPortal({ section }: { section: string }) {
           });
         }}
       />
+      <AlertDialog
+        open={registrationDeleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) closeRegistrationDeleteDialog();
+        }}
+      >
+        <AlertDialogContent
+          className="admin-organization-delete-dialog"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            registrationDeleteInputRef.current?.focus();
+          }}
+          onEscapeKeyDown={(event) => {
+            if (registrationDeleteLoading) event.preventDefault();
+          }}
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
+          {registrationDeleteTarget ? (
+            <>
+              <AlertDialogHeader>
+                <div className="admin-organization-delete-dialog__icon" aria-hidden="true">
+                  <AlertTriangle />
+                </div>
+                <AlertDialogTitle>
+                  Permanently delete this registration?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete the organization account, registration records, submitted
+                  documents, uploaded files, and other organization-owned records associated with this account.
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="admin-organization-delete-dialog__summary">
+                <p className="admin-organization-delete-dialog__summary-title">
+                  The following will be permanently deleted:
+                </p>
+                {registrationDeletePreflightLoading ? (
+                  <div className="flex items-center gap-2 py-3 text-sm text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin text-public-bg-brand" />
+                    <span>Calculating deletion manifest…</span>
+                  </div>
+                ) : registrationDeleteCounts ? (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-1 font-segoe text-xs text-text-default">
+                    <div>
+                      Documents: <strong className="font-semibold text-text-default">{registrationDeleteCounts.documentSubmissions}</strong>
+                    </div>
+                    <div>
+                      Uploaded files: <strong className="font-semibold text-text-default">{registrationDeleteCounts.documentFiles + registrationDeleteCounts.storageObjects}</strong>
+                    </div>
+                    <div>
+                      Budget requests: <strong className="font-semibold text-text-default">{registrationDeleteCounts.budgetRequests}</strong>
+                    </div>
+                    <div>
+                      Liquidation reports: <strong className="font-semibold text-text-default">{registrationDeleteCounts.liquidationReports}</strong>
+                    </div>
+                    <div>
+                      YPOP records: <strong className="font-semibold text-text-default">{registrationDeleteCounts.ypopEntries}</strong>
+                    </div>
+                    <div>
+                      Notifications: <strong className="font-semibold text-text-default">{registrationDeleteCounts.notifications}</strong>
+                    </div>
+                  </div>
+                ) : (
+                  <ul>
+                    {ORGANIZATION_DELETION_CATEGORIES.map((category) => (
+                      <li key={category}>{category}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="registration-delete-confirmation">
+                  Type the organization name to confirm
+                </Label>
+                <p
+                  id="registration-delete-instruction"
+                  className="admin-organization-delete-dialog__instruction"
+                >
+                  Enter “{registrationDeleteTarget.organizationName}” exactly as shown.
+                </p>
+                <Input
+                  ref={registrationDeleteInputRef}
+                  id="registration-delete-confirmation"
+                  value={registrationDeleteConfirmation}
+                  disabled={registrationDeleteLoading || registrationDeletePreflightLoading || Boolean(registrationDeleteError && !registrationDeleteCounts)}
+                  autoComplete="off"
+                  aria-invalid={Boolean(
+                    registrationDeleteConfirmation &&
+                    !organizationDeletionConfirmationMatches(
+                      registrationDeleteConfirmation,
+                      registrationDeleteTarget.organizationName,
+                    )
+                  )}
+                  aria-describedby="registration-delete-instruction registration-delete-mismatch"
+                  onChange={(event) => setRegistrationDeleteConfirmation(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      !registrationDeleteLoading &&
+                      !registrationDeletePreflightLoading &&
+                      !registrationDeleteError &&
+                      registrationDeleteTarget.id &&
+                      registrationDeleteTarget.organizationName &&
+                      organizationDeletionConfirmationMatches(
+                        registrationDeleteConfirmation,
+                        registrationDeleteTarget.organizationName,
+                      )
+                    ) {
+                      event.preventDefault();
+                      void confirmRegistrationPermanentDeletion();
+                    }
+                  }}
+                  placeholder={registrationDeleteTarget.organizationName}
+                />
+                {registrationDeleteConfirmation &&
+                  !organizationDeletionConfirmationMatches(
+                    registrationDeleteConfirmation,
+                    registrationDeleteTarget.organizationName,
+                  ) ? (
+                  <p id="registration-delete-mismatch" className="text-xs text-destructive" role="status">
+                    The organization name does not match.
+                  </p>
+                ) : (
+                  <span id="registration-delete-mismatch" className="sr-only">
+                    The entered organization name must match before deletion is enabled.
+                  </span>
+                )}
+              </div>
+
+              <div className="admin-organization-delete-dialog__warning-card" role="note">
+                <div className="admin-organization-delete-dialog__warning-icon-wrapper" aria-hidden="true">
+                  <AlertTriangle className="admin-organization-delete-dialog__warning-icon" />
+                </div>
+                <div className="admin-organization-delete-dialog__warning-content">
+                  <p className="admin-organization-delete-dialog__warning-title">
+                    This action is permanent and cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              {registrationDeleteError ? (
+                <div className="admin-organization-delete-dialog__error" role="alert">
+                  {registrationDeleteError}
+                </div>
+              ) : null}
+
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  disabled={registrationDeleteLoading}
+                  onClick={closeRegistrationDeleteDialog}
+                  className="font-segoe active:scale-[0.98] transition-transform"
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={
+                    registrationDeleteLoading ||
+                    registrationDeletePreflightLoading ||
+                    Boolean(registrationDeleteError && !registrationDeleteCounts) ||
+                    !registrationDeleteTarget.id ||
+                    !registrationDeleteTarget.organizationName ||
+                    !organizationDeletionConfirmationMatches(
+                      registrationDeleteConfirmation,
+                      registrationDeleteTarget.organizationName,
+                    )
+                  }
+                  onClick={() => void confirmRegistrationPermanentDeletion()}
+                  className="font-segoe active:scale-[0.98] transition-transform"
+                >
+                  {registrationDeleteLoading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />Deleting registration account…</>
+                  ) : (
+                    <><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Permanently Delete Account</>
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </>
+          ) : null}
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -14436,10 +15069,10 @@ function DetailStatusChip({
     tone === "success"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "warning"
-      ? "border-amber-200 bg-amber-50 text-amber-700"
-      : tone === "danger"
-      ? "border-rose-200 bg-rose-50 text-rose-700"
-      : "border-border/70 bg-muted/30 text-muted-foreground";
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : tone === "danger"
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : "border-border/70 bg-muted/30 text-muted-foreground";
 
   return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${toneClass}`}>{label}</span>;
 }
@@ -14555,11 +15188,10 @@ function DetailFilePills({
             type="button"
             title={file.fileName}
             onClick={() => onSelect(file.id)}
-            className={`inline-flex max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
-              isSelected
-                ? "border-primary bg-primary/5 text-primary shadow-sm"
-                : "border-border/70 bg-background text-foreground hover:border-primary/40 hover:bg-primary/5"
-            }`}
+            className={`inline-flex max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${isSelected
+              ? "border-primary bg-primary/5 text-primary shadow-sm"
+              : "border-border/70 bg-background text-foreground hover:border-primary/40 hover:bg-primary/5"
+              }`}
           >
             <FileText className="h-4 w-4 shrink-0 text-red-500" />
             <span className="line-clamp-2 break-all text-sm font-medium leading-snug">{file.fileName}</span>

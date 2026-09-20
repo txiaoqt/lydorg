@@ -32,10 +32,11 @@ import type {
   PublicBudgetSource,
   PublicBudgetSnapshotSettings,
   AnnualBudgetAllocation,
-  BudgetPurposeCategory,
   BudgetMonitoringSummary,
   PublicBudgetSummary,
   YorpQuarterlyReport,
+  NewsCategoryRecord,
+  INITIAL_NEWS_CATEGORIES,
 } from "./lydo-connect-data";
 import {
   DEFAULT_ORG_LED_TIERS,
@@ -468,6 +469,7 @@ type AdminPortalSnapshot = {
   liquidation_reports?: LiquidationReportRow[];
   liquidation_report_files?: LiquidationReportFileRow[];
   news_releases?: NewsReleaseRow[];
+  news_categories?: NewsCategoryRow[];
   transparency_posts?: TransparencyPostRow[];
   compliance_remarks?: ComplianceRemarkRow[];
   notifications?: NotificationRow[];
@@ -1029,6 +1031,39 @@ const fetchNewsReleases = async () => {
   return (data as NewsReleaseRow[] | null) ?? [];
 };
 
+export type NewsCategoryRow = {
+  id: string;
+  name: string;
+  normalized_name: string;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export const mapNewsCategory = (row: NewsCategoryRow): NewsCategoryRecord => ({
+  id: row.id,
+  name: row.name,
+  normalizedName: row.normalized_name,
+  isSystem: Boolean(row.is_system),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const fetchNewsCategories = async (): Promise<NewsCategoryRecord[]> => {
+  if (!supabase) return INITIAL_NEWS_CATEGORIES;
+  const { data, error } = await supabase
+    .from("news_categories")
+    .select("*")
+    .order("is_system", { ascending: false })
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.warn("Failed to fetch news categories from Supabase; using defaults.", error.message);
+    return INITIAL_NEWS_CATEGORIES;
+  }
+  return (data as NewsCategoryRow[]).map(mapNewsCategory);
+};
+
 const fetchTransparencyPosts = async () => {
   const { data, error } = await supabase!
     .from("transparency_posts")
@@ -1089,8 +1124,9 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
   const mappedTemplates = ((templateRows as RequiredDocumentTypeRow[] | null) ?? [])
     .map(mapTemplate)
     .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
-  const [newsReleaseRows, transparencyPostRows, notificationRows] = await Promise.all([
+  const [newsReleaseRows, newsCategoryRows, transparencyPostRows, notificationRows] = await Promise.all([
     fetchNewsReleases(),
+    fetchNewsCategories(),
     fetchTransparencyPosts(),
     session?.user ? fetchNotifications() : Promise.resolve([]),
   ]);
@@ -1098,6 +1134,7 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
   const sharedState: Partial<LydoSeedState> = {
     templates: mappedTemplates,
     newsReleases: newsReleaseRows.map(mapNewsRelease),
+    newsCategories: newsCategoryRows,
     transparencyPosts: transparencyPostRows.map(mapTransparencyPost),
     notifications: notificationRows.map(mapNotification),
   };
@@ -1370,6 +1407,15 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     }
   })();
 
+  const adminNewsCategoriesPromise = (async (): Promise<NewsCategoryRecord[] | null> => {
+    try {
+      return await fetchNewsCategories();
+    } catch (err) {
+      console.warn("admin news categories query unavailable; falling back to snapshot data.", err);
+      return null;
+    }
+  })();
+
   const { data, error } = await supabase.rpc("get_admin_portal_snapshot", {
     _session_token: adminSession.sessionToken,
   });
@@ -1393,6 +1439,7 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
       liquidationReports: (snapshot.liquidation_reports ?? []).map(mapLiquidationReport),
       liquidationReportFiles: (snapshot.liquidation_report_files ?? []).map(mapLiquidationReportFile),
       newsReleases: (snapshot.news_releases ?? []).map(mapNewsRelease),
+      newsCategories: (snapshot.news_categories ?? []).map(mapNewsCategory),
       transparencyPosts: (snapshot.transparency_posts ?? []).map(mapTransparencyPost),
       complianceRemarks: (snapshot.compliance_remarks ?? []).map(mapComplianceRemark),
       notifications: (snapshot.notifications ?? []).map(mapNotification),
@@ -1422,6 +1469,7 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     ypopOrgActivityRows,
     ypopOrgActivityFileRows,
     adminTemplateRows,
+    adminNewsCategories,
   ] = await Promise.all([
     inquiriesPromise,
     ypopPeriodsPromise,
@@ -1432,9 +1480,13 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     ypopOrgActivitiesPromise,
     ypopOrgActivityFilesPromise,
     adminTemplatesPromise,
+    adminNewsCategoriesPromise,
   ]);
   if (adminTemplateRows !== null) {
     remoteState.templates = adminTemplateRows;
+  }
+  if (adminNewsCategories !== null && (adminNewsCategories.length > 0 || !remoteState.newsCategories?.length)) {
+    remoteState.newsCategories = adminNewsCategories;
   }
   if (inquiryRows.length > 0 || !remoteState.inquiries?.length) {
     remoteState.inquiries = inquiryRows.map(mapInquiry);
@@ -2501,6 +2553,19 @@ export const createInquiryInSupabase = async (params: {
   subject: string;
   description: string;
 }): Promise<InquiryRecord> => {
+  const trimmedSubject = params.subject.trim();
+  if (!trimmedSubject) {
+    throw new Error("Subject is required.");
+  }
+  if (trimmedSubject.length > 120) {
+    throw new Error("Subject must be 120 characters or fewer.");
+  }
+
+  const trimmedDescription = params.description.trim();
+  if (!trimmedDescription) {
+    throw new Error("Message / details are required.");
+  }
+
   const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
 
   const canonicalOrgName = organizationProfile.organization_name || params.organizationName.trim();
@@ -2514,8 +2579,8 @@ export const createInquiryInSupabase = async (params: {
       submitter_name: canonicalSubmitterName,
       organization_name: canonicalOrgName,
       email: params.email.trim(),
-      subject: params.subject.trim(),
-      description: params.description.trim(),
+      subject: trimmedSubject,
+      description: trimmedDescription,
       status: "pending_review",
       admin_remarks: "",
       reviewed_at: null,
@@ -2694,6 +2759,37 @@ export const deleteNewsReleaseInSupabase = async (newsReleaseId: string) => {
     _news_release_id: newsReleaseId,
   });
   if (error) throw new Error(error.message);
+};
+
+export const createNewsCategoryInSupabase = async (name: string): Promise<NewsCategoryRecord> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  if (!trimmed) throw new Error("Category name cannot be empty.");
+
+  const { data, error } = await supabase!.rpc("create_admin_news_category", {
+    _session_token: adminSession.sessionToken,
+    _name: trimmed,
+  });
+
+  if (error) throw new Error(error.message);
+  const createdRow = Array.isArray(data) ? data[0] : data;
+  if (!createdRow) throw new Error("Failed to create category.");
+  return mapNewsCategory(createdRow as NewsCategoryRow);
+};
+
+export const deleteNewsCategoryInSupabase = async (categoryId: string): Promise<{ success: boolean; error?: string }> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("delete_admin_news_category", {
+    _session_token: adminSession.sessionToken,
+    _category_id: categoryId,
+  });
+
+  if (error) throw new Error(error.message);
+  const result = data as { success?: boolean; error?: string; deleted_id?: string; deleted_name?: string } | null;
+  if (!result || result.success === false) {
+    throw new Error(result?.error || "Failed to delete category.");
+  }
+  return { success: true };
 };
 
 export const createTransparencyPostInSupabase = async (params: {
@@ -3151,6 +3247,25 @@ export const adminUpdateInquiryInSupabase = async (
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the inquiry.");
   return mapInquiry(updatedRow as InquiryRow);
+};
+
+export const deleteInquiryInSupabase = async (inquiryId: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("delete_admin_inquiry", {
+    _session_token: adminSession.sessionToken,
+    _inquiry_id: inquiryId,
+  });
+
+  if (error) {
+    throw new Error(error.message || "Failed to delete inquiry.");
+  }
+
+  const res = data as { success?: boolean; error?: string } | null;
+  if (res && res.success === false) {
+    throw new Error(res.error || "Failed to delete inquiry.");
+  }
 };
 
 export const updateLiquidationReportInSupabase = async (

@@ -104,6 +104,14 @@ begin
       ),
       '[]'::jsonb
     ),
+    'news_categories',
+    coalesce(
+      (
+        select jsonb_agg(to_jsonb(nc) order by nc.is_system desc, nc.name asc)
+        from public.news_categories nc
+      ),
+      '[]'::jsonb
+    ),
     'transparency_posts',
     coalesce(
       (
@@ -141,7 +149,6 @@ begin
       (
         select jsonb_agg(to_jsonb(rdt) order by rdt.sort_order asc)
         from public.required_document_types rdt
-        where rdt.is_active = true
       ),
       '[]'::jsonb
     )

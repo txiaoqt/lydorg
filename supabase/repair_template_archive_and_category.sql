@@ -107,6 +107,14 @@ begin
       ),
       '[]'::jsonb
     ),
+    'news_categories',
+    coalesce(
+      (
+        select jsonb_agg(to_jsonb(nc) order by nc.is_system desc, nc.name asc)
+        from public.news_categories nc
+      ),
+      '[]'::jsonb
+    ),
     'transparency_posts',
     coalesce(
       (

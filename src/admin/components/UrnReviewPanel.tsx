@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,10 +12,11 @@ import { urnReviewLabels } from "@/lib/urn-registration";
 
 type Decision = "verified" | "needs_correction" | "rejected";
 
-export function UrnReviewPanel({ profile, onBack, onReviewed }: {
+export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
   profile: OrganizationProfile;
   onBack: () => void;
   onReviewed: (profile: OrganizationProfile) => void;
+  onDelete?: () => void;
 }) {
   const [decision, setDecision] = useState<Decision | null>(null);
   const [remarks, setRemarks] = useState("");
@@ -38,7 +39,21 @@ export function UrnReviewPanel({ profile, onBack, onReviewed }: {
   };
   return (
     <div className="space-y-5">
-      <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-2 h-4 w-4" />Back to Registration Review</Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-2 h-4 w-4" />Back to Registration Review</Button>
+        {onDelete && profile.profileStatus !== "verified" && profile.profileStatus !== "suspended_inactive" ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDelete}
+            className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Registration
+          </Button>
+        ) : null}
+      </div>
+
       <section className="mx-auto max-w-3xl rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Existing URN</p><h1 className="text-2xl font-semibold">{profile.organizationName}</h1><p className="text-sm text-muted-foreground">{profile.organizationEmail}</p></div>

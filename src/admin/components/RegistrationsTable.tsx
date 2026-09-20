@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -20,6 +20,9 @@ import { majorClassificationOptions, type OrganizationProfile } from "@/lib/lydo
 
 export type RegistrationStatusFilter = "all" | OrganizationProfile["profileStatus"];
 
+export const isDeletableRegistrationStatus = (status: OrganizationProfile["profileStatus"]) =>
+  status === "incomplete" || status === "pending_review" || status === "needs_update";
+
 type RegistrationsTableProps = {
   registrations: OrganizationProfile[];
   documentCountsByOrgId: Record<string, { submitted: number; required: number }>;
@@ -34,6 +37,9 @@ type RegistrationsTableProps = {
   classificationFilter: string;
   onClassificationFilterChange: (value: string) => void;
   onReview: (organizationId: string) => void;
+  onDelete?: (organization: OrganizationProfile) => void;
+  selectedOrgIds?: Set<string>;
+  onSelectedOrgIdsChange?: (selectedIds: Set<string>) => void;
 };
 
 const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
@@ -104,8 +110,37 @@ export const RegistrationsTable = ({
   classificationFilter,
   onClassificationFilterChange,
   onReview,
+  onDelete,
+  selectedOrgIds,
+  onSelectedOrgIdsChange,
 }: RegistrationsTableProps) => {
   const [page, setPage] = useState(0);
+  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
+  const selectedIds = selectedOrgIds ?? internalSelectedIds;
+  const setSelectedIds = onSelectedOrgIdsChange ?? setInternalSelectedIds;
+
+  // Prune stale IDs that no longer exist in the registrations dataset
+  useEffect(() => {
+    if (selectedIds.size === 0) return;
+    const validIds = new Set(registrations.map((r) => r.id));
+    const staleIds = Array.from(selectedIds).filter((id) => !validIds.has(id));
+    if (staleIds.length > 0) {
+      const next = new Set(selectedIds);
+      staleIds.forEach((id) => next.delete(id));
+      setSelectedIds(next);
+    }
+  }, [registrations, selectedIds, setSelectedIds]);
+
+  // Keyboard accessibility: Escape to clear selection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedIds.size > 0) {
+        setSelectedIds(new Set());
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIds, setSelectedIds]);
 
   const barangayOptions = useMemo(
     () => getBarangayOptionsForDistrict(districtFilter),
@@ -126,6 +161,40 @@ export const RegistrationsTable = ({
     () => registrations.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
     [registrations, clampedPage],
   );
+
+  const visibleRowIds = useMemo(() => pageItems.map((org) => org.id), [pageItems]);
+  const pageSelectedCount = useMemo(
+    () => pageItems.filter((org) => selectedIds.has(org.id)).length,
+    [pageItems, selectedIds],
+  );
+  const isAllPageSelected = pageItems.length > 0 && pageSelectedCount === pageItems.length;
+  const isIndeterminate = pageSelectedCount > 0 && pageSelectedCount < pageItems.length;
+
+  const handleToggleSelectAll = () => {
+    if (isAllPageSelected) {
+      const next = new Set(selectedIds);
+      for (const id of visibleRowIds) {
+        next.delete(id);
+      }
+      setSelectedIds(next);
+    } else {
+      const next = new Set(selectedIds);
+      for (const id of visibleRowIds) {
+        next.add(id);
+      }
+      setSelectedIds(next);
+    }
+  };
+
+  const handleToggleRow = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
 
   const changePage = (next: number) => {
     setPage(Math.max(0, Math.min(next, totalPages - 1)));
@@ -304,11 +373,20 @@ export const RegistrationsTable = ({
 
       {/* Table content with horizontal containment */}
       <div className="min-w-0 overflow-x-auto">
-        <div className="min-w-[840px]">
+        <div className="min-w-[920px]">
           {/* Column headers */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-            <span className="w-6 shrink-0">
-              <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
+            <span className="w-6 shrink-0 flex items-center justify-center">
+              <input
+                type="checkbox"
+                ref={(el) => {
+                  if (el) el.indeterminate = isIndeterminate;
+                }}
+                checked={isAllPageSelected}
+                onChange={handleToggleSelectAll}
+                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer"
+                aria-label="Select all visible registrations on current page"
+              />
             </span>
             <span className="w-[14%]">Reference ID</span>
             <span className="w-[20%]">Organization</span>
@@ -316,7 +394,7 @@ export const RegistrationsTable = ({
             <span className="w-[13%]">Documents</span>
             <span className="w-[10%]">Submitted</span>
             <span className="w-[12%]">Status</span>
-            <span className="w-[90px] shrink-0">Actions</span>
+            <span className="w-[176px] shrink-0">Actions</span>
           </div>
 
           {/* Rows */}
@@ -330,14 +408,24 @@ export const RegistrationsTable = ({
               const counts = documentCountsByOrgId[org.id] ?? { submitted: 0, required: 0 };
               const submittedDate = new Date(org.createdAt);
               const isValidDate = !Number.isNaN(submittedDate.getTime());
+              const isSelected = selectedIds.has(org.id);
 
               return (
                 <div
                   key={org.id}
-                  className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
+                  className={cn(
+                    "flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50",
+                    isSelected && "bg-blue-50/40 border-l-2 border-l-public-bg-brand",
+                  )}
                 >
-                  <span className="w-6 shrink-0">
-                    <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
+                  <span className="w-6 shrink-0 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleToggleRow(org.id)}
+                      className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer"
+                      aria-label={`Select ${org.organizationName}`}
+                    />
                   </span>
 
                   <div className="flex w-[14%] flex-col justify-center gap-1">
@@ -376,15 +464,26 @@ export const RegistrationsTable = ({
                     <StatusPill status={org.profileStatus} />
                   </div>
 
-                  <div className="flex w-[90px] shrink-0 items-center">
+                  <div className="flex w-[176px] shrink-0 items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => onReview(org.id)}
-                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1"
                     >
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                       Review
                     </button>
+                    {isDeletableRegistrationStatus(org.profileStatus) && onDelete ? (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(org)}
+                        className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md border border-red-200 bg-red-50/70 px-2.5 font-segoe text-public-fs-body-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1"
+                        aria-label={`Delete registration for ${org.organizationName}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 shrink-0 text-red-600" strokeWidth={1.6} />
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               );
@@ -398,6 +497,11 @@ export const RegistrationsTable = ({
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{registrations.length}</span> submissions
+          {selectedIds.size > 0 && (
+            <span className="ml-2 font-medium text-public-text-brand">
+              ({selectedIds.size} selected)
+            </span>
+          )}
         </p>
         <div className="flex items-center gap-2">
           <button

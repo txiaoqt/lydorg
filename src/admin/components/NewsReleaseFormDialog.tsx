@@ -14,11 +14,22 @@ import {
   Plus,
   RotateCcw,
   Save,
-  Trash2,
   UploadCloud,
   X,
+  Loader2,
+  Trash2,
 } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -31,9 +42,12 @@ import {
 import { cn } from "@/lib/utils";
 import {
   deriveNewsCategories,
+  getNewsCategoryUsage,
+  buildAdminNewsCategoryOptions,
   validateFacebookPostUrl,
   validateNewCategory,
   type NewsRelease,
+  type NewsCategoryRecord,
 } from "@/lib/lydo-connect-data";
 
 const FIELD_CLASS =
@@ -208,7 +222,10 @@ export type NewsReleaseFormDialogProps = {
   category: string;
   onCategoryChange: (value: string) => void;
   categoryOptions?: string[];
-  onAddCategory?: (newCategory: string) => void;
+  categories?: NewsCategoryRecord[];
+  allNewsReleases?: Array<Pick<NewsRelease, "category">>;
+  onAddCategory?: (newCategory: string) => Promise<string | void> | void;
+  onDeleteCategory?: (category: NewsCategoryRecord) => Promise<boolean | void> | void;
   facebookPostUrl: string;
   onFacebookPostUrlChange: (value: string) => void;
   previewImageUrl: string;
@@ -233,7 +250,10 @@ export const NewsReleaseFormDialog = ({
   category,
   onCategoryChange,
   categoryOptions = [],
+  categories,
+  allNewsReleases = [],
   onAddCategory,
+  onDeleteCategory,
   facebookPostUrl,
   onFacebookPostUrlChange,
   previewImageUrl,
@@ -262,20 +282,43 @@ export const NewsReleaseFormDialog = ({
 
   // Local state for adding a new category
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [isAddingCategorySubmitting, setIsAddingCategorySubmitting] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
   const [localCategories, setLocalCategories] = useState<string[]>([]);
 
+  // Category deletion state
+  const [categoryToDelete, setCategoryToDelete] = useState<NewsCategoryRecord | null>(null);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+  const [deleteCategoryError, setDeleteCategoryError] = useState<string | null>(null);
+
   // Validation submission state
   const [submitted, setSubmitted] = useState(false);
 
-  // Sync available categories
-  const availableCategories = useMemo(() => {
-    return deriveNewsCategories(
+  // Sync available categories using persistent registry or fallback options
+  const resolvedCategories = useMemo<NewsCategoryRecord[]>(() => {
+    if (categories && categories.length > 0) {
+      return buildAdminNewsCategoryOptions(categories, allNewsReleases);
+    }
+    const stringList = deriveNewsCategories(
       categoryOptions.map((c) => ({ category: c })),
       localCategories,
     );
-  }, [categoryOptions, localCategories]);
+    return stringList.map((name) => {
+      const isSys = ["yorp", "ypop", "move"].includes(name.trim().toLowerCase());
+      return {
+        id: `cat-${name.toLowerCase().replace(/\s+/g, "_")}`,
+        name,
+        normalizedName: name.trim().toLowerCase().replace(/\s+/g, " "),
+        isSystem: isSys,
+      };
+    });
+  }, [categories, categoryOptions, allNewsReleases, localCategories]);
+
+  const availableCategoryNames = useMemo(
+    () => resolvedCategories.map((c) => c.name),
+    [resolvedCategories],
+  );
 
   // Handle preview object URL cleanup
   useEffect(() => {
@@ -354,20 +397,31 @@ export const NewsReleaseFormDialog = ({
   };
 
   // Add new category
-  const handleConfirmAddCategory = () => {
-    const result = validateNewCategory(newCategoryName, availableCategories);
+  const handleConfirmAddCategory = async () => {
+    const result = validateNewCategory(newCategoryName, availableCategoryNames);
     if (!result.isValid) {
       setNewCategoryError(result.error || "Invalid category name.");
       return;
     }
 
     const createdName = result.normalizedName;
-    setLocalCategories((prev) => [...prev, createdName]);
-    onAddCategory?.(createdName);
-    onCategoryChange(createdName);
-    setIsAddingCategory(false);
-    setNewCategoryName("");
+    setIsAddingCategorySubmitting(true);
     setNewCategoryError(null);
+    try {
+      if (onAddCategory) {
+        await onAddCategory(createdName);
+      } else {
+        setLocalCategories((prev) => [...prev, createdName]);
+      }
+      onCategoryChange(createdName);
+      setIsAddingCategory(false);
+      setNewCategoryName("");
+      setNewCategoryError(null);
+    } catch (err: any) {
+      setNewCategoryError(err.message || "Failed to create category.");
+    } finally {
+      setIsAddingCategorySubmitting(false);
+    }
   };
 
   const handleCancelAddCategory = () => {
@@ -402,7 +456,8 @@ export const NewsReleaseFormDialog = ({
   };
 
   return (
-    <Dialog open={mode === "create" || mode === "edit"} onOpenChange={(open) => (!open ? onCancel() : undefined)}>
+    <>
+      <Dialog open={mode === "create" || mode === "edit"} onOpenChange={(open) => (!open ? onCancel() : undefined)}>
       <DialogContent
         hideCloseButton
         className="flex w-[620px] sm:w-[620px] max-w-[calc(100vw-1.5rem)] max-h-[calc(100dvh-2rem)] flex-col gap-5 overflow-y-auto rounded-lg border border-gray-200 bg-admin-surface p-4 sm:p-6 shadow-xl"
@@ -732,24 +787,67 @@ export const NewsReleaseFormDialog = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="start"
-                    className="w-[--radix-dropdown-menu-trigger-width] border-slate-200 p-1 shadow-lg"
+                    className="w-[--radix-dropdown-menu-trigger-width] border-slate-200 p-1 shadow-lg max-h-72 overflow-y-auto"
                   >
-                    {availableCategories.map((option) => (
-                      <DropdownMenuItem
-                        key={option}
-                        className={cn(
-                          "flex cursor-pointer items-center justify-between font-segoe text-xs",
-                          category === option && "font-semibold text-public-bg-brand",
-                        )}
-                        onClick={() => {
-                          onCategoryChange(option);
-                          setIsAddingCategory(false);
-                        }}
-                      >
-                        <span>{option}</span>
-                        {category === option ? <Check className="h-3.5 w-3.5 text-public-bg-brand" /> : null}
-                      </DropdownMenuItem>
-                    ))}
+                    {resolvedCategories.map((option) => {
+                      const isSelected = category === option.name;
+                      const usageCount = allNewsReleases.length
+                        ? getNewsCategoryUsage(option.normalizedName || option.name, allNewsReleases)
+                        : 0;
+                      const isDeletable = !option.isSystem && usageCount === 0;
+
+                      return (
+                        <DropdownMenuItem
+                          key={option.id || option.normalizedName || option.name}
+                          className={cn(
+                            "group/item flex cursor-pointer items-center justify-between font-segoe text-xs py-1.5",
+                            isSelected && "font-semibold text-public-bg-brand bg-slate-50",
+                          )}
+                          onClick={() => {
+                            onCategoryChange(option.name);
+                            setIsAddingCategory(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span className="truncate">{option.name}</span>
+                            {!option.isSystem && usageCount > 0 ? (
+                              <span className="text-[10px] text-slate-400 font-normal shrink-0">
+                                ({usageCount})
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            {isSelected ? <Check className="h-3.5 w-3.5 text-public-bg-brand" /> : null}
+
+                            {!option.isSystem && onDeleteCategory ? (
+                              isDeletable ? (
+                                <button
+                                  type="button"
+                                  title={`Delete category “${option.name}”`}
+                                  aria-label={`Delete category ${option.name}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteCategoryError(null);
+                                    setCategoryToDelete(option);
+                                  }}
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-400 opacity-60 transition-all hover:bg-rose-50 hover:text-rose-600 hover:opacity-100 focus:opacity-100"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+                                </button>
+                              ) : (
+                                <span
+                                  title={`Category is in use by ${usageCount} news release(s)`}
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-300 cursor-not-allowed opacity-40"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+                                </span>
+                              )
+                            ) : null}
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })}
 
                     <DropdownMenuSeparator className="bg-slate-200" />
 
@@ -785,6 +883,7 @@ export const NewsReleaseFormDialog = ({
                       <input
                         ref={newCategoryInputRef}
                         value={newCategoryName}
+                        disabled={isAddingCategorySubmitting}
                         onChange={(event) => {
                           setNewCategoryName(event.target.value);
                           setNewCategoryError(null);
@@ -792,7 +891,7 @@ export const NewsReleaseFormDialog = ({
                         onKeyDown={(event) => {
                           if (event.key === "Enter") {
                             event.preventDefault();
-                            handleConfirmAddCategory();
+                            void handleConfirmAddCategory();
                           } else if (event.key === "Escape") {
                             handleCancelAddCategory();
                           }
@@ -805,13 +904,22 @@ export const NewsReleaseFormDialog = ({
                       />
                       <button
                         type="button"
-                        onClick={handleConfirmAddCategory}
-                        className="h-8 rounded-md bg-public-bg-brand px-3 font-segoe text-xs font-medium text-white transition-colors hover:bg-bg-brand-hover active:scale-95"
+                        disabled={isAddingCategorySubmitting}
+                        onClick={() => void handleConfirmAddCategory()}
+                        className="h-8 rounded-md bg-public-bg-brand px-3 font-segoe text-xs font-medium text-white transition-colors hover:bg-bg-brand-hover active:scale-95 disabled:opacity-50 inline-flex items-center gap-1"
                       >
-                        Add
+                        {isAddingCategorySubmitting ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Adding…</span>
+                          </>
+                        ) : (
+                          "Add"
+                        )}
                       </button>
                       <button
                         type="button"
+                        disabled={isAddingCategorySubmitting}
                         onClick={handleCancelAddCategory}
                         className="h-8 rounded-md border border-slate-300 bg-white px-2.5 font-segoe text-xs text-slate-600 hover:bg-slate-100 active:scale-95"
                       >
@@ -825,7 +933,7 @@ export const NewsReleaseFormDialog = ({
                       </p>
                     ) : (
                       <p className="font-segoe text-[11px] text-slate-500">
-                        New category will be immediately selected and persisted with your news release.
+                        New category will be immediately selected and persisted in the category registry.
                       </p>
                     )}
                   </div>
@@ -962,5 +1070,83 @@ export const NewsReleaseFormDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Delete Category Confirmation Dialog */}
+    <AlertDialog
+      open={Boolean(categoryToDelete)}
+      onOpenChange={(open) => {
+        if (!open && !isDeletingCategory) {
+          setCategoryToDelete(null);
+          setDeleteCategoryError(null);
+        }
+      }}
+    >
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+            Delete Category
+          </AlertDialogTitle>
+          <AlertDialogDescription className="font-segoe text-sm text-slate-500">
+            Are you sure you want to delete the category “{categoryToDelete?.name}”? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        {deleteCategoryError ? (
+          <div className="rounded-md border border-rose-200 bg-rose-50 p-2.5 font-segoe text-xs text-rose-700" role="alert">
+            {deleteCategoryError}
+          </div>
+        ) : null}
+
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            disabled={isDeletingCategory}
+            onClick={() => {
+              setCategoryToDelete(null);
+              setDeleteCategoryError(null);
+            }}
+            className="font-segoe"
+          >
+            Cancel
+          </AlertDialogCancel>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={isDeletingCategory}
+            onClick={async () => {
+              if (!categoryToDelete) return;
+              setIsDeletingCategory(true);
+              setDeleteCategoryError(null);
+              try {
+                if (onDeleteCategory) {
+                  await onDeleteCategory(categoryToDelete);
+                }
+                if (category === categoryToDelete.name) {
+                  onCategoryChange("");
+                }
+                setCategoryToDelete(null);
+              } catch (err: any) {
+                setDeleteCategoryError(err.message || "Failed to delete category.");
+              } finally {
+                setIsDeletingCategory(false);
+              }
+            }}
+            className="font-segoe active:scale-[0.98] transition-transform"
+          >
+            {isDeletingCategory ? (
+              <>
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                Deleting…
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Delete Category
+              </>
+            )}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };

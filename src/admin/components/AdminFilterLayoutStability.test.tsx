@@ -285,7 +285,55 @@ describe("Admin Filter & Layout Stability Across All 5 Pages", () => {
     );
 
     expect(screen.getByText("Alpha Youth Group")).toBeInTheDocument();
-    expect(screen.getAllByText("Approved").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Verified").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByRole("button", { name: /delete registration for alpha youth group/i })).toBeNull();
+  });
+
+  it("RegistrationsTable shows Delete button for pending_review and invokes onDelete without triggering onReview", async () => {
+    const onReview = vi.fn();
+    const onDelete = vi.fn();
+    const mockPendingOrg = {
+      id: "org-pending-1",
+      organizationName: "Pending Youth Club",
+      district: "District I" as const,
+      barangay: "Bagong Ilog",
+      classification: "Youth Organization",
+      profileStatus: "pending_review" as const,
+      submittedAt: "2026-03-01T00:00:00Z",
+      updatedAt: "2026-03-01T00:00:00Z",
+    } as any;
+
+    render(
+      <RegistrationsTable
+        registrations={[mockPendingOrg]}
+        documentCountsByOrgId={{ "org-pending-1": { submitted: 1, required: 4 } }}
+        searchValue=""
+        onSearchChange={vi.fn()}
+        statusFilter="all"
+        onStatusFilterChange={vi.fn()}
+        districtFilter="all"
+        onDistrictFilterChange={vi.fn()}
+        barangayFilter="all"
+        onBarangayFilterChange={vi.fn()}
+        classificationFilter="all"
+        onClassificationFilterChange={vi.fn()}
+        onReview={onReview}
+        onDelete={onDelete}
+      />,
+    );
+
+    const deleteBtn = screen.getByRole("button", { name: /delete registration for pending youth club/i });
+    expect(deleteBtn).toBeInTheDocument();
+
+    // Clicking Delete triggers onDelete with target organization, not onReview
+    deleteBtn.click();
+    expect(onDelete).toHaveBeenCalledWith(mockPendingOrg);
+    expect(onReview).not.toHaveBeenCalled();
+
+    // Clicking Review triggers onReview with org.id, not onDelete
+    const reviewBtn = screen.getByRole("button", { name: /^review$/i });
+    reviewBtn.click();
+    expect(onReview).toHaveBeenCalledWith("org-pending-1");
   });
 
   it("RenewalsTable renders rows with status label without runtime error", () => {

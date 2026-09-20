@@ -180,6 +180,24 @@ export const permanentlyDeleteOrganizationAccount = (
     "The organization account could not be deleted. Please try again.",
   );
 
+export const preflightRegistrationDeletion = (organizationId: string) =>
+  invokeDeletionFunction<{
+    organization: { id: string; name: string; urn?: string | null };
+    counts: OrganizationDeletionCounts;
+  }>(
+    { action: "registration_preflight", organizationId },
+    "The registration deletion preflight check could not be completed.",
+  );
+
+export const permanentlyDeleteRegistrationAccount = (
+  organizationId: string,
+  confirmationName: string,
+) =>
+  invokeDeletionFunction<OrganizationDeletionResult>(
+    { action: "registration_delete", organizationId, confirmationName },
+    "The registration account could not be deleted. Please try again.",
+  );
+
 export const preflightBulkOrganizationDeletion = (organizationIds: string[]) =>
   invokeDeletionFunction<BulkPreflightResult>(
     { action: "bulk_preflight", organizationIds },
@@ -194,3 +212,4 @@ export const permanentlyDeleteBulkOrganizationAccounts = (
     { action: "bulk_delete", organizationIds, confirmationPhrase },
     "The bulk organization account deletion could not be completed.",
   );
+

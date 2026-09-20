@@ -28,6 +28,8 @@ import {
   type YPOPOrgActivity,
   type YPOPOrgActivityFile,
   type YPOPPeriod,
+  type NewsCategoryRecord,
+  INITIAL_NEWS_CATEGORIES,
   deriveTemplateCategory,
   isSystemTemplateCategory,
   legacyRemovedTemplateNames,
@@ -219,6 +221,9 @@ const normalizeInitialSeedState = (seed: LydoSeedState): LydoConnectState => ({
   ypopOrgActivityFiles: seed.ypopOrgActivityFiles.filter((item) => !legacySeedIds.has(item.id)),
   ypopCityActivities: seed.ypopCityActivities.filter((item) => !legacySeedIds.has(item.id)),
   ypopPeriods: seed.ypopPeriods.filter((item) => !legacySeedIds.has(item.id)),
+  newsCategories: Array.isArray(seed.newsCategories) && seed.newsCategories.length > 0
+    ? seed.newsCategories
+    : INITIAL_NEWS_CATEGORIES,
   customTemplateCategories: Array.isArray(seed.customTemplateCategories)
     ? Array.from(
         new Set(
@@ -261,6 +266,7 @@ type LydoConnectContextValue = {
   updateActivityLog: (id: string, patch: UpdatePatch<ActivityLog>) => void;
   createInquiry: (inquiry: InquiryRecord) => void;
   updateInquiry: (id: string, patch: UpdatePatch<InquiryRecord>) => void;
+  removeInquiry: (id: string) => void;
   updateTemplate: (id: string, patch: UpdatePatch<TemplateRecord>) => void;
   createNotification: (notification: NotificationRecord) => void;
   createActivityLog: (activity: ActivityLog) => void;
@@ -289,6 +295,9 @@ type LydoConnectContextValue = {
   deleteYPOPPeriod: (id: string) => void;
   addCustomTemplateCategory: (category: string) => void;
   removeCustomTemplateCategory: (category: string) => void;
+  setNewsCategories: (categories: NewsCategoryRecord[]) => void;
+  addNewsCategory: (category: NewsCategoryRecord) => void;
+  removeNewsCategory: (categoryIdOrNormalized: string) => void;
 };
 
 const LydoConnectContext = createContext<LydoConnectContextValue | undefined>(undefined);
@@ -1151,6 +1160,9 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             customTemplateCategories: Array.isArray(snapshot.customTemplateCategories)
               ? snapshot.customTemplateCategories
               : (current.customTemplateCategories ?? []),
+            newsCategories: Array.isArray(snapshot.newsCategories) && snapshot.newsCategories.length > 0
+              ? snapshot.newsCategories
+              : (current.newsCategories ?? INITIAL_NEWS_CATEGORIES),
           };
         });
       },
@@ -1175,6 +1187,29 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           ),
         }));
       },
+      setNewsCategories: (categories) =>
+        setState((current) => ({
+          ...current,
+          newsCategories: categories,
+        })),
+      addNewsCategory: (category) =>
+        setState((current) => {
+          const existing = current.newsCategories ?? [];
+          if (existing.some((c) => c.normalizedName === category.normalizedName)) {
+            return current;
+          }
+          return {
+            ...current,
+            newsCategories: [...existing, category],
+          };
+        }),
+      removeNewsCategory: (categoryIdOrNormalized) =>
+        setState((current) => ({
+          ...current,
+          newsCategories: (current.newsCategories ?? []).filter(
+            (c) => c.id !== categoryIdOrNormalized && c.normalizedName !== categoryIdOrNormalized,
+          ),
+        })),
       createTemplate: (template) =>
         setState((current) => ({
           ...current,
@@ -1392,6 +1427,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             status: normalizeInquiryStatus(inquiry.status),
             updatedAt: inquiry.id === id ? new Date().toISOString() : inquiry.updatedAt,
           })),
+        })),
+      removeInquiry: (id) =>
+        setState((current) => ({
+          ...current,
+          inquiries: current.inquiries.filter((inquiry) => inquiry.id !== id),
         })),
       updateTemplate: (id, patch) =>
         setState((current) => ({
