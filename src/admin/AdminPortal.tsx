@@ -2340,10 +2340,15 @@ export default function AdminPortal({ section }: { section: string }) {
     [state],
   );
 
-  const pendingYpop = useMemo(
-    () => state.ypopEntries.filter((entry) => entry.status === "submitted" || entry.status === "under_review").length,
-    [state.ypopEntries],
-  );
+  const pendingYpop = useMemo(() => {
+    const pendingCityLed = (state.ypopEventParticipations ?? []).filter(
+      (p) => p.status === "pending_evaluation" || p.status === "pending_verification",
+    ).length;
+    const pendingOrgLed = (state.ypopOrgActivities ?? []).filter(
+      (a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review",
+    ).length;
+    return pendingCityLed + pendingOrgLed;
+  }, [state.ypopEventParticipations, state.ypopOrgActivities]);
 
   const pendingRenewalsCount = useMemo(
     () =>
@@ -6398,15 +6403,26 @@ export default function AdminPortal({ section }: { section: string }) {
               timestamp: org.updatedAt,
               href: routeMap.registrations,
             })),
-          ...state.ypopEntries
-            .filter((entry) => entry.status === "submitted" || entry.status === "under_review")
-            .map((entry) => ({
-              id: `ypop-${entry.id}`,
+          ...(state.ypopEventParticipations ?? [])
+            .filter((p) => p.status === "pending_evaluation" || p.status === "pending_verification")
+            .map((p) => ({
+              id: `ypop-city-${p.id}`,
               icon: Award,
-              orgName: findOrgName(entry.organizationId),
-              actionText: `Submitted YPOP entry (${entry.semesterLabel}) · Review validation`,
+              orgName: findOrgName(p.organizationId),
+              actionText: `${p.activityName} · Review city-led proof`,
               verb: "Submitted" as const,
-              timestamp: entry.submittedAt,
+              timestamp: p.proofSubmittedAt || p.updatedAt || p.createdAt,
+              href: routeMap["ypop-validation"],
+            })),
+          ...(state.ypopOrgActivities ?? [])
+            .filter((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review")
+            .map((a) => ({
+              id: `ypop-org-${a.id}`,
+              icon: Award,
+              orgName: findOrgName(a.organizationId),
+              actionText: `${a.activityName} · Review org-led PPA`,
+              verb: "Submitted" as const,
+              timestamp: a.submittedAt || a.updatedAt || a.createdAt,
               href: routeMap["ypop-validation"],
             })),
           ...state.budgetRequests

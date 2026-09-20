@@ -656,6 +656,7 @@ const SignUp = () => {
                         side="bottom"
                         sideOffset={4}
                         collisionPadding={8}
+                        hideScrollButtons
                         className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
                       >
                         {districtBarangays.map((b) => (
