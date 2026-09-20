@@ -66,7 +66,11 @@ type AuthContextValue = {
   role: UserRole;
   user: AuthUser | null;
   signIn: (params: SignInParams) => Promise<{ error?: string }>;
-  signUp: (params: SignUpParams) => Promise<{ error?: string; needsEmailConfirmation?: boolean }>;
+  signUp: (params: SignUpParams) => Promise<{
+    error?: string;
+    flow?: "registration_otp" | "existing_magic_link";
+    needsEmailConfirmation?: boolean;
+  }>;
   signOut: () => Promise<void>;
 };
 
@@ -458,32 +462,104 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
     }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
-        data: {
-          full_name: organizationName ?? "",
-          display_name: organizationName ?? "",
-          organization_name: organizationName ?? "",
-          contact_number: contactNumber ?? "",
-          district: district ?? "",
-          barangay_id: barangayId ?? "",
-          barangay_name: barangayName ?? "",
-          is_existing_organization: Boolean(isExistingOrganization),
-          organization_identifier_number: organizationIdentifierNumber ?? "",
-          registration_type: isExistingOrganization ? "existing_urn" : "new_organization",
-          urn: isExistingOrganization ? normalizeUrn(organizationIdentifierNumber ?? "") : "",
-          urn_review_status: isExistingOrganization ? "pending" : "not_applicable",
-          municipality: "Prototype Municipality",
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 1. Check if email already belongs to a registered account in Supabase Auth
+    let isExistingRegistered = false;
+    try {
+      const { data: status, error: statusErr } = await supabase.rpc("check_signup_email_status", {
+        _email: normalizedEmail,
+      });
+      if (!statusErr && status === "registered") {
+        isExistingRegistered = true;
+      }
+    } catch {
+      // Continue to safe signUp fallback if RPC is unavailable
+    }
+
+    // 2. Existing User Flow -> Send Supabase Magic/Sign-in Link (shouldCreateUser: false)
+    if (isExistingRegistered) {
+      const { error: magicLinkError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
         },
+      });
+
+      if (magicLinkError) {
+        return { error: magicLinkError.message };
+      }
+
+      return {
+        flow: "existing_magic_link",
+        needsEmailConfirmation: false,
+      };
+    }
+
+    // 3. New User Flow -> Send Registration OTP via supabase.auth.signUp()
+    const metadata = {
+      full_name: organizationName ?? "",
+      display_name: organizationName ?? "",
+      organization_name: organizationName ?? "",
+      contact_number: contactNumber ?? "",
+      district: district ?? "",
+      barangay_id: barangayId ?? "",
+      barangay_name: barangayName ?? "",
+      is_existing_organization: Boolean(isExistingOrganization),
+      organization_identifier_number: organizationIdentifierNumber ?? "",
+      registration_type: isExistingOrganization ? "existing_urn" : "new_organization",
+      urn: isExistingOrganization ? normalizeUrn(organizationIdentifierNumber ?? "") : "",
+      urn_review_status: isExistingOrganization ? "pending" : "not_applicable",
+      municipality: "Prototype Municipality",
+    };
+
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
+        data: metadata,
       },
     });
 
-    if (error) return { error: error.message };
+    if (signUpError) {
+      // If error indicates user is already registered, fallback to sending Magic Link
+      if (/already registered|already exists|user already/i.test(signUpError.message)) {
+        const { error: magicLinkError } = await supabase.auth.signInWithOtp({
+          email: normalizedEmail,
+          options: {
+            shouldCreateUser: false,
+            emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
+          },
+        });
+        if (magicLinkError) return { error: magicLinkError.message };
+        return {
+          flow: "existing_magic_link",
+          needsEmailConfirmation: false,
+        };
+      }
+      return { error: signUpError.message };
+    }
+
+    // Obfuscated user with empty identities returned for existing account (anti-enumeration mode)
+    if (signUpData?.user && Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
+      const { error: magicLinkError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
+        },
+      });
+      if (magicLinkError) return { error: magicLinkError.message };
+      return {
+        flow: "existing_magic_link",
+        needsEmailConfirmation: false,
+      };
+    }
 
     return {
+      flow: "registration_otp",
       needsEmailConfirmation: true,
     };
   };

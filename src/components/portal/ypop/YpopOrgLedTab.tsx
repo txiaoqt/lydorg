@@ -11,10 +11,21 @@ import {
   Edit3,
   Trash2,
   Search,
+  Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/portal/StatusBadge";
 import {
@@ -61,6 +72,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<YPOPOrgActivity | null>(null);
+  const [pendingDeleteActivity, setPendingDeleteActivity] = useState<YPOPOrgActivity | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -116,13 +128,19 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
     setModalOpen(true);
   };
 
-  const handleDelete = async (act: YPOPOrgActivity) => {
-    if (!confirm(`Are you sure you want to delete "${act.activityName}"?`)) return;
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteActivity) return;
 
+    const act = pendingDeleteActivity;
     setDeletingId(act.id);
     try {
       await deleteYpopOrgActivityFromSupabase(act.id);
       onActivityDeleted(act.id);
+      if (editingActivity?.id === act.id) {
+        setEditingActivity(null);
+        setModalOpen(false);
+      }
+      setPendingDeleteActivity(null);
       toast({
         title: "Activity deleted",
         description: "The organization PPA record has been removed.",
@@ -327,11 +345,15 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                               variant="ghost"
                               size="sm"
                               disabled={deletingId === act.id}
-                              onClick={() => handleDelete(act)}
+                              onClick={() => setPendingDeleteActivity(act)}
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors active:scale-[0.98] shrink-0"
                               title="Delete PPA"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              {deletingId === act.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                              )}
                             </Button>
                           </div>
                         )}
@@ -399,9 +421,52 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
           setEditingActivity(saved);
           onActivitySaved(saved);
         }}
+        onActivityDeleted={(deletedId) => {
+          onActivityDeleted(deletedId);
+          if (editingActivity?.id === deletedId) {
+            setEditingActivity(null);
+          }
+        }}
         onFileCreated={onFileCreated}
         onFileDeleted={onFileDeleted}
       />
+
+      {/* Row Delete Confirmation Dialog */}
+      <AlertDialog
+        open={Boolean(pendingDeleteActivity)}
+        onOpenChange={(open) => {
+          if (!open && !deletingId) setPendingDeleteActivity(null);
+        }}
+      >
+        <AlertDialogContent className="max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-foreground">
+              Delete this PPA submission?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              {pendingDeleteActivity
+                ? `This will permanently remove "${pendingDeleteActivity.activityName || "this activity"}" and its uploaded supporting files. This action cannot be undone.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={Boolean(deletingId)} className="rounded-xl text-xs font-semibold">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={Boolean(deletingId)}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleConfirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl text-xs font-semibold gap-1.5 cursor-pointer"
+            >
+              {deletingId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              <span>Delete Submission</span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

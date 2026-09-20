@@ -3475,7 +3475,7 @@ const resolvedFileUrlCache = new Map<string, { url: string; expiresAt: number }>
 const missingStorageObjectsCache = new Set<string>();
 
 export const resolveSupabaseFileUrl = async (value: string): Promise<string> => {
-  if (!supabase || !value) return value;
+  if (!supabase || !value) return value || "";
   const trimmed = value.trim();
   if (!trimmed) return "";
   if (
@@ -3488,7 +3488,10 @@ export const resolveSupabaseFileUrl = async (value: string): Promise<string> => 
   }
 
   const parsed = parseStorageUri(trimmed);
-  if (!parsed) return trimmed;
+  if (!parsed) {
+    // If not a storage:// URI and not http/blob, don't return unresolvable storage scheme
+    return trimmed.startsWith("storage://") ? "" : trimmed;
+  }
 
   const cacheKey = `${parsed.bucket}/${parsed.path}`;
 
@@ -3521,7 +3524,12 @@ export const resolveSupabaseFileUrl = async (value: string): Promise<string> => 
         missingStorageObjectsCache.add(cacheKey);
         return "";
       }
-      console.warn(`Storage URL resolution notice for ${cacheKey}:`, error.message);
+      // Attempt canonical public URL fallback
+      const { data: pubData } = supabase.storage.from(parsed.bucket).getPublicUrl(parsed.path);
+      if (pubData?.publicUrl) {
+        resolvedFileUrlCache.set(cacheKey, { url: pubData.publicUrl, expiresAt: now + 3500000 });
+        return pubData.publicUrl;
+      }
       return "";
     }
     if (data?.signedUrl) {
@@ -3875,7 +3883,7 @@ export const updateYpopOrgActivityInSupabase = async (
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: activity, error: activityError } = await supabase
     .from("ypop_org_activities")
-    .select("id,ypop_entry_id,status")
+    .select("id,ypop_entry_id,status,activity_name,activity_date,venue,narrative_report")
     .eq("id", activityId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
@@ -3899,6 +3907,28 @@ export const updateYpopOrgActivityInSupabase = async (
       .maybeSingle();
     if (period && period.status !== "open") {
       throw new Error("PPA submissions can only be edited while the YPOP semester is open.");
+    }
+  }
+
+  // Canonical submission validation at backend boundary
+  if (patch.status === "submitted") {
+    const finalName = (patch.activityName !== undefined ? patch.activityName : activity.activity_name)?.trim();
+    const finalDate = patch.activityDate !== undefined ? patch.activityDate : activity.activity_date;
+    const finalVenue = (patch.venue !== undefined ? patch.venue : activity.venue)?.trim();
+    const finalNarrative = (patch.narrativeReport !== undefined ? patch.narrativeReport : activity.narrative_report)?.trim();
+
+    if (!finalName) throw new Error("Activity Title is required before submitting for review.");
+    if (!finalDate) throw new Error("Date Conducted is required before submitting for review.");
+    if (!finalVenue) throw new Error("Venue / Location is required before submitting for review.");
+    if (!finalNarrative) throw new Error("Description is required before submitting for review.");
+
+    const { count, error: filesErr } = await supabase
+      .from("ypop_org_activity_files")
+      .select("id", { count: "exact", head: true })
+      .eq("org_activity_id", activityId);
+    if (filesErr) throw new Error(filesErr.message);
+    if (!count || count === 0) {
+      throw new Error("At least one supporting document must be attached before submitting for review.");
     }
   }
 
@@ -3926,15 +3956,21 @@ export const updateYpopOrgActivityInSupabase = async (
 
 export const deleteYpopOrgActivityFromSupabase = async (activityId: string): Promise<void> => {
   if (!supabase) throw new Error("Supabase is not configured.");
-  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: activity, error: activityLoadError } = await supabase
     .from("ypop_org_activities")
-    .select("id,ypop_entry_id,status")
+    .select("id,ypop_entry_id,status,activity_name")
     .eq("id", activityId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
   if (activityLoadError) throw new Error(activityLoadError.message);
-  if (!activity || !["draft", "needs_revision"].includes(activity.status)) {
+  if (!activity) {
+    throw new Error("PPA submission not found.");
+  }
+  if (activity.status === "approved") {
+    throw new Error("Approved PPA submissions cannot be deleted.");
+  }
+  if (!["draft", "submitted", "under_review", "needs_revision", "rejected"].includes(activity.status)) {
     throw new Error("This PPA can no longer be deleted.");
   }
   const { data: entry } = await supabase
@@ -3953,8 +3989,40 @@ export const deleteYpopOrgActivityFromSupabase = async (activityId: string): Pro
       throw new Error("PPA submissions can only be deleted while the YPOP semester is open.");
     }
   }
+
+  // 1. Fetch all associated files to clean up storage objects safely
+  const { data: files } = await supabase
+    .from("ypop_org_activity_files")
+    .select("id,file_url")
+    .eq("org_activity_id", activityId);
+
+  if (files && files.length > 0) {
+    const fileUrls = files.map((f) => f.file_url).filter(Boolean);
+    if (fileUrls.length > 0) {
+      await removeStorageObjects(fileUrls).catch((err) => {
+        console.warn("Storage deletion warning during PPA removal (non-fatal):", err);
+      });
+    }
+    await supabase.from("ypop_org_activity_files").delete().eq("org_activity_id", activityId);
+  }
+
+  // 2. Authoritative deletion of the activity
   const { error } = await supabase.from("ypop_org_activities").delete().eq("id", activityId);
   if (error) throw new Error(error.message);
+
+  // 3. Log destructive organizational action to activity_logs
+  try {
+    await supabase.from("activity_logs").insert({
+      organization_id: organizationProfile.id,
+      actor_user_id: session.user.id,
+      action: "ppa_deleted",
+      related_type: "ypop_org_activity",
+      related_id: activityId,
+      description: `Organization deleted PPA: ${activity.activity_name || "Untitled Activity"}`,
+    });
+  } catch (logErr) {
+    console.warn("Activity log insertion warning (non-fatal):", logErr);
+  }
 };
 
 export const uploadYpopOrgActivityFileToSupabase = async (params: {

@@ -3,9 +3,10 @@ import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
   deriveTemplateCategory,
   formatTemplateCategoryDropdownLabel,
+  resolveCleanTemplateDownloadFileName,
 } from "@/lib/lydo-connect-data";
 import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortalTemplatesWorkspaceView";
-import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
+import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,12 +22,13 @@ export default function PublicTemplatesCatalog({
 }: PublicTemplatesCatalogProps) {
   const { state } = useLydoConnect();
 
-  // Preview Modal state
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewCanInline, setPreviewCanInline] = useState(true);
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Map state.templates using the authoritative User Portal mapping logic
   const allPublicTemplates = useMemo(() => {
@@ -89,7 +91,7 @@ export default function PublicTemplatesCatalog({
       setPreviewTitle(fileName);
       setPreviewEmptyMessage("No file available for preview yet.");
       setPreviewCanInline(false);
-      setPreviewModalOpen(true);
+      setDrawerOpen(true);
       return;
     }
 
@@ -108,13 +110,52 @@ export default function PublicTemplatesCatalog({
         resolvedUrl.toLowerCase().includes(".pdf") ||
         (!fileUrl.toLowerCase().endsWith(".xlsx") && !fileUrl.toLowerCase().endsWith(".docx"))
       );
-      setPreviewModalOpen(true);
+      setDrawerOpen(true);
     } catch (error) {
       toast({
         title: "Unable to preview template",
         description: error instanceof Error ? error.message : "The template file could not be opened.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDownloadFile = async (url: string, name: string) => {
+    if (!url || url.startsWith("#")) {
+      toast({
+        title: "Download unavailable",
+        description: "No file is available for download yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const resolvedUrl = (await resolveSupabaseFileUrl(url)) || url;
+      const downloadName = resolveCleanTemplateDownloadFileName(name, url || resolvedUrl);
+      const response = await fetch(resolvedUrl);
+      if (!response.ok) {
+        throw new Error(`Unable to download ${downloadName}.`);
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = downloadName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: error instanceof Error ? error.message : "The file could not be downloaded.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -131,13 +172,32 @@ export default function PublicTemplatesCatalog({
         compactHeader={compactHeader}
       />
 
-      <PortalDocumentPreviewModal
-        open={previewModalOpen}
-        onOpenChange={setPreviewModalOpen}
-        fileUrl={previewUrl}
-        fileName={previewTitle}
-        canInlinePreview={previewCanInline}
-        emptyMessage={previewEmptyMessage}
+      <PortalDocumentDrawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open);
+          if (!open) {
+            setPreviewUrl("");
+            setPreviewTitle("");
+            setPreviewEmptyMessage("");
+            setPreviewCanInline(false);
+          }
+        }}
+        mode="template"
+        previewUrl={previewUrl}
+        previewTitle={previewTitle}
+        templateTitle={previewTitle}
+        templateFileName={previewTitle}
+        previewCanInline={previewCanInline}
+        previewEmptyMessage={previewEmptyMessage}
+        organizationName="PCYDO Pasig City"
+        downloading={isDownloading}
+        onDownloadFile={handleDownloadFile}
+        onOpenInNewTab={(url) => {
+          if (url) {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        }}
       />
     </>
   );

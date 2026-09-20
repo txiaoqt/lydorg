@@ -65,6 +65,7 @@ import {
   fetchOrganizationProfileInSupabase,
   upsertOrganizationProfileInSupabase,
 } from "@/lib/lydo-connect-supabase";
+import { normalizeUrn, validateUrn } from "@/lib/urn-registration";
 import { checkSignupUrn, DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
 
 const GoogleIcon = ({ className }: { className?: string }) => (
@@ -299,9 +300,14 @@ const GoogleOnboarding = () => {
     return pasigDistrictBarangays[districtKey] || [];
   }, [profileDraft?.district]);
 
+  const urnError = useMemo(() => {
+    if (!profileDraft?.isExistingOrganization) return null;
+    return validateUrn(profileDraft.organizationIdentifierNumber || "");
+  }, [profileDraft?.isExistingOrganization, profileDraft?.organizationIdentifierNumber]);
+
   // Debounced URN check when existing organization is selected
   useEffect(() => {
-    if (!profileDraft?.isExistingOrganization || !profileDraft.organizationIdentifierNumber?.trim()) {
+    if (!profileDraft?.isExistingOrganization || urnError) {
       setUrnAvailability("idle");
       return;
     }
@@ -309,7 +315,7 @@ const GoogleOnboarding = () => {
     let active = true;
     setUrnAvailability("checking");
     const timer = window.setTimeout(async () => {
-      const status = await checkSignupUrn(profileDraft.organizationIdentifierNumber);
+      const status = await checkSignupUrn(profileDraft.organizationIdentifierNumber || "");
       if (active) setUrnAvailability(status);
     }, 500);
 
@@ -317,7 +323,7 @@ const GoogleOnboarding = () => {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [profileDraft?.isExistingOrganization, profileDraft?.organizationIdentifierNumber]);
+  }, [profileDraft?.isExistingOrganization, profileDraft?.organizationIdentifierNumber, urnError]);
 
   const handleFieldChange = <K extends keyof OrganizationProfile>(field: K, value: OrganizationProfile[K]) => {
     setProfileDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
@@ -391,11 +397,13 @@ const GoogleOnboarding = () => {
 
     // 5. Validate Existing Organization URN
     if (profileDraft.isExistingOrganization) {
-      if (!profileDraft.organizationIdentifierNumber?.trim()) {
-        setFormError("Please provide your existing Unique Registration Number (URN).");
+      if (urnError) {
+        setFormError(urnError);
         return;
       }
-      if (urnAvailability === "registered") {
+      const urnStatus = await checkSignupUrn(profileDraft.organizationIdentifierNumber || "");
+      if (urnStatus === "registered") {
+        setUrnAvailability("registered");
         setFormError(DUPLICATE_URN_ERROR_MESSAGE);
         return;
       }
@@ -450,7 +458,7 @@ const GoogleOnboarding = () => {
     // Prepare profile payload
     const isExisting = Boolean(profileDraft.isExistingOrganization);
     const finalIdentifier = isExisting
-      ? profileDraft.organizationIdentifierNumber.trim()
+      ? normalizeUrn(profileDraft.organizationIdentifierNumber || "")
       : "";
 
     const payloadToSave: OrganizationProfile = {
@@ -712,10 +720,11 @@ const GoogleOnboarding = () => {
                       position="popper"
                       side="bottom"
                       sideOffset={4}
-                      className="max-h-[280px] w-[var(--radix-select-trigger-width)]"
+                      collisionPadding={8}
+                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
                     >
                       {pasigDistrictOptions.map((opt) => (
-                        <SelectItem key={opt} value={opt} className="cursor-pointer">
+                        <SelectItem key={opt} value={opt} className="cursor-pointer text-sm">
                           {opt}
                         </SelectItem>
                       ))}
@@ -751,10 +760,11 @@ const GoogleOnboarding = () => {
                       position="popper"
                       side="bottom"
                       sideOffset={4}
-                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] overflow-y-auto"
+                      collisionPadding={8}
+                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
                     >
                       {districtBarangays.map((b) => (
-                        <SelectItem key={b.id} value={b.name} className="cursor-pointer">
+                        <SelectItem key={b.id} value={b.name} className="cursor-pointer text-sm">
                           {b.name}
                         </SelectItem>
                       ))}
@@ -806,28 +816,31 @@ const GoogleOnboarding = () => {
                   </Label>
                   <Input
                     id="urn-input"
-                    placeholder="BB-YY-NNN"
+                    placeholder="17-26-010"
                     value={profileDraft.organizationIdentifierNumber || ""}
                     onChange={(e) => handleFieldChange("organizationIdentifierNumber", e.target.value.toUpperCase())}
+                    onInput={(e) => { e.currentTarget.value = e.currentTarget.value.toUpperCase(); }}
                     autoComplete="off"
                     className="font-mono text-sm tracking-wide uppercase h-10"
                     required
                   />
-                  {urnAvailability === "checking" && (
+                  {profileDraft.organizationIdentifierNumber?.trim() && urnError ? (
+                    <p id="urn-error" className="text-xs text-destructive flex items-center gap-1.5 font-medium">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {urnError}
+                    </p>
+                  ) : urnAvailability === "checking" ? (
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                      <Loader2 className="h-3 w-3 animate-spin text-primary" /> Verifying URN availability…
+                      <Loader2 className="h-3 w-3 animate-spin text-primary shrink-0" /> Verifying URN availability…
                     </p>
-                  )}
-                  {urnAvailability === "registered" && (
-                    <p className="text-xs text-destructive flex items-center gap-1.5 font-medium">
-                      <AlertCircle className="h-3.5 w-3.5" /> {DUPLICATE_URN_ERROR_MESSAGE}
+                  ) : urnAvailability === "registered" ? (
+                    <p id="urn-error" className="text-xs text-destructive flex items-center gap-1.5 font-medium">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {DUPLICATE_URN_ERROR_MESSAGE}
                     </p>
-                  )}
-                  {urnAvailability === "available" && (
-                    <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5 font-medium">
-                      <Check className="h-3.5 w-3.5" /> URN is available for verification.
+                  ) : !urnError && profileDraft.organizationIdentifierNumber?.trim() && urnAvailability === "available" ? (
+                    <p id="urn-success" className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5 font-medium">
+                      <Check className="h-3.5 w-3.5 shrink-0" /> URN is available for verification.
                     </p>
-                  )}
+                  ) : null}
                 </div>
               ) : (
                 <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-muted/30 border border-dashed border-border/80 text-xs text-muted-foreground leading-relaxed">
@@ -1062,7 +1075,12 @@ const GoogleOnboarding = () => {
             </Button>
             <Button
               type="submit"
-              disabled={isSaving || urnAvailability === "checking" || urnAvailability === "registered"}
+              disabled={
+                isSaving ||
+                (Boolean(profileDraft?.isExistingOrganization) && Boolean(urnError)) ||
+                urnAvailability === "checking" ||
+                urnAvailability === "registered"
+              }
               className="w-full sm:w-auto min-w-[240px] font-semibold h-11 text-sm shadow-xs transition-transform active:scale-[0.98]"
             >
               {isSaving ? (

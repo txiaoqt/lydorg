@@ -64,6 +64,12 @@ vi.mock("@/lib/lydo-connect-supabase", () => ({
   upsertOrganizationProfileInSupabase: (...args: unknown[]) => mockUpsertProfile(...args),
 }));
 
+vi.mock("@/lib/lydo-connect-store", () => ({
+  useLydoConnect: () => ({
+    upsertOrganizationProfile: (...args: unknown[]) => mockUpsertProfile(...args),
+  }),
+}));
+
 let mockAuth = {
   isAuthenticated: false,
   isInitialized: true,
@@ -380,8 +386,8 @@ describe("Google OAuth & Onboarding Architecture Verification", () => {
 
     const missing = getMissingEditableProfileRequirements(partialProfile);
     expect(missing).toContain("Select Major and Sub Classification");
-    expect(missing).toContain("Select at least one Advocacy Focus Area");
-    expect(missing).toContain("Add Official Representative Name");
+    expect(missing).toContain("Select at least one Center of Youth Participation");
+    expect(missing).toContain("Add Official Head of Organization Name");
     expect(missing).toContain("Add Official Adviser Name");
     expect(missing).toContain("Add Complete Address");
   });

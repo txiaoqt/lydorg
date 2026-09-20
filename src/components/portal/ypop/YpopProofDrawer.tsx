@@ -28,6 +28,16 @@ import {
   SheetDescription,
   SheetClose,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/portal/StatusBadge";
@@ -100,12 +110,21 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   const [currentParticipation, setCurrentParticipation] = useState<YPOPEventParticipation | null>(participation);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmSubmitProofOpen, setConfirmSubmitProofOpen] = useState(false);
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState<string>("");
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const localBlobUrlsRef = useRef<Map<string, string>>(new Map());
   const isDesktop = useIsDesktop();
+
+  useEffect(() => {
+    return () => {
+      localBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      localBlobUrlsRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentParticipation(participation);
@@ -129,7 +148,18 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
 
   useEffect(() => {
     let isMounted = true;
-    if (!activeFile?.fileUrl) {
+    if (!activeFile) {
+      setResolvedPreviewUrl("");
+      return;
+    }
+
+    const localBlob = localBlobUrlsRef.current.get(activeFile.id);
+    if (localBlob) {
+      setResolvedPreviewUrl(localBlob);
+      return;
+    }
+
+    if (!activeFile.fileUrl) {
       setResolvedPreviewUrl("");
       return;
     }
@@ -137,12 +167,12 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     resolveSupabaseFileUrl(activeFile.fileUrl)
       .then((url) => {
         if (isMounted) {
-          setResolvedPreviewUrl(url || activeFile.fileUrl);
+          setResolvedPreviewUrl(url);
         }
       })
       .catch(() => {
         if (isMounted) {
-          setResolvedPreviewUrl(activeFile.fileUrl);
+          setResolvedPreviewUrl("");
         }
       });
 
@@ -187,6 +217,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           organizationId,
           file,
         });
+        const blobUrl = URL.createObjectURL(file);
+        localBlobUrlsRef.current.set(saved.id, blobUrl);
         onFileCreated(saved);
         setSelectedFileId(saved.id);
       }
@@ -208,6 +240,12 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
 
   const handleDeleteFile = async (file: YPOPEventFile) => {
     setDeletingFileId(file.id);
+    const localBlob = localBlobUrlsRef.current.get(file.id);
+    if (localBlob) {
+      URL.revokeObjectURL(localBlob);
+      localBlobUrlsRef.current.delete(file.id);
+    }
+
     if (selectedFileId === file.id) {
       const remaining = files.filter((f) => f.id !== file.id);
       setSelectedFileId(remaining[0]?.id ?? null);
@@ -232,12 +270,19 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   };
 
   const handleDownloadFile = async (fileUrl: string, fileName: string, fileId?: string) => {
-    if (!fileUrl) return;
+    const localBlob = fileId ? localBlobUrlsRef.current.get(fileId) : undefined;
+    const targetUrl = localBlob || (await resolveSupabaseFileUrl(fileUrl)) || (fileUrl?.startsWith("storage://") ? "" : fileUrl);
+    if (!targetUrl) {
+      toast({
+        title: "Download unavailable",
+        description: "File preview or download is not accessible yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       if (fileId) setDownloadingFileId(fileId);
-      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
-      const targetUrl = resolvedUrl || fileUrl;
-
       const response = await fetch(targetUrl);
       if (!response.ok) throw new Error("Failed to fetch file for download");
       const blob = await response.blob();
@@ -252,7 +297,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     } catch (err) {
       console.error("Direct blob download failed, falling back to link download:", err);
       const link = document.createElement("a");
-      link.href = fileUrl;
+      link.href = targetUrl;
       link.download = fileName || "proof-document.pdf";
       document.body.appendChild(link);
       link.click();
@@ -260,6 +305,26 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     } finally {
       if (fileId) setDownloadingFileId(null);
     }
+  };
+
+  const handleSubmitProofClick = () => {
+    if (uploading) {
+      toast({
+        title: "Upload in progress",
+        description: "Please wait for file attachments to finish uploading.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!files.length) {
+      toast({
+        title: "Proof documents required",
+        description: "Please attach at least one proof file (attendance sheet, photos, certificates) before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setConfirmSubmitProofOpen(true);
   };
 
   const handleSubmitProof = async () => {
@@ -292,6 +357,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       });
       setCurrentParticipation(updated);
       onParticipationUpdated(updated);
+      setConfirmSubmitProofOpen(false);
       toast({
         title: isNeedsRevision ? "Revision resubmitted" : "Proof submitted for verification",
         description: "Your participation proof has been submitted to the Admin for review.",
@@ -572,7 +638,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                     fileUrl: activeFile.fileUrl,
                     uploadedAt: activeFile.uploadedAt,
                   }}
-                  previewUrl={resolvedPreviewUrl || activeFile.fileUrl}
+                  previewUrl={resolvedPreviewUrl || (activeFile.fileUrl.startsWith("storage://") ? "" : activeFile.fileUrl)}
                   isDownloading={downloadingFileId === activeFile.id}
                   onDownloadFile={(url, name, id) => void handleDownloadFile(url, name, id)}
                   formatDateTimeLabel={(date) => new Date(date).toLocaleDateString()}
@@ -589,175 +655,207 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     </>
   );
 
-  // DESKTOP / PC: Right-Side Drawer matching Liquidation Report Drawer
-  if (isDesktop) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl"
-        >
-          {/* PINNED HEADER */}
-          <div className="p-5 sm:p-6 border-b border-border/70 bg-card shrink-0 space-y-2">
-            <div className="flex items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2">
-                {headerCategoryAndPoints}
+  return (
+    <>
+      {/* DESKTOP / PC: Right-Side Drawer */}
+      {isDesktop ? (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          <SheetContent
+            side="right"
+            className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl"
+          >
+            {/* PINNED HEADER */}
+            <div className="p-5 sm:p-6 border-b border-border/70 bg-card shrink-0 space-y-2">
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  {headerCategoryAndPoints}
+                </div>
+              </div>
+
+              <div className="space-y-1 pt-1">
+                <SheetTitle
+                  className="text-xl font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere]"
+                  title={activity.name}
+                >
+                  {activity.name}
+                </SheetTitle>
+                <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {headerDateTimeVenue}
+                </SheetDescription>
               </div>
             </div>
 
-            <div className="space-y-1 pt-1">
-              <SheetTitle
-                className="text-xl font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere]"
-                title={activity.name}
-              >
-                {activity.name}
-              </SheetTitle>
-              <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                {headerDateTimeVenue}
-              </SheetDescription>
+            {/* SCROLLABLE BODY */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+              {bodyContent}
             </div>
-          </div>
 
-          {/* SCROLLABLE BODY */}
-          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
-            {bodyContent}
-          </div>
+            {/* PINNED FOOTER */}
+            <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+              {isEditable ? (
+                <>
+                  <SheetClose asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={submitting || uploading}
+                      className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
+                    >
+                      Cancel
+                    </Button>
+                  </SheetClose>
 
-          {/* PINNED FOOTER */}
-          <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-            {isEditable ? (
-              <>
-                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    disabled={submitting || uploading || files.length === 0}
+                    onClick={handleSubmitProofClick}
+                    className="h-9 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
+                    YPOP Activity Proof • LYDO Pasig City
+                  </p>
+                  <SheetClose asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
+                    >
+                      Close Drawer
+                    </Button>
+                  </SheetClose>
+                </>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        /* MOBILE + TABLET: Centered Modal Dialog (< 1024px) */
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogContent
+            hideCloseButton={true}
+            className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+          >
+            {/* PINNED HEADER */}
+            <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
+              {/* Row 1: Badges + Dedicated Close Button */}
+              <div className="flex items-center justify-between gap-2.5 w-full">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {headerCategoryAndPoints}
+                </div>
+
+                <DialogClose asChild>
+                  <button
+                    type="button"
+                    aria-label="Close modal"
+                    className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Close</span>
+                  </button>
+                </DialogClose>
+              </div>
+
+              {/* Row 2: Title */}
+              <div className="space-y-1 min-w-0">
+                <DialogTitle
+                  className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2"
+                  title={activity.name}
+                >
+                  {activity.name}
+                </DialogTitle>
+                {/* Row 3: Subtitle */}
+                <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {headerDateTimeVenue}
+                </DialogDescription>
+              </div>
+            </div>
+
+            {/* SCROLLABLE BODY */}
+            <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+              {bodyContent}
+            </div>
+
+            {/* PINNED FOOTER */}
+            <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
+              {isEditable ? (
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
+                    disabled={submitting || uploading}
+                    onClick={() => onOpenChange(false)}
+                    className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
                   >
                     Cancel
                   </Button>
-                </SheetClose>
 
-                <Button
-                  type="button"
-                  disabled={submitting || files.length === 0}
-                  onClick={handleSubmitProof}
-                  className="h-9 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                >
-                  {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                  <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
-                </Button>
-              </>
-            ) : (
-              <>
-                <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                  YPOP Activity Proof • LYDO Pasig City
-                </p>
-                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    disabled={submitting || uploading || files.length === 0}
+                    onClick={handleSubmitProofClick}
+                    className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
+                    YPOP Activity Proof • LYDO Pasig City
+                  </p>
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
+                    onClick={() => onOpenChange(false)}
+                    className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                   >
                     Close Drawer
                   </Button>
-                </SheetClose>
-              </>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  // MOBILE + TABLET: Centered Modal Dialog matching Liquidation Report Dialog (< 1024px)
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        hideCloseButton={true}
-        className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
-      >
-        {/* PINNED HEADER */}
-        <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
-          {/* Row 1: Badges + Dedicated Close Button */}
-          <div className="flex items-center justify-between gap-2.5 w-full">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              {headerCategoryAndPoints}
+                </div>
+              )}
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
-            <DialogClose asChild>
-              <button
-                type="button"
-                aria-label="Close modal"
-                className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </button>
-            </DialogClose>
-          </div>
-
-          {/* Row 2: Title */}
-          <div className="space-y-1 min-w-0">
-            <DialogTitle
-              className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2"
-              title={activity.name}
+      {/* SUBMISSION CONFIRMATION DIALOG */}
+      <AlertDialog open={confirmSubmitProofOpen} onOpenChange={(val) => { if (!submitting) setConfirmSubmitProofOpen(val); }}>
+        <AlertDialogContent className="max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-foreground">
+              Submit Proof of Attendance?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              You are about to submit your attendance proof for LYDO review. Once submitted, the record will enter the verification process.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={submitting} className="rounded-xl text-xs font-semibold">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={submitting}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleSubmitProof();
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-semibold gap-1.5 cursor-pointer"
             >
-              {activity.name}
-            </DialogTitle>
-            {/* Row 3: Subtitle */}
-            <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
-              {headerDateTimeVenue}
-            </DialogDescription>
-          </div>
-        </div>
-
-        {/* SCROLLABLE BODY */}
-        <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
-          {bodyContent}
-        </div>
-
-        {/* PINNED FOOTER */}
-        <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
-          {isEditable ? (
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
-              >
-                Cancel
-              </Button>
-
-              <Button
-                type="button"
-                disabled={submitting || files.length === 0}
-                onClick={handleSubmitProof}
-                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                YPOP Activity Proof • LYDO Pasig City
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
-              >
-                Close Drawer
-              </Button>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+              {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+              <span>Submit Proof</span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

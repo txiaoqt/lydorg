@@ -109,6 +109,7 @@
   }
 
   :root {
+    --public-announcement-height: 0px;
     /* Shared Y-TRACE palette, aligned with the installed PWA. */
     --yt-bg: #f6f8fc;
     --yt-surface: #ffffff;

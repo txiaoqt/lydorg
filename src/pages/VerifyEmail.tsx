@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { getAuthCallbackUrl } from "@/lib/auth-redirect";
 import {
   beginPwaAuthFlow,
   endPwaAuthFlow,
@@ -25,6 +27,8 @@ import {
   clearSignupDraft,
   PENDING_SIGNUP_EMAIL_KEY,
   VERIFY_FRESH_NAV_KEY,
+  VERIFY_MODE_KEY,
+  type VerifyFlowMode,
 } from "@/lib/email-validation";
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -39,9 +43,11 @@ type VerifyEmailLocationState = {
 const VerifyEmail = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { isAuthenticated, isInitialized, isPasswordRecoverySession } = useAuth();
   const pwaFlow = isPwaAuthFlow(location.search);
   const pwaTheme = readPwaPreferences().accentTheme;
+
   const email = useMemo(() => {
     const searchEmail = new URLSearchParams(location.search).get("email");
     const stateEmail = (location.state as VerifyEmailLocationState | null)?.email;
@@ -105,24 +111,22 @@ const VerifyEmail = () => {
     if (new URLSearchParams(location.search).get("pwa") === "1") beginPwaAuthFlow();
   }, [location.search]);
 
+  // Magic Link or OTP session completion listener
   useEffect(() => {
     if (!isInitialized || !isAuthenticated) return;
     if (isPasswordRecoverySession) {
       navigate("/reset-password", { replace: true });
       return;
     }
-    const hasPendingSignup =
-      typeof window !== "undefined" &&
-      Boolean(window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY));
-    if (!isVerified && hasPendingSignup) return;
     clearSignupDraft();
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
     window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
+    window.sessionStorage.removeItem(VERIFY_MODE_KEY);
     window.sessionStorage.removeItem("ytrace_verify_active");
     window.sessionStorage.removeItem(OTP_ISSUED_AT_KEY);
     if (pwaFlow) endPwaAuthFlow();
     navigate(pwaFlow ? "/app" : "/dashboard", { replace: true });
-  }, [isAuthenticated, isInitialized, isPasswordRecoverySession, isVerified, navigate, pwaFlow]);
+  }, [isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow]);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -154,11 +158,24 @@ const VerifyEmail = () => {
     }
 
     setIsVerifying(true);
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+    let { data, error: verifyError } = await supabase.auth.verifyOtp({
       email,
       token: code,
-      type: "email",
+      type: "signup",
     });
+
+    if (verifyError) {
+      // Fallback to type: "email" for backwards compatibility or OTP variations
+      const fallback = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
+      });
+      if (!fallback.error) {
+        data = fallback.data;
+        verifyError = null;
+      }
+    }
     setIsVerifying(false);
 
     if (verifyError) {
@@ -182,20 +199,52 @@ const VerifyEmail = () => {
     clearSignupDraft();
     window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
     window.sessionStorage.removeItem(VERIFY_FRESH_NAV_KEY);
+    window.sessionStorage.removeItem(VERIFY_MODE_KEY);
     window.sessionStorage.removeItem("ytrace_verify_active");
     window.sessionStorage.removeItem(OTP_ISSUED_AT_KEY);
     setIsVerified(true);
   };
 
-  const resendCode = async () => {
+  const resendEmail = async () => {
     setError("");
     if (!supabase || !email || resendCooldown > 0) return;
 
     setIsResending(true);
-    const { error: resendError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
+    const storedMode =
+      typeof window !== "undefined"
+        ? (window.sessionStorage.getItem(VERIFY_MODE_KEY) as VerifyFlowMode | null)
+        : null;
+
+    let resendError: { message: string } | null = null;
+
+    if (storedMode === "existing_magic_link") {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
+        },
+      });
+      if (error) resendError = error;
+    } else {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: getAuthCallbackUrl({ pwaFlow }),
+        },
+      });
+      if (error) {
+        // Fallback for resilient delivery
+        const fallback = await supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false },
+        });
+        if (fallback.error) {
+          resendError = error;
+        }
+      }
+    }
     setIsResending(false);
 
     if (resendError) {
@@ -208,6 +257,10 @@ const VerifyEmail = () => {
     setError("");
     setCode("");
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    toast({
+      title: "Verification email resent",
+      description: "Check your email for the new verification message.",
+    });
   };
 
   return (
@@ -232,11 +285,11 @@ const VerifyEmail = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        
-
         <div className="space-y-6 rounded-2xl border border-border bg-card p-6 card-shadow sm:p-8">
           <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">Create Organization Account</h1>
+            <h1 className="text-2xl font-heading font-bold text-foreground">
+              Create Organization Account
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Register your youth organization to start the compliance process.
             </p>
@@ -253,15 +306,20 @@ const VerifyEmail = () => {
                     <span className="absolute right-1/2 top-3.5 h-px w-full bg-primary" aria-hidden="true" />
                   ) : null}
                   <span
-                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${isActive || isComplete
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground"
-                      }`}
+                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${
+                      isActive || isComplete
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground"
+                    }`}
                     aria-current={isActive ? "step" : undefined}
                   >
                     {isComplete ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : step}
                   </span>
-                  <span className={`text-[11px] font-medium sm:text-xs ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                  <span
+                    className={`text-[11px] font-medium sm:text-xs ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
                     {label}
                   </span>
                 </li>
@@ -276,37 +334,42 @@ const VerifyEmail = () => {
             <div>
               <h2 className="text-2xl font-heading font-bold">Verify your email</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                We&apos;ll send a verification code to{" "} to verify your email address.
+                Check your email to continue verifying your account. We&apos;ve sent verification details to{" "}
                 <span className="font-medium text-foreground">{email || "your email address"}</span>.
               </p>
             </div>
           </div>
 
           <form onSubmit={verifyCode} className="space-y-5">
-            <div className="flex w-full justify-center">
-              <InputOTP
-                maxLength={OTP_LENGTH}
-                value={code}
-                onChange={(value) => {
-                  setCode(value.replace(/\D/g, ""));
-                  setError("");
-                }}
-                inputMode="numeric"
-                autoFocus
-                disabled={isVerifying || !email}
-                aria-label="Six-digit email verification code"
-                containerClassName="justify-center"
-              >
-                <InputOTPGroup className="justify-center">
-                  {Array.from({ length: OTP_LENGTH }, (_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className="h-11 w-9 shrink-0 text-base sm:h-12 sm:w-11 sm:text-lg"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
+            <div className="space-y-2">
+              <p className="text-center text-xs text-muted-foreground">
+                If your email includes a six-digit verification code, enter it below.
+              </p>
+              <div className="flex w-full justify-center">
+                <InputOTP
+                  maxLength={OTP_LENGTH}
+                  value={code}
+                  onChange={(value) => {
+                    setCode(value.replace(/\D/g, ""));
+                    setError("");
+                  }}
+                  inputMode="numeric"
+                  autoFocus
+                  disabled={isVerifying || !email}
+                  aria-label="Six-digit email verification code"
+                  containerClassName="justify-center"
+                >
+                  <InputOTPGroup className="justify-center">
+                    {Array.from({ length: OTP_LENGTH }, (_, index) => (
+                      <InputOTPSlot
+                        key={index}
+                        index={index}
+                        className="h-11 w-9 shrink-0 text-base sm:h-12 sm:w-11 sm:text-lg"
+                      />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
             </div>
 
             {showPasswordField ? (
@@ -360,12 +423,12 @@ const VerifyEmail = () => {
           </form>
 
           <div className="space-y-2 text-center text-sm text-muted-foreground">
-            <p>Didn&apos;t receive the code?</p>
+            <p>Didn&apos;t receive the email?</p>
             <Button
               type="button"
               variant="ghost"
               className="h-auto px-2 py-1 font-medium text-primary"
-              onClick={resendCode}
+              onClick={resendEmail}
               disabled={isResending || resendCooldown > 0 || !email}
             >
               {isResending

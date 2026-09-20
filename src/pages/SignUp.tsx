@@ -25,6 +25,7 @@ import {
   PENDING_SIGNUP_EMAIL_KEY,
   saveSignupDraft,
   VERIFY_FRESH_NAV_KEY,
+  VERIFY_MODE_KEY,
 } from "@/lib/email-validation";
 import { OTP_ISSUED_AT_KEY } from "@/lib/verification-error";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
@@ -439,26 +440,25 @@ const SignUp = () => {
     }
 
     setIsConfirmOpen(false);
-    if (result.needsEmailConfirmation) {
-      const normalizedEmail = email.trim().toLowerCase();
-      window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, normalizedEmail);
-      window.sessionStorage.setItem(VERIFY_FRESH_NAV_KEY, "true");
-      window.sessionStorage.setItem(OTP_ISSUED_AT_KEY, String(Date.now()));
-      toast({
-        title: "Verification code sent",
-        description: "Enter the six-digit code from your email to finish creating your account.",
-      });
-      navigate(pwaFlow ? pwaAuthRoute("/verify-email") : "/verify-email", {
-        state: { email: normalizedEmail, fromSignup: true },
-      });
-      return;
-    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, normalizedEmail);
+    window.sessionStorage.setItem(
+      VERIFY_MODE_KEY,
+      result.flow === "existing_magic_link" ? "existing_magic_link" : "registration_otp",
+    );
+    window.sessionStorage.setItem(VERIFY_FRESH_NAV_KEY, "true");
+    window.sessionStorage.setItem(OTP_ISSUED_AT_KEY, String(Date.now()));
 
     toast({
-      title: "Account created!",
-      description: "Your account is ready.",
+      title: "Verification email sent",
+      description: "Check your email to continue verifying your account.",
     });
-    navigate(pwaFlow ? "/app" : "/dashboard", { replace: true });
+
+    navigate(pwaFlow ? pwaAuthRoute("/verify-email") : "/verify-email", {
+      state: { email: normalizedEmail, fromSignup: true },
+    });
+    return;
   };
 
   return (
@@ -621,12 +621,20 @@ const SignUp = () => {
                       value={district}
                       onValueChange={(v) => { setDistrict(v as PasigDistrict); touch("district"); }}
                     >
-                      <SelectTrigger id="district">
+                      <SelectTrigger id="district" className="h-10">
                         <SelectValue placeholder="Select district" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent
+                        position="popper"
+                        side="bottom"
+                        sideOffset={4}
+                        collisionPadding={8}
+                        className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
+                      >
                         {pasigDistrictOptions.map((opt) => (
-                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          <SelectItem key={opt} value={opt} className="cursor-pointer text-sm">
+                            {opt}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -640,12 +648,20 @@ const SignUp = () => {
                       onValueChange={(v) => { setBarangayId(v); touch("barangay"); }}
                       disabled={!district}
                     >
-                      <SelectTrigger id="barangay">
+                      <SelectTrigger id="barangay" className="h-10">
                         <SelectValue placeholder={district ? "Select Barangay" : "Choose district first"} />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent
+                        position="popper"
+                        side="bottom"
+                        sideOffset={4}
+                        collisionPadding={8}
+                        className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
+                      >
                         {districtBarangays.map((b) => (
-                          <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                          <SelectItem key={b.id} value={b.id} className="cursor-pointer text-sm">
+                            {b.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

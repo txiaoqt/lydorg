@@ -1,6 +1,9 @@
 export const PENDING_SIGNUP_EMAIL_KEY = "ytrace-pending-signup-email";
 export const VERIFY_FRESH_NAV_KEY = "ytrace_verify_fresh_nav";
+export const VERIFY_MODE_KEY = "ytrace_verify_mode";
 export const SIGNUP_DRAFT_KEY = "ytrace_signup_draft";
+
+export type VerifyFlowMode = "registration_otp" | "existing_magic_link";
 
 export const GENERIC_VERIFY_MESSAGE = "If this email can be used for registration, we'll send a verification code.";
 export const GENERIC_RESET_MESSAGE = "If an account is associated with this email address, you’ll receive a password reset link shortly. Please check your inbox and spam folder.";

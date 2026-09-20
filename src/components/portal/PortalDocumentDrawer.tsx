@@ -855,7 +855,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
         <SheetContent
           side="right"
           showCloseButton={false}
-          className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl"
+          className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl top-[var(--public-announcement-height,0px)] h-[calc(100dvh-var(--public-announcement-height,0px))] bottom-0"
         >
           <SheetTitle className="sr-only">
             {resolvedDocumentTitle} Document Preview
@@ -906,7 +906,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton={true}
-        className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+        className="w-[95vw] sm:w-[92vw] max-w-3xl h-[calc(92dvh-var(--public-announcement-height,0px))] sm:h-[calc(90vh-var(--public-announcement-height,0px))] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200 top-[calc(50%+var(--public-announcement-height,0px)/2)]"
       >
         <DialogTitle className="sr-only">
           {resolvedDocumentTitle} Document Preview

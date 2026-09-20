@@ -145,6 +145,8 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNumber, c
   );
 };
 
+import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+
 export interface PortalDocumentViewerProps {
   previewUrl: string;
   previewTitle?: string;
@@ -167,7 +169,44 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState(600);
+  const [effectiveUrl, setEffectiveUrl] = useState<string>(() => {
+    if (!previewUrl || previewUrl.startsWith("storage://")) return "";
+    return previewUrl;
+  });
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+    if (!previewUrl) {
+      setEffectiveUrl("");
+      return;
+    }
+    if (
+      previewUrl.startsWith("blob:") ||
+      previewUrl.startsWith("data:") ||
+      previewUrl.startsWith("http://") ||
+      previewUrl.startsWith("https://")
+    ) {
+      setEffectiveUrl(previewUrl);
+      return;
+    }
+    if (previewUrl.startsWith("storage://")) {
+      resolveSupabaseFileUrl(previewUrl)
+        .then((resolved) => {
+          if (!isCancelled) {
+            setEffectiveUrl(resolved || "");
+          }
+        })
+        .catch(() => {
+          if (!isCancelled) setEffectiveUrl("");
+        });
+      return;
+    }
+    setEffectiveUrl(previewUrl);
+    return () => {
+      isCancelled = true;
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     if (!scrollContainerRef.current) return;
@@ -180,12 +219,24 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
     });
     observer.observe(scrollContainerRef.current);
     return () => observer.disconnect();
-  }, [previewUrl]);
+  }, [effectiveUrl]);
 
   useEffect(() => {
     let isCancelled = false;
 
-    if (!previewUrl || !previewCanInline) {
+    if (!effectiveUrl || !previewCanInline || effectiveUrl.startsWith("storage://")) {
+      setPdfDoc(null);
+      setPdfLoading(false);
+      setPdfError(null);
+      return;
+    }
+
+    // Skip PDF loading if it is an image file
+    const isImage = Boolean(
+      /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(effectiveUrl) ||
+      (previewTitle && /\.(png|jpe?g|webp|gif|svg)$/i.test(previewTitle))
+    );
+    if (isImage) {
       setPdfDoc(null);
       setPdfLoading(false);
       setPdfError(null);
@@ -197,7 +248,7 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
       setPdfError(null);
 
       try {
-        const response = await fetch(previewUrl);
+        const response = await fetch(effectiveUrl);
         if (!response.ok) {
           throw new Error(`Failed to load document (HTTP ${response.status})`);
         }
@@ -225,22 +276,24 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [previewUrl, previewCanInline]);
+  }, [effectiveUrl, previewCanInline, previewTitle]);
 
   const handleOpenNewTab = () => {
-    if (previewUrl) {
-      window.open(previewUrl, "_blank", "noopener,noreferrer");
+    const targetUrl = effectiveUrl || (previewUrl && !previewUrl.startsWith("storage://") ? previewUrl : "");
+    if (targetUrl) {
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
     }
   };
 
   const handleDownload = async () => {
-    if (!previewUrl || downloading) return;
+    const targetUrl = effectiveUrl || (previewUrl && !previewUrl.startsWith("storage://") ? previewUrl : "");
+    if (!targetUrl || downloading) return;
     try {
       setDownloading(true);
       if (onDownloadFile) {
-        await onDownloadFile(previewUrl, previewTitle || "document.pdf");
+        await onDownloadFile(targetUrl, previewTitle || "document.pdf");
       } else {
-        const response = await fetch(previewUrl);
+        const response = await fetch(targetUrl);
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -259,7 +312,10 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
   };
 
   const isImageFile = Boolean(
-    previewUrl && /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(previewUrl)
+    effectiveUrl && (
+      /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(effectiveUrl) ||
+      (previewTitle && /\.(png|jpe?g|webp|gif|svg)$/i.test(previewTitle))
+    )
   );
 
   return (

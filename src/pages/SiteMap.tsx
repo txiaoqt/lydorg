@@ -29,14 +29,14 @@ const siteMapSections = [
       { label: "Create Organization Account", href: "/signup" },
       { label: "Dashboard", href: "/dashboard" },
       { label: "Organization Profile", href: "/organization-profile" },
-      { label: "YPOP (Youth Participation Organization Passport)", href: "/ypop" },
+      { label: "YPOP Incentive", href: "/ypop" },
       { label: "Document Submission", href: "/document-submission" },
       { label: "Budget Requests", href: "/budget-request" },
       { label: "Liquidation Reports", href: "/liquidation-reporting" },
       { label: "News Releases", href: "/portal-news-releases" },
       { label: "Notifications", href: "/notifications" },
       { label: "Inquiry / Support", href: "/contacts" },
-      { label: "Account Settings", href: "/organization-profile" },
+
     ],
   },
 ];

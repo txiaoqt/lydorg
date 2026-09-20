@@ -45,6 +45,8 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
   className,
   isMobile = false,
 }) => {
+  const safePreviewUrl = previewUrl || (file?.fileUrl && !file.fileUrl.startsWith("storage://") ? file.fileUrl : "");
+
   return (
     <div className={cn("space-y-2.5", className)}>
       <div className="flex items-center justify-between">
@@ -92,8 +94,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const targetUrl = previewUrl || file.fileUrl;
-                  if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+                  if (safePreviewUrl) window.open(safePreviewUrl, "_blank", "noopener,noreferrer");
                 }}
                 className="h-10 px-2.5 sm:px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
@@ -105,7 +106,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
                 type="button"
                 size="sm"
                 disabled={isDownloading}
-                onClick={() => void onDownloadFile(previewUrl || file.fileUrl, file.fileName, file.id)}
+                onClick={() => void onDownloadFile(safePreviewUrl || file.fileUrl, file.fileName, file.id)}
                 className="h-10 px-2.5 sm:px-3 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 {isDownloading ? (
@@ -125,7 +126,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
             {/* 3. Canonical PDF Canvas Viewer */}
             <div className="rounded-xl border border-border/80 overflow-hidden bg-slate-100/70 dark:bg-slate-900/60 shadow-inner">
               <PortalDocumentViewer
-                previewUrl={previewUrl || file.fileUrl}
+                previewUrl={safePreviewUrl}
                 previewTitle={file.fileName}
                 previewCanInline={true}
                 className="h-[360px] sm:h-[420px] overflow-y-auto p-2.5 sm:p-3"
@@ -162,8 +163,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const targetUrl = previewUrl || file.fileUrl;
-                    if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+                    if (safePreviewUrl) window.open(safePreviewUrl, "_blank", "noopener,noreferrer");
                   }}
                   className="h-8 px-2.5 sm:px-3 text-xs font-semibold rounded-lg border-border/80 gap-1.5 cursor-pointer hover:bg-accent text-foreground transition-all"
                 >
@@ -175,7 +175,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
                   type="button"
                   size="sm"
                   disabled={isDownloading}
-                  onClick={() => void onDownloadFile(previewUrl || file.fileUrl, file.fileName, file.id)}
+                  onClick={() => void onDownloadFile(safePreviewUrl || file.fileUrl, file.fileName, file.id)}
                   className="h-8 px-2.5 sm:px-3 text-xs font-bold rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 cursor-pointer shadow-2xs transition-all hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {isDownloading ? (
@@ -196,7 +196,7 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
             {/* Canonical PDF Canvas Viewer */}
             <div className="rounded-xl border border-border/80 overflow-hidden bg-slate-100/70 dark:bg-slate-900/60 shadow-inner">
               <PortalDocumentViewer
-                previewUrl={previewUrl || file.fileUrl}
+                previewUrl={safePreviewUrl}
                 previewTitle={file.fileName}
                 previewCanInline={true}
                 className="h-[360px] sm:h-[440px] overflow-y-auto p-3 sm:p-4"

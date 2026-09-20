@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
-import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
+import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { PublicNewsReleaseCard } from "@/components/public/PublicNewsReleaseCard";
 import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 import { toast } from "@/hooks/use-toast";
@@ -49,18 +49,18 @@ type LatestNewsRelease = {
 };
 
 const overviewCards = [
-  { icon: BookOpen,      title: "Learn the Process",       description: "Understand the compliance workflow and requirements for PCYDO-registered youth organizations." },
-  { icon: FileText,      title: "Access Official Forms",   description: "Download the required forms for registration, activity budgets, and liquidation reports." },
-  { icon: Send,          title: "Apply Online",            description: "Submit your organization's documents and applications directly through the portal." },
-  { icon: ClipboardList, title: "Track Your Application",  description: "Monitor submission statuses and stay on top of compliance deadlines in real time." },
+  { icon: BookOpen, title: "Learn the Process", description: "Understand the compliance workflow and requirements for PCYDO-registered youth organizations." },
+  { icon: FileText, title: "Access Official Forms", description: "Download the required forms for registration, activity budgets, and liquidation reports." },
+  { icon: Send, title: "Apply Online", description: "Submit your organization's documents and applications directly through the portal." },
+  { icon: ClipboardList, title: "Track Your Application", description: "Monitor submission statuses and stay on top of compliance deadlines in real time." },
 ];
 
 const quickLinks = [
-  { icon: Info,       title: "About",               description: "Learn about PCYDO and its mandate for Pasig City youth organizations.",       href: "/about" },
-  { icon: Banknote,   title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.",  href: "/budget-transparency" },
-  { icon: FileText,   title: "Forms & Templates",   description: "Download official forms and document templates for compliance submission.",    href: "/public-templates" },
-  { icon: Globe,      title: "News Releases",       description: "Stay updated with the latest official announcements and events from PCYDO.",   href: "/news-releases" },
-  { icon: HelpCircle, title: "FAQs",                description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
+  { icon: Info, title: "About", description: "Learn about PCYDO and its mandate for Pasig City youth organizations.", href: "/about" },
+  { icon: Banknote, title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.", href: "/budget-transparency" },
+  { icon: FileText, title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.", href: "/public-templates" },
+  { icon: Globe, title: "News Releases", description: "Stay updated with the latest official announcements and events from PCYDO.", href: "/news-releases" },
+  { icon: HelpCircle, title: "FAQs", description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
 ];
 
 const Index = () => {
@@ -70,7 +70,7 @@ const Index = () => {
   const [openingTemplateId, setOpeningTemplateId] = useState<string | null>(null);
   const [downloadingTemplateId, setDownloadingTemplateId] = useState<string | null>(null);
   const [latestReleases, setLatestReleases] = useState<LatestNewsRelease[] | null>(null);
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewCanInline, setPreviewCanInline] = useState(true);
@@ -109,7 +109,7 @@ const Index = () => {
       setPreviewTitle(fileName);
       setPreviewEmptyMessage("No file available for preview yet.");
       setPreviewCanInline(false);
-      setPreviewModalOpen(true);
+      setDrawerOpen(true);
       return;
     }
 
@@ -129,7 +129,7 @@ const Index = () => {
         resolvedUrl.toLowerCase().includes(".pdf") ||
         (!fileUrl.toLowerCase().endsWith(".xlsx") && !fileUrl.toLowerCase().endsWith(".docx"))
       );
-      setPreviewModalOpen(true);
+      setDrawerOpen(true);
     } catch (error) {
       toast({
         title: "Unable to preview template",
@@ -205,7 +205,7 @@ const Index = () => {
             {/* Left column (Text & Actions) */}
             <div className="animate-fade-up flex w-full flex-col items-center gap-3.5 sm:gap-6 lg:gap-[32px] text-center lg:max-w-[440px] lg:items-start lg:shrink-0 lg:text-left xl:max-w-[510px]">
               <div className="flex w-full flex-col items-center gap-2 sm:gap-4 lg:gap-[16px] lg:items-start">
-                
+
                 {/* Portal Badge */}
                 <div className="inline-flex w-fit max-w-full items-center gap-2 sm:gap-[8px] rounded-full border border-white/30 bg-white/15 px-3.5 py-1.5 sm:px-[20px] sm:py-[10px] backdrop-blur-[4px]">
                   <Shield className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-white" />
@@ -396,58 +396,58 @@ const Index = () => {
 
       {/* Latest News */}
       {latestReleases !== null && latestReleases.length > 0 && (
-      <section className="bg-public-bg-section px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
+        <section className="bg-public-bg-section px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
 
-          {/* Title group */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                LATEST NEWS
-              </span>
+            {/* Title group */}
+            <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
+              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+                  LATEST NEWS
+                </span>
+              </div>
+              <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
+                Stay Updated
+              </h2>
+              <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
+                Stay informed with the latest announcements, events, and updates from the Pasig City Local Youth Development Office.
+              </p>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-              Stay Updated
-            </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Stay informed with the latest announcements, events, and updates from the Pasig City Local Youth Development Office.
-            </p>
+
+            {/* Cards + view all */}
+            <div className="flex flex-col gap-2 sm:gap-[8px]">
+              <div className="hidden justify-end sm:flex">
+                <Link
+                  to="/news-releases"
+                  className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                >
+                  View all <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
+                {latestReleases === null ? (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="h-[300px] sm:h-[380px] lg:h-[380px] animate-pulse rounded-xl sm:rounded-[16px] lg:rounded-2xl bg-white border border-border/50" />
+                  ))
+                ) : (
+                  latestReleases.map((news) => (
+                    <PublicNewsReleaseCard key={news.id} news={news} />
+                  ))
+                )}
+              </div>
+              <div className="flex pt-1.5 sm:hidden">
+                <Link
+                  to="/news-releases"
+                  className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                >
+                  View all <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+            </div>
+
           </div>
-
-          {/* Cards + view all */}
-          <div className="flex flex-col gap-2 sm:gap-[8px]">
-            <div className="hidden justify-end sm:flex">
-              <Link
-                to="/news-releases"
-                className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-              >
-                View all <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
-              {latestReleases === null ? (
-                [1, 2, 3].map((i) => (
-                  <div key={i} className="h-[300px] sm:h-[380px] lg:h-[380px] animate-pulse rounded-xl sm:rounded-[16px] lg:rounded-2xl bg-white border border-border/50" />
-                ))
-              ) : (
-                latestReleases.map((news) => (
-                  <PublicNewsReleaseCard key={news.id} news={news} />
-                ))
-              )}
-            </div>
-            <div className="flex pt-1.5 sm:hidden">
-              <Link
-                to="/news-releases"
-                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-              >
-                View all <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
+        </section>
       )}
 
       {/* Resources */}
@@ -808,7 +808,7 @@ const Index = () => {
                   Office Hours
                 </p>
                 <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                  Monday–Friday<br />7:00 AM – 4:00 PM
+                  Monday–Thursday<br />7:00 AM – 4:00 PM
                 </p>
               </div>
 
@@ -828,15 +828,32 @@ const Index = () => {
         </div>
       </section>
 
-      <PortalDocumentPreviewModal
-        open={previewModalOpen}
-        onOpenChange={setPreviewModalOpen}
+      <PortalDocumentDrawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open);
+          if (!open) {
+            setPreviewUrl("");
+            setPreviewTitle("");
+            setPreviewEmptyMessage("");
+            setPreviewCanInline(false);
+          }
+        }}
+        mode="template"
         previewUrl={previewUrl}
         previewTitle={previewTitle}
+        templateTitle={previewTitle}
+        templateFileName={previewTitle}
         previewCanInline={previewCanInline}
         previewEmptyMessage={previewEmptyMessage}
-        hideTopCloseButton={true}
+        organizationName="PCYDO Pasig City"
+        downloading={Boolean(downloadingTemplateId)}
         onDownloadFile={downloadTemplate}
+        onOpenInNewTab={(url) => {
+          if (url) {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        }}
       />
 
       <Footer />
