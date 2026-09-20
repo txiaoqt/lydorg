@@ -324,6 +324,13 @@ const YpopDocumentStatusPill = ({ status }: { status: YPOPEventParticipationStat
       </span>
     );
   }
+  if (status === "pending_evaluation") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+        Pending Evaluation
+      </span>
+    );
+  }
   return (
     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
@@ -5312,8 +5319,8 @@ export default function AdminPortal({ section }: { section: string }) {
             state.ypopEventParticipations.some((p) => p.organizationId === relatedEntry.organizationId && p.status === "needs_revision");
 
           const hasUnreviewed =
-            approvedOrgActivities.some((a) => a.ypopEntryId === relatedEntry.id && (a.status === "submitted" || a.status === "under_review")) ||
-            state.ypopEventParticipations.some((p) => p.organizationId === relatedEntry.organizationId && p.status === "pending_verification");
+            approvedOrgActivities.some((a) => a.ypopEntryId === relatedEntry.id && (a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review")) ||
+            state.ypopEventParticipations.some((p) => p.organizationId === relatedEntry.organizationId && (p.status === "pending_evaluation" || p.status === "pending_verification"));
 
           const nextEntryStatus: YPOPEntry["status"] =
             updatedScore.totalScore >= (relatedEntry.pointsRequired ?? YPOP_SCORE_THRESHOLD)
@@ -12211,9 +12218,9 @@ export default function AdminPortal({ section }: { section: string }) {
           const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
           const semesterActivityIds = new Set(semesterActivities.map((a) => a.id));
           const orgEventParticipations = state.ypopEventParticipations.filter(
-            (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId),
+            (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId) && p.status !== "draft",
           );
-          const orgActivities = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id);
+          const orgActivities = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id && a.status !== "draft");
           const approvedCount =
             orgActivities.filter((a) => a.status === "approved").length +
             orgEventParticipations.filter((p) => p.status === "verified").length;
@@ -12221,8 +12228,8 @@ export default function AdminPortal({ section }: { section: string }) {
             orgActivities.filter((a) => a.status === "needs_revision" || a.status === "rejected").length +
             orgEventParticipations.filter((p) => p.status === "needs_revision" || p.status === "rejected").length;
           const unreviewedCount =
-            orgActivities.filter((a) => a.status === "submitted" || a.status === "under_review").length +
-            orgEventParticipations.filter((p) => p.status === "pending_verification").length;
+            orgActivities.filter((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review").length +
+            orgEventParticipations.filter((p) => p.status === "pending_evaluation" || p.status === "pending_verification").length;
           const period = state.ypopPeriods.find((p) => p.semesterKey === entry.semester);
           const approvedPpaCount = getApprovedYpopOrgActivityCount(
             orgActivities,
@@ -12417,8 +12424,8 @@ export default function AdminPortal({ section }: { section: string }) {
                   currentOrgActivities.some((a) => a.status === "needs_revision");
 
                 const hasUnreviewed =
-                  currentParticipations.some((p) => p.status === "pending_verification") ||
-                  currentOrgActivities.some((a) => a.status === "submitted" || a.status === "under_review");
+                  currentParticipations.some((p) => p.status === "pending_evaluation" || p.status === "pending_verification") ||
+                  currentOrgActivities.some((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review");
 
                 const nextEntryStatus: YPOPEntry["status"] =
                   updatedScore.totalScore >= (entry.pointsRequired ?? YPOP_SCORE_THRESHOLD)
@@ -13279,9 +13286,9 @@ export default function AdminPortal({ section }: { section: string }) {
           const submissionRows: YpopSubmissionRow[] = combinedPeriodEntries.map((entry) => {
             const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
             const orgParticipations = state.ypopEventParticipations.filter(
-              (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId)
+              (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId) && p.status !== "draft"
             );
-            const orgActs = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id);
+            const orgActs = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id && a.status !== "draft");
             const approvedPpaCount = getApprovedYpopOrgActivityCount(orgActs, entry.id, entry.orgLedProjectCount ?? 0);
             const verifiedAttendance = buildVerifiedYpopAttendance(semesterActivities, orgParticipations, entry.cityLedAttendance);
             const liveScore = computeYpopScore(verifiedAttendance, semesterActivities, approvedPpaCount, period.orgLedTiers);

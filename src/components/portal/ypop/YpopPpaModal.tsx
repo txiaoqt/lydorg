@@ -144,7 +144,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     };
   }, []);
 
-  const isUnderReview = currentActivity?.status === "submitted" || currentActivity?.status === "under_review";
+  const isUnderReview =
+    currentActivity?.status === "pending_evaluation" ||
+    currentActivity?.status === "submitted" ||
+    currentActivity?.status === "under_review";
   const isApproved = currentActivity?.status === "approved";
   const isNeedsRevision = currentActivity?.status === "needs_revision";
   const isRejected = currentActivity?.status === "rejected";
@@ -154,31 +157,55 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   // Safe delete eligibility: organization-owned records in non-approved states
   const canDelete = Boolean(
     currentActivity &&
-    ["draft", "submitted", "under_review", "needs_revision", "rejected"].includes(currentActivity.status) &&
+    ["draft", "pending_evaluation", "submitted", "under_review", "needs_revision", "rejected"].includes(currentActivity.status) &&
     currentActivity.status !== "approved"
   );
 
+  const [pendingDeletedFileIds, setPendingDeletedFileIds] = useState<string[]>([]);
+
+  const prevOpenRef = useRef(false);
+  const prevActivityIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    setCurrentActivity(activity);
-    setErrors({});
-    if (activity) {
-      setActivityName(activity.activityName || "");
-      setActivityDate(activity.activityDate || "");
-      setVenue(activity.venue || "");
-      setNarrativeReport(activity.narrativeReport || "");
+    const isOpening = open && !prevOpenRef.current;
+    const isDifferentActivity = (activity?.id ?? null) !== prevActivityIdRef.current;
+
+    if (isOpening || isDifferentActivity) {
+      setCurrentActivity(activity);
+      setErrors({});
       setPendingFiles([]);
-    } else {
-      setActivityName("");
-      setActivityDate(new Date().toISOString().split("T")[0]);
-      setVenue("");
-      setNarrativeReport("");
-      setPendingFiles([]);
+      setPendingDeletedFileIds([]);
+      setSelectedFileId(null);
+      if (activity) {
+        setActivityName(activity.activityName || "");
+        setActivityDate(activity.activityDate || "");
+        setVenue(activity.venue || "");
+        setNarrativeReport(activity.narrativeReport || "");
+      } else {
+        setActivityName("");
+        setActivityDate(new Date().toISOString().split("T")[0]);
+        setVenue("");
+        setNarrativeReport("");
+      }
+    } else if (open && activity) {
+      setCurrentActivity((prev) => {
+        if (!prev) return activity;
+        return {
+          ...prev,
+          ...activity,
+        };
+      });
     }
+
+    prevOpenRef.current = open;
+    prevActivityIdRef.current = activity?.id ?? null;
   }, [activity, open]);
 
-  // Saved files for this activity from the store
+  // Saved files for this activity from the store (excluding any marked for deletion during revision)
   const currentSavedFiles = currentActivity
-    ? orgActivityFiles.filter((f) => f.orgActivityId === currentActivity.id)
+    ? orgActivityFiles.filter(
+        (f) => f.orgActivityId === currentActivity.id && !pendingDeletedFileIds.includes(f.id)
+      )
     : [];
 
   // Local object URLs for staged pending files
@@ -284,43 +311,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       setErrors((prev) => ({ ...prev, files: undefined }));
     }
 
-    if (currentActivity && (currentActivity.status === "draft" || currentActivity.status === "needs_revision")) {
-      void uploadDirectFiles(selectedFiles);
-    } else {
-      setPendingFiles((prev) => [...prev, ...selectedFiles]);
-    }
+    setPendingFiles((prev) => [...prev, ...selectedFiles]);
+    toast({
+      title: selectedFiles.length > 1 ? "Supporting documents added" : "Supporting document added",
+      description: selectedFiles.length > 1 ? `${selectedFiles.length} files attached.` : "Document attached successfully.",
+    });
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const uploadDirectFiles = async (filesToUpload: File[]) => {
-    if (!currentActivity) return;
-    setUploading(true);
-    try {
-      for (const file of filesToUpload) {
-        const saved = await uploadYpopOrgActivityFileToSupabase({
-          orgActivityId: currentActivity.id,
-          organizationId,
-          file,
-        });
-        const blobUrl = URL.createObjectURL(file);
-        localBlobUrlsRef.current.set(saved.id, blobUrl);
-        localRawFilesRef.current.set(saved.id, file);
-        onFileCreated(saved);
-        setSelectedFileId(saved.id);
-      }
-      toast({
-        title: "Attachment uploaded",
-        description: `Uploaded ${filesToUpload.length} file(s) successfully.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Attachment upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload file.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
   };
 
   const handleRemovePendingFile = (index: number) => {
@@ -328,6 +324,17 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   };
 
   const handleDeleteSavedFile = async (file: YPOPOrgActivityFile) => {
+    if (currentActivity?.status === "needs_revision") {
+      // Stage the deletion locally so Admin continues to see the submitted original file until resubmission
+      setPendingDeletedFileIds((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
+      if (selectedFileId === file.id) {
+        const remaining = allFiles.filter((f) => f.id !== file.id);
+        setSelectedFileId(remaining[0]?.id ?? null);
+      }
+      toast({ title: "Attachment removed", description: "Attachment marked for removal on resubmission." });
+      return;
+    }
+
     setDeletingFileId(file.id);
     const localBlob = localBlobUrlsRef.current.get(file.id);
     if (localBlob) {
@@ -502,27 +509,44 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         onActivitySaved(targetActivity);
       }
 
-      if (pendingFiles.length > 0) {
-        for (const file of pendingFiles) {
-          const savedFile = await uploadYpopOrgActivityFileToSupabase({
-            orgActivityId: targetActivity.id,
-            organizationId,
-            file,
-          });
-          onFileCreated(savedFile);
-          setSelectedFileId(savedFile.id);
+      // If submitForReview is true OR this is a normal draft (not needs_revision), persist file mutations to Supabase
+      if (submitForReview || targetActivity.status === "draft") {
+        if (pendingDeletedFileIds.length > 0) {
+          for (const fileId of pendingDeletedFileIds) {
+            const fileObj = orgActivityFiles.find((f) => f.id === fileId);
+            if (fileObj) {
+              await deleteYpopOrgActivityFileFromSupabase(fileId, fileObj.fileUrl);
+              onFileDeleted(fileId);
+            }
+          }
+          setPendingDeletedFileIds([]);
         }
-        setPendingFiles([]);
+
+        if (pendingFiles.length > 0) {
+          for (const file of pendingFiles) {
+            const savedFile = await uploadYpopOrgActivityFileToSupabase({
+              orgActivityId: targetActivity.id,
+              organizationId,
+              file,
+            });
+            const blobUrl = URL.createObjectURL(file);
+            localBlobUrlsRef.current.set(savedFile.id, blobUrl);
+            localRawFilesRef.current.set(savedFile.id, file);
+            onFileCreated(savedFile);
+            setSelectedFileId(savedFile.id);
+          }
+          setPendingFiles([]);
+        }
       }
 
       if (submitForReview) {
         const submittedActivity = await updateYpopOrgActivityInSupabase(targetActivity.id, {
-          status: "submitted",
+          status: "pending_evaluation",
           submittedAt: now,
           adminRemarks: "",
           revisionHistory: [
             ...(targetActivity.revisionHistory ?? []),
-            { action: "submitted", adminRemarks: "", changedAt: now },
+            { action: "pending_evaluation", adminRemarks: isNeedsRevision ? "Revision submitted for evaluation." : "", changedAt: now },
           ],
         });
         setCurrentActivity(submittedActivity);
@@ -531,10 +555,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       }
 
       toast({
-        title: submitForReview ? "PPA submitted for review" : "PPA activity saved",
+        title: submitForReview ? (isNeedsRevision ? "Revision resubmitted" : "PPA submitted for evaluation") : "Draft saved",
         description: submitForReview
-          ? "Your organization PPA is now under review by LYDO Admin."
-          : "Saved as draft.",
+          ? "Your organization PPA is now under evaluation by LYDO Admin."
+          : "Draft saved successfully.",
       });
     } catch (error) {
       toast({
@@ -663,12 +687,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         </div>
       )}
 
-      {isDraft && allFiles.length > 0 && (
+      {Boolean(currentActivity && currentActivity.status === "draft" && currentSavedFiles.length > 0) && (
         <div className="p-3.5 sm:p-4 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-start gap-3 shadow-2xs">
           <FileText className="h-4.5 w-4.5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-slate-700 dark:text-slate-300">
-              Draft PPA Attached
+              Draft PPA Saved
             </p>
             <p className="text-slate-600/90 dark:text-slate-400/90 leading-snug sm:leading-relaxed break-words">
               Your PPA draft and supporting documents are saved. Click &ldquo;Submit for Review&rdquo; below when ready to submit to the Admin.
@@ -914,7 +938,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     isApproved
                       ? "verified"
                       : isUnderReview
-                      ? "pending_verification"
+                      ? "pending_evaluation"
                       : isNeedsRevision
                       ? "needs_revision"
                       : isRejected
@@ -925,7 +949,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     isApproved
                       ? "Approved"
                       : isUnderReview
-                      ? "Pending Review"
+                      ? "Pending Evaluation"
                       : isNeedsRevision
                       ? "Needs Revision"
                       : isRejected

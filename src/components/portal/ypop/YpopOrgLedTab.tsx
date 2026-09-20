@@ -242,7 +242,10 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                   const isApproved = act.status === "approved";
                   const isNeedsRevision = act.status === "needs_revision";
                   const isRejected = act.status === "rejected";
-                  const isUnderReview = act.status === "under_review" || act.status === "submitted";
+                  const isUnderReview =
+                    act.status === "pending_evaluation" ||
+                    act.status === "under_review" ||
+                    act.status === "submitted";
                   const isDraft = act.status === "draft";
 
                   return (

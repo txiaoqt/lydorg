@@ -110,6 +110,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   const [currentParticipation, setCurrentParticipation] = useState<YPOPEventParticipation | null>(participation);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [confirmSubmitProofOpen, setConfirmSubmitProofOpen] = useState(false);
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
@@ -128,21 +129,114 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     };
   }, []);
 
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingDeletedFileIds, setPendingDeletedFileIds] = useState<string[]>([]);
+
+  const prevOpenRef = useRef(false);
+  const prevActivityIdRef = useRef<string | null>(null);
+  const prevParticipationIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    setCurrentParticipation(participation);
-  }, [participation]);
+    const isOpening = open && !prevOpenRef.current;
+    const isDifferentActivity = (activity?.id ?? null) !== prevActivityIdRef.current;
+    const isDifferentParticipation =
+      (participation?.id ?? null) !== prevParticipationIdRef.current &&
+      prevParticipationIdRef.current !== null &&
+      participation?.id !== undefined;
+
+    if (isOpening || isDifferentActivity || isDifferentParticipation) {
+      setCurrentParticipation(participation);
+      setPendingFiles([]);
+      setPendingDeletedFileIds([]);
+      setSelectedFileId(null);
+    } else if (open && participation) {
+      setCurrentParticipation((prev) => {
+        if (!prev) return participation;
+        return {
+          ...prev,
+          ...participation,
+        };
+      });
+    }
+
+    prevOpenRef.current = open;
+    prevActivityIdRef.current = activity?.id ?? null;
+    prevParticipationIdRef.current = participation?.id ?? null;
+  }, [participation, activity, open]);
 
   const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : "mandatory";
   const points = activity ? (activity.points ?? getYpopCityLedPoints(category)) : 0;
 
-  const files = currentParticipation
-    ? eventFiles.filter((f) => f.participationId === currentParticipation.id)
+  const currentSavedFiles = currentParticipation
+    ? eventFiles.filter((f) => f.participationId === currentParticipation.id && !pendingDeletedFileIds.includes(f.id))
     : [];
+
+  const [stagedFileObjects, setStagedFileObjects] = useState<
+    Array<{
+      id: string;
+      fileName: string;
+      fileUrl: string;
+      fileSize: number;
+      fileType: string;
+      uploadedAt: string;
+      isStaged: boolean;
+      rawFile: File;
+      index: number;
+    }>
+  >([]);
+
+  useEffect(() => {
+    const objects = pendingFiles.map((f, idx) => ({
+      id: `staged-city-${idx}-${f.name}`,
+      fileName: f.name,
+      fileUrl: URL.createObjectURL(f),
+      fileSize: f.size,
+      fileType: f.type || "Document",
+      uploadedAt: new Date().toISOString(),
+      isStaged: true,
+      rawFile: f,
+      index: idx,
+    }));
+    setStagedFileObjects(objects);
+
+    return () => {
+      objects.forEach((obj) => URL.revokeObjectURL(obj.fileUrl));
+    };
+  }, [pendingFiles]);
+
+  const allFiles: Array<{
+    id: string;
+    fileName: string;
+    fileUrl: string;
+    fileSize?: number;
+    fileType?: string;
+    uploadedAt: string;
+    isStaged?: boolean;
+    rawFile?: File | null;
+    index?: number;
+  }> = [
+    ...currentSavedFiles.map((f) => ({
+      id: f.id,
+      fileName: f.fileName,
+      fileUrl: f.fileUrl,
+      fileSize: f.fileSize,
+      fileType: f.fileType,
+      uploadedAt: f.uploadedAt,
+      isStaged: false,
+      rawFile: localRawFilesRef.current.get(f.id) || null,
+      index: -1,
+    })),
+    ...stagedFileObjects,
+  ];
+
+  const files = allFiles;
 
   const isVerified = currentParticipation?.status === "verified";
   const isNeedsRevision = currentParticipation?.status === "needs_revision";
   const isRejected = currentParticipation?.status === "rejected";
-  const isPending = currentParticipation?.status === "pending_verification";
+  const isPending =
+    currentParticipation?.status === "pending_evaluation" ||
+    currentParticipation?.status === "pending_verification";
   const isDraft = !currentParticipation || currentParticipation.status === "draft";
   const isEditable = !isVerified && !isRejected && !isPending && (isDraft || isNeedsRevision);
 
@@ -152,6 +246,11 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     let isMounted = true;
     if (!activeFile) {
       setResolvedPreviewUrl("");
+      return;
+    }
+
+    if (activeFile.isStaged) {
+      setResolvedPreviewUrl(activeFile.fileUrl);
       return;
     }
 
@@ -181,7 +280,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [activeFile?.id, activeFile?.fileUrl]);
+  }, [activeFile?.id, activeFile?.fileUrl, activeFile?.isStaged]);
 
   useEffect(() => {
     if (files.length > 0) {
@@ -198,6 +297,16 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
+
+    if (isNeedsRevision) {
+      setPendingFiles((prev) => [...prev, ...selectedFiles]);
+      toast({
+        title: selectedFiles.length > 1 ? "Proof files added" : "Proof file added",
+        description: selectedFiles.length > 1 ? `Added ${selectedFiles.length} files.` : "File added successfully.",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     setUploading(true);
     try {
@@ -226,8 +335,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         setSelectedFileId(saved.id);
       }
       toast({
-        title: "Proof files uploaded",
-        description: `Uploaded ${selectedFiles.length} file(s) successfully as draft.`,
+        title: selectedFiles.length > 1 ? "Proof files uploaded" : "Proof file uploaded",
+        description: selectedFiles.length > 1 ? `Uploaded ${selectedFiles.length} files successfully.` : "File added successfully.",
       });
     } catch (error) {
       toast({
@@ -241,7 +350,33 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     }
   };
 
-  const handleDeleteFile = async (file: YPOPEventFile) => {
+  const handleDeleteFile = async (file: { id: string; fileUrl: string; isStaged?: boolean; index?: number }) => {
+    if (file.isStaged && typeof file.index === "number" && file.index >= 0) {
+      setPendingFiles((prev) => prev.filter((_, i) => i !== file.index));
+      if (selectedFileId === file.id) {
+        const remaining = files.filter((f) => f.id !== file.id);
+        setSelectedFileId(remaining[0]?.id ?? null);
+      }
+      toast({
+        title: "File removed",
+        description: "The proof file has been removed.",
+      });
+      return;
+    }
+
+    if (isNeedsRevision) {
+      setPendingDeletedFileIds((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
+      if (selectedFileId === file.id) {
+        const remaining = files.filter((f) => f.id !== file.id);
+        setSelectedFileId(remaining[0]?.id ?? null);
+      }
+      toast({
+        title: "File removed",
+        description: "Proof file marked for removal on resubmission.",
+      });
+      return;
+    }
+
     setDeletingFileId(file.id);
     const localBlob = localBlobUrlsRef.current.get(file.id);
     if (localBlob) {
@@ -311,8 +446,49 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (uploading || submitting || savingDraft) return;
+
+    setSavingDraft(true);
+    try {
+      let targetPart = currentParticipation;
+      if (!targetPart) {
+        targetPart = await ensureYpopEventParticipationInSupabase({
+          activityId: activity.id,
+          activityName: activity.name,
+          activityDate: activity.startDate || activity.date || "",
+          venue: activity.venue || "Pasig City",
+        });
+        setCurrentParticipation(targetPart);
+        onParticipationUpdated(targetPart);
+      } else {
+        const updated = await updateYpopEventParticipationInSupabase(targetPart.id, {
+          activityName: activity.name,
+          activityDate: activity.startDate || activity.date || "",
+          venue: activity.venue || "Pasig City",
+          status: targetPart.status === "needs_revision" ? "needs_revision" : "draft",
+        });
+        setCurrentParticipation(updated);
+        onParticipationUpdated(updated);
+      }
+
+      toast({
+        title: "Draft saved",
+        description: "Your participation proof has been saved as a draft.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to save draft",
+        description: error instanceof Error ? error.message : "Unable to save draft.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
   const handleSubmitProofClick = () => {
-    if (uploading) {
+    if (uploading || savingDraft) {
       toast({
         title: "Upload in progress",
         description: "Please wait for file attachments to finish uploading.",
@@ -346,15 +522,45 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     setSubmitting(true);
     try {
       const now = new Date().toISOString();
+
+      if (isNeedsRevision) {
+        if (pendingDeletedFileIds.length > 0) {
+          for (const fileId of pendingDeletedFileIds) {
+            const fileObj = eventFiles.find((f) => f.id === fileId);
+            if (fileObj) {
+              await deleteYpopEventFileFromSupabase(fileId, fileObj.fileUrl);
+              onFileDeleted(fileId);
+            }
+          }
+          setPendingDeletedFileIds([]);
+        }
+
+        if (pendingFiles.length > 0) {
+          for (const file of pendingFiles) {
+            const saved = await uploadYpopEventFileToSupabase({
+              participationId: currentParticipation.id,
+              organizationId,
+              file,
+            });
+            const blobUrl = URL.createObjectURL(file);
+            localBlobUrlsRef.current.set(saved.id, blobUrl);
+            localRawFilesRef.current.set(saved.id, file);
+            onFileCreated(saved);
+            setSelectedFileId(saved.id);
+          }
+          setPendingFiles([]);
+        }
+      }
+
       const updated = await updateYpopEventParticipationInSupabase(currentParticipation.id, {
         proofSubmittedAt: now,
-        status: "pending_verification",
+        status: "pending_evaluation",
         revisionHistory: [
           ...(currentParticipation.revisionHistory ?? []),
           {
-            action: "pending_verification",
+            action: "pending_evaluation",
             adminRemarks:
-              isNeedsRevision ? "Revision submitted for verification." : "Submitted for verification.",
+              isNeedsRevision ? "Revision submitted for evaluation." : "Submitted for evaluation.",
             changedAt: now,
           },
         ],
@@ -363,8 +569,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       onParticipationUpdated(updated);
       setConfirmSubmitProofOpen(false);
       toast({
-        title: isNeedsRevision ? "Revision resubmitted" : "Proof submitted for verification",
-        description: "Your participation proof has been submitted to the Admin for review.",
+        title: isNeedsRevision ? "Revision resubmitted" : "Proof submitted for evaluation",
+        description: "Your participation proof has been submitted to the Admin for evaluation.",
       });
     } catch (error) {
       toast({
@@ -604,7 +810,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                       isVerified
                         ? "verified"
                         : isPending
-                        ? "pending_verification"
+                        ? "pending_evaluation"
                         : isNeedsRevision
                         ? "needs_revision"
                         : isRejected
@@ -615,7 +821,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                       isVerified
                         ? "Approved"
                         : isPending
-                        ? "Pending Review"
+                        ? "Pending Evaluation"
                         : isNeedsRevision
                         ? "Needs Revision"
                         : isRejected
@@ -704,22 +910,37 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                       type="button"
                       variant="outline"
                       size="sm"
-                      disabled={submitting || uploading}
+                      disabled={submitting || uploading || savingDraft}
                       className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                     >
                       Cancel
                     </Button>
                   </SheetClose>
 
-                  <Button
-                    type="button"
-                    disabled={submitting || uploading || files.length === 0}
-                    onClick={handleSubmitProofClick}
-                    className="h-9 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={submitting || uploading || savingDraft}
+                      onClick={() => void handleSaveDraft()}
+                      className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
+                    >
+                      {savingDraft ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      <span>Save as Draft</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={submitting || uploading || savingDraft || files.length === 0}
+                      onClick={handleSubmitProofClick}
+                      className="h-9 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 sm:gap-2 justify-center"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
@@ -795,22 +1016,37 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={submitting || uploading}
+                    disabled={submitting || uploading || savingDraft}
                     onClick={() => onOpenChange(false)}
                     className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
                   >
                     Cancel
                   </Button>
 
-                  <Button
-                    type="button"
-                    disabled={submitting || uploading || files.length === 0}
-                    onClick={handleSubmitProofClick}
-                    className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
-                  </Button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={submitting || uploading || savingDraft}
+                      onClick={() => void handleSaveDraft()}
+                      className="flex-1 sm:flex-initial h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border/80 bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all active:scale-[0.98] cursor-pointer justify-center"
+                    >
+                      {savingDraft ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      <span>Save as Draft</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={submitting || uploading || savingDraft || files.length === 0}
+                      onClick={handleSubmitProofClick}
+                      className="flex-1 sm:flex-initial h-9 sm:h-9.5 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98] justify-center"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>{isNeedsRevision ? "Resubmit Corrected Proof" : "Submit Proof for Review"}</span>
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-2">

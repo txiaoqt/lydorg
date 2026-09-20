@@ -1501,21 +1501,25 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
     remoteState.ypopEntries = ypopEntryRows.map(mapYpopEntry);
   }
   if (ypopEventParticipationRows) {
-    remoteState.ypopEventParticipations = ypopEventParticipationRows.map(mapYpopEventParticipation);
+    remoteState.ypopEventParticipations = ypopEventParticipationRows
+      .filter((r) => r.status && r.status !== "draft")
+      .map(mapYpopEventParticipation);
   }
   if (ypopEventFileRows) {
     remoteState.ypopEventFiles = ypopEventFileRows.map(mapYpopEventFile);
   }
   if (ypopOrgActivityRows) {
-    remoteState.ypopOrgActivities = ypopOrgActivityRows.map(mapYpopOrgActivity);
+    remoteState.ypopOrgActivities = ypopOrgActivityRows
+      .filter((r) => r.status && r.status !== "draft")
+      .map(mapYpopOrgActivity);
   }
   if (ypopOrgActivityFileRows) {
     remoteState.ypopOrgActivityFiles = ypopOrgActivityFileRows.map(mapYpopOrgActivityFile);
   }
 
-  // BUG 1 DATA BOUNDARY: Scope ypopEventFiles so Admin ONLY receives files belonging to
-  // reviewable/submitted participations (pending_verification, needs_revision, verified, rejected).
-  // Files belonging to a 'draft' participation MUST NOT be exposed to Admin.
+  // DATA BOUNDARY: Scope ypopEventFiles and ypopOrgActivityFiles so Admin ONLY receives files belonging to
+  // reviewable/submitted participations and activities.
+  // Files belonging to a 'draft' participation or activity MUST NOT be exposed to Admin.
   const participations = remoteState.ypopEventParticipations ?? [];
   const reviewableParticipationIds = new Set(
     participations.filter((p) => p.status && p.status !== "draft").map((p) => p.id),
@@ -1523,6 +1527,16 @@ export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedSt
   if (remoteState.ypopEventFiles) {
     remoteState.ypopEventFiles = remoteState.ypopEventFiles.filter((file) =>
       reviewableParticipationIds.has(file.participationId),
+    );
+  }
+
+  const orgActivities = remoteState.ypopOrgActivities ?? [];
+  const reviewableOrgActivityIds = new Set(
+    orgActivities.filter((a) => a.status && a.status !== "draft").map((a) => a.id),
+  );
+  if (remoteState.ypopOrgActivityFiles) {
+    remoteState.ypopOrgActivityFiles = remoteState.ypopOrgActivityFiles.filter((file) =>
+      reviewableOrgActivityIds.has(file.orgActivityId),
     );
   }
 
@@ -3801,7 +3815,7 @@ export const createYpopEventParticipationInSupabase = async (
       proof_submitted_at: params.proofSubmittedAt || null,
       verified_at: null,
       revision_history: [
-        { action: initialStatus, adminRemarks: initialStatus === "draft" ? "Draft saved on proof upload." : "Submitted for verification.", changedAt: now },
+        { action: initialStatus, adminRemarks: initialStatus === "draft" ? "Draft saved on proof upload." : "Submitted for evaluation.", changedAt: now },
       ],
     })
     .select("*")
@@ -4026,7 +4040,7 @@ export const updateYpopOrgActivityInSupabase = async (
   }
 
   // Canonical submission validation at backend boundary
-  if (patch.status === "submitted") {
+  if (patch.status === "pending_evaluation" || patch.status === "submitted") {
     const finalName = (patch.activityName !== undefined ? patch.activityName : activity.activity_name)?.trim();
     const finalDate = patch.activityDate !== undefined ? patch.activityDate : activity.activity_date;
     const finalVenue = (patch.venue !== undefined ? patch.venue : activity.venue)?.trim();

@@ -145,6 +145,7 @@ export type YPOPFile = {
 
 export type YPOPEventParticipationStatus =
   | "draft"
+  | "pending_evaluation"
   | "pending_verification"
   | "verified"
   | "needs_revision"
@@ -179,6 +180,7 @@ export type YPOPEventFile = {
 
 export type YPOPOrgActivityStatus =
   | "draft"
+  | "pending_evaluation"
   | "submitted"
   | "under_review"
   | "needs_revision"
@@ -479,8 +481,8 @@ export function deriveYpopQualificationStatus(
   const unreviewedCount =
     typeof params.unreviewedCount === "number"
       ? params.unreviewedCount
-      : ((params.participations ?? []).filter((p) => p.status === "pending_verification").length +
-         (params.orgActivities ?? []).filter((a) => a.status === "submitted" || a.status === "under_review").length);
+      : ((params.participations ?? []).filter((p) => p.status === "pending_evaluation" || p.status === "pending_verification").length +
+         (params.orgActivities ?? []).filter((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review").length);
 
   const needsRevisionCount =
     typeof params.needsRevisionCount === "number"
@@ -2635,6 +2637,7 @@ export const statusToneMap: Record<string, "default" | "secondary" | "destructiv
   hidden: "outline",
   qualified: "default",
   not_qualified: "destructive",
+  pending_evaluation: "secondary",
   pending_verification: "secondary",
   approved: "default",
   rejected: "destructive",

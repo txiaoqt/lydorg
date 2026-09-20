@@ -43,7 +43,12 @@ export const isYpopPeriodOpen = (period: YPOPPeriod | null | undefined, now = ne
 };
 
 export const isYpopEntryEditable = (entry: YPOPEntry | null | undefined) =>
-  !entry || entry.status === "draft" || entry.status === "needs_revision" || entry.status === "submitted" || entry.status === "under_review";
+  !entry ||
+  entry.status === "draft" ||
+  entry.status === "needs_revision" ||
+  entry.status === "submitted" ||
+  entry.status === "under_review" ||
+  (entry.status as string) === "pending_evaluation";
 
 export type YpopJoinEligibility = {
   allowed: boolean;

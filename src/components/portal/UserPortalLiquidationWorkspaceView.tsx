@@ -192,6 +192,20 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
     if (!fileUrl) return;
     try {
       if (fileId) setDownloadingFileId(fileId);
+
+      // Check if this is a staged draft file with local File object available
+      if (selectedReport && (fileId === `staged-${selectedReport.id}` || fileUrl.startsWith("blob:")) && stagedDraftFile) {
+        const blobUrl = URL.createObjectURL(stagedDraftFile);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = fileName || stagedDraftFile.name || "liquidation-report.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        return;
+      }
+
       const resolvedUrl = (await resolveSupabaseFileUrl(fileUrl)) || fileUrl;
       if (!resolvedUrl) throw new Error("File URL not available");
 
@@ -804,9 +818,10 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       fileName: stagedDraft.name,
                       fileUrl: stagedPreviewUrl || "",
                       fileSize: stagedDraft.size,
-                      fileType: "application/pdf",
+                      fileType: stagedDraft.type || "application/pdf",
                       isStaged: true,
                       uploadedAt: null,
+                      rawFile: stagedDraft,
                     }
                   : null;
 
@@ -981,6 +996,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       <PortalDrawerDocumentSection
                         file={activeFile}
                         previewUrl={activePreviewUrl}
+                        previewFile={stagedDraft || activeFile?.rawFile || null}
                         isDownloading={downloadingFileId === activeFile?.id}
                         onDownloadFile={(url, name, id) => void handleDownloadLiquidationFile(url, name, id)}
                         formatDateTimeLabel={formatDateTimeLabel}
@@ -1129,9 +1145,10 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                       fileName: stagedDraft.name,
                       fileUrl: stagedPreviewUrl || "",
                       fileSize: stagedDraft.size,
-                      fileType: "application/pdf",
+                      fileType: stagedDraft.type || "application/pdf",
                       isStaged: true,
                       uploadedAt: null,
+                      rawFile: stagedDraft,
                     }
                   : null;
 
@@ -1352,6 +1369,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         isMobile={true}
                         file={activeFile}
                         previewUrl={activePreviewUrl}
+                        previewFile={stagedDraft || activeFile?.rawFile || null}
                         isDownloading={downloadingFileId === activeFile?.id}
                         onDownloadFile={(url, name, id) => void handleDownloadLiquidationFile(url, name, id)}
                         formatDateTimeLabel={formatDateTimeLabel}

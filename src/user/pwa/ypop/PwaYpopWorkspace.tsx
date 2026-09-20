@@ -177,7 +177,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
         activityName: activity.name,
         activityDate: activity.date,
         venue: activity.venue,
-        status: "pending_verification",
+        status: "pending_evaluation",
         adminRemarks: "",
         joinedAt: new Date().toISOString(),
       });
@@ -237,17 +237,17 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
     try {
       const now = new Date().toISOString();
       const saved = await updateYpopEventParticipationInSupabase(participation.id, {
-        status: "pending_verification",
+        status: "pending_evaluation",
         adminRemarks: "",
         proofSubmittedAt: now,
         revisionHistory: [
           ...(participation.revisionHistory ?? []),
-          { action: "pending_verification", adminRemarks: "Proof submitted for admin verification.", changedAt: now },
+          { action: "pending_evaluation", adminRemarks: "Proof submitted for admin evaluation.", changedAt: now },
         ],
       });
       data.store.updateYPOPEventParticipation(saved.id, saved);
       await refresh();
-      toast({ title: "Proof submitted", description: "The event proof is under admin review." });
+      toast({ title: "Proof submitted", description: "The event proof is under admin evaluation." });
     } catch (error) {
       toast({ title: "Submission failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     } finally {
@@ -808,10 +808,10 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
       }
       if (submit) {
         saved = await updateYpopOrgActivityInSupabase(saved.id, {
-          status: "submitted",
+          status: "pending_evaluation",
           submittedAt: now,
           adminRemarks: "",
-          revisionHistory: [...(saved.revisionHistory ?? []), { action: "submitted", adminRemarks: "", changedAt: now }],
+          revisionHistory: [...(saved.revisionHistory ?? []), { action: "pending_evaluation", adminRemarks: "", changedAt: now }],
         });
         data.store.updateYPOPOrgActivity(saved.id, saved);
       }
