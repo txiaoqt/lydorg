@@ -237,6 +237,7 @@ const normalizeInitialSeedState = (seed: LydoSeedState): LydoConnectState => ({
 
 type LydoConnectContextValue = {
   state: LydoConnectState;
+  isInitialSyncDone: boolean;
   resetAccountState: () => void;
   mergeRemoteState: (snapshot: Partial<LydoConnectState>) => void;
   createTemplate: (template: TemplateRecord) => void;
@@ -726,6 +727,32 @@ const hasActiveSession = async (): Promise<boolean> => {
 export const LydoConnectProvider = ({ children }: { children: React.ReactNode }) => {
   const initialIdentity = resolveInitialIdentity();
   const [state, setState] = useState<LydoConnectState>(() => readState(initialIdentity));
+  const syncedIdentityKeyRef = useRef<string>(
+    (() => {
+      const id = initialIdentity;
+      if (id.type === "anonymous") return "anonymous";
+      const initial = readState(id);
+      if (id.type === "user" && initial.organizationProfiles.some((p) => p.userId === id.id)) {
+        return getAccountIdentityKey(id);
+      }
+      if (id.type === "admin" && initial.organizationProfiles.length > 0) {
+        return getAccountIdentityKey(id);
+      }
+      return "";
+    })(),
+  );
+  const [isInitialSyncDone, setIsInitialSyncDone] = useState<boolean>(() => {
+    const id = initialIdentity;
+    if (id.type === "anonymous") return true;
+    const initial = readState(id);
+    if (id.type === "user") {
+      return initial.organizationProfiles.some((p) => p.userId === id.id);
+    }
+    if (id.type === "admin") {
+      return initial.organizationProfiles.length > 0;
+    }
+    return false;
+  });
   const activeIdentityRef = useRef<AccountIdentity>(initialIdentity);
   const hasPendingSyncRef = useRef(false);
   const syncSequenceRef = useRef({ dispatched: 0, resolved: 0 });
@@ -744,10 +771,21 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     }
     const resolvedNext = nextIdentity ?? { type: "anonymous" };
     activeIdentityRef.current = resolvedNext;
+    syncedIdentityKeyRef.current = "";
     lastStoredStateRef.current = "";
     syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
     const nextState = readState(resolvedNext);
     setState(nextState);
+    const hasCachedProfile =
+      resolvedNext.type === "anonymous"
+        ? true
+        : resolvedNext.type === "user"
+        ? nextState.organizationProfiles.some((p) => p.userId === resolvedNext.id)
+        : nextState.organizationProfiles.length > 0;
+    if (hasCachedProfile) {
+      syncedIdentityKeyRef.current = getAccountIdentityKey(resolvedNext);
+    }
+    setIsInitialSyncDone(hasCachedProfile);
   }, []);
 
   useEffect(() => {
@@ -789,7 +827,9 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           snapshot = await loadAdminPortalSupabaseState();
         }
         if (!snapshot) {
-          snapshot = await loadLydoConnectSupabaseState();
+          snapshot = await loadLydoConnectSupabaseState(
+            requestIdentity.type === "user" ? requestIdentity.id : undefined,
+          );
         }
         if (!active || !snapshot) return;
 
@@ -893,6 +933,10 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         console.error("Failed to sync Y-TRACE state from Supabase:", error);
       } finally {
         isSyncingRef.current = false;
+        if (isSameIdentity(requestIdentity, activeIdentityRef.current)) {
+          syncedIdentityKeyRef.current = getAccountIdentityKey(requestIdentity);
+          setIsInitialSyncDone(true);
+        }
         if (hasPendingSyncRef.current && active) {
           hasPendingSyncRef.current = false;
           void syncState();
@@ -933,6 +977,14 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           const cached = readState(nextIdentity);
           setState(cached);
           lastStoredStateRef.current = JSON.stringify(cached);
+          const hasCachedProfile =
+            nextIdentity.type === "anonymous"
+              ? true
+              : nextIdentity.type === "user"
+              ? cached.organizationProfiles.some((p) => p.userId === nextIdentity.id)
+              : cached.organizationProfiles.length > 0;
+          syncedIdentityKeyRef.current = hasCachedProfile ? getAccountIdentityKey(nextIdentity) : "";
+          setIsInitialSyncDone(hasCachedProfile);
         }
         void syncState();
         return;
@@ -979,6 +1031,14 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         const nextState = readState(nextIdentity);
         setState(nextState);
         lastStoredStateRef.current = JSON.stringify(nextState);
+        const hasCachedProfile =
+          nextIdentity.type === "anonymous"
+            ? true
+            : nextIdentity.type === "user"
+            ? nextState.organizationProfiles.some((p) => p.userId === nextIdentity.id)
+            : nextState.organizationProfiles.length > 0;
+        syncedIdentityKeyRef.current = hasCachedProfile ? getAccountIdentityKey(nextIdentity) : "";
+        setIsInitialSyncDone(hasCachedProfile);
       }
       void syncState();
     };
@@ -1054,9 +1114,25 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     };
   }, [resetAccountState]);
 
+  const isInitialSyncDoneComputed = useMemo(() => {
+    const currentId = activeIdentityRef.current;
+    if (currentId.type === "anonymous") return true;
+    if (currentId.type === "user") {
+      const hasProfile = state.organizationProfiles.some((p) => p.userId === currentId.id);
+      if (hasProfile) return true;
+      return syncedIdentityKeyRef.current === getAccountIdentityKey(currentId);
+    }
+    if (currentId.type === "admin") {
+      if (state.organizationProfiles.length > 0) return true;
+      return syncedIdentityKeyRef.current === getAccountIdentityKey(currentId);
+    }
+    return isInitialSyncDone;
+  }, [state.organizationProfiles, isInitialSyncDone]);
+
   const value = useMemo<LydoConnectContextValue>(
     () => ({
       state,
+      isInitialSyncDone: isInitialSyncDoneComputed,
       resetAccountState,
       mergeRemoteState: (snapshot) => {
         const isAdmin = Boolean(readAdminSession());
@@ -1732,7 +1808,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           };
         }),
     }),
-    [state, resetAccountState],
+    [state, isInitialSyncDoneComputed, resetAccountState],
   );
 
   return <LydoConnectContext.Provider value={value}>{children}</LydoConnectContext.Provider>;

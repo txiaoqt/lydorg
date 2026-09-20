@@ -1106,12 +1106,14 @@ const fetchActivityLogs = async (organizationId: string) => {
   return (data as ActivityLogRow[] | null) ?? [];
 };
 
-export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedState> | null> => {
+export const loadLydoConnectSupabaseState = async (userIdOverride?: string): Promise<Partial<LydoSeedState> | null> => {
   if (!supabase) return null;
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  const targetUserId = userIdOverride || session?.user?.id;
 
   const { data: templateRows, error: templatesError } = await supabase!
     .from("required_document_types")
@@ -1128,7 +1130,7 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
     fetchNewsReleases(),
     fetchNewsCategories(),
     fetchTransparencyPosts(),
-    session?.user ? fetchNotifications() : Promise.resolve([]),
+    targetUserId ? fetchNotifications() : Promise.resolve([]),
   ]);
 
   const sharedState: Partial<LydoSeedState> = {
@@ -1139,13 +1141,16 @@ export const loadLydoConnectSupabaseState = async (): Promise<Partial<LydoSeedSt
     notifications: notificationRows.map(mapNotification),
   };
 
-  if (!session?.user) {
+  if (!targetUserId) {
     return sharedState;
   }
 
-  const organizationProfile = await fetchOrganizationProfile(session.user.id);
+  const organizationProfile = await fetchOrganizationProfile(targetUserId);
   if (!organizationProfile) {
-    return sharedState;
+    return {
+      organizationProfiles: [],
+      ...sharedState,
+    };
   }
 
   const remoteState: Partial<LydoSeedState> = {

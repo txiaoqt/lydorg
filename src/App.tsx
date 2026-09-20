@@ -47,9 +47,7 @@ import { AdminDesktopGate } from "./components/portal/AdminDesktopGate";
 
 const queryClient = new QueryClient();
 
-const FullScreenLoader = () => (
-  <div className="min-h-screen bg-background grid place-items-center text-muted-foreground text-sm">Loading...</div>
-);
+const FullScreenLoader = () => <PublicPageLoader />;
 
 const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   const { isInitialized, isAuthenticated, isPasswordRecoverySession, role, user, signOut } = useAuth();

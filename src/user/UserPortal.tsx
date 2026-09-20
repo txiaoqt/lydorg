@@ -49,6 +49,7 @@ import { Button } from "@/components/ui/button";
 import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -529,12 +530,107 @@ const createBlankBudgetRequest = (organizationId: string, submittedBy: string): 
   updatedAt: new Date().toISOString(),
 });
 
+function UserPortalDashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Loading dashboard...">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-8 w-48 sm:w-64 rounded-lg" />
+              <Skeleton className="h-5 w-28 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-72 sm:w-96 rounded-md" />
+          </div>
+          <Skeleton className="h-8 w-36 rounded-xl shrink-0" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-2xl border border-border/60 bg-card p-4 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-24 rounded-md" />
+              <Skeleton className="h-8 w-8 rounded-xl" />
+            </div>
+            <Skeleton className="h-6 w-16 rounded-md" />
+            <Skeleton className="h-2 w-full rounded-full" />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <Skeleton className="h-5 w-36 rounded-md" />
+              <Skeleton className="h-4 w-20 rounded-md" />
+            </div>
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border/40">
+                  <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-4 w-40 rounded-md" />
+                    <Skeleton className="h-3 w-64 rounded-md" />
+                  </div>
+                  <Skeleton className="h-8 w-24 rounded-lg shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <Skeleton className="h-5 w-32 rounded-md" />
+              <Skeleton className="h-4 w-16 rounded-md" />
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Skeleton className="h-2 w-2 rounded-full mt-2 shrink-0" />
+                  <div className="space-y-1 flex-1">
+                    <Skeleton className="h-3 w-full rounded-md" />
+                    <Skeleton className="h-3 w-20 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UserPortalSectionSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Loading section...">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-2">
+        <Skeleton className="h-7 w-48 rounded-lg" />
+        <Skeleton className="h-4 w-80 rounded-md" />
+      </div>
+      <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-xs space-y-4">
+        <Skeleton className="h-5 w-40 rounded-md" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function UserPortal({ section }: { section: string }) {
   const navigate = useNavigate();
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const { signOut, user } = useAuth();
   const {
     state,
+    isInitialSyncDone,
     mergeRemoteState,
     upsertOrganizationProfile,
     updateDocumentFile,
@@ -2101,6 +2197,16 @@ export default function UserPortal({ section }: { section: string }) {
   const saveOrganizationProfile = async () => {
     if (!user) return;
 
+    const isAlreadyVerified = currentProfile?.profileStatus === "verified" || profileDraft.profileStatus === "verified";
+    const nextProfileStatus: OrganizationProfile["profileStatus"] = isAlreadyVerified
+      ? "verified"
+      : currentProfile?.profileStatus === "suspended_inactive"
+        ? "suspended_inactive"
+        : "pending_review";
+    const nextVerifiedAt = isAlreadyVerified
+      ? (currentProfile?.verifiedAt || profileDraft.verifiedAt || new Date().toISOString())
+      : "";
+
     const trimmedProfile: OrganizationProfile = {
       ...profileDraft,
       userId: user.id,
@@ -2110,7 +2216,18 @@ export default function UserPortal({ section }: { section: string }) {
       district: profileDraft.district.trim(),
       barangay: profileDraft.barangay.trim(),
       isExistingOrganization: profileDraft.isExistingOrganization,
-      organizationIdentifierNumber: profileDraft.organizationIdentifierNumber.trim(),
+      organizationIdentifierNumber: isAlreadyVerified
+        ? (currentProfile?.organizationIdentifierNumber?.trim() || profileDraft.organizationIdentifierNumber?.trim() || currentProfile?.urn?.trim() || "")
+        : profileDraft.organizationIdentifierNumber.trim(),
+      urn: isAlreadyVerified
+        ? (currentProfile?.urn?.trim() || profileDraft.urn?.trim() || "")
+        : profileDraft.urn?.trim() || "",
+      urnNormalized: isAlreadyVerified
+        ? (currentProfile?.urnNormalized?.trim() || profileDraft.urnNormalized?.trim() || "")
+        : profileDraft.urnNormalized?.trim() || "",
+      urnReviewStatus: isAlreadyVerified
+        ? (currentProfile?.urnReviewStatus || profileDraft.urnReviewStatus || "not_applicable")
+        : (profileDraft.urnReviewStatus || "not_applicable"),
       majorClassification: profileDraft.majorClassification,
       subClassification: profileDraft.subClassification,
       advocacies: [...profileDraft.advocacies],
@@ -2118,8 +2235,8 @@ export default function UserPortal({ section }: { section: string }) {
       representativeName: profileDraft.representativeName.trim(),
       address: profileDraft.address.trim(),
       facebookPageUrl: profileDraft.facebookPageUrl.trim(),
-      profileStatus: "pending_review",
-      verifiedAt: "",
+      profileStatus: nextProfileStatus,
+      verifiedAt: nextVerifiedAt,
       internalNotes: profileDraft.internalNotes.trim(),
       updatedAt: new Date().toISOString(),
       createdAt: currentProfile?.createdAt ?? profileDraft.createdAt ?? new Date().toISOString(),
@@ -2217,18 +2334,26 @@ export default function UserPortal({ section }: { section: string }) {
       setProfileDraft(savedProfile);
       setIsProfileDraftDirty(false);
       notifyAdmin({
-        title: savedProfile.isExistingOrganization ? "Existing Organization profile updated" : "Organization profile updated",
-        message: savedProfile.isExistingOrganization
-          ? `${savedProfile.organizationName} updated its profile and submitted an existing organization identifier for admin verification.`
-          : `${savedProfile.organizationName} updated its profile and sent it for admin review.`,
+        title: isAlreadyVerified
+          ? "Organization profile updated"
+          : savedProfile.isExistingOrganization
+            ? "Existing Organization profile updated"
+            : "Organization profile updated",
+        message: isAlreadyVerified
+          ? `${savedProfile.organizationName} updated its organization profile details.`
+          : savedProfile.isExistingOrganization
+            ? `${savedProfile.organizationName} updated its profile and submitted an existing organization identifier for admin verification.`
+            : `${savedProfile.organizationName} updated its profile and sent it for admin review.`,
         relatedType: "organization_profile",
         relatedId: savedProfile.id,
         organizationId: savedProfile.id,
       });
 
       toast({
-        title: "Profile saved",
-        description: "Your organization profile has been updated and sent for admin review.",
+        title: isAlreadyVerified ? "Profile updated" : "Profile saved",
+        description: isAlreadyVerified
+          ? "Your organization profile details have been saved successfully."
+          : "Your organization profile has been updated and sent for admin review.",
       });
     } catch (error) {
       const userFacingError = mapOrganizationProfileError(error, "The organization profile could not be saved.");
@@ -2943,7 +3068,16 @@ export default function UserPortal({ section }: { section: string }) {
     });
   };
 
+  const isProfileResolving = Boolean(user?.id && !currentProfile && !isInitialSyncDone);
+
   const activeContent = useMemo(() => {
+    if (isProfileResolving) {
+      if (section === "dashboard") {
+        return <UserPortalDashboardSkeleton />;
+      }
+      return <UserPortalSectionSkeleton />;
+    }
+
     switch (section) {
       case "dashboard": {
         const isVerified = profile.profileStatus === "verified";
@@ -3650,6 +3784,7 @@ export default function UserPortal({ section }: { section: string }) {
     handleStartRenewal,
     handleContinueRenewal,
     allUserTemplates,
+    isProfileResolving,
   ]);
 
   return (

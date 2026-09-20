@@ -557,6 +557,16 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
 
   const save = async () => {
     if (!data.user) return;
+    const isAlreadyVerified = data.profile?.profileStatus === "verified" || draft.profileStatus === "verified";
+    const nextProfileStatus: OrganizationProfile["profileStatus"] = isAlreadyVerified
+      ? "verified"
+      : data.profile?.profileStatus === "suspended_inactive"
+        ? "suspended_inactive"
+        : "pending_review";
+    const nextVerifiedAt = isAlreadyVerified
+      ? (data.profile?.verifiedAt || draft.verifiedAt || new Date().toISOString())
+      : "";
+
     const next: OrganizationProfile = {
       ...draft,
       userId: data.user.id,
@@ -565,14 +575,22 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       contactNumber: draft.contactNumber.trim(),
       district: draft.district.trim(),
       barangay: draft.barangay.trim(),
-      organizationIdentifierNumber: draft.organizationIdentifierNumber.trim(),
+      organizationIdentifierNumber: isAlreadyVerified
+        ? (data.profile?.organizationIdentifierNumber?.trim() || draft.organizationIdentifierNumber?.trim() || data.profile?.urn?.trim() || "")
+        : draft.organizationIdentifierNumber.trim(),
+      urn: isAlreadyVerified
+        ? (data.profile?.urn?.trim() || draft.urn?.trim() || "")
+        : draft.urn?.trim() || "",
+      urnNormalized: isAlreadyVerified
+        ? (data.profile?.urnNormalized?.trim() || draft.urnNormalized?.trim() || "")
+        : draft.urnNormalized?.trim() || "",
       adviserName: draft.adviserName.trim(),
       representativeName: draft.representativeName.trim(),
       address: draft.address.trim(),
       facebookPageUrl: draft.facebookPageUrl.trim(),
       internalNotes: draft.internalNotes.trim(),
-      profileStatus: "pending_review",
-      verifiedAt: "",
+      profileStatus: nextProfileStatus,
+      verifiedAt: nextVerifiedAt,
       createdAt: data.profile?.createdAt || draft.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -616,7 +634,12 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       const saved = await upsertOrganizationProfileInSupabase(next);
       data.store.upsertOrganizationProfile(saved);
       await data.refresh();
-      toast({ title: "Profile saved", description: "Your profile was updated and sent for admin review." });
+      toast({
+        title: isAlreadyVerified ? "Profile updated" : "Profile saved",
+        description: isAlreadyVerified
+          ? "Your profile details have been updated successfully."
+          : "Your profile was updated and sent for admin review.",
+      });
       go(PWA_ROUTES.profile, { replace: true });
     } catch (error) {
       const userFacingError = mapOrganizationProfileError(error, "The profile could not be saved.");
