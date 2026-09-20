@@ -3212,15 +3212,67 @@ export default function UserPortal({ section }: { section: string }) {
             tone: "bg-primary/10 text-primary",
           });
         } else if (isVerified) {
-          dashboardTasks.push({
-            key: "budget-start",
-            title: "Create your next budget request",
-            description: "Your organization is verified, so you can already submit a new budget request for upcoming activities.",
-            ctaLabel: "Open Budget",
-            onClick: () => navigate(userRouteMap["budget-request"]),
-            icon: ClipboardList,
-            tone: "bg-primary/10 text-primary",
-          });
+          if (budgetWorkflowEligibility.eligible) {
+            dashboardTasks.push({
+              key: "budget-start",
+              title: "Create your next budget request",
+              description: "Your organization is verified and currently eligible to submit a budget request.",
+              ctaLabel: "Open Budget",
+              onClick: () => navigate(userRouteMap["budget-request"]),
+              icon: ClipboardList,
+              tone: "bg-primary/10 text-primary",
+            });
+          } else if (budgetEligibility.reason === "ypop_under_review") {
+            dashboardTasks.push({
+              key: "budget-ypop-pending",
+              title: "Budget request eligibility pending",
+              description: "Your YPOP qualification is still under evaluation. You can submit a budget request once your organization becomes eligible.",
+              ctaLabel: "View YPOP Status",
+              onClick: () => navigate(userRouteMap.ypop),
+              icon: Clock,
+              tone: "bg-sky-500/10 text-sky-600",
+            });
+          } else if (budgetEligibility.reason === "ypop_needs_revision") {
+            dashboardTasks.push({
+              key: "budget-ypop-revision",
+              title: "YPOP revision required for budget eligibility",
+              description: "The admin requested corrections to your YPOP submission. Review remarks and resubmit to qualify for budget requests.",
+              ctaLabel: "Review YPOP Submission",
+              onClick: () => navigate(userRouteMap.ypop),
+              icon: AlertTriangle,
+              tone: "bg-orange-500/10 text-orange-600",
+            });
+          } else if (budgetEligibility.reason === "ypop_not_qualified") {
+            dashboardTasks.push({
+              key: "budget-ypop-not-qualified",
+              title: "Budget request unavailable",
+              description: "Your organization is verified, but did not qualify for the current YPOP period. Valid YPOP qualification is required to submit budget requests.",
+              ctaLabel: "View YPOP Status",
+              onClick: () => navigate(userRouteMap.ypop),
+              icon: AlertCircle,
+              tone: "bg-rose-500/10 text-rose-600",
+            });
+          } else if (budgetEligibility.reason === "ypop_not_submitted") {
+            dashboardTasks.push({
+              key: "budget-ypop-required",
+              title: "Budget request unavailable",
+              description: "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request.",
+              ctaLabel: "Open YPOP Incentive",
+              onClick: () => navigate(userRouteMap.ypop),
+              icon: ClipboardList,
+              tone: "bg-amber-500/10 text-amber-600",
+            });
+          } else {
+            dashboardTasks.push({
+              key: "budget-no-period",
+              title: "Budget request unavailable",
+              description: "Your organization is verified, but budget request creation requires an active, qualified YPOP period.",
+              ctaLabel: "View YPOP Status",
+              onClick: () => navigate(userRouteMap.ypop),
+              icon: ClipboardList,
+              tone: "bg-muted text-muted-foreground",
+            });
+          }
         }
 
         if (userRenewalState.key === "renewal_needs_revision") {
@@ -3304,6 +3356,7 @@ export default function UserPortal({ section }: { section: string }) {
             profile={profile}
             currentProfile={currentProfile}
             isVerified={isVerified}
+            isBudgetEligible={budgetWorkflowEligibility.eligible}
             isProfileSaved={isProfileSaved}
             hasSubmittedDocuments={hasSubmittedDocuments}
             stepsCompleted={stepsCompleted}

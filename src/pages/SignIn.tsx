@@ -48,14 +48,22 @@ const GoogleIcon = ({ className }: { className?: string }) => (
 );
 
 const SignIn = ({ forcedMode }: SignInProps) => {
+  const location = useLocation();
+  const locationState = location.state as {
+    error?: string;
+    prefilledUsername?: string;
+    prefilledMode?: "user" | "admin";
+  } | null;
+
   const inferredMode = useMemo<"user" | "admin">(() => {
     if (forcedMode) return forcedMode;
+    if (locationState?.prefilledMode) return locationState.prefilledMode;
     if (IS_ADMIN_SURFACE) return "admin";
     return "user";
-  }, [forcedMode]);
+  }, [forcedMode, locationState?.prefilledMode]);
 
   const [mode, setMode] = useState<"user" | "admin">(inferredMode);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => locationState?.prefilledUsername || "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -65,7 +73,6 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
   const pwaFlow = isPwaAuthFlow(location.search);
   const pwaTheme = readPwaPreferences().accentTheme;
   const { signIn, isAuthenticated, isInitialized, isPasswordRecoverySession, role } = useAuth();
@@ -83,13 +90,24 @@ const SignIn = ({ forcedMode }: SignInProps) => {
   }, [location.search]);
 
   useEffect(() => {
-    const errorFromState = (location.state as { error?: string } | null)?.error;
+    const stateObj = location.state as {
+      error?: string;
+      prefilledUsername?: string;
+      prefilledMode?: "user" | "admin";
+    } | null;
+    const errorFromState = stateObj?.error;
     const searchParams = new URLSearchParams(location.search);
     const errorFromSearch = searchParams.get("error_description") || searchParams.get("error");
     if (errorFromState) {
       setInlineError(errorFromState);
     } else if (errorFromSearch) {
       setInlineError(errorFromSearch);
+    }
+    if (stateObj?.prefilledUsername) {
+      setUsername(stateObj.prefilledUsername);
+    }
+    if (stateObj?.prefilledMode) {
+      setMode(stateObj.prefilledMode);
     }
   }, [location.state, location.search]);
 
@@ -255,13 +273,13 @@ const SignIn = ({ forcedMode }: SignInProps) => {
                 </div>
               )}
 
-              {/* Admin Username */}
+              {/* Admin Username / Email */}
               <div className="space-y-1.5">
-                <Label htmlFor="username">Admin Username</Label>
+                <Label htmlFor="username">Username (Email Address)</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Enter admin username"
+                  placeholder="name@example.com or admin username"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -270,6 +288,9 @@ const SignIn = ({ forcedMode }: SignInProps) => {
                   autoComplete="username"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Use the email address associated with your administrator invitation.
+                </p>
               </div>
 
               {/* Password */}

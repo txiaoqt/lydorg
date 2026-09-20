@@ -45,6 +45,7 @@ export interface UserPortalRedesignViewProps {
   profile: any;
   currentProfile: any;
   isVerified: boolean;
+  isBudgetEligible?: boolean;
   isProfileSaved: boolean;
   hasSubmittedDocuments: boolean;
   stepsCompleted: number;
@@ -225,6 +226,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   profile,
   currentProfile,
   isVerified,
+  isBudgetEligible = false,
   isProfileSaved,
   hasSubmittedDocuments,
   stepsCompleted,
@@ -480,10 +482,13 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             ) : isVerified ? (
               <div className="space-y-1">
                 <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-snug flex items-center gap-1.5">
-                  <span>🎉</span> All Compliance Up to Date
+                  <span>{isBudgetEligible ? "🎉" : "📋"}</span>{" "}
+                  {isBudgetEligible ? "All Compliance Up to Date" : "Organization Verified"}
                 </h2>
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                  Your organization has no pending compliance or liquidation tasks. You are ready to create and submit new budget requests for upcoming youth activities.
+                  {isBudgetEligible
+                    ? "Your organization has no pending compliance or liquidation tasks. You are ready to create and submit new budget requests for upcoming youth activities."
+                    : "Your organization is verified. Complete your YPOP qualification to qualify for upcoming activity budget requests."}
                 </p>
               </div>
             ) : (
@@ -512,11 +517,11 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             ) : isVerified ? (
               <Button
                 type="button"
-                onClick={() => navigate(userRouteMap["budget-request"])}
+                onClick={() => navigate(isBudgetEligible ? userRouteMap["budget-request"] : userRouteMap.ypop)}
                 size="lg"
                 className="w-full md:w-auto h-11 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer justify-center"
               >
-                Create Budget Request →
+                {isBudgetEligible ? "Create Budget Request →" : "Open YPOP Incentive →"}
               </Button>
             ) : (
               <Button

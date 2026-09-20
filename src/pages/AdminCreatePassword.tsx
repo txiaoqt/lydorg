@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandLogo from "@/components/BrandLogo";
-import { ADMIN_SIGNIN_PATH } from "@/lib/deployment-surface";
+import { EFFECTIVE_ADMIN_SIGNIN_PATH } from "@/lib/deployment-surface";
 import { clearPasswordRecoveryState, parsePasswordRecoveryUrl } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
 import { finalizeAdminInviteInSupabase, setInitialAdminPasswordInSupabase } from "@/lib/lydo-connect-supabase";
+import { writeAdminSession } from "@/lib/admin-auth";
 
 type PageMode = "verifying" | "update" | "invalid" | "updated";
 
@@ -115,6 +116,8 @@ const AdminCreatePassword = () => {
     [],
   );
   const [mode, setMode] = useState<PageMode>(() => (recovery.hasRecoveryError ? "invalid" : "verifying"));
+  const [invitedEmail, setInvitedEmail] = useState("");
+  const [resolvedUsername, setResolvedUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -167,6 +170,9 @@ const AdminCreatePassword = () => {
 
       if (sessionData?.session?.user) {
         window.history.replaceState({}, document.title, window.location.pathname);
+        if (sessionData.session.user.email) {
+          setInvitedEmail(sessionData.session.user.email);
+        }
         setInlineError("");
         setMode("update");
         return;
@@ -192,6 +198,7 @@ const AdminCreatePassword = () => {
   const finishAndSignOut = async () => {
     await finalizeAdminInviteInSupabase();
     clearPasswordRecoveryState();
+    writeAdminSession(null);
     if (supabase) await supabase.auth.signOut();
   };
 
@@ -227,7 +234,10 @@ const AdminCreatePassword = () => {
 
     setIsLoading(true);
     try {
-      await setInitialAdminPasswordInSupabase(password);
+      const result = await setInitialAdminPasswordInSupabase(password);
+      if (result.username) {
+        setResolvedUsername(result.username);
+      }
       await finishAndSignOut();
       setIsLoading(false);
       setPassword("");
@@ -254,6 +264,17 @@ const AdminCreatePassword = () => {
     }
     return null;
   }, [password, confirmPassword]);
+
+  const displayIdentifier = invitedEmail || resolvedUsername;
+
+  const handleContinueToSignIn = () => {
+    navigate(EFFECTIVE_ADMIN_SIGNIN_PATH, {
+      state: {
+        prefilledUsername: displayIdentifier,
+        prefilledMode: "admin",
+      },
+    });
+  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8 text-foreground">
@@ -346,22 +367,51 @@ const AdminCreatePassword = () => {
               <p className="text-sm leading-relaxed text-muted-foreground">
                 This invite link is invalid or has expired. Ask a Super Admin to send you a new one.
               </p>
-              <Button type="button" className="w-full" onClick={() => navigate(ADMIN_SIGNIN_PATH)}>
+              <Button type="button" className="w-full" onClick={handleContinueToSignIn}>
                 Back to Sign In
               </Button>
             </div>
           ) : null}
 
           {mode === "updated" ? (
-            <div className="flex flex-col items-center space-y-4 py-2 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+            <div className="space-y-5 py-2 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-success">
                 <CheckCircle2 className="h-8 w-8 text-success" aria-hidden="true" />
               </div>
               <div>
-                <h1 className="text-2xl font-heading font-bold">Password set</h1>
-                <p className="mt-2 text-sm text-muted-foreground">Your account is ready. Sign in to continue.</p>
+                <h1 className="text-2xl font-heading font-bold">Your administrator account is ready</h1>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Sign in using the email address where you received this invitation and the password you just created.
+                </p>
               </div>
-              <Button className="w-full font-semibold" onClick={() => navigate(ADMIN_SIGNIN_PATH)}>
+
+              <div className="rounded-xl border border-border/80 bg-muted/40 p-4 text-left space-y-3">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                  Your email address is your username
+                </p>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-muted-foreground">Username</span>
+                  <div className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground select-all break-all">
+                    {displayIdentifier || "your-email@example.com"}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-muted-foreground">Password</span>
+                  <p className="text-xs text-muted-foreground italic">
+                    The password you just created
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Click <span className="font-semibold text-foreground">Continue to Sign In</span> and use this email address with the password you just created.
+              </p>
+
+              <Button
+                type="button"
+                className="w-full font-semibold"
+                onClick={handleContinueToSignIn}
+              >
                 Continue to Sign In
               </Button>
             </div>
