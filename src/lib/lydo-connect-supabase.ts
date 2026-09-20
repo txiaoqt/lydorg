@@ -53,6 +53,7 @@ import {
   resolveYpopCityLedCategory,
 } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
+import { getAdminAppUrl } from "./auth-redirect";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { supabase, supabaseUrl } from "./supabase";
 
@@ -3115,7 +3116,7 @@ export const createAdministratorInSupabase = async (params: {
       username: params.username.trim(),
       role_id: params.roleId,
       unit_id: params.unitId,
-      redirect_origin: window.location.origin,
+      redirect_origin: getAdminAppUrl(),
     },
   });
 
@@ -3179,7 +3180,7 @@ export const resendAdminInviteInSupabase = async (adminId: string): Promise<void
       action: "resend",
       session_token: adminSession.sessionToken,
       admin_id: adminId,
-      redirect_origin: window.location.origin,
+      redirect_origin: getAdminAppUrl(),
     },
   });
 

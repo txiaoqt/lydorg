@@ -250,6 +250,7 @@ const App = () => (
                     <>
                       <Route path={ADMIN_SIGNIN_PATH} element={<AdminDesktopGate><SignIn forcedMode="admin" /></AdminDesktopGate>} />
                       <Route path={USER_SIGNIN_PATH} element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
                       <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
                       <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                       <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />

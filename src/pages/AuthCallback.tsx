@@ -11,6 +11,7 @@ import { fetchOrganizationProfileInSupabase } from "@/lib/lydo-connect-supabase"
 import { isOrganizationProfileComplete } from "@/lib/organization-profile-domain";
 import { isInviteJwt } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
+import { EFFECTIVE_ADMIN_SIGNIN_PATH, IS_ADMIN_SURFACE } from "@/lib/deployment-surface";
 
 const parseAuthError = (search?: string, hash?: string): string | null => {
   const searchSource = search || (typeof window !== "undefined" ? window.location.search : "");
@@ -114,6 +115,10 @@ const AuthCallback = () => {
         navigate("/admin", { replace: true });
         return;
       }
+      if (IS_ADMIN_SURFACE) {
+        navigate(EFFECTIVE_ADMIN_SIGNIN_PATH, { replace: true });
+        return;
+      }
       if (pwaFlow) {
         endPwaAuthFlow();
         navigate("/app", { replace: true });
@@ -146,12 +151,15 @@ const AuthCallback = () => {
     }
 
     if (!hasAuthParams || readyToFallback) {
-      navigate(pwaFlow ? pwaAuthRoute("/signin") : "/signin", {
-        replace: true,
-        state: readyToFallback
-          ? { error: "Authentication session could not be established. Please try again." }
-          : undefined,
-      });
+      navigate(
+        IS_ADMIN_SURFACE ? EFFECTIVE_ADMIN_SIGNIN_PATH : (pwaFlow ? pwaAuthRoute("/signin") : "/signin"),
+        {
+          replace: true,
+          state: readyToFallback
+            ? { error: "Authentication session could not be established. Please try again." }
+            : undefined,
+        }
+      );
     }
   }, [authError, hasAuthParams, isAuthenticated, isInitialized, isPasswordRecoverySession, navigate, pwaFlow, readyToFallback, role, user, location.search, location.hash]);
 

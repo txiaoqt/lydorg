@@ -134,6 +134,43 @@ async function authorizeAdminCaller(
   return { authorized: true };
 }
 
+/**
+ * Securely resolves the Admin Portal password creation redirect URL.
+ * Prevents open redirects and ensures the invitation link is directed
+ * strictly to the Admin Portal (https://y-trace-admin.vercel.app or configured ADMIN_APP_URL),
+ * never to the User Portal (https://ytrace.app).
+ */
+function resolveAdminRedirectUrl(clientOrigin?: string): string {
+  const envAdminUrl = Deno.env.get("ADMIN_APP_URL") || Deno.env.get("ADMIN_SITE_URL");
+  if (envAdminUrl && typeof envAdminUrl === "string" && envAdminUrl.trim()) {
+    return `${envAdminUrl.trim().replace(/\/+$/, "")}/admin/create-password`;
+  }
+
+  if (clientOrigin && typeof clientOrigin === "string") {
+    const trimmed = clientOrigin.trim().replace(/\/+$/, "");
+    try {
+      const url = new URL(trimmed);
+      // Support localhost / local development ports
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return `${trimmed}/admin/create-password`;
+      }
+      // Support canonical Admin Portal and Vercel admin preview domains
+      if (
+        url.hostname === "y-trace-admin.vercel.app" ||
+        url.hostname.endsWith(".vercel.app") ||
+        url.hostname.includes("admin")
+      ) {
+        return `${trimmed}/admin/create-password`;
+      }
+    } catch {
+      // Ignore URL parse errors and fall back to canonical Admin Portal
+    }
+  }
+
+  // Canonical production Admin Portal origin
+  return "https://y-trace-admin.vercel.app/admin/create-password";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -289,7 +326,7 @@ Deno.serve(async (req) => {
       }
 
       // Send the invite email via GoTrue
-      const targetRedirect = redirect_origin ? `${redirect_origin}/admin/create-password` : undefined;
+      const targetRedirect = resolveAdminRedirectUrl(redirect_origin);
       const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
         redirectTo: targetRedirect,
       });
@@ -363,7 +400,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      const targetRedirect = redirect_origin ? `${redirect_origin}/admin/create-password` : undefined;
+      const targetRedirect = resolveAdminRedirectUrl(redirect_origin);
       const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
         redirectTo: targetRedirect,
       });

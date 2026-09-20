@@ -60,3 +60,26 @@ export const getPasswordResetUrl = () => {
 
   return PASSWORD_RESET_PATH;
 };
+
+export const CANONICAL_ADMIN_APP_URL = "https://y-trace-admin.vercel.app";
+
+export const getAdminAppUrl = (): string => {
+  const explicitAdminUrl = cleanUrl(
+    import.meta.env.VITE_ADMIN_APP_URL || import.meta.env.VITE_ADMIN_SITE_URL
+  );
+  if (explicitAdminUrl) return explicitAdminUrl.replace(/\/+$/, "");
+
+  if (typeof window !== "undefined" && window.location.origin) {
+    const origin = window.location.origin;
+    // Support local development ports
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+      return origin;
+    }
+    // Support admin-specific domains
+    if (/y-trace-admin/i.test(origin) || /admin/i.test(origin)) {
+      return origin;
+    }
+  }
+
+  return CANONICAL_ADMIN_APP_URL;
+};
