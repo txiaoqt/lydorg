@@ -326,7 +326,7 @@ describe("Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests", () 
     it("13. RenewalStatusPill displays correct status color", () => {
       const { container } = render(<RenewalStatusPill status="submitted" />);
       expect(screen.getByText("Submitted")).toBeInTheDocument();
-      expect(container.firstChild).toHaveClass("bg-sky-50");
+      expect(container.firstChild).toHaveClass("bg-bg-info-tertiary");
     });
 
     it("14. 'Review' action button present per row", () => {

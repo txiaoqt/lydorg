@@ -65,6 +65,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
+import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining } from "@/lib/revision-deadline";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
 import { StatsCard } from "@/admin/components/StatsCard";
@@ -106,7 +107,9 @@ import { formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspace
 import { type PasigDistrict } from "@/lib/pasig-districts";
 import { AdministratorFormDialog } from "@/admin/components/AdministratorFormDialog";
 import { RolesPermissionsPanel } from "@/admin/components/RolesPermissionsPanel";
+import { AdminSettingsPage } from "@/admin/components/AdminSettingsPage";
 import { ADMIN_NAV_PERMISSION_MAP, hasAdminNavPermission } from "@/lib/admin-permissions";
+import { getEffectiveSystemSetting, shouldLogActivityType, shouldNotifyOrganization, formatSystemCurrency } from "@/lib/admin-system-settings";
 import { NewsReleaseFormDialog, CalendarCaption } from "@/admin/components/NewsReleaseFormDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -152,6 +155,8 @@ import {
   updateTemplateCategoryInSupabase,
   permanentlyDeleteTemplateRecordInSupabase,
   loadAdminPortalSupabaseState,
+  loadAdminPortalSnapshotState,
+  loadAdminYpopState,
   loadLydoConnectSupabaseState,
   resolveSupabaseFileUrl,
   submitDocumentReviewBatchToSupabase,
@@ -283,7 +288,7 @@ const DocumentQueueStatusPill = ({ status }: { status: SubmissionFile["adminStat
   }
   if (status === "needs_revision") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
       </span>
     );
@@ -312,14 +317,14 @@ const YpopDocumentStatusPill = ({ status }: { status: YPOPEventParticipationStat
   }
   if (status === "needs_revision") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
       </span>
     );
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-300 bg-slate-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-slate-600">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
         Draft
       </span>
     );
@@ -1447,7 +1452,9 @@ export default function AdminPortal({ section }: { section: string }) {
         return rightTime - leftTime;
       })[0] ?? null;
   const [annualAllocations, setAnnualAllocations] = useState<AnnualBudgetAllocation[]>([]);
-  const [selectedFiscalYear, setSelectedFiscalYear] = useState<number>(new Date().getFullYear());
+  const [selectedFiscalYear, setSelectedFiscalYear] = useState<number>(
+    () => Number(getEffectiveSystemSetting("budget.default_fiscal_year") || new Date().getFullYear()),
+  );
   const [isConfigureAnnualBudgetModalOpen, setIsConfigureAnnualBudgetModalOpen] = useState<boolean>(false);
 
   const loadAnnualBudgetAllocations = useCallback(async () => {
@@ -1536,17 +1543,21 @@ export default function AdminPortal({ section }: { section: string }) {
         const liquidationStatus = liquidation?.status ?? "pending_activity_completion";
         let riskLabel: BudgetMonitoringEntry["riskLabel"] = "Needs Attention";
 
+        const escalateDays = Number(getEffectiveSystemSetting("workflow.escalate_after_days") || 7);
+        const reminderDays = Number(getEffectiveSystemSetting("workflow.review_reminder_days") || 3);
+        const overdueEnabled = getEffectiveSystemSetting("workflow.overdue_indicators_enabled");
+
         if (liquidationStatus === "completed_liquidated" || request.status === "completed") {
           riskLabel = "Completed";
-        } else if (!liquidation && requestAgeInDays >= 7) {
-          riskLabel = "Overdue";
-        } else if (!liquidation && requestAgeInDays >= 2) {
+        } else if (!liquidation && requestAgeInDays >= escalateDays) {
+          riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
+        } else if (!liquidation && requestAgeInDays >= reminderDays) {
           riskLabel = "Needs Attention";
         } else if (
           liquidationStatus === "overdue" ||
           (deadlineDate && !Number.isNaN(deadlineDate.getTime()) && deadlineDate.getTime() < now.getTime() && !completedAtDate)
         ) {
-          riskLabel = "Overdue";
+          riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
         } else if (
           liquidationStatus === "approved_for_ftf_green" ||
           liquidationStatus === "budget_released" ||
@@ -1556,8 +1567,8 @@ export default function AdminPortal({ section }: { section: string }) {
         } else if (liquidation && deadlineDate && !Number.isNaN(deadlineDate.getTime())) {
           const daysUntilDeadline = Math.ceil((deadlineDate.getTime() - now.getTime()) / 86400000);
           if (daysUntilDeadline <= 0) {
-            riskLabel = completedAtDate ? "Completed" : "Overdue";
-          } else if (daysUntilDeadline <= 3 || utilizationRate < 50) {
+            riskLabel = completedAtDate ? "Completed" : overdueEnabled ? "Overdue" : "Needs Attention";
+          } else if (daysUntilDeadline <= reminderDays || utilizationRate < 50) {
             riskLabel = "Needs Attention";
           } else {
             riskLabel = "On Track";
@@ -2424,6 +2435,7 @@ export default function AdminPortal({ section }: { section: string }) {
         items: [
           { id: "administrators", label: "Administrators", icon: Shield },
           { id: "activity-logs", label: "Activity Logs", icon: Activity },
+          { id: "settings", label: "Settings", icon: Settings },
         ],
       },
     ];
@@ -3089,6 +3101,29 @@ export default function AdminPortal({ section }: { section: string }) {
     return remoteSnapshot;
   };
 
+  const refreshAdminSnapshot = async () => {
+    const remoteSnapshot = (await loadAdminPortalSnapshotState()) ?? (await loadAdminPortalSupabaseState());
+    if (remoteSnapshot) {
+      mergeRemoteStateRef.current(remoteSnapshot);
+    }
+    return remoteSnapshot;
+  };
+
+  const [isRefreshingYpop, setIsRefreshingYpop] = useState(false);
+
+  const refreshAdminYpop = async () => {
+    setIsRefreshingYpop(true);
+    try {
+      const remoteSnapshot = (await loadAdminYpopState()) ?? (await loadAdminPortalSupabaseState());
+      if (remoteSnapshot) {
+        mergeRemoteStateRef.current(remoteSnapshot);
+      }
+      return remoteSnapshot;
+    } finally {
+      setIsRefreshingYpop(false);
+    }
+  };
+
   const selectedBudgetRequests = useMemo(() => {
     return state.budgetRequests.filter((r) => selectedBudgetRequestIds.has(r.id));
   }, [state.budgetRequests, selectedBudgetRequestIds]);
@@ -3454,6 +3489,9 @@ export default function AdminPortal({ section }: { section: string }) {
     description: string,
     organizationId = profile?.id ?? "",
   ) => {
+    if (!shouldLogActivityType(action)) {
+      return;
+    }
     await createAdminActivityLogInSupabase({
       organizationId,
       action,
@@ -3548,7 +3586,7 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
-  const handleMarkInquiryResponded = async (inquiry: InquiryRecord) => {
+  const handleMarkInquiryReviewed = async (inquiry: InquiryRecord) => {
     try {
       const savedInquiry = await adminUpdateInquiryInSupabase(inquiry.id, {
         status: "reviewed",
@@ -3827,7 +3865,7 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       }
 
-      const freshSnapshot = await refreshAdminState();
+      const freshSnapshot = await refreshAdminSnapshot();
 
       for (const file of successfulFiles) {
         if (decision === "approve") {
@@ -4583,7 +4621,7 @@ export default function AdminPortal({ section }: { section: string }) {
           status,
           adminRemarks: pendingAdminConfirmation.action === "approve" ? undefined : adminRemarks,
         });
-        await refreshAdminState();
+        await refreshAdminSnapshot();
 
         if (pendingAdminConfirmation.action === "approve") {
           await appendAuditLog(
@@ -4728,10 +4766,14 @@ export default function AdminPortal({ section }: { section: string }) {
             revisionHistory: [...existingHistory, { action: "completed", adminRemarks: "", changedAt: budgetHistoryNow }],
           };
         } else if (pendingAdminConfirmation.action === "needs_revision") {
+          const deadline = calculateRevisionDeadline();
           budgetPatch = {
             status: "needs_revision",
             adminRemarks,
-            revisionHistory: [...existingHistory, { action: "needs_revision", adminRemarks, changedAt: budgetHistoryNow }],
+            revisionRequestedAt: deadline.requestedAt,
+            revisionDueAt: deadline.dueAt,
+            revisionLockedAt: null,
+            revisionHistory: [...existingHistory, { action: "needs_revision", adminRemarks, changedAt: budgetHistoryNow, revisionDueAt: deadline.dueAt }],
           };
         } else {
           budgetPatch = {
@@ -4960,12 +5002,16 @@ export default function AdminPortal({ section }: { section: string }) {
             ],
           };
         } else if (pendingAdminConfirmation.action === "needs_revision") {
+          const deadline = calculateRevisionDeadline();
           liqPatch = {
             status: "needs_revision",
             remarks: adminRemarks,
+            revisionRequestedAt: deadline.requestedAt,
+            revisionDueAt: deadline.dueAt,
+            revisionLockedAt: null,
             revisionHistory: [
               ...existingLiqHistory,
-              { action: "needs_revision", adminRemarks, changedAt: liqHistoryNow },
+              { action: "needs_revision", adminRemarks, changedAt: liqHistoryNow, revisionDueAt: deadline.dueAt },
             ],
           };
         } else {
@@ -5107,17 +5153,24 @@ export default function AdminPortal({ section }: { section: string }) {
         }
 
         const now = new Date().toISOString();
+        const eventDeadline = pendingAdminConfirmation.action === "needs_revision" ? calculateRevisionDeadline() : null;
         const patch = {
           status: pendingAdminConfirmation.action,
           adminRemarks: pendingAdminConfirmation.action === "verified" ? "" : adminRemarks,
           proofSubmittedAt: participation?.proofSubmittedAt ?? null,
           verifiedAt: pendingAdminConfirmation.action === "verified" ? now : "",
+          ...(eventDeadline ? {
+            revisionRequestedAt: eventDeadline.requestedAt,
+            revisionDueAt: eventDeadline.dueAt,
+            revisionLockedAt: null,
+          } : {}),
           revisionHistory: [
             ...(participation?.revisionHistory ?? []),
             {
               action: pendingAdminConfirmation.action,
               adminRemarks: pendingAdminConfirmation.action === "verified" ? "" : adminRemarks,
               changedAt: now,
+              ...(eventDeadline ? { revisionDueAt: eventDeadline.dueAt } : {}),
             },
           ],
         };
@@ -5175,6 +5228,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   : "not_qualified";
 
           const effectiveRemarks = hasNeedsRevision && adminRemarks ? adminRemarks : (relatedEntry.adminRemarks ?? "");
+          const entryDeadline = hasNeedsRevision && adminRemarks ? calculateRevisionDeadline() : null;
 
           const entryPatch: Partial<YPOPEntry> = {
             cityLedAttendance: updatedAttendance,
@@ -5182,8 +5236,13 @@ export default function AdminPortal({ section }: { section: string }) {
             pointsEarned: updatedScore.totalScore,
             status: nextEntryStatus,
             adminRemarks: effectiveRemarks,
+            ...(entryDeadline ? {
+              revisionRequestedAt: entryDeadline.requestedAt,
+              revisionDueAt: entryDeadline.dueAt,
+              revisionLockedAt: null,
+            } : {}),
             revisionHistory: hasNeedsRevision && adminRemarks
-              ? [...(relatedEntry.revisionHistory ?? []), { action: "needs_revision", adminRemarks, changedAt: now }]
+              ? [...(relatedEntry.revisionHistory ?? []), { action: "needs_revision", adminRemarks, changedAt: now, revisionDueAt: entryDeadline?.dueAt }]
               : (relatedEntry.revisionHistory ?? []),
           };
 
@@ -5196,7 +5255,7 @@ export default function AdminPortal({ section }: { section: string }) {
           }
         }
 
-        await refreshAdminState();
+        await refreshAdminYpop();
 
         const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
         if (pendingAdminConfirmation.action === "verified") {
@@ -5283,16 +5342,23 @@ export default function AdminPortal({ section }: { section: string }) {
         }
 
         const now = new Date().toISOString();
+        const ppaDeadline = pendingAdminConfirmation.action === "needs_revision" ? calculateRevisionDeadline() : null;
         const patch = {
           status: pendingAdminConfirmation.action,
           adminRemarks: pendingAdminConfirmation.action === "approved" ? "" : adminRemarks,
           approvedAt: pendingAdminConfirmation.action === "approved" ? now : "",
+          ...(ppaDeadline ? {
+            revisionRequestedAt: ppaDeadline.requestedAt,
+            revisionDueAt: ppaDeadline.dueAt,
+            revisionLockedAt: null,
+          } : {}),
           revisionHistory: [
             ...(orgActivity?.revisionHistory ?? []),
             {
               action: pendingAdminConfirmation.action,
               adminRemarks: pendingAdminConfirmation.action === "approved" ? "" : adminRemarks,
               changedAt: now,
+              ...(ppaDeadline ? { revisionDueAt: ppaDeadline.dueAt } : {}),
             },
           ],
         };
@@ -5337,13 +5403,19 @@ export default function AdminPortal({ section }: { section: string }) {
                   : "not_qualified";
 
           const effectiveRemarks = hasNeedsRevision && adminRemarks ? adminRemarks : (relatedEntry.adminRemarks ?? "");
+          const entryDeadline = hasNeedsRevision && adminRemarks ? calculateRevisionDeadline() : null;
           const entryPatch: Partial<YPOPEntry> = {
             orgLedProjectCount: approvedCount,
             pointsEarned: updatedScore.totalScore,
             status: nextEntryStatus,
             adminRemarks: effectiveRemarks,
+            ...(entryDeadline ? {
+              revisionRequestedAt: entryDeadline.requestedAt,
+              revisionDueAt: entryDeadline.dueAt,
+              revisionLockedAt: null,
+            } : {}),
             revisionHistory: hasNeedsRevision && adminRemarks
-              ? [...(relatedEntry.revisionHistory ?? []), { action: "needs_revision", adminRemarks, changedAt: now }]
+              ? [...(relatedEntry.revisionHistory ?? []), { action: "needs_revision", adminRemarks, changedAt: now, revisionDueAt: entryDeadline?.dueAt }]
               : (relatedEntry.revisionHistory ?? []),
           };
           try {
@@ -5355,7 +5427,7 @@ export default function AdminPortal({ section }: { section: string }) {
           }
         }
 
-        await refreshAdminState();
+        await refreshAdminYpop();
 
         const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
         if (pendingAdminConfirmation.action === "approved") {
@@ -6556,7 +6628,7 @@ export default function AdminPortal({ section }: { section: string }) {
       case "inquiries": {
         const totalInquiries = state.inquiries.length;
         const openInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "pending_review").length;
-        const respondedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "reviewed").length;
+        const reviewedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "reviewed").length;
         const closedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "closed").length;
 
         return (
@@ -6577,10 +6649,10 @@ export default function AdminPortal({ section }: { section: string }) {
                 description="Inquiries awaiting the team's first response"
               />
               <StatsCard
-                title="RESPONDED"
-                value={respondedInquiries}
+                title="REVIEWED"
+                value={reviewedInquiries}
                 icon={CornerDownLeft}
-                description="Inquiries awaiting organization follow-up"
+                description="Inquiries reviewed during this period"
               />
               <StatsCard
                 title="CLOSED"
@@ -6598,7 +6670,7 @@ export default function AdminPortal({ section }: { section: string }) {
               statusFilter={inquiryStatusFilter}
               onStatusFilterChange={setInquiryStatusFilter}
               onSelectInquiry={openInquiryDetails}
-              onMarkResponded={handleMarkInquiryResponded}
+              onMarkReviewed={handleMarkInquiryReviewed}
               onDeleteInquiry={handleInitiateDeleteInquiry}
             />
           </div>
@@ -8623,7 +8695,7 @@ export default function AdminPortal({ section }: { section: string }) {
               try {
                 await updateBudgetRequestInSupabase(selectedBudgetRequest.id, parentPatch);
                 updateBudgetRequest(selectedBudgetRequest.id, parentPatch);
-                await refreshAdminState();
+                await refreshAdminSnapshot();
 
                 if (targetParentStatus === "approved_for_ftf_green") {
                   const formattedApproved = `₱${approvedAmountNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -8694,7 +8766,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 }
               } catch (err) {
                 console.error("Failed to update parent budget request in Supabase:", err);
-                await refreshAdminState();
+                await refreshAdminSnapshot();
                 toast({
                   title: "Update failed",
                   description: "Unable to update the budget request. The document review may have been saved, but the budget lifecycle update failed. Please refresh and try again.",
@@ -8703,7 +8775,7 @@ export default function AdminPortal({ section }: { section: string }) {
               }
             } else {
               // Parent status remains unchanged (e.g. only 1 of multiple documents was approved)
-              await refreshAdminState();
+              await refreshAdminSnapshot();
               if (budgetBulkDecision === "approve") {
                 void appendAuditLog(
                   "Approved budget request document",
@@ -8778,7 +8850,7 @@ export default function AdminPortal({ section }: { section: string }) {
               try {
                 await updateBudgetRequestInSupabase(selectedBudgetRequest.id, budgetPatch);
                 updateBudgetRequest(selectedBudgetRequest.id, budgetPatch);
-                await refreshAdminState();
+                await refreshAdminSnapshot();
 
                 if (budgetLifecycleStage === "hard_copy_submitted") {
                   void appendAuditLog(
@@ -8816,7 +8888,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 }
               } catch (err) {
                 console.error("Failed to update lifecycle decision:", err);
-                await refreshAdminState();
+                await refreshAdminSnapshot();
                 toast({
                   title: "Update failed",
                   description: "Could not update budget request status. Please try again.",
@@ -10062,12 +10134,18 @@ export default function AdminPortal({ section }: { section: string }) {
               if (targetParentStatus !== selectedLiquidationReport.status) {
                 const liqHistoryNow = new Date().toISOString();
                 const existingHistory = selectedLiquidationReport.revisionHistory ?? [];
+                const deadline = targetParentStatus === "needs_revision" ? calculateRevisionDeadline() : null;
                 const parentPatch: Partial<LiquidationReport> = {
                   status: targetParentStatus,
                   remarks: remark,
+                  ...(deadline ? {
+                    revisionRequestedAt: deadline.requestedAt,
+                    revisionDueAt: deadline.dueAt,
+                    revisionLockedAt: null,
+                  } : {}),
                   revisionHistory: [
                     ...existingHistory,
-                    { action: targetParentStatus, adminRemarks: remark, changedAt: liqHistoryNow },
+                    { action: targetParentStatus, adminRemarks: remark, changedAt: liqHistoryNow, ...(deadline ? { revisionDueAt: deadline.dueAt } : {}) },
                   ],
                   ...(targetParentStatus === "approved_for_ftf_green"
                     ? { goSignalAt: selectedLiquidationReport.goSignalAt || liqHistoryNow }
@@ -10077,7 +10155,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 try {
                   await updateLiquidationReportInSupabase(selectedLiquidationReport.id, parentPatch);
                   updateLiquidationReport(selectedLiquidationReport.id, parentPatch);
-                  await refreshAdminState();
+                  await refreshAdminSnapshot();
 
                   if (targetParentStatus === "approved_for_ftf_green") {
                     void appendAuditLog(
@@ -10145,7 +10223,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   }
                 } catch (err) {
                   console.error("Failed to update parent liquidation report in Supabase:", err);
-                  await refreshAdminState();
+                  await refreshAdminSnapshot();
                   toast({
                     title: "Update failed",
                     description: "Unable to update liquidation report. The document review may have been saved, but parent lifecycle update failed. Please refresh and try again.",
@@ -10153,7 +10231,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   });
                 }
               } else {
-                await refreshAdminState();
+                await refreshAdminSnapshot();
                 if (liquidationBulkDecision === "approve") {
                   void appendAuditLog(
                     "Approved liquidation document",
@@ -10875,7 +10953,7 @@ export default function AdminPortal({ section }: { section: string }) {
                         {/* Hardcopy Submitted stage (legacy) */}
                         {selectedLiquidationReport.status === "hard_copy_submitted" && (
                           <div className="space-y-3">
-                            <div className="rounded-md border border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-800">
+                            <div className="rounded-md border border-border-progress-subtle bg-bg-progress-subtle p-3 text-xs text-text-progress">
                               <p className="font-semibold">Hardcopy Submitted</p>
                               <p className="mt-0.5 text-[11px] text-slate-600">Physical liquidation documents and receipts are on hand.</p>
                             </div>
@@ -11953,7 +12031,14 @@ export default function AdminPortal({ section }: { section: string }) {
                 resendingInviteId={resendingInviteId}
                 onEdit={(administrator) => startEditingAdministrator(administrator)}
                 onToggleActive={(administrator) => setPendingToggleActiveAdministrator(administrator)}
-                onDelete={(administrator) => setPendingDeleteAdministrator(administrator)}
+                onDelete={(administrator) => {
+                  const requireReauth = getEffectiveSystemSetting("security.reauth_delete_administrator");
+                  if (requireReauth) {
+                    setPendingDeleteAdministrator(administrator);
+                  } else {
+                    void handleDeleteAdministrator(administrator);
+                  }
+                }}
                 onResendInvite={(administrator) => void handleResendInvite(administrator)}
               />
             )}
@@ -11982,7 +12067,15 @@ export default function AdminPortal({ section }: { section: string }) {
                 if (editingAdministrator) setPendingToggleActiveAdministrator(editingAdministrator);
               }}
               onDeleteAdministrator={() => {
-                if (editingAdministrator) setPendingDeleteAdministrator(editingAdministrator);
+                if (editingAdministrator) {
+                  const requireReauth = getEffectiveSystemSetting("security.reauth_delete_administrator");
+                  if (requireReauth) {
+                    setPendingDeleteAdministrator(editingAdministrator);
+                  } else {
+                    void handleDeleteAdministrator(editingAdministrator);
+                    resetAdministratorForm();
+                  }
+                }
               }}
               saving={savingAdministrator}
               onCancel={resetAdministratorForm}
@@ -12353,19 +12446,49 @@ export default function AdminPortal({ section }: { section: string }) {
           const isEntryReviewConfirmDisabled =
             selectedBulkGroups.length === 0 ||
             entryReviewSubmitting ||
-            (selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark && !entryReviewBulkRemark.trim());
+            (entryReviewBulkDecision === "needs_revision" && (selectedBulkGroups.length !== 1 || !entryReviewBulkRemark.trim())) ||
+            (entryReviewBulkDecision === "reject" && (selectedBulkGroups.length !== 1 || !entryReviewBulkRemark.trim())) ||
+            (entryReviewBulkDecision === "approve" && selectedBulkGroups.length === 0);
 
           const submitEntryReviewDecisions = async () => {
-            if (!selectedBulkGroups.length) return;
-            setEntryReviewSubmitting(true);
-            const now = new Date().toISOString();
+            if (!selectedBulkGroups.length || entryReviewSubmitting) return;
+
             const targetStatus =
               entryReviewBulkDecision === "approve"
                 ? entryReviewTab === "city_led" ? "verified" : "approved"
                 : entryReviewBulkDecision === "needs_revision"
                   ? "needs_revision"
                   : "rejected";
-            const remark = selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark ? entryReviewBulkRemark.trim() : "";
+
+            const trimmedRemark = entryReviewBulkRemark.trim();
+
+            if (targetStatus === "needs_revision") {
+              if (selectedBulkGroups.length !== 1 || !trimmedRemark) {
+                toast({
+                  title: "Revision Remark Required",
+                  description: "Request Revision applies to exactly one submission and requires a non-empty admin remark.",
+                  variant: "destructive",
+                });
+                setEntryReviewConfirmOpen(false);
+                return;
+              }
+            }
+
+            if (targetStatus === "rejected") {
+              if (selectedBulkGroups.length !== 1 || !trimmedRemark) {
+                toast({
+                  title: "Rejection Remark Required",
+                  description: "Reject applies to exactly one submission and requires a non-empty admin remark.",
+                  variant: "destructive",
+                });
+                setEntryReviewConfirmOpen(false);
+                return;
+              }
+            }
+
+            setEntryReviewSubmitting(true);
+            const now = new Date().toISOString();
+            const remark = (targetStatus === "needs_revision" || targetStatus === "rejected") ? trimmedRemark : "";
             const savedParticipations: YPOPEventParticipation[] = [];
             const savedOrgActivities: YPOPOrgActivity[] = [];
             const failedTitles: string[] = [];
@@ -12473,7 +12596,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   updateYPOPEntry(entry.id, entryPatch);
                 }
               }
-              await refreshAdminState();
+              await refreshAdminYpop();
             }
             setEntryReviewSubmitting(false);
             setSelectedEntryReviewGroupIds([]);
@@ -12975,6 +13098,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     {(() => {
+                      const isSingleItemDecision = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
                       const selectableEntryReviewGroups = activeReviewGroups.filter(
                         (group) => group.status !== "verified" && group.status !== "approved",
                       );
@@ -12989,6 +13113,7 @@ export default function AdminPortal({ section }: { section: string }) {
                         selectedEntryReviewCount > 0 &&
                         selectedEntryReviewCount < selectableEntryReviewGroupIds.length;
                       const handleToggleSelectAllEntryReview = () => {
+                        if (isSingleItemDecision) return;
                         if (isAllEntryReviewSelected) {
                           setSelectedEntryReviewGroupIds((current) =>
                             current.filter((id) => !selectableEntryReviewGroupIds.includes(id)),
@@ -13008,10 +13133,10 @@ export default function AdminPortal({ section }: { section: string }) {
                               <input
                                 type="checkbox"
                                 ref={(el) => {
-                                  if (el) el.indeterminate = isEntryReviewIndeterminate;
+                                  if (el) el.indeterminate = isEntryReviewIndeterminate && !isSingleItemDecision;
                                 }}
-                                checked={isAllEntryReviewSelected}
-                                disabled={selectableEntryReviewGroupIds.length === 0}
+                                checked={isAllEntryReviewSelected && !isSingleItemDecision}
+                                disabled={selectableEntryReviewGroupIds.length === 0 || isSingleItemDecision}
                                 onChange={handleToggleSelectAllEntryReview}
                                 className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label="Select all"
@@ -13032,6 +13157,8 @@ export default function AdminPortal({ section }: { section: string }) {
                           const isCollapsed = collapsedEntryReviewGroups.includes(group.id);
                           const isGroupSelected = selectedEntryReviewGroupIds.includes(group.id);
                           const isLocked = group.status === "verified" || group.status === "approved";
+                          const isSingleItemDecision = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
+                          const isSelectionDisabled = isLocked || (isSingleItemDecision && selectedEntryReviewGroupIds.length === 1 && !isGroupSelected);
                           return (
                             <div key={group.id} className="rounded-md border border-slate-200">
                               <div className="flex items-center justify-between gap-2 p-3">
@@ -13039,15 +13166,18 @@ export default function AdminPortal({ section }: { section: string }) {
                                   <input
                                     type="checkbox"
                                     checked={isGroupSelected}
-                                    disabled={isLocked}
+                                    disabled={isSelectionDisabled}
                                     onChange={() =>
                                       setSelectedEntryReviewGroupIds((current) =>
                                         current.includes(group.id)
                                           ? current.filter((id) => id !== group.id)
-                                          : [...current, group.id],
+                                          : isSingleItemDecision
+                                            ? [group.id]
+                                            : [...current, group.id],
                                       )
                                     }
-                                    className="h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                                    aria-label={`Select ${group.title}`}
                                   />
                                   <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{group.title}</p>
                                   {group.categoryLabel ? (
@@ -13104,6 +13234,8 @@ export default function AdminPortal({ section }: { section: string }) {
                                         </div>
                                       );
                                     })
+                                  ) : isRefreshingYpop ? (
+                                    <p className="px-2 py-3 text-center font-segoe text-xs text-slate-500">Loading files...</p>
                                   ) : (
                                     <p className="px-2 py-3 text-center font-segoe text-xs text-slate-500">No files uploaded yet.</p>
                                   )}
@@ -13130,7 +13262,20 @@ export default function AdminPortal({ section }: { section: string }) {
                       {selectedBulkGroups.length === 0 ? (
                         <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">
+                            {entryReviewBulkDecision === "needs_revision"
+                              ? "No documents selected. Select one submission to request revision."
+                              : entryReviewBulkDecision === "reject"
+                                ? "No documents selected. Select one submission to reject."
+                                : "No documents selected."}
+                          </p>
+                        </div>
+                      ) : selectedBulkGroups.length > 1 && (entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject") ? (
+                        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                            {entryReviewBulkDecision === "needs_revision" ? "Request Revision" : "Reject"} is a single-submission action. Please select only one submission.
+                          </p>
                         </div>
                       ) : (
                         <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
@@ -13145,7 +13290,17 @@ export default function AdminPortal({ section }: { section: string }) {
                         <label className="font-segoe text-[13px] text-text-default">Decision</label>
                         <Select
                           value={entryReviewBulkDecision}
-                          onValueChange={(value) => setEntryReviewBulkDecision(value as "approve" | "needs_revision" | "reject")}
+                          onValueChange={(value) => {
+                            const newDecision = value as "approve" | "needs_revision" | "reject";
+                            if ((newDecision === "needs_revision" || newDecision === "reject") && selectedEntryReviewGroupIds.length > 1) {
+                              setSelectedEntryReviewGroupIds([]);
+                              toast({
+                                title: "Single Item Action",
+                                description: `${newDecision === "needs_revision" ? "Request Revision" : "Reject"} applies to one submission at a time. Select one submission to continue.`,
+                              });
+                            }
+                            setEntryReviewBulkDecision(newDecision);
+                          }}
                           disabled={selectedBulkGroups.length === 0}
                         >
                           <SelectTrigger className="h-8 border-slate-300 text-[13px]">
@@ -13179,10 +13334,19 @@ export default function AdminPortal({ section }: { section: string }) {
                           <Textarea
                             value={entryReviewBulkRemark}
                             onChange={(event) => setEntryReviewBulkRemark(event.target.value)}
-                            placeholder="Explain the reason or required action..."
+                            placeholder={
+                              entryReviewBulkDecision === "needs_revision"
+                                ? "Explain what the organization needs to revise or provide..."
+                                : "Explain the reason for rejection..."
+                            }
                             rows={3}
                             className="resize-none text-[13px]"
                           />
+                          {!entryReviewBulkRemark.trim() && (
+                            <p className="text-[11px] text-icon-danger-secondary font-medium">
+                              {entryReviewBulkDecision === "needs_revision" ? "Revision remark is required." : "Rejection remark is required."}
+                            </p>
+                          )}
                         </div>
                       ) : null}
 
@@ -13213,8 +13377,9 @@ export default function AdminPortal({ section }: { section: string }) {
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           {selectedBulkGroups.map((group) => {
-                            const remarkText = selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark
-                              ? entryReviewBulkRemark.trim() || "—"
+                            const isRevisionOrReject = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
+                            const remarkText = (selectedBulkGroups.length === 1 && isRevisionOrReject)
+                              ? entryReviewBulkRemark.trim() || (isRevisionOrReject ? "[Remark required]" : "—")
                               : "—";
                             return (
                               <div key={group.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
@@ -13228,7 +13393,10 @@ export default function AdminPortal({ section }: { section: string }) {
                                       ? "Request Revision"
                                       : "Reject"}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                <p className={cn(
+                                  "font-segoe text-[11px] leading-[140%] min-w-0 break-words [overflow-wrap:anywhere]",
+                                  remarkText === "[Remark required]" ? "font-bold text-icon-danger-secondary" : "font-semibold text-text-default"
+                                )} title={remarkText !== "—" ? remarkText : undefined}>
                                   {remarkText}
                                 </p>
                               </div>
@@ -13374,20 +13542,18 @@ export default function AdminPortal({ section }: { section: string }) {
                 reviewEntry = created;
                 createYPOPEntry(created);
               } catch (err) {
-                console.warn("Could not persist virtual entry to Supabase immediately:", err);
-                const fallbackId = globalThis.crypto?.randomUUID?.() ?? "00000000-0000-4000-8000-000000000000";
-                const fallbackEntry: YPOPEntry = {
-                  id: fallbackId,
-                  ...newEntryPayload,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                };
-                reviewEntry = fallbackEntry;
-                createYPOPEntry(fallbackEntry);
+                console.error("Could not persist virtual entry to Supabase:", err);
+                toast({
+                  title: "Unable to Open Submission Review",
+                  description: err instanceof Error ? err.message : "Could not initialize the qualification entry in the database. Please try again.",
+                  variant: "destructive",
+                });
+                return;
               }
             }
             setSelectedYpopId(reviewEntry.id);
             setYpopAdminView("entry-review");
+            void refreshAdminYpop();
           };
 
           return (
@@ -14263,6 +14429,12 @@ export default function AdminPortal({ section }: { section: string }) {
       }
       case "yorp-registry":
         return <YorpRegistryPage />;
+      case "settings":
+        return (
+          <AdminSettingsPage
+            onNavigateToBudgetConfig={() => navigate("/admin/budget-monitoring?tab=public-config")}
+          />
+        );
       default:
         return (
           <PortalEmptyState
@@ -14508,14 +14680,16 @@ export default function AdminPortal({ section }: { section: string }) {
         }}
         onUpdateStatus={(status) => void handleSaveInquiryStatus(status)}
         onReplyEmail={() => {
-          if (selectedInquiry) setReplyDialogInquiry(selectedInquiry);
+          if (selectedInquiry && normalizeInquiryStatus(selectedInquiry.status) === "pending_review") {
+            setReplyDialogInquiry(selectedInquiry);
+          }
           setSelectedInquiry(null);
         }}
         onDeleteInquiry={handleInitiateDeleteInquiry}
         saving={savingInquiryStatus}
       />
       <ReplyEmailDialog
-        open={Boolean(replyDialogInquiry)}
+        open={Boolean(replyDialogInquiry && normalizeInquiryStatus(replyDialogInquiry.status) === "pending_review")}
         onOpenChange={(open) => {
           if (!open) setReplyDialogInquiry(null);
         }}
@@ -14526,7 +14700,8 @@ export default function AdminPortal({ section }: { section: string }) {
             ? replyDialogInquiry.organizationName || replyDialogInquiry.submitterName || "Unknown"
             : ""
         }
-        onMarkResponded={() => (replyDialogInquiry ? handleMarkInquiryResponded(replyDialogInquiry) : undefined)}
+        inquiryStatus={replyDialogInquiry?.status}
+        onMarkReviewed={() => (replyDialogInquiry ? handleMarkInquiryReviewed(replyDialogInquiry) : undefined)}
       />
       <AlertDialog
         open={Boolean(inquiryToDelete)}

@@ -43,7 +43,8 @@ type SignInParams =
     }
   | {
       mode: "admin";
-      username: string;
+      email?: string;
+      username?: string;
       password: string;
     };
 
@@ -371,19 +372,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: "Admin login is disabled on this deployment." };
       }
 
-      const username = params.username.trim();
+      const identifier = (params.email ?? params.username ?? "").trim();
       const password = params.password;
-      const canUseLocalDemoCredentials = username.toLowerCase() === DEMO_ADMIN_USERNAME.toLowerCase() && DEMO_ADMIN_PASSWORDS.has(password.trim());
+      const canUseLocalDemoCredentials = identifier.toLowerCase() === DEMO_ADMIN_USERNAME.toLowerCase() && DEMO_ADMIN_PASSWORDS.has(password.trim());
       const signInWithLocalDemoAccount = async () => {
         if (!canUseLocalDemoCredentials) return null;
 
-        const adminUser = createDemoAdminSession(username);
+        const adminUser = createDemoAdminSession(identifier);
         writeAdminSession(adminUser);
         if (supabase) {
           try {
             await supabase.rpc("ensure_admin_demo_session", {
               _session_token: adminUser.sessionToken,
-              _username: username,
+              _username: identifier,
             });
           } catch (e) {
             console.debug("ensure_admin_demo_session notice:", e);
@@ -403,7 +404,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const { data, error } = await supabase.rpc("authenticate_admin_account", {
-        _username: username,
+        _username: identifier,
         _password: password,
       });
 
@@ -422,8 +423,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const adminUser: SeededAdminUser = {
         id: String(adminAccount.admin_id),
-        username: String(adminAccount.username ?? params.username.trim()),
-        email: String(adminAccount.email ?? ""),
+        username: String(adminAccount.username ?? identifier),
+        email: String(adminAccount.email ?? identifier),
         displayName: String(adminAccount.display_name ?? "Admin User"),
         sessionToken: String(adminAccount.session_token ?? ""),
         expiresAt: String(adminAccount.expires_at ?? ""),

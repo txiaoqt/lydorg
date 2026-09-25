@@ -55,6 +55,76 @@ async function authorizeAdminCaller(
 }
 
 /**
+ * Fetches dynamic system settings from public.admin_system_settings.
+ */
+async function fetchAdminSettings(supabaseAdmin: SupabaseAdminClient) {
+  try {
+    const { data } = await supabaseAdmin
+      .from("admin_system_settings")
+      .select("setting_key, value_json");
+
+    let senderName = "Pasig City LYDO";
+    let replyToEmail = "support@lydo.pasig.gov.ph";
+    let sendWorkflowEmails = true;
+    let emailYpopEnabled = true;
+    let inAppYpopEnabled = true;
+    let userPortalUrl = "https://ytrace.app";
+    let systemName = "Y-TRACE";
+    let officeName = "Pasig City Local Youth Development Office";
+
+    if (data && Array.isArray(data)) {
+      for (const row of data) {
+        if (row.setting_key === "email.sender_name" && typeof row.value_json === "string" && row.value_json.trim()) {
+          senderName = row.value_json.trim();
+        }
+        if (row.setting_key === "email.reply_to_email" && typeof row.value_json === "string" && row.value_json.trim()) {
+          replyToEmail = row.value_json.trim();
+        }
+        if (row.setting_key === "email.send_workflow_emails" && typeof row.value_json === "boolean") {
+          sendWorkflowEmails = row.value_json;
+        }
+        if (row.setting_key === "notifications.ypop_submission.email" && typeof row.value_json === "boolean") {
+          emailYpopEnabled = row.value_json;
+        }
+        if (row.setting_key === "notifications.ypop_submission.in_app" && typeof row.value_json === "boolean") {
+          inAppYpopEnabled = row.value_json;
+        }
+        if (row.setting_key === "general.user_portal_url" && typeof row.value_json === "string" && row.value_json.trim()) {
+          userPortalUrl = row.value_json.trim();
+        }
+        if (row.setting_key === "general.system_name" && typeof row.value_json === "string" && row.value_json.trim()) {
+          systemName = row.value_json.trim();
+        }
+        if (row.setting_key === "general.office_name" && typeof row.value_json === "string" && row.value_json.trim()) {
+          officeName = row.value_json.trim();
+        }
+      }
+    }
+    return {
+      senderName,
+      replyToEmail,
+      sendWorkflowEmails,
+      emailYpopEnabled,
+      inAppYpopEnabled,
+      userPortalUrl,
+      systemName,
+      officeName,
+    };
+  } catch {
+    return {
+      senderName: "Pasig City LYDO",
+      replyToEmail: "support@lydo.pasig.gov.ph",
+      sendWorkflowEmails: true,
+      emailYpopEnabled: true,
+      inAppYpopEnabled: true,
+      userPortalUrl: "https://ytrace.app",
+      systemName: "Y-TRACE",
+      officeName: "Pasig City Local Youth Development Office",
+    };
+  }
+}
+
+/**
  * Format date for display in the email announcement.
  */
 function formatAnnouncementDate(startDate?: string | null, endDate?: string | null): string {
@@ -85,6 +155,8 @@ function generateAnnouncementEmailHtml(params: {
   dateRangeStr: string;
   venue: string;
   viewActivityUrl: string;
+  officeName?: string;
+  systemName?: string;
 }): string {
   const {
     activityName,
@@ -96,6 +168,8 @@ function generateAnnouncementEmailHtml(params: {
     dateRangeStr,
     venue,
     viewActivityUrl,
+    officeName = "Pasig City Local Youth Development Office",
+    systemName = "Y-TRACE",
   } = params;
 
   return `<!doctype html>
@@ -403,6 +477,9 @@ Deno.serve(async (req) => {
 
   const announcementId = annRow?.id ?? null;
 
+  // 6. Fetch Dynamic System Settings
+  const settings = await fetchAdminSettings(supabaseAdmin);
+
   // Determine category and points presentation
   const points = activity.points ?? 4;
   const categoryLabel = points === 4 ? "Mandatory" : points === 3 ? "Invitational" : "Partnership";
@@ -410,7 +487,8 @@ Deno.serve(async (req) => {
   const categoryBg = points === 4 ? "#eff6ff" : points === 3 ? "#fdf2f8" : "#ecfdf5";
   const categoryBorder = points === 4 ? "#bfdbfe" : points === 3 ? "#fbcfe8" : "#a7f3d0";
   const dateRangeStr = formatAnnouncementDate(activity.start_date || activity.date, activity.end_date || activity.start_date || activity.date);
-  const viewActivityUrl = `${siteUrl.replace(/\/+$/, "")}/portal?section=ypop&activityId=${activity.id}`;
+  const targetSiteUrl = (payload.site_url as string) || settings.userPortalUrl || Deno.env.get("SITE_URL") || "https://ytrace.app";
+  const viewActivityUrl = `${targetSiteUrl.replace(/\/+$/, "")}/portal?section=ypop&activityId=${activity.id}`;
 
   const emailHtml = generateAnnouncementEmailHtml({
     activityName: activity.name,
@@ -422,16 +500,21 @@ Deno.serve(async (req) => {
     dateRangeStr,
     venue: activity.venue || "Pasig City",
     viewActivityUrl,
+    officeName: settings.officeName,
+    systemName: settings.systemName,
   });
 
-  // 6. Brevo Transactional Email Integration
+  // 7. Brevo Transactional Email Integration
   const brevoApiKey = Deno.env.get("BREVO_API_KEY") || Deno.env.get("SMTP_API_KEY");
   const senderEmail = Deno.env.get("BREVO_SENDER_EMAIL") || "noreply@ytrace.app";
-  const senderName = Deno.env.get("BREVO_SENDER_NAME") || "Y-TRACE";
+  const senderName = settings.senderName || Deno.env.get("BREVO_SENDER_NAME") || "Y-TRACE";
+  const replyToAddress = settings.replyToEmail || senderEmail;
 
   let successfulCount = 0;
   let failedCount = 0;
   const deliveryErrors: string[] = [];
+
+  const shouldSendEmail = settings.sendWorkflowEmails && settings.emailYpopEnabled;
 
   if (uniqueRecipients.length === 0) {
     if (announcementId) {
@@ -453,67 +536,75 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (brevoApiKey) {
-    // Dispatch batches to Brevo REST API
-    const batchRecipients = uniqueRecipients.map((r) => ({
-      email: r.email,
-      name: r.orgName,
-    }));
+  if (shouldSendEmail) {
+    if (brevoApiKey) {
+      // Dispatch batches to Brevo REST API
+      const batchRecipients = uniqueRecipients.map((r) => ({
+        email: r.email,
+        name: r.orgName,
+      }));
 
-    try {
-      const brevoPayload = {
-        sender: { name: senderName, email: senderEmail },
-        to: batchRecipients,
-        subject: `[Y-TRACE] City-Led Activity Announcement: ${activity.name}`,
-        htmlContent: emailHtml,
-      };
+      try {
+        const brevoPayload = {
+          sender: { name: senderName, email: senderEmail },
+          replyTo: { email: replyToAddress, name: senderName },
+          to: batchRecipients,
+          subject: `[${settings.systemName}] City-Led Activity Announcement: ${activity.name}`,
+          htmlContent: emailHtml,
+        };
 
-      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": brevoApiKey,
-          accept: "application/json",
-        },
-        body: JSON.stringify(brevoPayload),
-      });
+        const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": brevoApiKey,
+            accept: "application/json",
+          },
+          body: JSON.stringify(brevoPayload),
+        });
 
-      if (!brevoRes.ok) {
-        const errText = await brevoRes.text();
-        console.error("Brevo API error:", errText);
+        if (!brevoRes.ok) {
+          const errText = await brevoRes.text();
+          console.error("Brevo API error:", errText);
+          failedCount = uniqueRecipients.length;
+          deliveryErrors.push(`Brevo status ${brevoRes.status}: ${errText}`);
+        } else {
+          successfulCount = uniqueRecipients.length;
+        }
+      } catch (sendErr) {
+        console.error("Network send error to Brevo:", sendErr);
         failedCount = uniqueRecipients.length;
-        deliveryErrors.push(`Brevo status ${brevoRes.status}: ${errText}`);
-      } else {
-        successfulCount = uniqueRecipients.length;
+        deliveryErrors.push(sendErr instanceof Error ? sendErr.message : "Network error");
       }
-    } catch (sendErr) {
-      console.error("Network send error to Brevo:", sendErr);
-      failedCount = uniqueRecipients.length;
-      deliveryErrors.push(sendErr instanceof Error ? sendErr.message : "Network error");
+    } else {
+      console.warn("BREVO_API_KEY is not configured in Edge Function environment. Logging mock dispatch.");
+      successfulCount = uniqueRecipients.length;
     }
   } else {
-    console.warn("BREVO_API_KEY is not configured in Edge Function environment. Logging mock dispatch.");
+    // Email delivery skipped per system configuration
     successfulCount = uniqueRecipients.length;
   }
 
-  // 7. Create in-app notifications
-  try {
-    const notificationRows = uniqueRecipients.map((r) => ({
-      user_id: r.userId,
-      organization_id: r.orgId,
-      type: "announcement",
-      related_type: "ypop_city_activity",
-      related_id: activity.id,
-      title: "New City-Led Activity Announcement",
-      message: `Pasig City LYDO announced a new City-Led activity: "${activity.name}". Location: ${activity.venue || "Pasig City"}.`,
-      is_read: false,
-    }));
+  // 8. Create in-app notifications if notifications.ypop_submission.in_app is enabled
+  if (settings.inAppYpopEnabled) {
+    try {
+      const notificationRows = uniqueRecipients.map((r) => ({
+        user_id: r.userId,
+        organization_id: r.orgId,
+        type: "announcement",
+        related_type: "ypop_city_activity",
+        related_id: activity.id,
+        title: "New City-Led Activity Announcement",
+        message: `${settings.officeName} announced a new City-Led activity: "${activity.name}". Location: ${activity.venue || "Pasig City"}.`,
+        is_read: false,
+      }));
 
-    if (notificationRows.length > 0) {
-      await supabaseAdmin.from("notifications").insert(notificationRows);
+      if (notificationRows.length > 0) {
+        await supabaseAdmin.from("notifications").insert(notificationRows);
+      }
+    } catch (notifErr) {
+      console.warn("Could not insert in-app notifications:", notifErr);
     }
-  } catch (notifErr) {
-    console.warn("Could not insert in-app notifications:", notifErr);
   }
 
   // 8. Update announcement tracking status

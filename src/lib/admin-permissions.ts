@@ -100,6 +100,16 @@ export const ADMIN_PERMISSION_GROUPS: AdminPermissionGroup[] = [
         label: "Activity Logs View",
         description: "Review the system-wide history of administrative actions.",
       },
+      {
+        code: "system_settings_view",
+        label: "System Settings View",
+        description: "View system-wide administrative settings and configuration.",
+      },
+      {
+        code: "system_settings_manage",
+        label: "System Settings Management",
+        description: "Modify system-wide administrative settings and configuration.",
+      },
     ],
   },
 ];
@@ -124,6 +134,7 @@ export const ADMIN_NAV_PERMISSION_MAP: Record<string, string> = {
   inquiries: "inquiries_management",
   administrators: "administrators_management",
   "activity-logs": "activity_logs_view",
+  settings: "system_settings_view",
 };
 
 export const hasAdminNavPermission = (permissionCodes: string[] | undefined, navItemId: string): boolean => {
@@ -131,3 +142,9 @@ export const hasAdminNavPermission = (permissionCodes: string[] | undefined, nav
   if (!requiredCode) return true;
   return (permissionCodes ?? []).includes(requiredCode);
 };
+
+export const hasAdminPermission = (permissionCodes: string[] | undefined, permissionCode: string): boolean => {
+  return (permissionCodes ?? []).includes(permissionCode);
+};
+
+

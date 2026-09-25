@@ -528,7 +528,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByText("Pasig Sports Center")).toBeInTheDocument();
 
     // Action button
-    expect(screen.getAllByRole("button", { name: /Submit Attendance Proof/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /Submit Proof of Attendance|Submit Attendance Proof/i }).length).toBeGreaterThan(0);
   });
 
   it("23. Completely removes redundant points weight badge from City-Led activity rows", () => {
@@ -786,8 +786,8 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(cityResolveBtn.className).toContain("active:scale-[0.98]");
     expect(cityResolveBtn.className).toContain("focus-visible:ring-amber-500/40");
 
-    // Other activity button (e.g. Submit Attendance Proof) must remain untouched
-    const submitProofBtn = screen.getByRole("button", { name: "Submit Attendance Proof" });
+    // Other activity button (e.g. Submit Proof of Attendance) must remain untouched
+    const submitProofBtn = screen.getByRole("button", { name: "Submit Proof of Attendance" });
     expect(submitProofBtn).toBeInTheDocument();
     expect(submitProofBtn.className).toContain("bg-primary");
     expect(submitProofBtn.className).not.toContain("bg-amber-500/10");

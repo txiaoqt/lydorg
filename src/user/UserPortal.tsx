@@ -186,6 +186,12 @@ import {
 } from "@/lib/lydo-connect-data";
 import {
   loadLydoConnectSupabaseState,
+  loadOrganizationDocumentSubmissionState,
+  loadOrganizationBudgetSubmissionState,
+  loadOrganizationLiquidationSubmissionState,
+  loadOrganizationYpopState,
+  loadOrganizationInquiriesState,
+  loadOrganizationNotificationsState,
   createInquiryInSupabase,
   createBudgetRequestInSupabase,
   updateBudgetRequestInSupabase,
@@ -872,14 +878,39 @@ export default function UserPortal({ section }: { section: string }) {
   }, [mergeRemoteState]);
 
   useEffect(() => {
-    if (section === "ypop" || section === "budget-request" || section === "templates") {
-      void loadLydoConnectSupabaseState().then((remoteSnapshot) => {
+    if (section === "budget-request") {
+      void loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id).then((remoteSnapshot) => {
+        if (remoteSnapshot) {
+          mergeRemoteStateRef.current(remoteSnapshot);
+        }
+      });
+    } else if (section === "ypop") {
+      void loadOrganizationYpopState(undefined, currentProfile?.id).then((remoteSnapshot) => {
+        if (remoteSnapshot) {
+          mergeRemoteStateRef.current(remoteSnapshot);
+        }
+      });
+    } else if (section === "notifications") {
+      void loadOrganizationNotificationsState().then((remoteSnapshot) => {
         if (remoteSnapshot) {
           mergeRemoteStateRef.current(remoteSnapshot);
         }
       });
     }
-  }, [section]);
+  }, [section, currentProfile?.id]);
+
+  useEffect(() => {
+    const inquiryId = searchParams.get("inquiryId");
+    if (inquiryId && state.inquiries.length > 0) {
+      const match = state.inquiries.find((i) => i.id === inquiryId);
+      if (match) {
+        setSelectedInquiry(match);
+        setInquiryListModalOpen(true);
+      }
+    } else if (searchParams.get("inquiries") === "true" || searchParams.get("inquiries") === "open") {
+      setInquiryListModalOpen(true);
+    }
+  }, [searchParams, state.inquiries]);
 
   const userRenewalState = useMemo(() => {
     return resolveUserRenewalState({
@@ -1696,7 +1727,7 @@ export default function UserPortal({ section }: { section: string }) {
 
   const removeDocumentById = async (fileId: string, documentTypeName: string) => {
     await removeOrganizationDocumentFromSupabase(fileId);
-    const remoteSnapshot = await loadLydoConnectSupabaseState();
+    const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, currentProfile?.id);
     if (remoteSnapshot) {
       mergeRemoteState(remoteSnapshot);
     }
@@ -1899,7 +1930,7 @@ export default function UserPortal({ section }: { section: string }) {
         })),
       });
 
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -1951,7 +1982,7 @@ export default function UserPortal({ section }: { section: string }) {
     try {
       await markNotificationReadInSupabase(notificationId);
     } catch (error) {
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationNotificationsState();
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -1971,7 +2002,7 @@ export default function UserPortal({ section }: { section: string }) {
     try {
       await markAllNotificationsReadInSupabase();
     } catch (error) {
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationNotificationsState();
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2052,7 +2083,7 @@ export default function UserPortal({ section }: { section: string }) {
       });
 
       updateDocumentFile(submissionResult.file.id, submissionResult.file);
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2560,7 +2591,7 @@ export default function UserPortal({ section }: { section: string }) {
         });
       }
 
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2617,8 +2648,8 @@ export default function UserPortal({ section }: { section: string }) {
         revisionHistory: updatedHistory,
       });
 
-      // 3. Refresh and merge remote state using the existing Y-TRACE synchronization mechanism
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      // 3. Refresh and merge remote state using the targeted Y-TRACE synchronization mechanism
+      const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2670,7 +2701,7 @@ export default function UserPortal({ section }: { section: string }) {
 
     try {
       await deleteBudgetRequestInSupabase(request.id);
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2757,7 +2788,7 @@ export default function UserPortal({ section }: { section: string }) {
 
     try {
       await deleteLiquidationReportFileInSupabase(file.id, file.fileUrl);
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationLiquidationSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2827,9 +2858,11 @@ export default function UserPortal({ section }: { section: string }) {
     try {
       if (stagedFile) {
         if (existingFiles.length > 0) {
-          for (const existingFile of existingFiles) {
-            await deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl);
-          }
+          await Promise.all(
+            existingFiles.map((existingFile) =>
+              deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl)
+            )
+          );
         }
 
         await createLiquidationReportFileInSupabase({
@@ -2848,7 +2881,7 @@ export default function UserPortal({ section }: { section: string }) {
         await updateLiquidationReportInSupabase(report.id, { status: "draft" });
       }
 
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationLiquidationSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -2917,9 +2950,11 @@ export default function UserPortal({ section }: { section: string }) {
     try {
       if (stagedFile) {
         if (existingFiles.length > 0) {
-          for (const existingFile of existingFiles) {
-            await deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl);
-          }
+          await Promise.all(
+            existingFiles.map((existingFile) =>
+              deleteLiquidationReportFileInSupabase(existingFile.id, existingFile.fileUrl)
+            )
+          );
         }
 
         await createLiquidationReportFileInSupabase({
@@ -2940,7 +2975,7 @@ export default function UserPortal({ section }: { section: string }) {
         return next;
       });
 
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationLiquidationSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
@@ -3006,7 +3041,7 @@ export default function UserPortal({ section }: { section: string }) {
         description,
       });
       createInquiry(createdInquiry);
-      const remoteSnapshot = await loadLydoConnectSupabaseState();
+      const remoteSnapshot = await loadOrganizationInquiriesState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) mergeRemoteState(remoteSnapshot);
       setInquiryForm({
         submitterName: currentProfile.organizationName,
@@ -4387,7 +4422,7 @@ export default function UserPortal({ section }: { section: string }) {
               attachedDocumentEditor.file.submissionId,
               [attachedDocumentEditor.file.id]
             );
-            const remoteSnapshot = await loadLydoConnectSupabaseState();
+            const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, profile.id);
             if (remoteSnapshot) {
               mergeRemoteState(remoteSnapshot);
             }
@@ -4425,7 +4460,7 @@ export default function UserPortal({ section }: { section: string }) {
           setSavingAttachedDocument(true);
           try {
             await removeOrganizationDocumentFromSupabase(attachedDocumentEditor.file.id);
-            const remoteSnapshot = await loadLydoConnectSupabaseState();
+            const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, profile.id);
             if (remoteSnapshot) {
               mergeRemoteState(remoteSnapshot);
             }

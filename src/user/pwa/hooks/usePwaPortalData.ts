@@ -3,6 +3,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
   loadLydoConnectSupabaseState,
+  loadOrganizationDocumentSubmissionState,
+  loadOrganizationBudgetSubmissionState,
+  loadOrganizationLiquidationSubmissionState,
+  loadOrganizationYpopState,
+  loadOrganizationInquiriesState,
+  loadOrganizationNotificationsState,
   markAllNotificationsReadInSupabase,
   markNotificationReadInSupabase,
 } from "@/lib/lydo-connect-supabase";
@@ -245,6 +251,30 @@ export function usePwaPortalData() {
     const remoteSnapshot = await loadLydoConnectSupabaseState();
     if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
   };
+  const refreshDocuments = async () => {
+    const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, organizationId);
+    if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
+  };
+  const refreshBudgets = async () => {
+    const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, organizationId);
+    if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
+  };
+  const refreshLiquidations = async () => {
+    const remoteSnapshot = await loadOrganizationLiquidationSubmissionState(undefined, organizationId);
+    if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
+  };
+  const refreshYpop = async () => {
+    const remoteSnapshot = await loadOrganizationYpopState(undefined, organizationId);
+    if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
+  };
+  const refreshInquiries = async () => {
+    const remoteSnapshot = await loadOrganizationInquiriesState(undefined, organizationId);
+    if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
+  };
+  const refreshNotifications = async () => {
+    const remoteSnapshot = await loadOrganizationNotificationsState();
+    if (remoteSnapshot) store.mergeRemoteState(remoteSnapshot);
+  };
 
   return {
     ...data,
@@ -256,5 +286,11 @@ export function usePwaPortalData() {
     markRead,
     markAllRead,
     refresh,
+    refreshDocuments,
+    refreshBudgets,
+    refreshLiquidations,
+    refreshYpop,
+    refreshInquiries,
+    refreshNotifications,
   };
 }

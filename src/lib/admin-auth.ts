@@ -31,6 +31,12 @@ export const readAdminSession = (): SeededAdminUser | null => {
       return null;
     }
 
+    const expiresAtTime = new Date(parsed.expiresAt).getTime();
+    if (!Number.isNaN(expiresAtTime) && expiresAtTime <= Date.now()) {
+      window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+      return null;
+    }
+
     return {
       id: parsed.id,
       username: parsed.username,

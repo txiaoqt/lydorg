@@ -372,5 +372,62 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     // DESKTOP UI PRESERVED: YES
     expect(screen.getByText("Renewal in 60 days")).toBeInTheDocument();
   });
+
+  it("renders the enhanced Compliance Verification Workflow progress bar when unverified across all completion states", () => {
+    const unverifiedProps = {
+      ...defaultProps,
+      isVerified: false,
+      isProfileSaved: true,
+      hasSubmittedDocuments: false,
+      stepsCompleted: 1,
+    };
+
+    const { rerender } = render(<UserPortalRedesignView {...unverifiedProps} />);
+
+    expect(screen.getByText("Compliance Verification Workflow")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 completed (33%)")).toBeInTheDocument();
+
+    const progressBar = screen.getByRole("progressbar");
+    expect(progressBar).toBeInTheDocument();
+    expect(progressBar).toHaveClass("h-2");
+    expect(progressBar).toHaveClass("w-full");
+    expect(progressBar).toHaveClass("rounded-full");
+    expect(progressBar).toHaveAttribute("data-value");
+
+    // 0% completion
+    rerender(
+      <UserPortalRedesignView
+        {...unverifiedProps}
+        isProfileSaved={false}
+        hasSubmittedDocuments={false}
+        stepsCompleted={0}
+      />
+    );
+    expect(screen.getByText("0 of 3 completed (0%)")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-value", "0");
+
+    // 67% (2 of 3) completion
+    rerender(
+      <UserPortalRedesignView
+        {...unverifiedProps}
+        isProfileSaved={true}
+        hasSubmittedDocuments={true}
+        stepsCompleted={2}
+      />
+    );
+    expect(screen.getByText("2 of 3 completed (67%)")).toBeInTheDocument();
+
+    // 100% (3 of 3) completion
+    rerender(
+      <UserPortalRedesignView
+        {...unverifiedProps}
+        isProfileSaved={true}
+        hasSubmittedDocuments={true}
+        stepsCompleted={3}
+      />
+    );
+    expect(screen.getByText("3 of 3 completed (100%)")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-value", "100");
+  });
 });
 

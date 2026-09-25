@@ -72,7 +72,7 @@ const StatusPill = ({ active, passwordSet }: { active: boolean; passwordSet: boo
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
       Suspended
     </span>
   );

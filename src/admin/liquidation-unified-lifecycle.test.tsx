@@ -341,9 +341,9 @@ describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 
 
     await renderLiquidationMonitoring();
 
-    // Select File A
+    // Select File A (checkboxes[0] is Select All, checkboxes[1] is File A)
     const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[0]);
+    fireEvent.click(checkboxes[1]);
 
     const confirmBtn1 = screen.getByRole("button", { name: /confirm document decision/i });
     fireEvent.click(confirmBtn1);
@@ -361,9 +361,11 @@ describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 
       expect(currentLiquidationReports[0].status).toBe("submitted");
     });
 
-    // Now select File B
+    await screen.findByText(/Review remaining documents to advance the liquidation report/i);
+
+    // Now select File B (checkboxes[0] is Select All, [1] is File A, [2] is File B)
     const updatedCheckboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(updatedCheckboxes[1]);
+    fireEvent.click(updatedCheckboxes[2]);
 
     const confirmBtn2 = screen.getByRole("button", { name: /confirm document decision/i });
     fireEvent.click(confirmBtn2);

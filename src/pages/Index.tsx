@@ -808,7 +808,7 @@ const Index = () => {
                   Office Hours
                 </p>
                 <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                  Monday–Thursday<br />7:00 AM – 5:00 PM
+                  Monday–Thursday<br />7:00 AM – 6:00 PM
                 </p>
               </div>
 

@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Medal,
   Megaphone,
+  MessageSquare,
   Search,
   ChevronRight,
   RefreshCw,
@@ -83,6 +84,12 @@ const getNotificationVisuals = (relatedType?: string, type?: string): Notificati
       tone: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
     };
   }
+  if (norm.includes("inquiry") || norm.includes("inquiries")) {
+    return {
+      icon: MessageSquare,
+      tone: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
+    };
+  }
   return {
     icon: Bell,
     tone: "bg-primary/10 text-primary border-primary/20",
@@ -120,6 +127,13 @@ const getTargetRoute = (
   }
   if (norm.includes("news") || norm.includes("release") || norm.includes("announcement")) {
     return { route: userRouteMap?.["news-releases"] || "/portal-news-releases", label: "View News" };
+  }
+  if (norm.includes("inquiry") || norm.includes("inquiries")) {
+    const basePath = userRouteMap?.["inquiries"] || userRouteMap?.["dashboard"] || "/dashboard";
+    const route = relatedId
+      ? `${basePath}${basePath.includes("?") ? "&" : "?"}inquiryId=${encodeURIComponent(relatedId)}`
+      : basePath;
+    return { route, label: "View Inquiry" };
   }
   return null;
 };

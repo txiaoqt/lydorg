@@ -136,7 +136,7 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
     expect(screen.getByText(/"Please attach venue cost breakdown."/i)).toBeInTheDocument();
 
     // Applicant's own remarks must remain separate and preserved
-    expect(screen.getByText("Activity Details & Remarks")).toBeInTheDocument();
+    expect(screen.getAllByText("Activity Details").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Applicant note: Initial submission with quotation\./i)).toBeInTheDocument();
   });
 

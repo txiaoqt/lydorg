@@ -6,9 +6,18 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import type { OrganizationProfile } from "@/lib/lydo-connect-data";
 import { reviewOrganizationUrnInSupabase } from "@/lib/lydo-connect-supabase";
-import { urnReviewLabels } from "@/lib/urn-registration";
+import { urnReviewLabels, type UrnReviewStatus } from "@/lib/urn-registration";
+
+const urnStatusToneClasses: Record<UrnReviewStatus, string> = {
+  verified: "border-border-success-subtle bg-bg-success-subtle text-positive-secondary",
+  needs_correction: "border-border-action-subtle bg-bg-action-subtle text-text-action",
+  rejected: "border-status-danger-border bg-danger-subtle text-icon-danger-secondary",
+  pending: "border-bg-info-secondary bg-bg-info-tertiary text-icon-info-secondary",
+  not_applicable: "border-border-closed-subtle bg-neutral-100 text-public-text-secondary",
+};
 
 type Decision = "verified" | "needs_correction" | "rejected";
 
@@ -57,7 +66,7 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
       <section className="mx-auto max-w-3xl rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Existing URN</p><h1 className="text-2xl font-semibold">{profile.organizationName}</h1><p className="text-sm text-muted-foreground">{profile.organizationEmail}</p></div>
-          <span className="rounded-full border px-3 py-1 text-sm font-medium">{urnReviewLabels[profile.urnReviewStatus]}</span>
+          <span className={cn("rounded-full border px-3 py-1 text-sm font-medium", urnStatusToneClasses[profile.urnReviewStatus] ?? "border-border-closed-subtle bg-neutral-100 text-public-text-secondary")}>{urnReviewLabels[profile.urnReviewStatus]}</span>
         </div>
         <div className="mt-6 rounded-xl border bg-muted/30 p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Submitted Unique Registration Number (URN)</p>

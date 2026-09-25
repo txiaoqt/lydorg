@@ -227,6 +227,12 @@
     --bg-success-default: 148.05 79.38% 38.04%;
     --bg-success-subtle: 129 100% 96.08%;
     --border-success-subtle: 126 71.43% 89.02%;
+    --bg-action-subtle: 33.33 100% 96.47%;
+    --border-action-subtle: 32.73 97.62% 83.53%;
+    --text-action: 21.29 88.54% 40.39%;
+    --bg-progress-subtle: 166.15 76.47% 96.67%;
+    --border-progress-subtle: 167.83 84.55% 78.43%;
+    --text-progress: 174.67 77.59% 26.08%;
     --text-neutral-tertiary: 0 0% 46.27%;
     --bg-reference-chip: 216 23.81% 95.88%;
     --border-reference-chip: 222.86 17.95% 92.35%;
@@ -470,6 +476,12 @@
     --bg-success-default: 148.05 60% 40%;
     --bg-success-subtle: 129 30% 16%;
     --border-success-subtle: 126 30% 24%;
+    --bg-action-subtle: 24 45% 15%;
+    --border-action-subtle: 24 50% 25%;
+    --text-action: 24.5 95% 61%;
+    --bg-progress-subtle: 166.15 45% 15%;
+    --border-progress-subtle: 167.83 50% 25%;
+    --text-progress: 174.67 77.59% 55%;
     --text-neutral-tertiary: 216 17% 56.9%;
     --bg-reference-chip: 219 37% 17.5%;
     --border-reference-chip: 216 32% 22%;

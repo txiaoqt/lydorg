@@ -157,5 +157,7 @@ export function getPwaRelatedRecordRoute(relatedType: string, relatedId: string)
   if (relatedType === "document_submission" || relatedType === "document") return PWA_ROUTES.documents;
   if (relatedType === "organization_profile") return PWA_ROUTES.profile;
   if (relatedType.startsWith("ypop")) return PWA_ROUTES.ypop;
+  if (relatedType === "inquiry" || relatedType === "inquiries") return PWA_ROUTES.inquiries;
   return null;
 }
+

@@ -9,6 +9,7 @@ import {
   PCYDO_WATERMARK_DATA_URL,
   PCYDO_WATERMARK_ASPECT_RATIO,
 } from "./report-letterhead-assets";
+import { getEffectiveSystemSetting } from "./admin-system-settings";
 
 export type ExportFormat = "csv" | "pdf" | "xlsx";
 
@@ -185,10 +186,13 @@ export const formatDateDisplay = (value?: string | null) => {
 
 export const formatCurrencyCsv = (value: number) => Number(value || 0).toFixed(2);
 
-export const formatCurrencyPdf = (value: number) => `₱${Number(value || 0).toLocaleString("en-PH", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})}`;
+export const formatCurrencyPdf = (value: number) => {
+  const symbol = getEffectiveSystemSetting("budget.currency_symbol") || "₱";
+  return `${symbol}${Number(value || 0).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
 
 export const getExcelColumnLetter = (columnNumber: number) => {
   let result = "";

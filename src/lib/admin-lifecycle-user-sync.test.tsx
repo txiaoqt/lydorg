@@ -28,7 +28,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       const expectedLabels: Record<BudgetRequestStatus, string> = {
         draft: 'Draft',
         submitted: 'Pending Review',
-        under_review: 'Pending Review',
+        under_review: 'Under Review',
         needs_revision: 'Needs Revision',
         approved_for_ftf_green: 'Onsite Required',
         rejected_red: 'Rejected',
@@ -47,9 +47,9 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       const { rerender } = render(<StatusBadge status="submitted" />);
       expect(screen.getByText('Pending Review')).toBeDefined();
 
-      // Step 2: under_review -> Pending Review
+      // Step 2: under_review -> Under Review
       rerender(<StatusBadge status="under_review" />);
-      expect(screen.getByText('Pending Review')).toBeDefined();
+      expect(screen.getByText('Under Review')).toBeDefined();
 
       // Step 3: approved_for_ftf_green -> User sees "Onsite Required"
       rerender(<StatusBadge status="approved_for_ftf_green" />);
@@ -101,7 +101,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       expect(screen.getByText('Pending Review')).toBeDefined();
 
       rerender(<StatusPill status="under_review" />);
-      expect(screen.getByText('Pending Review')).toBeDefined();
+      expect(screen.getByText('Under Review')).toBeDefined();
 
       rerender(<StatusPill status="approved_for_ftf_green" />);
       expect(screen.getByText('Onsite Required')).toBeDefined();
@@ -144,7 +144,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
         not_started: 'Not Started',
         draft: 'Draft',
         submitted: 'Pending Review',
-        under_review: 'Pending Review',
+        under_review: 'Under Review',
         needs_revision: 'Needs Revision',
         approved_for_ftf_green: 'Onsite Required',
         rejected_red: 'Rejected',
@@ -217,7 +217,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       const expectedLabels: Record<YPOPStatus, string> = {
         draft: 'Draft',
         submitted: 'Pending Review',
-        under_review: 'Pending Review',
+        under_review: 'Under Review',
         needs_revision: 'Needs Revision',
         qualified: 'Qualified',
         not_qualified: 'Not Qualified',
@@ -236,7 +236,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       expect(screen.getByText('Pending Review')).toBeDefined();
 
       rerender(<StatusBadge status="under_review" />);
-      expect(screen.getByText('Pending Review')).toBeDefined();
+      expect(screen.getByText('Under Review')).toBeDefined();
 
       rerender(<StatusBadge status="needs_revision" />);
       expect(screen.getByText('Needs Revision')).toBeDefined();

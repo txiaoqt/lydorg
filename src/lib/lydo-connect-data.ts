@@ -126,7 +126,10 @@ export type YPOPEntry = {
   validationDeadline: string;
   submittedAt: string;
   validatedAt: string;
-  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLockedAt?: string | null;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
   orgLedProjectCount?: number;
   cityLedAttendance?: Array<{ activityId: string; attended: boolean }>;
   createdAt: string;
@@ -163,7 +166,13 @@ export type YPOPEventParticipation = {
   joinedAt: string;
   proofSubmittedAt: string;
   verifiedAt: string;
-  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
   createdAt: string;
   updatedAt: string;
 };
@@ -200,7 +209,13 @@ export type YPOPOrgActivity = {
   adminRemarks: string;
   submittedAt: string;
   approvedAt: string;
-  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
   createdAt: string;
   updatedAt: string;
 };
@@ -803,6 +818,12 @@ export type OrganizationRenewalRecord = {
   reviewedBy: string | null;
   reviewedAt: string | null;
   adminRemarks: string | null;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -939,6 +960,11 @@ export type SubmissionFile = {
   adminStatus: DocumentSubmissionStatus;
   adminRemarks: string;
   userRemarks?: string;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
   revisionHistory?: Array<{
     action?: string;
     adminRemarks?: string;
@@ -949,6 +975,7 @@ export type SubmissionFile = {
     previousFileUrl?: string;
     previousStatus?: string;
     reviewedAt?: string;
+    revisionDueAt?: string | null;
   }>;
   uploadedAt: string;
   reviewedAt: string;
@@ -968,6 +995,12 @@ export type DocumentSubmission = {
   reviewedBy: string;
   reviewedAt: string;
   overallRemarks: string;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -1006,10 +1039,16 @@ export type BudgetRequest = {
   adminRemarks: string;
   goSignalAt: string;
   hardCopySubmittedAt: string;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
   createdAt: string;
   updatedAt: string;
   userNote?: string;
-  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
   budgetRequestType?: BudgetRequestType;
   ypopEntryId?: string;
 };
@@ -1113,9 +1152,15 @@ export type LiquidationReport = {
   deadlineAt: string;
   hardCopySubmittedAt: string;
   completedAt: string;
+  revisionRequestedAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLocked?: boolean;
+  revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
+  revisionUnlockedBy?: string | null;
   createdAt: string;
   updatedAt: string;
-  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string }>;
+  revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
 };
 
 export type PublicBudgetSource = {
@@ -2681,7 +2726,7 @@ export const statusLabelMap: Record<string, string> = {
   rejected: "Rejected",
   reviewed: "Reviewed",
   closed: "Closed",
-  responded: "Responded",
+  responded: "Reviewed",
   open: "Open",
   upcoming: "Upcoming",
   ongoing: "Ongoing",

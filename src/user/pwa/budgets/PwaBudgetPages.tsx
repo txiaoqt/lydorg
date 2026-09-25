@@ -222,7 +222,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       } else {
         saved = await createBudgetRequestInSupabase({ budgetRequest: payload, file });
       }
-      await data.refresh();
+      await data.refreshBudgets();
       toast({ title: status === "draft" ? "Budget draft saved" : "Budget request submitted" });
       go(pwaBudgetDetailRoute(saved.id), { replace: true });
     } catch (error) {

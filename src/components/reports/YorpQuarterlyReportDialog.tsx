@@ -162,10 +162,10 @@ export function YorpQuarterlyReportDialog({
         <DialogHeader className="space-y-1 pb-1">
           <DialogTitle className="flex items-center gap-2 text-public-fs-title-base sm:text-public-fs-title-lg font-bold text-slate-900">
             <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.8} />
-            YORP Reports
+            Section 35 YORP Quarterly Reports
           </DialogTitle>
           <DialogDescription className="text-public-fs-body-sm text-muted-foreground">
-            Generate an official YORP report for the selected reporting period.
+            Generate an official Section 35 YORP report for the selected reporting period.
           </DialogDescription>
         </DialogHeader>
 

@@ -17,6 +17,7 @@ import {
   type PasigDistrict,
 } from "@/lib/pasig-districts";
 import { buildPublicRecordCode, majorClassificationOptions, type BudgetRequest, type OrganizationProfile } from "@/lib/lydo-connect-data";
+import { isRevisionExpired } from "@/lib/revision-deadline";
 
 export type BudgetRequestsStatusFilter =
   | "all"
@@ -60,31 +61,47 @@ const PAGE_SIZE = 10;
 
 const formatBudgetCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
 
-export const StatusPill = ({ status }: { status: BudgetRequest["status"] }) => {
+export const StatusPill = ({
+  status,
+  revisionDueAt,
+  revisionLockedAt,
+}: {
+  status: BudgetRequest["status"];
+  revisionDueAt?: string | null;
+  revisionLockedAt?: string | null;
+}) => {
   if (status === "budget_released" || status === "completed") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-mandatory-subtle bg-bg-mandatory-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-mandatory">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
         {status === "completed" ? "Completed" : "Budget Released"}
       </span>
     );
   }
   if (status === "hard_copy_submitted") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-role-blue-border bg-role-blue-bg px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-role-blue-text">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-progress-subtle bg-bg-progress-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-progress">
         Hardcopy Submitted
       </span>
     );
   }
   if (status === "approved_for_ftf_green") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-progress-subtle bg-bg-progress-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-progress">
         Onsite Required
       </span>
     );
   }
   if (status === "needs_revision") {
+    const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
+    if (isExpired) {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+          Revision Expired (Locked)
+        </span>
+      );
+    }
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
       </span>
     );
@@ -100,6 +117,13 @@ export const StatusPill = ({ status }: { status: BudgetRequest["status"] }) => {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
         Draft
+      </span>
+    );
+  }
+  if (status === "under_review") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+        Under Review
       </span>
     );
   }
@@ -547,7 +571,11 @@ export const BudgetRequestsTable = ({
                   </div>
 
                   <div className="flex w-[14%] items-center">
-                    <StatusPill status={request.status} />
+                    <StatusPill
+                      status={request.status}
+                      revisionDueAt={request.revisionDueAt}
+                      revisionLockedAt={request.revisionLockedAt}
+                    />
                   </div>
 
                   <div className="flex w-[90px] shrink-0 items-center">

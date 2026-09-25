@@ -166,7 +166,7 @@ export function PwaLiquidationManager({ data }: { data: PortalData }) {
     setSaving(true);
     try {
       await deleteLiquidationReportFileInSupabase(fileId, fileUrl);
-      await data.refresh();
+      await data.refreshLiquidations();
       toast({ title: "Liquidation file removed" });
     } catch (error) {
       toast({ title: "Remove failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
@@ -185,7 +185,7 @@ export function PwaLiquidationManager({ data }: { data: PortalData }) {
     setSaving(true);
     try {
       await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
-      await data.refresh();
+      await data.refreshLiquidations();
       toast({ title: "Liquidation submitted", description: "The admin can now review your report." });
       go(pwaLiquidationDetailRoute(report.id), { replace: true });
     } catch (error) {

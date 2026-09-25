@@ -13,7 +13,8 @@ import {
   Loader2,
   X,
   Sparkles,
-  DollarSign
+  DollarSign,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
@@ -42,6 +43,12 @@ import {
 import { cn } from "@/lib/utils";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
+import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isRevisionExpired,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
 import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
@@ -808,8 +815,11 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
 
-                const isEditable = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
                 const isNeedsRevision = selectedReport.status === "needs_revision" || selectedReport.status === "rejected_red";
+                const isRevisionDeadlineExpired = isNeedsRevision && (isRevisionExpired(selectedReport.revisionDueAt) || isSubmissionRevisionLocked(selectedReport));
+                const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(selectedReport.revisionDueAt) : "";
+                const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(selectedReport.revisionDueAt) : null;
+                const isEditable = !isRevisionDeadlineExpired && ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
 
                 const stagedDraft = liquidationFileDraftByReportId[selectedReport.id] ?? null;
                 const stagedFileItem = stagedDraft
@@ -858,6 +868,34 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                     {/* SCROLLABLE BODY */}
                     <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                      {/* Revision Deadline Feedback Alert */}
+                      {isNeedsRevision && (
+                        <div
+                          className={cn(
+                            "rounded-xl border p-3.5 sm:p-4 text-xs space-y-1.5 shadow-2xs",
+                            isRevisionDeadlineExpired
+                              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+                              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <AlertCircle className={cn("h-4 w-4 shrink-0", isRevisionDeadlineExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
+                            <span>{isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
+                          </div>
+                          {selectedReport.adminRemarks && (
+                            <p className="text-xs leading-relaxed pl-5 font-normal italic">
+                              "{selectedReport.adminRemarks}"
+                            </p>
+                          )}
+                          {revisionDeadlineFormatted && (
+                            <p className="text-xs font-semibold pl-5">
+                              {isRevisionDeadlineExpired
+                                ? `The 5-day resubmission deadline expired on ${revisionDeadlineFormatted}. Further file replacements or resubmissions are locked.`
+                                : `Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {/* Key Summary: Activity Timeline */}
                       <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
                         <div className="flex items-center justify-between text-xs">
@@ -1135,8 +1173,11 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
 
-                const isEditable = ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
                 const isNeedsRevision = selectedReport.status === "needs_revision" || selectedReport.status === "rejected_red";
+                const isRevisionDeadlineExpired = isNeedsRevision && (isRevisionExpired(selectedReport.revisionDueAt) || isSubmissionRevisionLocked(selectedReport));
+                const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(selectedReport.revisionDueAt) : "";
+                const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(selectedReport.revisionDueAt) : null;
+                const isEditable = !isRevisionDeadlineExpired && ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
 
                 const stagedDraft = liquidationFileDraftByReportId[selectedReport.id] ?? null;
                 const stagedFileItem = stagedDraft
@@ -1207,6 +1248,34 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
 
                     {/* SCROLLABLE BODY */}
                     <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                      {/* Revision Deadline Feedback Alert */}
+                      {isNeedsRevision && (
+                        <div
+                          className={cn(
+                            "rounded-xl border p-3.5 sm:p-4 text-xs space-y-1.5 shadow-2xs",
+                            isRevisionDeadlineExpired
+                              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+                              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <AlertCircle className={cn("h-4 w-4 shrink-0", isRevisionDeadlineExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
+                            <span>{isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
+                          </div>
+                          {selectedReport.adminRemarks && (
+                            <p className="text-xs leading-relaxed pl-5 font-normal italic">
+                              "{selectedReport.adminRemarks}"
+                            </p>
+                          )}
+                          {revisionDeadlineFormatted && (
+                            <p className="text-xs font-semibold pl-5">
+                              {isRevisionDeadlineExpired
+                                ? `The 5-day resubmission deadline expired on ${revisionDeadlineFormatted}. Further file replacements or resubmissions are locked.`
+                                : `Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {/* Key Summary: Activity Timeline */}
                       <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
                         <div className="flex items-center justify-between text-xs">
@@ -1470,7 +1539,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                             onClick={() => closeLiquidationDetail()}
                             className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                           >
-                            Close Drawer
+                            Close
                           </Button>
                         </div>
                       )}

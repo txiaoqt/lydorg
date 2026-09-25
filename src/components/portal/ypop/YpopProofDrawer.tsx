@@ -59,6 +59,12 @@ import {
   updateYpopEventParticipationInSupabase,
   resolveSupabaseFileUrl,
 } from "@/lib/lydo-connect-supabase";
+import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isRevisionExpired,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
 import { PortalDrawerDocumentSection } from "@/components/portal/PortalDrawerDocumentSection";
 import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
 
@@ -238,7 +244,12 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     currentParticipation?.status === "pending_evaluation" ||
     currentParticipation?.status === "pending_verification";
   const isDraft = !currentParticipation || currentParticipation.status === "draft";
-  const isEditable = !isVerified && !isRejected && !isPending && (isDraft || isNeedsRevision);
+  const isRevisionDeadlineExpired =
+    isNeedsRevision &&
+    (isRevisionExpired(currentParticipation?.revisionDueAt) || isSubmissionRevisionLocked(currentParticipation));
+  const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(currentParticipation?.revisionDueAt) : "";
+  const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(currentParticipation?.revisionDueAt) : null;
+  const isEditable = !isVerified && !isRejected && !isPending && (isDraft || (isNeedsRevision && !isRevisionDeadlineExpired));
 
   const activeFile = files.find((f) => f.id === selectedFileId) || files[0] || null;
 
@@ -298,56 +309,23 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
 
-    if (isNeedsRevision) {
-      setPendingFiles((prev) => [...prev, ...selectedFiles]);
+    const invalidFiles = selectedFiles.filter((f) => f.size > 25 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
       toast({
-        title: selectedFiles.length > 1 ? "Proof files added" : "Proof file added",
-        description: selectedFiles.length > 1 ? `Added ${selectedFiles.length} files.` : "File added successfully.",
+        title: "File too large",
+        description: "One or more files exceed the 25MB size limit.",
+        variant: "destructive",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    setUploading(true);
-    try {
-      let targetPart = currentParticipation;
-      if (!targetPart) {
-        targetPart = await ensureYpopEventParticipationInSupabase({
-          activityId: activity.id,
-          activityName: activity.name,
-          activityDate: activity.startDate || activity.date || "",
-          venue: activity.venue || "Pasig City",
-        });
-        setCurrentParticipation(targetPart);
-        onParticipationUpdated(targetPart);
-      }
-
-      for (const file of selectedFiles) {
-        const saved = await uploadYpopEventFileToSupabase({
-          participationId: targetPart.id,
-          organizationId,
-          file,
-        });
-        const blobUrl = URL.createObjectURL(file);
-        localBlobUrlsRef.current.set(saved.id, blobUrl);
-        localRawFilesRef.current.set(saved.id, file);
-        onFileCreated(saved);
-        setSelectedFileId(saved.id);
-      }
-      toast({
-        title: selectedFiles.length > 1 ? "Proof files uploaded" : "Proof file uploaded",
-        description: selectedFiles.length > 1 ? `Uploaded ${selectedFiles.length} files successfully.` : "File added successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload file.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    setPendingFiles((prev) => [...prev, ...selectedFiles]);
+    toast({
+      title: selectedFiles.length > 1 ? "Proof files added" : "Proof file added",
+      description: selectedFiles.length > 1 ? `Added ${selectedFiles.length} files.` : "File added successfully.",
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleDeleteFile = async (file: { id: string; fileUrl: string; isStaged?: boolean; index?: number }) => {
@@ -460,7 +438,6 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           venue: activity.venue || "Pasig City",
         });
         setCurrentParticipation(targetPart);
-        onParticipationUpdated(targetPart);
       } else {
         const updated = await updateYpopEventParticipationInSupabase(targetPart.id, {
           activityName: activity.name,
@@ -468,9 +445,45 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           venue: activity.venue || "Pasig City",
           status: targetPart.status === "needs_revision" ? "needs_revision" : "draft",
         });
+        targetPart = updated;
         setCurrentParticipation(updated);
-        onParticipationUpdated(updated);
       }
+
+      if (pendingDeletedFileIds.length > 0) {
+        await Promise.all(
+          pendingDeletedFileIds.map(async (fileId) => {
+            const fileObj = eventFiles.find((f) => f.id === fileId);
+            if (fileObj) {
+              await deleteYpopEventFileFromSupabase(fileId, fileObj.fileUrl);
+              onFileDeleted(fileId);
+            }
+          })
+        );
+        setPendingDeletedFileIds([]);
+      }
+
+      if (pendingFiles.length > 0) {
+        const savedPendingFiles = await Promise.all(
+          pendingFiles.map((file) =>
+            uploadYpopEventFileToSupabase({
+              participationId: targetPart.id,
+              organizationId,
+              file,
+            })
+          )
+        );
+        savedPendingFiles.forEach((saved, index) => {
+          const file = pendingFiles[index];
+          const blobUrl = URL.createObjectURL(file);
+          localBlobUrlsRef.current.set(saved.id, blobUrl);
+          localRawFilesRef.current.set(saved.id, file);
+          onFileCreated(saved);
+          setSelectedFileId(saved.id);
+        });
+        setPendingFiles([]);
+      }
+
+      onParticipationUpdated(targetPart);
 
       toast({
         title: "Draft saved",
@@ -517,50 +530,73 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       return;
     }
 
-    if (!currentParticipation) return;
+    if (isRevisionDeadlineExpired) {
+      toast({
+        title: "Revision deadline expired",
+        description: "This participation record is locked and can no longer be resubmitted.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSubmitting(true);
     try {
+      let targetPart = currentParticipation;
+      if (!targetPart) {
+        targetPart = await ensureYpopEventParticipationInSupabase({
+          activityId: activity.id,
+          activityName: activity.name,
+          activityDate: activity.startDate || activity.date || "",
+          venue: activity.venue || "Pasig City",
+        });
+        setCurrentParticipation(targetPart);
+      }
+
       const now = new Date().toISOString();
 
-      if (isNeedsRevision) {
-        if (pendingDeletedFileIds.length > 0) {
-          for (const fileId of pendingDeletedFileIds) {
+      if (pendingDeletedFileIds.length > 0) {
+        await Promise.all(
+          pendingDeletedFileIds.map(async (fileId) => {
             const fileObj = eventFiles.find((f) => f.id === fileId);
             if (fileObj) {
               await deleteYpopEventFileFromSupabase(fileId, fileObj.fileUrl);
               onFileDeleted(fileId);
             }
-          }
-          setPendingDeletedFileIds([]);
-        }
-
-        if (pendingFiles.length > 0) {
-          for (const file of pendingFiles) {
-            const saved = await uploadYpopEventFileToSupabase({
-              participationId: currentParticipation.id,
-              organizationId,
-              file,
-            });
-            const blobUrl = URL.createObjectURL(file);
-            localBlobUrlsRef.current.set(saved.id, blobUrl);
-            localRawFilesRef.current.set(saved.id, file);
-            onFileCreated(saved);
-            setSelectedFileId(saved.id);
-          }
-          setPendingFiles([]);
-        }
+          })
+        );
+        setPendingDeletedFileIds([]);
       }
 
-      const updated = await updateYpopEventParticipationInSupabase(currentParticipation.id, {
+      if (pendingFiles.length > 0) {
+        const savedPendingFiles = await Promise.all(
+          pendingFiles.map((file) =>
+            uploadYpopEventFileToSupabase({
+              participationId: targetPart.id,
+              organizationId,
+              file,
+            })
+          )
+        );
+        savedPendingFiles.forEach((saved, index) => {
+          const file = pendingFiles[index];
+          const blobUrl = URL.createObjectURL(file);
+          localBlobUrlsRef.current.set(saved.id, blobUrl);
+          localRawFilesRef.current.set(saved.id, file);
+          onFileCreated(saved);
+          setSelectedFileId(saved.id);
+        });
+        setPendingFiles([]);
+      }
+
+      const updated = await updateYpopEventParticipationInSupabase(targetPart.id, {
         proofSubmittedAt: now,
-        status: "pending_evaluation",
+        status: "pending_verification",
         revisionHistory: [
-          ...(currentParticipation.revisionHistory ?? []),
+          ...(targetPart.revisionHistory ?? []),
           {
-            action: "pending_evaluation",
+            action: "pending_verification",
             adminRemarks:
-              isNeedsRevision ? "Revision submitted for evaluation." : "Submitted for evaluation.",
+              isNeedsRevision ? "Revision submitted for verification." : "Submitted for verification.",
             changedAt: now,
           },
         ],
@@ -569,8 +605,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       onParticipationUpdated(updated);
       setConfirmSubmitProofOpen(false);
       toast({
-        title: isNeedsRevision ? "Revision resubmitted" : "Proof submitted for evaluation",
-        description: "Your participation proof has been submitted to the Admin for evaluation.",
+        title: isNeedsRevision ? "Revision resubmitted" : "Proof submitted for verification",
+        description: "Your participation proof has been submitted to the Admin for verification.",
       });
     } catch (error) {
       toast({
@@ -656,20 +692,46 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       )}
 
       {isNeedsRevision && (
-        <div className="p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 shadow-2xs">
-          <AlertTriangle className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div
+          className={cn(
+            "p-3.5 sm:p-4 rounded-xl flex items-start gap-3 shadow-2xs border",
+            isRevisionDeadlineExpired
+              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+              : "bg-amber-500/10 border-amber-500/25 text-amber-900 dark:text-amber-200"
+          )}
+        >
+          <AlertTriangle
+            className={cn(
+              "h-4.5 w-4.5 shrink-0 mt-0.5",
+              isRevisionDeadlineExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400"
+            )}
+          />
           <div className="text-xs space-y-2 min-w-0 flex-1">
-            <p className="font-bold text-amber-700 dark:text-amber-300">
-              Admin Revision Requested
+            <p
+              className={cn(
+                "font-bold",
+                isRevisionDeadlineExpired ? "text-rose-700 dark:text-rose-300" : "text-amber-700 dark:text-amber-300"
+              )}
+            >
+              {isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Requested"}
             </p>
             {currentParticipation?.adminRemarks && (
               <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium italic break-words">
                 "{currentParticipation.adminRemarks}"
               </div>
             )}
-            <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
-              Please review the admin remarks, attach updated proof files below, and resubmit for verification.
-            </p>
+            {revisionDeadlineFormatted && (
+              <p className="text-xs font-semibold">
+                {isRevisionDeadlineExpired
+                  ? `The 5-day resubmission deadline expired on ${revisionDeadlineFormatted}. Further proof replacements or resubmissions are locked.`
+                  : `Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
+              </p>
+            )}
+            {!isRevisionDeadlineExpired && (
+              <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
+                Please review the admin remarks, attach updated proof files below, and resubmit for verification.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -707,7 +769,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         </div>
       )}
 
-      {isDraft && files.length > 0 && (
+      {currentParticipation?.status === "draft" && currentSavedFiles.length > 0 && (
         <div className="p-3.5 sm:p-4 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-start gap-3 shadow-2xs">
           <FileText className="h-4.5 w-4.5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
@@ -732,6 +794,11 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
             {isDraft && (
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Please attach the following: Attendance Sheet and Narrative Report.
+              </p>
+            )}
+            {isNeedsRevision && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Review previous proof below. You can remove previous files or attach updated documents for verification.
               </p>
             )}
           </div>
@@ -777,7 +844,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               {uploading ? "Uploading files..." : "Click to browse file"}
             </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground">
-              Supports PDF, DOCX, XLSX, JPG, JPEG, and PNG files up to 10 MB
+              Supports PDF, DOCX, and XLSX documents up to 10 MB
             </p>
           </div>
         )}
@@ -800,6 +867,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
             >
               {files.map((file) => {
                 const isActive = activeFile?.id === file.id;
+                const isStagedFile = Boolean(file.isStaged);
                 return (
                   <PortalAttachedFileRow
                     key={file.id}
@@ -807,10 +875,12 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                     isActive={isActive}
                     onSelect={() => setSelectedFileId(file.id)}
                     status={
-                      isVerified
+                      isStagedFile
+                        ? "draft"
+                        : isVerified
                         ? "verified"
                         : isPending
-                        ? "pending_evaluation"
+                        ? "submitted"
                         : isNeedsRevision
                         ? "needs_revision"
                         : isRejected
@@ -818,10 +888,12 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                         : "draft"
                     }
                     statusLabel={
-                      isVerified
+                      isStagedFile
+                        ? "Ready to Upload"
+                        : isVerified
                         ? "Approved"
                         : isPending
-                        ? "Pending Evaluation"
+                        ? "Pending Review"
                         : isNeedsRevision
                         ? "Needs Revision"
                         : isRejected
@@ -980,7 +1052,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                 <DialogClose asChild>
                   <button
                     type="button"
-                    aria-label="Close modal"
+                    aria-label="Close"
                     className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <X className="h-4 w-4" />
@@ -1059,7 +1131,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                     onClick={() => onOpenChange(false)}
                     className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                   >
-                    Close Drawer
+                    Close
                   </Button>
                 </div>
               )}

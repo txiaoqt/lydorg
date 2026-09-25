@@ -791,5 +791,214 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
       expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
     });
   });
+
+  describe("Group 5: PPA Loading State & Action Discrimination UI (Save as Draft vs Submit for Review)", () => {
+    it("1. Idle state: Save as Draft and Submit for Review have no spinners and Submit displays upload icon", () => {
+      setViewportWidth(1280);
+      render(
+        <YpopPpaModal
+          open={true}
+          onOpenChange={vi.fn()}
+          entry={mockEntry}
+          activity={mockDraftActivity}
+          orgActivityFiles={[]}
+          organizationId="org-1"
+          userId="user-1"
+          onActivitySaved={vi.fn()}
+          onFileCreated={vi.fn()}
+          onFileDeleted={vi.fn()}
+        />
+      );
+
+      const saveDraftBtn = screen.getByRole("button", { name: /Save as Draft/i });
+      const submitBtn = screen.getByRole("button", { name: /Submit for Review/i });
+
+      expect(saveDraftBtn).toBeInTheDocument();
+      expect(submitBtn).toBeInTheDocument();
+
+      // No spinners in idle state
+      expect(saveDraftBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+      expect(submitBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+    });
+
+    it("2. Save as Draft operation: Save as Draft displays spinner while Submit for Review does NOT", async () => {
+      setViewportWidth(1280);
+      let resolveUpdate: (val: any) => void;
+      const updatePromise = new Promise((resolve) => {
+        resolveUpdate = resolve;
+      });
+
+      vi.spyOn(lydoSupabase, "updateYpopOrgActivityInSupabase").mockImplementation(() => updatePromise as any);
+
+      render(
+        <YpopPpaModal
+          open={true}
+          onOpenChange={vi.fn()}
+          entry={mockEntry}
+          activity={mockDraftActivity}
+          orgActivityFiles={[]}
+          organizationId="org-1"
+          userId="user-1"
+          onActivitySaved={vi.fn()}
+          onFileCreated={vi.fn()}
+          onFileDeleted={vi.fn()}
+        />
+      );
+
+      const saveDraftBtn = screen.getByRole("button", { name: /Save as Draft/i });
+      const submitBtn = screen.getByRole("button", { name: /Submit for Review/i });
+
+      fireEvent.click(saveDraftBtn);
+
+      // Save as Draft must display the spinner!
+      await waitFor(() => {
+        expect(saveDraftBtn.querySelector(".animate-spin")).toBeInTheDocument();
+      });
+
+      // Submit for Review must NOT display the spinner!
+      expect(submitBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+
+      // Both buttons disabled while saving
+      expect(saveDraftBtn).toBeDisabled();
+      expect(submitBtn).toBeDisabled();
+
+      // Clean up async promise
+      resolveUpdate!({ ...mockDraftActivity });
+      await waitFor(() => {
+        expect(saveDraftBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+      });
+    });
+
+    it("3. Submit for Review operation: Submit for Review displays spinner while Save as Draft does NOT", async () => {
+      setViewportWidth(1280);
+      let resolveUpdate: (val: any) => void;
+      const updatePromise = new Promise((resolve) => {
+        resolveUpdate = resolve;
+      });
+
+      vi.spyOn(lydoSupabase, "updateYpopOrgActivityInSupabase").mockImplementation(() => updatePromise as any);
+
+      const file = makePpaFile("f-sub", mockDraftActivity.id, "proof.pdf");
+
+      render(
+        <YpopPpaModal
+          open={true}
+          onOpenChange={vi.fn()}
+          entry={mockEntry}
+          activity={mockDraftActivity}
+          orgActivityFiles={[file]}
+          organizationId="org-1"
+          userId="user-1"
+          onActivitySaved={vi.fn()}
+          onFileCreated={vi.fn()}
+          onFileDeleted={vi.fn()}
+        />
+      );
+
+      const saveDraftBtn = screen.getByRole("button", { name: /Save as Draft/i });
+      const submitBtn = screen.getByRole("button", { name: /Submit for Review/i });
+
+      fireEvent.click(submitBtn);
+
+      // Submit for Review must display the spinner!
+      await waitFor(() => {
+        expect(submitBtn.querySelector(".animate-spin")).toBeInTheDocument();
+      });
+
+      // Save as Draft must NOT display the spinner!
+      expect(saveDraftBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+
+      // Both buttons disabled while submitting
+      expect(saveDraftBtn).toBeDisabled();
+      expect(submitBtn).toBeDisabled();
+
+      // Clean up async promise
+      resolveUpdate!({ ...mockDraftActivity, status: "submitted" });
+      await waitFor(() => {
+        expect(submitBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+      });
+    });
+
+    it("4. Needs Revision resubmission: Resubmit for Review displays spinner during submission", async () => {
+      setViewportWidth(1280);
+      let resolveUpdate: (val: any) => void;
+      const updatePromise = new Promise((resolve) => {
+        resolveUpdate = resolve;
+      });
+
+      vi.spyOn(lydoSupabase, "updateYpopOrgActivityInSupabase").mockImplementation(() => updatePromise as any);
+
+      const file = makePpaFile("f-rev", mockRevisionActivity.id, "proof_v2.pdf");
+
+      render(
+        <YpopPpaModal
+          open={true}
+          onOpenChange={vi.fn()}
+          entry={mockEntry}
+          activity={mockRevisionActivity}
+          orgActivityFiles={[file]}
+          organizationId="org-1"
+          userId="user-1"
+          onActivitySaved={vi.fn()}
+          onFileCreated={vi.fn()}
+          onFileDeleted={vi.fn()}
+        />
+      );
+
+      const resubmitBtn = screen.getByRole("button", { name: /Resubmit for Review/i });
+      fireEvent.click(resubmitBtn);
+
+      await waitFor(() => {
+        expect(resubmitBtn.querySelector(".animate-spin")).toBeInTheDocument();
+      });
+
+      resolveUpdate!({ ...mockRevisionActivity, status: "submitted" });
+      await waitFor(() => {
+        expect(resubmitBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+      });
+    });
+
+    it("5. Mobile viewport: Action discrimination applies correctly on mobile footer buttons", async () => {
+      setViewportWidth(390);
+      let resolveUpdate: (val: any) => void;
+      const updatePromise = new Promise((resolve) => {
+        resolveUpdate = resolve;
+      });
+
+      vi.spyOn(lydoSupabase, "updateYpopOrgActivityInSupabase").mockImplementation(() => updatePromise as any);
+
+      const file = makePpaFile("f-mob", mockDraftActivity.id, "mobile_doc.pdf");
+
+      render(
+        <YpopPpaModal
+          open={true}
+          onOpenChange={vi.fn()}
+          entry={mockEntry}
+          activity={mockDraftActivity}
+          orgActivityFiles={[file]}
+          organizationId="org-1"
+          userId="user-1"
+          onActivitySaved={vi.fn()}
+          onFileCreated={vi.fn()}
+          onFileDeleted={vi.fn()}
+        />
+      );
+
+      const mobileSubmitBtn = screen.getByRole("button", { name: /Submit for Review/i });
+      const mobileSaveDraftBtn = screen.getByRole("button", { name: /Save as Draft/i });
+
+      fireEvent.click(mobileSubmitBtn);
+
+      await waitFor(() => {
+        expect(mobileSubmitBtn.querySelector(".animate-spin")).toBeInTheDocument();
+      });
+      expect(mobileSaveDraftBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+
+      resolveUpdate!({ ...mockDraftActivity, status: "submitted" });
+      await waitFor(() => {
+        expect(mobileSubmitBtn.querySelector(".animate-spin")).not.toBeInTheDocument();
+      });
+    });
+  });
 });
 

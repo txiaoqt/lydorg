@@ -135,12 +135,52 @@ async function authorizeAdminCaller(
 }
 
 /**
+ * Fetches dynamic system settings from public.admin_system_settings.
+ */
+async function fetchAdminSettings(supabaseAdmin: SupabaseAdminClient): Promise<{
+  sendInvitationEmails: boolean;
+  adminPortalUrl: string;
+  requireVerifiedEmail: boolean;
+}> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("admin_system_settings")
+      .select("setting_key, value_json");
+
+    let sendInvitationEmails = true;
+    let adminPortalUrl = "https://y-trace-admin.vercel.app";
+    let requireVerifiedEmail = true;
+
+    if (data && Array.isArray(data)) {
+      for (const row of data) {
+        if (row.setting_key === "email.send_invitation_emails" && typeof row.value_json === "boolean") {
+          sendInvitationEmails = row.value_json;
+        }
+        if (row.setting_key === "general.admin_portal_url" && typeof row.value_json === "string" && row.value_json.trim()) {
+          adminPortalUrl = row.value_json.trim();
+        }
+        if (row.setting_key === "security.require_verified_admin_email" && typeof row.value_json === "boolean") {
+          requireVerifiedEmail = row.value_json;
+        }
+      }
+    }
+    return { sendInvitationEmails, adminPortalUrl, requireVerifiedEmail };
+  } catch {
+    return {
+      sendInvitationEmails: true,
+      adminPortalUrl: "https://y-trace-admin.vercel.app",
+      requireVerifiedEmail: true,
+    };
+  }
+}
+
+/**
  * Securely resolves the Admin Portal password creation redirect URL.
  * Prevents open redirects and ensures the invitation link is directed
- * strictly to the Admin Portal (https://y-trace-admin.vercel.app or configured ADMIN_APP_URL),
+ * strictly to the Admin Portal (configured general.admin_portal_url or https://y-trace-admin.vercel.app),
  * never to the User Portal (https://ytrace.app).
  */
-function resolveAdminRedirectUrl(clientOrigin?: string): string {
+function resolveAdminRedirectUrl(clientOrigin?: string, fallbackAdminPortalUrl?: string): string {
   const envAdminUrl = Deno.env.get("ADMIN_APP_URL") || Deno.env.get("ADMIN_SITE_URL");
   if (envAdminUrl && typeof envAdminUrl === "string" && envAdminUrl.trim()) {
     return `${envAdminUrl.trim().replace(/\/+$/, "")}/admin/create-password`;
@@ -167,8 +207,11 @@ function resolveAdminRedirectUrl(clientOrigin?: string): string {
     }
   }
 
-  // Canonical production Admin Portal origin
-  return "https://y-trace-admin.vercel.app/admin/create-password";
+  // Dynamic configured Admin Portal origin or canonical fallback
+  const base = fallbackAdminPortalUrl && fallbackAdminPortalUrl.trim()
+    ? fallbackAdminPortalUrl.trim().replace(/\/+$/, "")
+    : "https://y-trace-admin.vercel.app";
+  return `${base}/admin/create-password`;
 }
 
 Deno.serve(async (req) => {
@@ -325,33 +368,37 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Failed to create the administrator account.", code: "create_failed" }, 400);
       }
 
-      // Send the invite email via GoTrue
-      const targetRedirect = resolveAdminRedirectUrl(redirect_origin);
-      const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
-        redirectTo: targetRedirect,
-      });
+      const settings = await fetchAdminSettings(supabaseAdmin);
 
-      if (inviteError) {
-        // Compensating rollback: delete newly created admin account
-        try {
-          const { error: rollbackError } = await supabaseAdmin.rpc("delete_admin_account", {
-            _session_token: session_token,
-            _admin_id_to_delete: createdRow.id,
-          });
-          if (rollbackError) {
-            console.error("Rollback failed for admin account ID:", createdRow.id, rollbackError);
+      // Send the invite email via GoTrue if email.send_invitation_emails setting is enabled
+      if (settings.sendInvitationEmails) {
+        const targetRedirect = resolveAdminRedirectUrl(redirect_origin, settings.adminPortalUrl);
+        const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
+          redirectTo: targetRedirect,
+        });
+
+        if (inviteError) {
+          // Compensating rollback: delete newly created admin account
+          try {
+            const { error: rollbackError } = await supabaseAdmin.rpc("delete_admin_account", {
+              _session_token: session_token,
+              _admin_id_to_delete: createdRow.id,
+            });
+            if (rollbackError) {
+              console.error("Rollback failed for admin account ID:", createdRow.id, rollbackError);
+            }
+          } catch (rbEx) {
+            console.error("Exception during rollback for admin account ID:", createdRow.id, rbEx);
           }
-        } catch (rbEx) {
-          console.error("Exception during rollback for admin account ID:", createdRow.id, rbEx);
-        }
 
-        return jsonResponse({
-          error: `The administrator account could not be invited right now: ${inviteError.message}`,
-          code: "invite_failed",
-        }, 400);
+          return jsonResponse({
+            error: `The administrator account could not be invited right now: ${inviteError.message}`,
+            code: "invite_failed",
+          }, 400);
+        }
       }
 
-      return jsonResponse({ administrator: createdRow }, 200);
+      return jsonResponse({ administrator: createdRow, emailSent: settings.sendInvitationEmails }, 200);
     }
 
     if (action === "resend") {
@@ -400,7 +447,16 @@ Deno.serve(async (req) => {
         }
       }
 
-      const targetRedirect = resolveAdminRedirectUrl(redirect_origin);
+      const settings = await fetchAdminSettings(supabaseAdmin);
+      if (!settings.sendInvitationEmails) {
+        return jsonResponse({
+          success: true,
+          emailSent: false,
+          message: "Invitation email dispatch is disabled by the current system setting (email.send_invitation_emails = false).",
+        }, 200);
+      }
+
+      const targetRedirect = resolveAdminRedirectUrl(redirect_origin, settings.adminPortalUrl);
       const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
         redirectTo: targetRedirect,
       });
@@ -409,7 +465,7 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: `Could not resend the invite email: ${inviteError.message}`, code: "invite_failed" }, 400);
       }
 
-      return jsonResponse({ success: true }, 200);
+      return jsonResponse({ success: true, emailSent: true }, 200);
     }
 
     if (action === "finalize") {

@@ -9,18 +9,21 @@ import Navbar from "@/components/Navbar";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 
+import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
+
 L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
-});
+  });
 
 const COORDS: [number, number] = [14.592421073182033, 121.08615468030744];
-const address = "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City";
-const phone = "(02) 8643-7632";
-const email = "lydo@pasigcity.gov.ph";
 
 const Contacts = () => {
+  const address = getEffectiveSystemSetting("general.office_address") || "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City";
+  const phone = getEffectiveSystemSetting("general.contact_number") || "(02) 8643-7632";
+  const email = getEffectiveSystemSetting("general.support_email") || "lydo@pasigcity.gov.ph";
+  const officeName = getEffectiveSystemSetting("general.office_name") || "PCYDO Office";
   return (
     <div className="min-h-screen bg-background">
       <AnnouncementBar />
@@ -61,7 +64,7 @@ const Contacts = () => {
               />
               <Marker position={COORDS}>
                 <Popup>
-                  <strong>PCYDO Office</strong>
+                  <strong>{officeName}</strong>
                   <br />
                   {address}
                 </Popup>
@@ -137,7 +140,7 @@ const Contacts = () => {
                   Monday - Thursday
                 </span>
                 <span className="font-segoe text-sm font-bold text-[#0E2F66]">
-                  8:00 AM – 5:00 PM
+                  7:00 AM – 6:00 PM
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">

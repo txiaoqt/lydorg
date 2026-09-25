@@ -218,12 +218,20 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
       target: { value: "2026-09-12" },
     });
+    fireEvent.change(screen.getByPlaceholderText(/Barangay Multipurpose Hall/i), {
+      target: { value: "Pasig City Hall" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Description \/ narrative report summary/i), {
+      target: { value: "Detailed narrative report for youth summit." },
+    });
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const testFile = new File(["dummy content"], "report.pdf", { type: "application/pdf" });
     fireEvent.change(fileInput, { target: { files: [testFile] } });
 
     fireEvent.click(screen.getByRole("button", { name: /Submit for Review/i }));
+    const confirmButtons = await screen.findAllByRole("button", { name: /Submit for Review/i });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
 
     await waitFor(() => {
       // Must be called ONLY once, NEVER with status: "draft"
@@ -297,6 +305,8 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /Submit for Review/i }));
+    const confirmButtons = await screen.findAllByRole("button", { name: /Submit for Review/i });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
 
     await waitFor(() => {
       expect(onActivitySaved).toHaveBeenCalledTimes(1);

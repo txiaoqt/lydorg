@@ -17,6 +17,7 @@ import {
   type PasigDistrict,
 } from "@/lib/pasig-districts";
 import { majorClassificationOptions, type OrganizationRenewalStatus } from "@/lib/lydo-connect-data";
+import { isRevisionExpired } from "@/lib/revision-deadline";
 
 export type RenewalStatusFilter = "all" | "submitted" | "pending_review" | "needs_revision" | "approved" | "rejected";
 
@@ -36,6 +37,8 @@ export type AdminRenewalQueueEntry = {
   linkedDocumentSubmissionId: string | null;
   currentAccreditationId: string | null;
   adminRemarks: string | null;
+  revisionDueAt?: string | null;
+  revisionLockedAt?: string | null;
 };
 
 export type RenewalsTableProps = {
@@ -55,18 +58,27 @@ export type RenewalsTableProps = {
 
 const STATUS_TABS: { value: RenewalStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "approved", label: "Verified" },
+  { value: "submitted", label: "Submitted" },
   { value: "pending_review", label: "Pending Review" },
   { value: "needs_revision", label: "Needs Revision" },
+  { value: "approved", label: "Approved" },
 ];
 
 const PAGE_SIZE = 10;
 
-export const RenewalStatusPill = ({ status }: { status: OrganizationRenewalStatus }) => {
+export const RenewalStatusPill = ({
+  status,
+  revisionDueAt,
+  revisionLockedAt,
+}: {
+  status: OrganizationRenewalStatus;
+  revisionDueAt?: string | null;
+  revisionLockedAt?: string | null;
+}) => {
   if (status === "approved") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
-        Verified
+        Approved
       </span>
     );
   }
@@ -78,9 +90,24 @@ export const RenewalStatusPill = ({ status }: { status: OrganizationRenewalStatu
     );
   }
   if (status === "needs_revision") {
+    const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
+    if (isExpired) {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+          Revision Expired (Locked)
+        </span>
+      );
+    }
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
+      </span>
+    );
+  }
+  if (status === "submitted") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+        Submitted
       </span>
     );
   }
@@ -395,7 +422,11 @@ export const RenewalsTable = ({
                   </div>
 
                   <div className="flex w-[12%] items-center">
-                    <RenewalStatusPill status={item.renewalStatus} />
+                    <RenewalStatusPill
+                      status={item.renewalStatus}
+                      revisionDueAt={item.revisionDueAt}
+                      revisionLockedAt={item.revisionLockedAt}
+                    />
                   </div>
 
                   <div className="flex w-[90px] shrink-0 items-center">

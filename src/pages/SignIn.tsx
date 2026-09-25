@@ -20,6 +20,7 @@ import {
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 import { getAuthCallbackUrl, getPasswordResetUrl } from "@/lib/auth-redirect";
+import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
 import { AdminDesktopGate } from "@/components/portal/AdminDesktopGate";
 
 type SignInProps = {
@@ -205,9 +206,9 @@ const SignIn = ({ forcedMode }: SignInProps) => {
         onSwitchToUser={
           roleSelectionEnabled
             ? () => {
-                setMode("user");
-                setInlineError("");
-              }
+              setMode("user");
+              setInlineError("");
+            }
             : undefined
         }
       >
@@ -240,7 +241,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
                   Admin sign in
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Sign in to access the Y-TRACE administration portal and manage youth organization records.
+                  Sign in to access the {getEffectiveSystemSetting("general.system_name") || "Y-TRACE"} administration portal and manage youth organization records.
                 </p>
               </div>
 
@@ -275,11 +276,11 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
               {/* Admin Username / Email */}
               <div className="space-y-1.5">
-                <Label htmlFor="username">Username (Email Address)</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="name@example.com or admin username"
+                  placeholder="Enter your username"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -288,9 +289,6 @@ const SignIn = ({ forcedMode }: SignInProps) => {
                   autoComplete="username"
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Use the email address associated with your administrator invitation.
-                </p>
               </div>
 
               {/* Password */}

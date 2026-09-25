@@ -177,12 +177,14 @@ export const normalizeTemplates = (templates: TemplateRecord[]): TemplateRecord[
       byIdentity.get(template.id);
 
     if (existing) {
+      const oldNameKey = existing.name.trim().toLowerCase();
       const merged: TemplateRecord = {
         ...existing,
         ...normalized,
         databaseId: normalized.databaseId || existing.databaseId,
         id: normalized.id || existing.id,
       };
+      if (oldNameKey !== nameKey) byIdentity.delete(oldNameKey);
       if (existing.databaseId) byIdentity.delete(existing.databaseId);
       if (existing.id) byIdentity.delete(existing.id);
       byIdentity.set(nameKey, merged);
@@ -575,12 +577,20 @@ export const reconcileYpopEntries = (
   const currentById = new Map<string, YPOPEntry>();
   currentEntries.forEach((e) => currentById.set(e.id, e));
 
-  const merged = remoteEntries.map((remoteEntry) => {
+  const remoteById = new Map<string, YPOPEntry>();
+  remoteEntries.forEach((e) => remoteById.set(e.id, e));
+
+  // Retain local-only virtual entries for valid semesters while active
+  const localVirtualItems = currentEntries.filter(
+    (item) => !remoteById.has(item.id) && ("_isVirtual" in item || item.id.startsWith("virtual-")),
+  );
+
+  const mergedRemote = remoteEntries.map((remoteEntry) => {
     const localEntry = currentById.get(remoteEntry.id);
     return pickNewerYpopRecord(localEntry, remoteEntry);
   });
 
-  return merged.filter((e) => validSemesterKeys.has(e.semester));
+  return [...localVirtualItems, ...mergedRemote].filter((e) => validSemesterKeys.has(e.semester));
 };
 
 export const reconcileYpopEventFiles = (
@@ -889,6 +899,14 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             validCityActivityIds,
           );
 
+          const nextOrgActivities = reconcileYpopOrgActivities(
+            current.ypopOrgActivities,
+            snapshot.ypopOrgActivities,
+            snapshot.organizationProfiles,
+            isAdmin,
+            validEntryIds,
+          );
+
           return {
             ...current,
             ...snapshot,
@@ -914,17 +932,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
               nextEventParticipations,
               isAdmin,
             ),
-            ypopOrgActivities: reconcileYpopOrgActivities(
-              current.ypopOrgActivities,
-              snapshot.ypopOrgActivities,
-              snapshot.organizationProfiles,
-              isAdmin,
-              validEntryIds,
-            ),
+            ypopOrgActivities: nextOrgActivities,
             ypopOrgActivityFiles: reconcileYpopOrgActivityFiles(
               current.ypopOrgActivityFiles,
               snapshot.ypopOrgActivityFiles,
-              current.ypopOrgActivities,
+              nextOrgActivities,
               isAdmin,
             ),
           };

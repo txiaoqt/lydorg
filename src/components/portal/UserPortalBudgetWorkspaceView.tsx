@@ -54,6 +54,12 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isRevisionExpired,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
 
 import { computeBudgetWorkflowMetrics } from "@/lib/workflow-metrics";
 import { WebsiteWorkflowNotice } from "./WebsiteWorkflowNotice";
@@ -1621,40 +1627,68 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   {/* SCROLLABLE BODY */}
                   <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
                     {/* Admin Revision Feedback (Needs Revision Callout) */}
-                    {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (
-                      <div className="rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 shadow-2xs">
-                        <div className="flex items-center gap-1.5 font-bold">
-                          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                          <span>Admin Revision Feedback</span>
-                        </div>
-                        <p className="text-xs leading-relaxed pl-5 font-normal italic">
-                          "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
-                        </p>
-                        {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
-                          <div className="pt-1 pl-5">
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={isReplacingBudgetFile}
-                              onClick={handleTriggerReplaceBudgetFile}
-                              className="h-8 px-3 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
-                            >
-                              {isReplacingBudgetFile ? (
-                                <>
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  <span>Uploading Revised Proposal...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <FileUp className="h-3.5 w-3.5" />
-                                  <span>Upload Revised Proposal</span>
-                                </>
-                              )}
-                            </Button>
+                    {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (() => {
+                      const isExpired = selectedRequest.status === "needs_revision" && (isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest));
+                      const deadlineText = selectedRequest.status === "needs_revision" ? formatRevisionDeadline(selectedRequest.revisionDueAt) : "";
+                      const remaining = selectedRequest.status === "needs_revision" ? getRevisionTimeRemaining(selectedRequest.revisionDueAt) : null;
+
+                      return (
+                        <div
+                          className={cn(
+                            "rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 shadow-2xs",
+                            isExpired
+                              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+                              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <AlertCircle className={cn("h-4 w-4 shrink-0", isExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
+                            <span>{isExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <p className="text-xs leading-relaxed pl-5 font-normal italic">
+                            "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
+                          </p>
+                          {deadlineText && (
+                            <p className="text-xs font-semibold pl-5">
+                              {isExpired
+                                ? `The 5-day resubmission deadline expired on ${deadlineText}. Further file updates or resubmissions are locked.`
+                                : `Resubmission deadline: ${deadlineText} (${remaining?.label})`}
+                            </p>
+                          )}
+                          {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
+                            <div className="pt-1 pl-5">
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={isReplacingBudgetFile || isExpired}
+                                onClick={() => {
+                                  if (isExpired) return;
+                                  handleTriggerReplaceBudgetFile();
+                                }}
+                                className={cn(
+                                  "h-8 px-3 rounded-lg font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer",
+                                  isExpired
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                    : "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"
+                                )}
+                              >
+                                {isReplacingBudgetFile ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    <span>Uploading Revised Proposal...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <FileUp className="h-3.5 w-3.5" />
+                                    <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* 1. Key Summary: Financial Overview */}
                     <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
@@ -1857,40 +1891,68 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   {/* SCROLLABLE BODY */}
                   <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
                     {/* Admin Revision Feedback (Needs Revision Callout) */}
-                    {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (
-                      <div className="rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 shadow-2xs">
-                        <div className="flex items-center gap-1.5 font-bold">
-                          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                          <span>Admin Revision Feedback</span>
-                        </div>
-                        <p className="text-xs leading-relaxed pl-5 font-normal italic">
-                          "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
-                        </p>
-                        {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
-                          <div className="pt-1 pl-5">
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={isReplacingBudgetFile}
-                              onClick={handleTriggerReplaceBudgetFile}
-                              className="h-8.5 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
-                            >
-                              {isReplacingBudgetFile ? (
-                                <>
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  <span>Uploading Revised Proposal...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <FileUp className="h-3.5 w-3.5" />
-                                  <span>Upload Revised Proposal</span>
-                                </>
-                              )}
-                            </Button>
+                    {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (() => {
+                      const isExpired = selectedRequest.status === "needs_revision" && (isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest));
+                      const deadlineText = selectedRequest.status === "needs_revision" ? formatRevisionDeadline(selectedRequest.revisionDueAt) : "";
+                      const remaining = selectedRequest.status === "needs_revision" ? getRevisionTimeRemaining(selectedRequest.revisionDueAt) : null;
+
+                      return (
+                        <div
+                          className={cn(
+                            "rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 shadow-2xs",
+                            isExpired
+                              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+                              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <AlertCircle className={cn("h-4 w-4 shrink-0", isExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
+                            <span>{isExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <p className="text-xs leading-relaxed pl-5 font-normal italic">
+                            "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
+                          </p>
+                          {deadlineText && (
+                            <p className="text-xs font-semibold pl-5">
+                              {isExpired
+                                ? `The 5-day resubmission deadline expired on ${deadlineText}. Further file updates or resubmissions are locked.`
+                                : `Resubmission deadline: ${deadlineText} (${remaining?.label})`}
+                            </p>
+                          )}
+                          {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
+                            <div className="pt-1 pl-5">
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={isReplacingBudgetFile || isExpired}
+                                onClick={() => {
+                                  if (isExpired) return;
+                                  handleTriggerReplaceBudgetFile();
+                                }}
+                                className={cn(
+                                  "h-8.5 px-3.5 rounded-lg font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer",
+                                  isExpired
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                    : "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"
+                                )}
+                              >
+                                {isReplacingBudgetFile ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    <span>Uploading Revised Proposal...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <FileUp className="h-3.5 w-3.5" />
+                                    <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* 1. Key Summary: Financial Overview */}
                     <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
@@ -2006,7 +2068,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         onClick={() => closeBudgetDetail()}
                         className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
                       >
-                        Close Drawer
+                        Close
                       </Button>
                       {selectedRequest.status === "draft" && (
                         <Button

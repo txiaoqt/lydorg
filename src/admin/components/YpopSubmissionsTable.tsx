@@ -58,21 +58,21 @@ export const StatusLabel = ({ status }: { status: YpopQualificationStatus | YPOP
   }
   if (status === "pending_evaluation") {
     return (
-      <span className="inline-flex h-6 items-center justify-center rounded-full border border-amber-500/30 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-800 dark:bg-amber-500/10 dark:text-amber-400">
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Pending Evaluation
       </span>
     );
   }
   if (status === "needs_revision") {
     return (
-      <span className="inline-flex h-6 items-center justify-center rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
       </span>
     );
   }
   if (status === "under_review") {
     return (
-      <span className="inline-flex h-6 items-center justify-center rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-[#2864C4]">
+      <span className="inline-flex h-6 items-center justify-center rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Under Review
       </span>
     );

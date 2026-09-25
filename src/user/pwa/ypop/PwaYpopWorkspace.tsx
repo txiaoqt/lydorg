@@ -157,7 +157,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
   }, [entry?.id, entry?.submissionNote]);
 
   const refresh = async () => {
-    await data.refresh();
+    await data.refreshYpop();
   };
 
   const joinEvent = async (activityId: string) => {
@@ -815,7 +815,7 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
         });
         data.store.updateYPOPOrgActivity(saved.id, saved);
       }
-      await data.refresh();
+      await data.refreshYpop();
       toast({ title: submit ? "PPA submitted" : "PPA draft saved", description: submit ? "The activity is now pending admin approval." : "You can continue this draft later." });
       go(pwaYpopEntryRoute(entry.id), { replace: true });
     } catch (error) {
@@ -835,7 +835,7 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
     try {
       await deleteYpopOrgActivityFileFromSupabase(fileId, fileUrl);
       data.store.deleteYPOPOrgActivityFile(fileId);
-      await data.refresh();
+      await data.refreshYpop();
     } catch (error) {
       toast({ title: "Unable to remove file", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     }

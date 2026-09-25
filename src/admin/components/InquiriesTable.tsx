@@ -16,14 +16,15 @@ type InquiriesTableProps = {
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
   onSelectInquiry: (inquiry: InquiryRecord) => void;
-  onMarkResponded: (inquiry: InquiryRecord) => void | Promise<void>;
+  onMarkReviewed?: (inquiry: InquiryRecord) => void | Promise<void>;
+  onMarkResponded?: (inquiry: InquiryRecord) => void | Promise<void>;
   onDeleteInquiry?: (inquiry: InquiryRecord) => void;
 };
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "pending_review", label: "Open" },
-  { value: "reviewed", label: "Responded" },
+  { value: "pending_review", label: "Pending Review" },
+  { value: "reviewed", label: "Reviewed" },
   { value: "closed", label: "Closed" },
 ];
 
@@ -33,15 +34,15 @@ export const StatusPill = ({ status }: { status: InquiryRecord["status"] }) => {
   const normalized = normalizeInquiryStatus(status);
   if (normalized === "pending_review") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
-        Open
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+        Pending Review
       </span>
     );
   }
   if (normalized === "reviewed") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
-        Responded
+        Reviewed
       </span>
     );
   }
@@ -140,11 +141,14 @@ export const InquiriesTable = ({
   statusFilter,
   onStatusFilterChange,
   onSelectInquiry,
+  onMarkReviewed,
   onMarkResponded,
   onDeleteInquiry,
 }: InquiriesTableProps) => {
   const [page, setPage] = useState(0);
   const [replyDialogInquiry, setReplyDialogInquiry] = useState<InquiryRecord | null>(null);
+
+  const markReviewedHandler = onMarkReviewed ?? onMarkResponded;
 
   const totalPages = Math.max(1, Math.ceil(inquiries.length / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
@@ -220,6 +224,7 @@ export const InquiriesTable = ({
           const code = getReferenceCode(inquiry);
           const date = new Date(inquiry.createdAt);
           const isValidDate = !Number.isNaN(date.getTime());
+          const isEligibleForReply = normalizeInquiryStatus(inquiry.status) === "pending_review";
 
           return (
             <div
@@ -260,7 +265,9 @@ export const InquiriesTable = ({
               </div>
 
               <div className="flex w-[185px] shrink-0 items-center justify-end gap-1.5">
-                <ReplyEmailButton onClick={() => setReplyDialogInquiry(inquiry)} />
+                {isEligibleForReply ? (
+                  <ReplyEmailButton onClick={() => setReplyDialogInquiry(inquiry)} />
+                ) : null}
                 {onDeleteInquiry ? (
                   <DeleteInquiryButton onClick={() => onDeleteInquiry(inquiry)} />
                 ) : null}
@@ -322,7 +329,7 @@ export const InquiriesTable = ({
       </div>
 
       <ReplyEmailDialog
-        open={Boolean(replyDialogInquiry)}
+        open={Boolean(replyDialogInquiry && normalizeInquiryStatus(replyDialogInquiry.status) === "pending_review")}
         onOpenChange={(open) => {
           if (!open) setReplyDialogInquiry(null);
         }}
@@ -333,7 +340,8 @@ export const InquiriesTable = ({
             ? replyDialogInquiry.organizationName || replyDialogInquiry.submitterName || "Unknown"
             : ""
         }
-        onMarkResponded={() => (replyDialogInquiry ? onMarkResponded(replyDialogInquiry) : undefined)}
+        inquiryStatus={replyDialogInquiry?.status}
+        onMarkReviewed={() => (replyDialogInquiry && markReviewedHandler ? markReviewedHandler(replyDialogInquiry) : undefined)}
       />
     </div>
   );

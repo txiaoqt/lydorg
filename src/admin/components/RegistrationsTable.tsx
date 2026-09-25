@@ -46,7 +46,7 @@ const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
   { value: "verified", label: "Verified" },
   { value: "pending_review", label: "Pending Review" },
-  { value: "needs_update", label: "Needs Revision" },
+  { value: "needs_update", label: "Needs Update" },
 ];
 
 const PAGE_SIZE = 10;
@@ -61,12 +61,26 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
   }
   if (status === "needs_update") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
-        Needs Revision
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+        Needs Update
       </span>
     );
   }
-  if (status === "pending_review" || status === "incomplete") {
+  if (status === "incomplete") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+        Incomplete Profile
+      </span>
+    );
+  }
+  if (status === "suspended_inactive") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+        Suspended
+      </span>
+    );
+  }
+  if (status === "pending_review") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Pending Review
@@ -74,7 +88,7 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
     </span>
   );

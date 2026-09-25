@@ -33,14 +33,14 @@ export const UserPortalRenewalCountdownChip: React.FC<UserPortalRenewalCountdown
 
   // Derive label and tone from authoritative renewalState if provided
   let label: string;
-  let tone: "danger" | "warning" | "info" | "neutral" = "neutral";
+  let tone: "danger" | "action" | "warning" | "info" | "neutral" = "neutral";
 
   if (renewalState?.key === "renewal_draft") {
     label = "Renewal draft in progress";
-    tone = "warning";
+    tone = "neutral";
   } else if (renewalState?.key === "renewal_needs_revision") {
     label = "Renewal action required";
-    tone = "danger";
+    tone = "action";
   } else if (renewalState?.key === "renewal_submitted" || renewalState?.key === "renewal_resubmitted") {
     label = "Renewal submitted";
     tone = "info";
@@ -74,23 +74,27 @@ export const UserPortalRenewalCountdownChip: React.FC<UserPortalRenewalCountdown
       className={cn(
         "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors duration-150 shadow-2xs",
         tone === "danger"
-          ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-          : tone === "warning"
-            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-            : tone === "info"
-              ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20"
-              : "bg-muted/40 text-foreground border-border/50",
+          ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+          : tone === "action"
+            ? "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20"
+            : tone === "warning"
+              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+              : tone === "info"
+                ? "bg-primary/10 text-primary dark:text-primary border-primary/20"
+                : "bg-muted/50 text-muted-foreground border-border",
         className,
       )}
     >
       {tone === "danger" ? (
         <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-500" />
+      ) : tone === "action" ? (
+        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-orange-500" />
       ) : tone === "warning" ? (
         <Clock className="h-3.5 w-3.5 shrink-0 text-amber-500" />
       ) : tone === "info" ? (
-        <FileText className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+        <FileText className="h-3.5 w-3.5 shrink-0 text-primary" />
       ) : (
-        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary" />
+        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
       <span>{label}</span>
     </div>

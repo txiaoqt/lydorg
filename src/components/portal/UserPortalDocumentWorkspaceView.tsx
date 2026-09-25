@@ -27,6 +27,7 @@ import { formatActivityActionLabel, formatFullActivityTimestamp } from "@/compon
 import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 
 import { FeatureGate } from "./FeatureGate";
+import { StatusBadge } from "./StatusBadge";
 
 export interface UserPortalDocumentWorkspaceViewProps {
   registrationPrerequisites?: any;
@@ -515,43 +516,55 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               const renderStatusBadge = () => {
                 if (isApproved) {
                   return (
-                    <span className="inline-flex text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 shrink-0">
-                      Approved
-                    </span>
+                    <StatusBadge
+                      status="approved"
+                      label="Approved"
+                      className="text-[10px] font-bold px-2.5 py-0.5 shrink-0"
+                    />
                   );
                 }
                 if (isUnderReview) {
                   return (
-                    <span className="inline-flex text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20 shrink-0">
-                      Under Review
-                    </span>
+                    <StatusBadge
+                      status="under_review"
+                      label="Under Review"
+                      className="text-[10px] font-bold px-2.5 py-0.5 shrink-0"
+                    />
                   );
                 }
                 if (isDraft) {
                   return (
-                    <span className="inline-flex text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 shrink-0">
-                      Draft Saved
-                    </span>
+                    <StatusBadge
+                      status="draft"
+                      label="Draft Saved"
+                      className="text-[10px] font-bold px-2.5 py-0.5 shrink-0"
+                    />
                   );
                 }
                 if (isRejected) {
                   return (
-                    <span className="inline-flex text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/20 shrink-0">
-                      Rejected
-                    </span>
+                    <StatusBadge
+                      status="rejected"
+                      label="Rejected"
+                      className="text-[10px] font-bold px-2.5 py-0.5 shrink-0"
+                    />
                   );
                 }
                 if (isRevision) {
                   return (
-                    <span className="inline-flex text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20 shrink-0">
-                      Needs Revision
-                    </span>
+                    <StatusBadge
+                      status="needs_revision"
+                      label="Needs Revision"
+                      className="text-[10px] font-bold px-2.5 py-0.5 shrink-0"
+                    />
                   );
                 }
                 return (
-                  <span className="inline-flex text-[10px] font-medium text-muted-foreground bg-accent px-2.5 py-0.5 rounded-full border border-border/60 shrink-0">
-                    Not Uploaded
-                  </span>
+                  <StatusBadge
+                    status="not_started"
+                    label="Not Uploaded"
+                    className="text-[10px] font-medium px-2.5 py-0.5 shrink-0"
+                  />
                 );
               };
 

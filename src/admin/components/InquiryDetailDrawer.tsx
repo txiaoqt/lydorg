@@ -17,8 +17,8 @@ type InquiryDetailDrawerProps = {
 };
 
 const STATUS_ACTIONS: { value: InquiryRecord["status"]; label: string }[] = [
-  { value: "pending_review", label: "Open" },
-  { value: "reviewed", label: "Responded" },
+  { value: "pending_review", label: "Pending Review" },
+  { value: "reviewed", label: "Reviewed" },
   { value: "closed", label: "Closed" },
 ];
 
@@ -159,7 +159,9 @@ export const InquiryDetailDrawer = ({
                     Delete Inquiry
                   </button>
                 ) : <div />}
-                <ReplyEmailButton onClick={onReplyEmail} className="h-10 px-4 text-xs sm:text-sm font-semibold" />
+                {inquiry && normalizeInquiryStatus(inquiry.status) === "pending_review" ? (
+                  <ReplyEmailButton onClick={onReplyEmail} className="h-10 px-4 text-xs sm:text-sm font-semibold" />
+                ) : null}
               </div>
             </div>
           </div>

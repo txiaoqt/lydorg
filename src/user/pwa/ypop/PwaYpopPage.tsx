@@ -85,7 +85,7 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
         cityLedAttendance: [],
       });
       data.store.createYPOPEntry(saved);
-      await data.refresh();
+      await data.refreshYpop();
       go(pwaYpopEntryRoute(saved.id));
     } catch (error) {
       toast({ title: "Unable to open submission", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });

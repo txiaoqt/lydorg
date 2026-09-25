@@ -24,6 +24,7 @@ import {
   type LiquidationReport,
   type OrganizationProfile,
 } from "@/lib/lydo-connect-data";
+import { isRevisionExpired } from "@/lib/revision-deadline";
 
 export type LiquidationReportsStatusFilter =
   | "all"
@@ -99,11 +100,11 @@ export const STATUS_LABEL_CONFIG: Record<LiquidationReport["status"], { label: s
   },
   needs_revision: {
     label: "Needs Revision",
-    className: "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
+    className: "border-border-action-subtle bg-bg-action-subtle text-text-action",
   },
   approved_for_ftf_green: {
     label: "Onsite Required",
-    className: "border-border-success-subtle bg-bg-success-subtle text-positive-secondary",
+    className: "border-border-progress-subtle bg-bg-progress-subtle text-text-progress",
   },
   rejected_red: {
     label: "Rejected",
@@ -114,12 +115,12 @@ export const STATUS_LABEL_CONFIG: Record<LiquidationReport["status"], { label: s
     className: "border-bg-info-secondary bg-bg-info-tertiary text-icon-info-secondary",
   },
   under_review: {
-    label: "Pending Review",
+    label: "Under Review",
     className: "border-bg-info-secondary bg-bg-info-tertiary text-icon-info-secondary",
   },
   hard_copy_submitted: {
     label: "Hardcopy Submitted",
-    className: "border-cyan-200 bg-cyan-50 text-cyan-700",
+    className: "border-border-progress-subtle bg-bg-progress-subtle text-text-progress",
   },
   completed_liquidated: {
     label: "Liquidated",
@@ -134,10 +135,24 @@ export const STATUS_LABEL_CONFIG: Record<LiquidationReport["status"], { label: s
 export const LiquidationStatusLabel = ({
   status,
   deadlineAt,
+  revisionDueAt,
+  revisionLockedAt,
 }: {
   status: LiquidationReport["status"];
   deadlineAt?: string | null;
+  revisionDueAt?: string | null;
+  revisionLockedAt?: string | null;
 }) => {
+  if (status === "needs_revision") {
+    const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
+    if (isExpired) {
+      return (
+        <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%] border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
+          Revision Expired (Locked)
+        </span>
+      );
+    }
+  }
   const isOverdue = isLiquidationOverdue(deadlineAt, status);
   const config = isOverdue
     ? STATUS_LABEL_CONFIG.overdue
@@ -441,7 +456,12 @@ export const LiquidationReportsTable = ({
                   </div>
 
                   <div className="flex w-[14%] items-center">
-                    <LiquidationStatusLabel status={report.status} deadlineAt={report.deadlineAt} />
+                    <LiquidationStatusLabel
+                      status={report.status}
+                      deadlineAt={report.deadlineAt}
+                      revisionDueAt={report.revisionDueAt}
+                      revisionLockedAt={report.revisionLockedAt}
+                    />
                   </div>
 
                   <div className="flex w-[90px] shrink-0 items-center">

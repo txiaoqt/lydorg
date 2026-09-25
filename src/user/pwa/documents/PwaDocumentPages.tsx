@@ -24,6 +24,13 @@ import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaDocumentDetailRoute } from "../pwaRoutes";
 import { isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isRevisionAdminUnlocked,
+  isRevisionExpired,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
+import {
   DOCUMENT_UPLOAD_MAX_BYTES,
   formatDocumentFileSize,
   getAcceptedDocumentFormats,
@@ -219,6 +226,10 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
   };
 
   const requiresCorrection = Boolean(file && correctionStatuses.has(file.adminStatus));
+  const isUnlocked = requiresCorrection && isRevisionAdminUnlocked(file);
+  const isExpired = requiresCorrection && isSubmissionRevisionLocked(file);
+  const revisionDeadlineText = formatRevisionDeadline(file?.revisionDueAt);
+  const revisionRemaining = getRevisionTimeRemaining(file?.revisionDueAt, undefined, isUnlocked);
   const latestRevision = file?.revisionHistory?.at(-1);
   const fileAccess = resolveRegistrationDocumentAccess({
     file,
@@ -290,6 +301,10 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
   };
 
   const submitReplacement = async () => {
+    if (isExpired) {
+      setReplacementError("Revision deadline has expired. This document is locked and cannot be replaced.");
+      return;
+    }
     if (!file || !replacementFile) {
       setReplacementError("Choose the corrected file before submitting.");
       return;
@@ -344,11 +359,34 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
         <div><h2>{template.name}</h2><StatusBadge status={file?.adminStatus ?? "not_started"} label={file ? undefined : "Missing"} /></div>
       </section>
       {requiresCorrection ? (
-        <section className={`pwa-card pwa-revision-notice ${file?.adminStatus === "rejected_red" ? "is-rejected" : ""}`}>
+        <section className={`pwa-card pwa-revision-notice ${isUnlocked ? "is-unlocked" : file?.adminStatus === "rejected_red" || isExpired ? "is-rejected" : ""}`}>
           <Info aria-hidden="true" />
           <div>
-            <strong>{file?.adminStatus === "rejected_red" ? "This document was rejected." : "Admin requested changes to this document."}</strong>
+            <strong>
+              {isUnlocked
+                ? "Needs Revision • Unlocked by Admin"
+                : isExpired
+                ? "Revision Locked"
+                : file?.adminStatus === "rejected_red"
+                  ? "This document was rejected."
+                  : "Admin requested changes to this document."}
+            </strong>
             <p>{previousRemark || "Review the requirement and upload a corrected file."}</p>
+            {isUnlocked ? (
+              <p className="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                {revisionDeadlineText
+                  ? `Original deadline: ${revisionDeadlineText}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
+                  : "This submission has been unlocked by an administrator. You may now upload corrected files and resubmit."}
+              </p>
+            ) : isExpired ? (
+              <p className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400">
+                The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.
+              </p>
+            ) : revisionDeadlineText ? (
+              <p className="mt-2 text-xs font-semibold">
+                {`Resubmission deadline: ${revisionDeadlineText} (${revisionRemaining.label})`}
+              </p>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -360,7 +398,27 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
         {previousRemark ? <div><Eye /><span><small>{latestRevision ? "Previous review remark" : "Admin remark"}</small><strong>{previousRemark}</strong></span></div> : null}
       </section>
       <div className="pwa-button-stack">
-        {requiresCorrection ? <button ref={reuploadTriggerRef} type="button" className="pwa-primary-button" onClick={() => setReplaceOpen(true)}><UploadCloud /> Re-upload File</button> : null}
+        {requiresCorrection ? (
+          <button
+            ref={reuploadTriggerRef}
+            type="button"
+            className="pwa-primary-button"
+            disabled={isExpired}
+            onClick={() => {
+              if (isExpired) {
+                toast({
+                  title: "Revision Locked",
+                  description: "The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.",
+                  variant: "destructive",
+                });
+                return;
+              }
+              setReplaceOpen(true);
+            }}
+          >
+            <UploadCloud /> {isExpired ? "Revision Locked" : "Re-upload File"}
+          </button>
+        ) : null}
         {fileAccess.canViewAttachedFile && file ? <button type="button" className="pwa-secondary-button" onClick={() => void openReference(file.fileUrl)}><Eye /> View Attached File</button> : null}
         {template.templateFileUrl ? <button type="button" className="pwa-secondary-button" onClick={() => void openReference(template.templateFileUrl)}><Download /> View Template</button> : null}
         {!file || initialUploadStatuses.has(file.adminStatus) ? <button type="button" className="pwa-primary-button" onClick={() => go(PWA_ROUTES.documentsManage)}><UploadCloud /> Upload in Document Manager</button> : null}
@@ -570,7 +628,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
           };
         }),
       });
-      await data.refresh();
+      await data.refreshDocuments();
       if (result.failureCount) {
         toast({ title: `${result.successCount} uploaded, ${result.failureCount} failed`, description: result.results.find((item) => !item.success)?.error || "Review the failed files.", variant: "destructive" });
       } else {
@@ -588,7 +646,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
     if (submissionLocked || approvedStatuses.has(file.adminStatus)) return;
     try {
       await removeOrganizationDocumentFromSupabase(file.id);
-      await data.refresh();
+      await data.refreshDocuments();
       toast({ title: "Document removed" });
     } catch (error) {
       toast({ title: "Remove failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });

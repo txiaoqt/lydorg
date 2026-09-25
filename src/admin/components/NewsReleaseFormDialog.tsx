@@ -408,12 +408,12 @@ export const NewsReleaseFormDialog = ({
     setIsAddingCategorySubmitting(true);
     setNewCategoryError(null);
     try {
+      onCategoryChange(createdName);
       if (onAddCategory) {
         await onAddCategory(createdName);
       } else {
         setLocalCategories((prev) => [...prev, createdName]);
       }
-      onCategoryChange(createdName);
       setIsAddingCategory(false);
       setNewCategoryName("");
       setNewCategoryError(null);

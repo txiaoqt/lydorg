@@ -39,6 +39,14 @@ import { cn } from "@/lib/utils";
 import type { OrganizationProfile, OrganizationRenewalRecord, SubmissionFile, TemplateRecord } from "@/lib/lydo-connect-data";
 import type { UserFacingRenewalState } from "@/lib/organization-renewal";
 import {
+  calculateRevisionDeadline,
+  formatRevisionDeadline,
+  isRevisionExpired,
+  getRevisionTimeRemaining,
+  isRevisionAdminUnlocked,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
+import {
   fetchRenewalPacketInSupabase,
   fetchRenewalRequiredDocumentTypesInSupabase,
   uploadRenewalDocumentFileInSupabase,
@@ -214,6 +222,15 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
     ).length;
   }, [files]);
 
+  const isRenewalAdminUnlockedState = useMemo(() => {
+    return isRevisionAdminUnlocked(activeRenewal);
+  }, [activeRenewal]);
+
+  const isRenewalRevisionLocked = useMemo(() => {
+    if (activeRenewal?.status !== "needs_revision") return false;
+    return isSubmissionRevisionLocked(activeRenewal);
+  }, [activeRenewal]);
+
   const completionPercent = totalMandatoryCount > 0
     ? Math.round((uploadedFilesCount / totalMandatoryCount) * 100)
     : 0;
@@ -312,6 +329,15 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
       return;
     }
 
+    if (isRenewalRevisionLocked) {
+      toast({
+        title: "Revision Expired",
+        description: "The 5-calendar-day deadline to resubmit this renewal has expired. Submissions are now locked.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setUploadingDocId(docTypeId);
       const replacedFile = await replaceRenewalDocumentFileInSupabase({
@@ -387,6 +413,14 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
   // Resubmit Renewal Handler
   const handleResubmit = async () => {
     if (!activeRenewal?.id) return;
+    if (isRenewalRevisionLocked) {
+      toast({
+        title: "Revision Expired",
+        description: "The 5-calendar-day deadline to resubmit this renewal has expired. Submissions are now locked.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       setResubmittingRenewal(true);
       const res = await userResubmitRenewalInSupabase(activeRenewal.id);
@@ -461,6 +495,12 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
       case "under_review":
         return <Badge variant="outline" className="bg-sky-500/10 text-sky-600 border-sky-500/30">Under Admin Review</Badge>;
       case "needs_revision":
+        if (isRenewalAdminUnlockedState) {
+          return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">Needs Revision • Unlocked by Admin</Badge>;
+        }
+        if (isRenewalRevisionLocked) {
+          return <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30">Revision Locked</Badge>;
+        }
         return <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30">Revision Requested</Badge>;
       case "resubmitted":
         return <Badge variant="outline" className="bg-sky-500/10 text-sky-600 border-sky-500/30">Resubmitted (Under Review)</Badge>;
@@ -560,11 +600,21 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
             {activeRenewal?.status === "needs_revision" && (
               <Button
                 size="lg"
-                disabled={unresolvedFlaggedCount > 0 || resubmittingRenewal}
+                disabled={unresolvedFlaggedCount > 0 || resubmittingRenewal || isRenewalRevisionLocked}
                 onClick={handleResubmit}
-                className="font-bold text-xs sm:text-sm rounded-xl shrink-0 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+                className={cn(
+                  "font-bold text-xs sm:text-sm rounded-xl shrink-0 gap-1.5",
+                  isRenewalRevisionLocked
+                    ? "bg-rose-500/10 text-rose-600 border border-rose-500/30 cursor-not-allowed opacity-80"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                )}
               >
-                {resubmittingRenewal ? (
+                {isRenewalRevisionLocked ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-rose-600" />
+                    Revision Expired (Locked)
+                  </>
+                ) : resubmittingRenewal ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Resubmitting...
@@ -597,6 +647,63 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                     Late renewal remains available through {userRenewalState.lateCutoffDate} (Day 180).
                   </p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Revision Deadline Banner if Needs Revision */}
+          {activeRenewal?.status === "needs_revision" && activeRenewal.revisionDueAt && (
+            <div
+              className={cn(
+                "p-4 rounded-xl border flex items-start gap-3",
+                isRenewalRevisionLocked
+                  ? "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-200"
+                  : isRenewalAdminUnlockedState
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-200"
+                  : "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200"
+              )}
+            >
+              {isRenewalRevisionLocked ? (
+                <ShieldAlert className="h-5 w-5 shrink-0 text-rose-600 mt-0.5" />
+              ) : isRenewalAdminUnlockedState ? (
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 mt-0.5" />
+              ) : (
+                <Clock className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+              )}
+              <div className="space-y-1 text-xs sm:text-sm">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold uppercase tracking-wider">
+                    {isRenewalAdminUnlockedState
+                      ? "Needs Revision • Unlocked by Admin"
+                      : isRenewalRevisionLocked
+                      ? "Revision Locked"
+                      : "5-Day Resubmission Window Active"}
+                  </h4>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px] font-bold uppercase",
+                      isRenewalAdminUnlockedState
+                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+                        : isRenewalRevisionLocked
+                        ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40"
+                        : "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40"
+                    )}
+                  >
+                    {isRenewalAdminUnlockedState
+                      ? "Unlocked"
+                      : isRenewalRevisionLocked
+                      ? "Locked"
+                      : getRevisionTimeRemaining(activeRenewal.revisionDueAt, undefined, isRenewalAdminUnlockedState).formatted}
+                  </Badge>
+                </div>
+                <p className="leading-relaxed">
+                  {isRenewalAdminUnlockedState
+                    ? `Original deadline: ${formatRevisionDeadline(activeRenewal.revisionDueAt)}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
+                    : isRenewalRevisionLocked
+                    ? "The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked."
+                    : `Resubmission deadline: ${formatRevisionDeadline(activeRenewal.revisionDueAt)}. Please replace all flagged documents and submit before the 5-day window expires.`}
+                </p>
               </div>
             </div>
           )}
@@ -1010,11 +1117,21 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                           <Button
                             type="button"
                             size="sm"
-                            disabled={isUploadingThis}
+                            disabled={isUploadingThis || isRenewalRevisionLocked}
                             onClick={() => triggerRevisionReplacement(file!.id, doc.id, doc.name)}
-                            className="h-8 text-xs font-bold gap-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-2xs"
+                            className={cn(
+                              "h-8 text-xs font-bold gap-1.5 rounded-xl shadow-2xs",
+                              isRenewalRevisionLocked
+                                ? "bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
+                                : "bg-amber-600 hover:bg-amber-700 text-white"
+                            )}
                           >
-                            {isUploadingThis ? (
+                            {isRenewalRevisionLocked ? (
+                              <>
+                                <ShieldAlert className="h-3.5 w-3.5" />
+                                Revision Locked
+                              </>
+                            ) : isUploadingThis ? (
                               <>
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 Replacing...

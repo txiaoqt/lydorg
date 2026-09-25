@@ -55,6 +55,7 @@ import {
 import { readAdminSession } from "./admin-auth";
 import { getAdminAppUrl } from "./auth-redirect";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
+import { calculateRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked } from "./revision-deadline";
 import { supabase, supabaseUrl } from "./supabase";
 
 const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
@@ -156,6 +157,12 @@ type OrganizationRenewalRow = {
   reviewed_by: string | null;
   reviewed_at: string | null;
   admin_remarks: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -172,6 +179,12 @@ type DocumentSubmissionRow = {
   overall_remarks: string | null;
   submission_scope?: "registration" | "renewal" | null;
   renewal_id?: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -190,6 +203,11 @@ type DocumentSubmissionFileRow = {
   revision_history?: SubmissionFile["revisionHistory"] | null;
   uploaded_at: string | null;
   reviewed_at: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   created_at: string;
   updated_at: string;
   required_document_types?: {
@@ -218,6 +236,12 @@ type BudgetRequestRow = {
   go_signal_at: string | null;
   hard_copy_submitted_at: string | null;
   user_note: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   revision_history: unknown[] | null;
   created_at: string;
   updated_at: string;
@@ -247,6 +271,12 @@ type LiquidationReportRow = {
   deadline_at: string | null;
   hard_copy_submitted_at: string | null;
   completed_at: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -370,6 +400,12 @@ type YpopEntryRow = {
   validation_deadline: string | null;
   submitted_at: string | null;
   validated_at: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   revision_history: unknown[];
   org_led_project_count: number;
   city_led_attendance: unknown[];
@@ -400,6 +436,12 @@ type YpopEventParticipationRow = {
   joined_at: string | null;
   proof_submitted_at: string | null;
   verified_at: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   revision_history: unknown[];
   created_at: string;
   updated_at: string;
@@ -429,6 +471,12 @@ type YpopOrgActivityRow = {
   admin_remarks: string | null;
   submitted_at: string | null;
   approved_at: string | null;
+  revision_requested_at?: string | null;
+  revision_due_at?: string | null;
+  revision_locked?: boolean | null;
+  revision_locked_at?: string | null;
+  revision_unlocked_at?: string | null;
+  revision_unlocked_by?: string | null;
   revision_history: unknown[];
   created_at: string;
   updated_at: string;
@@ -664,6 +712,11 @@ export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile 
     revisionHistory: row.revision_history ?? [],
     uploadedAt: row.uploaded_at ?? "",
     reviewedAt: row.reviewed_at ?? "",
+    revisionRequestedAt: row.revision_requested_at ?? null,
+    revisionDueAt: row.revision_due_at ?? null,
+    revisionLocked: Boolean(row.revision_locked),
+    revisionUnlockedAt: row.revision_unlocked_at ?? null,
+    revisionUnlockedBy: row.revision_unlocked_by ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -688,6 +741,12 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   adminRemarks: row.admin_remarks ?? "",
   goSignalAt: row.go_signal_at ?? "",
   hardCopySubmittedAt: row.hard_copy_submitted_at ?? "",
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLocked: Boolean(row.revision_locked),
+  revisionLockedAt: row.revision_locked_at ?? null,
+  revisionUnlockedAt: row.revision_unlocked_at ?? null,
+  revisionUnlockedBy: row.revision_unlocked_by ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   userNote: row.user_note ?? "",
@@ -706,6 +765,12 @@ const mapDocumentSubmission = (row: DocumentSubmissionRow): DocumentSubmission =
   reviewedBy: row.reviewed_by ?? "",
   reviewedAt: row.reviewed_at ?? "",
   overallRemarks: row.overall_remarks ?? "",
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLocked: Boolean(row.revision_locked),
+  revisionLockedAt: row.revision_locked_at ?? null,
+  revisionUnlockedAt: row.revision_unlocked_at ?? null,
+  revisionUnlockedBy: row.revision_unlocked_by ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -734,6 +799,12 @@ const mapLiquidationReport = (row: LiquidationReportRow): LiquidationReport => (
   deadlineAt: row.deadline_at ?? "",
   hardCopySubmittedAt: row.hard_copy_submitted_at ?? "",
   completedAt: row.completed_at ?? "",
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLocked: Boolean(row.revision_locked),
+  revisionLockedAt: row.revision_locked_at ?? null,
+  revisionUnlockedAt: row.revision_unlocked_at ?? null,
+  revisionUnlockedBy: row.revision_unlocked_by ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -873,6 +944,9 @@ const mapYpopEntry = (row: YpopEntryRow): YPOPEntry => ({
   validationDeadline: row.validation_deadline ?? "",
   submittedAt: row.submitted_at ?? "",
   validatedAt: row.validated_at ?? "",
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLockedAt: row.revision_locked_at ?? null,
   revisionHistory: (row.revision_history ?? []) as YPOPEntry["revisionHistory"],
   orgLedProjectCount: row.org_led_project_count,
   cityLedAttendance: (row.city_led_attendance ?? []) as YPOPEntry["cityLedAttendance"],
@@ -902,6 +976,12 @@ const mapYpopEventParticipation = (row: YpopEventParticipationRow): YPOPEventPar
   joinedAt: row.joined_at ?? "",
   proofSubmittedAt: row.proof_submitted_at ?? "",
   verifiedAt: row.verified_at ?? "",
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLocked: Boolean(row.revision_locked),
+  revisionLockedAt: row.revision_locked_at ?? null,
+  revisionUnlockedAt: row.revision_unlocked_at ?? null,
+  revisionUnlockedBy: row.revision_unlocked_by ?? null,
   revisionHistory: (row.revision_history ?? []) as YPOPEventParticipation["revisionHistory"],
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -930,6 +1010,12 @@ const mapYpopOrgActivity = (row: YpopOrgActivityRow): YPOPOrgActivity => ({
   adminRemarks: row.admin_remarks ?? "",
   submittedAt: row.submitted_at ?? "",
   approvedAt: row.approved_at ?? "",
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLocked: Boolean(row.revision_locked),
+  revisionLockedAt: row.revision_locked_at ?? null,
+  revisionUnlockedAt: row.revision_unlocked_at ?? null,
+  revisionUnlockedBy: row.revision_unlocked_by ?? null,
   revisionHistory: (row.revision_history ?? []) as YPOPOrgActivity["revisionHistory"],
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -1219,6 +1305,344 @@ export const loadLydoConnectSupabaseState = async (userIdOverride?: string): Pro
     .filter((file): file is SubmissionFile => Boolean(file));
 
   return remoteState;
+};
+
+export const loadOrganizationDocumentSubmissionState = async (
+  userIdOverride?: string,
+  preloadedOrgId?: string,
+): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  let orgId = preloadedOrgId;
+  let organizationProfile: OrganizationProfileRow | null = null;
+
+  if (!orgId) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const targetUserId = userIdOverride || session?.user?.id;
+    if (!targetUserId) return null;
+
+    organizationProfile = await fetchOrganizationProfile(targetUserId);
+    if (!organizationProfile) {
+      return {
+        organizationProfiles: [],
+        documentSubmissions: [],
+        documentSubmissionFiles: [],
+      };
+    }
+    orgId = organizationProfile.id;
+  }
+
+  const latestSubmission = await fetchLatestSubmission(orgId);
+  if (!latestSubmission) {
+    return {
+      ...(organizationProfile ? { organizationProfiles: [mapOrganizationProfile(organizationProfile)] } : {}),
+      documentSubmissions: [],
+      documentSubmissionFiles: [],
+    };
+  }
+
+  const { data: fileRows, error: filesError } = await supabase!
+    .from("document_submission_files")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .eq("submission_id", latestSubmission.id);
+
+  if (filesError) throw new Error(filesError.message);
+
+  const documentSubmissionFiles = ((fileRows as DocumentSubmissionFileRow[] | null) ?? [])
+    .map(mapDocumentFile)
+    .filter((file): file is SubmissionFile => Boolean(file));
+
+  return {
+    ...(organizationProfile ? { organizationProfiles: [mapOrganizationProfile(organizationProfile)] } : {}),
+    documentSubmissions: [mapDocumentSubmission(latestSubmission)],
+    documentSubmissionFiles,
+  };
+};
+
+export const loadOrganizationBudgetSubmissionState = async (
+  userIdOverride?: string,
+  preloadedOrgId?: string,
+): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  let orgId = preloadedOrgId;
+  let organizationProfile: OrganizationProfileRow | null = null;
+
+  if (!orgId) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const targetUserId = userIdOverride || session?.user?.id;
+    if (!targetUserId) return null;
+
+    organizationProfile = await fetchOrganizationProfile(targetUserId);
+    if (!organizationProfile) {
+      return {
+        organizationProfiles: [],
+        budgetRequests: [],
+        budgetRequestFiles: [],
+      };
+    }
+    orgId = organizationProfile.id;
+  }
+
+  const budgetRows = await fetchBudgetRequests(orgId);
+  const budgetRequestIds = budgetRows.map((row) => row.id);
+  const budgetFileRows = await fetchBudgetRequestFiles(budgetRequestIds);
+
+  return {
+    ...(organizationProfile ? { organizationProfiles: [mapOrganizationProfile(organizationProfile)] } : {}),
+    budgetRequests: budgetRows.map(mapBudgetRequest),
+    budgetRequestFiles: budgetFileRows.map(mapBudgetRequestFile),
+  };
+};
+
+export const loadOrganizationLiquidationSubmissionState = async (
+  userIdOverride?: string,
+  preloadedOrgId?: string,
+): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  let orgId = preloadedOrgId;
+  let organizationProfile: OrganizationProfileRow | null = null;
+
+  if (!orgId) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const targetUserId = userIdOverride || session?.user?.id;
+    if (!targetUserId) return null;
+
+    organizationProfile = await fetchOrganizationProfile(targetUserId);
+    if (!organizationProfile) {
+      return {
+        organizationProfiles: [],
+        liquidationReports: [],
+        liquidationReportFiles: [],
+      };
+    }
+    orgId = organizationProfile.id;
+  }
+
+  const liquidationRows = await fetchLiquidationReports(orgId);
+  const liquidationReportIds = liquidationRows.map((row) => row.id);
+  const liquidationFileRows = await fetchLiquidationReportFiles(liquidationReportIds);
+
+  return {
+    ...(organizationProfile ? { organizationProfiles: [mapOrganizationProfile(organizationProfile)] } : {}),
+    liquidationReports: liquidationRows.map(mapLiquidationReport),
+    liquidationReportFiles: liquidationFileRows.map(mapLiquidationReportFile),
+  };
+};
+
+export const loadOrganizationYpopState = async (
+  userIdOverride?: string,
+  preloadedOrgId?: string,
+): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  let orgId = preloadedOrgId;
+  let organizationProfile: OrganizationProfileRow | null = null;
+
+  if (!orgId) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const targetUserId = userIdOverride || session?.user?.id;
+    if (!targetUserId) return null;
+
+    organizationProfile = await fetchOrganizationProfile(targetUserId);
+    if (!organizationProfile) {
+      return {
+        organizationProfiles: [],
+        ypopPeriods: [],
+        ypopCityActivities: [],
+        ypopEntries: [],
+        ypopFiles: [],
+        ypopEventParticipations: [],
+        ypopEventFiles: [],
+        ypopOrgActivities: [],
+        ypopOrgActivityFiles: [],
+      };
+    }
+    orgId = organizationProfile.id;
+  }
+
+  const [
+    ypopPeriodRows,
+    ypopActivityRows,
+    ypopEntryRows,
+    ypopFileRows,
+    ypopEventParticipationRows,
+    ypopEventFileRows,
+    ypopOrgActivityRows,
+    ypopOrgActivityFileRows,
+  ] = await Promise.all([
+    supabase!.from("ypop_periods").select("*").order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_city_activities").select("*").order("created_at", { ascending: true }).then((r) => r.data ?? []),
+    supabase!.from("ypop_entries").select("*").eq("organization_id", orgId).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_files").select("*").eq("organization_id", orgId).then((r) => r.data ?? []),
+    supabase!.from("ypop_event_participations").select("*").eq("organization_id", orgId).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_event_files").select("*").eq("organization_id", orgId).then((r) => r.data ?? []),
+    supabase!.from("ypop_org_activities").select("*").eq("organization_id", orgId).order("created_at", { ascending: false }).then((r) => r.data ?? []),
+    supabase!.from("ypop_org_activity_files").select("*").eq("organization_id", orgId).order("uploaded_at", { ascending: false }).then((r) => r.data ?? []),
+  ]);
+
+  return {
+    ...(organizationProfile ? { organizationProfiles: [mapOrganizationProfile(organizationProfile)] } : {}),
+    ypopPeriods: (ypopPeriodRows as YpopPeriodRow[]).map(mapYpopPeriod),
+    ypopCityActivities: (ypopActivityRows as YpopCityActivityRow[]).map(mapYpopCityActivity),
+    ypopEntries: (ypopEntryRows as YpopEntryRow[]).map(mapYpopEntry),
+    ypopFiles: (ypopFileRows as YpopFileRow[]).map(mapYpopFile),
+    ypopEventParticipations: (ypopEventParticipationRows as YpopEventParticipationRow[]).map(mapYpopEventParticipation),
+    ypopEventFiles: (ypopEventFileRows as YpopEventFileRow[]).map(mapYpopEventFile),
+    ypopOrgActivities: (ypopOrgActivityRows as YpopOrgActivityRow[]).map(mapYpopOrgActivity),
+    ypopOrgActivityFiles: (ypopOrgActivityFileRows as YpopOrgActivityFileRow[]).map(mapYpopOrgActivityFile),
+  };
+};
+
+export const loadOrganizationInquiriesState = async (
+  userIdOverride?: string,
+  preloadedOrgId?: string,
+): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  let orgId = preloadedOrgId;
+  let organizationProfile: OrganizationProfileRow | null = null;
+
+  if (!orgId) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const targetUserId = userIdOverride || session?.user?.id;
+    if (!targetUserId) return null;
+
+    organizationProfile = await fetchOrganizationProfile(targetUserId);
+    if (!organizationProfile) {
+      return {
+        organizationProfiles: [],
+        inquiries: [],
+      };
+    }
+    orgId = organizationProfile.id;
+  }
+
+  const inquiryRows = await fetchInquiries(orgId);
+
+  return {
+    ...(organizationProfile ? { organizationProfiles: [mapOrganizationProfile(organizationProfile)] } : {}),
+    inquiries: inquiryRows.map(mapInquiry),
+  };
+};
+
+export const loadOrganizationNotificationsState = async (
+  userIdOverride?: string,
+): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const targetUserId = userIdOverride || session?.user?.id;
+  if (!targetUserId) return null;
+
+  const notificationRows = await fetchNotifications();
+
+  return {
+    notifications: notificationRows.map(mapNotification),
+  };
+};
+
+export const loadAdminPortalSnapshotState = async (): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) return null;
+
+  const { data, error } = await supabase.rpc("get_admin_portal_snapshot", {
+    _session_token: adminSession.sessionToken,
+  });
+
+  if (error) {
+    if (error.message?.includes("Admin account is not authorized")) {
+      return null;
+    }
+    console.warn("get_admin_portal_snapshot RPC failed:", error.message);
+    return null;
+  }
+
+  if (data && typeof data === "object") {
+    const snapshot = data as AdminPortalSnapshot;
+    return {
+      organizationProfiles: (snapshot.organization_profiles ?? []).map(mapOrganizationProfile),
+      documentSubmissions: (snapshot.document_submissions ?? []).map(mapDocumentSubmission),
+      documentSubmissionFiles: (snapshot.document_submission_files ?? [])
+        .map(mapDocumentFile)
+        .filter((file): file is SubmissionFile => Boolean(file)),
+      budgetRequests: (snapshot.budget_requests ?? []).map(mapBudgetRequest),
+      budgetRequestFiles: (snapshot.budget_request_files ?? []).map(mapBudgetRequestFile),
+      liquidationReports: (snapshot.liquidation_reports ?? []).map(mapLiquidationReport),
+      liquidationReportFiles: (snapshot.liquidation_report_files ?? []).map(mapLiquidationReportFile),
+      newsReleases: (snapshot.news_releases ?? []).map(mapNewsRelease),
+      newsCategories: (snapshot.news_categories ?? []).map(mapNewsCategory),
+      transparencyPosts: (snapshot.transparency_posts ?? []).map(mapTransparencyPost),
+      complianceRemarks: (snapshot.compliance_remarks ?? []).map(mapComplianceRemark),
+      notifications: (snapshot.notifications ?? []).map(mapNotification),
+      activityLogs: (snapshot.activity_logs ?? []).map(mapActivityLog),
+      templates: (snapshot.templates ?? [])
+        .map(mapTemplate)
+        .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name)),
+      ypopPeriods: (snapshot.ypop_periods ?? []).map(mapYpopPeriod),
+      ypopCityActivities: (snapshot.ypop_city_activities ?? []).map(mapYpopCityActivity),
+      ypopEntries: (snapshot.ypop_entries ?? []).map(mapYpopEntry),
+      ypopFiles: (snapshot.ypop_files ?? []).map(mapYpopFile),
+      ypopEventParticipations: (snapshot.ypop_event_participations ?? []).map(mapYpopEventParticipation),
+      ypopEventFiles: (snapshot.ypop_event_files ?? []).map(mapYpopEventFile),
+      ypopOrgActivities: (snapshot.ypop_org_activities ?? []).map(mapYpopOrgActivity),
+      ypopOrgActivityFiles: (snapshot.ypop_org_activity_files ?? []).map(mapYpopOrgActivityFile),
+      inquiries: (snapshot.inquiries ?? []).map(mapInquiry),
+    };
+  }
+
+  return null;
+};
+
+export const loadAdminYpopState = async (): Promise<Partial<LydoSeedState> | null> => {
+  if (!supabase) return null;
+
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) return null;
+
+  const [
+    ypopPeriodRows,
+    ypopCityActivityRows,
+    ypopEntryRows,
+    ypopEventParticipationRows,
+    ypopEventFileRows,
+    ypopOrgActivityRows,
+    ypopOrgActivityFileRows,
+  ] = await Promise.all([
+    supabase.rpc("admin_get_ypop_periods", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopPeriodRow[]).catch(() => null),
+    supabase.rpc("admin_get_ypop_city_activities", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopCityActivityRow[]).catch(() => null),
+    supabase.rpc("admin_get_ypop_entries", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopEntryRow[]).catch(() => null),
+    supabase.rpc("admin_get_ypop_event_participations", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopEventParticipationRow[]).catch(() => null),
+    supabase.rpc("admin_get_ypop_event_files", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopEventFileRow[]).catch(() => null),
+    supabase.rpc("admin_get_ypop_org_activities", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopOrgActivityRow[]).catch(() => null),
+    supabase.rpc("admin_get_ypop_org_activity_files", { _session_token: adminSession.sessionToken }).then((r) => (r.data ?? []) as YpopOrgActivityFileRow[]).catch(() => null),
+  ]);
+
+  const state: Partial<LydoSeedState> = {};
+  if (ypopPeriodRows !== null) state.ypopPeriods = ypopPeriodRows.map(mapYpopPeriod);
+  if (ypopCityActivityRows !== null) state.ypopCityActivities = ypopCityActivityRows.map(mapYpopCityActivity);
+  if (ypopEntryRows !== null) state.ypopEntries = ypopEntryRows.map(mapYpopEntry);
+  if (ypopEventParticipationRows !== null) state.ypopEventParticipations = ypopEventParticipationRows.map(mapYpopEventParticipation);
+  if (ypopEventFileRows !== null) state.ypopEventFiles = ypopEventFileRows.map(mapYpopEventFile);
+  if (ypopOrgActivityRows !== null) state.ypopOrgActivities = ypopOrgActivityRows.map(mapYpopOrgActivity);
+  if (ypopOrgActivityFileRows !== null) state.ypopOrgActivityFiles = ypopOrgActivityFileRows.map(mapYpopOrgActivityFile);
+
+  return state;
 };
 
 export const markNotificationReadInSupabase = async (notificationId: string) => {
@@ -1775,6 +2199,13 @@ const resolveTemplateDatabaseId = async (databaseId: string, name?: string) => {
   return databaseId;
 };
 
+export interface OrganizationDocumentUploadContext {
+  session?: { user: { id: string } } | null;
+  organizationProfile?: OrganizationProfileRow | null;
+  documentTypeRow?: RequiredDocumentTypeRow;
+  submission?: DocumentSubmissionRow;
+}
+
 export const submitOrganizationDocumentToSupabase = async (params: {
   documentTypeId?: string;
   documentTypeName: string;
@@ -1782,40 +2213,50 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   validationStatus?: SubmissionFile["validationStatus"];
   adminRemarks?: string;
   submitMode?: "draft" | "review";
+  context?: OrganizationDocumentUploadContext;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   await assertPdfUpload(params.file, "Document submission");
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session =
+    params.context?.session !== undefined
+      ? params.context.session
+      : (await supabase.auth.getSession()).data.session;
 
   if (!session?.user) throw new Error("Please sign in with your organization account first.");
 
-  const [organizationProfile, documentTypeRow] = await Promise.all([
-    fetchOrganizationProfile(session.user.id),
-    params.documentTypeId
-      ? resolveTemplateDatabaseId(params.documentTypeId, params.documentTypeName).then((resolvedId) =>
-          supabase!
-            .from("required_document_types")
-            .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
-            .eq("id", resolvedId)
-            .single()
-            .then(({ data, error }) => {
-              if (error || !data) {
-                throw new Error(error?.message ?? `Required document type not found for ${params.documentTypeName}.`);
-              }
-              return data as RequiredDocumentTypeRow;
-            }),
-        )
-      : fetchRequiredDocumentTypeRowByName(params.documentTypeName),
-  ]);
+  const organizationProfile =
+    params.context?.organizationProfile !== undefined
+      ? params.context.organizationProfile
+      : await fetchOrganizationProfile(session.user.id);
 
   if (!organizationProfile) {
     throw new Error("No organization profile was found for this account.");
   }
 
-  const submission = await ensureDocumentSubmission(organizationProfile.id, session.user.id);
+  let documentTypeRow: RequiredDocumentTypeRow;
+  if (params.context?.documentTypeRow) {
+    documentTypeRow = params.context.documentTypeRow;
+  } else if (params.documentTypeId) {
+    const resolvedId = await resolveTemplateDatabaseId(params.documentTypeId, params.documentTypeName);
+    const { data, error } = await supabase!
+      .from("required_document_types")
+      .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+      .eq("id", resolvedId)
+      .single();
+    if (error || !data) {
+      throw new Error(error?.message ?? `Required document type not found for ${params.documentTypeName}.`);
+    }
+    documentTypeRow = data as RequiredDocumentTypeRow;
+  } else {
+    documentTypeRow = await fetchRequiredDocumentTypeRowByName(params.documentTypeName);
+  }
+
+  const submission =
+    params.context?.submission !== undefined
+      ? params.context.submission
+      : await ensureDocumentSubmission(organizationProfile.id, session.user.id);
+
   const { data: existingRows, error: existingRowsError } = await supabase!
     .from("document_submission_files")
     .select("id,file_url,admin_status")
@@ -1969,6 +2410,15 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
 
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error("The corrected document was not saved.");
+
+    void dispatchAdminNotificationInSupabase({
+      eventType: "revision_resubmission",
+      organizationId: organizationProfile.id,
+      organizationName: organizationProfile.organization_name,
+      referenceId: params.fileId,
+      subject: `Corrected Registration Document: ${params.file.name}`,
+    });
+
     return row;
   } catch (error) {
     await removeStorageObjects([storageUri]).catch(() => undefined);
@@ -1978,9 +2428,12 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
 
 export const submitDocumentSubmissionForReviewInSupabase = async (
   submissionId: string,
-  targetFileIds?: string[]
+  targetFileIds?: string[],
+  contextOrganizationProfile?: OrganizationProfileRow,
 ) => {
-  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const organizationProfile =
+    contextOrganizationProfile || (await getAuthenticatedOrganizationContext()).organizationProfile;
+
   const { data: submission, error: submissionError } = await supabase!
     .from("document_submissions")
     .select("id,status,submitted_at")
@@ -2022,89 +2475,183 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
     .update({ status: "under_admin_review", user_confirmed: true, submitted_at: firstSubmittedAt, updated_at: submittedAt })
     .eq("id", submissionId);
   if (updateError) throw new Error(updateError.message);
+
+  void dispatchAdminNotificationInSupabase({
+    eventType: submission.status === "needs_revision" ? "revision_resubmission" : "new_registration",
+    organizationId: organizationProfile.id,
+    organizationName: organizationProfile.organization_name,
+    referenceId: submissionId,
+    subject: `Accreditation Registration Documents (${organizationProfile.organization_name || "Organization"})`,
+  });
 };
+
+const BATCH_UPLOAD_CONCURRENCY_LIMIT = 3;
 
 export const submitOrganizationDocumentsBatchToSupabase = async (params: {
   documents: BatchOrganizationDocumentUploadInput[];
   submitMode?: "draft" | "review";
 }) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
   const submitMode = params.submitMode ?? "review";
   const seenDocumentKeys = new Set<string>();
-  const results: BatchOrganizationDocumentUploadResult[] = [];
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error("Please sign in with your organization account first.");
+
+  const organizationProfile = await fetchOrganizationProfile(session.user.id);
+  if (!organizationProfile) throw new Error("No organization profile was found for this account.");
+
+  const submission = await ensureDocumentSubmission(organizationProfile.id, session.user.id);
+
+  // Preload all active required document types in a single query
+  let templateMapById = new Map<string, RequiredDocumentTypeRow>();
+  let templateMapByName = new Map<string, RequiredDocumentTypeRow>();
+  try {
+    const { data: allTemplateRows, error: templatesError } = await supabase!
+      .from("required_document_types")
+      .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,template_scope,updated_at")
+      .eq("is_active", true);
+
+    if (!templatesError && allTemplateRows) {
+      for (const row of allTemplateRows as RequiredDocumentTypeRow[]) {
+        templateMapById.set(row.id, row);
+        templateMapByName.set(row.name.trim().toLowerCase(), row);
+      }
+    }
+  } catch {
+    // Fall back to per-item lookup if bulk fetch fails
+  }
+
+  interface PreparedBatchItem {
+    document: BatchOrganizationDocumentUploadInput;
+    dedupeKey: string;
+    immediateError?: string;
+    documentTypeRow?: RequiredDocumentTypeRow;
+  }
+
+  const preparedItems: PreparedBatchItem[] = [];
 
   for (const document of params.documents) {
     const dedupeKey = document.documentTypeId?.trim() || document.documentTypeName.trim().toLowerCase();
     if (!document.file) {
-      results.push({
-        documentTypeId: document.documentTypeId ?? "",
-        documentTypeName: document.documentTypeName,
-        fileName: "",
-        success: false,
-        error: "No file was selected.",
+      preparedItems.push({
+        document,
+        dedupeKey,
+        immediateError: "No file was selected.",
       });
       continue;
     }
     if (seenDocumentKeys.has(dedupeKey)) {
-      results.push({
-        documentTypeId: document.documentTypeId ?? "",
-        documentTypeName: document.documentTypeName,
-        fileName: document.file.name,
-        success: false,
-        error: "This document type was selected more than once in the same batch.",
+      preparedItems.push({
+        document,
+        dedupeKey,
+        immediateError: "This document type was selected more than once in the same batch.",
       });
       continue;
     }
     seenDocumentKeys.add(dedupeKey);
 
-    try {
-      const uploadResult = await submitOrganizationDocumentToSupabase({
-        documentTypeId: document.documentTypeId,
-        documentTypeName: document.documentTypeName,
-        file: document.file,
-        validationStatus: document.validationStatus ?? "correct",
-        adminRemarks: document.adminRemarks,
-        // Keep the parent submission mutable until every selected file has
-        // been stored. The final status transition happens atomically below.
-        submitMode: submitMode === "review" ? "draft" : submitMode,
-      });
-
-      results.push({
-        documentTypeId: uploadResult.file.documentTypeId,
-        documentTypeName: document.documentTypeName,
-        fileName: document.file.name,
-        success: true,
-        submissionId: uploadResult.submissionId,
-        file: uploadResult.file,
-      });
-    } catch (error) {
-      results.push({
-        documentTypeId: document.documentTypeId ?? "",
-        documentTypeName: document.documentTypeName,
-        fileName: document.file.name,
-        success: false,
-        error: error instanceof Error ? error.message : "The document could not be uploaded.",
-      });
+    let matchedRow: RequiredDocumentTypeRow | undefined;
+    if (document.documentTypeId && UUID_PATTERN.test(document.documentTypeId)) {
+      matchedRow = templateMapById.get(document.documentTypeId);
     }
+    if (!matchedRow && document.documentTypeName?.trim()) {
+      matchedRow = templateMapByName.get(document.documentTypeName.trim().toLowerCase());
+    }
+
+    preparedItems.push({
+      document,
+      dedupeKey,
+      documentTypeRow: matchedRow,
+    });
   }
+
+  const results: BatchOrganizationDocumentUploadResult[] = new Array(preparedItems.length);
+
+  let nextIndex = 0;
+  const workerCount = Math.min(BATCH_UPLOAD_CONCURRENCY_LIMIT, preparedItems.length);
+
+  const workers = Array.from({ length: Math.max(1, workerCount) }, async () => {
+    while (nextIndex < preparedItems.length) {
+      const index = nextIndex++;
+      const item = preparedItems[index];
+
+      if (item.immediateError || !item.document.file) {
+        results[index] = {
+          documentTypeId: item.document.documentTypeId ?? "",
+          documentTypeName: item.document.documentTypeName,
+          fileName: item.document.file?.name ?? "",
+          success: false,
+          error: item.immediateError ?? "No file was selected.",
+        };
+        continue;
+      }
+
+      try {
+        const uploadResult = await submitOrganizationDocumentToSupabase({
+          documentTypeId: item.document.documentTypeId,
+          documentTypeName: item.document.documentTypeName,
+          file: item.document.file,
+          validationStatus: item.document.validationStatus ?? "correct",
+          adminRemarks: item.document.adminRemarks,
+          submitMode: submitMode === "review" ? "draft" : submitMode,
+          context: {
+            session,
+            organizationProfile,
+            documentTypeRow: item.documentTypeRow,
+            submission,
+          },
+        });
+
+        results[index] = {
+          documentTypeId: uploadResult.file.documentTypeId,
+          documentTypeName: item.document.documentTypeName,
+          fileName: item.document.file.name,
+          success: true,
+          submissionId: uploadResult.submissionId,
+          file: uploadResult.file,
+        };
+      } catch (error) {
+        results[index] = {
+          documentTypeId: item.document.documentTypeId ?? "",
+          documentTypeName: item.document.documentTypeName,
+          fileName: item.document.file.name,
+          success: false,
+          error: error instanceof Error ? error.message : "The document could not be uploaded.",
+        };
+      }
+    }
+  });
+
+  await Promise.all(workers);
 
   if (submitMode === "review") {
     const successfulUploadedFileIds = results
       .filter((result) => result.success && result.file?.id)
       .map((result) => result.file!.id);
     const submissionIds = [...new Set(results.filter((result) => result.success && result.submissionId).map((result) => result.submissionId!))];
-    for (const submissionId of submissionIds) {
-      try {
-        await submitDocumentSubmissionForReviewInSupabase(submissionId, successfulUploadedFileIds);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
-        results.forEach((result) => {
-          if (result.submissionId === submissionId && result.success) {
-            result.success = false;
-            result.error = message;
-          }
-        });
-      }
-    }
+    
+    await Promise.all(
+      submissionIds.map(async (submissionId) => {
+        try {
+          await submitDocumentSubmissionForReviewInSupabase(
+            submissionId,
+            successfulUploadedFileIds,
+            organizationProfile,
+          );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
+          results.forEach((result) => {
+            if (result.submissionId === submissionId && result.success) {
+              result.success = false;
+              result.error = message;
+            }
+          });
+        }
+      }),
+    );
   }
 
   return {
@@ -2422,6 +2969,18 @@ export const createBudgetRequestInSupabase = async (params: {
     await replaceBudgetRequestFileInSupabase(createdBudget.id, params.file);
   }
 
+  if (params.budgetRequest.status === "submitted" || params.budgetRequest.status === "under_review") {
+    void dispatchAdminNotificationInSupabase({
+      eventType: "budget_request",
+      organizationId: organizationProfile.id,
+      organizationName: organizationProfile.organization_name,
+      referenceId: createdBudget.id,
+      subject: params.budgetRequest.activityTitle,
+      amount: params.budgetRequest.requestedAmount,
+      details: params.budgetRequest.activityDescription,
+    });
+  }
+
   return createdBudget;
 };
 
@@ -2442,6 +3001,27 @@ export const updateBudgetRequestInSupabase = async (
 
   const adminSession = readAdminSession();
   if (adminSession?.sessionToken) {
+    let finalRevisionHistory = patch.revisionHistory;
+    let revisionRequestedAt: string | null = null;
+    let revisionDueAt: string | null = null;
+
+    if (patch.status === "needs_revision") {
+      const deadline = calculateRevisionDeadline();
+      revisionRequestedAt = deadline.requestedAt;
+      revisionDueAt = deadline.dueAt;
+
+      if (Array.isArray(finalRevisionHistory) && finalRevisionHistory.length > 0) {
+        const lastIdx = finalRevisionHistory.length - 1;
+        const lastItem = finalRevisionHistory[lastIdx];
+        if (lastItem && typeof lastItem === "object") {
+          finalRevisionHistory = [
+            ...finalRevisionHistory.slice(0, lastIdx),
+            { ...lastItem, revisionDueAt: deadline.dueAt },
+          ];
+        }
+      }
+    }
+
     const { data, error } = await supabase.rpc("update_admin_budget_request", {
       _session_token: adminSession.sessionToken,
       _budget_request_id: budgetRequestId,
@@ -2454,15 +3034,49 @@ export const updateBudgetRequestInSupabase = async (
       _go_signal_at: patch.goSignalAt || null,
       _hard_copy_submitted_at: patch.hardCopySubmittedAt || null,
       _user_note: normalizedUserNote ?? null,
-      _revision_history: patch.revisionHistory ?? null,
+      _revision_history: finalRevisionHistory ?? null,
     });
+
+    // Also persist deadline timestamps directly if status changed to needs_revision
+    if (patch.status === "needs_revision" && revisionDueAt) {
+      await supabase
+        .from("budget_requests")
+        .update({
+          revision_requested_at: revisionRequestedAt,
+          revision_due_at: revisionDueAt,
+          revision_locked_at: null,
+        })
+        .eq("id", budgetRequestId);
+    }
 
     const updatedRow = Array.isArray(data) ? data[0] : null;
     if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the budget request.");
     return mapBudgetRequest(updatedRow as BudgetRequestRow);
   }
 
-  await getAuthenticatedOrganizationContext();
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data: existingBudget, error: fetchErr } = await supabase
+    .from("budget_requests")
+    .select("id,status,activity_title,requested_amount,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .eq("id", budgetRequestId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!existingBudget) throw new Error("Budget request not found.");
+
+  if (
+    isSubmissionRevisionLocked({
+      status: existingBudget.status,
+      revisionDueAt: existingBudget.revision_due_at,
+      revisionLocked: existingBudget.revision_locked,
+      revisionLockedAt: existingBudget.revision_locked_at,
+      revisionUnlockedAt: existingBudget.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
 
   if (patch.requestedAmount !== undefined && patch.requestedAmount > 100000) {
     throw new Error("Requested budget amount cannot exceed ₱100,000.");
@@ -2479,7 +3093,14 @@ export const updateBudgetRequestInSupabase = async (
   if (patch.releaseDate !== undefined) payload.release_date = patch.releaseDate || null;
   if (patch.purposeCategory !== undefined) payload.purpose_category = patch.purposeCategory.trim();
   if (patch.fiscalYear !== undefined) payload.fiscal_year = patch.fiscalYear;
-  if (patch.status !== undefined) payload.status = patch.status;
+  if (patch.status !== undefined) {
+    payload.status = patch.status;
+    if (patch.status === "submitted") {
+      payload.revision_requested_at = null;
+      payload.revision_due_at = null;
+      payload.revision_locked_at = null;
+    }
+  }
   if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
   if (patch.adminRemarks !== undefined) payload.admin_remarks = normalizedAdminRemarks ?? "";
   if (patch.goSignalAt !== undefined) payload.go_signal_at = patch.goSignalAt || null;
@@ -2495,6 +3116,18 @@ export const updateBudgetRequestInSupabase = async (
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to update the budget request.");
+
+  if (patch.status === "submitted") {
+    void dispatchAdminNotificationInSupabase({
+      eventType: existingBudget.status === "needs_revision" ? "revision_resubmission" : "budget_request",
+      organizationId: organizationProfile.id,
+      organizationName: organizationProfile.organization_name,
+      referenceId: budgetRequestId,
+      subject: patch.activityTitle || existingBudget.activity_title,
+      amount: patch.requestedAmount || existingBudget.requested_amount,
+    });
+  }
+
   return mapBudgetRequest(data as BudgetRequestRow);
 };
 
@@ -2609,7 +3242,18 @@ export const createInquiryInSupabase = async (params: {
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to submit the inquiry.");
-  return mapInquiry(data as InquiryRow);
+  const createdInquiry = mapInquiry(data as InquiryRow);
+
+  void dispatchAdminNotificationInSupabase({
+    eventType: "new_inquiry",
+    organizationId: organizationProfile.id,
+    organizationName: canonicalOrgName,
+    referenceId: createdInquiry.id,
+    subject: trimmedSubject,
+    details: trimmedDescription,
+  });
+
+  return createdInquiry;
 };
 
 const replaceBudgetRequestFileInSupabase = async (budgetRequestId: string, file: File) => {
@@ -2658,11 +3302,22 @@ export const createLiquidationReportFileInSupabase = async (params: {
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: report, error: reportError } = await supabase!
     .from("liquidation_reports")
-    .select("id,status")
+    .select("id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", params.liquidationReportId)
     .eq("organization_id", organizationProfile.id)
     .single();
   if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
+  if (
+    isSubmissionRevisionLocked({
+      status: report.status,
+      revisionDueAt: report.revision_due_at,
+      revisionLocked: report.revision_locked,
+      revisionLockedAt: report.revision_locked_at,
+      revisionUnlockedAt: report.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
   if (!editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
     throw new Error("Files cannot be uploaded while this liquidation submission is under review.");
   }
@@ -2696,11 +3351,22 @@ export const deleteLiquidationReportFileInSupabase = async (fileId: string, file
 
   const { data: report, error: reportError } = await supabase!
     .from("liquidation_reports")
-    .select("id,status")
+    .select("id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", file.liquidation_report_id as string)
     .eq("organization_id", organizationProfile.id)
     .single();
   if (reportError || !report) throw new Error("The liquidation report could not be verified.");
+  if (
+    isSubmissionRevisionLocked({
+      status: report.status,
+      revisionDueAt: report.revision_due_at,
+      revisionLocked: report.revision_locked,
+      revisionLockedAt: report.revision_locked_at,
+      revisionUnlockedAt: report.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
   if (!editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
     throw new Error("Files cannot be removed while this liquidation submission is under review.");
   }
@@ -3296,6 +3962,15 @@ export const updateLiquidationReportInSupabase = async (
 
   const adminSession = readAdminSession();
   if (adminSession?.sessionToken) {
+    let revisionRequestedAt: string | null = null;
+    let revisionDueAt: string | null = null;
+
+    if (patch.status === "needs_revision") {
+      const deadline = calculateRevisionDeadline();
+      revisionRequestedAt = deadline.requestedAt;
+      revisionDueAt = deadline.dueAt;
+    }
+
     const { data, error } = await supabase.rpc("update_admin_liquidation_report", {
       _session_token: adminSession.sessionToken,
       _liquidation_report_id: liquidationReportId,
@@ -3307,6 +3982,17 @@ export const updateLiquidationReportInSupabase = async (
       _completed_at: patch.completedAt || null,
     });
 
+    if (patch.status === "needs_revision" && revisionDueAt) {
+      await supabase
+        .from("liquidation_reports")
+        .update({
+          revision_requested_at: revisionRequestedAt,
+          revision_due_at: revisionDueAt,
+          revision_locked_at: null,
+        })
+        .eq("id", liquidationReportId);
+    }
+
     const updatedRow = Array.isArray(data) ? data[0] : null;
     if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the liquidation report.");
     return mapLiquidationReport(updatedRow as LiquidationReportRow);
@@ -3314,14 +4000,27 @@ export const updateLiquidationReportInSupabase = async (
 
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
 
+  const { data: report, error: reportError } = await supabase
+    .from("liquidation_reports")
+    .select("id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .eq("id", liquidationReportId)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
+
+  if (
+    isSubmissionRevisionLocked({
+      status: report.status,
+      revisionDueAt: report.revision_due_at,
+      revisionLocked: report.revision_locked,
+      revisionLockedAt: report.revision_locked_at,
+      revisionUnlockedAt: report.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
+
   if (patch.status !== undefined) {
-    const { data: report, error: reportError } = await supabase
-      .from("liquidation_reports")
-      .select("id,status")
-      .eq("id", liquidationReportId)
-      .eq("organization_id", organizationProfile.id)
-      .single();
-    if (reportError || !report) throw new Error(reportError?.message ?? "The liquidation report could not be found.");
     if ((patch.status !== "submitted" && patch.status !== "draft") || !editableLiquidationStatuses.has(report.status as LiquidationReport["status"])) {
       throw new Error("This liquidation status can only be changed by an administrator.");
     }
@@ -3340,7 +4039,14 @@ export const updateLiquidationReportInSupabase = async (
   }
 
   const payload: Record<string, unknown> = {};
-  if (patch.status !== undefined) payload.status = patch.status;
+  if (patch.status !== undefined) {
+    payload.status = patch.status;
+    if (patch.status === "submitted") {
+      payload.revision_requested_at = null;
+      payload.revision_due_at = null;
+      payload.revision_locked_at = null;
+    }
+  }
   if (patch.remarks !== undefined) payload.remarks = patch.remarks.trim() || null;
   if (patch.goSignalAt !== undefined) payload.go_signal_at = patch.goSignalAt || null;
   if (patch.deadlineAt !== undefined) payload.deadline_at = patch.deadlineAt || null;
@@ -3355,6 +4061,18 @@ export const updateLiquidationReportInSupabase = async (
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to update the liquidation report.");
+
+  if (patch.status === "submitted") {
+    void dispatchAdminNotificationInSupabase({
+      eventType: report.status === "needs_revision" ? "revision_resubmission" : "liquidation_report",
+      organizationId: organizationProfile.id,
+      organizationName: organizationProfile.organization_name,
+      referenceId: liquidationReportId,
+      subject: `Liquidation Report Submission (${organizationProfile.organization_name || "Organization"})`,
+      details: patch.remarks || report.remarks || undefined,
+    });
+  }
+
   return mapLiquidationReport(data as LiquidationReportRow);
 };
 
@@ -3888,12 +4606,42 @@ export const updateYpopEventParticipationInSupabase = async (
   patch: Partial<Omit<YPOPEventParticipation, "id" | "organizationId" | "createdAt" | "updatedAt">>,
 ): Promise<YPOPEventParticipation> => {
   if (!supabase) throw new Error("Supabase is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data: existing, error: fetchErr } = await supabase
+    .from("ypop_event_participations")
+    .select("id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .eq("id", participationId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!existing) throw new Error("Event participation record not found.");
+
+  if (
+    isSubmissionRevisionLocked({
+      status: existing.status,
+      revisionDueAt: existing.revision_due_at,
+      revisionLocked: existing.revision_locked,
+      revisionLockedAt: existing.revision_locked_at,
+      revisionUnlockedAt: existing.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
 
   const dbPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (patch.activityName !== undefined) dbPatch.activity_name = patch.activityName;
   if (patch.activityDate !== undefined) dbPatch.activity_date = patch.activityDate || null;
   if (patch.venue !== undefined) dbPatch.venue = patch.venue || null;
-  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.status !== undefined) {
+    dbPatch.status = patch.status;
+    if (patch.status === "pending_verification" || patch.status === "submitted") {
+      dbPatch.revision_requested_at = null;
+      dbPatch.revision_due_at = null;
+      dbPatch.revision_locked_at = null;
+    }
+  }
   if (patch.adminRemarks !== undefined) dbPatch.admin_remarks = patch.adminRemarks;
   if (patch.joinedAt !== undefined) dbPatch.joined_at = patch.joinedAt || null;
   if (patch.proofSubmittedAt !== undefined) dbPatch.proof_submitted_at = patch.proofSubmittedAt || null;
@@ -3917,6 +4665,28 @@ export const uploadYpopEventFileToSupabase = async (params: {
   file: File;
 }): Promise<YPOPEventFile> => {
   if (!supabase) throw new Error("Supabase is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+
+  const { data: existing, error: fetchErr } = await supabase
+    .from("ypop_event_participations")
+    .select("id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .eq("id", params.participationId)
+    .eq("organization_id", organizationProfile.id)
+    .maybeSingle();
+
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (
+    existing &&
+    isSubmissionRevisionLocked({
+      status: existing.status,
+      revisionDueAt: existing.revision_due_at,
+      revisionLocked: existing.revision_locked,
+      revisionLockedAt: existing.revision_locked_at,
+      revisionUnlockedAt: existing.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
 
   const storageUri = await uploadFileToStorage(YPOP_FILES_BUCKET, params.participationId, params.file);
   const { data, error } = await supabase
@@ -3933,7 +4703,17 @@ export const uploadYpopEventFileToSupabase = async (params: {
     .single();
 
   if (error) throw new Error(error.message);
-  return mapYpopEventFile(data as YpopEventFileRow);
+  const mapped = mapYpopEventFile(data as YpopEventFileRow);
+
+  void dispatchAdminNotificationInSupabase({
+    eventType: "ypop_submission",
+    organizationId: params.organizationId,
+    organizationName: organizationProfile.organization_name,
+    referenceId: params.participationId,
+    subject: `Event Participation Proof: ${params.file.name}`,
+  });
+
+  return mapped;
 };
 
 export const deleteYpopEventFileFromSupabase = async (fileId: string, fileUrl?: string): Promise<void> => {
@@ -4007,7 +4787,20 @@ export const createYpopOrgActivityInSupabase = async (
     .single();
 
   if (error) throw new Error(error.message);
-  return mapYpopOrgActivity(data as YpopOrgActivityRow);
+  const mapped = mapYpopOrgActivity(data as YpopOrgActivityRow);
+
+  if (initialStatus === "pending_evaluation" || initialStatus === "submitted") {
+    void dispatchAdminNotificationInSupabase({
+      eventType: "ypop_submission",
+      organizationId: organizationProfile.id,
+      organizationName: organizationProfile.organization_name,
+      referenceId: mapped.id,
+      subject: `PPA Activity Log: ${params.activityName}`,
+      details: params.narrativeReport,
+    });
+  }
+
+  return mapped;
 };
 
 export const updateYpopOrgActivityInSupabase = async (
@@ -4018,12 +4811,23 @@ export const updateYpopOrgActivityInSupabase = async (
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: activity, error: activityError } = await supabase
     .from("ypop_org_activities")
-    .select("id,ypop_entry_id,status,activity_name,activity_date,venue,narrative_report")
+    .select("id,ypop_entry_id,status,activity_name,activity_date,venue,narrative_report,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", activityId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
   if (activityError) throw new Error(activityError.message);
   if (!activity) throw new Error("PPA submission not found.");
+  if (
+    isSubmissionRevisionLocked({
+      status: activity.status,
+      revisionDueAt: activity.revision_due_at,
+      revisionLocked: activity.revision_locked,
+      revisionLockedAt: activity.revision_locked_at,
+      revisionUnlockedAt: activity.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
   if (activity.status !== "draft" && activity.status !== "needs_revision") {
     throw new Error("This PPA is locked while it is under review or after a final decision.");
   }
@@ -4072,7 +4876,14 @@ export const updateYpopOrgActivityInSupabase = async (
   if (patch.activityDate !== undefined) dbPatch.activity_date = patch.activityDate || null;
   if (patch.venue !== undefined) dbPatch.venue = patch.venue || null;
   if (patch.narrativeReport !== undefined) dbPatch.narrative_report = patch.narrativeReport;
-  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.status !== undefined) {
+    dbPatch.status = patch.status;
+    if (patch.status === "pending_evaluation" || patch.status === "submitted") {
+      dbPatch.revision_requested_at = null;
+      dbPatch.revision_due_at = null;
+      dbPatch.revision_locked_at = null;
+    }
+  }
   if (patch.adminRemarks !== undefined) dbPatch.admin_remarks = patch.adminRemarks;
   if (patch.submittedAt !== undefined) dbPatch.submitted_at = patch.submittedAt || null;
   if (patch.approvedAt !== undefined) dbPatch.approved_at = patch.approvedAt || null;
@@ -4086,7 +4897,20 @@ export const updateYpopOrgActivityInSupabase = async (
     .single();
 
   if (error) throw new Error(error.message);
-  return mapYpopOrgActivity(data as YpopOrgActivityRow);
+  const mapped = mapYpopOrgActivity(data as YpopOrgActivityRow);
+
+  if (patch.status === "pending_evaluation" || patch.status === "submitted") {
+    void dispatchAdminNotificationInSupabase({
+      eventType: activity.status === "needs_revision" ? "revision_resubmission" : "ypop_submission",
+      organizationId: organizationProfile.id,
+      organizationName: organizationProfile.organization_name,
+      referenceId: activityId,
+      subject: `PPA Activity Log: ${patch.activityName || activity.activity_name}`,
+      details: patch.narrativeReport || activity.narrative_report,
+    });
+  }
+
+  return mapped;
 };
 
 export const deleteYpopOrgActivityFromSupabase = async (activityId: string): Promise<void> => {
@@ -4094,13 +4918,24 @@ export const deleteYpopOrgActivityFromSupabase = async (activityId: string): Pro
   const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: activity, error: activityLoadError } = await supabase
     .from("ypop_org_activities")
-    .select("id,ypop_entry_id,status,activity_name")
+    .select("id,ypop_entry_id,status,activity_name,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", activityId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
   if (activityLoadError) throw new Error(activityLoadError.message);
   if (!activity) {
     throw new Error("PPA submission not found.");
+  }
+  if (
+    isSubmissionRevisionLocked({
+      status: activity.status,
+      revisionDueAt: activity.revision_due_at,
+      revisionLocked: activity.revision_locked,
+      revisionLockedAt: activity.revision_locked_at,
+      revisionUnlockedAt: activity.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
   }
   if (activity.status === "approved") {
     throw new Error("Approved PPA submissions cannot be deleted.");
@@ -4169,13 +5004,24 @@ export const uploadYpopOrgActivityFileToSupabase = async (params: {
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: activity, error: activityError } = await supabase
     .from("ypop_org_activities")
-    .select("id,ypop_entry_id,status")
+    .select("id,ypop_entry_id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", params.orgActivityId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
   if (activityError) throw new Error(activityError.message);
   if (!activity || !["draft", "needs_revision"].includes(activity.status)) {
     throw new Error("This PPA no longer accepts file changes.");
+  }
+  if (
+    isSubmissionRevisionLocked({
+      status: activity.status,
+      revisionDueAt: activity.revision_due_at,
+      revisionLocked: activity.revision_locked,
+      revisionLockedAt: activity.revision_locked_at,
+      revisionUnlockedAt: activity.revision_unlocked_at,
+    })
+  ) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
   }
   const { data: entry } = await supabase
     .from("ypop_entries")
@@ -4491,6 +5337,27 @@ export const adminUpdateYpopEntryInSupabase = async (
   const adminSession = getAuthenticatedAdminSession();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
+  let finalRevisionHistory = patch.revisionHistory;
+  let revisionRequestedAt: string | null = null;
+  let revisionDueAt: string | null = null;
+
+  if (patch.status === "needs_revision") {
+    const deadline = calculateRevisionDeadline();
+    revisionRequestedAt = deadline.requestedAt;
+    revisionDueAt = deadline.dueAt;
+
+    if (Array.isArray(finalRevisionHistory) && finalRevisionHistory.length > 0) {
+      const lastIdx = finalRevisionHistory.length - 1;
+      const lastItem = finalRevisionHistory[lastIdx];
+      if (lastItem && typeof lastItem === "object") {
+        finalRevisionHistory = [
+          ...finalRevisionHistory.slice(0, lastIdx),
+          { ...lastItem, revisionDueAt: deadline.dueAt },
+        ];
+      }
+    }
+  }
+
   if (isUuid) {
     const { data, error } = await supabase!.rpc("admin_update_ypop_entry", {
       _session_token: adminSession.sessionToken,
@@ -4500,9 +5367,20 @@ export const adminUpdateYpopEntryInSupabase = async (
       _points_earned: patch.pointsEarned ?? null,
       _org_led_project_count: patch.orgLedProjectCount ?? null,
       _city_led_attendance: patch.cityLedAttendance ?? null,
-      _revision_history: patch.revisionHistory ?? null,
+      _revision_history: finalRevisionHistory ?? null,
       _validated_at: patch.validatedAt || null,
     });
+
+    if (patch.status === "needs_revision" && revisionDueAt) {
+      await supabase!
+        .from("ypop_entries")
+        .update({
+          revision_requested_at: revisionRequestedAt,
+          revision_due_at: revisionDueAt,
+          revision_locked_at: null,
+        })
+        .eq("id", id);
+    }
 
     if (!error) {
       const row = Array.isArray(data) ? data[0] : (data && typeof data === "object" ? data : null);
@@ -4519,8 +5397,13 @@ export const adminUpdateYpopEntryInSupabase = async (
       if (patch.pointsEarned !== undefined) updatePayload.points_earned = patch.pointsEarned;
       if (patch.orgLedProjectCount !== undefined) updatePayload.org_led_project_count = patch.orgLedProjectCount;
       if (patch.cityLedAttendance !== undefined) updatePayload.city_led_attendance = patch.cityLedAttendance;
-      if (patch.revisionHistory !== undefined) updatePayload.revision_history = patch.revisionHistory;
+      if (finalRevisionHistory !== undefined) updatePayload.revision_history = finalRevisionHistory;
       if (patch.validatedAt !== undefined) updatePayload.validated_at = patch.validatedAt || null;
+      if (patch.status === "needs_revision" && revisionDueAt) {
+        updatePayload.revision_requested_at = revisionRequestedAt;
+        updatePayload.revision_due_at = revisionDueAt;
+        updatePayload.revision_locked_at = null;
+      }
 
       const { data: directData, error: directError } = await supabase!
         .from("ypop_entries")
@@ -4551,7 +5434,10 @@ export const adminUpdateYpopEntryInSupabase = async (
     validationDeadline: patch.validationDeadline ?? "",
     submittedAt: patch.submittedAt ?? "",
     validatedAt: patch.validatedAt ?? "",
-    revisionHistory: patch.revisionHistory ?? [],
+    revisionRequestedAt,
+    revisionDueAt,
+    revisionLockedAt: null,
+    revisionHistory: finalRevisionHistory ?? [],
     orgLedProjectCount: patch.orgLedProjectCount ?? 0,
     cityLedAttendance: patch.cityLedAttendance ?? [],
     createdAt: new Date().toISOString(),
@@ -4563,7 +5449,32 @@ export const adminUpdateYpopEventParticipationInSupabase = async (
   id: string,
   patch: Partial<YPOPEventParticipation>,
 ): Promise<YPOPEventParticipation> => {
+  if (patch.status === "needs_revision" && !patch.adminRemarks?.trim()) {
+    throw new Error("A non-empty admin remark is required when requesting revision.");
+  }
   const adminSession = getAuthenticatedAdminSession();
+
+  let finalRevisionHistory = patch.revisionHistory;
+  let revisionRequestedAt: string | null = null;
+  let revisionDueAt: string | null = null;
+
+  if (patch.status === "needs_revision") {
+    const deadline = calculateRevisionDeadline();
+    revisionRequestedAt = deadline.requestedAt;
+    revisionDueAt = deadline.dueAt;
+
+    if (Array.isArray(finalRevisionHistory) && finalRevisionHistory.length > 0) {
+      const lastIdx = finalRevisionHistory.length - 1;
+      const lastItem = finalRevisionHistory[lastIdx];
+      if (lastItem && typeof lastItem === "object") {
+        finalRevisionHistory = [
+          ...finalRevisionHistory.slice(0, lastIdx),
+          { ...lastItem, revisionDueAt: deadline.dueAt },
+        ];
+      }
+    }
+  }
+
   const { data, error } = await supabase!.rpc("admin_update_ypop_event_participation", {
     _session_token: adminSession.sessionToken,
     _participation_id: id,
@@ -4571,9 +5482,21 @@ export const adminUpdateYpopEventParticipationInSupabase = async (
     _admin_remarks: patch.adminRemarks ?? null,
     _proof_submitted_at: patch.proofSubmittedAt || null,
     _verified_at: patch.verifiedAt || null,
-    _revision_history: patch.revisionHistory ?? null,
+    _revision_history: finalRevisionHistory ?? null,
   });
   if (error) throw new Error(error.message);
+
+  if (patch.status === "needs_revision" && revisionDueAt) {
+    await supabase!
+      .from("ypop_event_participations")
+      .update({
+        revision_requested_at: revisionRequestedAt,
+        revision_due_at: revisionDueAt,
+        revision_locked_at: null,
+      })
+      .eq("id", id);
+  }
+
   const row = Array.isArray(data) ? data[0] : (data && typeof data === "object" ? data : null);
   if (!row) {
     const { data: fetched, error: fetchErr } = await supabase!
@@ -4726,16 +5649,53 @@ export const adminUpdateYpopOrgActivityInSupabase = async (
   id: string,
   patch: Partial<YPOPOrgActivity>,
 ): Promise<YPOPOrgActivity> => {
+  if (patch.status === "needs_revision" && !patch.adminRemarks?.trim()) {
+    throw new Error("A non-empty admin remark is required when requesting revision.");
+  }
   const adminSession = getAuthenticatedAdminSession();
+
+  let finalRevisionHistory = patch.revisionHistory;
+  let revisionRequestedAt: string | null = null;
+  let revisionDueAt: string | null = null;
+
+  if (patch.status === "needs_revision") {
+    const deadline = calculateRevisionDeadline();
+    revisionRequestedAt = deadline.requestedAt;
+    revisionDueAt = deadline.dueAt;
+
+    if (Array.isArray(finalRevisionHistory) && finalRevisionHistory.length > 0) {
+      const lastIdx = finalRevisionHistory.length - 1;
+      const lastItem = finalRevisionHistory[lastIdx];
+      if (lastItem && typeof lastItem === "object") {
+        finalRevisionHistory = [
+          ...finalRevisionHistory.slice(0, lastIdx),
+          { ...lastItem, revisionDueAt: deadline.dueAt },
+        ];
+      }
+    }
+  }
+
   const { data, error } = await supabase!.rpc("admin_update_ypop_org_activity", {
     _session_token: adminSession.sessionToken,
     _activity_id: id,
     _status: patch.status ?? null,
     _admin_remarks: patch.adminRemarks ?? null,
     _approved_at: patch.approvedAt || null,
-    _revision_history: patch.revisionHistory ?? null,
+    _revision_history: finalRevisionHistory ?? null,
   });
   if (error) throw new Error(error.message);
+
+  if (patch.status === "needs_revision" && revisionDueAt) {
+    await supabase!
+      .from("ypop_org_activities")
+      .update({
+        revision_requested_at: revisionRequestedAt,
+        revision_due_at: revisionDueAt,
+        revision_locked_at: null,
+      })
+      .eq("id", id);
+  }
+
   const row = Array.isArray(data) ? data[0] : (data && typeof data === "object" ? data : null);
   if (!row) {
     const { data: fetched, error: fetchErr } = await supabase!
@@ -4844,6 +5804,40 @@ export const adminCreateYpopEntryInSupabase = async (
   if (!supabase) throw new Error("Supabase is not configured.");
   const adminSession = getAuthenticatedAdminSession();
 
+  // Try calling the secure Admin RPC first
+  try {
+    const { data, error } = await supabase.rpc("admin_create_ypop_entry", {
+      _session_token: adminSession.sessionToken,
+      _organization_id: params.organizationId,
+      _semester: params.semester,
+      _semester_label: params.semesterLabel,
+      _points_earned: params.pointsEarned ?? 0,
+      _points_required: params.pointsRequired ?? 70,
+      _total_points: params.totalPoints ?? 100,
+      _status: params.status ?? "draft",
+      _admin_remarks: params.adminRemarks ?? "",
+      _submission_note: params.submissionNote ?? "",
+      _validation_deadline: params.validationDeadline || null,
+      _submitted_at: params.submittedAt || null,
+      _validated_at: params.validatedAt || null,
+      _revision_history: params.revisionHistory ?? [],
+      _org_led_project_count: params.orgLedProjectCount ?? 0,
+      _city_led_attendance: params.cityLedAttendance ?? [],
+    });
+
+    if (!error) {
+      const row = Array.isArray(data) ? data[0] : (data && typeof data === "object" ? data : null);
+      if (row) {
+        return mapYpopEntry(row as YpopEntryRow);
+      }
+    } else {
+      console.warn("admin_create_ypop_entry RPC warning:", error.message);
+    }
+  } catch (rpcErr) {
+    console.warn("admin_create_ypop_entry RPC dispatch error:", rpcErr);
+  }
+
+  // Fallback for environments / mocks where direct table operations are used
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("ypop_entries")
@@ -5039,6 +6033,12 @@ export const mapOrganizationRenewal = (
   reviewedBy: row.reviewed_by ?? null,
   reviewedAt: row.reviewed_at ?? null,
   adminRemarks: row.admin_remarks ?? null,
+  revisionRequestedAt: row.revision_requested_at ?? null,
+  revisionDueAt: row.revision_due_at ?? null,
+  revisionLocked: Boolean(row.revision_locked),
+  revisionLockedAt: row.revision_locked_at ?? null,
+  revisionUnlockedAt: row.revision_unlocked_at ?? null,
+  revisionUnlockedBy: row.revision_unlocked_by ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -5124,7 +6124,7 @@ export const fetchAllOrganizationRenewalsInSupabase = async (): Promise<Organiza
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("organization_renewals")
-    .select("id,organization_id,cycle_number,current_accreditation_id,status,submitted_at,reviewed_by,reviewed_at,admin_remarks,created_at,updated_at")
+    .select("*")
     .order("submitted_at", { ascending: false, nullsFirst: false });
 
   if (error) {
@@ -5143,7 +6143,7 @@ export const fetchOrganizationRenewalsInSupabase = async (
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("organization_renewals")
-    .select("id,organization_id,cycle_number,current_accreditation_id,status,submitted_at,reviewed_by,reviewed_at,admin_remarks,created_at,updated_at")
+    .select("*")
     .eq("organization_id", organizationId)
     .order("cycle_number", { ascending: true });
 
@@ -5195,6 +6195,13 @@ export const userSubmitRenewalInSupabase = async (
 
   if (error) throw new Error(error.message);
   const payload = data as { success: boolean; renewal_id: string; submitted_at: string };
+
+  void dispatchAdminNotificationInSupabase({
+    eventType: "renewal_submitted",
+    referenceId: renewalId,
+    subject: "Accreditation Renewal Application Submitted",
+  });
+
   return {
     success: payload.success,
     renewalId: payload.renewal_id,
@@ -5215,6 +6222,13 @@ export const userResubmitRenewalInSupabase = async (
 
   if (error) throw new Error(error.message);
   const payload = data as { success: boolean; renewal_id: string; resubmitted_at: string };
+
+  void dispatchAdminNotificationInSupabase({
+    eventType: "revision_resubmission",
+    referenceId: renewalId,
+    subject: "Accreditation Renewal Resubmitted",
+  });
+
   return {
     success: payload.success,
     renewalId: payload.renewal_id,
@@ -5242,7 +6256,15 @@ export const userReplaceDocumentSubmissionFileInSupabase = async (params: {
   });
 
   if (error || !data) throw new Error(error?.message ?? "Failed to replace document file.");
-  return mapDocumentFile((Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow)!;
+  const mapped = mapDocumentFile((Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow)!;
+
+  void dispatchAdminNotificationInSupabase({
+    eventType: "revision_resubmission",
+    referenceId: params.fileId,
+    subject: `Corrected Document: ${params.newFileName}`,
+  });
+
+  return mapped;
 };
 
 /**
@@ -5285,7 +6307,7 @@ export const fetchRenewalPacketInSupabase = async (
  */
 export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<TemplateRecord[]> => {
   const fallbackTemplates = requiredDocumentTypes
-    .filter((t) => (t.scope === "renewal" || t.scope === "both" || !t.scope) && t.templateScope === "document_submission")
+    .filter((t) => (t.scope === "renewal" || t.scope === "both" || !t.scope) && (t.templateScope === "document_submission" || !t.templateScope))
     .map((t) => ({
       ...t,
       databaseId: t.id,
@@ -5306,17 +6328,16 @@ export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<Tem
       .from("required_document_types")
       .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,scope,template_scope,template_category,template_file_size,updated_at")
       .eq("is_active", true)
-      .eq("template_scope", "document_submission")
       .order("sort_order", { ascending: true });
 
     if (templatesError) throw new Error(templatesError.message);
 
     const list = ((templateRows as RequiredDocumentTypeRow[] | null) ?? [])
-      .filter((row: any) => !row.scope || row.scope === "renewal" || row.scope === "both")
+      .filter((row: any) => (!row.scope || row.scope === "renewal" || row.scope === "both") && (row.template_scope === "document_submission" || !row.template_scope))
       .map(mapTemplate)
       .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
 
-    return list.length > 0 ? list : fallbackTemplates;
+    return list.length >= 6 ? list : fallbackTemplates;
   } catch (err) {
     console.warn("fetchRenewalRequiredDocumentTypesInSupabase falling back to default:", err);
     return fallbackTemplates;
@@ -5902,5 +6923,124 @@ export const deleteAdminBudgetRequestsInSupabase = async (
   };
 };
 
+/**
+ * Admin RPC: Explicitly unlock a locked submission in needs_revision state.
+ * Sets revision_locked = false and tracks revision_unlocked_at while preserving original revision_due_at.
+ */
+export const adminUnlockSubmissionRevisionInSupabase = async (params: {
+  entityType: "document_submission" | "renewal" | "budget_request" | "liquidation_report" | "ypop_event_participation" | "ypop_org_activity";
+  entityId: string;
+  remarks?: string;
+}): Promise<{
+  success: boolean;
+  entityType: string;
+  entityId: string;
+  revisionLocked: boolean;
+  revisionUnlockedAt: string;
+  revisionDueAt: string | null;
+}> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase.rpc("admin_unlock_submission_revision", {
+    _session_token: adminSession.sessionToken,
+    _entity_type: params.entityType,
+    _entity_id: params.entityId,
+    _remarks: params.remarks?.trim() || null,
+  });
 
+  if (error) throw new Error(error.message);
+  const payload = (data ?? {}) as {
+    success?: boolean;
+    entity_type?: string;
+    entity_id?: string;
+    revision_locked?: boolean;
+    revision_unlocked_at?: string;
+    revision_due_at?: string | null;
+  };
+
+  return {
+    success: payload.success ?? true,
+    entityType: payload.entity_type ?? params.entityType,
+    entityId: payload.entity_id ?? params.entityId,
+    revisionLocked: Boolean(payload.revision_locked ?? false),
+    revisionUnlockedAt: payload.revision_unlocked_at ?? new Date().toISOString(),
+    revisionDueAt: payload.revision_due_at ?? null,
+  };
+};
+
+export type AdminNotificationEventType =
+  | "new_registration"
+  | "renewal_submitted"
+  | "ypop_submission"
+  | "budget_request"
+  | "liquidation_report"
+  | "new_inquiry"
+  | "revision_resubmission"
+  | "accreditation_expiring"
+  | "overdue_liquidation";
+
+export interface DispatchAdminNotificationParams {
+  eventType: AdminNotificationEventType;
+  organizationId?: string;
+  organizationName?: string;
+  referenceId?: string;
+  subject?: string;
+  details?: string;
+  amount?: number;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Dispatches an administrative notification event to the server-side Edge Function.
+ * The Edge Function dynamically reads general.support_email, validates gating, and delivers via Brevo.
+ * This operation is non-blocking to prevent UI/submission disruption if email fails.
+ */
+export const dispatchAdminNotificationInSupabase = async (
+  params: DispatchAdminNotificationParams,
+): Promise<{
+  success: boolean;
+  event: string;
+  emailSent?: boolean;
+  recipient?: string;
+  inAppCreated?: number;
+  reason?: string;
+}> => {
+  if (!supabase) {
+    return { success: false, event: params.eventType, reason: "supabase_not_configured" };
+  }
+
+  try {
+    const customHeaders: Record<string, string> = {};
+    const adminSession = readAdminSession();
+    if (adminSession?.sessionToken) {
+      customHeaders["x-admin-session-token"] = adminSession.sessionToken;
+    }
+
+    const { data, error } = await supabase.functions.invoke("send-admin-notification", {
+      body: params,
+      headers: customHeaders,
+    });
+
+    if (error) {
+      console.warn("[dispatchAdminNotificationInSupabase] Edge function error (non-fatal):", error.message);
+      return { success: false, event: params.eventType, reason: error.message };
+    }
+
+    return (data ?? { success: true, event: params.eventType }) as {
+      success: boolean;
+      event: string;
+      emailSent?: boolean;
+      recipient?: string;
+      inAppCreated?: number;
+      reason?: string;
+    };
+  } catch (err) {
+    console.warn("[dispatchAdminNotificationInSupabase] Dispatch exception (non-fatal):", err);
+    return {
+      success: false,
+      event: params.eventType,
+      reason: err instanceof Error ? err.message : "network_error",
+    };
+  }
+};
 

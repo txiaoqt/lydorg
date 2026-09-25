@@ -450,7 +450,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             </div>
           </div>
 
-          <Progress value={(stepsCompleted / 3) * 100} className="h-1.5 bg-muted" />
+          <Progress
+            value={Math.min(100, Math.max(0, (stepsCompleted / 3) * 100))}
+            className="h-2 w-full bg-slate-100 dark:bg-slate-800/90 border border-border/40 rounded-full"
+          />
         </Card>
       )}
 

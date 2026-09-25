@@ -891,8 +891,6 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
       expect(screen.getByText(/Click to browse file/i)).toBeInTheDocument();
       // Delete button visible
       expect(screen.getByTitle(/Remove file/i)).toBeInTheDocument();
-      // Remarks textarea visible and editable
-      expect(screen.getByPlaceholderText(/Add any notes or context regarding your proof submission/i)).toBeInTheDocument();
     });
 
     // 2. PENDING VERIFICATION + FILE (LOCKED)
@@ -957,8 +955,6 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
       expect(screen.getByText(/Click to browse file/i)).toBeInTheDocument();
       // Resubmit Corrected Proof button visible
       expect(screen.getByRole("button", { name: /Resubmit Corrected Proof/i })).toBeInTheDocument();
-      // Remarks textarea available
-      expect(screen.getByPlaceholderText(/Add any notes or context regarding your proof submission/i)).toBeInTheDocument();
       // Canonical document preview still available for existing file
       expect(screen.getByText("Document Preview")).toBeInTheDocument();
       expect(screen.getAllByText("initial_attendance.pdf").length).toBeGreaterThan(0);
@@ -1097,6 +1093,8 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
 
       // Click submit
       fireEvent.click(submitBtn);
+      const confirmSubmitBtn = await screen.findByRole("button", { name: /Submit Proof/i });
+      fireEvent.click(confirmSubmitBtn);
 
       // Await transition
       await waitFor(() => {
@@ -1154,6 +1152,8 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
 
       // Click resubmit
       fireEvent.click(resubmitBtn);
+      const confirmSubmitBtn = await screen.findByRole("button", { name: /Submit Proof/i });
+      fireEvent.click(confirmSubmitBtn);
 
       await waitFor(() => {
         expect(onParticipationUpdatedMock).toHaveBeenCalledWith(

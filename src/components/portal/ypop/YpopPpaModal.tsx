@@ -53,6 +53,12 @@ import {
   deleteYpopOrgActivityFromSupabase,
   resolveSupabaseFileUrl,
 } from "@/lib/lydo-connect-supabase";
+import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isRevisionExpired,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
 import type {
   YPOPEntry,
   YPOPOrgActivity,
@@ -116,6 +122,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState<"draft" | "submit" | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
@@ -152,7 +159,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const isNeedsRevision = currentActivity?.status === "needs_revision";
   const isRejected = currentActivity?.status === "rejected";
   const isDraft = !currentActivity || currentActivity.status === "draft";
-  const isReadOnly = isUnderReview || isApproved || isRejected;
+  const isRevisionDeadlineExpired =
+    isNeedsRevision &&
+    (isRevisionExpired(currentActivity?.revisionDueAt) || isSubmissionRevisionLocked(currentActivity));
+  const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(currentActivity?.revisionDueAt) : "";
+  const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(currentActivity?.revisionDueAt) : null;
+  const isReadOnly = isUnderReview || isApproved || isRejected || isRevisionDeadlineExpired;
 
   // Safe delete eligibility: organization-owned records in non-approved states
   const canDelete = Boolean(
@@ -324,23 +336,13 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   };
 
   const handleDeleteSavedFile = async (file: YPOPOrgActivityFile) => {
-    if (currentActivity?.status === "needs_revision") {
-      // Stage the deletion locally so Admin continues to see the submitted original file until resubmission
-      setPendingDeletedFileIds((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
-      if (selectedFileId === file.id) {
-        const remaining = allFiles.filter((f) => f.id !== file.id);
-        setSelectedFileId(remaining[0]?.id ?? null);
-      }
-      toast({ title: "Attachment removed", description: "Attachment marked for removal on resubmission." });
-      return;
-    }
-
     setDeletingFileId(file.id);
     const localBlob = localBlobUrlsRef.current.get(file.id);
     if (localBlob) {
       URL.revokeObjectURL(localBlob);
       localBlobUrlsRef.current.delete(file.id);
     }
+    localRawFilesRef.current.delete(file.id);
 
     try {
       await deleteYpopOrgActivityFileFromSupabase(file.id, file.fileUrl);
@@ -418,12 +420,6 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     if (!activityDate) {
       nextErrors.activityDate = "Date Conducted is required.";
     }
-    if (!venue.trim()) {
-      nextErrors.venue = "Venue / Location is required.";
-    }
-    if (!narrativeReport.trim()) {
-      nextErrors.narrativeReport = "Description is required.";
-    }
     if (allFiles.length === 0) {
       nextErrors.files = "Attach at least one supporting document before submitting.";
     }
@@ -431,11 +427,19 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     return nextErrors;
   };
 
-  const handleSubmitReviewClick = () => {
-    if (uploading) {
+  const handleSubmitReviewClick = async () => {
+    if (uploading || saving) {
       toast({
         title: "Upload in progress",
         description: "Please wait for file attachments to finish uploading.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (isRevisionDeadlineExpired) {
+      toast({
+        title: "Revision deadline expired",
+        description: "This PPA activity is locked and can no longer be resubmitted.",
         variant: "destructive",
       });
       return;
@@ -452,17 +456,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         document.getElementById("ppa-title")?.focus();
       } else if (currentErrors.activityDate) {
         document.getElementById("ppa-date")?.focus();
-      } else if (currentErrors.venue) {
-        document.getElementById("ppa-venue")?.focus();
-      } else if (currentErrors.narrativeReport) {
-        document.getElementById("ppa-report")?.focus();
       }
       return;
     }
-    setConfirmSubmitOpen(true);
+    await executeSave(true);
   };
 
   const handleSaveDraftClick = async () => {
+    if (uploading || saving) return;
     if (!activityName.trim()) {
       toast({
         title: "Title required",
@@ -478,6 +479,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
 
   const executeSave = async (submitForReview: boolean) => {
     setSaving(true);
+    setSavingAction(submitForReview ? "submit" : "draft");
     try {
       const now = new Date().toISOString();
       let targetActivity: YPOPOrgActivity;
@@ -541,12 +543,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
 
       if (submitForReview) {
         const submittedActivity = await updateYpopOrgActivityInSupabase(targetActivity.id, {
-          status: "pending_evaluation",
+          status: "submitted",
           submittedAt: now,
           adminRemarks: "",
           revisionHistory: [
             ...(targetActivity.revisionHistory ?? []),
-            { action: "pending_evaluation", adminRemarks: isNeedsRevision ? "Revision submitted for evaluation." : "", changedAt: now },
+            { action: "submitted", adminRemarks: isNeedsRevision ? "Revision submitted for evaluation." : "", changedAt: now },
           ],
         });
         setCurrentActivity(submittedActivity);
@@ -568,6 +570,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       });
     } finally {
       setSaving(false);
+      setSavingAction(null);
     }
   };
 
@@ -650,20 +653,46 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       )}
 
       {isNeedsRevision && (
-        <div className="p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 shadow-2xs">
-          <AlertTriangle className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div
+          className={cn(
+            "p-3.5 sm:p-4 rounded-xl flex items-start gap-3 shadow-2xs border",
+            isRevisionDeadlineExpired
+              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+              : "bg-amber-500/10 border-amber-500/25 text-amber-900 dark:text-amber-200"
+          )}
+        >
+          <AlertTriangle
+            className={cn(
+              "h-4.5 w-4.5 shrink-0 mt-0.5",
+              isRevisionDeadlineExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400"
+            )}
+          />
           <div className="text-xs space-y-2 min-w-0 flex-1">
-            <p className="font-bold text-amber-700 dark:text-amber-300">
-              Admin Revision Requested
+            <p
+              className={cn(
+                "font-bold",
+                isRevisionDeadlineExpired ? "text-rose-700 dark:text-rose-300" : "text-amber-700 dark:text-amber-300"
+              )}
+            >
+              {isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Requested"}
             </p>
             {currentActivity?.adminRemarks && (
               <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium italic break-words">
                 &ldquo;{currentActivity.adminRemarks}&rdquo;
               </div>
             )}
-            <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
-              Please review the admin remarks, update the details or attach corrected documents, and resubmit for verification.
-            </p>
+            {revisionDeadlineFormatted && (
+              <p className="text-xs font-semibold">
+                {isRevisionDeadlineExpired
+                  ? `The 5-day resubmission deadline expired on ${revisionDeadlineFormatted}. Further file updates or resubmissions are locked.`
+                  : `Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
+              </p>
+            )}
+            {!isRevisionDeadlineExpired && (
+              <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
+                Please review the admin remarks, update the details or attach corrected documents, and resubmit for verification.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -871,9 +900,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               <span>{isReadOnly ? fileSectionTitle : "Supporting Documents"}</span>
               {!isReadOnly && <span className="text-destructive">*</span>}
             </h4>
-            {!isReadOnly && (
+            {!isReadOnly && isDraft && (
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Please attach the following: Attendance Sheet and Narrative Report.
+              </p>
+            )}
+            {!isReadOnly && isNeedsRevision && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Review previous attachments below. You can remove outdated files or attach updated documents for review.
               </p>
             )}
           </div>
@@ -928,6 +962,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
           >
             {allFiles.map((file) => {
               const isActive = activeFile?.id === file.id;
+              const isStagedFile = Boolean(file.isStaged);
               return (
                 <PortalAttachedFileRow
                   key={file.id}
@@ -935,10 +970,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                   isActive={isActive}
                   onSelect={() => setSelectedFileId(file.id)}
                   status={
-                    isApproved
+                    isStagedFile
+                      ? "draft"
+                      : isApproved
                       ? "verified"
                       : isUnderReview
-                      ? "pending_evaluation"
+                      ? "submitted"
                       : isNeedsRevision
                       ? "needs_revision"
                       : isRejected
@@ -946,10 +983,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       : "draft"
                   }
                   statusLabel={
-                    isApproved
+                    isStagedFile
+                      ? "Ready to Upload"
+                      : isApproved
                       ? "Approved"
                       : isUnderReview
-                      ? "Pending Evaluation"
+                      ? "Pending Review"
                       : isNeedsRevision
                       ? "Needs Revision"
                       : isRejected
@@ -1120,7 +1159,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                         onClick={() => void handleSaveDraftClick()}
                         className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                       >
-                        {saving && !confirmSubmitOpen ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                        {savingAction === "draft" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                         <span>Save as Draft</span>
                       </Button>
                     )}
@@ -1130,7 +1169,11 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       onClick={handleSubmitReviewClick}
                       className="h-9 px-4 sm:px-5 text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                     >
-                      <Upload className="h-3.5 w-3.5" />
+                      {savingAction === "submit" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="h-3.5 w-3.5" />
+                      )}
                       <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
                     </Button>
                   </div>
@@ -1254,7 +1297,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                         onClick={() => void handleSaveDraftClick()}
                         className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
                       >
-                        {saving && !confirmSubmitOpen ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                        {savingAction === "draft" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                         <span>Save as Draft</span>
                       </Button>
                     )}
@@ -1264,7 +1307,11 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       onClick={handleSubmitReviewClick}
                       className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                     >
-                      <Upload className="h-4 w-4" />
+                      {savingAction === "submit" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
                       <span>{isNeedsRevision ? "Resubmit for Review" : "Submit for Review"}</span>
                     </Button>
                   </div>
@@ -1298,7 +1345,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               }}
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-semibold gap-1.5 cursor-pointer"
             >
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+              {savingAction === "submit" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
               <span>Submit for Review</span>
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -19,8 +19,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DangerConfirmDialog } from "@/components/portal/DangerConfirmDialog";
-import type { AdministratorRecord, AdminRoleRecord } from "@/lib/lydo-connect-data";
 import { ADMIN_PERMISSION_GROUPS, ADMIN_PERMISSION_TOTAL_COUNT } from "@/lib/admin-permissions";
+import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
 
 type RolesPermissionsPanelProps = {
   administrators: AdministratorRecord[];
@@ -336,7 +336,14 @@ export const RolesPermissionsPanel = ({
                 <button
                   type="button"
                   disabled={savingPermissions}
-                  onClick={() => setPendingSaveConfirmOpen(true)}
+                  onClick={() => {
+                    const requireReauth = getEffectiveSystemSetting("security.reauth_modify_role_permissions");
+                    if (requireReauth) {
+                      setPendingSaveConfirmOpen(true);
+                    } else {
+                      void handleConfirmSavePermissions();
+                    }
+                  }}
                   className="flex h-11 shrink-0 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 shrink-0" strokeWidth={1.6} />

@@ -1076,9 +1076,9 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
-      // Select ONLY File A via checkbox
+      // Select ONLY File A via checkbox (checkboxes[0] is Select All, checkboxes[1] is File A)
       const checkboxes = screen.getAllByRole("checkbox");
-      fireEvent.click(checkboxes[0]);
+      fireEvent.click(checkboxes[1]);
 
       const confirmBtn1 = screen.getByRole("button", { name: /confirm document decision/i });
       fireEvent.click(confirmBtn1);

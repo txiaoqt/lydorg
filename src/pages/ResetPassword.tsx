@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import BrandLogo from "@/components/BrandLogo";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
 import {
   clearPasswordRecoveryState,
+  getStoredSupabaseToken,
+  isPasswordRecoveryActive,
+  markPasswordRecoveryActive,
   parsePasswordRecoveryUrl,
 } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
@@ -17,9 +20,9 @@ import { GENERIC_RESET_MESSAGE, isValidEmailFormat } from "@/lib/email-validatio
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
-type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
+export type ResetMode = "request" | "verifying" | "update" | "invalid" | "updated";
 
-const validatePasswordCriteria = (value: string) => ({
+export const validatePasswordCriteria = (value: string) => ({
   length: value.length >= 8 && value.length <= 16,
   uppercase: /[A-Z]/.test(value),
   lowercase: /[a-z]/.test(value),
@@ -27,9 +30,24 @@ const validatePasswordCriteria = (value: string) => ({
   special: /[!@#$%^&*()\-_+=[\]{}|;:'",.<>?/\\~]/.test(value),
 });
 
-const isPasswordValid = (value: string) => {
+export const isPasswordValid = (value: string) => {
   const criteria = validatePasswordCriteria(value);
   return Object.values(criteria).every(Boolean);
+};
+
+export const computeInitialResetMode = (href?: string): ResetMode => {
+  const currentHref = href ?? (typeof window === "undefined" ? "/reset-password" : window.location.href);
+  const recovery = parsePasswordRecoveryUrl(currentHref);
+
+  if (recovery.hasRecoveryError) return "invalid";
+  if (recovery.code || recovery.tokenHash) return "verifying";
+  if (recovery.accessToken && recovery.refreshToken) return "update";
+  if (isPasswordRecoveryActive({ url: currentHref })) return "update";
+
+  const storedToken = getStoredSupabaseToken();
+  if (storedToken) return "update";
+
+  return "request";
 };
 
 const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
@@ -67,24 +85,22 @@ const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
 };
 
 const ResetPassword = () => {
-  const { signOut, isPasswordRecoverySession } = useAuth();
+  const { user, isAuthenticated, signOut, isPasswordRecoverySession } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const cancelRecovery = async (destination: string) => {
-    clearPasswordRecoveryState();
-    window.history.replaceState({}, document.title, destination);
-    await signOut();
-    navigate(destination, { replace: true });
-  };
+  const currentHref = useMemo(() => {
+    if (typeof window === "undefined") return "/reset-password";
+    const origin = window.location.origin || "https://y-trace.local";
+    return `${origin}${location.pathname}${location.search}${location.hash}`;
+  }, [location.pathname, location.search, location.hash]);
 
   const recovery = useMemo(
-    () => parsePasswordRecoveryUrl(typeof window === "undefined" ? "/reset-password" : window.location.href),
-    [],
+    () => parsePasswordRecoveryUrl(currentHref),
+    [currentHref],
   );
 
-  const [mode, setMode] = useState<ResetMode>(() =>
-    recovery.hasRecoveryError ? "invalid" : recovery.hasRecoveryCredentials ? "verifying" : "request",
-  );
+  const [mode, setMode] = useState<ResetMode>(() => computeInitialResetMode(currentHref));
 
   const [email, setEmail] = useState("");
   const [touchedEmail, setTouchedEmail] = useState(false);
@@ -118,13 +134,22 @@ const ResetPassword = () => {
     }
 
     let active = true;
+
+    // Listen for auth events that signal recovery or active session availability
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      const isRecoveryEvent = event === "PASSWORD_RECOVERY";
-      const isRecoverySignIn = recovery.hasRecoveryCredentials && event === "SIGNED_IN";
-      if (!active || !session || (!isRecoveryEvent && !isRecoverySignIn)) return;
-      window.history.replaceState({}, document.title, window.location.pathname);
-      setInlineError("");
-      setMode((current) => (current === "updated" ? "updated" : "update"));
+      if (!active) return;
+      if (
+        event === "PASSWORD_RECOVERY" ||
+        (event === "SIGNED_IN" && session) ||
+        (event === "INITIAL_SESSION" && session) ||
+        (event === "TOKEN_REFRESHED" && session)
+      ) {
+        if (session) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setInlineError("");
+          setMode((current) => (current === "updated" ? "updated" : "update"));
+        }
+      }
     });
 
     const establishRecoverySession = async () => {
@@ -137,26 +162,31 @@ const ResetPassword = () => {
       }
 
       let exchangeError: string | null = null;
-      if (recovery.code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(recovery.code);
-        exchangeError = error?.message ?? null;
-      } else if (recovery.tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: recovery.tokenHash,
-          type: "recovery",
-        });
-        exchangeError = error?.message ?? null;
-      } else if (recovery.accessToken && recovery.refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: recovery.accessToken,
-          refresh_token: recovery.refreshToken,
-        });
-        exchangeError = error?.message ?? null;
+      try {
+        if (recovery.code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(recovery.code);
+          exchangeError = error?.message ?? null;
+        } else if (recovery.tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: recovery.tokenHash,
+            type: "recovery",
+          });
+          exchangeError = error?.message ?? null;
+        } else if (recovery.accessToken && recovery.refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: recovery.accessToken,
+            refresh_token: recovery.refreshToken,
+          });
+          exchangeError = error?.message ?? null;
+        }
+      } catch (err: unknown) {
+        exchangeError = err instanceof Error ? err.message : "Failed to establish password recovery session.";
       }
 
       const { data } = await supabase.auth.getSession();
       if (!active) return;
       if (data.session) {
+        markPasswordRecoveryActive(data.session.user?.id);
         window.history.replaceState({}, document.title, window.location.pathname);
         setInlineError("");
         setMode("update");
@@ -172,20 +202,23 @@ const ResetPassword = () => {
       return;
     }
 
-    if (recovery.hasRecoveryCredentials) {
+    if (recovery.code || recovery.tokenHash || (recovery.accessToken && recovery.refreshToken)) {
       void establishRecoverySession();
-    } else if (isPasswordRecoverySession) {
+    } else {
+      // Check existing authenticated session or recovery session
       void supabase.auth.getSession().then(({ data }) => {
-        if (active && data.session) {
-          setMode("update");
+        if (!active) return;
+        if (data.session || isAuthenticated || isPasswordRecoverySession) {
+          setMode((current) => (current === "updated" || current === "invalid" ? current : "update"));
         }
       });
     }
+
     return () => {
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, [recovery, isPasswordRecoverySession]);
+  }, [recovery, isAuthenticated, isPasswordRecoverySession]);
 
   const requestReset = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -272,6 +305,15 @@ const ResetPassword = () => {
     setMode("updated");
   };
 
+  const cancelRecovery = async (destination: string) => {
+    clearPasswordRecoveryState();
+    window.history.replaceState({}, document.title, destination);
+    if (isPasswordRecoverySession) {
+      await signOut();
+    }
+    navigate(destination, { replace: true });
+  };
+
   const requestAnotherLink = () => {
     clearPasswordRecoveryState();
     window.history.replaceState({}, document.title, "/reset-password");
@@ -313,14 +355,14 @@ const ResetPassword = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        
-
         <div className="space-y-5 rounded-2xl border border-border bg-card p-6 card-shadow sm:p-8">
           {mode === "request" ? (
             <form onSubmit={requestReset} className="space-y-5">
               <div>
                 <h1 className="text-2xl font-heading font-bold">Forgot your password?</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Enter the email address associated with your account, and we&apos;ll send you a secure reset link to reset your password</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Enter the email address associated with your account, and we&apos;ll send you a secure reset link to reset your password.
+                </p>
               </div>
 
               {requestSent && (
@@ -399,8 +441,14 @@ const ResetPassword = () => {
           {mode === "update" ? (
             <form onSubmit={updatePassword} className="space-y-5">
               <div>
-                <h1 className="text-2xl font-heading font-bold">Create a new password</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Choose a secure password you haven&apos;t used before.</p>
+                <h1 className="text-2xl font-heading font-bold">
+                  {isAuthenticated || user ? "Set your account password" : "Create a new password"}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {isAuthenticated || user
+                    ? "Establish a secure password for your account."
+                    : "Choose a secure password you haven't used before."}
+                </p>
               </div>
               <PasswordField
                 id="new-password"
@@ -435,8 +483,19 @@ const ResetPassword = () => {
                 hint={confirmMatchHint}
               />
 
-              <Button type="submit" className="w-full font-semibold" disabled={isLoading || !isPasswordValid(password) || password !== confirmPassword}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</> : "Update Password"}
+              <Button
+                type="submit"
+                className="w-full font-semibold"
+                disabled={isLoading || !isPasswordValid(password) || password !== confirmPassword}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
               </Button>
             </form>
           ) : null}
@@ -444,8 +503,12 @@ const ResetPassword = () => {
           {mode === "invalid" ? (
             <div className="space-y-4 py-2 text-center">
               <h1 className="text-2xl font-heading font-bold">Reset link unavailable</h1>
-              <p className="text-sm leading-relaxed text-muted-foreground">Request a new password reset link and try again.</p>
-              <Button type="button" className="w-full" onClick={requestAnotherLink}>Request New Link</Button>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {inlineError || "Request a new password reset link and try again."}
+              </p>
+              <Button type="button" className="w-full" onClick={requestAnotherLink}>
+                Request New Link
+              </Button>
             </div>
           ) : null}
 
@@ -456,9 +519,13 @@ const ResetPassword = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-heading font-bold">Password updated</h1>
-                <p className="mt-2 text-sm text-muted-foreground">Your new password is ready. Sign in again to continue.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Your new password is ready. Sign in again to continue.
+                </p>
               </div>
-              <Button className="w-full font-semibold" onClick={() => cancelRecovery("/signin")}>Continue to Sign In</Button>
+              <Button className="w-full font-semibold" onClick={() => cancelRecovery("/signin")}>
+                Continue to Sign In
+              </Button>
             </div>
           ) : null}
 
@@ -471,8 +538,21 @@ const ResetPassword = () => {
 
         {mode !== "updated" ? (
           <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
-            <p>Remember your password? <button type="button" onClick={() => cancelRecovery("/signin")} className="font-medium text-primary hover:text-primary/80">Sign in</button></p>
-            <p><button type="button" onClick={() => cancelRecovery("/")} className="hover:text-foreground">← Back to home</button></p>
+            <p>
+              Remember your password?{" "}
+              <button
+                type="button"
+                onClick={() => cancelRecovery("/signin")}
+                className="font-medium text-primary hover:text-primary/80"
+              >
+                Sign in
+              </button>
+            </p>
+            <p>
+              <button type="button" onClick={() => cancelRecovery("/")} className="hover:text-foreground">
+                ← Back to home
+              </button>
+            </p>
           </div>
         ) : null}
       </div>

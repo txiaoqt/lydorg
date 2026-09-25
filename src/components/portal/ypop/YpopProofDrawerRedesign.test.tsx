@@ -907,7 +907,7 @@ describe("YpopProofDrawer - Liquidation-Aligned Redesign & Multi-File UX", () =>
       expect(screen.queryByRole("button", { name: /Choose Files/i })).not.toBeInTheDocument();
     });
 
-    it("4, 5, 8 & 15. Canonical upload surface supports multiple file selection and batch upload in one action", async () => {
+    it("4, 5, 8 & 15. Canonical upload surface supports multiple file selection staged locally and batch uploaded on explicit submit", async () => {
       setViewportWidth(1280);
       const onFileCreated = vi.fn();
       const createdFile1 = makeFile("f-new-1", "part-canon-draft", "attendance.pdf");
@@ -918,6 +918,10 @@ describe("YpopProofDrawer - Liquidation-Aligned Redesign & Multi-File UX", () =>
         uploadCallCount++;
         return uploadCallCount === 1 ? createdFile1 : createdFile2;
       });
+      vi.spyOn(lydoSupabase, "updateYpopEventParticipationInSupabase").mockResolvedValue({
+        ...draftParticipation,
+        status: "pending_verification",
+      } as any);
 
       render(
         <YpopProofDrawer
@@ -941,6 +945,19 @@ describe("YpopProofDrawer - Liquidation-Aligned Redesign & Multi-File UX", () =>
       const file2 = new File(["dummy 2"], "event_photo.png", { type: "image/png" });
 
       fireEvent.change(fileInput, { target: { files: [file1, file2] } });
+
+      // Staged locally: files appear in UI with Ready to Upload and NO immediate Supabase upload
+      expect(screen.getAllByText("attendance.pdf").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("event_photo.png").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Ready to Upload").length).toBe(2);
+      expect(lydoSupabase.uploadYpopEventFileToSupabase).not.toHaveBeenCalled();
+
+      // Submit Proof for Review triggers the batch upload
+      const submitBtn = screen.getByRole("button", { name: /Submit Proof for Review/i });
+      fireEvent.click(submitBtn);
+
+      const confirmBtn = screen.getByRole("button", { name: /Submit Proof/i });
+      fireEvent.click(confirmBtn);
 
       await waitFor(() => {
         expect(lydoSupabase.uploadYpopEventFileToSupabase).toHaveBeenCalledTimes(2);

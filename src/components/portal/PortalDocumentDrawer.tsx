@@ -28,6 +28,13 @@ import { cn } from "@/lib/utils";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { isApprovedRegistrationDocument } from "@/lib/document-file-access";
 import { type SubmissionFile, resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
+import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isRevisionAdminUnlocked,
+  isRevisionExpired,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
 
 export interface PortalDocumentDrawerProps {
   open: boolean;
@@ -140,6 +147,14 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
     adminStatus === "under_admin_review" ||
     adminStatus === "under_review";
 
+  const isRevisionAdminUnlockedState = !isTemplate && isNeedsRevision && isRevisionAdminUnlocked(file);
+  const isRevisionDeadlineExpired =
+    !isTemplate &&
+    isNeedsRevision &&
+    isSubmissionRevisionLocked(file);
+  const revisionDeadlineFormatted = !isTemplate && isNeedsRevision ? formatRevisionDeadline(file?.revisionDueAt) : "";
+  const revisionTimeRemaining = !isTemplate && isNeedsRevision ? getRevisionTimeRemaining(file?.revisionDueAt, undefined, isRevisionAdminUnlockedState) : null;
+
   // Formatted Date
   const formattedDate = file?.uploadedAt
     ? formatShortPortalDate
@@ -216,7 +231,11 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
             : isDraft
             ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
             : isNeedsRevision
-            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+            ? isRevisionAdminUnlockedState
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : isRevisionDeadlineExpired
+              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+              : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
             : isRejected
             ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
             : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
@@ -227,7 +246,11 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
           : isDraft
           ? "Draft Saved"
           : isNeedsRevision
-          ? "Needs Revision"
+          ? isRevisionAdminUnlockedState
+            ? "Needs Revision • Unlocked by Admin"
+            : isRevisionDeadlineExpired
+            ? "Revision Locked"
+            : "Needs Revision"
           : isRejected
           ? "Rejected"
           : "Under Review"}
@@ -310,22 +333,49 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
       </div>
 
       {/* Admin Remarks Callout if Needs Revision or Rejected (Attached Mode Only) */}
-      {!isTemplate && (isNeedsRevision || isRejected) && file?.adminRemarks && (
+      {!isTemplate && (isNeedsRevision || isRejected) && (
         <div
           className={cn(
-            "rounded-xl border p-3 text-xs space-y-1",
-            isNeedsRevision
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+            "rounded-xl border p-3 text-xs space-y-1.5",
+            isRevisionDeadlineExpired || isRejected
+              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+              : isRevisionAdminUnlockedState
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
+              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
           )}
         >
           <div className="flex items-center gap-1.5 font-bold">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>Admin Review Remarks</span>
+            <span>
+              {isRevisionAdminUnlockedState
+                ? "Needs Revision • Unlocked by Admin"
+                : isRevisionDeadlineExpired
+                ? "Revision Locked"
+                : isRejected
+                ? "Admin Review Rejection"
+                : "Admin Review Remarks"}
+            </span>
           </div>
-          <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
-            "{file.adminRemarks}"
-          </p>
+          {file?.adminRemarks && (
+            <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
+              "{file.adminRemarks}"
+            </p>
+          )}
+          {isRevisionAdminUnlockedState ? (
+            <p className="text-[11px] font-semibold pl-5 text-emerald-800 dark:text-emerald-300">
+              {revisionDeadlineFormatted
+                ? `Original deadline: ${revisionDeadlineFormatted}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
+                : "This submission has been unlocked by an administrator. You may now upload corrected files and resubmit."}
+            </p>
+          ) : isRevisionDeadlineExpired ? (
+            <p className="text-[11px] font-semibold pl-5 text-rose-800 dark:text-rose-300">
+              The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.
+            </p>
+          ) : revisionDeadlineFormatted ? (
+            <p className="text-[11px] font-semibold pl-5">
+              {`Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -447,12 +497,20 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
               <Button
                 type="button"
                 size="sm"
-                disabled={saving}
-                onClick={onReplaceFile}
-                className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-bold gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                disabled={saving || isRevisionDeadlineExpired}
+                onClick={() => {
+                  if (isRevisionDeadlineExpired) return;
+                  onReplaceFile();
+                }}
+                className={cn(
+                  "h-9 px-4 rounded-xl text-xs font-bold gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2",
+                  isRevisionDeadlineExpired
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground focus-visible:ring-primary"
+                )}
               >
                 <FileUp className="h-3.5 w-3.5 shrink-0" />
-                <span>Upload Revised File</span>
+                <span>{isRevisionDeadlineExpired ? "Revision Expired (Locked)" : "Upload Revised File"}</span>
               </Button>
             )}
 
@@ -588,22 +646,49 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
       </div>
 
       {/* Admin Remarks Callout if Needs Revision or Rejected (Attached Mode Only) */}
-      {!isTemplate && (isNeedsRevision || isRejected) && file?.adminRemarks && (
+      {!isTemplate && (isNeedsRevision || isRejected) && (
         <div
           className={cn(
             "rounded-xl border p-2.5 sm:p-3 text-xs space-y-1 mt-0.5",
-            isNeedsRevision
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+            isRevisionDeadlineExpired || isRejected
+              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
+              : isRevisionAdminUnlockedState
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
+              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
           )}
         >
           <div className="flex items-center gap-1.5 font-bold">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>Admin Review Remarks</span>
+            <span>
+              {isRevisionAdminUnlockedState
+                ? "Needs Revision • Unlocked by Admin"
+                : isRevisionDeadlineExpired
+                ? "Revision Locked"
+                : isRejected
+                ? "Admin Review Rejection"
+                : "Admin Review Remarks"}
+            </span>
           </div>
-          <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
-            "{file.adminRemarks}"
-          </p>
+          {file?.adminRemarks && (
+            <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
+              "{file.adminRemarks}"
+            </p>
+          )}
+          {isRevisionAdminUnlockedState ? (
+            <p className="text-[11px] font-semibold pl-5 text-emerald-800 dark:text-emerald-300">
+              {revisionDeadlineFormatted
+                ? `Original deadline: ${revisionDeadlineFormatted}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
+                : "This submission has been unlocked by an administrator. You may now upload corrected files and resubmit."}
+            </p>
+          ) : isRevisionDeadlineExpired ? (
+            <p className="text-[11px] font-semibold pl-5 text-rose-800 dark:text-rose-300">
+              The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.
+            </p>
+          ) : revisionDeadlineFormatted ? (
+            <p className="text-[11px] font-semibold pl-5">
+              {`Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -731,12 +816,20 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
               <Button
                 type="button"
                 size="sm"
-                disabled={saving}
-                onClick={onReplaceFile}
-                className="w-full h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                disabled={saving || isRevisionDeadlineExpired}
+                onClick={() => {
+                  if (isRevisionDeadlineExpired) return;
+                  onReplaceFile();
+                }}
+                className={cn(
+                  "w-full h-10 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2",
+                  isRevisionDeadlineExpired
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-primary hover:bg-primary/90 active:bg-primary/95 text-primary-foreground focus-visible:ring-primary"
+                )}
               >
                 <FileUp className="h-4 w-4 shrink-0" />
-                <span>Upload Revised File</span>
+                <span>{isRevisionDeadlineExpired ? "Revision Expired (Locked)" : "Upload Revised File"}</span>
               </Button>
             )}
 
@@ -940,7 +1033,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
+            className="h-8.5 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center"
           >
             Close
           </Button>
