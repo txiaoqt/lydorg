@@ -328,6 +328,7 @@ begin
     raise exception 'You cannot delete your own account.';
   end if;
 
+  delete from public.admin_sessions where admin_sessions.admin_id = _admin_id_to_delete;
   delete from public.admin_accounts where admin_accounts.id = _admin_id_to_delete;
 end;
 $$;

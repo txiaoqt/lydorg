@@ -266,7 +266,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const isInviteSession =
         isInviteJwt(session.access_token) ||
-        Boolean(authUser.invited_at) ||
         (typeof window !== "undefined" && window.location.pathname === "/admin/create-password");
 
       const hasNoOrgOrRoleData = !profileResp.data && roleCodes.length === 0;

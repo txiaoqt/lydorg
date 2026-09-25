@@ -412,4 +412,32 @@ describe("City-Led YPOP Proof Upload Workflow — Local Staging and Explicit Sub
     expect(screen.queryByRole("button", { name: /Submit Proof/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Close/i }).length).toBeGreaterThan(0);
   });
+
+  // TEST 9 — Staged City-Led file provides rawFile to canonical Document Preview
+  it("TEST 9: Staged file passes rawFile to canonical document preview section so in-memory ArrayBuffer is used", async () => {
+    setViewportWidth(1280);
+    render(
+      <YpopProofDrawer
+        open={true}
+        onOpenChange={vi.fn()}
+        activity={mockActivity as any}
+        participation={null}
+        eventFiles={[]}
+        organizationId="org-1"
+        onParticipationUpdated={vi.fn()}
+        onFileCreated={vi.fn()}
+        onFileDeleted={vi.fn()}
+      />
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["dummy pdf content"], "city_proof_preview.pdf", { type: "application/pdf" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // Document Preview section appears for the active staged file
+    expect(screen.getByText("Document Preview")).toBeInTheDocument();
+    expect(screen.getAllByText("city_proof_preview.pdf").length).toBeGreaterThan(0);
+  });
 });
+

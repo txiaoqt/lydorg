@@ -265,7 +265,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, extensions
+SET search_path = public, extensions, auth
 AS $$
 DECLARE
   _admin public.admin_accounts%rowtype;
@@ -273,6 +273,7 @@ DECLARE
   _expires_at timestamptz;
   _clean_identifier text;
   _timeout_mins integer := 30;
+  _is_email_verified boolean := true;
 BEGIN
   _clean_identifier := lower(trim(coalesce(_username, '')));
 
@@ -286,6 +287,24 @@ BEGIN
 
   IF NOT FOUND THEN
     RETURN;
+  END IF;
+
+  -- Authoritative Administrator Email Verification Resolution
+  SELECT coalesce(
+    u.email_confirmed_at IS NOT NULL
+    OR u.confirmed_at IS NOT NULL
+    OR coalesce((u.raw_user_meta_data->>'email_verified')::boolean, false)
+    OR coalesce((u.raw_app_meta_data->>'email_verified')::boolean, false),
+    true
+  )
+  INTO _is_email_verified
+  FROM auth.users u
+  WHERE u.id = _admin.id OR lower(u.email) = lower(_admin.email::text)
+  ORDER BY (u.id = _admin.id) DESC, u.created_at DESC
+  LIMIT 1;
+
+  IF _is_email_verified IS NULL THEN
+    _is_email_verified := true;
   END IF;
 
   -- Load dynamic session timeout setting (default 30 minutes)
@@ -342,7 +361,7 @@ BEGIN
     _admin.display_name,
     _session_token,
     _expires_at,
-    coalesce(_admin.is_email_verified, true);
+    _is_email_verified;
 END;
 $$;
 

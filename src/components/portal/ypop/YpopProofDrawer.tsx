@@ -919,9 +919,10 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                     fileName: activeFile.fileName,
                     fileUrl: activeFile.fileUrl,
                     uploadedAt: activeFile.uploadedAt,
+                    rawFile: activeFile.rawFile,
                   }}
                   previewUrl={resolvedPreviewUrl || (activeFile.fileUrl.startsWith("storage://") ? "" : activeFile.fileUrl)}
-                  previewFile={localRawFilesRef.current.get(activeFile.id) || null}
+                  previewFile={activeFile.rawFile || localRawFilesRef.current.get(activeFile.id) || null}
                   isDownloading={downloadingFileId === activeFile.id}
                   onDownloadFile={(url, name, id) => void handleDownloadFile(url, name, id)}
                   formatDateTimeLabel={(date) => new Date(date).toLocaleDateString()}

@@ -103,7 +103,7 @@ const AuthCallback = () => {
     // 3. Priority: Check if active session is an unconfirmed admin invite session
     if (supabase) {
       void supabase.auth.getSession().then(({ data }) => {
-        if (data?.session && (isInviteJwt(data.session.access_token) || Boolean(data.session.user?.invited_at))) {
+        if (data?.session && isInviteJwt(data.session.access_token)) {
           navigate("/admin/create-password", { replace: true });
         }
       });
