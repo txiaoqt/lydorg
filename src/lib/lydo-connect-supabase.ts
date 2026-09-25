@@ -53,6 +53,7 @@ import {
   resolveYpopCityLedCategory,
 } from "./lydo-connect-data";
 import { readAdminSession } from "./admin-auth";
+import { type AuditCategory } from "./admin-system-settings";
 import { getAdminAppUrl } from "./auth-redirect";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { calculateRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked } from "./revision-deadline";
@@ -359,6 +360,7 @@ type ActivityLogRow = {
   related_id: string;
   description: string;
   created_at: string;
+  metadata?: Record<string, unknown> | null;
 };
 
 type YpopPeriodRow = {
@@ -887,6 +889,7 @@ const mapActivityLog = (row: ActivityLogRow): ActivityLog => ({
   relatedId: row.related_id,
   description: row.description,
   createdAt: row.created_at,
+  metadata: (row.metadata as Record<string, unknown>) ?? {},
 });
 
 const mapInquiry = (row: InquiryRow): InquiryRecord => ({
@@ -3538,20 +3541,30 @@ export const createAdminActivityLogInSupabase = async (params: {
   relatedType: string;
   relatedId?: string;
   description: string;
-}) => {
-  const adminSession = getAuthenticatedAdminSession();
-  const { data, error } = await supabase!.rpc("create_admin_activity_log", {
+  category?: AuditCategory;
+  metadata?: Record<string, unknown>;
+}): Promise<ActivityLog | null> => {
+  const adminSession = readAdminSession();
+  if (!supabase || !adminSession) {
+    return null;
+  }
+  const { data, error } = await supabase.rpc("create_admin_activity_log", {
     _session_token: adminSession.sessionToken,
     _organization_id: params.organizationId || null,
     _action: params.action.trim(),
     _related_type: params.relatedType.trim(),
     _related_id: params.relatedId || null,
     _description: params.description.trim(),
+    _category: params.category || null,
+    _metadata: params.metadata || {},
   });
 
-  const createdRow = Array.isArray(data) ? data[0] : null;
-  if (error || !createdRow) throw new Error(error?.message ?? "Failed to create the activity log.");
-  return mapActivityLog(createdRow as ActivityLogRow);
+  if (error) {
+    console.warn("Unable to create admin activity log:", error.message);
+    return null;
+  }
+  const createdRow = Array.isArray(data) && data.length > 0 ? data[0] : null;
+  return createdRow ? mapActivityLog(createdRow as ActivityLogRow) : null;
 };
 
 export const getAdminAccountsInSupabase = async (): Promise<
@@ -5509,6 +5522,35 @@ export const adminUpdateYpopEventParticipationInSupabase = async (
     }
     throw new Error("No data returned from admin_update_ypop_event_participation.");
   }
+
+  if (patch.status && ["approved", "needs_revision", "rejected"].includes(patch.status)) {
+    const updatedStatus = patch.status;
+    void (async () => {
+      try {
+        const { data: part } = await supabase!
+          .from("ypop_event_participations")
+          .select("organization_id, ypop_city_activities(name)")
+          .eq("id", id)
+          .single();
+        if (part?.organization_id) {
+          const evType: OrgTransactionalEmailEventType =
+            updatedStatus === "approved" ? "ypop_approved" : updatedStatus === "needs_revision" ? "ypop_needs_revision" : "ypop_rejected";
+          const activityName = (part as unknown as { ypop_city_activities?: { name?: string } })?.ypop_city_activities?.name || "City-Led Activity";
+          await dispatchOrgTransactionalEmailInSupabase({
+            eventType: evType,
+            organizationId: part.organization_id,
+            referenceId: id,
+            status: updatedStatus,
+            remarks: patch.adminRemarks || undefined,
+            itemName: `YPOP Activity: ${activityName}`,
+          });
+        }
+      } catch (e) {
+        console.warn("Non-fatal email dispatch error for YPOP participation update:", e);
+      }
+    })();
+  }
+
   return mapYpopEventParticipation(row as YpopEventParticipationRow);
 };
 
@@ -5526,6 +5568,34 @@ export const adminUpdateBudgetRequestFileStatusInSupabase = async (
   if (error) throw new Error(error.message);
   const row = Array.isArray(data) ? data[0] : null;
   if (!row) throw new Error("No data returned from admin_update_budget_request_file_status.");
+
+  if (patch.adminStatus && ["approved_for_ftf_green", "needs_revision", "rejected_red", "approved", "rejected"].includes(patch.adminStatus)) {
+    const updatedStatus = patch.adminStatus;
+    void (async () => {
+      try {
+        const { data: fileRow } = await supabase!
+          .from("budget_request_files")
+          .select("request_id, file_name, budget_requests(organization_id, title)")
+          .eq("id", id)
+          .single();
+        const orgId = (fileRow as unknown as { budget_requests?: { organization_id?: string; title?: string } })?.budget_requests?.organization_id;
+        const reqTitle = (fileRow as unknown as { budget_requests?: { title?: string } })?.budget_requests?.title || fileRow?.file_name || "Budget Proposal";
+        if (orgId) {
+          await dispatchOrgTransactionalEmailInSupabase({
+            eventType: "budget_status_update",
+            organizationId: orgId,
+            referenceId: id,
+            status: updatedStatus,
+            remarks: patch.adminRemarks || undefined,
+            itemName: `Budget Request: ${reqTitle}`,
+          });
+        }
+      } catch (e) {
+        console.warn("Non-fatal email dispatch error for budget file status update:", e);
+      }
+    })();
+  }
+
   return mapBudgetRequestFile(row as BudgetRequestFileRow);
 };
 
@@ -5642,6 +5712,34 @@ export const adminUpdateLiquidationReportFileStatusInSupabase = async (
   if (error) throw new Error(error.message);
   const row = Array.isArray(data) ? data[0] : null;
   if (!row) throw new Error("No data returned from admin_update_liquidation_report_file_status.");
+
+  if (patch.adminStatus && ["approved_for_ftf_green", "complete_green", "needs_revision", "rejected_red", "approved", "rejected"].includes(patch.adminStatus)) {
+    const updatedStatus = patch.adminStatus;
+    void (async () => {
+      try {
+        const { data: fileRow } = await supabase!
+          .from("liquidation_report_files")
+          .select("report_id, file_name, liquidation_reports(organization_id, activity_title)")
+          .eq("id", id)
+          .single();
+        const orgId = (fileRow as unknown as { liquidation_reports?: { organization_id?: string; activity_title?: string } })?.liquidation_reports?.organization_id;
+        const reportTitle = (fileRow as unknown as { liquidation_reports?: { activity_title?: string } })?.liquidation_reports?.activity_title || fileRow?.file_name || "Liquidation Packet";
+        if (orgId) {
+          await dispatchOrgTransactionalEmailInSupabase({
+            eventType: "liquidation_status_update",
+            organizationId: orgId,
+            referenceId: id,
+            status: updatedStatus,
+            remarks: patch.adminRemarks || undefined,
+            itemName: `Liquidation: ${reportTitle}`,
+          });
+        }
+      } catch (e) {
+        console.warn("Non-fatal email dispatch error for liquidation file status update:", e);
+      }
+    })();
+  }
+
   return mapLiquidationReportFile(row as LiquidationReportFileRow);
 };
 
@@ -5708,6 +5806,34 @@ export const adminUpdateYpopOrgActivityInSupabase = async (
     }
     throw new Error("No data returned from admin_update_ypop_org_activity.");
   }
+
+  if (patch.status && ["approved", "needs_revision", "rejected"].includes(patch.status)) {
+    const updatedStatus = patch.status;
+    void (async () => {
+      try {
+        const { data: act } = await supabase!
+          .from("ypop_org_activities")
+          .select("organization_id, name")
+          .eq("id", id)
+          .single();
+        if (act?.organization_id) {
+          const evType: OrgTransactionalEmailEventType =
+            updatedStatus === "approved" ? "ypop_approved" : updatedStatus === "needs_revision" ? "ypop_needs_revision" : "ypop_rejected";
+          await dispatchOrgTransactionalEmailInSupabase({
+            eventType: evType,
+            organizationId: act.organization_id,
+            referenceId: id,
+            status: updatedStatus,
+            remarks: patch.adminRemarks || undefined,
+            itemName: `Org-Led PPA: ${act.name || "Activity"}`,
+          });
+        }
+      } catch (e) {
+        console.warn("Non-fatal email dispatch error for YPOP org activity update:", e);
+      }
+    })();
+  }
+
   return mapYpopOrgActivity(row as YpopOrgActivityRow);
 };
 
@@ -6481,6 +6607,24 @@ export const adminRequestRenewalRevisionInSupabase = async (
 
   if (error) throw new Error(error.message);
   const payload = data as { success: boolean; renewal_id: string; status: string };
+
+  void (async () => {
+    try {
+      const { data: ren } = await supabase!.from("organization_renewals").select("organization_id").eq("id", renewalId).single();
+      if (ren?.organization_id) {
+        await dispatchOrgTransactionalEmailInSupabase({
+          eventType: "renewal_needs_revision",
+          organizationId: ren.organization_id,
+          referenceId: renewalId,
+          remarks: adminRemarks || undefined,
+          itemName: "Accreditation Renewal Packet",
+        });
+      }
+    } catch (e) {
+      console.warn("Non-fatal email dispatch error for renewal revision:", e);
+    }
+  })();
+
   return {
     success: payload.success,
     renewalId: payload.renewal_id,
@@ -6509,6 +6653,24 @@ export const adminRejectRenewalInSupabase = async (
 
   if (error) throw new Error(error.message);
   const payload = data as { success: boolean; renewal_id: string; status: string };
+
+  void (async () => {
+    try {
+      const { data: ren } = await supabase!.from("organization_renewals").select("organization_id").eq("id", renewalId).single();
+      if (ren?.organization_id) {
+        await dispatchOrgTransactionalEmailInSupabase({
+          eventType: "renewal_rejected",
+          organizationId: ren.organization_id,
+          referenceId: renewalId,
+          remarks: adminRemarks || undefined,
+          itemName: "Accreditation Renewal Application",
+        });
+      }
+    } catch (e) {
+      console.warn("Non-fatal email dispatch error for renewal rejection:", e);
+    }
+  })();
+
   return {
     success: payload.success,
     renewalId: payload.renewal_id,
@@ -6560,6 +6722,23 @@ export const adminApproveRenewalInSupabase = async (
     end_date: string;
     certificate_urn: string;
   };
+
+  void (async () => {
+    try {
+      const { data: ren } = await supabase!.from("organization_renewals").select("organization_id").eq("id", renewalId).single();
+      if (ren?.organization_id) {
+        await dispatchOrgTransactionalEmailInSupabase({
+          eventType: "renewal_approved",
+          organizationId: ren.organization_id,
+          referenceId: renewalId,
+          remarks: adminRemarks?.trim() || undefined,
+          itemName: `Accreditation Renewal (URN: ${certificateUrn})`,
+        });
+      }
+    } catch (e) {
+      console.warn("Non-fatal email dispatch error for renewal approval:", e);
+    }
+  })();
 
   return {
     success: payload.success,
@@ -6930,6 +7109,7 @@ export const deleteAdminBudgetRequestsInSupabase = async (
 export const adminUnlockSubmissionRevisionInSupabase = async (params: {
   entityType: "document_submission" | "renewal" | "budget_request" | "liquidation_report" | "ypop_event_participation" | "ypop_org_activity";
   entityId: string;
+  organizationId?: string;
   remarks?: string;
 }): Promise<{
   success: boolean;
@@ -6957,6 +7137,19 @@ export const adminUnlockSubmissionRevisionInSupabase = async (params: {
     revision_unlocked_at?: string;
     revision_due_at?: string | null;
   };
+
+  if (params.organizationId) {
+    void dispatchOrgTransactionalEmailInSupabase({
+      eventType: "submission_unlocked",
+      organizationId: params.organizationId,
+      referenceId: params.entityId,
+      title: "Submission Unlocked for Revision",
+      status: "unlocked",
+      statusLabel: "Unlocked by Admin",
+      remarks: params.remarks?.trim() || "An administrator has unlocked this submission. You may now submit your revisions.",
+      itemName: params.entityType.replace(/_/g, " "),
+    });
+  }
 
   return {
     success: payload.success ?? true,
@@ -7043,4 +7236,89 @@ export const dispatchAdminNotificationInSupabase = async (
     };
   }
 };
+
+export type OrgTransactionalEmailEventType =
+  | "registration_approved"
+  | "registration_needs_revision"
+  | "registration_rejected"
+  | "renewal_approved"
+  | "renewal_needs_revision"
+  | "renewal_rejected"
+  | "document_approved"
+  | "document_needs_revision"
+  | "document_rejected"
+  | "ypop_approved"
+  | "ypop_needs_revision"
+  | "ypop_rejected"
+  | "budget_status_update"
+  | "liquidation_status_update"
+  | "submission_unlocked";
+
+export interface DispatchOrgTransactionalEmailParams {
+  eventType: OrgTransactionalEmailEventType;
+  organizationId: string;
+  userId?: string;
+  referenceId?: string;
+  title?: string;
+  subject?: string;
+  status?: string;
+  statusLabel?: string;
+  remarks?: string;
+  itemName?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Dispatches an organization transactional status/workflow email event to the server-side Edge Function.
+ * Gated by 'email.send_workflow_emails'. Runs asynchronously and non-blockingly.
+ */
+export const dispatchOrgTransactionalEmailInSupabase = async (
+  params: DispatchOrgTransactionalEmailParams,
+): Promise<{
+  success: boolean;
+  event: string;
+  emailSent?: boolean;
+  recipient?: string;
+  reason?: string;
+}> => {
+  if (!supabase) {
+    return { success: false, event: params.eventType, reason: "supabase_not_configured" };
+  }
+
+  try {
+    const customHeaders: Record<string, string> = {};
+    const adminSession = readAdminSession();
+    if (adminSession?.sessionToken) {
+      customHeaders["x-admin-session-token"] = adminSession.sessionToken;
+    }
+
+    const { data, error } = await supabase.functions.invoke("send-org-transactional-email", {
+      body: params,
+      headers: customHeaders,
+    });
+
+    if (error) {
+      console.warn("[dispatchOrgTransactionalEmailInSupabase] Edge function error (non-fatal):", error.message);
+      return { success: false, event: params.eventType, reason: error.message };
+    }
+
+    return (data ?? { success: true, event: params.eventType }) as {
+      success: boolean;
+      event: string;
+      emailSent?: boolean;
+      recipient?: string;
+      reason?: string;
+    };
+  } catch (err) {
+    console.warn("[dispatchOrgTransactionalEmailInSupabase] Dispatch exception (non-fatal):", err);
+    return {
+      success: false,
+      event: params.eventType,
+      reason: err instanceof Error ? err.message : "network_error",
+    };
+  }
+};
+
 

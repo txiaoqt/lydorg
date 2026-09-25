@@ -144,7 +144,7 @@ const About = () => {
                 Empowering Youth Organizations in Pasig City
               </h1>
               <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-center text-[#1e1e1e] text-sm sm:text-public-fs-subtitle-sm xl:text-justify">
-                The Pasig City Local Youth Development Office (PCYDO) is mandated to support, develop, and monitor registered youth organizations across the city. Y-TRACE is our official digital portal — simplifying compliance, registration, document submission, and activity reporting for both organizations and PCYDO staff.
+                The Pasig City Youth Development Office (PCYDO) is mandated to support, develop, and monitor registered youth organizations across the city. Y-TRACE is our official digital portal — simplifying compliance, registration, document submission, and activity reporting for both organizations and PCYDO staff.
               </p>
             </div>
 
@@ -262,14 +262,14 @@ const About = () => {
             </div>
             <div className="flex flex-col gap-1 sm:gap-[4px]">
               <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-[#1e1e1e]">
-                Pasig City Local Youth Development Office
+                Pasig City Youth Development Office
               </h3>
               <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
                 PCYDO
               </span>
             </div>
             <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-public-text-secondary">
-              The Pasig City Local Youth Development Office oversees youth welfare programs, supports registered youth organizations, and enforces compliance with national and local youth development policies.
+              The Pasig City Youth Development Office oversees youth welfare programs, supports registered youth organizations, and enforces compliance with national and local youth development policies.
             </p>
             <div className="flex flex-wrap gap-1.5 sm:gap-[12px]">
               {["Youth Development", "Compliance", "Registration"].map((tag) => (

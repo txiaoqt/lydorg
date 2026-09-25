@@ -85,7 +85,7 @@ const NewsReleases = () => {
               News Releases
             </h1>
             <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-              Official announcements and updates from the Pasig City Local Youth Development Office.
+              Official announcements and updates from the Pasig City Youth Development Office.
             </p>
           </div>
         </div>

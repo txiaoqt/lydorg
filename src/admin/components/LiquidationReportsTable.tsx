@@ -25,6 +25,7 @@ import {
   type OrganizationProfile,
 } from "@/lib/lydo-connect-data";
 import { isRevisionExpired } from "@/lib/revision-deadline";
+import { useSystemSetting } from "@/lib/admin-system-settings";
 
 export type LiquidationReportsStatusFilter =
   | "all"
@@ -75,13 +76,14 @@ export function matchesLiquidationStatusFilter(
   status: LiquidationReport["status"],
   filter: LiquidationReportsStatusFilter,
   deadlineAt?: string | null,
+  overdueEnabled = true,
 ): boolean {
   if (filter === "all") return true;
   if (filter === "ongoing_activity") return ONGOING_ACTIVITY_STATUSES.has(status);
   if (filter === "pending_review") return status === "submitted" || status === "under_review";
   if (filter === "hardcopy_submitted") return status === "hard_copy_submitted";
   if (filter === "liquidated") return status === "completed_liquidated";
-  if (filter === "overdue") return status === "overdue" || isLiquidationOverdue(deadlineAt, status);
+  if (filter === "overdue") return status === "overdue" || (overdueEnabled && isLiquidationOverdue(deadlineAt, status));
   return true;
 }
 
@@ -143,6 +145,8 @@ export const LiquidationStatusLabel = ({
   revisionDueAt?: string | null;
   revisionLockedAt?: string | null;
 }) => {
+  const overdueIndicatorsEnabled = useSystemSetting("workflow.overdue_indicators_enabled");
+
   if (status === "needs_revision") {
     const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
     if (isExpired) {
@@ -153,7 +157,7 @@ export const LiquidationStatusLabel = ({
       );
     }
   }
-  const isOverdue = isLiquidationOverdue(deadlineAt, status);
+  const isOverdue = overdueIndicatorsEnabled && isLiquidationOverdue(deadlineAt, status);
   const config = isOverdue
     ? STATUS_LABEL_CONFIG.overdue
     : (STATUS_LABEL_CONFIG[status] ?? STATUS_LABEL_CONFIG.draft);

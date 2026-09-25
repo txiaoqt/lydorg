@@ -87,8 +87,9 @@ describe("Admin System Settings - Definitions and Defaults", () => {
 
   it("has valid defaults for general settings", () => {
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.system_name"]).toBe("Y-TRACE");
-    expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_name"]).toBe("Pasig City Local Youth Development Office");
+    expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_name"]).toBe("Pasig City Youth Development Office");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_acronym"]).toBe("PCYDO / LYDO");
+    expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_address"]).toBe("3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.user_portal_url"]).toBe("https://ytrace.app");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.admin_portal_url"]).toBe("https://y-trace-admin.vercel.app");
   });
@@ -202,12 +203,17 @@ describe("Admin System Settings - Local Cache & Fallback Store", () => {
   });
 
   it("saves settings locally and updates cache when Supabase is not configured", async () => {
-    const updates = [{ key: "general.system_name" as const, value: "Y-TRACE Custom" }];
+    const updates = [{ key: "general.office_name" as const, value: "Pasig City Youth Development Office (Custom)" }];
     const saved = await adminSaveSystemSettingsInSupabase(updates);
 
     expect(saved.length).toBeGreaterThan(0);
     const cached = readCachedSystemSettings();
-    expect(cached["general.system_name"]).toBe("Y-TRACE Custom");
+    expect(cached["general.office_name"]).toBe("Pasig City Youth Development Office (Custom)");
+  });
+
+  it("rejects saving system-managed read-only settings", async () => {
+    const readOnlyUpdates = [{ key: "email.sender_name" as const, value: "Custom Sender" }];
+    await expect(adminSaveSystemSettingsInSupabase(readOnlyUpdates)).rejects.toThrow(/read-only/i);
   });
 
   it("rejects invalid setting updates during save", async () => {
@@ -282,7 +288,7 @@ describe("Admin System Settings - UI Component", () => {
     );
 
     expect(screen.getByText(/Access Restricted/i)).toBeInTheDocument();
-    expect(screen.getByText(/You do not have the required permissions/i)).toBeInTheDocument();
+    expect(screen.getByText(/You do not have permission to view System Settings/i)).toBeInTheDocument();
   });
 
   it("renders read-only indicator for admin with view-only permission", async () => {
@@ -326,8 +332,13 @@ describe("Admin System Settings - UI Component", () => {
     expect(screen.getByRole("tab", { name: /Audit & Records/i })).toBeInTheDocument();
 
     const systemNameInput = screen.getByLabelText(/System Name/i) as HTMLInputElement;
-    expect(systemNameInput).not.toBeDisabled();
+    expect(systemNameInput).toBeDisabled();
+    expect(systemNameInput.readOnly).toBe(true);
     expect(systemNameInput.value).toBe("Y-TRACE");
+
+    const officeNameInput = screen.getByLabelText(/Office Name/i) as HTMLInputElement;
+    expect(officeNameInput).not.toBeDisabled();
+    expect(officeNameInput.value).toBe("Pasig City Youth Development Office");
   });
 
   it("tracks dirty state when fields are modified and allows saving", async () => {
@@ -340,11 +351,11 @@ describe("Admin System Settings - UI Component", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/System Name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Office Name/i)).toBeInTheDocument();
     });
 
-    const systemNameInput = screen.getByLabelText(/System Name/i);
-    fireEvent.change(systemNameInput, { target: { value: "Y-TRACE 2026" } });
+    const officeNameInput = screen.getByLabelText(/Office Name/i);
+    fireEvent.change(officeNameInput, { target: { value: "Pasig City Youth Development Office (Main)" } });
 
     // Should indicate unsaved changes
     expect(screen.getByText(/Unsaved changes/i)).toBeInTheDocument();
@@ -369,8 +380,8 @@ describe("Admin System Settings - UI Component", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Session Lifetime & Timeout/i)).toBeInTheDocument();
-      expect(screen.getByText(/Destructive Action Confirmation Guards/i)).toBeInTheDocument();
+      expect(screen.getByText(/Administrator Session Inactivity/i)).toBeInTheDocument();
+      expect(screen.getByText(/Confirmation Prompts for Important Actions/i)).toBeInTheDocument();
     });
   });
 
@@ -402,27 +413,27 @@ describe("Admin System Settings - UI Component", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Administrator Event Alerts/i)).toBeInTheDocument();
+      expect(screen.getByText(/Administrator Notifications/i)).toBeInTheDocument();
     });
 
     expect(screen.getByLabelText(/In-App: New Registration/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Email: New Registration/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/In-App: Renewal Application/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Email: Renewal Application/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/In-App: YPOP Verification Proof/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email: YPOP Verification Proof/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/In-App: Budget Project Proposal/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email: Budget Project Proposal/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/In-App: Liquidation Report Packet/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email: Liquidation Report Packet/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/In-App: Helpdesk Citizen Inquiry/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email: Helpdesk Citizen Inquiry/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/In-App: YPOP Submission/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email: YPOP Submission/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/In-App: Budget Request/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email: Budget Request/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/In-App: Liquidation Report/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email: Liquidation Report/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/In-App: New Inquiry/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email: New Inquiry/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/In-App: Document Resubmission/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Email: Document Resubmission/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/In-App: Accreditation Expiring Notice/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email: Accreditation Expiring Notice/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/In-App: Overdue Liquidation Escalation/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email: Overdue Liquidation Escalation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/In-App: Expiring Accreditation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email: Expiring Accreditation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/In-App: Overdue Liquidation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email: Overdue Liquidation/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Daily Activity Digest/i)).toBeInTheDocument();
   });
 });
@@ -500,11 +511,11 @@ describe("Admin System Settings - RPC Payload and Response Mapping", () => {
     const mockRpcResponse = [
       {
         id: "setting-1",
-        setting_key: "general.office_acronym",
+        setting_key: "general.office_address",
         category: "general",
-        value_json: "PCYDO / LYDO PASIG",
+        value_json: "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City",
         data_type: "string",
-        description: "Official office acronyms used in headers and badges",
+        description: "Official office address",
         is_sensitive: false,
         is_editable: true,
         updated_by: "admin-1",
@@ -530,7 +541,7 @@ describe("Admin System Settings - RPC Payload and Response Mapping", () => {
       permissionCodes: ["system_settings_manage"],
     });
 
-    const updates = [{ key: "general.office_acronym" as const, value: "PCYDO / LYDO PASIG" }];
+    const updates = [{ key: "general.office_address" as const, value: "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City" }];
     const result = await adminSaveSystemSettingsInSupabase(updates);
 
     expect(supabaseModule.supabase.rpc).toHaveBeenCalledWith("admin_save_system_settings", {
@@ -539,8 +550,8 @@ describe("Admin System Settings - RPC Payload and Response Mapping", () => {
     });
 
     expect(result.length).toBe(1);
-    expect(result[0].settingKey).toBe("general.office_acronym");
-    expect(result[0].value).toBe("PCYDO / LYDO PASIG");
+    expect(result[0].settingKey).toBe("general.office_address");
+    expect(result[0].value).toBe("3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City");
     expect(result[0].updatedBy).toBe("admin-1");
   });
 
@@ -548,11 +559,11 @@ describe("Admin System Settings - RPC Payload and Response Mapping", () => {
     const mockRpcResponse = [
       {
         id: "setting-1",
-        setting_key: "general.office_acronym",
+        setting_key: "general.office_address",
         category: "general",
-        value_json: "PCYDO / LYDO PASIG",
+        value_json: "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City",
         data_type: "string",
-        description: "Official office acronyms",
+        description: "Official office address",
         is_sensitive: false,
         is_editable: true,
         updated_by: "admin-1",
@@ -591,14 +602,14 @@ describe("Admin System Settings - RPC Payload and Response Mapping", () => {
     });
 
     const updates = [
-      { key: "general.office_acronym" as const, value: "PCYDO / LYDO PASIG" },
+      { key: "general.office_address" as const, value: "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City" },
       { key: "security.admin_session_timeout_minutes" as const, value: 45 },
     ];
     const result = await adminSaveSystemSettingsInSupabase(updates);
 
     expect(result.length).toBe(2);
     expect(result.map((r) => r.settingKey)).toEqual([
-      "general.office_acronym",
+      "general.office_address",
       "security.admin_session_timeout_minutes",
     ]);
   });

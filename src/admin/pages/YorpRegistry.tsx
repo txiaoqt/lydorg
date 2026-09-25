@@ -35,6 +35,7 @@ import {
   permanentlyDeleteOrganizationAccount,
   type BulkOrganizationDeletionResult,
 } from "@/lib/admin-organization-deletion";
+import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
 import { loadAdminPortalSupabaseState } from "@/lib/lydo-connect-supabase";
 import {
   mapOrganizationProfileToYorpExportRow,
@@ -144,7 +145,8 @@ export function YorpRegistryPage() {
   }, [search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
 
   const openDeleteDialog = (organization: OrganizationProfile) => {
-    setDeleteConfirmation("");
+    const requireNameConfirmation = Boolean(getEffectiveSystemSetting("security.reauth_delete_organization"));
+    setDeleteConfirmation(requireNameConfirmation ? "" : organization.organizationName);
     setDeleteError("");
     setDeleteTarget(organization);
   };
@@ -169,9 +171,12 @@ export function YorpRegistryPage() {
   };
 
   const confirmPermanentDeletion = async () => {
+    const requireNameConfirmation = Boolean(getEffectiveSystemSetting("security.reauth_delete_organization"));
+    const effectiveConfirmation = requireNameConfirmation ? deleteConfirmation : (deleteConfirmation || deleteTarget?.organizationName || "");
+
     if (
       !deleteTarget ||
-      !organizationDeletionConfirmationMatches(deleteConfirmation, deleteTarget.organizationName) ||
+      (requireNameConfirmation && !organizationDeletionConfirmationMatches(effectiveConfirmation, deleteTarget.organizationName)) ||
       deletingOrganization
     ) {
       return;
@@ -182,7 +187,7 @@ export function YorpRegistryPage() {
     try {
       await permanentlyDeleteOrganizationAccount(
         deleteTarget.id,
-        deleteConfirmation,
+        effectiveConfirmation,
       );
       removeOrganizationAccountFromCache(deleteTarget.id);
       setSelectedOrgIds((current) => {
@@ -487,10 +492,11 @@ export function YorpRegistryPage() {
                     deletingOrganization ||
                     !deleteTarget.id ||
                     !deleteTarget.organizationName ||
-                    !organizationDeletionConfirmationMatches(
-                      deleteConfirmation,
-                      deleteTarget.organizationName,
-                    )
+                    (Boolean(getEffectiveSystemSetting("security.reauth_delete_organization")) &&
+                      !organizationDeletionConfirmationMatches(
+                        deleteConfirmation,
+                        deleteTarget.organizationName,
+                      ))
                   }
                   onClick={() => void confirmPermanentDeletion()}
                   className="font-segoe active:scale-[0.98] transition-transform"

@@ -115,8 +115,11 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   );
 };
 
+import { getEffectiveSystemSetting } from "./lib/admin-system-settings";
+import { UnverifiedAdminAccessScreen } from "./admin/components/UnverifiedAdminAccessScreen";
+
 export const RequireAdmin = ({ children }: { children: JSX.Element }) => {
-  const { isInitialized, isPasswordRecoverySession, role } = useAuth();
+  const { isInitialized, isPasswordRecoverySession, role, user, signOut } = useAuth();
   const { pathname } = useLocation();
   if (!isInitialized) return <AdminPageLoader />;
   if (isPasswordRecoverySession) {
@@ -124,6 +127,16 @@ export const RequireAdmin = ({ children }: { children: JSX.Element }) => {
     return <Navigate to="/reset-password" replace />;
   }
   if (role !== "admin") return <Navigate to={EFFECTIVE_ADMIN_SIGNIN_PATH} replace />;
+
+  const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
+  if (requireVerifiedEmail && user && user.isEmailVerified === false) {
+    return (
+      <AdminDesktopGate>
+        <UnverifiedAdminAccessScreen email={user.email} onSignOut={signOut} />
+      </AdminDesktopGate>
+    );
+  }
+
   return <AdminDesktopGate>{children}</AdminDesktopGate>;
 };
 

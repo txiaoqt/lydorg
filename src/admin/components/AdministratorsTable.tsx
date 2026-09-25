@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
-import { ChevronDown, ChevronLeft, ChevronRight, Link2, MoreHorizontal, Pencil, Search, Trash2, UserCheck, UserX } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, KeyRound, Link2, MoreHorizontal, Pencil, Search, Trash2, UserCheck, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -29,10 +29,13 @@ type AdministratorsTableProps = {
   onStatusFilterChange: (value: AdministratorStatusFilter) => void;
   currentAdminId: string | null;
   resendingInviteId: string | null;
+  canSendPasswordReset?: boolean;
+  sendingPasswordResetId?: string | null;
   onEdit: (administrator: AdministratorRecord) => void;
   onToggleActive: (administrator: AdministratorRecord) => void;
   onDelete: (administrator: AdministratorRecord) => void;
   onResendInvite: (administrator: AdministratorRecord) => void;
+  onSendPasswordReset?: (administrator: AdministratorRecord) => void;
 };
 
 const PAGE_SIZE = 10;
@@ -92,10 +95,13 @@ export const AdministratorsTable = ({
   onStatusFilterChange,
   currentAdminId,
   resendingInviteId,
+  canSendPasswordReset = true,
+  sendingPasswordResetId,
   onEdit,
   onToggleActive,
   onDelete,
   onResendInvite,
+  onSendPasswordReset,
 }: AdministratorsTableProps) => {
   const [page, setPage] = useState(0);
 
@@ -339,6 +345,20 @@ export const AdministratorsTable = ({
                       >
                         <Link2 className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.6} />
                         Resend Invite
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canSendPasswordReset && onSendPasswordReset ? (
+                      <DropdownMenuItem
+                        disabled={sendingPasswordResetId === administrator.id}
+                        className={cn(
+                          MENU_ITEM_CLASS,
+                          "text-public-text-neutral-default focus:bg-neutral-hover-subtle focus:text-public-text-neutral-default",
+                          sendingPasswordResetId === administrator.id && "pointer-events-none opacity-50",
+                        )}
+                        onClick={() => onSendPasswordReset(administrator)}
+                      >
+                        <KeyRound className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.6} />
+                        Send Password Reset
                       </DropdownMenuItem>
                     ) : null}
                     <DropdownMenuItem

@@ -515,7 +515,7 @@ async function fetchAdminNotificationSettings(
   let replyToEmail = "";
   let adminPortalUrl = "https://y-trace-admin.vercel.app";
   let systemName = "Y-TRACE";
-  let officeName = "Pasig City Local Youth Development Office";
+  let officeName = "Pasig City Youth Development Office";
   let officeAcronym = "PCYDO / LYDO";
 
   // Fail-closed defaults: if settings table cannot be queried, do not send automated emails
@@ -750,7 +750,7 @@ function generateAdminEmailHtml(params: {
   timestamp: string;
 }): string {
   const safeSystemName = escapeHtml(params.systemName || "Y-TRACE");
-  const safeOfficeName = escapeHtml(params.officeName || "Pasig City Local Youth Development Office");
+  const safeOfficeName = escapeHtml(params.officeName || "Pasig City Youth Development Office");
   const safeTitle = escapeHtml(params.title);
   const safeDescription = escapeHtml(params.description || "An administrative notification has been logged and requires review.");
   const safeBadge = escapeHtml(params.badge);

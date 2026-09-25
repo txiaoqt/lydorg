@@ -686,7 +686,7 @@ const SignUp = () => {
                       We already have a Unique Registration Number (URN)
                     </Label>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Select this option if your organization has previously registered with the Pasig City Local Youth Development Office.
+                      Select this option if your organization has previously registered with the Pasig City Youth Development Office.
                     </p>
                   </div>
                 </div>

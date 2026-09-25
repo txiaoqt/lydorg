@@ -70,7 +70,7 @@ async function fetchAdminSettings(supabaseAdmin: SupabaseAdminClient) {
     let inAppYpopEnabled = true;
     let userPortalUrl = "https://ytrace.app";
     let systemName = "Y-TRACE";
-    let officeName = "Pasig City Local Youth Development Office";
+    let officeName = "Pasig City Youth Development Office";
 
     if (data && Array.isArray(data)) {
       for (const row of data) {
@@ -119,7 +119,7 @@ async function fetchAdminSettings(supabaseAdmin: SupabaseAdminClient) {
       inAppYpopEnabled: true,
       userPortalUrl: "https://ytrace.app",
       systemName: "Y-TRACE",
-      officeName: "Pasig City Local Youth Development Office",
+      officeName: "Pasig City Youth Development Office",
     };
   }
 }
@@ -175,7 +175,7 @@ function generateAnnouncementEmailHtml(params: {
   const safeCategoryLabel = escapeHtml(params.categoryLabel);
   const safeDateRangeStr = escapeHtml(params.dateRangeStr);
   const safeVenue = escapeHtml(params.venue || "Pasig City");
-  const safeOfficeName = escapeHtml(params.officeName || "Pasig City Local Youth Development Office");
+  const safeOfficeName = escapeHtml(params.officeName || "Pasig City Youth Development Office");
   const safeSystemName = escapeHtml(params.systemName || "Y-TRACE");
   const safeUrl = params.viewActivityUrl && params.viewActivityUrl.startsWith("http")
     ? escapeHtml(params.viewActivityUrl)

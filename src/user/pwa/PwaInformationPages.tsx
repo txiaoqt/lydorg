@@ -3,6 +3,7 @@ import { BookOpen, Info, Mail, MapPin, Phone, Shield, Users } from "lucide-react
 import { LegalPolicyView } from "@/components/LegalPolicyView";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 import { PwaAboutSettings } from "./settings/PwaSettingsPages";
 
 const faqs = [
@@ -79,16 +80,17 @@ export function PwaFaqPage() {
 }
 
 export function PwaContactPage() {
+  const { address, contactNumber, email } = usePublicContactInfo();
   return (
     <div className="pwa-stack">
       <section className="pwa-card pwa-settings-detail-card">
         <span className="pwa-settings-hero-icon"><MapPin aria-hidden="true" /></span>
-        <div><h2>LYDO / PCYDO Office</h2><p>{contact.address}</p></div>
+        <div><h2>LYDO / PCYDO Office</h2><p>{address}</p></div>
       </section>
       <section className="pwa-card pwa-contact-list">
         <div><span className="pwa-menu-icon"><Info /></span><span><small>Officer in charge</small><strong>{contact.officer}</strong></span></div>
-        <a href={`tel:${contact.phone}`}><span className="pwa-menu-icon"><Phone /></span><span><small>Phone</small><strong>{contact.phone}</strong></span></a>
-        <a href={`mailto:${contact.email}`}><span className="pwa-menu-icon"><Mail /></span><span><small>Email</small><strong>{contact.email}</strong></span></a>
+        <a href={`tel:${contactNumber}`}><span className="pwa-menu-icon"><Phone /></span><span><small>Contact Number</small><strong>{contactNumber}</strong></span></a>
+        <a href={`mailto:${email}`}><span className="pwa-menu-icon"><Mail /></span><span><small>Email</small><strong>{email}</strong></span></a>
       </section>
     </div>
   );

@@ -1,5 +1,6 @@
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
 const mobileLinkClass =
   "font-segoe text-sm sm:text-public-fs-body-md font-normal leading-relaxed sm:leading-[140%] text-white/80 transition-colors hover:text-white";
@@ -8,6 +9,7 @@ const desktopLinkClass =
   "font-segoe text-sm font-normal leading-relaxed text-white/75 transition-colors hover:text-white";
 
 const Footer = () => {
+  const { contactNumber, email } = usePublicContactInfo();
   return (
     <footer className="bg-gradient-to-r from-[#0E2F66] to-[#1A5CA8] px-4 py-8 sm:px-6 sm:py-10 lg:px-[64px] lg:py-12">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-8 lg:gap-6">
@@ -21,7 +23,7 @@ const Footer = () => {
               <img src="/FullFooter.svg" alt="Y-TRACE" className="h-9 w-auto sm:h-10 object-contain" />
             </div>
             <p className="font-segoe text-sm sm:text-public-fs-body-sm font-semibold leading-relaxed sm:leading-[140%] text-white">
-              Official Pasig City Local Youth Development Office Portal
+              Official Pasig City Youth Development Office Portal
             </p>
             <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-white/80 max-w-md">
               Empowering Pasig City youth organizations through streamlined compliance, transparent governance, and accessible digital services.
@@ -67,12 +69,12 @@ const Footer = () => {
               <div className="flex flex-col gap-2 sm:gap-[12px]">
                 <div className="flex items-center gap-2 text-sm sm:text-public-fs-body-md text-white/90">
                   <Phone className="h-3.5 w-3.5 sm:hidden shrink-0 text-white/70" />
-                  <span>(02) 8643-7632</span>
+                  <span>{contactNumber}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm sm:text-public-fs-body-md text-white/90">
                   <Mail className="h-3.5 w-3.5 sm:hidden shrink-0 text-white/70" />
-                  <a href="mailto:lydo@pasigcity.gov.ph" className="underline underline-offset-2 hover:text-white">
-                    lydo@pasigcity.gov.ph
+                  <a href={`mailto:${email}`} className="underline underline-offset-2 hover:text-white">
+                    {email}
                   </a>
                 </div>
                 <Link
@@ -98,7 +100,7 @@ const Footer = () => {
               <img src="/FullFooter.svg" alt="Y-TRACE" className="h-9 w-auto object-contain" />
             </div>
             <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-snug text-white">
-              Official Pasig City Local Youth Development Office Portal
+              Official Pasig City Youth Development Office Portal
             </p>
             <p className="font-segoe text-sm font-normal leading-relaxed text-white/75 max-w-sm">
               Empowering Pasig City youth organizations through streamlined compliance, transparent governance, and accessible digital services.
@@ -144,12 +146,12 @@ const Footer = () => {
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2 text-sm text-white/80">
                   <Phone className="h-3.5 w-3.5 shrink-0 text-white/60" />
-                  <span>(02) 8643-7632</span>
+                  <span>{contactNumber}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-white/80">
                   <Mail className="h-3.5 w-3.5 shrink-0 text-white/60" />
-                  <a href="mailto:lydo@pasigcity.gov.ph" className="underline underline-offset-2 hover:text-white">
-                    lydo@pasigcity.gov.ph
+                  <a href={`mailto:${email}`} className="underline underline-offset-2 hover:text-white">
+                    {email}
                   </a>
                 </div>
                 <Link
@@ -170,7 +172,7 @@ const Footer = () => {
         <div className="flex flex-col gap-3 sm:gap-4">
           <hr className="border-t border-white/20" />
           <p className="text-center font-segoe text-xs font-normal leading-relaxed text-white/70">
-            © 2026 Y-TRACE • Pasig City Local Youth Development Office. All rights reserved.
+            © 2026 Y-TRACE • Pasig City Youth Development Office. All rights reserved.
           </p>
         </div>
 

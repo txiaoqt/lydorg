@@ -1251,6 +1251,7 @@ export type ActivityLog = {
   relatedId: string;
   description: string;
   createdAt: string;
+  metadata?: Record<string, unknown>;
 };
 
 export type AdminRoleRecord = {
@@ -2707,7 +2708,7 @@ export const statusLabelMap: Record<string, string> = {
   needs_revision: "Needs Revision",
   approved_green: "Approved",
   rejected_red: "Rejected",
-  under_review: "Pending Review",
+  under_review: "Under Review",
   approved_for_ftf_green: "Onsite Required",
   hard_copy_submitted: "Hardcopy Submitted",
   budget_released: "Budget Released",

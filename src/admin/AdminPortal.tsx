@@ -110,13 +110,15 @@ import { AdministratorFormDialog } from "@/admin/components/AdministratorFormDia
 import { RolesPermissionsPanel } from "@/admin/components/RolesPermissionsPanel";
 import { AdminSettingsPage } from "@/admin/components/AdminSettingsPage";
 import { ADMIN_NAV_PERMISSION_MAP, hasAdminNavPermission } from "@/lib/admin-permissions";
-import { getEffectiveSystemSetting, shouldLogActivityType, shouldNotifyOrganization, formatSystemCurrency } from "@/lib/admin-system-settings";
+import { getEffectiveSystemSetting, shouldLogActivityType, shouldNotifyOrganization, formatSystemCurrency, type AuditCategory } from "@/lib/admin-system-settings";
 import { NewsReleaseFormDialog, CalendarCaption } from "@/admin/components/NewsReleaseFormDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { InquiryDetailDrawer } from "@/admin/components/InquiryDetailDrawer";
 import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getPasswordResetUrl } from "@/lib/auth-redirect";
+import { UnverifiedAdminAccessScreen } from "@/admin/components/UnverifiedAdminAccessScreen";
 import {
   allocationByBarangayExportConfig,
   budgetMonitoringExportConfig,
@@ -197,10 +199,11 @@ import {
   fetchAllOrganizationRenewalsInSupabase,
   fetchAllOrganizationAccreditationsInSupabase,
   fetchRenewalPacketInSupabase,
-  fetchRenewalRequiredDocumentTypesInSupabase,
   adminApproveRenewalInSupabase,
   adminRequestRenewalRevisionInSupabase,
   adminRejectRenewalInSupabase,
+  dispatchOrgTransactionalEmailInSupabase,
+  type OrgTransactionalEmailEventType,
 } from "@/lib/lydo-connect-supabase";
 import { validateUrn } from "@/lib/urn-registration";
 import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile } from "@/lib/lydo-connect-data";
@@ -688,6 +691,12 @@ export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+
+  const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
+  if (requireVerifiedEmail && user && user.isEmailVerified === false) {
+    return <UnverifiedAdminAccessScreen email={user.email} onSignOut={signOut} />;
+  }
+
   const { state, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
     useLydoConnect();
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
@@ -772,6 +781,8 @@ export default function AdminPortal({ section }: { section: string }) {
   const [savingAdministrator, setSavingAdministrator] = useState(false);
   const [pendingToggleActiveAdministrator, setPendingToggleActiveAdministrator] = useState<AdministratorRecord | null>(null);
   const [pendingDeleteAdministrator, setPendingDeleteAdministrator] = useState<AdministratorRecord | null>(null);
+  const [pendingPasswordResetAdmin, setPendingPasswordResetAdmin] = useState<AdministratorRecord | null>(null);
+  const [sendingPasswordResetId, setSendingPasswordResetId] = useState<string | null>(null);
   const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
   const [administratorsExportDialogOpen, setAdministratorsExportDialogOpen] = useState(false);
   const [administratorsViewTab, setAdministratorsViewTab] = useState<"accounts" | "roles-permissions">("accounts");
@@ -1551,13 +1562,14 @@ export default function AdminPortal({ section }: { section: string }) {
 
         const escalateDays = Number(getEffectiveSystemSetting("workflow.escalate_after_days") || 7);
         const reminderDays = Number(getEffectiveSystemSetting("workflow.review_reminder_days") || 3);
-        const overdueEnabled = getEffectiveSystemSetting("workflow.overdue_indicators_enabled");
+        const overdueEnabled = Boolean(getEffectiveSystemSetting("workflow.overdue_indicators_enabled"));
+        const reminderEnabled = Boolean(getEffectiveSystemSetting("workflow.review_reminder_enabled"));
 
         if (liquidationStatus === "completed_liquidated" || request.status === "completed") {
           riskLabel = "Completed";
         } else if (!liquidation && requestAgeInDays >= escalateDays) {
           riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
-        } else if (!liquidation && requestAgeInDays >= reminderDays) {
+        } else if (!liquidation && reminderEnabled && requestAgeInDays >= reminderDays) {
           riskLabel = "Needs Attention";
         } else if (
           liquidationStatus === "overdue" ||
@@ -1574,7 +1586,7 @@ export default function AdminPortal({ section }: { section: string }) {
           const daysUntilDeadline = Math.ceil((deadlineDate.getTime() - now.getTime()) / 86400000);
           if (daysUntilDeadline <= 0) {
             riskLabel = completedAtDate ? "Completed" : overdueEnabled ? "Overdue" : "Needs Attention";
-          } else if (daysUntilDeadline <= reminderDays || utilizationRate < 50) {
+          } else if ((reminderEnabled && daysUntilDeadline <= reminderDays) || utilizationRate < 50) {
             riskLabel = "Needs Attention";
           } else {
             riskLabel = "On Track";
@@ -3349,6 +3361,74 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
+  const executeSendPasswordReset = async (administrator: AdministratorRecord) => {
+    if (sendingPasswordResetId) return;
+    if (user?.roleCode !== "super_admin") {
+      toast({
+        title: "Access Denied",
+        description: "Only Super Administrators are authorized to send administrator password reset links.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const targetEmail = administrator.email.trim().toLowerCase();
+    if (!targetEmail) {
+      toast({
+        title: "Invalid Email",
+        description: "This administrator account does not have a registered email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingPasswordResetId(administrator.id);
+    try {
+      if (supabase) {
+        const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+          redirectTo: getPasswordResetUrl(),
+        });
+        if (error) {
+          toast({
+            title: "Unable to Send Password Reset",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Password Reset Link Sent",
+        description: `A secure password reset link has been dispatched to ${administrator.email}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Unable to Send Password Reset",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingPasswordResetId(null);
+    }
+  };
+
+  const handleInitiateSendPasswordReset = (administrator: AdministratorRecord) => {
+    if (user?.roleCode !== "super_admin") {
+      toast({
+        title: "Access Denied",
+        description: "Only Super Administrators are authorized to send administrator password reset links.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const requireConfirmation = getEffectiveSystemSetting("security.allow_admin_password_reset");
+    if (requireConfirmation) {
+      setPendingPasswordResetAdmin(administrator);
+    } else {
+      void executeSendPasswordReset(administrator);
+    }
+  };
+
   const handleUpdateAdministrator = async () => {
     if (!editingAdministratorId) return;
     if (!administratorDisplayNameDraft.trim() || !administratorEmailDraft.trim() || !administratorUsernameDraft.trim()) {
@@ -3494,8 +3574,9 @@ export default function AdminPortal({ section }: { section: string }) {
     relatedId: string,
     description: string,
     organizationId = profile?.id ?? "",
+    category?: AuditCategory,
   ) => {
-    if (!shouldLogActivityType(action)) {
+    if (!shouldLogActivityType(action, category)) {
       return;
     }
     await createAdminActivityLogInSupabase({
@@ -3504,6 +3585,7 @@ export default function AdminPortal({ section }: { section: string }) {
       relatedType,
       relatedId,
       description,
+      category,
     });
   };
 
@@ -3628,19 +3710,14 @@ export default function AdminPortal({ section }: { section: string }) {
     }
   };
 
-  const handleInitiateDeleteInquiry = (inquiry: InquiryRecord) => {
-    setInquiryToDelete(inquiry);
-    setDeleteInquiryError(null);
-  };
-
-  const handleConfirmDeleteInquiry = async () => {
-    if (!inquiryToDelete || isDeletingInquiry) return;
+  const executeDeleteInquiry = async (inquiry: InquiryRecord) => {
+    if (isDeletingInquiry) return;
     setIsDeletingInquiry(true);
     setDeleteInquiryError(null);
 
     try {
-      const targetId = inquiryToDelete.id;
-      const refCode = getInquiryReferenceCode(inquiryToDelete, state.inquiries);
+      const targetId = inquiry.id;
+      const refCode = getInquiryReferenceCode(inquiry, state.inquiries);
       await deleteInquiryInSupabase(targetId);
       removeInquiry(targetId);
 
@@ -3668,6 +3745,21 @@ export default function AdminPortal({ section }: { section: string }) {
     } finally {
       setIsDeletingInquiry(false);
     }
+  };
+
+  const handleInitiateDeleteInquiry = (inquiry: InquiryRecord) => {
+    const requireReauth = getEffectiveSystemSetting("security.reauth_delete_inquiry");
+    if (requireReauth) {
+      setInquiryToDelete(inquiry);
+      setDeleteInquiryError(null);
+    } else {
+      void executeDeleteInquiry(inquiry);
+    }
+  };
+
+  const handleConfirmDeleteInquiry = async () => {
+    if (!inquiryToDelete) return;
+    await executeDeleteInquiry(inquiryToDelete);
   };
 
   const notifyOrganizationUser = (params: {
@@ -3919,6 +4011,43 @@ export default function AdminPortal({ section }: { section: string }) {
         relatedId: selectedRegistrationSubmission.id,
       });
 
+      const freshlyUpdatedOrg = freshSnapshot?.organizationProfiles.find(
+        (o) => o.id === selectedRegistrationProfile.id,
+      );
+      const isNowVerified = freshlyUpdatedOrg?.profileStatus === "verified";
+      let regEventType: OrgTransactionalEmailEventType = "document_approved";
+      if (isNowVerified) {
+        regEventType = "registration_approved";
+      } else if (decision === "needs_revision") {
+        regEventType = "document_needs_revision";
+      } else if (decision === "reject") {
+        regEventType = "document_rejected";
+      }
+
+      void dispatchOrgTransactionalEmailInSupabase({
+        eventType: regEventType,
+        organizationId: selectedRegistrationProfile.id,
+        userId: selectedRegistrationProfile.userId,
+        referenceId: selectedRegistrationSubmission.id,
+        title: isNowVerified
+          ? "Organization Accreditation Registration Approved"
+          : decision === "needs_revision"
+          ? "Registration Document Revision Requested"
+          : decision === "reject"
+          ? "Registration Document Rejected"
+          : "Registration Document Approved",
+        status: isNowVerified ? "verified" : decision,
+        statusLabel: isNowVerified
+          ? "Verified & Approved"
+          : decision === "needs_revision"
+          ? "Needs Revision"
+          : decision === "reject"
+          ? "Rejected"
+          : "Approved",
+        remarks: remark || undefined,
+        itemName: successfulFiles.map((f) => f.fileName).join(", "),
+      });
+
       setSelectedRegistrationReviewFileIds([]);
       setRegistrationBulkDecision("approve");
       setRegistrationBulkRemark("");
@@ -3933,13 +4062,10 @@ export default function AdminPortal({ section }: { section: string }) {
           variant: "destructive",
         });
       } else {
-        const freshlyUpdatedOrg = freshSnapshot?.organizationProfiles.find(
-          (o) => o.id === selectedRegistrationProfile.id,
-        );
-        if (freshlyUpdatedOrg?.profileStatus === "verified") {
+        if (isNowVerified) {
           toast({
             title: "Organization automatically verified",
-            description: `All required documents approved. Official URN: ${freshlyUpdatedOrg.urn || "Assigned"}.`,
+            description: `All required documents approved. Official URN: ${freshlyUpdatedOrg?.urn || "Assigned"}.`,
           });
         } else {
           toast({
@@ -4072,6 +4198,33 @@ export default function AdminPortal({ section }: { section: string }) {
         relatedId: selectedRenewal.id,
       });
 
+      void dispatchOrgTransactionalEmailInSupabase({
+        eventType:
+          decision === "approve"
+            ? "renewal_approved"
+            : decision === "needs_revision"
+            ? "renewal_needs_revision"
+            : "renewal_rejected",
+        organizationId: selectedRenewalProfile.id,
+        userId: selectedRenewalProfile.userId,
+        referenceId: selectedRenewal.id,
+        title:
+          decision === "approve"
+            ? "Accreditation Renewal Document Approved"
+            : decision === "needs_revision"
+            ? "Renewal Document Revision Requested"
+            : "Renewal Document Rejected",
+        status: decision,
+        statusLabel:
+          decision === "approve"
+            ? "Approved"
+            : decision === "needs_revision"
+            ? "Needs Revision"
+            : "Rejected",
+        remarks: remark || undefined,
+        itemName: successfulFiles.map((f) => f.fileName).join(", "),
+      });
+
       setSelectedRenewalReviewFileIds([]);
       setRenewalBulkDecision("approve");
       setRenewalBulkRemark("");
@@ -4122,14 +4275,6 @@ export default function AdminPortal({ section }: { section: string }) {
         adminRemarks: renewalDecisionRemarksDraft.trim() || undefined,
       });
 
-      await appendAuditLog(
-        "Approved organization renewal",
-        "organization_renewal",
-        selectedRenewal.id,
-        `Approved renewal for ${selectedRenewalProfile.organizationName} with URN ${urn}.`,
-        selectedRenewalProfile.id,
-      );
-
       notifyOrganizationUser({
         userId: selectedRenewalProfile.userId,
         organizationId: selectedRenewalProfile.id,
@@ -4177,14 +4322,6 @@ export default function AdminPortal({ section }: { section: string }) {
         adminRemarks: remarks,
       });
 
-      await appendAuditLog(
-        "Requested renewal revision",
-        "organization_renewal",
-        selectedRenewal.id,
-        `Requested revision for renewal of ${selectedRenewalProfile.organizationName}: ${remarks}`,
-        selectedRenewalProfile.id,
-      );
-
       notifyOrganizationUser({
         userId: selectedRenewalProfile.userId,
         organizationId: selectedRenewalProfile.id,
@@ -4231,14 +4368,6 @@ export default function AdminPortal({ section }: { section: string }) {
         renewalId: selectedRenewal.id,
         adminRemarks: remarks,
       });
-
-      await appendAuditLog(
-        "Rejected organization renewal",
-        "organization_renewal",
-        selectedRenewal.id,
-        `Rejected renewal for ${selectedRenewalProfile.organizationName}: ${remarks}`,
-        selectedRenewalProfile.id,
-      );
 
       notifyOrganizationUser({
         userId: selectedRenewalProfile.userId,
@@ -12035,6 +12164,8 @@ export default function AdminPortal({ section }: { section: string }) {
                 onStatusFilterChange={setAdministratorStatusFilter}
                 currentAdminId={user?.id ?? null}
                 resendingInviteId={resendingInviteId}
+                canSendPasswordReset={Boolean(user?.roleCode === "super_admin")}
+                sendingPasswordResetId={sendingPasswordResetId}
                 onEdit={(administrator) => startEditingAdministrator(administrator)}
                 onToggleActive={(administrator) => setPendingToggleActiveAdministrator(administrator)}
                 onDelete={(administrator) => {
@@ -12046,6 +12177,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   }
                 }}
                 onResendInvite={(administrator) => void handleResendInvite(administrator)}
+                onSendPasswordReset={handleInitiateSendPasswordReset}
               />
             )}
 
@@ -12148,6 +12280,48 @@ export default function AdminPortal({ section }: { section: string }) {
                 setPendingDeleteAdministrator(null);
               }}
             />
+
+            <AlertDialog
+              open={Boolean(pendingPasswordResetAdmin)}
+              onOpenChange={(open) => (!open ? setPendingPasswordResetAdmin(null) : undefined)}
+            >
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+                    Send Password Reset Link?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed space-y-2">
+                    <span>A password reset link will be sent to the administrator's registered email address:</span>
+                    <span className="block font-semibold text-slate-800 bg-slate-100 px-2.5 py-1 rounded">
+                      {pendingPasswordResetAdmin?.displayName} ({pendingPasswordResetAdmin?.email})
+                    </span>
+                    <span>The administrator will receive an email containing a secure link to create a new password.</span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="gap-2 sm:gap-0">
+                  <AlertDialogCancel
+                    disabled={Boolean(sendingPasswordResetId)}
+                    onClick={() => setPendingPasswordResetAdmin(null)}
+                    className="text-xs font-medium h-9"
+                  >
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={Boolean(sendingPasswordResetId)}
+                    onClick={() => {
+                      const target = pendingPasswordResetAdmin;
+                      setPendingPasswordResetAdmin(null);
+                      if (target) {
+                        void executeSendPasswordReset(target);
+                      }
+                    }}
+                    className="text-xs font-semibold h-9 bg-public-bg-brand text-white hover:bg-bg-brand-hover"
+                  >
+                    {sendingPasswordResetId ? "Sending..." : "Send Reset Link"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <ActivityLogsExportDialog
               open={administratorsExportDialogOpen}

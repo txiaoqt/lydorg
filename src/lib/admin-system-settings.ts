@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { readAdminSession } from "./admin-auth";
 import { supabase } from "./supabase";
 
@@ -124,42 +125,42 @@ export const ADMIN_SETTING_CATEGORIES: Array<{
   {
     id: "general",
     label: "General",
-    description: "System identity, department metadata, and canonical portal endpoints.",
+    description: "Office information, official contact details, and system identity.",
   },
   {
     id: "notifications",
     label: "Notifications",
-    description: "In-app and email alert routing for administrative events and daily digest.",
+    description: "In-app and email notifications for submissions, reminders, and daily summaries.",
   },
   {
     id: "workflow",
     label: "Workflow",
-    description: "Review reminder intervals, escalation thresholds, and organization status notices.",
+    description: "Review reminder timelines, overdue alerts, and automated organization notifications.",
   },
   {
     id: "programs",
     label: "Programs",
-    description: "YPOP validation period defaults, automated reminders, and submission lifecycle.",
+    description: "YPOP validation period defaults, deadline reminder schedules, and submission deadlines.",
   },
   {
     id: "budget_finance",
     label: "Budget & Finance",
-    description: "Default fiscal year, currency display settings, and budget monitoring parameters.",
+    description: "Default fiscal year, currency display, and financial deadline reminders.",
   },
   {
     id: "security",
     label: "Security",
-    description: "Session inactivity timeouts, re-authentication guards, and credential policies.",
+    description: "Sign-in session timeouts, action confirmation prompts, and administrator security rules.",
   },
   {
     id: "email",
     label: "Email",
-    description: "Application sender identity, reply-to routing, and automated email delivery.",
+    description: "Automated email sender details, reply-to address, and email notification switches.",
   },
   {
     id: "audit_records",
     label: "Audit & Records",
-    description: "Audit trail logging preferences, administrative action capture, and metadata options.",
+    description: "Activity log preferences, recorded administrator actions, and sign-in details.",
   },
 ];
 
@@ -171,43 +172,47 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "general.system_name",
     category: "general",
     label: "System Name",
-    description: "Primary system title displayed across portal headers, breadcrumbs, and exported notices.",
+    description: "Official system name displayed in headers, reports, and notices.",
     dataType: "string",
     defaultValue: "Y-TRACE",
+    isEditable: false,
+    badge: "System",
     helperText: "e.g. Y-TRACE",
   },
   {
     key: "general.office_name",
     category: "general",
     label: "Office Name",
-    description: "Official local government office or department administering youth organization programs.",
+    description: "Official name of the local government office administering youth programs.",
     dataType: "string",
-    defaultValue: "Pasig City Local Youth Development Office",
-    helperText: "e.g. Pasig City Local Youth Development Office",
+    defaultValue: "Pasig City Youth Development Office",
+    helperText: "e.g. Pasig City Youth Development Office",
   },
   {
     key: "general.office_acronym",
     category: "general",
     label: "Office Acronym",
-    description: "Official abbreviated acronyms shown in chips, badges, and document headers.",
+    description: "Short office abbreviation shown on badges, tags, and document headers.",
     dataType: "string",
     defaultValue: "PCYDO / LYDO",
+    isEditable: false,
+    badge: "System",
     helperText: "e.g. PCYDO / LYDO",
   },
   {
     key: "general.support_email",
     category: "general",
     label: "Official Support Email",
-    description: "Public contact address displayed for organization inquiries and technical support.",
+    description: "Official contact email displayed to youth organizations and citizens for inquiries.",
     dataType: "string",
-    defaultValue: "support@lydo.pasig.gov.ph",
-    helperText: "e.g. support@lydo.pasig.gov.ph",
+    defaultValue: "lydo@pasigcity.gov.ph",
+    helperText: "e.g. lydo@pasigcity.gov.ph",
   },
   {
     key: "general.contact_number",
     category: "general",
     label: "Official Contact Number",
-    description: "Landline or mobile contact number for administrative communications and inquiries.",
+    description: "Official telephone or mobile number displayed for inquiries.",
     dataType: "string",
     defaultValue: "(02) 8643-1111",
     helperText: "e.g. (02) 8643-1111",
@@ -216,16 +221,16 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "general.office_address",
     category: "general",
     label: "Office Address",
-    description: "Physical location for on-site document submission and official appointments.",
+    description: "Physical office address displayed for in-person visits and submissions.",
     dataType: "string",
-    defaultValue: "Pasig City Hall Complex, Caruncho Ave, Pasig, Metro Manila",
-    helperText: "e.g. Pasig City Hall Complex, Caruncho Ave, Pasig, Metro Manila",
+    defaultValue: "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City",
+    helperText: "e.g. 3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City",
   },
   {
     key: "general.user_portal_url",
     category: "general",
     label: "Youth Organization Portal URL",
-    description: "Canonical public website and portal address for youth organizations.",
+    description: "Website address used in emails and links for youth organizations.",
     dataType: "string",
     defaultValue: "https://ytrace.app",
     helperText: "e.g. https://ytrace.app",
@@ -234,7 +239,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "general.admin_portal_url",
     category: "general",
     label: "Admin Portal URL",
-    description: "Canonical URL for the administrative management portal.",
+    description: "Website address for the administrator portal.",
     dataType: "string",
     defaultValue: "https://y-trace-admin.vercel.app",
     helperText: "e.g. https://y-trace-admin.vercel.app",
@@ -247,7 +252,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.new_registration.in_app",
     category: "notifications",
     label: "New Registration (In-App)",
-    description: "Generate in-app notification when a new YORP accreditation application is submitted.",
+    description: "Show an in-app notification when a youth organization submits a new registration application.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -255,39 +260,39 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.new_registration.email",
     category: "notifications",
     label: "New Registration (Email)",
-    description: "Dispatch administrative email alert on incoming YORP accreditation submissions.",
+    description: "Send an email notification when a youth organization submits a new registration application.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.renewal_submitted.in_app",
     category: "notifications",
-    label: "Renewal Packet (In-App)",
-    description: "Generate in-app notification when an organization submits an accreditation renewal packet.",
+    label: "Renewal Application (In-App)",
+    description: "Show an in-app notification when an organization submits an annual renewal application.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.renewal_submitted.email",
     category: "notifications",
-    label: "Renewal Packet (Email)",
-    description: "Dispatch email alert when an organization submits an accreditation renewal packet.",
+    label: "Renewal Application (Email)",
+    description: "Send an email notification when an organization submits an annual renewal application.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.ypop_submission.in_app",
     category: "notifications",
-    label: "YPOP Validation Submission (In-App)",
-    description: "Generate in-app notification on new YPOP event validations and activity submissions.",
+    label: "YPOP Submission (In-App)",
+    description: "Show an in-app notification when an organization submits documents for YPOP event validation.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.ypop_submission.email",
     category: "notifications",
-    label: "YPOP Validation Submission (Email)",
-    description: "Dispatch email alert on new YPOP event validations and activity submissions.",
+    label: "YPOP Submission (Email)",
+    description: "Send an email notification when an organization submits documents for YPOP event validation.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -295,7 +300,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.budget_request.in_app",
     category: "notifications",
     label: "Budget Request (In-App)",
-    description: "Generate in-app notification when an organization submits a project funding request.",
+    description: "Show an in-app notification when an organization submits a project funding request.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -303,7 +308,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.budget_request.email",
     category: "notifications",
     label: "Budget Request (Email)",
-    description: "Dispatch email alert when an organization submits a project funding request.",
+    description: "Send an email notification when an organization submits a project funding request.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -311,7 +316,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.liquidation_report.in_app",
     category: "notifications",
     label: "Liquidation Report (In-App)",
-    description: "Generate in-app notification when an organization submits a financial liquidation report.",
+    description: "Show an in-app notification when an organization submits a financial liquidation report.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -319,7 +324,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.liquidation_report.email",
     category: "notifications",
     label: "Liquidation Report (Email)",
-    description: "Dispatch email alert when an organization submits a financial liquidation report.",
+    description: "Send an email notification when an organization submits a financial liquidation report.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -327,7 +332,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.new_inquiry.in_app",
     category: "notifications",
     label: "New Inquiry (In-App)",
-    description: "Generate in-app notification upon receipt of a new public or organization inquiry.",
+    description: "Show an in-app notification when a new citizen or organization inquiry is received.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -335,23 +340,23 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.new_inquiry.email",
     category: "notifications",
     label: "New Inquiry (Email)",
-    description: "Dispatch email alert upon receipt of a new public or organization inquiry.",
+    description: "Send an email notification when a new citizen or organization inquiry is received.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.revision_resubmission.in_app",
     category: "notifications",
-    label: "Revision Resubmission (In-App)",
-    description: "Notify administrators when an organization resubmits previously returned documents.",
+    label: "Document Resubmission (In-App)",
+    description: "Show an in-app notification when an organization resubmits returned documents.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.revision_resubmission.email",
     category: "notifications",
-    label: "Revision Resubmission (Email)",
-    description: "Send email notice when an organization resubmits previously returned documents.",
+    label: "Document Resubmission (Email)",
+    description: "Send an email notification when an organization resubmits returned documents.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -359,7 +364,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.overdue_liquidation.in_app",
     category: "notifications",
     label: "Overdue Liquidation (In-App)",
-    description: "Generate in-app warning when a funded project exceeds its liquidation deadline.",
+    description: "Show an in-app notification when an organization misses its project liquidation deadline.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -367,39 +372,39 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "notifications.overdue_liquidation.email",
     category: "notifications",
     label: "Overdue Liquidation (Email)",
-    description: "Dispatch email warning when a funded project exceeds its liquidation deadline.",
+    description: "Send an email notification when an organization misses its project liquidation deadline.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.accreditation_expiring.in_app",
     category: "notifications",
-    label: "Accreditation Expiring (In-App)",
-    description: "Generate in-app alert when recognized organizations enter their renewal window.",
+    label: "Expiring Accreditation (In-App)",
+    description: "Show an in-app notification when an organization's accreditation is nearing expiration.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.accreditation_expiring.email",
     category: "notifications",
-    label: "Accreditation Expiring (Email)",
-    description: "Dispatch email alert when recognized organizations enter their renewal window.",
+    label: "Expiring Accreditation (Email)",
+    description: "Send an email notification when an organization's accreditation is nearing expiration.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "notifications.daily_digest_enabled",
     category: "notifications",
-    label: "Daily Administrative Digest",
-    description: "Consolidate open pending reviews, overdue items, and inquiries into a daily morning summary email.",
+    label: "Daily Activity Digest",
+    description: "Send administrators a consolidated daily morning email summarizing pending reviews, overdue items, and new inquiries.",
     dataType: "boolean",
     defaultValue: false,
   },
   {
     key: "notifications.daily_digest_time",
     category: "notifications",
-    label: "Daily Digest Schedule Time",
-    description: "Target hour (Asia/Manila) for generating and emailing the daily administrative digest.",
+    label: "Daily Digest Delivery Time",
+    description: "Time of day when the daily summary email is sent to administrators.",
     dataType: "string",
     defaultValue: "08:00",
     options: [
@@ -416,16 +421,16 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "workflow.review_reminder_enabled",
     category: "workflow",
-    label: "Enable Review Reminders",
-    description: "Automatically flag document review items that have remained in pending queue.",
+    label: "Review Reminders",
+    description: "Flag submissions that have been waiting for review past the target turnaround time.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "workflow.review_reminder_days",
     category: "workflow",
-    label: "Review Reminder Threshold (Days)",
-    description: "Number of calendar days after submission before a pending review item shows a reminder flag.",
+    label: "Reminder After (Days)",
+    description: "Number of days a submission can wait in queue before showing a reminder indicator.",
     dataType: "number",
     defaultValue: 3,
     helperText: "e.g. 3 days",
@@ -433,8 +438,8 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "workflow.escalate_after_days",
     category: "workflow",
-    label: "Escalation Threshold (Days)",
-    description: "Number of days before unreviewed submissions escalate to urgent attention status.",
+    label: "Mark Urgent After (Days)",
+    description: "Number of days before an unreviewed submission is marked with urgent priority.",
     dataType: "number",
     defaultValue: 7,
     helperText: "e.g. 7 days",
@@ -442,8 +447,8 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "workflow.overdue_indicators_enabled",
     category: "workflow",
-    label: "Show Overdue Badges",
-    description: "Display prominent visual overdue chips on document review lists and dashboard metrics.",
+    label: "Show Overdue Indicators",
+    description: "Show visual overdue badges on submissions and reports that have passed their deadline.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -451,7 +456,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "workflow.notify_org_on_needs_revision",
     category: "workflow",
     label: "Notify Organization on Needs Revision",
-    description: "Dispatch immediate notification to organization when reviewer requests corrections.",
+    description: "Send an automatic notification to the organization when an administrator requests document corrections.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -459,23 +464,23 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "workflow.notify_org_on_approved",
     category: "workflow",
     label: "Notify Organization on Approval",
-    description: "Send confirmation notice and accreditation updates when reviews are approved.",
+    description: "Send an automatic notification to the organization when their registration, renewal, YPOP, or budget request is approved.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "workflow.notify_org_on_rejected",
     category: "workflow",
-    label: "Notify Organization on Rejection",
-    description: "Send official notification with administrative remarks when submissions are rejected.",
+    label: "Notify Organization on Disapproval",
+    description: "Send an automatic notification with administrative remarks when a submission is not approved.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "workflow.notify_org_on_resubmitted",
     category: "workflow",
-    label: "Acknowledge Receipt on Resubmission",
-    description: "Send automatic receipt confirmation to organization upon uploading revised requirements.",
+    label: "Acknowledge Resubmissions",
+    description: "Send an automatic confirmation to the organization when they successfully upload revised documents.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -486,8 +491,8 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "programs.ypop_default_reminder_days",
     category: "programs",
-    label: "YPOP Reminder Lead Time (Days)",
-    description: "Lead time before validation deadline to send automated participation reminders.",
+    label: "Reminder Notice (Days Before Deadline)",
+    description: "Number of days before the validation deadline to send reminder notices to organizations.",
     dataType: "number",
     defaultValue: 5,
     helperText: "e.g. 5 days prior to deadline",
@@ -495,16 +500,16 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "programs.ypop_deadline_reminders_enabled",
     category: "programs",
-    label: "YPOP Deadline Reminders",
-    description: "Send automated countdown reminders to active youth organizations during validation periods.",
+    label: "Send Deadline Reminders",
+    description: "Automatically send reminder notifications to organizations before the submission deadline.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "programs.ypop_auto_close_on_deadline",
     category: "programs",
-    label: "Auto-Close Submissions on Deadline",
-    description: "Automatically lock semester validation submission queue when the period deadline passes.",
+    label: "Automatically Close Submissions at Deadline",
+    description: "Automatically close the submission window and stop accepting new submissions once the deadline passes.",
     dataType: "boolean",
     defaultValue: false,
   },
@@ -516,7 +521,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "budget.default_fiscal_year",
     category: "budget_finance",
     label: "Default Fiscal Year",
-    description: "Active fiscal year selected by default in budget tracking, exports, and allocation charts.",
+    description: "The fiscal year selected by default when viewing budget tracking, reports, and funding allocations.",
     dataType: "number",
     defaultValue: 2026,
     options: [
@@ -529,7 +534,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "budget.currency",
     category: "budget_finance",
     label: "Currency Code",
-    description: "ISO currency code used for budget accounting and financial reports.",
+    description: "Currency code used for financial amounts in reports and records.",
     dataType: "string",
     defaultValue: "PHP",
     isEditable: false,
@@ -539,7 +544,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "budget.currency_symbol",
     category: "budget_finance",
     label: "Currency Symbol",
-    description: "Display symbol for monetary values across tables and cards.",
+    description: "Symbol displayed before currency amounts throughout the system.",
     dataType: "string",
     defaultValue: "₱",
     isEditable: false,
@@ -547,8 +552,8 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "budget.budget_deadline_reminders",
     category: "budget_finance",
-    label: "Budget Proposal Deadlines",
-    description: "Enable reminders for upcoming budget request cycles and project evaluation windows.",
+    label: "Budget Proposal Reminders",
+    description: "Show reminders for pending budget proposals that require review or action.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -556,7 +561,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "budget.liquidation_overdue_reminders",
     category: "budget_finance",
     label: "Liquidation Overdue Reminders",
-    description: "Automate warnings to organizations with released funds approaching liquidation deadlines.",
+    description: "Send automatic reminders to organizations with released project funds that are due or past due for liquidation.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -567,8 +572,8 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
   {
     key: "security.admin_session_timeout_minutes",
     category: "security",
-    label: "Admin Session Inactivity Timeout",
-    description: "Duration of administrator inactivity before the authentication session expires.",
+    label: "Inactivity Sign-Out Time",
+    description: "Duration of administrator inactivity before the system automatically signs them out.",
     dataType: "number",
     defaultValue: 30,
     options: [
@@ -577,61 +582,61 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
       { label: "60 minutes (1 hour)", value: 60 },
       { label: "120 minutes (2 hours)", value: 120 },
     ],
-    helperText: "Affects newly authenticated administrator sessions.",
+    helperText: "Applies to administrator sign-ins after saving.",
   },
   {
     key: "security.reauth_delete_administrator",
     category: "security",
-    label: "Confirmation: Delete Administrator",
-    description: "Require explicit confirmation before permanently removing an administrator account.",
+    label: "Confirm Before Deleting Administrator Accounts",
+    description: "Ask for confirmation before permanently removing an administrator account.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "security.reauth_delete_inquiry",
     category: "security",
-    label: "Confirmation: Delete Inquiry",
-    description: "Require explicit confirmation modal before permanently deleting inquiry threads.",
+    label: "Confirm Before Deleting Inquiries",
+    description: "Ask for confirmation before permanently deleting an inquiry.",
     dataType: "boolean",
     defaultValue: false,
   },
   {
     key: "security.reauth_delete_organization",
     category: "security",
-    label: "Confirmation: Delete Organization Account",
-    description: "Require exact typing of organization name before permanently erasing an accreditation account.",
+    label: "Confirm Before Deleting Organizations",
+    description: "Require typing the organization's name before permanently deleting its record.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "security.reauth_modify_role_permissions",
     category: "security",
-    label: "Confirmation: Modify Role Permissions",
-    description: "Prompt for confirmation before applying permission code changes to administrative roles.",
+    label: "Confirm Before Changing Role Permissions",
+    description: "Ask for confirmation before saving changes to administrator role permissions.",
     dataType: "boolean",
     defaultValue: false,
   },
   {
     key: "security.reauth_modify_system_settings",
     category: "security",
-    label: "Confirmation: Modify System Settings",
-    description: "Prompt for confirmation before saving changes to core system settings.",
+    label: "Confirm Before Saving System Settings",
+    description: "Ask for confirmation before saving changes made on this settings page.",
     dataType: "boolean",
     defaultValue: false,
   },
   {
     key: "security.require_verified_admin_email",
     category: "security",
-    label: "Require Verified Admin Email",
-    description: "Enforce email address verification before granting access to administrator portal accounts.",
+    label: "Require Verified Email for Administrators",
+    description: "Require administrators to verify their email address before accessing the admin portal.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "security.allow_admin_password_reset",
     category: "security",
-    label: "Allow Admin Password Reset",
-    description: "Allow administrators to request self-service password reset emails via official inbox.",
+    label: "Allow Self-Service Password Resets",
+    description: "Allow administrators to reset forgotten passwords using a secure link sent to their email.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -643,33 +648,35 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "email.sender_name",
     category: "email",
     label: "Sender Display Name",
-    description: "Display name shown as the email sender on all automated system communications.",
+    description: "The name shown as the sender for all automated emails from Y-TRACE.",
     dataType: "string",
-    defaultValue: "Pasig City LYDO",
-    helperText: "e.g. Pasig City LYDO",
+    defaultValue: "Y-TRACE",
+    isEditable: false,
+    badge: "Managed by System",
+    helperText: "noreply@ytrace.app (Y-TRACE)",
   },
   {
     key: "email.reply_to_email",
     category: "email",
-    label: "Reply-To Address",
-    description: "Incoming reply address for automated transactional emails.",
+    label: "Reply-To Email Address",
+    description: "The email address where replies to automated system emails will be received.",
     dataType: "string",
-    defaultValue: "support@lydo.pasig.gov.ph",
-    helperText: "e.g. support@lydo.pasig.gov.ph",
+    defaultValue: "lydo@pasigcity.gov.ph",
+    helperText: "e.g. lydo@pasigcity.gov.ph",
   },
   {
     key: "email.send_invitation_emails",
     category: "email",
-    label: "Send Administrator Invites",
-    description: "Dispatch automated email invitations with secure setup links when creating new administrators.",
+    label: "Send New Administrator Invitation Emails",
+    description: "Send an email with an account setup link whenever a new administrator is created.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "email.send_workflow_emails",
     category: "email",
-    label: "Send Transactional Status Emails",
-    description: "Dispatch transactional emails for approval, revision requests, and completion receipts.",
+    label: "Send Status & Decision Emails to Organizations",
+    description: "Send emails to youth organizations when their submissions are approved, returned for revision, or rejected. (In-app notifications remain active regardless of this switch.)",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -681,7 +688,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "audit.log_admin_login",
     category: "audit_records",
     label: "Log Administrator Sign-Ins",
-    description: "Record administrator authentication events in system activity history.",
+    description: "Record when administrators sign in to the portal.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -689,71 +696,71 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     key: "audit.log_admin_logout",
     category: "audit_records",
     label: "Log Administrator Sign-Outs",
-    description: "Record administrator sign-out events in activity logs.",
+    description: "Record when administrators sign out of the portal.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.log_record_creation",
     category: "audit_records",
-    label: "Log Record Creation",
-    description: "Record creation of new templates, news releases, activities, and accreditation records.",
+    label: "Log New Records & Submissions",
+    description: "Record when new templates, announcements, activities, registrations, or budget requests are created.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.log_record_updates",
     category: "audit_records",
-    label: "Log Record Updates",
-    description: "Record modifications to existing templates, posts, and review states.",
+    label: "Log Record Changes & Edits",
+    description: "Record when existing information, templates, announcements, or organization records are edited.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.log_approvals_rejections",
     category: "audit_records",
-    label: "Log Approvals & Decisions",
-    description: "Record administrative approvals, revision requests, and rejections.",
+    label: "Log Approvals, Revisions & Decisions",
+    description: "Record administrative decisions, including approvals, revision requests, and rejections.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.log_deletions",
     category: "audit_records",
-    label: "Log Deletions",
-    description: "Record deletion of templates, inquiries, activities, and organization accounts.",
+    label: "Log Deleted Items",
+    description: "Record when items such as templates, inquiries, activities, or accounts are deleted.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.log_permission_changes",
     category: "audit_records",
-    label: "Log Role Permission Changes",
-    description: "Record updates to administrative role permission assignments.",
+    label: "Log Permission & Role Changes",
+    description: "Record when administrator roles or access permissions are modified.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.log_config_changes",
     category: "audit_records",
-    label: "Log System Settings Updates",
-    description: "Record modifications made to system configuration settings in activity history.",
+    label: "Log System Settings Changes",
+    description: "Record whenever changes are made and saved on this System Settings page.",
     dataType: "boolean",
     defaultValue: true,
   },
   {
     key: "audit.include_ip_metadata",
     category: "audit_records",
-    label: "Capture Client IP Metadata",
-    description: "Record client IP address in audit log metadata when available.",
+    label: "Record IP Address",
+    description: "Record the IP address of the device used when an administrator performs an action.",
     dataType: "boolean",
     defaultValue: false,
   },
   {
     key: "audit.include_user_agent",
     category: "audit_records",
-    label: "Capture User Agent Metadata",
-    description: "Record browser user agent strings in audit logs for security diagnostics.",
+    label: "Record Browser & Device Information",
+    description: "Record the web browser and device type used when an administrator performs an action.",
     dataType: "boolean",
     defaultValue: true,
   },
@@ -781,6 +788,12 @@ export const validateSystemSettingValue = (
   const def = ADMIN_SETTING_DEFINITIONS_BY_KEY.get(key as AdminSystemSettingKey);
   if (!def) return { valid: true };
 
+  if (def.isEditable === false) {
+    if (value !== undefined && value !== def.defaultValue) {
+      return { valid: false, error: `${def.label} is system-managed and read-only.` };
+    }
+  }
+
   if (def.dataType === "boolean") {
     if (typeof value !== "boolean") return { valid: false, error: "Must be a true/false value" };
     return { valid: true };
@@ -794,6 +807,15 @@ export const validateSystemSettingValue = (
     }
     if (key === "budget.default_fiscal_year" && (num < 2000 || num > 2100)) {
       return { valid: false, error: "Fiscal year must be between 2000 and 2100" };
+    }
+    if (key === "workflow.review_reminder_days" && (num < 1 || num > 90)) {
+      return { valid: false, error: "Reminder threshold must be between 1 and 90 days" };
+    }
+    if (key === "workflow.escalate_after_days" && (num < 1 || num > 180)) {
+      return { valid: false, error: "Urgent threshold must be between 1 and 180 days" };
+    }
+    if (key === "programs.ypop_default_reminder_days" && (num < 1 || num > 60)) {
+      return { valid: false, error: "Reminder days must be between 1 and 60 days" };
     }
     if (num < 0) return { valid: false, error: "Value cannot be negative" };
     return { valid: true };
@@ -861,12 +883,12 @@ export const writeCachedSystemSettings = (settingsMap: Partial<AdminSystemSettin
 export const adminGetSystemSettingsFromSupabase = async (): Promise<AdminSystemSettingRecord[]> => {
   const adminSession = readAdminSession();
   if (!supabase || !adminSession) {
-    // Fall back to defaults for local/demo mode
-    const defaults = getDefaultSystemSettingsMap();
+    // Fall back to cached / defaults for local/demo mode
+    const effective = getEffectiveSystemSettings();
     return ADMIN_SYSTEM_SETTING_DEFINITIONS.map((def) => ({
       settingKey: def.key,
       category: def.category,
-      value: defaults[def.key],
+      value: (effective as Record<string, unknown>)[def.key] ?? def.defaultValue,
       dataType: def.dataType,
       description: def.description,
       isSensitive: Boolean(def.isSensitive),
@@ -986,46 +1008,213 @@ export const getEffectiveSystemSettings = (): AdminSystemSettingsValues => {
 /**
  * Get a single effective system setting value
  */
-export const getEffectiveSystemSetting = <K extends AdminSystemSettingKey>(
+export const getEffectiveSystemSetting = <K extends AdminSystemSettingKey | "security.admin_password_reset">(
   key: K,
-): AdminSystemSettingsValues[K] => {
+): K extends AdminSystemSettingKey ? AdminSystemSettingsValues[K] : boolean => {
   const settings = getEffectiveSystemSettings();
-  return settings[key];
+  if (key === "security.admin_password_reset") {
+    return (settings["security.allow_admin_password_reset"] ?? true) as any;
+  }
+  return settings[key as AdminSystemSettingKey] as any;
 };
 
 /**
- * Determine if a given activity type should be logged based on active settings
+ * Reactive hook to subscribe to system settings changes across the application
+ */
+export const useSystemSettings = (): AdminSystemSettingsValues => {
+  const [settings, setSettings] = useState<AdminSystemSettingsValues>(() => getEffectiveSystemSettings());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSettings(getEffectiveSystemSettings());
+    };
+    window.addEventListener(ADMIN_SETTINGS_CHANGE_EVENT, handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener(ADMIN_SETTINGS_CHANGE_EVENT, handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  return settings;
+};
+
+/**
+ * Reactive hook to subscribe to a specific system setting
+ */
+export const useSystemSetting = <K extends AdminSystemSettingKey | "security.admin_password_reset">(
+  key: K,
+): K extends AdminSystemSettingKey ? AdminSystemSettingsValues[K] : boolean => {
+  const [val, setVal] = useState(() => getEffectiveSystemSetting(key));
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setVal(getEffectiveSystemSetting(key));
+    };
+    window.addEventListener(ADMIN_SETTINGS_CHANGE_EVENT, handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener(ADMIN_SETTINGS_CHANGE_EVENT, handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, [key]);
+
+  return val as any;
+};
+
+/**
+ * Public-safe asynchronous fetcher for non-sensitive system settings (e.g. contact info, office address).
+ * Loads live data from Supabase without requiring admin session authentication.
+ */
+export const fetchPublicSystemSettings = async (): Promise<Partial<AdminSystemSettingsValues>> => {
+  if (!supabase) return {};
+
+  try {
+    let rows: Array<{ setting_key: string; value_json: unknown }> | null = null;
+
+    // Try public-safe RPC first
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_public_system_settings");
+    if (!rpcError && Array.isArray(rpcData)) {
+      rows = rpcData;
+    } else {
+      // Fallback to direct select via RLS policy
+      const { data: tableData, error: tableError } = await supabase
+        .from("admin_system_settings")
+        .select("setting_key, value_json")
+        .eq("is_sensitive", false);
+      if (!tableError && Array.isArray(tableData)) {
+        rows = tableData;
+      }
+    }
+
+    if (rows && Array.isArray(rows)) {
+      const map: Record<string, unknown> = {};
+      rows.forEach((r) => {
+        if (r.setting_key && r.value_json !== undefined) {
+          map[r.setting_key] = r.value_json;
+        }
+      });
+      if (Object.keys(map).length > 0) {
+        const current = readCachedSystemSettings();
+        const next = { ...current, ...map };
+        writeCachedSystemSettings(next);
+        return map as Partial<AdminSystemSettingsValues>;
+      }
+    }
+  } catch (err) {
+    // Non-blocking fallback to local defaults/cache
+    console.warn("Could not refresh public system settings from server:", err);
+  }
+
+  return {};
+};
+
+/**
+ * Reactive hook for public-facing contact information
+ */
+export const usePublicContactInfo = () => {
+  const [info, setInfo] = useState(() => {
+    const s = getEffectiveSystemSettings();
+    return {
+      contactNumber: String(s["general.contact_number"] || "(02) 8643-1111"),
+      email: String(s["email.reply_to_email"] || s["general.support_email"] || "lydo@pasigcity.gov.ph"),
+      address: String(s["general.office_address"] || "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City"),
+      officeName: String(s["general.office_name"] || "Pasig City Youth Development Office"),
+      systemName: String(s["general.system_name"] || "Y-TRACE"),
+    };
+  });
+
+  useEffect(() => {
+    // Immediately fetch latest live settings from Supabase on mount
+    void fetchPublicSystemSettings();
+
+    const handleUpdate = () => {
+      const s = getEffectiveSystemSettings();
+      setInfo({
+        contactNumber: String(s["general.contact_number"] || "(02) 8643-1111"),
+        email: String(s["email.reply_to_email"] || s["general.support_email"] || "lydo@pasigcity.gov.ph"),
+        address: String(s["general.office_address"] || "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City"),
+        officeName: String(s["general.office_name"] || "Pasig City Youth Development Office"),
+        systemName: String(s["general.system_name"] || "Y-TRACE"),
+      });
+    };
+
+    window.addEventListener(ADMIN_SETTINGS_CHANGE_EVENT, handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener(ADMIN_SETTINGS_CHANGE_EVENT, handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  return info;
+};
+
+export type AuditCategory =
+  | "login"
+  | "logout"
+  | "create"
+  | "update"
+  | "approval"
+  | "deletion"
+  | "permission"
+  | "config";
+
+/**
+ * Determine if a given activity type should be logged based on active settings.
+ * Supports explicit audit category and fallback keyword classification.
  */
 export const shouldLogActivityType = (
-  action: string,
+  actionOrCategory: string,
+  explicitCategory?: AuditCategory,
 ): boolean => {
   const settings = getEffectiveSystemSettings();
-  const lower = action.toLowerCase();
-  if (lower.includes("login") || lower.includes("sign_in")) {
-    return Boolean(settings["audit.log_admin_login"]);
+  const lower = actionOrCategory.toLowerCase();
+
+  const category: AuditCategory =
+    explicitCategory ??
+    (() => {
+      if (lower === "login" || lower.includes("sign_in") || lower.includes("signed in") || lower.includes("logged in")) return "login";
+      if (lower === "logout" || lower.includes("sign_out") || lower.includes("signed out") || lower.includes("logged out")) return "logout";
+      if (lower.includes("delete") || lower.includes("remove") || lower.includes("purge")) return "deletion";
+      if (lower.includes("permission") || lower.includes("role")) return "permission";
+      if (lower.includes("setting") || lower.includes("config")) return "config";
+      if (lower.includes("approve") || lower.includes("reject") || lower.includes("decision") || lower.includes("review") || lower.includes("needs_revision")) return "approval";
+      if (lower.includes("create") || lower.includes("add") || lower.includes("new")) return "create";
+      if (
+        lower.includes("update") ||
+        lower.includes("edit") ||
+        lower.includes("modify") ||
+        lower.includes("save") ||
+        lower.includes("status") ||
+        lower.includes("archive") ||
+        lower.includes("restore")
+      ) {
+        return "update";
+      }
+      return "update";
+    })();
+
+  switch (category) {
+    case "login":
+      return Boolean(settings["audit.log_admin_login"]);
+    case "logout":
+      return Boolean(settings["audit.log_admin_logout"]);
+    case "create":
+      return Boolean(settings["audit.log_record_creation"]);
+    case "update":
+      return Boolean(settings["audit.log_record_updates"]);
+    case "approval":
+      return Boolean(settings["audit.log_approvals_rejections"]);
+    case "deletion":
+      return Boolean(settings["audit.log_deletions"]);
+    case "permission":
+      return Boolean(settings["audit.log_permission_changes"]);
+    case "config":
+      return Boolean(settings["audit.log_config_changes"]);
+    default:
+      return true;
   }
-  if (lower.includes("logout") || lower.includes("sign_out")) {
-    return Boolean(settings["audit.log_admin_logout"]);
-  }
-  if (lower.includes("delete") || lower.includes("remove") || lower.includes("purge")) {
-    return Boolean(settings["audit.log_deletions"]);
-  }
-  if (lower.includes("permission") || lower.includes("role")) {
-    return Boolean(settings["audit.log_permission_changes"]);
-  }
-  if (lower.includes("setting") || lower.includes("config")) {
-    return Boolean(settings["audit.log_config_changes"]);
-  }
-  if (lower.includes("approve") || lower.includes("reject") || lower.includes("decision") || lower.includes("review")) {
-    return Boolean(settings["audit.log_approvals_rejections"]);
-  }
-  if (lower.includes("create") || lower.includes("add") || lower.includes("new")) {
-    return Boolean(settings["audit.log_record_creation"]);
-  }
-  if (lower.includes("update") || lower.includes("edit") || lower.includes("modify") || lower.includes("save") || lower.includes("status")) {
-    return Boolean(settings["audit.log_record_updates"]);
-  }
-  return true;
 };
 
 /**
@@ -1089,8 +1278,11 @@ export const shouldNotifyAdmin = (
  */
 export const shouldNotifyOrganization = (
   action: "needs_revision" | "approved" | "rejected" | "resubmitted",
+  settingsOverride?: Partial<AdminSystemSettingsValues> | Record<string, unknown>,
 ): boolean => {
-  const settings = getEffectiveSystemSettings();
+  const settings = settingsOverride
+    ? { ...getEffectiveSystemSettings(), ...settingsOverride }
+    : getEffectiveSystemSettings();
   switch (action) {
     case "needs_revision":
       return Boolean(settings["workflow.notify_org_on_needs_revision"]);
@@ -1105,6 +1297,107 @@ export const shouldNotifyOrganization = (
   }
 };
 
+export interface WorkflowTimingResult {
+  ageInDays: number;
+  isReminderDue: boolean;
+  isEscalated: boolean;
+  isOverdue: boolean;
+  riskLabel: "On Track" | "Needs Attention" | "Overdue" | "Completed";
+}
+
+/**
+ * Centrally computes timing, review reminders, and overdue states for reviewable workflow items.
+ */
+export const computeWorkflowItemTiming = (
+  submittedAtOrDeadline: string | Date | null | undefined,
+  options?: {
+    isDeadline?: boolean;
+    isCompleted?: boolean;
+    customSettings?: Partial<AdminSystemSettingsValues>;
+  },
+): WorkflowTimingResult => {
+  const settings = options?.customSettings
+    ? { ...getEffectiveSystemSettings(), ...options.customSettings }
+    : getEffectiveSystemSettings();
+
+  const reminderEnabled = Boolean(settings["workflow.review_reminder_enabled"]);
+  const reminderDays = Math.max(1, Number(settings["workflow.review_reminder_days"]) || 3);
+  const escalateDays = Math.max(1, Number(settings["workflow.escalate_after_days"]) || 7);
+  const overdueEnabled = Boolean(settings["workflow.overdue_indicators_enabled"]);
+
+  if (options?.isCompleted) {
+    return {
+      ageInDays: 0,
+      isReminderDue: false,
+      isEscalated: false,
+      isOverdue: false,
+      riskLabel: "Completed",
+    };
+  }
+
+  if (!submittedAtOrDeadline) {
+    return {
+      ageInDays: 0,
+      isReminderDue: false,
+      isEscalated: false,
+      isOverdue: false,
+      riskLabel: "On Track",
+    };
+  }
+
+  const date = typeof submittedAtOrDeadline === "string" ? new Date(submittedAtOrDeadline) : submittedAtOrDeadline;
+  if (Number.isNaN(date.getTime())) {
+    return {
+      ageInDays: 0,
+      isReminderDue: false,
+      isEscalated: false,
+      isOverdue: false,
+      riskLabel: "On Track",
+    };
+  }
+
+  const now = new Date();
+
+  if (options?.isDeadline) {
+    const isPastDeadline = date.getTime() < now.getTime();
+    const daysUntil = Math.ceil((date.getTime() - now.getTime()) / 86400000);
+    const isOverdue = overdueEnabled && isPastDeadline;
+    const isReminder = reminderEnabled && !isPastDeadline && daysUntil <= reminderDays;
+
+    let riskLabel: WorkflowTimingResult["riskLabel"] = "On Track";
+    if (isOverdue) riskLabel = "Overdue";
+    else if (isPastDeadline) riskLabel = "Needs Attention";
+    else if (isReminder) riskLabel = "Needs Attention";
+
+    return {
+      ageInDays: Math.max(0, -daysUntil),
+      isReminderDue: isReminder,
+      isEscalated: false,
+      isOverdue,
+      riskLabel,
+    };
+  }
+
+  const ageInDays = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000));
+  const isEscalated = ageInDays >= escalateDays;
+  const isReminderDue = reminderEnabled && ageInDays >= reminderDays;
+
+  let riskLabel: WorkflowTimingResult["riskLabel"] = "On Track";
+  if (isEscalated) {
+    riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
+  } else if (isReminderDue) {
+    riskLabel = "Needs Attention";
+  }
+
+  return {
+    ageInDays,
+    isReminderDue,
+    isEscalated,
+    isOverdue: isEscalated && overdueEnabled,
+    riskLabel,
+  };
+};
+
 /**
  * Format currency amount using dynamic currency symbol from settings
  */
@@ -1115,4 +1408,5 @@ export const formatSystemCurrency = (amount: number): string => {
     maximumFractionDigits: 2,
   })}`;
 };
+
 

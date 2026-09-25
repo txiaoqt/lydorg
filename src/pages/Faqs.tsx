@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
 type FaqCategory = "getting-started" | "documents" | "budget" | "portal";
 type FilterId = "all" | FaqCategory;
@@ -95,6 +96,7 @@ const categoryDefs: { id: FaqCategory; title: string }[] = [
 ];
 
 const Faqs = () => {
+  const { email } = usePublicContactInfo();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -319,9 +321,7 @@ const Faqs = () => {
               </p>
             </div>
             <a
-              href="https://mail.google.com/mail/?view=cm&fs=1&to=lydo@pasigcity.gov.ph"
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`mailto:${email}`}
               className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
             >
               <Send className="h-4 w-4 shrink-0" />

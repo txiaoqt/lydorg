@@ -14,6 +14,7 @@ import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { PublicNewsReleaseCard } from "@/components/public/PublicNewsReleaseCard";
 import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 import { toast } from "@/hooks/use-toast";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
 const faqs = [
   {
@@ -75,6 +76,7 @@ const Index = () => {
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewCanInline, setPreviewCanInline] = useState(true);
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
+  const { address: officeAddress, contactNumber, email: officialEmail } = usePublicContactInfo();
   const { isAuthenticated, role } = useAuth();
   const { hash } = useLocation();
   const { state } = useLydoConnect();
@@ -210,7 +212,7 @@ const Index = () => {
                 <div className="inline-flex w-fit max-w-full items-center gap-2 sm:gap-[8px] rounded-full border border-white/30 bg-white/15 px-3.5 py-1.5 sm:px-[20px] sm:py-[10px] backdrop-blur-[4px]">
                   <Shield className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-white" />
                   <span className="whitespace-nowrap font-segoe text-[9.5px] xs:text-[10px] sm:text-public-fs-scale-01 font-bold leading-none sm:leading-[140%] tracking-wide sm:tracking-normal text-white">
-                    OFFICIAL PASIG CITY LOCAL YOUTH DEVELOPMENT OFFICE PORTAL
+                    OFFICIAL PASIG CITY YOUTH DEVELOPMENT OFFICE PORTAL
                   </span>
                 </div>
 
@@ -410,7 +412,7 @@ const Index = () => {
                 Stay Updated
               </h2>
               <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-                Stay informed with the latest announcements, events, and updates from the Pasig City Local Youth Development Office.
+                Stay informed with the latest announcements, events, and updates from the Pasig City Youth Development Office.
               </p>
             </div>
 
@@ -761,23 +763,23 @@ const Index = () => {
                 Office Address
               </p>
               <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City
+                {officeAddress}
               </p>
             </div>
 
             {/* Card row — 3 columns */}
             <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-3">
 
-              {/* Contact Numbers */}
+              {/* Contact Number */}
               <div className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav text-center">
                 <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
                   <Phone className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
                 </div>
                 <p className="font-segoe text-xs font-semibold uppercase leading-none text-public-text-secondary">
-                  Contact Numbers
+                  Contact Number
                 </p>
                 <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                  (02) 8643-7632
+                  {contactNumber}
                 </p>
               </div>
 
@@ -790,12 +792,10 @@ const Index = () => {
                   Official Email
                 </p>
                 <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=lydo@pasigcity.gov.ph"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`mailto:${officialEmail}`}
                   className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand hover:underline"
                 >
-                  lydo@pasigcity.gov.ph
+                  {officialEmail}
                 </a>
               </div>
 

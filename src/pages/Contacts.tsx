@@ -9,21 +9,18 @@ import Navbar from "@/components/Navbar";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 
-import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
 L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
-  });
+});
 
 const COORDS: [number, number] = [14.592421073182033, 121.08615468030744];
 
 const Contacts = () => {
-  const address = getEffectiveSystemSetting("general.office_address") || "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City";
-  const phone = getEffectiveSystemSetting("general.contact_number") || "(02) 8643-7632";
-  const email = getEffectiveSystemSetting("general.support_email") || "lydo@pasigcity.gov.ph";
-  const officeName = getEffectiveSystemSetting("general.office_name") || "PCYDO Office";
+  const { address, contactNumber, email, officeName } = usePublicContactInfo();
   return (
     <div className="min-h-screen bg-background">
       <AnnouncementBar />
@@ -87,23 +84,23 @@ const Contacts = () => {
             </div>
           </div>
 
-          {/* Row 3 — Telephone + Email (left) | Office Hours (right) */}
+          {/* Row 3 — Contact Number + Email (left) | Office Hours (right) */}
           <div className="flex flex-col gap-3.5 sm:flex-row sm:items-stretch sm:gap-5">
 
-            {/* Left: Telephone + Email stacked */}
+            {/* Left: Contact Number + Email stacked */}
             <div className="flex flex-1 flex-col gap-3.5 sm:gap-4">
 
-              {/* Telephone */}
+              {/* Contact Number */}
               <div className="flex items-center gap-3 rounded-xl sm:rounded-2xl border border-public-bg-brand-subtle bg-white p-4 sm:p-4.5 sm:px-5 shadow-2xs sm:shadow-xs sm:gap-4">
                 <div className="flex h-10 w-10 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-public-bg-tertiary-100 p-2 text-public-text-brand">
                   <Phone className="h-5 w-5 text-public-text-brand" />
                 </div>
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <p className="font-segoe text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Telephone
+                    Contact Number
                   </p>
                   <p className="font-segoe text-sm sm:text-base font-bold leading-snug text-[#0E2F66]">
-                    {phone}
+                    {contactNumber}
                   </p>
                 </div>
               </div>
@@ -118,9 +115,7 @@ const Contacts = () => {
                     Email
                   </p>
                   <a
-                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`mailto:${email}`}
                     className="font-segoe text-sm sm:text-base font-bold leading-snug text-[#0E2F66] hover:underline break-all"
                   >
                     {email}
@@ -186,9 +181,7 @@ const Contacts = () => {
               </p>
             </div>
             <a
-              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`mailto:${email}`}
               className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
             >
               <Send className="h-4 w-4 shrink-0" />

@@ -44,6 +44,7 @@ import {
   type AdminSystemSettingKey,
   ADMIN_SETTING_CATEGORIES,
   ADMIN_SETTING_DEFINITIONS_BY_KEY,
+  getEffectiveSystemSetting,
 } from "@/lib/admin-system-settings";
 import { useAdminSystemSettings } from "@/hooks/use-admin-system-settings";
 
@@ -68,55 +69,55 @@ interface NotificationEventRow {
 const NOTIFICATION_EVENT_ROWS: NotificationEventRow[] = [
   {
     label: "New Registration",
-    description: "New youth organization accreditation submitted.",
+    description: "A youth organization submits a new registration application.",
     inAppKey: "notifications.new_registration.in_app",
     emailKey: "notifications.new_registration.email",
   },
   {
     label: "Renewal Application",
-    description: "Existing organization annual renewal submitted.",
+    description: "An accredited organization submits an annual renewal application.",
     inAppKey: "notifications.renewal_submitted.in_app",
     emailKey: "notifications.renewal_submitted.email",
   },
   {
-    label: "YPOP Verification Proof",
-    description: "Organization submitted YPOP compliance documents.",
+    label: "YPOP Submission",
+    description: "An organization submits documents for YPOP event validation.",
     inAppKey: "notifications.ypop_submission.in_app",
     emailKey: "notifications.ypop_submission.email",
   },
   {
-    label: "Budget Project Proposal",
-    description: "New project proposal / fund allocation submitted.",
+    label: "Budget Request",
+    description: "An organization submits a project funding request.",
     inAppKey: "notifications.budget_request.in_app",
     emailKey: "notifications.budget_request.email",
   },
   {
-    label: "Liquidation Report Packet",
-    description: "Financial report packet submitted for completed project.",
+    label: "Liquidation Report",
+    description: "An organization submits a financial liquidation report.",
     inAppKey: "notifications.liquidation_report.in_app",
     emailKey: "notifications.liquidation_report.email",
   },
   {
-    label: "Helpdesk Citizen Inquiry",
-    description: "New citizen or organization support ticket submitted.",
+    label: "New Inquiry",
+    description: "A citizen or organization submits a new message or question.",
     inAppKey: "notifications.new_inquiry.in_app",
     emailKey: "notifications.new_inquiry.email",
   },
   {
     label: "Document Resubmission",
-    description: "Organization re-uploaded revised compliance files.",
+    description: "An organization resubmits returned documents.",
     inAppKey: "notifications.revision_resubmission.in_app",
     emailKey: "notifications.revision_resubmission.email",
   },
   {
-    label: "Accreditation Expiring Notice",
-    description: "Automated alert when recognized organizations enter renewal window.",
+    label: "Expiring Accreditation",
+    description: "An organization's accreditation is nearing expiration.",
     inAppKey: "notifications.accreditation_expiring.in_app",
     emailKey: "notifications.accreditation_expiring.email",
   },
   {
-    label: "Overdue Liquidation Escalation",
-    description: "Automated warning when a funded project exceeds liquidation deadline.",
+    label: "Overdue Liquidation",
+    description: "An organization misses its project liquidation deadline.",
     inAppKey: "notifications.overdue_liquidation.in_app",
     emailKey: "notifications.overdue_liquidation.email",
   },
@@ -151,6 +152,8 @@ export const AdminSettingsPage: React.FC = () => {
     refreshSettings,
   } = useAdminSystemSettings();
 
+  const [pendingSaveCategory, setPendingSaveCategory] = useState<AdminSystemSettingCategory | null>(null);
+
   const handleTabChange = (val: string) => {
     const category = val as AdminSystemSettingCategory;
     setActiveTab(category);
@@ -164,14 +167,23 @@ export const AdminSettingsPage: React.FC = () => {
     if (result.success) {
       toast({
         title: "Settings Saved",
-        description: "System configuration has been updated successfully.",
+        description: "System settings have been updated successfully.",
       });
     } else {
       toast({
         title: "Unable to Save Settings",
-        description: result.error || "Please verify your input and try again.",
+        description: result.error || "Please check your input and try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleInitiateSave = (category: AdminSystemSettingCategory) => {
+    const requireReauth = getEffectiveSystemSetting("security.reauth_modify_system_settings");
+    if (requireReauth) {
+      setPendingSaveCategory(category);
+    } else {
+      void handleSave(category);
     }
   };
 
@@ -181,7 +193,7 @@ export const AdminSettingsPage: React.FC = () => {
     setResetConfirmCategory(null);
     toast({
       title: "Reset to System Defaults",
-      description: "Draft values updated. Click 'Save Changes' to apply.",
+      description: "Draft values have been reset. Click 'Save Changes' to apply them.",
     });
   };
 
@@ -199,7 +211,7 @@ export const AdminSettingsPage: React.FC = () => {
         />
         <PortalEmptyState
           title="Access Restricted"
-          description="You do not have the required permissions ('System Settings View') to access the system settings panel. Contact a Super Administrator to adjust your role permissions."
+          description="You do not have permission to view System Settings. Please contact a Super Administrator if you need access to this page."
           action={
             <Button variant="outline" onClick={() => navigate("/admin")}>
               Return to Overview
@@ -228,7 +240,7 @@ export const AdminSettingsPage: React.FC = () => {
           </div>
           <Button onClick={() => refreshSettings()} variant="outline" size="sm" className="gap-2 text-xs">
             <RefreshCw className="h-3.5 w-3.5" />
-            Retry Connection
+            Try Again
           </Button>
         </div>
       </div>
@@ -240,7 +252,7 @@ export const AdminSettingsPage: React.FC = () => {
       {/* Page Header */}
       <AdminPageHeader
         title="System Settings"
-        description="Configure system-wide administrative behavior, notifications, workflows, security, and defaults."
+        description="Manage office details, notifications, review timelines, security rules, and system defaults."
         action={
           <Button
             variant="outline"
@@ -261,7 +273,7 @@ export const AdminSettingsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <Lock className="h-4 w-4 text-amber-600 shrink-0" />
             <span>
-              <strong className="font-semibold text-amber-950">Read-Only Mode:</strong> You can view system settings, but modifying them requires the <code className="font-mono text-[11px] bg-amber-100/80 px-1 py-0.5 rounded">system_settings_manage</code> permission.
+              <strong className="font-semibold text-amber-950">Read-Only Mode:</strong> You can view system settings, but saving changes requires administrator management permissions.
             </span>
           </div>
         </div>
@@ -275,7 +287,7 @@ export const AdminSettingsPage: React.FC = () => {
             <nav aria-label="Settings Categories" className="sticky top-6 rounded-xl border border-slate-200/80 bg-white p-1.5 shadow-2xs">
               <div className="px-2.5 py-1 mb-1 border-b border-slate-100">
                 <p className="font-segoe text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Configuration Areas
+                  Settings Sections
                 </p>
               </div>
               <TabsList className="flex flex-row lg:flex-col items-stretch justify-start bg-transparent p-0 gap-0.5 overflow-x-auto lg:overflow-visible w-full h-auto">
@@ -344,7 +356,7 @@ export const AdminSettingsPage: React.FC = () => {
               <TabsContent value="general" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
                   title="System Information"
-                  description="Official department identity and public-facing system names."
+                  description="Official office details and contact information displayed across Y-TRACE."
                 >
                   <div className="grid gap-3.5 sm:grid-cols-2">
                     <SettingInputField
@@ -352,7 +364,7 @@ export const AdminSettingsPage: React.FC = () => {
                       value={draftSettings["general.system_name"]}
                       error={validationErrors["general.system_name"]}
                       disabled={!canManageSettings || isSaving}
-                      descriptionOverride="Primary name used across portal headers and notices."
+                      descriptionOverride="Official system name displayed in headers, reports, and notices."
                       onChange={(val) => updateDraft("general.system_name", val)}
                     />
                     <SettingInputField
@@ -380,7 +392,7 @@ export const AdminSettingsPage: React.FC = () => {
                       value={draftSettings["general.support_email"]}
                       error={validationErrors["general.support_email"]}
                       disabled={!canManageSettings || isSaving}
-                      descriptionOverride="Destination for citizen support and inquiries."
+                      descriptionOverride="Official contact email displayed to youth organizations and citizens for inquiries."
                       onChange={(val) => updateDraft("general.support_email", val)}
                     />
                     <SettingInputField
@@ -409,12 +421,12 @@ export const AdminSettingsPage: React.FC = () => {
               {/* ───────────────────────────────────────────────────────────────── */}
               <TabsContent value="notifications" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
-                  title="Administrator Event Alerts"
-                  description="Choose which system activities trigger in-app bell notifications and email dispatches."
+                  title="Administrator Notifications"
+                  description="Choose how administrators are notified about new submissions, updates, and requests."
                 >
                   <div className="rounded-lg border border-slate-200/80 overflow-hidden">
                     <div className="grid grid-cols-12 bg-slate-50/90 px-4 py-2 border-b border-slate-200/80 text-[11px] font-semibold text-slate-600">
-                      <div className="col-span-8">Event Alert Trigger</div>
+                      <div className="col-span-8">Activity / Event</div>
                       <div className="col-span-2 text-center">In-App</div>
                       <div className="col-span-2 text-center">Email</div>
                     </div>
@@ -452,13 +464,13 @@ export const AdminSettingsPage: React.FC = () => {
 
                 <div className="border-t border-slate-100 pt-5">
                   <SettingSection
-                    title="Delivery Preferences"
-                    description="Configure scheduled digests and bulk notification timing."
+                    title="Summary & Schedule"
+                    description="Choose when daily summary emails are delivered to administrators."
                   >
                     <div className="divide-y divide-slate-100">
                       <SettingRow
                         title="Daily Activity Digest"
-                        description="Bundle administrative alerts into a consolidated daily summary email."
+                        description="Send administrators a consolidated daily morning email summarizing pending reviews, overdue items, and new inquiries."
                       >
                         <Switch
                           aria-label="Daily Activity Digest"
@@ -488,13 +500,13 @@ export const AdminSettingsPage: React.FC = () => {
               {/* ───────────────────────────────────────────────────────────────── */}
               <TabsContent value="workflow" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
-                  title="Review Thresholds & Escalations"
-                  description="Turnaround timeframes and queue visual indicators."
+                  title="Review Timelines & Reminders"
+                  description="Set target review turnaround times and visual reminders for pending submissions."
                 >
                   <div className="divide-y divide-slate-100">
                     <SettingRow
                       title="Review Reminders"
-                      description="Highlight submissions awaiting action past target turnaround time."
+                      description="Flag submissions that have been waiting for review past the target turnaround time."
                     >
                       <Switch
                         aria-label="Review Reminders"
@@ -526,11 +538,11 @@ export const AdminSettingsPage: React.FC = () => {
 
                   <div className="divide-y divide-slate-100 pt-1">
                     <SettingRow
-                      title="Overdue Indicators"
-                      description="Display persistent red warning badges on submissions exceeding deadline limits."
+                      title="Show Overdue Indicators"
+                      description="Show visual overdue badges on submissions and reports that have passed their deadline."
                     >
                       <Switch
-                        aria-label="Overdue Indicators"
+                        aria-label="Show Overdue Indicators"
                         checked={Boolean(draftSettings["workflow.overdue_indicators_enabled"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("workflow.overdue_indicators_enabled", val)}
@@ -541,13 +553,13 @@ export const AdminSettingsPage: React.FC = () => {
 
                 <div className="border-t border-slate-100 pt-5">
                   <SettingSection
-                    title="Organization Status Alerts"
-                    description="Transactional notifications automatically sent to youth organizations upon administrative decisions."
+                    title="Organization Notifications on Workflow Updates"
+                    description="Choose which automatic notifications organizations receive when administrators take action on their submissions."
                   >
                     <div className="divide-y divide-slate-100">
                       <SettingRow
                         title="Notify on Needs Revision"
-                        description="Alert organization when remarks and correction requirements are issued."
+                        description="Send an automatic notification to the organization when an administrator requests document corrections."
                       >
                         <Switch
                           aria-label="Notify on Needs Revision"
@@ -558,7 +570,7 @@ export const AdminSettingsPage: React.FC = () => {
                       </SettingRow>
                       <SettingRow
                         title="Notify on Approval"
-                        description="Send confirmation when an accreditation, YPOP, or budget request is approved."
+                        description="Send an automatic notification to the organization when their registration, renewal, YPOP, or budget request is approved."
                       >
                         <Switch
                           aria-label="Notify on Approval"
@@ -568,22 +580,22 @@ export const AdminSettingsPage: React.FC = () => {
                         />
                       </SettingRow>
                       <SettingRow
-                        title="Notify on Rejection"
-                        description="Dispatch notification with documented reason when a submission is declined."
+                        title="Notify on Disapproval"
+                        description="Send an automatic notification with administrative remarks when a submission is not approved."
                       >
                         <Switch
-                          aria-label="Notify on Rejection"
+                          aria-label="Notify on Disapproval"
                           checked={Boolean(draftSettings["workflow.notify_org_on_rejected"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("workflow.notify_org_on_rejected", val)}
                         />
                       </SettingRow>
                       <SettingRow
-                        title="Notify on Resubmission"
-                        description="Acknowledge receipt when an organization submits requested document revisions."
+                        title="Acknowledge Resubmissions"
+                        description="Send an automatic confirmation to the organization when they successfully upload revised documents."
                       >
                         <Switch
-                          aria-label="Notify on Resubmission"
+                          aria-label="Acknowledge Resubmissions"
                           checked={Boolean(draftSettings["workflow.notify_org_on_resubmitted"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("workflow.notify_org_on_resubmitted", val)}
@@ -600,7 +612,7 @@ export const AdminSettingsPage: React.FC = () => {
               <TabsContent value="programs" className="m-0 space-y-4 focus-visible:outline-none">
                 <SettingSection
                   title="YPOP Program Defaults"
-                  description="Global baseline defaults applied to newly created YPOP validation cycles. Existing active cycles retain their explicit configuration."
+                  description="Default settings for new Youth Program of the Year (YPOP) validation cycles. Changing these defaults will not alter existing active cycles."
                 >
                   <div className="grid gap-3.5 sm:grid-cols-2 pt-1">
                     <SettingInputField
@@ -615,11 +627,11 @@ export const AdminSettingsPage: React.FC = () => {
 
                   <div className="pt-2 border-t border-slate-100 divide-y divide-slate-100">
                     <SettingRow
-                      title="Enable Deadline Reminders"
-                      description="Dispatch automated notifications to organizations as the validation period closes."
+                      title="Send Deadline Reminders"
+                      description="Automatically send reminder notifications to organizations before the submission deadline."
                     >
                       <Switch
-                        aria-label="Enable Deadline Reminders"
+                        aria-label="Send Deadline Reminders"
                         checked={Boolean(draftSettings["programs.ypop_deadline_reminders_enabled"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("programs.ypop_deadline_reminders_enabled", val)}
@@ -627,11 +639,11 @@ export const AdminSettingsPage: React.FC = () => {
                     </SettingRow>
 
                     <SettingRow
-                      title="Auto-Close on Deadline Expiration"
-                      description="Automatically lock proof submissions when the official deadline date passes."
+                      title="Automatically Close Submissions at Deadline"
+                      description="Automatically close the submission window and stop accepting new submissions once the deadline passes."
                     >
                       <Switch
-                        aria-label="Auto-Close on Deadline Expiration"
+                        aria-label="Automatically Close Submissions at Deadline"
                         checked={Boolean(draftSettings["programs.ypop_auto_close_on_deadline"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("programs.ypop_auto_close_on_deadline", val)}
@@ -646,8 +658,8 @@ export const AdminSettingsPage: React.FC = () => {
               {/* ───────────────────────────────────────────────────────────────── */}
               <TabsContent value="budget_finance" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
-                  title="Fiscal Parameters & Accounting Defaults"
-                  description="Baseline accounting currency and fiscal parameters across budget monitoring modules."
+                  title="Fiscal Year & Deadline Reminders"
+                  description="Choose the default fiscal year and configure reminder notifications for budget proposals and liquidations."
                 >
                   <div className="grid gap-3.5 sm:grid-cols-2 pt-1">
                     <SettingInputField
@@ -658,23 +670,15 @@ export const AdminSettingsPage: React.FC = () => {
                       hideDescription
                       onChange={(val) => updateDraft("budget.default_fiscal_year", Number(val))}
                     />
-                    <SettingInputField
-                      settingKey="budget.currency"
-                      value={draftSettings["budget.currency"]}
-                      error={validationErrors["budget.currency"]}
-                      disabled={!canManageSettings || isSaving}
-                      hideDescription
-                      onChange={(val) => updateDraft("budget.currency", val)}
-                    />
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 divide-y divide-slate-100">
                     <SettingRow
-                      title="Budget Deadline Alerts"
-                      description="Display notifications for pending project proposals nearing approval cutoffs."
+                      title="Budget Proposal Reminders"
+                      description="Show reminders for pending budget proposals that require review or action."
                     >
                       <Switch
-                        aria-label="Budget Deadline Alerts"
+                        aria-label="Budget Proposal Reminders"
                         checked={Boolean(draftSettings["budget.budget_deadline_reminders"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("budget.budget_deadline_reminders", val)}
@@ -683,7 +687,7 @@ export const AdminSettingsPage: React.FC = () => {
 
                     <SettingRow
                       title="Liquidation Overdue Reminders"
-                      description="Generate system alerts for released funds missing formal liquidation packets."
+                      description="Send automatic reminders to organizations with released project funds that are due or past due for liquidation."
                     >
                       <Switch
                         aria-label="Liquidation Overdue Reminders"
@@ -701,10 +705,10 @@ export const AdminSettingsPage: React.FC = () => {
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-segoe text-xs font-semibold text-text-default">Public Budget Snapshot</span>
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Authoritative Module</span>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Budget Monitoring</span>
                       </div>
                       <p className="font-segoe text-[11px] text-slate-500 max-w-lg">
-                        Municipal budget allocations, charts, and fund breakdowns are managed centrally in the Budget Monitoring workspace.
+                        City youth budget allocations, category charts, and fund breakdowns can be configured directly in Budget Monitoring.
                       </p>
                     </div>
                     <Button
@@ -714,7 +718,7 @@ export const AdminSettingsPage: React.FC = () => {
                       onClick={() => navigate("/admin/budget-monitoring")}
                       className="shrink-0 gap-1.5 text-xs font-medium border-slate-300 hover:bg-white h-8 shadow-none"
                     >
-                      <span>Open Configuration</span>
+                      <span>Open Budget Monitoring</span>
                       <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
                     </Button>
                   </div>
@@ -726,8 +730,8 @@ export const AdminSettingsPage: React.FC = () => {
               {/* ───────────────────────────────────────────────────────────────── */}
               <TabsContent value="security" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
-                  title="Session Lifetime & Timeout"
-                  description="Enforce automatic administrative session expiration after inactivity."
+                  title="Administrator Session Inactivity"
+                  description="Choose how long an administrator can remain inactive before the system automatically signs them out."
                 >
                   <div className="max-w-xs pt-1">
                     <SettingSelectField
@@ -741,13 +745,13 @@ export const AdminSettingsPage: React.FC = () => {
 
                 <div className="border-t border-slate-100 pt-5">
                   <SettingSection
-                    title="Destructive Action Confirmation Guards"
-                    description="Require explicit confirmation dialogs before executing permanent data operations."
+                    title="Confirmation Prompts for Important Actions"
+                    description="Require administrators to confirm before performing permanent or sensitive actions."
                   >
                     <div className="divide-y divide-slate-100">
                       <SettingRow
                         title="Administrator Account Deletion"
-                        description="Require confirmed name input before removing an administrator account."
+                        description="Ask for confirmation before permanently removing an administrator account."
                       >
                         <Switch
                           aria-label="Administrator Account Deletion"
@@ -757,11 +761,11 @@ export const AdminSettingsPage: React.FC = () => {
                         />
                       </SettingRow>
                       <SettingRow
-                        title="Organization Deletion"
-                        description="Enforce confirmation before permanently purging organization records."
+                        title="Organization Account Deletion"
+                        description="Require typing the organization's name before permanently deleting its record."
                       >
                         <Switch
-                          aria-label="Organization Deletion"
+                          aria-label="Organization Account Deletion"
                           checked={Boolean(draftSettings["security.reauth_delete_organization"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("security.reauth_delete_organization", val)}
@@ -769,7 +773,7 @@ export const AdminSettingsPage: React.FC = () => {
                       </SettingRow>
                       <SettingRow
                         title="Inquiry Ticket Deletion"
-                        description="Confirm ticket deletion to prevent accidental loss of citizen communication."
+                        description="Ask for confirmation before permanently deleting an inquiry."
                       >
                         <Switch
                           aria-label="Inquiry Ticket Deletion"
@@ -780,7 +784,7 @@ export const AdminSettingsPage: React.FC = () => {
                       </SettingRow>
                       <SettingRow
                         title="Role Permission Changes"
-                        description="Display permission modification warning before altering role capabilities."
+                        description="Ask for confirmation before saving changes to administrator role permissions."
                       >
                         <Switch
                           aria-label="Role Permission Changes"
@@ -790,11 +794,11 @@ export const AdminSettingsPage: React.FC = () => {
                         />
                       </SettingRow>
                       <SettingRow
-                        title="System Configuration Updates"
-                        description="Require confirmation before applying system-wide administrative policy updates."
+                        title="System Settings Updates"
+                        description="Ask for confirmation before saving changes made on this settings page."
                       >
                         <Switch
-                          aria-label="System Configuration Updates"
+                          aria-label="System Settings Updates"
                           checked={Boolean(draftSettings["security.reauth_modify_system_settings"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("security.reauth_modify_system_settings", val)}
@@ -806,13 +810,13 @@ export const AdminSettingsPage: React.FC = () => {
 
                 <div className="border-t border-slate-100 pt-5">
                   <SettingSection
-                    title="Account Security Standards"
-                    description="Verification and recovery rules for administrator accounts."
+                    title="Administrator Account Security"
+                    description="Manage email verification and password recovery requirements for administrators."
                   >
                     <div className="divide-y divide-slate-100">
                       <SettingRow
                         title="Require Verified Admin Email"
-                        description="Administrators must confirm their municipal email address prior to active access."
+                        description="Require administrators to verify their email address before accessing the admin portal."
                       >
                         <Switch
                           aria-label="Require Verified Admin Email"
@@ -822,11 +826,11 @@ export const AdminSettingsPage: React.FC = () => {
                         />
                       </SettingRow>
                       <SettingRow
-                        title="Administrator Password Reset"
-                        description="Enable self-service reset links dispatched to registered municipal email accounts."
+                        title="Allow Self-Service Password Resets"
+                        description="Allow administrators to reset forgotten passwords using a secure link sent to their email."
                       >
                         <Switch
-                          aria-label="Administrator Password Reset"
+                          aria-label="Allow Self-Service Password Resets"
                           checked={Boolean(draftSettings["security.allow_admin_password_reset"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("security.allow_admin_password_reset", val)}
@@ -842,38 +846,57 @@ export const AdminSettingsPage: React.FC = () => {
               {/* ───────────────────────────────────────────────────────────────── */}
               <TabsContent value="email" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
-                  title="Email Sender Identity"
-                  description="Information displayed on automated receipts, invitations, and notices."
+                  title="Automated Email Sender Information"
+                  description="Details used when Y-TRACE automatically sends emails to organizations and administrators."
                 >
                   <div className="grid gap-3.5 sm:grid-cols-2 pt-1">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="font-segoe text-xs font-medium text-text-default">
+                          Sender Email Address
+                        </Label>
+                        <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                          Managed by System
+                        </span>
+                      </div>
+                      <Input
+                        type="text"
+                        value="noreply@ytrace.app"
+                        disabled
+                        className="h-8 font-segoe text-xs border-slate-300 bg-slate-50 text-slate-500 shadow-none cursor-not-allowed"
+                      />
+                    </div>
                     <SettingInputField
                       settingKey="email.sender_name"
-                      value={draftSettings["email.sender_name"]}
-                      error={validationErrors["email.sender_name"]}
-                      disabled={!canManageSettings || isSaving}
+                      value="Y-TRACE"
+                      disabled
                       hideDescription
-                      onChange={(val) => updateDraft("email.sender_name", val)}
+                      onChange={() => {}}
                     />
+                  </div>
+                  <div className="pt-2">
                     <SettingInputField
                       settingKey="email.reply_to_email"
                       value={draftSettings["email.reply_to_email"]}
                       error={validationErrors["email.reply_to_email"]}
                       disabled={!canManageSettings || isSaving}
-                      hideDescription
                       onChange={(val) => updateDraft("email.reply_to_email", val)}
                     />
                   </div>
+                  <p className="text-[11px] text-slate-500 leading-tight pt-1">
+                    Automated emails from Y-TRACE are sent from <strong className="text-slate-700">noreply@ytrace.app (Y-TRACE)</strong>. Any replies sent by users will be delivered to your official Reply-To email address.
+                  </p>
                 </SettingSection>
 
                 <div className="border-t border-slate-100 pt-5">
                   <SettingSection
-                    title="Email Delivery Dispatch"
-                    description="Choose which system communication workflows dispatch transactional emails."
+                    title="Automated Email Notifications"
+                    description="Choose whether the system sends automated emails when administrative events occur."
                   >
                     <div className="divide-y divide-slate-100">
                       <SettingRow
                         title="Administrator Invitation Emails"
-                        description="Dispatch invitation onboarding links when new administrator accounts are registered."
+                        description="Send an email with an account setup link whenever a new administrator is created."
                       >
                         <Switch
                           aria-label="Administrator Invitation Emails"
@@ -883,11 +906,11 @@ export const AdminSettingsPage: React.FC = () => {
                         />
                       </SettingRow>
                       <SettingRow
-                        title="Transactional Status & Workflow Emails"
-                        description="Dispatch submission decision and review notice emails to youth organizations."
+                        title="Status & Decision Emails to Organizations"
+                        description="Send emails to youth organizations when their submissions are approved, returned for revision, or rejected. (In-app notifications remain active regardless of this switch.)"
                       >
                         <Switch
-                          aria-label="Transactional Status & Workflow Emails"
+                          aria-label="Status & Decision Emails to Organizations"
                           checked={Boolean(draftSettings["email.send_workflow_emails"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("email.send_workflow_emails", val)}
@@ -903,13 +926,13 @@ export const AdminSettingsPage: React.FC = () => {
               {/* ───────────────────────────────────────────────────────────────── */}
               <TabsContent value="audit_records" className="mt-0 focus-visible:outline-none space-y-5">
                 <SettingSection
-                  title="System Activity Tracking Preferences"
-                  description="Select administrative and organizational actions tracked in the immutable audit log."
+                  title="Activity Log Recording"
+                  description="Choose which actions are recorded in the administrative activity log."
                 >
                   <div className="divide-y divide-slate-100">
                     <SettingRow
                       title="Administrator Sign-Ins"
-                      description="Log successful administrator portal logins with timestamp and session details."
+                      description="Record when administrators sign in to the portal."
                     >
                       <Switch
                         aria-label="Administrator Sign-Ins"
@@ -920,7 +943,7 @@ export const AdminSettingsPage: React.FC = () => {
                     </SettingRow>
                     <SettingRow
                       title="Administrator Sign-Outs"
-                      description="Log intentional administrator session terminations."
+                      description="Record when administrators sign out of the portal."
                     >
                       <Switch
                         aria-label="Administrator Sign-Outs"
@@ -930,44 +953,44 @@ export const AdminSettingsPage: React.FC = () => {
                       />
                     </SettingRow>
                     <SettingRow
-                      title="Record Creation"
-                      description="Log new registrations, program entries, and budget transactions."
+                      title="New Records & Submissions"
+                      description="Record when new templates, announcements, activities, registrations, or budget requests are created."
                     >
                       <Switch
-                        aria-label="Record Creation"
+                        aria-label="New Records & Submissions"
                         checked={Boolean(draftSettings["audit.log_record_creation"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("audit.log_record_creation", val)}
                       />
                     </SettingRow>
                     <SettingRow
-                      title="Record Updates"
-                      description="Log changes to organization profiles, status flags, and compliance files."
+                      title="Record Changes & Edits"
+                      description="Record when existing information, templates, announcements, or organization records are edited."
                     >
                       <Switch
-                        aria-label="Record Updates"
+                        aria-label="Record Changes & Edits"
                         checked={Boolean(draftSettings["audit.log_record_updates"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("audit.log_record_updates", val)}
                       />
                     </SettingRow>
                     <SettingRow
-                      title="Approvals & Decisions"
-                      description="Log administrative approval, rejection, and revision decisions."
+                      title="Approvals, Revisions & Decisions"
+                      description="Record administrative decisions, including approvals, revision requests, and rejections."
                     >
                       <Switch
-                        aria-label="Approvals & Decisions"
+                        aria-label="Approvals, Revisions & Decisions"
                         checked={Boolean(draftSettings["audit.log_approvals_rejections"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("audit.log_approvals_rejections", val)}
                       />
                     </SettingRow>
                     <SettingRow
-                      title="Record Deletions"
-                      description="Log permanent purging of tickets, records, or accounts."
+                      title="Deleted Items"
+                      description="Record when items such as templates, inquiries, activities, or accounts are deleted."
                     >
                       <Switch
-                        aria-label="Record Deletions"
+                        aria-label="Deleted Items"
                         checked={Boolean(draftSettings["audit.log_deletions"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("audit.log_deletions", val)}
@@ -975,7 +998,7 @@ export const AdminSettingsPage: React.FC = () => {
                     </SettingRow>
                     <SettingRow
                       title="Role Permission Changes"
-                      description="Log modifications made to administrator security roles and capabilities."
+                      description="Record when administrator roles or access permissions are modified."
                     >
                       <Switch
                         aria-label="Role Permission Changes"
@@ -985,11 +1008,11 @@ export const AdminSettingsPage: React.FC = () => {
                       />
                     </SettingRow>
                     <SettingRow
-                      title="System Settings Updates"
-                      description="Log all modifications made to global system settings and defaults."
+                      title="System Settings Changes"
+                      description="Record whenever changes are made and saved on this System Settings page."
                     >
                       <Switch
-                        aria-label="System Settings Updates"
+                        aria-label="System Settings Changes"
                         checked={Boolean(draftSettings["audit.log_config_changes"])}
                         disabled={!canManageSettings || isSaving}
                         onCheckedChange={(val) => updateDraft("audit.log_config_changes", val)}
@@ -1000,27 +1023,27 @@ export const AdminSettingsPage: React.FC = () => {
 
                 <div className="border-t border-slate-100 pt-5">
                   <SettingSection
-                    title="Audit Trail Metadata"
-                    description="Contextual diagnostic information recorded alongside audit events."
+                    title="Additional Details in Activity Logs"
+                    description="Optionally record device and network details along with each logged activity."
                   >
                     <div className="divide-y divide-slate-100">
                       <SettingRow
-                        title="Capture User Agent Metadata"
-                        description="Record browser user agent details in audit metadata for security diagnostics."
+                        title="Record Browser & Device Information"
+                        description="Record the web browser and device type used when an administrator performs an action."
                       >
                         <Switch
-                          aria-label="Capture User Agent Metadata"
+                          aria-label="Record Browser & Device Information"
                           checked={Boolean(draftSettings["audit.include_user_agent"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("audit.include_user_agent", val)}
                         />
                       </SettingRow>
                       <SettingRow
-                        title="Capture Client IP Metadata"
-                        description="Record client IP addresses in activity log records where available."
+                        title="Record IP Address"
+                        description="Record the IP address of the device used when an administrator performs an action."
                       >
                         <Switch
-                          aria-label="Capture Client IP Metadata"
+                          aria-label="Record IP Address"
                           checked={Boolean(draftSettings["audit.include_ip_metadata"])}
                           disabled={!canManageSettings || isSaving}
                           onCheckedChange={(val) => updateDraft("audit.include_ip_metadata", val)}
@@ -1060,7 +1083,7 @@ export const AdminSettingsPage: React.FC = () => {
               <Button
                 type="button"
                 size="sm"
-                onClick={() => handleSave(activeTab)}
+                onClick={() => handleInitiateSave(activeTab)}
                 disabled={!canManageSettings || isSaving}
                 className="h-8 px-4 text-xs font-semibold shadow-sm bg-public-bg-brand text-white hover:bg-bg-brand-hover gap-1.5"
               >
@@ -1081,6 +1104,45 @@ export const AdminSettingsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Save Confirmation Guard Dialog */}
+      <AlertDialog
+        open={Boolean(pendingSaveCategory)}
+        onOpenChange={(open) => (!open ? setPendingSaveCategory(null) : undefined)}
+      >
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+              Save System Settings?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed">
+              You are about to save changes to the system settings. These updates will take effect immediately across Y-TRACE.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel
+              disabled={isSaving}
+              onClick={() => setPendingSaveCategory(null)}
+              className="text-xs font-medium h-9"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isSaving}
+              onClick={() => {
+                const cat = pendingSaveCategory;
+                setPendingSaveCategory(null);
+                if (cat) {
+                  void handleSave(cat);
+                }
+              }}
+              className="text-xs font-semibold h-9 bg-public-bg-brand text-white hover:bg-bg-brand-hover"
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Reset Confirmation Dialog */}
       <AlertDialog
         open={Boolean(resetConfirmCategory)}
@@ -1092,7 +1154,7 @@ export const AdminSettingsPage: React.FC = () => {
               Reset section to defaults?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed">
-              This will replace all fields in the <strong className="text-foreground">{activeCategoryLabel}</strong> section with standard system defaults. You can still review and discard before clicking Save Changes.
+              This will return all settings in the <strong className="text-foreground">{activeCategoryLabel}</strong> section to their original system defaults. You can review your changes before clicking Save Changes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
@@ -1182,6 +1244,7 @@ function SettingInputField({
 
   const label = labelOverride || def.label;
   const description = hideDescription ? undefined : (descriptionOverride || def.description);
+  const isReadOnly = disabled || def.isEditable === false;
 
   return (
     <div className="space-y-1.5">
@@ -1199,13 +1262,17 @@ function SettingInputField({
         id={settingKey}
         type={def.dataType === "number" ? "number" : "text"}
         value={String(value ?? "")}
-        disabled={disabled}
+        disabled={isReadOnly}
+        readOnly={def.isEditable === false}
         placeholder={def.helperText}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          if (def.isEditable === false) return;
+          onChange(e.target.value);
+        }}
         className={cn(
           "h-8 font-segoe text-xs border-slate-300 bg-white shadow-none focus-visible:ring-1",
           Boolean(error) && "border-destructive focus-visible:ring-destructive",
-          disabled && "bg-slate-50 text-slate-500",
+          isReadOnly && "bg-slate-50 text-slate-500 cursor-not-allowed select-none",
         )}
       />
       {description && <p className="text-[11px] text-slate-500 leading-tight mt-1">{description}</p>}

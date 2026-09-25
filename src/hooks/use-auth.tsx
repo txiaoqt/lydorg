@@ -1,6 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { readAdminSession, type SeededAdminUser, writeAdminSession } from "@/lib/admin-auth";
+import {
+  readAdminSession,
+  type SeededAdminUser,
+  writeAdminSession,
+  ADMIN_SESSION_STORAGE_KEY,
+  ADMIN_SESSION_CHANGE_EVENT,
+  ADMIN_LAST_ACTIVITY_STORAGE_KEY,
+  recordAdminActivity,
+  isSessionExpiredDueToInactivity,
+} from "@/lib/admin-auth";
+import { ADMIN_SETTINGS_CHANGE_EVENT } from "@/lib/admin-system-settings";
+import { toast } from "@/hooks/use-toast";
 import { getAdminPermissionContextInSupabase } from "@/lib/lydo-connect-supabase";
 import { getAuthCallbackUrl } from "@/lib/auth-redirect";
 import { IS_USER_SURFACE } from "@/lib/deployment-surface";
@@ -26,6 +37,7 @@ export type AuthUser = {
   displayName: string;
   roleCode?: string;
   permissionCodes?: string[];
+  isEmailVerified?: boolean;
   profileHints?: {
     contactNumber?: string;
     district?: string;
@@ -98,6 +110,7 @@ const toAuthUser = (adminUser: SeededAdminUser): AuthUser => ({
   displayName: adminUser.displayName,
   roleCode: adminUser.roleCode,
   permissionCodes: adminUser.permissionCodes,
+  isEmailVerified: adminUser.isEmailVerified ?? true,
 });
 
 const createDemoAdminSession = (username: string): SeededAdminUser => {
@@ -269,6 +282,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const resolvedRole = priorityRole(roleCodes);
+      const isEmailConfirmed = Boolean(
+        authUser.email_confirmed_at ||
+        authUser.confirmed_at ||
+        authUser.app_metadata?.email_verified ||
+        authUser.user_metadata?.email_verified,
+      );
       const resolvedUser: AuthUser = {
         id: authUser.id,
         email: (profileResp.data?.email as string | undefined) ?? authUser.email ?? "",
@@ -276,6 +295,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           (profileResp.data?.display_name as string | undefined)?.trim() ||
           (profileResp.data?.full_name as string | undefined)?.trim() ||
           defaultDisplayName,
+        isEmailVerified: isEmailConfirmed,
         profileHints: {
           contactNumber:
             (profileResp.data?.contact_number as string | undefined) ??
@@ -350,9 +370,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             void applySession(data.session ?? null);
           }
         });
+      } else if (e.key === ADMIN_SESSION_STORAGE_KEY) {
+        if (!e.newValue) {
+          setIsAuthenticated(false);
+          setRole("guest");
+          setUser(null);
+        } else {
+          const storedAdmin = readAdminSession();
+          if (storedAdmin) {
+            setIsAuthenticated(true);
+            setRole("admin");
+            setUser(toAuthUser(storedAdmin));
+          } else {
+            setIsAuthenticated(false);
+            setRole("guest");
+            setUser(null);
+          }
+        }
       }
     };
     window.addEventListener("storage", handleStorage);
+
+    const handleAdminSessionChange = () => {
+      const storedAdmin = readAdminSession();
+      if (storedAdmin) {
+        setIsAuthenticated(true);
+        setRole("admin");
+        setUser(toAuthUser(storedAdmin));
+      } else {
+        setIsAuthenticated(false);
+        setRole("guest");
+        setUser(null);
+      }
+    };
+    window.addEventListener(ADMIN_SESSION_CHANGE_EVENT, handleAdminSessionChange);
 
     const { data: authListener } = supabaseClient.auth.onAuthStateChange((event, session) => {
       void applySession(session, event);
@@ -362,9 +413,102 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       window.removeEventListener("unhandledrejection", handleUnhandledAuthRejection);
       window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(ADMIN_SESSION_CHANGE_EVENT, handleAdminSessionChange);
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // ── Administrator Continuous Inactivity Monitor ─────────────────────────────
+  useEffect(() => {
+    if (role !== "admin" || !isAuthenticated) return;
+
+    // Immediately register active interaction baseline
+    recordAdminActivity({ force: true });
+
+    let isExpiring = false;
+
+    const handleInactivityExpiry = async () => {
+      if (isExpiring) return;
+      isExpiring = true;
+
+      const storedAdmin = readAdminSession();
+      if (supabase && storedAdmin?.sessionToken) {
+        try {
+          await supabase.rpc("revoke_admin_session_token", {
+            _session_token: storedAdmin.sessionToken,
+          });
+        } catch {
+          // Best effort backend session revocation
+        }
+      }
+
+      writeAdminSession(null);
+      setIsAuthenticated(false);
+      setRole("guest");
+      setUser(null);
+
+      toast({
+        title: "Session Expired",
+        description: "Your administrator session expired due to inactivity. Please sign in again.",
+        variant: "destructive",
+      });
+    };
+
+    // User interactions that constitute meaningful activity
+    const onUserActivity = () => {
+      recordAdminActivity();
+    };
+
+    const interactionEvents = [
+      "mousedown",
+      "keydown",
+      "pointerdown",
+      "touchstart",
+      "touchend",
+      "wheel",
+    ] as const;
+
+    interactionEvents.forEach((evt) => {
+      window.addEventListener(evt, onUserActivity, { passive: true, capture: true });
+    });
+
+    // Check inactivity on visibility change (e.g. background tab restored) and focus
+    const onVisibilityOrFocusChange = () => {
+      if (isSessionExpiredDueToInactivity()) {
+        void handleInactivityExpiry();
+      } else {
+        recordAdminActivity();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityOrFocusChange);
+    window.addEventListener("focus", onVisibilityOrFocusChange);
+
+    // Heartbeat check interval to catch inactivity transitions while idle
+    const inactivityInterval = window.setInterval(() => {
+      if (isSessionExpiredDueToInactivity()) {
+        void handleInactivityExpiry();
+      }
+    }, 10_000);
+
+    // React immediately if administrator updates security timeout in Admin Settings
+    const onSettingsChange = () => {
+      if (isSessionExpiredDueToInactivity()) {
+        void handleInactivityExpiry();
+      }
+    };
+    window.addEventListener(ADMIN_SETTINGS_CHANGE_EVENT, onSettingsChange);
+
+    return () => {
+      interactionEvents.forEach((evt) => {
+        window.removeEventListener(evt, onUserActivity, { capture: true } as EventListenerOptions);
+      });
+      document.removeEventListener("visibilitychange", onVisibilityOrFocusChange);
+      window.removeEventListener("focus", onVisibilityOrFocusChange);
+      window.clearInterval(inactivityInterval);
+      window.removeEventListener(ADMIN_SETTINGS_CHANGE_EVENT, onSettingsChange);
+    };
+  }, [role, isAuthenticated]);
 
   const signIn = async (params: SignInParams) => {
     if (params.mode === "admin") {
@@ -428,6 +572,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         displayName: String(adminAccount.display_name ?? "Admin User"),
         sessionToken: String(adminAccount.session_token ?? ""),
         expiresAt: String(adminAccount.expires_at ?? ""),
+        isEmailVerified: adminAccount.is_email_verified !== false,
       };
 
       const permissionContext = await getAdminPermissionContextInSupabase(adminUser.sessionToken);
@@ -592,12 +737,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsPasswordRecoverySession(false);
     const storedAdmin = readAdminSession();
     if (supabase && storedAdmin?.sessionToken) {
-      await supabase.rpc("revoke_admin_session_token", {
-        _session_token: storedAdmin.sessionToken,
-      });
+      try {
+        await supabase.rpc("revoke_admin_session_token", {
+          _session_token: storedAdmin.sessionToken,
+        });
+      } catch (err) {
+        console.warn("Revoke admin session notice:", err);
+      }
     }
     writeAdminSession(null);
-    if (supabase) await supabase.auth.signOut();
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.warn("Supabase auth signOut notice:", err);
+      }
+    }
     setIsAuthenticated(false);
     setRole("guest");
     setUser(null);
