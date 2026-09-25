@@ -254,7 +254,7 @@ async function authorizeAndResolveEventContext(
     case "budget_request": {
       const { data: budgetRow } = await supabaseAdmin
         .from("budget_requests")
-        .select("id, organization_id, project_name, activity_title, amount, requested_amount, status")
+        .select("id, organization_id, activity_title, requested_amount, status")
         .eq("id", refId)
         .maybeSingle();
 
@@ -268,12 +268,10 @@ async function authorizeAndResolveEventContext(
       if (!budgetRow.status || !validBudgetStatuses.includes(budgetRow.status)) {
         return { authorized: false, error: "Forbidden: Budget request is not in a submitted/reviewable state." };
       }
-      if (budgetRow.project_name || budgetRow.activity_title) {
-        subject = budgetRow.project_name || budgetRow.activity_title;
+      if (budgetRow.activity_title) {
+        subject = budgetRow.activity_title;
       }
-      if (typeof budgetRow.amount === "number") {
-        amount = budgetRow.amount;
-      } else if (typeof budgetRow.requested_amount === "number") {
+      if (typeof budgetRow.requested_amount === "number") {
         amount = budgetRow.requested_amount;
       }
       break;
@@ -282,7 +280,7 @@ async function authorizeAndResolveEventContext(
     case "liquidation_report": {
       const { data: liqRow } = await supabaseAdmin
         .from("liquidation_reports")
-        .select("id, organization_id, project_name, total_amount, status")
+        .select("id, organization_id, status, remarks")
         .eq("id", refId)
         .maybeSingle();
 
@@ -296,8 +294,7 @@ async function authorizeAndResolveEventContext(
       if (!liqRow.status || !validLiqStatuses.includes(liqRow.status)) {
         return { authorized: false, error: "Forbidden: Liquidation report is not in a submitted/reviewable state." };
       }
-      if (liqRow.project_name) subject = liqRow.project_name;
-      if (typeof liqRow.total_amount === "number") amount = liqRow.total_amount;
+      if (liqRow.remarks) subject = `Liquidation: ${liqRow.remarks}`;
       break;
     }
 
@@ -610,6 +607,7 @@ function getEventMetadata(
     case "new_registration":
       return {
         title: "New Accreditation Registration",
+        description: "A new youth organization has submitted registration documents for accreditation review.",
         badge: "Registration",
         badgeBg: "#eff6ff",
         badgeColor: "#1d4ed8",
@@ -622,6 +620,7 @@ function getEventMetadata(
     case "renewal_submitted":
       return {
         title: "Accreditation Renewal Application",
+        description: "An accreditation renewal application and supporting documents have been submitted for administrative review.",
         badge: "Renewal",
         badgeBg: "#f0fdf4",
         badgeColor: "#15803d",
@@ -634,6 +633,7 @@ function getEventMetadata(
     case "ypop_submission":
       return {
         title: "YPOP Event Validation Proof",
+        description: "A youth organization has submitted YPOP event attendance and accomplishment proof for evaluation.",
         badge: "YPOP Activity",
         badgeBg: "#faf5ff",
         badgeColor: "#7e22ce",
@@ -646,6 +646,7 @@ function getEventMetadata(
     case "budget_request":
       return {
         title: "Project Budget Request",
+        description: "A new project budget proposal has been submitted and requires administrative review.",
         badge: "Budget Proposal",
         badgeBg: "#fffbeb",
         badgeColor: "#b45309",
@@ -658,6 +659,7 @@ function getEventMetadata(
     case "liquidation_report":
       return {
         title: "Liquidation Report Packet",
+        description: "A project financial liquidation report packet has been submitted for administrative audit.",
         badge: "Liquidation",
         badgeBg: "#ecfeff",
         badgeColor: "#0e7490",
@@ -670,6 +672,7 @@ function getEventMetadata(
     case "new_inquiry":
       return {
         title: "Helpdesk Citizen / Org Inquiry",
+        description: "A new inquiry message has been submitted through the helpdesk and requires administrative response.",
         badge: "Helpdesk Inquiry",
         badgeBg: "#fdf2f8",
         badgeColor: "#be185d",
@@ -682,6 +685,7 @@ function getEventMetadata(
     case "revision_resubmission":
       return {
         title: "Document Revision Resubmitted",
+        description: "Corrected compliance documents have been resubmitted following administrative revision feedback.",
         badge: "Resubmission",
         badgeBg: "#fff7ed",
         badgeColor: "#c2410c",
@@ -694,6 +698,7 @@ function getEventMetadata(
     case "accreditation_expiring":
       return {
         title: "Accreditation Expiring Notice",
+        description: "An organization accreditation term is expiring soon and requires renewal coordination.",
         badge: "Term Expiring",
         badgeBg: "#fff1f2",
         badgeColor: "#be123c",
@@ -706,6 +711,7 @@ function getEventMetadata(
     case "overdue_liquidation":
       return {
         title: "Overdue Liquidation Escalation",
+        description: "A project liquidation report submission deadline has passed and is flagged for administrative action.",
         badge: "Overdue Alert",
         badgeBg: "#fef2f2",
         badgeColor: "#b91c1c",
@@ -720,6 +726,7 @@ function getEventMetadata(
 
 /**
  * Generates responsive, branded HTML email template for administrative notifications.
+ * Strictly adheres to the official Y-TRACE transactional email design system.
  * All dynamic parameters are strictly HTML-escaped to prevent injection.
  */
 function generateAdminEmailHtml(params: {
@@ -728,6 +735,7 @@ function generateAdminEmailHtml(params: {
   officeAcronym: string;
   supportEmail: string;
   title: string;
+  description?: string;
   badge: string;
   badgeBg: string;
   badgeColor: string;
@@ -741,11 +749,10 @@ function generateAdminEmailHtml(params: {
   amount?: number;
   timestamp: string;
 }): string {
-  const safeSystemName = escapeHtml(params.systemName);
-  const safeOfficeName = escapeHtml(params.officeName);
-  const safeOfficeAcronym = escapeHtml(params.officeAcronym);
-  const safeSupportEmail = escapeHtml(params.supportEmail);
+  const safeSystemName = escapeHtml(params.systemName || "Y-TRACE");
+  const safeOfficeName = escapeHtml(params.officeName || "Pasig City Local Youth Development Office");
   const safeTitle = escapeHtml(params.title);
+  const safeDescription = escapeHtml(params.description || "An administrative notification has been logged and requires review.");
   const safeBadge = escapeHtml(params.badge);
   const safeActionLabel = escapeHtml(params.actionLabel);
   const safeTimestamp = escapeHtml(params.timestamp);
@@ -755,39 +762,52 @@ function generateAdminEmailHtml(params: {
   const safeDetails = escapeHtml(params.details);
   const safeUrl = params.actionUrl.startsWith("http") ? escapeHtml(params.actionUrl) : "#";
 
+  const cardHeading = safeSubject || safeOrg || safeTitle;
+
   const amountRow =
     params.amount !== undefined && params.amount !== null
       ? `<tr>
-          <td style="padding: 10px 14px; font-size: 13px; color: #64748b; font-weight: 600; width: 140px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">Requested Amount</td>
-          <td style="padding: 10px 14px; font-size: 14px; color: #0f172a; font-weight: 700; border-bottom: 1px solid #f1f5f9;">₱${params.amount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">Requested Amount</td>
+          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #0f172a; font-weight: 700; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0;">&#8369;${params.amount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
         </tr>`
       : "";
 
   const orgRow = safeOrg
     ? `<tr>
-        <td style="padding: 10px 14px; font-size: 13px; color: #64748b; font-weight: 600; width: 140px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">Organization</td>
-        <td style="padding: 10px 14px; font-size: 13px; color: #0f172a; font-weight: 700; border-bottom: 1px solid #f1f5f9;">${safeOrg}</td>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">Organization</td>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0; word-break: break-word;">${safeOrg}</td>
       </tr>`
     : "";
 
-  const subjectRow = safeSubject
+  const subjectRow = safeSubject && safeSubject !== cardHeading
     ? `<tr>
-        <td style="padding: 10px 14px; font-size: 13px; color: #64748b; font-weight: 600; width: 140px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">Topic / Item</td>
-        <td style="padding: 10px 14px; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9;">${safeSubject}</td>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">Topic / Item</td>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0; word-break: break-word;">${safeSubject}</td>
       </tr>`
     : "";
 
   const refRow = safeRef
     ? `<tr>
-        <td style="padding: 10px 14px; font-size: 13px; color: #64748b; font-weight: 600; width: 140px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">Reference ID</td>
-        <td style="padding: 10px 14px; font-size: 12px; font-family: monospace; color: #475569; border-bottom: 1px solid #f1f5f9;">${safeRef}</td>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">Reference ID</td>
+        <td style="padding: 10px 0; font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; color: #475569; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0; word-break: break-all;">${safeRef}</td>
+      </tr>`
+    : "";
+
+  const timestampRow = safeTimestamp
+    ? `<tr>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">Timestamp</td>
+        <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #64748b; text-align: right; vertical-align: top;">${safeTimestamp} (PHT)</td>
       </tr>`
     : "";
 
   const detailsBlock = safeDetails
-    ? `<div style="margin-top: 18px; padding: 14px 16px; background-color: #f8fafc; border-left: 3px solid #0038A8; border-radius: 6px;">
-        <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Remarks / Submission Summary</p>
-        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #334155; white-space: pre-wrap;">${safeDetails}</p>
+    ? `<div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #e2e8f0;">
+        <p style="margin: 0 0 6px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b;">
+          Submission Summary
+        </p>
+        <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #334155; white-space: pre-wrap; word-break: break-word;">
+          ${safeDetails}
+        </p>
       </div>`
     : "";
 
@@ -797,80 +817,125 @@ function generateAdminEmailHtml(params: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${safeTitle} - ${safeSystemName}</title>
+  <style>
+    body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    @media only screen and (max-width: 600px) {
+      .email-outer-td { padding: 20px 12px !important; }
+      .email-inner-card { padding: 24px 18px !important; }
+      .email-footer-td { padding: 20px 16px !important; }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 32px 16px;">
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
+  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; color: transparent; line-height: 1px; font-size: 1px;">
+    ${safeTitle}: ${cardHeading} - ${safeSystemName} Administrative Notification.
+  </div>
+
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; background-color: #f8fafc;">
     <tr>
-      <td align="center">
-        <!-- Main Card -->
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+      <td align="center" class="email-outer-td" style="padding: 40px 16px;">
+        <!-- Container Card -->
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 540px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03);">
           
-          <!-- Header Banner -->
+          <!-- Card Body Area -->
           <tr>
-            <td style="background: linear-gradient(135deg, #0038A8 0%, #002266 100%); padding: 24px 32px; text-align: left;">
-              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+            <td class="email-inner-card" style="padding: 32px 32px 28px; text-align: left;">
+              
+              <!-- Brand Header -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
                 <tr>
-                  <td>
-                    <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #93c5fd; margin-bottom: 4px;">
-                      ${safeOfficeAcronym} &bull; Administrative Alert
-                    </div>
-                    <div style="font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                      ${safeSystemName} Management Portal
-                    </div>
+                  <td align="left">
+                    <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/FullNavbar.svg" height="32" alt="${safeSystemName}" style="display: block; height: 32px; width: auto; max-height: 36px; border: 0; outline: none; text-decoration: none;" />
                   </td>
                 </tr>
               </table>
-            </td>
-          </tr>
 
-          <!-- Body Content -->
-          <tr>
-            <td style="padding: 32px;">
-              <!-- Event Badge & Title -->
-              <div style="margin-bottom: 20px;">
-                <span style="display: inline-block; padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 9999px; background-color: ${params.badgeBg}; color: ${params.badgeColor}; border: 1px solid ${params.badgeBorder}; margin-bottom: 12px;">
-                  ${safeBadge}
-                </span>
-                <h1 style="margin: 0; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.3;">
-                  ${safeTitle}
-                </h1>
-                <p style="margin: 6px 0 0 0; font-size: 13px; color: #64748b;">
-                  Logged on ${safeTimestamp} (PHT)
-                </p>
-              </div>
+              <!-- Eyebrow & Main Heading -->
+              <p style="margin: 0 0 6px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #1d4ed8;">
+                Administrative Notification
+              </p>
+              <h1 style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.4px; color: #0f172a;">
+                ${safeTitle}
+              </h1>
+              <p style="margin: 0 0 24px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 20px; color: #475569;">
+                ${safeDescription}
+              </p>
 
-              <!-- Key Attributes Table -->
-              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
-                ${orgRow}
-                ${subjectRow}
-                ${amountRow}
-                ${refRow}
+              <!-- Single Information Card -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 26px;">
                 <tr>
-                  <td style="padding: 10px 14px; font-size: 13px; color: #64748b; font-weight: 600; width: 140px; vertical-align: top;">Official Recipient</td>
-                  <td style="padding: 10px 14px; font-size: 13px; color: #0038A8; font-weight: 600;">${safeSupportEmail}</td>
+                  <td style="padding: 18px 20px;">
+                    
+                    <!-- Card Top Title & Badge -->
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 14px;">
+                      <tr>
+                        <td style="vertical-align: middle; padding-right: 10px;">
+                          <h2 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+                            ${cardHeading}
+                          </h2>
+                        </td>
+                        <td align="right" style="vertical-align: middle; white-space: nowrap;">
+                          <span style="display: inline-block; padding: 3px 9px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 12px; background-color: ${params.badgeBg}; color: ${params.badgeColor}; border: 1px solid ${params.badgeBorder};">
+                            ${safeBadge}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Key Metadata Rows -->
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                      ${orgRow}
+                      ${subjectRow}
+                      ${amountRow}
+                      ${refRow}
+                      ${timestampRow}
+                    </table>
+
+                    ${detailsBlock}
+                  </td>
                 </tr>
               </table>
 
-              ${detailsBlock}
+              <!-- Call to Action Button -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 8px;">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" style="background-color: #0e3a7a; border-radius: 6px;">
+                          <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 11px 26px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; letter-spacing: 0.2px; line-height: 1.2;">
+                            ${safeActionLabel}
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-              <!-- Action Button -->
-              <div style="margin-top: 28px; text-align: center;">
-                <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 12px 28px; background-color: #0038A8; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 56, 168, 0.2);">
-                  ${safeActionLabel} &rarr;
-                </a>
-              </div>
             </td>
           </tr>
 
-          <!-- Footer -->
+          <!-- Solid Blue Institutional Footer -->
           <tr>
-            <td style="background-color: #f8fafc; padding: 20px 32px; border-top: 1px solid #e2e8f0; text-align: center;">
-              <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 600; color: #475569;">
+            <td class="email-footer-td" style="background-color: #0e3a7a; padding: 24px 28px; text-align: center;">
+              <p style="margin: 0 0 6px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; color: #ffffff; letter-spacing: -0.1px;">
                 ${safeOfficeName}
               </p>
-              <p style="margin: 0; font-size: 11px; color: #94a3b8; line-height: 1.5;">
-                This is an automated administrative notification dispatched by ${safeSystemName}.<br>
-                Notification routing preferences are dynamically configured in Admin &rarr; Settings.
+              <p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 16px; color: #bfdbfe;">
+                3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City
+              </p>
+              <p style="margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 16px; color: #93c5fd;">
+                <a href="mailto:lydo@pasigcity.gov.ph" style="color: #93c5fd; text-decoration: none;">lydo@pasigcity.gov.ph</a> &bull;
+                <a href="https://ytrace.app" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">ytrace.app</a> &bull;
+                <a href="https://ytrace.app/privacy-policy" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Privacy Policy</a> &bull;
+                <a href="https://ytrace.app/terms-of-service" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Terms of Service</a> &bull;
+                <a href="https://www.facebook.com/PasigCityLYDO" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Facebook</a>
+              </p>
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 15px; color: #93c5fd;">
+                &copy; 2026 ${safeSystemName} &middot; ${safeOfficeName}. All rights reserved.
               </p>
             </td>
           </tr>
@@ -985,7 +1050,7 @@ Deno.serve(async (req: Request) => {
         const { data: admins, error: adminErr } = await supabaseAdmin
           .from("admin_accounts")
           .select("id")
-          .eq("status", "active");
+          .eq("is_active", true);
 
         if (adminErr) {
           console.warn("[send-admin-notification] Could not fetch active admins for in-app alert:", adminErr.message);
@@ -1012,7 +1077,7 @@ Deno.serve(async (req: Request) => {
               message: validatedPayload.subject
                 ? `${validatedPayload.subject} (${validatedPayload.organizationName || "Youth Organization"})`
                 : `${eventMeta.title} submitted by ${validatedPayload.organizationName || "Youth Organization"}.`,
-              type: "announcement",
+              type: "document_green",
               related_type: eventMeta.relatedType,
               related_id: validatedPayload.referenceId || null,
               is_read: false,
@@ -1084,6 +1149,7 @@ Deno.serve(async (req: Request) => {
       officeAcronym: settings.officeAcronym,
       supportEmail,
       title: eventMeta.title,
+      description: eventMeta.description,
       badge: eventMeta.badge,
       badgeBg: eventMeta.badgeBg,
       badgeColor: eventMeta.badgeColor,

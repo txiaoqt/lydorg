@@ -15,15 +15,32 @@ type ReplyEmailDialogProps = {
   inquiryStatus?: InquiryRecord["status"];
 };
 
-const FieldRow = ({ label, value, withDivider }: { label: string; value: string; withDivider?: boolean }) => (
+const FieldRow = ({
+  label,
+  value,
+  withDivider,
+  allowBreakAll,
+}: {
+  label: string;
+  value: string;
+  withDivider?: boolean;
+  allowBreakAll?: boolean;
+}) => (
   <div
     className={cn(
-      "flex items-center justify-between gap-2 py-1",
-      withDivider && "border-b border-slate-300",
+      "flex flex-col gap-1 py-1",
+      withDivider && "border-b border-slate-300 pb-2.5",
     )}
   >
-    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
-    <p className="truncate font-segoe text-[13px] font-semibold leading-none text-text-default">{value}</p>
+    <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider leading-none text-slate-500">{label}</p>
+    <p
+      className={cn(
+        "font-segoe text-[13px] font-semibold leading-normal text-text-default",
+        allowBreakAll ? "break-all" : "break-words [overflow-wrap:anywhere]",
+      )}
+    >
+      {value}
+    </p>
   </div>
 );
 
@@ -72,7 +89,7 @@ export const ReplyEmailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton
-        className="flex h-[526px] sm:h-[526px] w-[420px] sm:w-[420px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex-col gap-6 overflow-y-auto rounded-md sm:rounded-md border border-slate-300 bg-admin-surface p-6 sm:p-6 shadow-lg"
+        className="flex w-[420px] sm:w-[420px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex-col gap-6 overflow-y-auto rounded-md sm:rounded-md border border-slate-300 bg-admin-surface p-6 sm:p-6 shadow-lg"
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
           <div className="flex items-center gap-3">
@@ -114,8 +131,8 @@ export const ReplyEmailDialog = ({
             </div>
           )}
 
-          <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface p-6">
-            <FieldRow label="Recipient" value={email} withDivider />
+          <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface p-4 sm:p-5">
+            <FieldRow label="Recipient" value={email} withDivider allowBreakAll />
             <FieldRow label="Subject" value={subject} />
           </div>
         </div>

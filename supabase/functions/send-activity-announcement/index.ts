@@ -143,7 +143,20 @@ function formatAnnouncementDate(startDate?: string | null, endDate?: string | nu
 }
 
 /**
- * Generates the responsive HTML email template using Y-TRACE design tokens.
+ * Safely escapes HTML special characters to prevent HTML injection in email templates.
+ */
+function escapeHtml(str?: string | null): string {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * Generates the responsive HTML email template strictly adhering to the official Y-TRACE transactional email design system.
  */
 function generateAnnouncementEmailHtml(params: {
   activityName: string;
@@ -158,117 +171,104 @@ function generateAnnouncementEmailHtml(params: {
   officeName?: string;
   systemName?: string;
 }): string {
-  const {
-    activityName,
-    categoryLabel,
-    categoryColor,
-    categoryBg,
-    categoryBorder,
-    points,
-    dateRangeStr,
-    venue,
-    viewActivityUrl,
-    officeName = "Pasig City Local Youth Development Office",
-    systemName = "Y-TRACE",
-  } = params;
+  const safeActivityName = escapeHtml(params.activityName);
+  const safeCategoryLabel = escapeHtml(params.categoryLabel);
+  const safeDateRangeStr = escapeHtml(params.dateRangeStr);
+  const safeVenue = escapeHtml(params.venue || "Pasig City");
+  const safeOfficeName = escapeHtml(params.officeName || "Pasig City Local Youth Development Office");
+  const safeSystemName = escapeHtml(params.systemName || "Y-TRACE");
+  const safeUrl = params.viewActivityUrl && params.viewActivityUrl.startsWith("http")
+    ? escapeHtml(params.viewActivityUrl)
+    : "#";
+
+  const currentYear = new Date().getFullYear();
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Official Announcement: ${activityName}</title>
+    <title>Official Announcement: ${safeActivityName}</title>
     <style>
       body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
       table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+      img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
       @media only screen and (max-width: 600px) {
-        .email-outer-padding { padding: 24px 12px !important; }
-        .email-card-content { padding: 32px 20px 28px !important; }
-        .email-heading { font-size: 24px !important; line-height: 32px !important; }
+        .email-outer-td { padding: 20px 12px !important; }
+        .email-inner-card { padding: 24px 18px !important; }
+        .email-footer-td { padding: 20px 16px !important; }
       }
     </style>
   </head>
-  <body style="margin:0;padding:0;background-color:#f8fafc;-webkit-font-smoothing:antialiased;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;line-height:1px;font-size:1px;">
-      New City-Led YPOP Activity Announcement from Pasig City Local Youth Development Office: ${activityName}.
+  <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; color: transparent; line-height: 1px; font-size: 1px;">
+      New City-Led Activity Announcement from ${safeOfficeName}: ${safeActivityName}.
     </div>
 
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:#f8fafc;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; background-color: #f8fafc;">
       <tr>
-        <td align="center" class="email-outer-padding" style="padding:48px 16px;">
-          <!-- Centered SaaS Card -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:580px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 10px 30px -5px rgba(15,23,42,0.05);overflow:hidden;">
+        <td align="center" class="email-outer-td" style="padding: 40px 16px;">
+          <!-- Container Card -->
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 540px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03);">
+            
+            <!-- Card Body Area -->
             <tr>
-              <td class="email-card-content" style="padding:40px 40px 36px;">
+              <td class="email-inner-card" style="padding: 32px 32px 28px; text-align: left;">
                 
-                <!-- Y-TRACE Brand Header -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px;">
+                <!-- Brand Header -->
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
                   <tr>
-                    <td align="center">
-                      <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/transparency-attachments/y-trace-logo.png" width="76" alt="Y-TRACE Logo" style="display:block;width:76px;height:auto;margin:0 auto;" />
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Eyebrow Badge -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 16px;">
-                  <tr>
-                    <td align="center" style="background-color:#eff6ff;border:1px solid #dbeafe;border-radius:20px;padding:4px 14px;">
-                      <span style="font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#1d4ed8;">
-                        City-Led Activity Announcement
-                      </span>
+                    <td align="left">
+                      <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/FullNavbar.svg" height="32" alt="${safeSystemName}" style="display: block; height: 32px; width: auto; max-height: 36px; border: 0; outline: none; text-decoration: none;" />
                     </td>
                   </tr>
                 </table>
 
                 <!-- Main Heading -->
-                <h1 class="email-heading" style="margin:0 0 16px;font-size:26px;line-height:34px;font-weight:800;letter-spacing:-0.5px;color:#0f172a;text-align:center;">
-                  ${activityName}
+                <h1 style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.4px; color: #0f172a;">
+                  New City-led Activity
                 </h1>
-
-                <p style="margin:0 0 28px;font-size:14px;line-height:22px;color:#64748b;text-align:center;">
-                  The Pasig City Local Youth Development Office (LYDO) announces a new City-Led Activity under the Youth Participation Organization Passport (YPOP) program.
+                <p style="margin: 0 0 24px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 20px; color: #475569;">
+                  A new city-led activity has been announced by PCYDO. View the details below and learn how your organization can participate.
                 </p>
 
-                <!-- Parameter Details Box -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:32px;">
+                <!-- Single Activity Card -->
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px;">
                   <tr>
-                    <td style="padding:20px 24px;">
+                    <td style="padding: 18px 20px;">
                       
-                      <!-- Activity Type & Points Row -->
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
-                        <tr>
-                          <td style="font-size:13px;color:#64748b;font-weight:600;width:120px;">
-                            Activity Type
-                          </td>
-                          <td align="right">
-                            <span style="display:inline-block;background-color:${categoryBg};color:${categoryColor};border:1px solid ${categoryBorder};font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px;">
-                              ${categoryLabel} (${points} pts)
-                            </span>
-                          </td>
-                        </tr>
-                      </table>
+                      <!-- Activity Title & Subtitle inside Card -->
+                      <h2 style="margin: 0 0 4px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+                        ${safeActivityName}
+                      </h2>
+                      <p style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 18px; color: #64748b;">
+                        Join fellow youth organizations for a city-led youth leadership and development activity.
+                      </p>
 
-                      <!-- Date Row -->
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+                      <!-- Key Metadata Rows -->
+                      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                         <tr>
-                          <td style="font-size:13px;color:#64748b;font-weight:600;width:120px;">
+                          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
                             Date
                           </td>
-                          <td align="right" style="font-size:13px;font-weight:600;color:#0f172a;">
-                            ${dateRangeStr}
+                          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0; word-break: break-word;">
+                            ${safeDateRangeStr}
                           </td>
                         </tr>
-                      </table>
-
-                      <!-- Venue Row -->
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                         <tr>
-                          <td style="font-size:13px;color:#64748b;font-weight:600;width:120px;">
+                          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
                             Venue
                           </td>
-                          <td align="right" style="font-size:13px;font-weight:600;color:#0f172a;">
-                            ${venue}
+                          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0; word-break: break-word;">
+                            ${safeVenue}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">
+                            Participation
+                          </td>
+                          <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; word-break: break-word;">
+                            ${safeCategoryLabel} (${params.points} pts)
                           </td>
                         </tr>
                       </table>
@@ -278,33 +278,52 @@ function generateAnnouncementEmailHtml(params: {
                 </table>
 
                 <!-- Call to Action Button -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:32px;">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
                   <tr>
                     <td align="center">
-                      <a href="${viewActivityUrl}" target="_blank" style="display:inline-block;background-color:#022B69;color:#ffffff;font-size:14px;font-weight:700;line-height:44px;height:44px;padding:0 32px;border-radius:8px;text-decoration:none;letter-spacing:0.2px;box-shadow:0 4px 12px rgba(2,43,105,0.25);">
-                        View Activity &amp; Upload Proof &rarr;
-                      </a>
+                      <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td align="center" style="background-color: #0e3a7a; border-radius: 6px;">
+                            <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 11px 26px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; letter-spacing: 0.2px; line-height: 1.2;">
+                              View Activity &amp; Upload Proof &rarr;
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:0;font-size:12px;line-height:18px;color:#94a3b8;text-align:center;">
+                <!-- Supporting Note -->
+                <p style="margin: 0 auto 8px; max-width: 460px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 18px; color: #64748b; text-align: center;">
                   Accredited youth organizations may upload proof of attendance in the YPOP portal after participating in this event to earn incentive points.
                 </p>
 
               </td>
             </tr>
 
-            <!-- Card Footer -->
+            <!-- Solid Blue Institutional Footer -->
             <tr>
-              <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-                <p style="margin:0;font-size:11px;line-height:16px;color:#94a3b8;">
-                  &copy; ${new Date().getFullYear()} Pasig City Local Youth Development Office &bull; Y-TRACE Youth Participation System
+              <td class="email-footer-td" style="background-color: #0e3a7a; padding: 24px 28px; text-align: center;">
+                <p style="margin: 0 0 6px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; color: #ffffff; letter-spacing: -0.1px;">
+                  ${safeOfficeName}
+                </p>
+                <p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 16px; color: #bfdbfe;">
+                  3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City
+                </p>
+                <p style="margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 16px; color: #93c5fd;">
+                  <a href="mailto:lydo@pasigcity.gov.ph" style="color: #93c5fd; text-decoration: none;">lydo@pasigcity.gov.ph</a> &bull;
+                  <a href="https://ytrace.app" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">ytrace.app</a> &bull;
+                  <a href="https://ytrace.app/privacy-policy" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Privacy Policy</a> &bull;
+                  <a href="https://ytrace.app/terms-of-service" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Terms of Service</a> &bull;
+                  <a href="https://www.facebook.com/PasigCityLYDO" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Facebook</a>
+                </p>
+                <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 15px; color: #93c5fd;">
+                  &copy; ${currentYear} ${safeSystemName} &middot; ${safeOfficeName}. All rights reserved.
                 </p>
               </td>
             </tr>
           </table>
-
         </td>
       </tr>
     </table>

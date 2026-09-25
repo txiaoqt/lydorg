@@ -12,6 +12,7 @@ import {
   ORGANIZATION_DELETION_CATEGORIES,
   type OrganizationDeletionCounts,
 } from "@/lib/admin-organization-deletion";
+import { readAdminSession } from "@/lib/admin-auth";
 import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock, Clock3, Copy, CornerDownLeft, Download, Eye, EyeOff, ExternalLink, FileText, FolderOpen, Globe, History, Inbox, Info, Loader, Loader2, Lock, LogOut, Mail, MapPin, Medal, Megaphone, MessageSquare, MoreHorizontal, Newspaper, Pencil, Phone, PieChart as PieChartIcon, Plus, RefreshCw, Save, Search, Send, Settings, Shield, Trash2, TrendingUp, Trophy, Upload, UserCheck, UserPlus, UserRound, UserX, Users, Wallet, X, XCircle, type LucideIcon } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { addYears, format, parse } from "date-fns";
@@ -354,6 +355,7 @@ const routeMap: Record<string, string> = {
   "budget-monitoring": "/admin/budget-monitoring",
   templates: "/admin/templates",
   notifications: "/admin/notifications",
+  "notifications-activity": "/admin/notifications",
   "activity-logs": "/admin/activity-logs",
   "ypop-validation": "/admin/ypop-validation",
   "yorp-registry": "/admin/yorp-registry",
@@ -1080,7 +1082,11 @@ export default function AdminPortal({ section }: { section: string }) {
   const [deleteInquiryError, setDeleteInquiryError] = useState<string | null>(null);
 
   const profile = state.organizationProfiles[0] ?? null;
-  const adminNotifications = state.notifications.filter((item) => item.userId === adminId);
+  const currentAdminSession = readAdminSession();
+  const currentAdminId = currentAdminSession?.id || user?.id || adminId;
+  const adminNotifications = state.notifications.filter(
+    (item) => item.userId === currentAdminId || item.userId === adminId || item.userId === "admin",
+  );
   const unread = adminNotifications.filter((item) => !item.isRead).length;
   const activeTemplates = useMemo(
     () =>

@@ -772,7 +772,8 @@ export const adminNavigationGroups: PortalNavGroup[] = [
     label: "System",
     items: [
       { id: "inquiries", label: "Inquiries", icon: Mail },
-      { id: "notifications-activity", label: "Notifications / Activity Logs", icon: Bell },
+      { id: "notifications", label: "Notifications", icon: Bell },
+      { id: "activity-logs", label: "Activity Logs", icon: FileCheck2 },
     ],
   },
 ];
