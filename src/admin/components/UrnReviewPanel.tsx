@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Info, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,6 +32,14 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const submit = async () => {
+    if (profile.profileStatus === "suspended_inactive") {
+      toast({
+        title: "Organization Suspended",
+        description: "Review actions are unavailable because this organization account is permanently suspended.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!decision || (decision === "verified" && !confirmed)) return;
     if (decision !== "verified" && !remarks.trim()) return;
     setSaving(true);
@@ -74,11 +82,20 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
           <p className="mt-3 text-sm text-muted-foreground">Verify this number against the official LYDO / PCYDO registration record outside Y-TRACE.</p>
         </div>
         {profile.urnAdminRemarks ? <div className="mt-4 rounded-lg border p-3 text-sm"><strong>Latest remarks</strong><p>{profile.urnAdminRemarks}</p></div> : null}
-        {profile.urnReviewStatus !== "verified" ? <div className="mt-6 grid gap-2 sm:grid-cols-3">
-          <Button onClick={() => setDecision("verified")}><CheckCircle2 className="mr-2 h-4 w-4" />Verify URN</Button>
-          <Button variant="outline" onClick={() => setDecision("needs_correction")}>Needs Correction</Button>
-          <Button variant="destructive" onClick={() => setDecision("rejected")}>Reject URN</Button>
-        </div> : null}
+        {profile.profileStatus === "suspended_inactive" ? (
+          <div className="mt-6 flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle p-4">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" />
+            <p className="font-segoe text-sm text-icon-danger-secondary">
+              Review actions are unavailable because this organization account is permanently suspended.
+            </p>
+          </div>
+        ) : profile.urnReviewStatus !== "verified" ? (
+          <div className="mt-6 grid gap-2 sm:grid-cols-3">
+            <Button onClick={() => setDecision("verified")}><CheckCircle2 className="mr-2 h-4 w-4" />Verify URN</Button>
+            <Button variant="outline" onClick={() => setDecision("needs_correction")}>Needs Correction</Button>
+            <Button variant="destructive" onClick={() => setDecision("rejected")}>Reject URN</Button>
+          </div>
+        ) : null}
       </section>
       <Dialog open={Boolean(decision)} onOpenChange={(open) => !saving && !open && setDecision(null)}>
         <DialogContent className="max-w-md">

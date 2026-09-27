@@ -53,6 +53,7 @@ import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
+import { formatAdvocacyLabel } from "@/lib/lydo-connect-data";
 
 export interface UserPortalLiquidationWorkspaceViewProps {
   liquidationWorkflowEligibility?: any;
@@ -896,7 +897,84 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                           )}
                         </div>
                       )}
-                      {/* Key Summary: Activity Timeline */}
+                      {/* 1. Key Summary: Financial Overview */}
+                      <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
+                        <p className="text-xs font-bold text-foreground">Financial Overview</p>
+                        <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border/40">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Requested Amount</span>
+                            <span className="font-bold text-foreground text-sm tabular-nums">
+                              {formatCurrency(selectedBudget?.requestedAmount || 0)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold tracking-wider">Approved Amount</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm tabular-nums">
+                              {selectedBudget?.approvedAmount != null && Number(selectedBudget.approvedAmount) > 0
+                                ? formatCurrency(selectedBudget.approvedAmount)
+                                : "Pending"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-teal-600 dark:text-teal-400 uppercase font-semibold tracking-wider">Released Amount</span>
+                            <span className="font-bold text-teal-600 dark:text-teal-400 text-sm tabular-nums">
+                              {selectedBudget?.status === "budget_released" || (selectedBudget?.releasedAmount != null && Number(selectedBudget.releasedAmount) > 0)
+                                ? formatCurrency(selectedBudget.releasedAmount || selectedBudget.approvedAmount || 0)
+                                : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 2. Activity Details */}
+                      <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2.5">
+                        <p className="text-xs font-bold text-foreground">Activity Details</p>
+                        <div className="space-y-3 text-xs pt-2 border-t border-border/40">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Activity Title</span>
+                              <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block break-words">
+                                {selectedBudget?.activityTitle || "Untitled Activity"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Purpose & Category</span>
+                              <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                                {formatAdvocacyLabel(selectedBudget?.purposeCategory) || "General Purpose"}
+                              </span>
+                            </div>
+                          </div>
+                          {selectedBudget?.activityDescription && (
+                            <div>
+                              <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Purpose Description</span>
+                              <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
+                                {selectedBudget.activityDescription}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 3. Schedule & Location */}
+                      <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
+                        <p className="text-xs font-bold text-foreground">Schedule & Location</p>
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/40">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Target Date</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                              {selectedBudget?.activityDate ? formatShortPortalDate(selectedBudget.activityDate) : "Not set"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Venue / Location</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedBudget?.venue}>
+                              {selectedBudget?.venue || "Pasig City"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 4. Activity Timeline */}
                       <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-bold text-foreground">Activity Timeline</span>
@@ -1048,15 +1126,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         uploadButtonLabel={isNeedsRevision ? "Select Replacement File" : "Upload Report File"}
                       />
 
-                      {/* Secondary Details: Remarks if any */}
-                      {selectedBudget?.remarks && (
-                        <div className="rounded-xl border border-border/50 bg-card/70 p-3 sm:p-3.5 space-y-1 text-xs">
-                          <p className="font-bold text-foreground">Remarks</p>
-                          <p className="text-muted-foreground leading-relaxed pt-1 border-t border-border/40 italic text-[11px]">
-                            {selectedBudget.remarks}
-                          </p>
-                        </div>
-                      )}
+
                     </div>
 
                     {/* PINNED FOOTER */}
@@ -1126,8 +1196,8 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs text-muted-foreground font-medium truncate mr-2">
-                            Liquidation Report • LYDO Pasig City
+                          <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
+                            Liquidation Report • Pasig City Youth Development Portal
                           </p>
                           <SheetClose asChild>
                             <Button
@@ -1276,7 +1346,84 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                           )}
                         </div>
                       )}
-                      {/* Key Summary: Activity Timeline */}
+                      {/* 1. Key Summary: Financial Overview */}
+                      <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2">
+                        <p className="text-xs font-bold text-foreground">Financial Overview</p>
+                        <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border/50">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Requested</span>
+                            <span className="font-bold text-foreground text-xs sm:text-sm tabular-nums mt-0.5 block">
+                              {formatCurrency(selectedBudget?.requestedAmount || 0)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider">Approved</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm tabular-nums mt-0.5 block">
+                              {selectedBudget?.approvedAmount != null && Number(selectedBudget.approvedAmount) > 0
+                                ? formatCurrency(selectedBudget.approvedAmount)
+                                : "Pending"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-teal-600 dark:text-teal-400 uppercase font-bold tracking-wider">Released</span>
+                            <span className="font-bold text-teal-600 dark:text-teal-400 text-xs sm:text-sm tabular-nums mt-0.5 block">
+                              {selectedBudget?.status === "budget_released" || (selectedBudget?.releasedAmount != null && Number(selectedBudget.releasedAmount) > 0)
+                                ? formatCurrency(selectedBudget.releasedAmount || selectedBudget.approvedAmount || 0)
+                                : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 2. Activity Details */}
+                      <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
+                        <p className="text-xs font-bold text-foreground">Activity Details</p>
+                        <div className="space-y-2.5 text-xs pt-2 border-t border-border/50">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                              <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Activity Title</span>
+                              <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block break-words">
+                                {selectedBudget?.activityTitle || "Untitled Activity"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Purpose & Category</span>
+                              <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                                {formatAdvocacyLabel(selectedBudget?.purposeCategory) || "General Purpose"}
+                              </span>
+                            </div>
+                          </div>
+                          {selectedBudget?.activityDescription && (
+                            <div>
+                              <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Purpose Description</span>
+                              <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
+                                {selectedBudget.activityDescription}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 3. Schedule & Location */}
+                      <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2">
+                        <p className="text-xs font-bold text-foreground">Schedule & Location</p>
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/50">
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Target Date</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
+                              {selectedBudget?.activityDate ? formatShortPortalDate(selectedBudget.activityDate) : "Not set"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Venue / Location</span>
+                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedBudget?.venue}>
+                              {selectedBudget?.venue || "Pasig City"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 4. Activity Timeline */}
                       <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2.5">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-bold text-foreground tracking-tight">Activity Timeline</span>
@@ -1452,15 +1599,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         uploadButtonLabel={isNeedsRevision ? "Select Replacement File" : "Upload Report File"}
                       />
 
-                      {/* Secondary Details: Remarks if any */}
-                      {selectedBudget?.remarks && (
-                        <div className="rounded-xl border border-border/60 bg-card/80 p-3 sm:p-3.5 space-y-1 text-xs">
-                          <p className="font-bold text-foreground">Remarks</p>
-                          <p className="text-muted-foreground leading-relaxed pt-1 border-t border-border/40 italic text-[11px]">
-                            {selectedBudget.remarks}
-                          </p>
-                        </div>
-                      )}
+
                     </div>
 
                     {/* PINNED FOOTER */}
@@ -1529,8 +1668,8 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs text-muted-foreground font-medium truncate mr-2">
-                            Liquidation Report • LYDO Pasig City
+                          <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
+                            Liquidation Report • Pasig City Youth Development Portal
                           </p>
                           <Button
                             type="button"

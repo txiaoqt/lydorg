@@ -50,6 +50,7 @@ import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isRevisionExpired, isSubmissionRevisionLocked } from "@/lib/revision-deadline";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,6 +102,7 @@ import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { PortalAttachedDocumentDrawer } from "@/components/portal/PortalAttachedDocumentDrawer";
 import { OrganizationActivityHistoryModal } from "@/components/portal/OrganizationActivityHistoryModal";
+import { AccountSuspendedScreen } from "@/components/portal/AccountSuspendedScreen";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -324,6 +326,7 @@ const budgetNativeSelectClass =
   "h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50";
 const budgetActionLabels: Record<string, string> = {
   needs_revision: "Revision requested",
+  awaiting_release: "Awaiting Release",
   approved_for_ftf_green: "Submit Onsite",
   hard_copy_submitted: "Hardcopy Submitted",
   budget_released: "Budget released",
@@ -333,6 +336,7 @@ const budgetActionLabels: Record<string, string> = {
   draft: "Saved as draft",
 };
 const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
+  "awaiting_release",
   "approved_for_ftf_green",
   "budget_released",
   "completed",
@@ -513,7 +517,11 @@ const createOrganizationProfileDraft = (
   };
 };
 
-const createBlankBudgetRequest = (organizationId: string, submittedBy: string): BudgetRequest => ({
+const createBlankBudgetRequest = (
+  organizationId: string,
+  submittedBy: string,
+  defaultCategory: string = "",
+): BudgetRequest => ({
   id: `budget-${organizationId || "draft"}-${Date.now()}`,
   organizationId,
   submittedBy,
@@ -526,7 +534,7 @@ const createBlankBudgetRequest = (organizationId: string, submittedBy: string): 
   approvedAmount: 0,
   releasedAmount: 0,
   releaseDate: "",
-  purposeCategory: "Leadership & Governance",
+  purposeCategory: defaultCategory || "",
   status: "draft",
   remarks: "",
   adminRemarks: "",
@@ -768,6 +776,7 @@ export default function UserPortal({ section }: { section: string }) {
   } | null>(null);
   const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [savingBudgetRequest, setSavingBudgetRequest] = useState(false);
+  const [submittingRevisedBudgetId, setSubmittingRevisedBudgetId] = useState<string | null>(null);
   const [budgetFileDraft, setBudgetFileDraft] = useState<File | null>(null);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [notifFilter, setNotifFilter] = useState<"all" | "unread" | "read">("all");
@@ -822,6 +831,19 @@ export default function UserPortal({ section }: { section: string }) {
   const [batchDroppedFiles, setBatchDroppedFiles] = useState<BatchDroppedDocumentFile[]>([]);
   const [batchUploadResult, setBatchUploadResult] = useState<BatchUploadResultSummary | null>(null);
   const currentProfile = state.organizationProfiles.find((item) => item.userId === user?.id) ?? null;
+  const userRegistrationSubmission = currentProfile?.id
+    ? state.documentSubmissions.find(
+        (item) => item.organizationId === currentProfile.id && !item.renewalId,
+      ) ?? null
+    : null;
+  const userRegistrationFiles = userRegistrationSubmission
+    ? state.documentSubmissionFiles.filter(
+        (item) => item.submissionId === userRegistrationSubmission.id,
+      )
+    : [];
+  const isSuspended =
+    currentProfile?.profileStatus === "suspended_inactive" ||
+    userRegistrationFiles.some((f) => f.adminStatus === "rejected_red");
   const ypopEntryIdParam = section === "budget-request" ? searchParams.get("ypopEntryId") : null;
   const ypopSemesterParam = section === "budget-request" ? searchParams.get("semester") : null;
   const budgetEligibility = useMemo(
@@ -1159,12 +1181,13 @@ export default function UserPortal({ section }: { section: string }) {
 
   useEffect(() => {
     if (!user) return;
+    const defaultCat = currentProfile?.advocacies?.[0] || "";
     setBudgetForm((current) =>
       current.organizationId === (currentProfile?.id ?? "")
         ? current
-        : createBlankBudgetRequest(currentProfile?.id ?? "", user.id),
+        : createBlankBudgetRequest(currentProfile?.id ?? "", user.id, defaultCat),
     );
-  }, [currentProfile?.id, user]);
+  }, [currentProfile?.id, currentProfile?.advocacies, user]);
 
 
 
@@ -2399,7 +2422,8 @@ export default function UserPortal({ section }: { section: string }) {
   };
 
   const resetBudgetForm = () => {
-    const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
+    const defaultCat = currentProfile?.advocacies?.[0] || "";
+    const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "", defaultCat);
     if (budgetEligibility.eligible && budgetEligibility.entry) {
       setBudgetForm({
         ...blank,
@@ -2436,6 +2460,16 @@ export default function UserPortal({ section }: { section: string }) {
       toast({
         title: "Complete your organization profile first",
         description: "Budget requests need an organization profile before they can be saved.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userAdvocacies = currentProfile?.advocacies || [];
+    if (userAdvocacies.length === 0) {
+      toast({
+        title: "No Centers of Youth Participation configured",
+        description: "Please configure your organization's Centers of Youth Participation in your Organization Profile before creating a budget request.",
         variant: "destructive",
       });
       return;
@@ -2491,7 +2525,7 @@ export default function UserPortal({ section }: { section: string }) {
       releaseDate: budgetForm.releaseDate,
       purposeCategory: budgetForm.purposeCategory.trim(),
       status,
-      remarks: budgetForm.remarks.trim(),
+      remarks: "",
       goSignalAt: budgetForm.goSignalAt,
       hardCopySubmittedAt: budgetForm.hardCopySubmittedAt,
       updatedAt: new Date().toISOString(),
@@ -2515,7 +2549,7 @@ export default function UserPortal({ section }: { section: string }) {
       } else if (!nextBudgetRequest.purposeCategory) {
         toast({
           title: "Purpose & Category is required",
-          description: "Please select or specify a category for this activity.",
+          description: "Please select a Center of Youth Participation for this activity.",
           variant: "destructive",
         });
       } else if (nextBudgetRequest.requestedAmount <= 0) {
@@ -2526,8 +2560,8 @@ export default function UserPortal({ section }: { section: string }) {
         });
       } else if (!nextBudgetRequest.activityDescription) {
         toast({
-          title: "Activity Description is required",
-          description: "Please provide a description of the planned activity.",
+          title: "Purpose Description is required",
+          description: "Please provide a purpose description for the planned activity.",
           variant: "destructive",
         });
       } else if (!nextBudgetRequest.activityDate) {
@@ -2543,6 +2577,18 @@ export default function UserPortal({ section }: { section: string }) {
           variant: "destructive",
         });
       }
+      return;
+    }
+
+    const isCategoryValid = userAdvocacies.some(
+      (adv) => adv.trim().toLowerCase() === nextBudgetRequest.purposeCategory.trim().toLowerCase()
+    );
+    if (!isCategoryValid && !existingBudgetRequest) {
+      toast({
+        title: "Invalid Purpose & Category",
+        description: "The selected category must match one of your organization's configured Centers of Youth Participation.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -2629,35 +2675,16 @@ export default function UserPortal({ section }: { section: string }) {
       // 1. Upload/replace proposal file in Supabase storage & budget_request_files table
       await uploadBudgetRequestFileToSupabase(budgetRequestId, file);
 
-      // 2. Update parent budget request: status = "under_review", clear active adminRemarks, append revision history
-      const existing = budgetRequests.find((req) => req.id === budgetRequestId);
-      const now = new Date().toISOString();
-      const existingHistory = existing?.revisionHistory ?? [];
-      const updatedHistory = [
-        ...existingHistory,
-        {
-          action: "under_review",
-          adminRemarks: "",
-          changedAt: now,
-        },
-      ];
-
-      await updateBudgetRequestInSupabase(budgetRequestId, {
-        status: "under_review",
-        adminRemarks: "",
-        revisionHistory: updatedHistory,
-      });
-
-      // 3. Refresh and merge remote state using the targeted Y-TRACE synchronization mechanism
+      // 2. Refresh and merge remote state without mutating status or admin remarks
       const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id || profile.id);
       if (remoteSnapshot) {
         mergeRemoteState(remoteSnapshot);
       }
 
-      // 4. Success toast
+      // 3. Success toast informing user the replacement succeeded
       toast({
         title: "Revised proposal uploaded",
-        description: "Revised proposal uploaded. The admin will review your updated document.",
+        description: "Your proposal file has been replaced. Review your changes and submit for review when ready.",
       });
     } catch (error) {
       console.error("Failed to replace budget request proposal file:", error);
@@ -2667,6 +2694,72 @@ export default function UserPortal({ section }: { section: string }) {
         variant: "destructive",
       });
       throw error;
+    }
+  };
+
+  const handleResubmitBudgetRequest = async (budgetRequestId: string) => {
+    const existing = budgetRequests.find((req) => req.id === budgetRequestId);
+    if (!existing) return;
+
+    if (isRevisionExpired(existing.revisionDueAt) || isSubmissionRevisionLocked(existing)) {
+      toast({
+        title: "Resubmission locked",
+        description: "The 5-day resubmission deadline has expired. This request is locked.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const files = budgetRequestFilesByBudgetId.get(budgetRequestId);
+    const hasFile = Array.isArray(files) ? files.length > 0 : Boolean(files);
+    if (!hasFile) {
+      toast({
+        title: "Attach required document",
+        description: "Please upload the revised budget proposal before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingRevisedBudgetId(budgetRequestId);
+    try {
+      const now = new Date().toISOString();
+      const existingHistory = existing.revisionHistory ?? [];
+      const updatedHistory = [
+        ...existingHistory,
+        {
+          action: "submitted",
+          adminRemarks: "",
+          changedAt: now,
+        },
+      ];
+
+      await updateBudgetRequestInSupabase(budgetRequestId, {
+        status: "submitted",
+        adminRemarks: "",
+        revisionHistory: updatedHistory,
+        updatedAt: now,
+      });
+
+      const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id || profile.id);
+      if (remoteSnapshot) {
+        mergeRemoteState(remoteSnapshot);
+      }
+
+      toast({
+        title: "Budget request submitted",
+        description: "Your revised proposal has been submitted and is ready for admin review.",
+      });
+    } catch (error) {
+      console.error("Failed to submit revised budget request:", error);
+      toast({
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "The budget request could not be submitted right now.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setSubmittingRevisedBudgetId(null);
     }
   };
 
@@ -3196,62 +3289,148 @@ export default function UserPortal({ section }: { section: string }) {
           });
         }
 
-        if (latestBudget?.status === "budget_released") {
+        const releasedBudgets = budgetRequests.filter(
+          (b) => b.status === "budget_released" || b.status === "completed",
+        );
+        const revisionBudgets = budgetRequests.filter((b) => b.status === "needs_revision");
+        const awaitingReleaseBudgets = budgetRequests.filter((b) => b.status === "awaiting_release");
+        const approvedFtfBudgets = budgetRequests.filter((b) => b.status === "approved_for_ftf_green");
+        const hardCopyBudgets = budgetRequests.filter((b) => b.status === "hard_copy_submitted");
+        const pendingBudgets = budgetRequests.filter((b) => b.status === "submitted" || b.status === "draft");
+
+        const releasedBudgetsWithLiquidation = releasedBudgets.map((b) => {
+          const report =
+            liquidationReports.find((r) => r.budgetRequestId === b.id) ??
+            state.liquidationReports.find(
+              (r) => r.budgetRequestId === b.id && r.organizationId === currentProfile?.id,
+            ) ??
+            null;
+          return { budget: b, report };
+        });
+
+        const liquidationNeedingRevision = releasedBudgetsWithLiquidation.find(
+          ({ report }) =>
+            report &&
+            (report.status === "needs_revision" ||
+              report.status === "overdue" ||
+              report.status === "rejected_red"),
+        );
+
+        const unsubmittedLiquidation = releasedBudgetsWithLiquidation.find(
+          ({ report }) =>
+            !report ||
+            report.status === "not_started" ||
+            report.status === "draft" ||
+            report.status === "pending_activity_completion",
+        );
+
+        const underReviewLiquidation = releasedBudgetsWithLiquidation.find(
+          ({ report }) =>
+            report &&
+            (report.status === "submitted" ||
+              report.status === "under_review" ||
+              report.status === "hard_copy_submitted" ||
+              report.status === "approved_for_ftf_green"),
+        );
+
+        if (liquidationNeedingRevision?.report) {
           dashboardTasks.push({
-            key: "liquidation",
-            title: "Submit your liquidation file",
-            description: "Your budget has already been released, so you can now upload the required liquidation file.",
+            key: `liquidation-revision-${liquidationNeedingRevision.report.id}`,
+            title: "Revise your liquidation report",
+            description:
+              liquidationNeedingRevision.report.remarks?.trim() ||
+              "The admin requested corrections to your liquidation report. Review remarks and resubmit.",
             ctaLabel: "Open Liquidation",
             onClick: () => navigate(userRouteMap["liquidation-reporting"]),
-            icon: CalendarDays,
-            tone: "bg-primary-soft text-primary",
+            icon: AlertTriangle,
+            tone: "bg-orange-500/10 text-orange-600",
           });
-        } else if (latestBudget?.status === "approved_for_ftf_green") {
+        } else if (revisionBudgets.length > 0) {
+          const b = revisionBudgets[0];
           dashboardTasks.push({
-            key: "budget-hardcopy",
-            title: "Prepare your hard copy submission",
-            description: "Your budget request is approved for face-to-face processing. Prepare the required hard copy next.",
-            ctaLabel: "Open Budget",
-            onClick: () => navigate(userRouteMap["budget-request"]),
-            icon: ClipboardList,
-            tone: "bg-primary/10 text-primary",
-          });
-        } else if (latestBudget?.status === "hard_copy_submitted") {
-          dashboardTasks.push({
-            key: "budget-release-wait",
-            title: "Wait for cash release",
-            description: "Your hard copy has already been submitted. The next update will be the release of your approved budget.",
-            ctaLabel: "Open Budget",
-            onClick: () => navigate(userRouteMap["budget-request"]),
-            icon: ClipboardList,
-            tone: "bg-primary/10 text-primary",
-          });
-        } else if (latestBudget?.status === "needs_revision") {
-          dashboardTasks.push({
-            key: "budget-revision",
+            key: `budget-revision-${b.id}`,
             title: "Revise your budget request",
-            description: "The admin requested changes to your latest budget request. Review the remarks and resubmit when ready.",
+            description:
+              b.adminRemarks?.trim() ||
+              "The admin requested changes to your latest budget request. Review the remarks and resubmit when ready.",
             ctaLabel: "Open Budget",
             onClick: () => navigate(userRouteMap["budget-request"]),
             icon: AlertTriangle,
             tone: "bg-orange-500/10 text-orange-600",
           });
-        } else if (latestBudget?.status === "submitted" || latestBudget?.status === "draft") {
+        } else if (unsubmittedLiquidation) {
           dashboardTasks.push({
-            key: "budget-review",
-            title: "Track your budget request",
-            description: "Your latest budget request is in progress. You can review its current status and attached file anytime.",
+            key: `liquidation-submit-${unsubmittedLiquidation.budget.id}`,
+            title: "Submit your liquidation file",
+            description:
+              "Your budget has already been released, so you can now upload the required liquidation file.",
+            ctaLabel: "Open Liquidation",
+            onClick: () => navigate(userRouteMap["liquidation-reporting"]),
+            icon: CalendarDays,
+            tone: "bg-primary-soft text-primary",
+          });
+        } else if (awaitingReleaseBudgets.length > 0) {
+          dashboardTasks.push({
+            key: "budget-release-wait",
+            title: "Awaiting Fund Release",
+            description:
+              "Your budget request has been approved. The LYDO admin will notify you once funds are released.",
             ctaLabel: "Open Budget",
             onClick: () => navigate(userRouteMap["budget-request"]),
             icon: ClipboardList,
             tone: "bg-primary/10 text-primary",
+          });
+        } else if (approvedFtfBudgets.length > 0) {
+          dashboardTasks.push({
+            key: "budget-hardcopy",
+            title: "Prepare your hard copy submission",
+            description:
+              "Your budget request is approved for face-to-face processing. Prepare the required hard copy next.",
+            ctaLabel: "Open Budget",
+            onClick: () => navigate(userRouteMap["budget-request"]),
+            icon: ClipboardList,
+            tone: "bg-primary/10 text-primary",
+          });
+        } else if (hardCopyBudgets.length > 0) {
+          dashboardTasks.push({
+            key: "budget-release-wait",
+            title: "Wait for cash release",
+            description:
+              "Your hard copy has already been submitted. The next update will be the release of your approved budget.",
+            ctaLabel: "Open Budget",
+            onClick: () => navigate(userRouteMap["budget-request"]),
+            icon: ClipboardList,
+            tone: "bg-primary/10 text-primary",
+          });
+        } else if (pendingBudgets.length > 0) {
+          dashboardTasks.push({
+            key: "budget-review",
+            title: "Track your budget request",
+            description:
+              "Your latest budget request is in progress. You can review its current status and attached file anytime.",
+            ctaLabel: "Open Budget",
+            onClick: () => navigate(userRouteMap["budget-request"]),
+            icon: ClipboardList,
+            tone: "bg-primary/10 text-primary",
+          });
+        } else if (underReviewLiquidation?.report) {
+          dashboardTasks.push({
+            key: `liquidation-review-${underReviewLiquidation.report.id}`,
+            title: "Wait for liquidation review",
+            description:
+              "Your liquidation report is under review by the LYDO administrator. Check back for approval or remarks.",
+            ctaLabel: "View Liquidation",
+            onClick: () => navigate(userRouteMap["liquidation-reporting"]),
+            icon: ClipboardList,
+            tone: "bg-sky-500/10 text-sky-600",
           });
         } else if (isVerified) {
           if (budgetWorkflowEligibility.eligible) {
             dashboardTasks.push({
               key: "budget-start",
               title: "Create your next budget request",
-              description: "Your organization is verified and currently eligible to submit a budget request.",
+              description:
+                "Your organization is verified and currently eligible to submit a budget request.",
               ctaLabel: "Open Budget",
               onClick: () => navigate(userRouteMap["budget-request"]),
               icon: ClipboardList,
@@ -3261,7 +3440,8 @@ export default function UserPortal({ section }: { section: string }) {
             dashboardTasks.push({
               key: "budget-ypop-pending",
               title: "Budget request eligibility pending",
-              description: "Your YPOP qualification is still under evaluation. You can submit a budget request once your organization becomes eligible.",
+              description:
+                "Your YPOP qualification is still under evaluation. You can submit a budget request once your organization becomes eligible.",
               ctaLabel: "View YPOP Status",
               onClick: () => navigate(userRouteMap.ypop),
               icon: Clock,
@@ -3271,7 +3451,8 @@ export default function UserPortal({ section }: { section: string }) {
             dashboardTasks.push({
               key: "budget-ypop-revision",
               title: "YPOP revision required for budget eligibility",
-              description: "The admin requested corrections to your YPOP submission. Review remarks and resubmit to qualify for budget requests.",
+              description:
+                "The admin requested corrections to your YPOP submission. Review remarks and resubmit to qualify for budget requests.",
               ctaLabel: "Review YPOP Submission",
               onClick: () => navigate(userRouteMap.ypop),
               icon: AlertTriangle,
@@ -3281,7 +3462,8 @@ export default function UserPortal({ section }: { section: string }) {
             dashboardTasks.push({
               key: "budget-ypop-not-qualified",
               title: "Budget request unavailable",
-              description: "Your organization is verified, but did not qualify for the current YPOP period. Valid YPOP qualification is required to submit budget requests.",
+              description:
+                "Your organization is verified, but did not qualify for the current YPOP period. Valid YPOP qualification is required to submit budget requests.",
               ctaLabel: "View YPOP Status",
               onClick: () => navigate(userRouteMap.ypop),
               icon: AlertCircle,
@@ -3291,7 +3473,8 @@ export default function UserPortal({ section }: { section: string }) {
             dashboardTasks.push({
               key: "budget-ypop-required",
               title: "Budget request unavailable",
-              description: "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request.",
+              description:
+                "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request.",
               ctaLabel: "Open YPOP Incentive",
               onClick: () => navigate(userRouteMap.ypop),
               icon: ClipboardList,
@@ -3301,7 +3484,8 @@ export default function UserPortal({ section }: { section: string }) {
             dashboardTasks.push({
               key: "budget-no-period",
               title: "Budget request unavailable",
-              description: "Your organization is verified, but budget request creation requires an active, qualified YPOP period.",
+              description:
+                "Your organization is verified, but budget request creation requires an active, qualified YPOP period.",
               ctaLabel: "View YPOP Status",
               onClick: () => navigate(userRouteMap.ypop),
               icon: ClipboardList,
@@ -3564,7 +3748,7 @@ export default function UserPortal({ section }: { section: string }) {
             budgetRequests={budgetRequests}
             budgetFilesByRequestId={budgetRequestFilesByBudgetId}
             budgetNotesByRequestId={{}}
-            submittingBudgetId={savingBudgetRequest ? budgetForm.id : null}
+            submittingBudgetId={savingBudgetRequest ? budgetForm.id : submittingRevisedBudgetId}
             showBudgetForm={showBudgetForm}
             setShowBudgetForm={setShowBudgetForm}
             editingBudgetRequest={budgetRequests.find((r) => r.id === budgetForm.id) || null}
@@ -3592,8 +3776,7 @@ export default function UserPortal({ section }: { section: string }) {
             setNewVenue={(val) => setBudgetForm((c) => ({ ...c, venue: val }))}
             newRequestedAmount={budgetForm.requestedAmount}
             setNewRequestedAmount={(val) => setBudgetForm((c) => ({ ...c, requestedAmount: val }))}
-            newRemarks={budgetForm.remarks}
-            setNewRemarks={(val) => setBudgetForm((c) => ({ ...c, remarks: val }))}
+            organizationAdvocacies={currentProfile?.advocacies || []}
             budgetFileInputRef={budgetFileInputRef}
             budgetFileDraft={budgetFileDraft}
             handleBudgetFileDraftChange={handleBudgetFileDraftChange}
@@ -3608,6 +3791,7 @@ export default function UserPortal({ section }: { section: string }) {
               await saveBudgetRequest(isDraft ? "draft" : "submitted");
             }}
             onReplaceBudgetFile={handleReplaceBudgetFile}
+            onResubmitBudgetRequest={handleResubmitBudgetRequest}
           />
         );
       case "liquidation-reporting":
@@ -3875,6 +4059,16 @@ export default function UserPortal({ section }: { section: string }) {
     isProfileResolving,
   ]);
 
+  if (isSuspended) {
+    return (
+      <AccountSuspendedScreen
+        onSignOut={() => void signOut()}
+        userEmail={user?.email}
+        organizationName={currentProfile?.organizationName}
+      />
+    );
+  }
+
   return (
     <>
       <UserPortalShell
@@ -3885,6 +4079,7 @@ export default function UserPortal({ section }: { section: string }) {
         userEmail={user?.email}
         notifications={userNotifications}
         onMarkAllRead={() => void handleMarkAllNotificationsRead()}
+        onMarkRead={(id) => markNotificationRead(id)}
         groups={userNavigationGroups}
         activeId={section}
         onNavigate={(id) => navigate(userRouteMap[id] ?? userRouteMap.dashboard)}

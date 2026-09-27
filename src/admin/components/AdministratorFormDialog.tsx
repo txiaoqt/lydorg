@@ -289,7 +289,7 @@ export const AdministratorFormDialog = ({
             <button
               type="button"
               onClick={() => setAccessPreviewExpanded((value) => !value)}
-              className="flex h-12 items-center justify-between gap-2 rounded-md border border-slate-300 bg-gray-50 px-4 py-3 transition-colors hover:bg-slate-50"
+              className="flex h-12 items-center justify-between gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/40 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <span className="flex items-center gap-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default">
                 <Shield className="h-4 w-4 shrink-0 text-public-text-neutral-default" strokeWidth={1.6} />
@@ -306,7 +306,7 @@ export const AdministratorFormDialog = ({
               <div className="flex flex-col gap-4">
                 {accessPreviewGroups.map((group) => (
                   <div key={group.label} className="flex flex-col gap-1.5">
-                    <p className="font-segoe text-[11px] font-semibold leading-none text-slate-500">{group.label}</p>
+                    <p className="font-segoe text-[11px] font-semibold leading-none text-slate-500 dark:text-slate-400">{group.label}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {group.items.map((item) => (
                         <span
@@ -327,21 +327,21 @@ export const AdministratorFormDialog = ({
 
         {mode === "edit" ? (
           <>
-            <div className="border-t border-slate-300" />
+            <div className="border-t border-slate-300 dark:border-slate-800" />
 
-            <div className="flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-gray-50 p-6">
+            <div className="flex items-center justify-between gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/40 p-6">
               <div className="flex items-center gap-2">
                 <p className="font-segoe text-[13px] font-normal leading-none text-text-default">Current Status:</p>
                 {!isPasswordSet ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 dark:bg-amber-950/30 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
                     Invitation Pending
                   </span>
                 ) : isActive ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle dark:bg-emerald-950/30 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
                     Active
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 dark:bg-amber-950/30 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
                     Suspended
                   </span>
                 )}

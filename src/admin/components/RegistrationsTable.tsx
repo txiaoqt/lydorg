@@ -47,6 +47,7 @@ const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
   { value: "verified", label: "Verified" },
   { value: "pending_review", label: "Pending Review" },
   { value: "needs_update", label: "Needs Update" },
+  { value: "suspended_inactive", label: "Suspended" },
 ];
 
 const PAGE_SIZE = 10;

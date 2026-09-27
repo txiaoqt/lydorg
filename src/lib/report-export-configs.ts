@@ -8,19 +8,27 @@ import {
 } from "@/lib/report-export";
 
 export type YorpRegistryExportRow = {
+  no?: number;
+  referenceId?: string;
   organizationName: string;
   majorClassification: string;
-  address: string;
-  urn: string;
-  registrationDate: string;
-  expiryDate: string;
-  // Backward compatibility fields for test mocks / legacy objects
-  no?: number;
   subClassification?: string;
-  advocacyThemes?: string[];
+  registrationType?: string;
+  address: string;
   district?: string;
   barangay?: string;
+  urn: string;
+  organizationHead: string;
+  adviserName?: string;
+  contactNumber: string;
+  email: string;
+  facebookPageUrl?: string;
+  registrationDate: string;
+  verifiedDate: string;
+  expiryDate?: string;
   status?: string;
+  // Backward compatibility fields for test mocks / legacy objects
+  advocacyThemes?: string[];
   contactNumbers?: string[];
   emails?: string[];
   yorpUniqueRegistrationNumber?: string;
@@ -101,8 +109,9 @@ export const mapOrganizationProfileToYorpExportRow = (
   const rawRegDate =
     "org" in input && input.registrationDate
       ? input.registrationDate
-      : organization.verifiedAt || organization.createdAt;
+      : organization.accreditationStartDate || organization.createdAt || organization.verifiedAt;
   const regDateObj = rawRegDate ? new Date(rawRegDate) : null;
+  const rawVerifiedDate = organization.verifiedAt ? new Date(organization.verifiedAt) : null;
   const rawExpDate =
     "org" in input && input.expiryDate
       ? input.expiryDate
@@ -112,34 +121,92 @@ export const mapOrganizationProfileToYorpExportRow = (
       ? addYears(regDateObj, 3)
       : null;
 
+  const yorpStatusFormatted =
+    "org" in input && input.yorpStatus
+      ? input.yorpStatus === "active"
+        ? "Active"
+        : input.yorpStatus === "expiring_soon"
+        ? "Expiring Soon"
+        : input.yorpStatus === "expired"
+        ? "Expired"
+        : String(input.yorpStatus)
+      : organization.profileStatus === "verified"
+      ? "Active"
+      : organization.profileStatus || "";
+
   return {
+    no: typeof index === "number" ? index + 1 : undefined,
+    referenceId: (organization.referenceId || "").trim(),
     organizationName: (organization.organizationName || "").trim(),
-    majorClassification: normalizeClassificationLabel(organization.majorClassification || ""),
+    majorClassification: normalizeClassificationLabel(
+      organization.majorClassification || organization.classification || "",
+    ),
+    subClassification: (organization.subClassification || "").trim(),
+    registrationType:
+      organization.registrationType === "new"
+        ? "New Organization"
+        : organization.registrationType === "existing"
+        ? "Existing Organization"
+        : organization.registrationType || "",
     address: (organization.address || "").trim(),
-    urn: (organization.urn || "").trim(),
+    district: (organization.district || resolveDistrictFromBarangay(organization.barangay) || "").trim(),
+    barangay: (organization.barangay || "").trim(),
+    urn: (organization.urn || organization.yorpUniqueRegistrationNumber || "").trim(),
+    organizationHead: (organization.representativeName || "").trim(),
+    adviserName: (organization.adviserName || "").trim(),
+    contactNumber: (organization.contactNumber || organization.officialContactNumber || "").trim(),
+    email: (organization.organizationEmail || organization.officialEmailAddress || "").trim(),
+    facebookPageUrl: (organization.facebookPageUrl || "").trim(),
     registrationDate:
       regDateObj && !Number.isNaN(regDateObj.getTime())
         ? formatDateDisplay(regDateObj.toISOString())
+        : organization.yorpRegisteredYear
+        ? String(organization.yorpRegisteredYear)
+        : "",
+    verifiedDate:
+      rawVerifiedDate && !Number.isNaN(rawVerifiedDate.getTime())
+        ? formatDateDisplay(rawVerifiedDate.toISOString())
+        : organization.approvedAt
+        ? formatDateDisplay(organization.approvedAt)
         : "",
     expiryDate:
       rawExpDate && !Number.isNaN(new Date(rawExpDate).getTime())
         ? formatDateDisplay(new Date(rawExpDate).toISOString())
         : "",
+    status: yorpStatusFormatted,
+    advocacyThemes: organization.advocacies,
+    contactNumbers: organization.contactNumber ? normalizeMultiValue(organization.contactNumber) : undefined,
+    emails: organization.organizationEmail ? normalizeMultiValue(organization.organizationEmail) : undefined,
   };
 };
 
-export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow> = {
-  title: "YORP Registry",
-  filenamePrefix: "YORP_Registry_Master",
-  orientation: "portrait",
-  headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
-  footerText: "Pasig City Youth Development Office - YORP Registry",
-  xlsxSheetName: "YORP Registry",
-  columns: [
-    {
+export type YorpRegistryColumnGroupKey =
+  | "identification"
+  | "organization_details"
+  | "contact_location"
+  | "registration_status";
+
+export type YorpRegistryColumnDef = {
+  key: string;
+  label: string;
+  description: string;
+  group: YorpRegistryColumnGroupKey;
+  column: ReportColumn<YorpRegistryExportRow>;
+  isDefault: boolean;
+};
+
+export const YORP_REGISTRY_AVAILABLE_COLUMNS: YorpRegistryColumnDef[] = [
+  // IDENTIFICATION
+  {
+    key: "no",
+    label: "No.",
+    description: "Row number in export",
+    group: "identification",
+    isDefault: true,
+    column: {
       label: "No.",
-      value: (_row, index) => index + 1,
-      pdfWidth: 24,
+      value: (row, index) => (typeof row.no === "number" ? row.no : index + 1),
+      pdfWidth: 20,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxWidth: 6,
@@ -147,67 +214,415 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
       xlsxMaxWidth: 8,
       xlsxType: "integer",
     },
-    {
-      label: "Name of the Organization",
+  },
+  {
+    key: "organizationName",
+    label: "Organization Name",
+    description: "Full registered youth organization name",
+    group: "identification",
+    isDefault: true,
+    column: {
+      label: "Organization Name",
       value: (row) => row.organizationName || "",
-      pdfWidth: 136,
-      xlsxWidth: 34,
-      xlsxMinWidth: 26,
-      xlsxMaxWidth: 45,
+      pdfWidth: 125,
+      xlsxWidth: 28,
+      xlsxMinWidth: 20,
+      xlsxMaxWidth: 40,
       xlsxWrap: true,
     },
-    {
-      label: "Major Classification",
-      value: (row) => normalizeClassificationLabel(row.majorClassification || row.classification || ""),
-      pdfWidth: 74,
+  },
+  {
+    key: "urn",
+    label: "URN",
+    description: "Unique Registration Number",
+    group: "identification",
+    isDefault: true,
+    column: {
+      label: "URN",
+      value: (row) => row.urn || row.yorpUniqueRegistrationNumber || "",
+      pdfWidth: 65,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxWidth: 22,
-      xlsxMinWidth: 18,
+      xlsxWidth: 14,
+      xlsxMinWidth: 12,
+      xlsxMaxWidth: 18,
+      preserveSpreadsheetText: true,
+      xlsxWrap: true,
+    },
+  },
+  {
+    key: "referenceId",
+    label: "Reference ID",
+    description: "System registration reference code (e.g. REG-2026-0001)",
+    group: "identification",
+    isDefault: false,
+    column: {
+      label: "Reference ID",
+      value: (row) => row.referenceId || "",
+      pdfWidth: 65,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+      preserveSpreadsheetText: true,
+    },
+  },
+
+  // ORGANIZATION DETAILS
+  {
+    key: "majorClassification",
+    label: "Major Classification",
+    description: "Youth Organization or Youth-Serving Organization",
+    group: "organization_details",
+    isDefault: true,
+    column: {
+      label: "Major Classification",
+      value: (row) => normalizeClassificationLabel(row.majorClassification || row.classification || ""),
+      pdfWidth: 85,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 20,
+      xlsxMinWidth: 16,
       xlsxMaxWidth: 26,
       xlsxWrap: true,
     },
-    {
-      label: "Address",
-      value: (row) => row.address || "",
-      pdfWidth: 135,
-      xlsxWidth: 34,
-      xlsxMinWidth: 26,
-      xlsxMaxWidth: 45,
-      xlsxWrap: true,
-    },
-    {
-      label: "URN",
-      value: (row) => row.urn || row.yorpUniqueRegistrationNumber || "",
-      pdfWidth: 62,
+  },
+  {
+    key: "subClassification",
+    label: "Sub-Classification",
+    description: "Community-Based, School-Based, Faith-Based, etc.",
+    group: "organization_details",
+    isDefault: false,
+    column: {
+      label: "Sub-Classification",
+      value: (row) => row.subClassification || "",
+      pdfWidth: 80,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxWidth: 20,
       xlsxWrap: true,
     },
-    {
-      label: "Date of Registration",
+  },
+  {
+    key: "organizationHead",
+    label: "Organization Head",
+    description: "President or authorized head representative",
+    group: "organization_details",
+    isDefault: true,
+    column: {
+      label: "Organization Head",
+      value: (row) => row.organizationHead || "",
+      pdfWidth: 90,
+      xlsxWidth: 24,
+      xlsxMinWidth: 18,
+      xlsxMaxWidth: 32,
+      xlsxWrap: true,
+    },
+  },
+  {
+    key: "adviserName",
+    label: "Adviser Name",
+    description: "Registered adult adviser or mentor name",
+    group: "organization_details",
+    isDefault: false,
+    column: {
+      label: "Adviser Name",
+      value: (row) => row.adviserName || "",
+      pdfWidth: 80,
+      xlsxWidth: 22,
+      xlsxWrap: true,
+    },
+  },
+  {
+    key: "registrationType",
+    label: "Registration Type",
+    description: "New Organization or Existing Organization",
+    group: "organization_details",
+    isDefault: false,
+    column: {
+      label: "Registration Type",
+      value: (row) => row.registrationType || "",
+      pdfWidth: 65,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+    },
+  },
+
+  // CONTACT & LOCATION
+  {
+    key: "address",
+    label: "Address",
+    description: "Physical headquarters or official address",
+    group: "contact_location",
+    isDefault: true,
+    column: {
+      label: "Address",
+      value: (row) => row.address || "",
+      pdfWidth: 135,
+      xlsxWidth: 35,
+      xlsxMinWidth: 24,
+      xlsxMaxWidth: 50,
+      xlsxWrap: true,
+    },
+  },
+  {
+    key: "district",
+    label: "District",
+    description: "Pasig District I or District II",
+    group: "contact_location",
+    isDefault: false,
+    column: {
+      label: "District",
+      value: (row) => row.district || "",
+      pdfWidth: 55,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 14,
+    },
+  },
+  {
+    key: "barangay",
+    label: "Barangay",
+    description: "Barangay of official registration",
+    group: "contact_location",
+    isDefault: false,
+    column: {
+      label: "Barangay",
+      value: (row) => row.barangay || "",
+      pdfWidth: 65,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+    },
+  },
+  {
+    key: "contactNumber",
+    label: "Contact Number",
+    description: "Official contact phone / mobile number",
+    group: "contact_location",
+    isDefault: true,
+    column: {
+      label: "Contact Number",
+      value: (row) => row.contactNumber || row.officialContactNumber || "",
+      pdfWidth: 65,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 18,
+      xlsxMinWidth: 14,
+      xlsxMaxWidth: 22,
+      preserveSpreadsheetText: true,
+    },
+  },
+  {
+    key: "email",
+    label: "Email",
+    description: "Official organization email address",
+    group: "contact_location",
+    isDefault: true,
+    column: {
+      label: "Email",
+      value: (row) => row.email || row.officialEmailAddress || "",
+      pdfWidth: 105,
+      xlsxWidth: 30,
+      xlsxMinWidth: 20,
+      xlsxMaxWidth: 38,
+      xlsxWrap: true,
+    },
+  },
+  {
+    key: "facebookPageUrl",
+    label: "Facebook Page",
+    description: "Official social media / Facebook page URL",
+    group: "contact_location",
+    isDefault: false,
+    column: {
+      label: "Facebook Page",
+      value: (row) => row.facebookPageUrl || "",
+      pdfWidth: 80,
+      xlsxWidth: 28,
+      xlsxWrap: true,
+    },
+  },
+
+  // REGISTRATION & STATUS
+  {
+    key: "registrationDate",
+    label: "Registration Date",
+    description: "Initial registration or accreditation date",
+    group: "registration_status",
+    isDefault: true,
+    column: {
+      label: "Registration Date",
       value: (row) =>
         row.registrationDate ||
-        (row.approvedAt
-          ? formatDateDisplay(row.approvedAt)
-          : row.createdAt
+        (row.createdAt
           ? formatDateDisplay(row.createdAt)
           : ""),
-      pdfWidth: 52,
+      pdfWidth: 55,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxWidth: 18,
+      xlsxWidth: 16,
+      xlsxMinWidth: 14,
+      xlsxMaxWidth: 20,
     },
-    {
-      label: "Date of Expiration",
-      value: (row) => row.expiryDate || (row.validUntil ? formatDateDisplay(row.validUntil) : ""),
-      pdfWidth: 52,
+  },
+  {
+    key: "verifiedDate",
+    label: "Verified Date",
+    description: "Date accreditation was verified by Administrator",
+    group: "registration_status",
+    isDefault: true,
+    column: {
+      label: "Verified Date",
+      value: (row) =>
+        row.verifiedDate ||
+        (row.approvedAt
+          ? formatDateDisplay(row.approvedAt)
+          : ""),
+      pdfWidth: 55,
       pdfAlign: "center",
       xlsxAlign: "center",
-      xlsxWidth: 18,
+      xlsxWidth: 16,
+      xlsxMinWidth: 14,
+      xlsxMaxWidth: 20,
     },
-  ],
+  },
+  {
+    key: "expiryDate",
+    label: "Expiration Date",
+    description: "3-Year YORP accreditation validity expiration date",
+    group: "registration_status",
+    isDefault: false,
+    column: {
+      label: "Expiration Date",
+      value: (row) => row.expiryDate || "",
+      pdfWidth: 55,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 16,
+    },
+  },
+  {
+    key: "status",
+    label: "Registration Status",
+    description: "Active, Expiring Soon, or Expired status",
+    group: "registration_status",
+    isDefault: false,
+    column: {
+      label: "Registration Status",
+      value: (row) => row.status || "",
+      pdfWidth: 55,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxWidth: 14,
+    },
+  },
+];
+
+export const YORP_REGISTRY_COLUMN_GROUPS: {
+  key: YorpRegistryColumnGroupKey;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: "identification",
+    label: "IDENTIFICATION",
+    description: "Unique identifiers and official organization name",
+  },
+  {
+    key: "organization_details",
+    label: "ORGANIZATION DETAILS",
+    description: "Classifications, heads, advisers, and registration scope",
+  },
+  {
+    key: "contact_location",
+    label: "CONTACT & LOCATION",
+    description: "Address, district, barangay, and contact information",
+  },
+  {
+    key: "registration_status",
+    label: "REGISTRATION",
+    description: "Dates, verification milestones, and accreditation status",
+  },
+];
+
+export const YORP_REGISTRY_AVAILABLE_COLUMNS_MAP: Record<string, YorpRegistryColumnDef> =
+  Object.fromEntries(YORP_REGISTRY_AVAILABLE_COLUMNS.map((def) => [def.key, def]));
+
+export const DEFAULT_YORP_REGISTRY_COLUMN_KEYS: string[] = [
+  "no",
+  "organizationName",
+  "majorClassification",
+  "address",
+  "urn",
+  "organizationHead",
+  "contactNumber",
+  "email",
+  "registrationDate",
+  "verifiedDate",
+];
+
+export const YORP_REGISTRY_COLUMN_ORDER: string[] = [
+  "no",
+  "organizationName",
+  "majorClassification",
+  "subClassification",
+  "registrationType",
+  "address",
+  "district",
+  "barangay",
+  "urn",
+  "referenceId",
+  "organizationHead",
+  "adviserName",
+  "contactNumber",
+  "email",
+  "facebookPageUrl",
+  "registrationDate",
+  "verifiedDate",
+  "expiryDate",
+  "status",
+];
+
+export const buildYorpRegistryExportConfig = (
+  selectedKeys: string[],
+  baseConfig: Partial<ReportExportConfig<YorpRegistryExportRow>> = {},
+): ReportExportConfig<YorpRegistryExportRow> => {
+  const selectedKeySet = new Set(selectedKeys);
+  const selectedDefs = YORP_REGISTRY_COLUMN_ORDER
+    .filter((key) => selectedKeySet.has(key))
+    .map((key) => YORP_REGISTRY_AVAILABLE_COLUMNS_MAP[key])
+    .filter((def): def is YorpRegistryColumnDef => Boolean(def));
+
+  const columns = selectedDefs.map((def) => def.column);
+  const columnCount = columns.length;
+
+  const pdfFontSize =
+    columnCount > 13 ? 6 : columnCount > 9 ? 7 : columnCount > 5 ? 7.5 : 8.5;
+  const pdfCellPadding = columnCount > 13 ? 2 : columnCount > 9 ? 3 : 3.5;
+
+  return {
+    ...yorpRegistryExportConfig,
+    ...baseConfig,
+    columns: columns.length > 0 ? columns : yorpRegistryExportConfig.columns,
+    pdfFontSize,
+    pdfCellPadding,
+  };
+};
+
+export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow> = {
+  title: "YORP Registry",
+  filenamePrefix: "YORP_Registry_Master",
+  orientation: "landscape",
+  paperSize: "a4",
+  headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
+  footerText: "Pasig City Youth Development Office - YORP Registry",
+  xlsxSheetName: "YORP Registry",
+  pdfFontSize: 7,
+  pdfCellPadding: 3,
+  columns: DEFAULT_YORP_REGISTRY_COLUMN_KEYS.map(
+    (key) => YORP_REGISTRY_AVAILABLE_COLUMNS_MAP[key].column,
+  ),
 };
 
 export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRow> = {

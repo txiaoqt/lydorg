@@ -12,7 +12,7 @@ type AdminSearchPaletteProps = {
 };
 
 const kbdPillClasses =
-  "flex h-[22px] shrink-0 items-center justify-center rounded border-[0.6px] border-slate-300 bg-neutral-100 px-1.5 font-cascadia text-[10px] leading-[140%] text-public-text-secondary";
+  "flex h-[22px] shrink-0 items-center justify-center rounded border border-border bg-muted/80 px-1.5 font-cascadia text-[10px] leading-[140%] text-muted-foreground";
 
 export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProps) => {
   const [open, setOpen] = useState(false);
@@ -38,16 +38,16 @@ export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProp
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="group flex h-10 w-full max-w-[400px] items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3.5 py-2.5 text-left transition-colors hover:border-public-text-brand-secondary"
+          className="group flex h-10 w-full max-w-[400px] items-center gap-2 rounded-md border border-border bg-admin-surface px-3.5 py-2.5 text-left transition-colors hover:border-primary/50"
         >
-          <Search className="h-4 w-4 shrink-0 text-text-disabled group-hover:text-public-text-brand-secondary" strokeWidth={1.6} />
-          <span className="min-w-0 flex-1 truncate font-segoe text-public-fs-body-sm leading-[140%] text-text-disabled group-hover:text-text-default">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary" strokeWidth={1.6} />
+          <span className="min-w-0 flex-1 truncate font-segoe text-sm leading-[140%] text-muted-foreground group-hover:text-foreground">
             Search pages...
           </span>
           <span
             className={cn(
               kbdPillClasses,
-              "group-hover:border-public-text-brand-secondary group-hover:text-public-text-brand-secondary",
+              "group-hover:border-primary/30 group-hover:text-foreground",
             )}
           >
             Ctrl+K
@@ -57,24 +57,24 @@ export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProp
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="w-[500px] max-h-[599px] overflow-hidden rounded-md border border-gray-200 bg-admin-surface p-0 shadow-lg"
+        className="w-[500px] max-h-[599px] overflow-hidden rounded-lg border border-border bg-popover p-0 shadow-lg"
       >
-        <Command shouldFilter className="bg-admin-surface">
-          <div className="flex h-10 items-center gap-2 border-b border-slate-300 px-3.5 py-2.5">
-            <Search className="h-4 w-4 shrink-0 text-public-text-brand-secondary" strokeWidth={1.6} />
+        <Command shouldFilter className="bg-popover text-popover-foreground">
+          <div className="flex h-11 items-center gap-2 border-b border-border px-3.5 py-2.5">
+            <Search className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.6} />
             <CommandPrimitive.Input
               placeholder="Search pages..."
-              className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm leading-[140%] text-text-default outline-none placeholder:text-text-disabled"
+              className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-sm leading-[140%] text-foreground outline-none placeholder:text-muted-foreground"
             />
             <span className={kbdPillClasses}>ESC</span>
           </div>
-          <CommandList className="max-h-[559px] px-3.5 py-2.5">
-            <CommandEmpty className="py-6 text-center font-segoe text-sm text-slate-500">
+          <CommandList className="max-h-[559px] p-2">
+            <CommandEmpty className="py-6 text-center font-segoe text-sm text-muted-foreground">
               No matching pages.
             </CommandEmpty>
             <CommandGroup
               heading="Pages"
-              className="p-0 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2.5 [&_[cmdk-group-heading]]:font-segoe [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:leading-[140%] [&_[cmdk-group-heading]]:text-public-text-neutral-default"
+              className="p-0 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:font-segoe [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:leading-[140%] [&_[cmdk-group-heading]]:text-muted-foreground"
             >
               {pages.map((item) => {
                 const Icon = item.icon;
@@ -84,11 +84,11 @@ export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProp
                     value={item.label}
                     onSelect={() => handleSelect(item.id)}
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 font-segoe text-xs leading-[140%] text-text-default",
-                      "data-[selected=true]:bg-bg-info-tertiary data-[selected=true]:text-public-text-brand",
+                      "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 font-segoe text-sm leading-[140%] text-foreground transition-colors",
+                      "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
                     )}
                   >
-                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />
                     <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   </CommandItem>
                 );

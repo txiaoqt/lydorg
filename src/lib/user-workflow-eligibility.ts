@@ -47,6 +47,20 @@ export const isMatchingFileForTemplate = (
   file.documentTypeId === template.id ||
   (Boolean(template.databaseId) && file.documentTypeId === template.databaseId);
 
+export function isOrganizationSuspended({
+  profile,
+  documentFiles,
+}: {
+  profile?: OrganizationProfile | null;
+  documentFiles?: SubmissionFile[];
+}): boolean {
+  if (profile?.profileStatus === "suspended_inactive") return true;
+  if (documentFiles && documentFiles.some((file) => file.adminStatus === "rejected_red")) {
+    return true;
+  }
+  return false;
+}
+
 export function resolveRegistrationPrerequisites({
   profile,
   requiredTemplates,
@@ -56,28 +70,33 @@ export function resolveRegistrationPrerequisites({
   requiredTemplates: TemplateRecord[];
   documentFiles: SubmissionFile[];
 }) {
-  const profileComplete = isOrganizationProfileComplete(profile);
-  const registrationVerified = profile?.profileStatus === "verified";
+  const isSuspended = isOrganizationSuspended({ profile, documentFiles });
+  const profileComplete = !isSuspended && isOrganizationProfileComplete(profile);
+  const registrationVerified = !isSuspended && profile?.profileStatus === "verified";
   const urnRegistration = isUrnRegistration(profile);
-  const approvedDocuments = requiredTemplates.filter((template) =>
-    documentFiles.some(
-      (file) =>
-        isMatchingFileForTemplate(file, template) &&
-        approvedDocumentStatuses.has(file.adminStatus),
-    ),
-  ).length;
+  const approvedDocuments = isSuspended
+    ? 0
+    : requiredTemplates.filter((template) =>
+        documentFiles.some(
+          (file) =>
+            isMatchingFileForTemplate(file, template) &&
+            approvedDocumentStatuses.has(file.adminStatus),
+        ),
+      ).length;
   const documentsSatisfied =
-    urnRegistration
+    !isSuspended &&
+    (urnRegistration
       ? profile?.urnReviewStatus === "verified"
-      : requiredTemplates.length > 0 && approvedDocuments === requiredTemplates.length;
+      : requiredTemplates.length > 0 && approvedDocuments === requiredTemplates.length);
 
   return {
+    isSuspended,
     profileComplete,
     registrationVerified,
     urnRegistration,
     approvedDocuments,
     documentsSatisfied,
-    canAccessDocuments: profileComplete,
+    canAccessDocuments: !isSuspended && profileComplete,
   };
 }
 

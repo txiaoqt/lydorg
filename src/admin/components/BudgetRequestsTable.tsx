@@ -23,6 +23,7 @@ export type BudgetRequestsStatusFilter =
   | "all"
   | "under_review"
   | "needs_revision"
+  | "awaiting_release"
   | "approved_for_ftf_green"
   | "hard_copy_submitted"
   | "budget_released";
@@ -52,8 +53,7 @@ const STATUS_TABS: { value: BudgetRequestsStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
   { value: "under_review", label: "Pending Review" },
   { value: "needs_revision", label: "Needs Revision" },
-  { value: "approved_for_ftf_green", label: "Onsite Required" },
-  { value: "hard_copy_submitted", label: "Hardcopy Submitted" },
+  { value: "awaiting_release", label: "Awaiting Release" },
   { value: "budget_released", label: "Released" },
 ];
 
@@ -77,6 +77,13 @@ export const StatusPill = ({
       </span>
     );
   }
+  if (status === "awaiting_release") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-progress-subtle bg-bg-progress-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-progress">
+        Awaiting Release
+      </span>
+    );
+  }
   if (status === "hard_copy_submitted") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-progress-subtle bg-bg-progress-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-progress">
@@ -95,40 +102,40 @@ export const StatusPill = ({
     const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
     if (isExpired) {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap text-icon-danger-secondary">
           Revision Expired (Locked)
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap text-text-action">
         Needs Revision
       </span>
     );
   }
   if (status === "rejected_red") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap text-icon-danger-secondary">
         Rejected
       </span>
     );
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap text-public-text-secondary">
         Draft
       </span>
     );
   }
   if (status === "under_review") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap text-icon-info-secondary">
         Under Review
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap text-icon-info-secondary">
       Pending Review
     </span>
   );

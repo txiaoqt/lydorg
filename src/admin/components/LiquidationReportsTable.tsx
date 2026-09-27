@@ -151,7 +151,7 @@ export const LiquidationStatusLabel = ({
     const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
     if (isExpired) {
       return (
-        <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%] border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
+        <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
           Revision Expired (Locked)
         </span>
       );
@@ -164,7 +164,7 @@ export const LiquidationStatusLabel = ({
   return (
     <span
       className={cn(
-        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap",
         config.className,
       )}
     >

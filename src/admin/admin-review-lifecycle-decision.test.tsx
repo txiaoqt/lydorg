@@ -651,7 +651,7 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       expect(screen.queryByRole("button", { name: /mark overdue/i })).toBeNull();
     });
 
-    it("TEST 13: approved_for_ftf_green renders unified Review Decision with Confirm Document Decision and approval banner", async () => {
+    it("TEST 13: approved_for_ftf_green renders unified Review Decision with Approved — Onsite Required and Liquidated button", async () => {
       const budgetReq: BudgetRequest = {
         id: "br-liq-13",
         organizationId: "org-1",
@@ -681,16 +681,18 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       await renderAdminPortal("liquidation-monitoring");
 
       // Approval banner IS rendered because status is approved_for_ftf_green
-      expect(screen.getByText(/Approved · 5 Sep 2026/i)).toBeDefined();
+      expect(screen.getByText(/Approved · September 5, 2026/i)).toBeDefined();
 
-      // Next action visible in single Review Decision panel
-      expect(screen.getByText("Approved for Face-to-Face Submission")).toBeDefined();
-      expect(screen.getByRole("button", { name: /confirm document decision/i })).toBeDefined();
+      // Next action visible in single Review Decision panel with Liquidated button
+      expect(screen.getAllByText("Onsite Required").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("Approved — Onsite Required")).toBeDefined();
+      expect(screen.getByRole("button", { name: /^Liquidated$/i })).toBeDefined();
+      expect(screen.queryByRole("button", { name: /confirm document decision/i })).toBeNull();
       expect(screen.queryByRole("button", { name: /mark hardcopy submitted/i })).toBeNull();
       expect(screen.queryByRole("button", { name: /mark overdue/i })).toBeNull();
     });
 
-    it("TEST 14: hard_copy_submitted renders unified Review Decision with Confirm Document Decision", async () => {
+    it("TEST 14: hard_copy_submitted renders unified Review Decision with Liquidated button", async () => {
       const budgetReq: BudgetRequest = {
         id: "br-liq-14",
         organizationId: "org-1",
@@ -723,8 +725,9 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       // Hardcopy banner visible
       expect(screen.getByText(/Hardcopy Received · 10 Sep 2026/i)).toBeDefined();
 
-      // Review Decision panel with Confirm Document Decision button visible
-      expect(screen.getByRole("button", { name: /confirm document decision/i })).toBeDefined();
+      // Review Decision panel with Liquidated button visible
+      expect(screen.getByRole("button", { name: /^Liquidated$/i })).toBeDefined();
+      expect(screen.queryByRole("button", { name: /confirm document decision/i })).toBeNull();
       expect(screen.queryByRole("button", { name: /complete liquidation/i })).toBeNull();
     });
 
@@ -822,7 +825,7 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
     it("TEST 19: User-side status mapping remains strictly preserved", () => {
       expect(statusLabelMap["submitted"]).toBe("Pending Review");
-      expect(statusLabelMap["under_review"]).toBe("Pending Review");
+      expect(statusLabelMap["under_review"]).toBe("Under Review");
       expect(statusLabelMap["approved_for_ftf_green"]).toBe("Onsite Required");
       expect(statusLabelMap["hard_copy_submitted"]).toBe("Hardcopy Submitted");
       expect(statusLabelMap["budget_released"]).toBe("Budget Released");
@@ -868,7 +871,10 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
-      // File is already selected and active by default
+      // Select document in Document Queue (checkboxes[0] is Select All, [1] is the unreviewed file)
+      const checkboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(checkboxes[1]);
+
       // Click Confirm Document Decision
       const confirmDocDecisionBtn = screen.getByRole("button", { name: /confirm document decision/i });
       fireEvent.click(confirmDocDecisionBtn);
@@ -885,16 +891,16 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
         );
         expect(updateBudgetRequestInSupabase).toHaveBeenCalledWith(
           "br-persist-ab",
-          expect.objectContaining({ status: "approved_for_ftf_green" })
+          expect.objectContaining({ status: "awaiting_release" })
         );
         expect(currentBudgetFiles[0].adminStatus).toBe("approved_green");
-        expect(currentBudgetRequests[0].status).toBe("approved_for_ftf_green");
+        expect(currentBudgetRequests[0].status).toBe("awaiting_release");
       });
 
-      // TEST B assertion: Refresh Persistence - UI reflects Onsite Required and does NOT flicker back to Pending Review
+      // TEST B assertion: Refresh Persistence - UI reflects Awaiting Release and does NOT flicker back to Pending Review
       await waitFor(() => {
-        expect(screen.getByText("Approved for Face-to-Face Submission")).toBeDefined();
-        expect(screen.getAllByText("Onsite Required").length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByText("Approved — Awaiting Release")).toBeDefined();
+        expect(screen.getAllByText("Awaiting Release").length).toBeGreaterThanOrEqual(1);
       });
       expect(screen.queryByRole("button", { name: /confirm document decision/i })).toBeNull();
     });
@@ -934,6 +940,10 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
+      // Select document in Document Queue
+      const checkboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(checkboxes[1]);
+
       const confirmDocDecisionBtn = screen.getByRole("button", { name: /confirm document decision/i });
       fireEvent.click(confirmDocDecisionBtn);
 
@@ -944,7 +954,7 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       await waitFor(() => {
         expect(updateBudgetRequestInSupabase).toHaveBeenCalledWith(
           "br-fail-parent",
-          expect.objectContaining({ status: "approved_for_ftf_green" })
+          expect.objectContaining({ status: "awaiting_release" })
         );
       });
 
@@ -954,8 +964,8 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       // CRITICAL: Parent in DB remained 'submitted' (not updated)
       expect(currentBudgetRequests[0].status).toBe("submitted");
 
-      // CRITICAL: UI must NOT pretend parent advanced to Onsite Required
-      expect(screen.queryByText("Approved for Face-to-Face Submission")).toBeNull();
+      // CRITICAL: UI must NOT pretend parent advanced to Awaiting Release
+      expect(screen.queryByText("Approved — Awaiting Release")).toBeNull();
 
       // Meaningful error message surfaced to admin
       await screen.findByText(/Unable to update the budget request/i);
@@ -1094,9 +1104,9 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await screen.findByText(/Review remaining documents to advance the budget proposal/i);
 
-      // Now select File B via checkbox
+      // Now select File B via checkbox (checkboxes[0] is Select All, [1] is File A (approved/disabled), [2] is File B)
       const updatedCheckboxes = screen.getAllByRole("checkbox");
-      fireEvent.click(updatedCheckboxes[1]);
+      fireEvent.click(updatedCheckboxes[2]);
 
       const confirmBtn2 = screen.getByRole("button", { name: /confirm document decision/i });
       fireEvent.click(confirmBtn2);
@@ -1104,10 +1114,10 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       const submitBtn2 = await screen.findByRole("button", { name: /submit review/i });
       fireEvent.click(submitBtn2);
 
-      // Now all files are approved -> parent advances to approved_for_ftf_green!
+      // Now all files are approved -> parent advances to awaiting_release!
       await waitFor(() => {
         expect(currentBudgetFiles.find((f) => f.id === "file-f-2")?.adminStatus).toBe("approved_green");
-        expect(currentBudgetRequests[0].status).toBe("approved_for_ftf_green");
+        expect(currentBudgetRequests[0].status).toBe("awaiting_release");
       });
     });
 
@@ -1172,6 +1182,10 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
+      // Select document in Document Queue
+      const checkboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(checkboxes[1]);
+
       const input = screen.getByTestId("admin-approved-amount-input") as HTMLInputElement;
       expect(input).toBeDefined();
 
@@ -1228,6 +1242,10 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
+      // Select document in Document Queue
+      const checkboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(checkboxes[1]);
+
       const input = screen.getByTestId("admin-approved-amount-input") as HTMLInputElement;
       fireEvent.change(input, { target: { value: "122130.99" } });
       expect(input.value).toBe("122130.99");
@@ -1274,6 +1292,10 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
+      // Select document in Document Queue
+      const checkboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(checkboxes[1]);
+
       const input = screen.getByTestId("admin-approved-amount-input") as HTMLInputElement;
       fireEvent.change(input, { target: { value: "122130.99" } });
       expect(input.value).toBe("122130.99");
@@ -1294,7 +1316,7 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
         expect(updateBudgetRequestInSupabase).toHaveBeenCalledWith(
           "br-submit-value",
           expect.objectContaining({
-            status: "approved_for_ftf_green",
+            status: "awaiting_release",
             approvedAmount: 122130.99,
           })
         );
@@ -1339,6 +1361,182 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       });
       expect(budgetReviewRefreshIntervals.length).toBe(0);
       setIntervalSpy.mockRestore();
+    });
+
+    it("TEST 25: Selection Gating — Zero documents selected displays 'No documents selected', disables Decision and Confirm button", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-selection-guard-1",
+        organizationId: "org-1",
+        activityTitle: "Community Project",
+        activityDate: "2026-11-20",
+        requestedAmount: 50000,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-sg-1",
+        budgetRequestId: "br-selection-guard-1",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      await renderAdminPortal("budget-utilization");
+
+      // 1. 'No documents selected.' informational box must be present
+      expect(screen.getByText("No documents selected.")).toBeDefined();
+
+      // 2. Decision selector button / trigger must be disabled
+      const decisionTrigger = screen.getByRole("combobox");
+      expect(decisionTrigger).toBeDisabled();
+
+      // 3. Confirm Document Decision button must be disabled
+      const confirmButton = screen.getByRole("button", { name: /confirm document decision/i });
+      expect(confirmButton).toBeDisabled();
+
+      // 4. Clicking confirm button while disabled must NOT trigger mutation or open confirmation modal
+      fireEvent.click(confirmButton);
+      expect(screen.queryByRole("button", { name: /submit review/i })).toBeNull();
+      expect(updateBudgetRequestInSupabase).not.toHaveBeenCalled();
+    });
+
+    it("TEST 26: Selection Gating — Selecting document updates count, enables Decision and Confirm button, deselecting disables them again", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-selection-guard-2",
+        organizationId: "org-1",
+        activityTitle: "Community Project",
+        activityDate: "2026-11-20",
+        requestedAmount: 50000,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-sg-2",
+        budgetRequestId: "br-selection-guard-2",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      await renderAdminPortal("budget-utilization");
+
+      const checkboxes = screen.getAllByRole("checkbox");
+      // Select the document
+      fireEvent.click(checkboxes[1]);
+
+      // 1. Info box updates to '1 document selected.'
+      expect(screen.getByText("1 document selected.")).toBeDefined();
+
+      // 2. Decision trigger is now enabled
+      const decisionTrigger = screen.getByRole("combobox");
+      expect(decisionTrigger).not.toBeDisabled();
+
+      // 3. Confirm button is now enabled (approve decision with valid amount)
+      const confirmButton = screen.getByRole("button", { name: /confirm document decision/i });
+      expect(confirmButton).not.toBeDisabled();
+
+      // 4. Now toggle/deselect the document
+      const updatedCheckboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(updatedCheckboxes[1]);
+
+      // 5. Returns to 'No documents selected.' and disabled state
+      expect(screen.getByText("No documents selected.")).toBeDefined();
+      expect(decisionTrigger).toBeDisabled();
+      expect(confirmButton).toBeDisabled();
+    });
+
+    it("TEST 27: Selection Gating — Needs Revision requires document selection and remarks before enabling confirmation", async () => {
+      const budgetReq: BudgetRequest = {
+        id: "br-selection-guard-3",
+        organizationId: "org-1",
+        activityTitle: "Community Project",
+        activityDate: "2026-11-20",
+        requestedAmount: 50000,
+        status: "submitted",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+      const unreviewedFile: BudgetRequestFile = {
+        id: "br-file-sg-3",
+        budgetRequestId: "br-selection-guard-3",
+        fileName: "Proposal.pdf",
+        fileUrl: "https://example.com/proposal.pdf",
+        fileSize: 1024,
+        adminStatus: "submitted",
+        uploadedAt: "2026-09-01T00:00:00.000Z",
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      currentBudgetRequests = [budgetReq];
+      currentBudgetFiles = [unreviewedFile];
+
+      await renderAdminPortal("budget-utilization");
+
+      // Before document selection: no remarks textarea and confirm button disabled
+      expect(screen.queryByPlaceholderText(/Explain required revisions/i)).toBeNull();
+
+      // Select document
+      const checkboxes = screen.getAllByRole("checkbox");
+      fireEvent.click(checkboxes[1]);
+
+      // Open select and choose Needs Revision
+      const decisionTrigger = screen.getByRole("combobox");
+      fireEvent.click(decisionTrigger);
+
+      // Select needs_revision
+      const needsRevOption = await screen.findByRole("option", { name: /needs revision/i });
+      fireEvent.click(needsRevOption);
+
+      // Remarks textarea is now rendered
+      const remarksTextarea = screen.getByPlaceholderText(/Explain required revisions/i);
+      expect(remarksTextarea).toBeDefined();
+
+      // Confirm button is disabled while remarks are empty
+      const confirmButton = screen.getByRole("button", { name: /confirm document decision/i });
+      expect(confirmButton).toBeDisabled();
+
+      // Enter remarks
+      fireEvent.change(remarksTextarea, { target: { value: "Please provide itemized equipment costs." } });
+      expect(confirmButton).not.toBeDisabled();
+
+      // Confirm and submit
+      fireEvent.click(confirmButton);
+      const submitReviewBtn = await screen.findByRole("button", { name: /submit review/i });
+      fireEvent.click(submitReviewBtn);
+
+      await waitFor(() => {
+        expect(adminUpdateBudgetRequestFileStatusInSupabase).toHaveBeenCalledWith(
+          "br-file-sg-3",
+          expect.objectContaining({
+            adminStatus: "needs_revision",
+            adminRemarks: "Please provide itemized equipment costs.",
+          })
+        );
+        expect(updateBudgetRequestInSupabase).toHaveBeenCalledWith(
+          "br-selection-guard-3",
+          expect.objectContaining({
+            status: "needs_revision",
+            adminRemarks: "Please provide itemized equipment costs.",
+          })
+        );
+      });
     });
   });
 });

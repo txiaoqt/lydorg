@@ -36,6 +36,7 @@ import {
   PwaSettingsMain,
   PwaStorageSettings,
 } from "./settings/PwaSettingsPages";
+import { AccountSuspendedScreen } from "@/components/portal/AccountSuspendedScreen";
 import "./styles/pwa-app.css";
 
 function PwaDocumentAccessGuard({ data, children }: {
@@ -84,6 +85,17 @@ export default function PwaUserPortal() {
     }[preferences.defaultLanding];
     if (target) go(target, { replace: true });
   }, [go, pathname, preferences.defaultLanding]);
+
+  if (data.isSuspended) {
+    return (
+      <AccountSuspendedScreen
+        onSignOut={data.signOut}
+        userEmail={data.user?.email}
+        organizationName={data.organizationName}
+        isPwa
+      />
+    );
+  }
 
   return (
     <PwaAppShell

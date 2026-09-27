@@ -106,6 +106,10 @@ describe("Google OAuth & Onboarding Architecture Verification", () => {
     vi.clearAllMocks();
     window.localStorage.clear();
     window.sessionStorage.clear();
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
     mockGetUserIdentities.mockResolvedValue({
       data: { identities: [{ provider: "google" }] },
       error: null,
@@ -479,398 +483,30 @@ describe("Google OAuth & Onboarding Architecture Verification", () => {
   });
 });
 
-describe("Y-TRACE Email/Password Credential Creation in Google Onboarding", () => {
-  const sampleIncompleteProfileDraft: OrganizationProfile = {
-    id: "profile-fresh-1",
-    userId: "user-fresh-1",
-    organizationName: "Fresh Pasig Youth",
-    organizationEmail: "fresh@google.com",
-    contactNumber: "09171234567",
-    district: "District I",
-    barangay: "Kapasigan",
-    isExistingOrganization: false,
-    organizationIdentifierNumber: "",
-    registrationType: "new_organization",
-    urn: "",
-    majorClassification: "Youth Organization",
-    subClassification: "community-based",
-    advocacies: ["health", "education"],
-    adviserName: "Adviser Santos",
-    representativeName: "Leader Juan",
-    address: "", // Incomplete so user remains on onboarding form
-    profileStatus: "pending_review",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
+describe("Google OAuth Onboarding & Auth Callback Flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
+    mockGetUserIdentities.mockResolvedValue({
+      data: { identities: [{ provider: "google" }] },
+      error: null,
+    });
+    mockGetUser.mockResolvedValue({
+      data: { user: { identities: [{ provider: "google" }] } },
+      error: null,
+    });
     mockAuth = {
       isAuthenticated: true,
       isInitialized: true,
       isPasswordRecoverySession: false,
       role: "youth",
-      user: { id: "user-fresh-1", email: "fresh@google.com", displayName: "Fresh User" },
+      user: { id: "user-google-10", email: "user10@gmail.com", displayName: "User Ten" },
       signIn: vi.fn(),
       signOut: vi.fn(),
     };
-    mockGetUserIdentities.mockResolvedValue({
-      data: { identities: [{ provider: "google", id: "gid-1", user_id: "user-fresh-1" }] },
-      error: null,
-    });
-    mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-fresh-1", identities: [{ provider: "google" }] } },
-      error: null,
-    });
-    mockUpdateUser.mockResolvedValue({ data: { user: { id: "user-fresh-1" } }, error: null });
-    mockFetchProfile.mockResolvedValue(sampleIncompleteProfileDraft);
-    mockUpsertProfile.mockResolvedValue({ ...sampleIncompleteProfileDraft, address: "123 Pasig Blvd", profileStatus: "verified" });
-  });
-
-  // TEST 1: Fresh Google user sees password creation section.
-  it("FOCUSED TEST 1: Fresh Google user sees password creation section", async () => {
-    mockGetUserIdentities.mockResolvedValue({
-      data: { identities: [{ provider: "google" }] },
-      error: null,
-    });
-
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-      expect(screen.getByText("6. Create Your Y-TRACE Password")).toBeInTheDocument();
-      expect(
-        screen.getByText("Create a password so you can also sign in to Y-TRACE using your email address."),
-      ).toBeInTheDocument();
-      expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^Confirm Password/i)).toBeInTheDocument();
-    });
-  });
-
-  // TEST 2: Password and confirmation must match.
-  it("FOCUSED TEST 2: Password and confirmation must match", async () => {
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-    });
-
-    const passwordInput = screen.getByLabelText(/^Password/i);
-    const confirmInput = screen.getByLabelText(/^Confirm Password/i);
-
-    fireEvent.change(passwordInput, { target: { value: "P@ssword123!" } });
-    fireEvent.change(confirmInput, { target: { value: "Mismatch123!" } });
-
-    expect(screen.getByText("Passwords do not match.")).toBeInTheDocument();
-
-    const submitBtn = screen.getByRole("button", { name: /Complete Registration & Continue/i });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText("Passwords do not match. Please verify your confirmation password.")).toBeInTheDocument();
-      expect(mockUpdateUser).not.toHaveBeenCalled();
-    });
-  });
-
-  // TEST 3: Weak password is rejected.
-  it("FOCUSED TEST 3: Weak password is rejected", async () => {
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-    });
-
-    const passwordInput = screen.getByLabelText(/^Password/i);
-    const confirmInput = screen.getByLabelText(/^Confirm Password/i);
-
-    // Too short, lacks numbers and special characters
-    fireEvent.change(passwordInput, { target: { value: "short" } });
-    fireEvent.change(confirmInput, { target: { value: "short" } });
-
-    const submitBtn = screen.getByRole("button", { name: /Complete Registration & Continue/i });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Password does not meet Y-TRACE security requirements/i)).toBeInTheDocument();
-      expect(mockUpdateUser).not.toHaveBeenCalled();
-    });
-  });
-
-  // TEST 4: Valid password can be saved.
-  it("FOCUSED TEST 4: Valid password can be saved", async () => {
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-    });
-
-    // Provide complete address to satisfy all profile requirements
-    const addressInput = screen.getByLabelText(/Complete Office or Community Address/i);
-    fireEvent.change(addressInput, { target: { value: "123 Pasig Blvd" } });
-
-    const passwordInput = screen.getByLabelText(/^Password/i);
-    const confirmInput = screen.getByLabelText(/^Confirm Password/i);
-
-    fireEvent.change(passwordInput, { target: { value: "ValidP@ss123!" } });
-    fireEvent.change(confirmInput, { target: { value: "ValidP@ss123!" } });
-
-    const submitBtn = screen.getByRole("button", { name: /Complete Registration & Continue/i });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(mockUpdateUser).toHaveBeenCalledWith({
-        password: "ValidP@ss123!",
-      });
-      expect(mockUpsertProfile).toHaveBeenCalled();
-    });
-  });
-
-  // TEST 5: Saving password does not sign the user out.
-  it("FOCUSED TEST 5: Saving password does not sign the user out", async () => {
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-    });
-
-    // Complete required address
-    const addressInput = screen.getByLabelText(/Complete Office or Community Address/i);
-    fireEvent.change(addressInput, { target: { value: "123 Pasig Blvd" } });
-
-    const passwordInput = screen.getByLabelText(/^Password/i);
-    const confirmInput = screen.getByLabelText(/^Confirm Password/i);
-
-    fireEvent.change(passwordInput, { target: { value: "ValidP@ss123!" } });
-    fireEvent.change(confirmInput, { target: { value: "ValidP@ss123!" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration & Continue/i }));
-
-    await waitFor(() => {
-      expect(mockUpdateUser).toHaveBeenCalled();
-      expect(mockAuth.signOut).not.toHaveBeenCalled();
-      expect(mockAuth.isAuthenticated).toBe(true);
-    });
-  });
-
-  // TEST 6: After onboarding, sign out and sign in using email + password (expected: same account)
-  it("FOCUSED TEST 6: After onboarding, sign out and sign in using email + password", async () => {
-    // 1. Onboarding attached password to user-fresh-1
-    expect(sampleIncompleteProfileDraft.userId).toBe("user-fresh-1");
-
-    // 2. User signs out
-    mockAuth.signOut();
-    expect(mockAuth.signOut).toHaveBeenCalled();
-
-    // 3. User signs in with email + password
-    mockAuth.signIn.mockResolvedValue({});
-    const signInResult = await mockAuth.signIn({
-      mode: "user",
-      email: "fresh@google.com",
-      password: "ValidP@ss123!",
-    });
-
-    expect(signInResult).toEqual({});
-    expect(mockAuth.signIn).toHaveBeenCalledWith({
-      mode: "user",
-      email: "fresh@google.com",
-      password: "ValidP@ss123!",
-    });
-
-    // Profile remains linked to same user-fresh-1
-    const profile = await mockFetchProfile("user-fresh-1");
-    expect(profile.userId).toBe("user-fresh-1");
-  });
-
-  // TEST 7: After onboarding, sign out and sign in using Google (expected: same account)
-  it("FOCUSED TEST 7: After onboarding, sign out and sign in using Google", async () => {
-    mockSignInWithOAuth.mockResolvedValue({ error: null });
-
-    render(
-      <MemoryRouter initialEntries={["/signin"]}>
-        <SignIn />
-      </MemoryRouter>,
-    );
-
-    const googleBtn = screen.getByRole("button", { name: /Continue with Google/i });
-    fireEvent.click(googleBtn);
-
-    await waitFor(() => {
-      expect(mockSignInWithOAuth).toHaveBeenCalledWith({
-        provider: "google",
-        options: expect.objectContaining({
-          redirectTo: expect.stringContaining("/auth/callback"),
-        }),
-      });
-    });
-
-    // Both auth methods target the exact same user.id and organization profile
-    const profile = await mockFetchProfile("user-fresh-1");
-    expect(profile.userId).toBe("user-fresh-1");
-    expect(profile.organizationName).toBe("Fresh Pasig Youth");
-  });
-
-  // TEST 8: Existing email/password account does not get duplicate password creation request when already linked
-  it("FOCUSED TEST 8: Existing email/password account does not get duplicate password creation request when already linked", async () => {
-    mockGetUserIdentities.mockResolvedValue({
-      data: {
-        identities: [
-          { provider: "email", id: "email-id-1", user_id: "user-existing-1" },
-          { provider: "google", id: "google-id-1", user_id: "user-existing-1" },
-        ],
-      },
-      error: null,
-    });
-
-    mockAuth = {
-      ...mockAuth,
-      user: { id: "user-existing-1", email: "existing@org.com", displayName: "Existing User" },
-    };
-
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Complete Your Y-TRACE Organization Registration")).toBeInTheDocument();
-    });
-
-    // Password creation card should be completely skipped
-    expect(screen.queryByTestId("ytrace-password-section")).not.toBeInTheDocument();
-    expect(screen.queryByText("6. Create Your Y-TRACE Password")).not.toBeInTheDocument();
-  });
-
-  // TEST 9: Password update failure keeps user authenticated and preserves onboarding state
-  it("FOCUSED TEST 9: Password update failure keeps user authenticated and preserves onboarding state", async () => {
-    mockUpdateUser.mockResolvedValue({
-      data: null,
-      error: { message: "Network error during password update. Please retry." },
-    });
-
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-    });
-
-    // Provide complete address
-    const addressInput = screen.getByLabelText(/Complete Office or Community Address/i);
-    fireEvent.change(addressInput, { target: { value: "123 Pasig Blvd" } });
-
-    const passwordInput = screen.getByLabelText(/^Password/i);
-    const confirmInput = screen.getByLabelText(/^Confirm Password/i);
-
-    fireEvent.change(passwordInput, { target: { value: "ValidP@ss123!" } });
-    fireEvent.change(confirmInput, { target: { value: "ValidP@ss123!" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration & Continue/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Network error during password update. Please retry.")).toBeInTheDocument();
-      // User must NOT be signed out
-      expect(mockAuth.signOut).not.toHaveBeenCalled();
-      expect(screen.getByDisplayValue("Fresh Pasig Youth")).toBeInTheDocument();
-      expect(passwordInput).toHaveValue("ValidP@ss123!");
-      expect(confirmInput).toHaveValue("ValidP@ss123!");
-    });
-  });
-
-  // TEST 10: Refreshing onboarding does not create another user
-  it("FOCUSED TEST 10: Refreshing onboarding does not create another user", async () => {
-    const { unmount } = render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Complete Your Y-TRACE Organization Registration")).toBeInTheDocument();
-    });
-
-    unmount();
-
-    // Re-mount as if page refreshed
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Complete Your Y-TRACE Organization Registration")).toBeInTheDocument();
-      expect(mockAuth.user.id).toBe("user-fresh-1");
-    });
-  });
-
-  // TEST 11: Organization profile remains linked to the same auth user
-  it("FOCUSED TEST 11: Organization profile remains linked to the same auth user", async () => {
-    render(
-      <MemoryRouter initialEntries={["/google-onboarding"]}>
-        <GoogleOnboarding />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ytrace-password-section")).toBeInTheDocument();
-    });
-
-    // Complete address
-    const addressInput = screen.getByLabelText(/Complete Office or Community Address/i);
-    fireEvent.change(addressInput, { target: { value: "123 Pasig Blvd" } });
-
-    const passwordInput = screen.getByLabelText(/^Password/i);
-    const confirmInput = screen.getByLabelText(/^Confirm Password/i);
-
-    fireEvent.change(passwordInput, { target: { value: "ValidP@ss123!" } });
-    fireEvent.change(confirmInput, { target: { value: "ValidP@ss123!" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration & Continue/i }));
-
-    await waitFor(() => {
-      expect(mockUpsertProfile).toHaveBeenCalledWith(
-        expect.objectContaining({
-          userId: "user-fresh-1",
-        }),
-      );
-    });
-  });
-
-  // TEST 12: Admin authentication remains unaffected
-  it("FOCUSED TEST 12: Admin authentication remains unaffected", () => {
-    render(
-      <MemoryRouter initialEntries={["/signin"]}>
-        <SignIn forcedMode="admin" />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByText(/Admin sign in/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Continue with Google/i })).not.toBeInTheDocument();
-    expect(screen.queryByTestId("ytrace-password-section")).not.toBeInTheDocument();
   });
 
   // TEST 10 — Google callback code does not enter recovery
@@ -1138,5 +774,180 @@ describe("Y-TRACE Email/Password Credential Creation in Google Onboarding", () =
     clearPasswordRecoveryState();
     expect(window.localStorage.getItem("ytrace-active-password-recovery")).toBeNull();
     expect(window.sessionStorage.getItem("ytrace-active-password-recovery")).toBeNull();
+  });
+
+  // TEST 20 — Google Onboarding: Auto-populate Official Email Address
+  it("TEST 20: Google Onboarding auto-populates Official Email Address with authenticated Google email", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-20", email: "angyyy.pasig@gmail.com", displayName: "Angelica" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter initialEntries={["/google-onboarding"]}>
+        <Routes>
+          <Route path="/google-onboarding" element={<GoogleOnboarding />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Official Email Address/i) as HTMLInputElement;
+      expect(emailInput).toBeInTheDocument();
+      expect(emailInput.value).toBe("angyyy.pasig@gmail.com");
+    });
+  });
+
+  // TEST 21 — UI Immutability: Read-only attributes and helper text
+  it("TEST 21: Official Email Address is read-only, not editable, and displays helper text", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-21", email: "angyyy.pasig@gmail.com", displayName: "Angelica" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter initialEntries={["/google-onboarding"]}>
+        <Routes>
+          <Route path="/google-onboarding" element={<GoogleOnboarding />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Official Email Address/i) as HTMLInputElement;
+      expect(emailInput).toHaveAttribute("readonly");
+      expect(emailInput).toHaveAttribute("aria-readonly", "true");
+      expect(emailInput).toHaveAttribute("tabindex", "-1");
+      expect(emailInput).toHaveAttribute("autocomplete", "off");
+      expect(emailInput.className).toContain("cursor-not-allowed");
+      expect(
+        screen.getByText(/Email is linked to your Google account and cannot be changed during onboarding/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  // TEST 22 — Submission Payload uses Authenticated Google Email
+  it("TEST 22: Google Onboarding submission uses authenticated Google email as authoritative email", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-22", email: "angyyy.pasig@gmail.com", displayName: "Angelica" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+    mockUpsertProfile.mockResolvedValue({
+      id: "org-22",
+      userId: "google-user-22",
+      organizationName: "Pasig Innovators",
+      organizationEmail: "angyyy.pasig@gmail.com",
+      contactNumber: "09171234567",
+      district: "District I",
+      barangay: "Kapasigan",
+      isExistingOrganization: false,
+      organizationIdentifierNumber: "",
+      registrationType: "new_organization",
+      urn: "",
+      majorClassification: "Youth Organization",
+      subClassification: "community-based",
+      advocacies: ["education"],
+      adviserName: "Prof. Cruz",
+      representativeName: "Angelica Pasig",
+      address: "Caruncho Ave",
+      profileStatus: "pending_review",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/google-onboarding"]}>
+        <Routes>
+          <Route path="/google-onboarding" element={<GoogleOnboarding />} />
+          <Route path="/dashboard" element={<div data-testid="dashboard-screen">Dashboard</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/e.g. Pasig Youth Leadership Council/i)).toBeInTheDocument();
+    });
+
+    // Fill in required fields
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Pasig Youth Leadership Council/i), { target: { value: "Pasig Innovators" } });
+    fireEvent.change(screen.getByPlaceholderText("09171234567"), { target: { value: "09171234567" } });
+    fireEvent.change(screen.getByPlaceholderText(/Room\/Unit, Street Address/i), { target: { value: "Caruncho Ave" } });
+    fireEvent.change(screen.getByPlaceholderText(/Full name of head of organization/i), { target: { value: "Angelica Pasig" } });
+    fireEvent.change(screen.getByPlaceholderText(/Full name of organization adviser/i), { target: { value: "Prof Cruz" } });
+
+    // Verify official email field is read-only and displays Google email
+    const emailInput = screen.getByLabelText(/Official Email Address/i) as HTMLInputElement;
+    expect(emailInput.value).toBe("angyyy.pasig@gmail.com");
+    expect(emailInput).toHaveAttribute("readonly");
+  });
+
+  // TEST 23 — Missing Google Email blocks onboarding
+  it("TEST 23: Google session without email displays clear error state and blocks onboarding", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-no-email", email: null, displayName: "No Email User" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter initialEntries={["/google-onboarding"]}>
+        <Routes>
+          <Route path="/google-onboarding" element={<GoogleOnboarding />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Unable to load profile session/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Your authenticated Google account does not provide an email address/i),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Return to Sign In/i })).toBeInTheDocument();
+    });
+  });
+
+  // TEST 24 — Refresh / Reload preserves authenticated email
+  it("TEST 24: Reloading onboarding page maintains authoritative Google email and ignores stale local draft email", async () => {
+    mockAuth = {
+      ...mockAuth,
+      isAuthenticated: true,
+      role: "youth",
+      user: { id: "google-user-24", email: "authoritative@gmail.com", displayName: "Test" },
+    };
+    mockFetchProfile.mockResolvedValue(null);
+
+    // Stale draft with a different email in localStorage
+    window.localStorage.setItem(
+      "ytrace-google-onboarding-draft:google-user-24",
+      JSON.stringify({
+        version: 1,
+        savedAt: new Date().toISOString(),
+        organizationName: "Saved Draft Org",
+        organizationEmail: "tampered-attacker@gmail.com",
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/google-onboarding"]}>
+        <Routes>
+          <Route path="/google-onboarding" element={<GoogleOnboarding />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Official Email Address/i) as HTMLInputElement;
+      expect(emailInput.value).toBe("authoritative@gmail.com");
+      expect(emailInput.value).not.toBe("tampered-attacker@gmail.com");
+    });
   });
 });

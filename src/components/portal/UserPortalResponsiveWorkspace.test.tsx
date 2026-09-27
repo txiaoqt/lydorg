@@ -1531,7 +1531,7 @@ describe("UserPortalLiquidationWorkspaceView Mobile Preview Modal Polish", () =>
       expect(buttonGrid?.className).toContain("grid-cols-2");
 
       // 5. Quiet Footer verification
-      expect(screen.getByText(/Liquidation Report • LYDO Pasig City/i)).toBeInTheDocument();
+      expect(screen.getByText(/Liquidation Report • Pasig City Youth Development Portal/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });
   });
@@ -1630,7 +1630,7 @@ describe("UserPortalBudgetWorkspaceView Mobile Preview Modal Polish", () => {
       expect(buttonGrid?.className).toContain("grid-cols-2");
 
       // 5. Quiet Footer verification
-      expect(screen.getByText(/Budget Request • LYDO Pasig City/i)).toBeInTheDocument();
+      expect(screen.getByText(/Budget Request • Pasig City Youth Development Portal/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });
   });

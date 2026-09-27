@@ -119,6 +119,9 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const [activityDate, setActivityDate] = useState("");
   const [venue, setVenue] = useState("");
   const [narrativeReport, setNarrativeReport] = useState("");
+  const [totalAttendees, setTotalAttendees] = useState("");
+  const [girlsAttendees, setGirlsAttendees] = useState("");
+  const [boysAttendees, setBoysAttendees] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -135,6 +138,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     activityDate?: string;
     venue?: string;
     narrativeReport?: string;
+    totalAttendees?: string;
+    girlsAttendees?: string;
+    boysAttendees?: string;
+    attendanceMath?: string;
     files?: string;
   }>({});
 
@@ -193,11 +200,29 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         setActivityDate(activity.activityDate || "");
         setVenue(activity.venue || "");
         setNarrativeReport(activity.narrativeReport || "");
+        setTotalAttendees(
+          activity.totalAttendees !== null && activity.totalAttendees !== undefined
+            ? String(activity.totalAttendees)
+            : ""
+        );
+        setGirlsAttendees(
+          activity.girlsAttendees !== null && activity.girlsAttendees !== undefined
+            ? String(activity.girlsAttendees)
+            : ""
+        );
+        setBoysAttendees(
+          activity.boysAttendees !== null && activity.boysAttendees !== undefined
+            ? String(activity.boysAttendees)
+            : ""
+        );
       } else {
         setActivityName("");
         setActivityDate(new Date().toISOString().split("T")[0]);
         setVenue("");
         setNarrativeReport("");
+        setTotalAttendees("");
+        setGirlsAttendees("");
+        setBoysAttendees("");
       }
     } else if (open && activity) {
       setCurrentActivity((prev) => {
@@ -420,6 +445,50 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     if (!activityDate) {
       nextErrors.activityDate = "Date Conducted is required.";
     }
+    if (!venue.trim()) {
+      nextErrors.venue = "Venue / Location is required.";
+    }
+    if (!narrativeReport.trim()) {
+      nextErrors.narrativeReport = "Description is required.";
+    }
+
+    // Attendance validation
+    const trimmedTotal = totalAttendees.trim();
+    const trimmedGirls = girlsAttendees.trim();
+    const trimmedBoys = boysAttendees.trim();
+
+    if (!trimmedTotal) {
+      nextErrors.totalAttendees = "Total Attendees is required.";
+    }
+    if (!trimmedGirls) {
+      nextErrors.girlsAttendees = "Girls count is required.";
+    }
+    if (!trimmedBoys) {
+      nextErrors.boysAttendees = "Boys count is required.";
+    }
+
+    if (trimmedTotal && trimmedGirls && trimmedBoys) {
+      const totalNum = parseInt(trimmedTotal, 10);
+      const girlsNum = parseInt(trimmedGirls, 10);
+      const boysNum = parseInt(trimmedBoys, 10);
+
+      if (isNaN(totalNum) || isNaN(girlsNum) || isNaN(boysNum)) {
+        nextErrors.attendanceMath = "Attendee counts must be valid numbers.";
+      } else if (totalNum < 1) {
+        nextErrors.totalAttendees = "Total attendees must be at least 1.";
+      } else if (girlsNum < 0 || boysNum < 0) {
+        nextErrors.attendanceMath = "Attendee counts cannot be negative.";
+      } else if (girlsNum > totalNum) {
+        nextErrors.girlsAttendees = "Girls count cannot exceed total attendees.";
+        nextErrors.attendanceMath = "Girls and boys counts must equal the total number of attendees.";
+      } else if (boysNum > totalNum) {
+        nextErrors.boysAttendees = "Boys count cannot exceed total attendees.";
+        nextErrors.attendanceMath = "Girls and boys counts must equal the total number of attendees.";
+      } else if (girlsNum + boysNum !== totalNum) {
+        nextErrors.attendanceMath = "Girls and boys counts must equal the total number of attendees.";
+      }
+    }
+
     if (allFiles.length === 0) {
       nextErrors.files = "Attach at least one supporting document before submitting.";
     }
@@ -484,12 +553,19 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       const now = new Date().toISOString();
       let targetActivity: YPOPOrgActivity;
 
+      const parsedTotal = totalAttendees.trim() !== "" ? parseInt(totalAttendees.trim(), 10) : null;
+      const parsedGirls = girlsAttendees.trim() !== "" ? parseInt(girlsAttendees.trim(), 10) : null;
+      const parsedBoys = boysAttendees.trim() !== "" ? parseInt(boysAttendees.trim(), 10) : null;
+
       if (currentActivity) {
         targetActivity = await updateYpopOrgActivityInSupabase(currentActivity.id, {
           activityName: activityName.trim(),
           activityDate,
           venue: venue.trim(),
           narrativeReport: narrativeReport.trim(),
+          totalAttendees: !isNaN(Number(parsedTotal)) ? parsedTotal : null,
+          girlsAttendees: !isNaN(Number(parsedGirls)) ? parsedGirls : null,
+          boysAttendees: !isNaN(Number(parsedBoys)) ? parsedBoys : null,
           status: currentActivity.status === "needs_revision" ? "needs_revision" : "draft",
         });
       } else {
@@ -501,6 +577,9 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
           activityDate,
           venue: venue.trim(),
           narrativeReport: narrativeReport.trim(),
+          totalAttendees: !isNaN(Number(parsedTotal)) ? parsedTotal : null,
+          girlsAttendees: !isNaN(Number(parsedGirls)) ? parsedGirls : null,
+          boysAttendees: !isNaN(Number(parsedBoys)) ? parsedBoys : null,
           status: "draft",
           adminRemarks: "",
           submittedAt: "",
@@ -773,6 +852,32 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                 <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed break-words">{narrativeReport}</p>
               </div>
             )}
+
+            {/* Attendance Summary */}
+            <div className="space-y-1.5 pt-2 border-t border-border/50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Attendance</span>
+              {currentActivity?.totalAttendees !== null && currentActivity?.totalAttendees !== undefined ? (
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60 text-center">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Total</p>
+                    <p className="text-sm font-bold text-foreground mt-0.5">{currentActivity.totalAttendees}</p>
+                    <p className="text-[9px] text-muted-foreground">attendees</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-pink-500/5 border border-pink-500/20 text-center">
+                    <p className="text-[10px] uppercase font-bold text-pink-700 dark:text-pink-300">Girls</p>
+                    <p className="text-sm font-bold text-foreground mt-0.5">{currentActivity.girlsAttendees ?? 0}</p>
+                    <p className="text-[9px] text-muted-foreground">attendees</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-blue-500/5 border border-blue-500/20 text-center">
+                    <p className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300">Boys</p>
+                    <p className="text-sm font-bold text-foreground mt-0.5">{currentActivity.boysAttendees ?? 0}</p>
+                    <p className="text-[9px] text-muted-foreground">attendees</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Not provided</p>
+              )}
+            </div>
           </div>
         </div>
       ) : (
@@ -888,6 +993,125 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                 <p className="text-[11px] font-medium text-destructive mt-1">{errors.narrativeReport}</p>
               )}
             </div>
+          </div>
+
+          {/* Section 3: Attendance */}
+          <div className="space-y-3 pt-1">
+            <div className="border-b border-border/40 pb-1">
+              <h4 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Attendance
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="ppa-total-attendees" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  <span>Total Attendees</span>
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ppa-total-attendees"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  placeholder="e.g. 50"
+                  value={totalAttendees}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setTotalAttendees(val);
+                    if (errors.totalAttendees || errors.attendanceMath) {
+                      setErrors((prev) => ({ ...prev, totalAttendees: undefined, attendanceMath: undefined }));
+                    }
+                  }}
+                  className={cn(
+                    "text-xs h-9 sm:h-8.5 rounded-lg border-border/80 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                    (errors.totalAttendees || errors.attendanceMath) && "border-destructive focus-visible:ring-destructive"
+                  )}
+                />
+                {errors.totalAttendees && (
+                  <p className="text-[11px] font-medium text-destructive mt-1">{errors.totalAttendees}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="ppa-girls" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  <span>Girls</span>
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ppa-girls"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  placeholder="e.g. 28"
+                  value={girlsAttendees}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setGirlsAttendees(val);
+                    if (errors.girlsAttendees || errors.attendanceMath) {
+                      setErrors((prev) => ({ ...prev, girlsAttendees: undefined, attendanceMath: undefined }));
+                    }
+                  }}
+                  className={cn(
+                    "text-xs h-9 sm:h-8.5 rounded-lg border-border/80 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                    (errors.girlsAttendees || errors.attendanceMath) && "border-destructive focus-visible:ring-destructive"
+                  )}
+                />
+                {errors.girlsAttendees && (
+                  <p className="text-[11px] font-medium text-destructive mt-1">{errors.girlsAttendees}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="ppa-boys" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  <span>Boys</span>
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ppa-boys"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  placeholder="e.g. 22"
+                  value={boysAttendees}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setBoysAttendees(val);
+                    if (errors.boysAttendees || errors.attendanceMath) {
+                      setErrors((prev) => ({ ...prev, boysAttendees: undefined, attendanceMath: undefined }));
+                    }
+                  }}
+                  className={cn(
+                    "text-xs h-9 sm:h-8.5 rounded-lg border-border/80 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                    (errors.boysAttendees || errors.attendanceMath) && "border-destructive focus-visible:ring-destructive"
+                  )}
+                />
+                {errors.boysAttendees && (
+                  <p className="text-[11px] font-medium text-destructive mt-1">{errors.boysAttendees}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
+              <p>Girls and boys counts must equal the total number of attendees.</p>
+              {Boolean(totalAttendees && girlsAttendees && boysAttendees) && (
+                <span className={cn(
+                  "font-semibold font-mono",
+                  parseInt(girlsAttendees || "0", 10) + parseInt(boysAttendees || "0", 10) === parseInt(totalAttendees || "0", 10)
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-amber-600 dark:text-amber-400"
+                )}>
+                  {parseInt(girlsAttendees || "0", 10) + parseInt(boysAttendees || "0", 10)} / {totalAttendees}
+                </span>
+              )}
+            </div>
+
+            {errors.attendanceMath && (
+              <p className="text-[11px] font-medium text-destructive mt-1">{errors.attendanceMath}</p>
+            )}
           </div>
         </div>
       )}
@@ -1104,7 +1328,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       </Button>
                     ) : (
                       <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                        Organization PPA • LYDO Pasig City
+                        Organization PPA • Pasig City Youth Development Portal
                       </p>
                     )}
                   </div>
@@ -1247,8 +1471,8 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       <span>Delete Submission</span>
                     </Button>
                   ) : (
-                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                      Organization PPA • LYDO Pasig City
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
+                      Organization PPA • Pasig City Youth Development Portal
                     </p>
                   )}
                   <Button

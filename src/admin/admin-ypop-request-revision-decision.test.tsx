@@ -754,4 +754,40 @@ describe("YPOP Admin Review Decision — Single-Item Request Revision & Authorit
     const confirmBtn = screen.getByRole("button", { name: /^Confirm$/i });
     expect(confirmBtn).not.toBeDisabled();
   });
+
+  it("TEST 14: YPOP Review Decision help icon opens Review Rules popover and closes on toggle", async () => {
+    render(
+      <MemoryRouter initialEntries={["/admin/ypop-validation"]}>
+        <LydoConnectProvider initialState={setupAdminStore() as any}>
+          <AdminPortal section="ypop-validation" />
+        </LydoConnectProvider>
+      </MemoryRouter>
+    );
+
+    const submissionsBtn = await screen.findByRole("button", { name: /Submissions/i });
+    fireEvent.click(submissionsBtn);
+
+    const validateBtn = await screen.findByRole("button", { name: /Validate/i });
+    fireEvent.click(validateBtn);
+
+    await waitFor(() => expect(screen.getByText("Barangay Youth Leadership Summit")).toBeInTheDocument());
+
+    // Help popover is initially not in document
+    expect(screen.queryByText("Review Rules")).not.toBeInTheDocument();
+
+    // Find and click the help button
+    const helpBtn = screen.getByRole("button", { name: /Review rules/i });
+    expect(helpBtn).toBeInTheDocument();
+    fireEvent.click(helpBtn);
+
+    // Review Rules popover must now be visible with authoritative content
+    expect(screen.getByText("Review Rules")).toBeInTheDocument();
+    expect(screen.getByText(/multiple files can be selected/i)).toBeInTheDocument();
+    expect(screen.getByText(/one file at a time, remarks required/i)).toBeInTheDocument();
+
+    // Toggle close
+    fireEvent.click(helpBtn);
+    expect(screen.queryByText("Review Rules")).not.toBeInTheDocument();
+  });
 });
+

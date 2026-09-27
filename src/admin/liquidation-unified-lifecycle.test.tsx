@@ -387,7 +387,7 @@ describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 
     });
   });
 
-  it("4. approved_for_ftf_green renders single Review Decision panel with dropdown [ Onsite Required, Liquidated ] and button Confirm Document Decision", async () => {
+  it("4. approved_for_ftf_green renders dedicated Approved — Onsite Required panel and button Liquidated", async () => {
     const budgetReq: BudgetRequest = {
       id: "br-liq-4",
       organizationId: "org-1",
@@ -416,17 +416,29 @@ describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 
 
     await renderLiquidationMonitoring();
 
-    // Shows Approved banner
-    expect(screen.getByText(/Approved · 5 Sep 2026/i)).toBeDefined();
+    // Shows Approved banner with full date + time
+    expect(screen.getByText(/Approved · September 5, 2026/i)).toBeDefined();
 
-    // Shows single Review Decision panel with Confirm Document Decision
+    // Shows dedicated Approved — Onsite Required panel and Liquidated action button
     expect(screen.getByText("Review Decision")).toBeDefined();
-    expect(screen.getByText("Approved for Face-to-Face Submission")).toBeDefined();
-    expect(screen.getByRole("button", { name: /confirm document decision/i })).toBeDefined();
+    expect(screen.getAllByText("Onsite Required").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Approved — Onsite Required")).toBeDefined();
+    expect(screen.getByText(/The liquidation report has been approved. The organization must complete the required onsite process before the liquidation can be finalized./i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /^Liquidated$/i })).toBeDefined();
 
-    // NO separate buttons
+    // NO dropdown or Confirm Document Decision
+    expect(screen.queryByRole("button", { name: /confirm document decision/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /mark hardcopy submitted/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /mark overdue/i })).toBeNull();
+
+    // Clicking Liquidated advances the lifecycle
+    fireEvent.click(screen.getByRole("button", { name: /^Liquidated$/i }));
+    await waitFor(() => {
+      expect(updateLiquidationReportInSupabase).toHaveBeenCalledWith(
+        "liq-rep-4",
+        expect.objectContaining({ status: "completed_liquidated" }),
+      );
+    });
   });
 
   it("5. completed_liquidated renders clean terminal state with zero buttons or dropdowns", async () => {
@@ -485,7 +497,7 @@ describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 
     expect(matchesLiquidationStatusFilter("completed_liquidated", "overdue", pastDeadline)).toBe(false);
   });
 
-  it("7. STATUS_LABEL_CONFIG has label 'Onsite Required' for approved_for_ftf_green", () => {
+  it("7. STATUS_LABEL_CONFIG has compact label 'Onsite Required' for admin and 'Onsite Required' for user", () => {
     expect(STATUS_LABEL_CONFIG.approved_for_ftf_green.label).toBe("Onsite Required");
     expect(statusLabelMap["approved_for_ftf_green"]).toBe("Onsite Required");
     expect(statusLabelMap["completed_liquidated"]).toBe("Liquidated");

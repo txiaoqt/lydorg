@@ -1018,7 +1018,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               ) : (
                 <>
                   <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                    YPOP Activity Proof • LYDO Pasig City
+                    YPOP Activity Proof • Pasig City Youth Development Portal
                   </p>
                   <SheetClose asChild>
                     <Button
@@ -1123,8 +1123,8 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                    YPOP Activity Proof • LYDO Pasig City
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
+                    YPOP Activity Proof • Pasig City Youth Development Portal
                   </p>
                   <Button
                     type="button"

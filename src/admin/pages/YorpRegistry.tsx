@@ -1,8 +1,15 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, addYears } from "date-fns";
-import { AlertTriangle, Award, BarChart3, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
+import { AlertTriangle, Award, BarChart3, ChevronDown, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
 import "./yorp-registry.css";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -12,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
+import { YorpRegistryExportDialog } from "@/admin/components/YorpRegistryExportDialog";
 import { YorpQuarterlyReportDialog } from "@/components/reports/YorpQuarterlyReportDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,9 +46,15 @@ import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
 import { loadAdminPortalSupabaseState } from "@/lib/lydo-connect-supabase";
 import {
   mapOrganizationProfileToYorpExportRow,
+  buildYorpRegistryExportConfig,
   yorpRegistryExportConfig,
 } from "@/lib/report-export-configs";
 import { exportReport, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
+import {
+  ALL_SEMESTERS_KEY,
+  buildYorpSemesterOptions,
+  isOrganizationInSemester,
+} from "@/lib/yorp-semester";
 import { toast } from "@/hooks/use-toast";
 
 const yorpStatusFilterLabel: Record<YorpStatusFilter, string> = {
@@ -70,6 +83,14 @@ export function YorpRegistryPage() {
   } = useLydoConnect();
   const orgs = state.organizationProfiles;
 
+  const [selectedSemester, setSelectedSemester] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("semester");
+      if (param) return param;
+    }
+    return ALL_SEMESTERS_KEY;
+  });
+
   const [search, setSearch] = useState("");
   const [yorpStatusFilter, setYorpStatusFilter] = useState<YorpStatusFilter>("all");
   const [districtFilter, setDistrictFilter] = useState<"all" | PasigDistrict>("all");
@@ -86,6 +107,32 @@ export function YorpRegistryPage() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const deleteConfirmationInputRef = useRef<HTMLInputElement>(null);
 
+  // Sync selectedSemester with URL search params when it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (selectedSemester && selectedSemester !== ALL_SEMESTERS_KEY) {
+        url.searchParams.set("semester", selectedSemester);
+      } else {
+        url.searchParams.delete("semester");
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [selectedSemester]);
+
+  const semesterOptions = useMemo(
+    () => buildYorpSemesterOptions(state.ypopPeriods, orgs),
+    [state.ypopPeriods, orgs],
+  );
+
+  const selectedSemesterLabel = useMemo(() => {
+    if (selectedSemester === ALL_SEMESTERS_KEY) return "All Semesters";
+    const found = semesterOptions.find(
+      (opt) => opt.key === selectedSemester || opt.label === selectedSemester,
+    );
+    return found ? found.label : selectedSemester;
+  }, [selectedSemester, semesterOptions]);
+
   const registryEntries = useMemo<YorpRegistryEntry[]>(() => {
     const now = new Date();
     return orgs
@@ -97,6 +144,13 @@ export function YorpRegistryPage() {
       });
   }, [orgs]);
 
+  const semesterScopedEntries = useMemo(() => {
+    if (selectedSemester === ALL_SEMESTERS_KEY) return registryEntries;
+    return registryEntries.filter(({ org }) =>
+      isOrganizationInSemester(org, selectedSemester, semesterOptions, state.ypopEntries),
+    );
+  }, [registryEntries, selectedSemester, semesterOptions, state.ypopEntries]);
+
   const selectedBulkOrgs = useMemo(
     () =>
       registryEntries
@@ -107,19 +161,19 @@ export function YorpRegistryPage() {
 
   const stats = useMemo(
     () => ({
-      activeAccredited: registryEntries.length,
-      expiringSoon: registryEntries.filter((entry) => entry.yorpStatus === "expiring_soon").length,
-      youthOrgs: registryEntries.filter((entry) => entry.org.majorClassification === "Youth Organization").length,
-      youthServingOrgs: registryEntries.filter(
+      activeAccredited: semesterScopedEntries.length,
+      expiringSoon: semesterScopedEntries.filter((entry) => entry.yorpStatus === "expiring_soon").length,
+      youthOrgs: semesterScopedEntries.filter((entry) => entry.org.majorClassification === "Youth Organization").length,
+      youthServingOrgs: semesterScopedEntries.filter(
         (entry) => entry.org.majorClassification === "Youth-Serving Organization",
       ).length,
     }),
-    [registryEntries],
+    [semesterScopedEntries],
   );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return registryEntries.filter(({ org, yorpStatus }) => {
+    return semesterScopedEntries.filter(({ org, yorpStatus }) => {
       if (q && ![org.organizationName, org.urn].some((field) => field.toLowerCase().includes(q))) return false;
       if (yorpStatusFilter !== "all" && yorpStatus !== yorpStatusFilter) return false;
       if (districtFilter !== "all" && org.district !== districtFilter) return false;
@@ -127,7 +181,7 @@ export function YorpRegistryPage() {
       if (classificationFilter !== "all" && org.majorClassification !== classificationFilter) return false;
       return true;
     });
-  }, [registryEntries, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
+  }, [semesterScopedEntries, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
 
   const exportRows = useMemo(
     () => filtered.map((entry, index) => mapOrganizationProfileToYorpExportRow(entry, index)),
@@ -136,13 +190,18 @@ export function YorpRegistryPage() {
 
   const exportFilterSummary = useMemo(() => {
     const summary: string[] = [];
+    if (selectedSemester !== ALL_SEMESTERS_KEY) {
+      summary.push(`Semester: ${selectedSemesterLabel}`);
+    } else {
+      summary.push("Semester: All Semesters");
+    }
     if (search.trim()) summary.push(`Search: ${search.trim()}`);
     if (yorpStatusFilter !== "all") summary.push(`Status: ${yorpStatusFilterLabel[yorpStatusFilter]}`);
     if (districtFilter !== "all") summary.push(`District: ${districtFilter}`);
     if (barangayFilter !== "all") summary.push(`Barangay: ${barangayFilter}`);
     if (classificationFilter !== "all") summary.push(`Classification: ${classificationFilter}`);
     return summary;
-  }, [search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
+  }, [selectedSemester, selectedSemesterLabel, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
 
   const openDeleteDialog = (organization: OrganizationProfile) => {
     const requireNameConfirmation = Boolean(getEffectiveSystemSetting("security.reauth_delete_organization"));
@@ -253,19 +312,45 @@ export function YorpRegistryPage() {
     }
   };
 
-  const handleExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
+  const handleExport = async (
+    format: ExportFormat,
+    selectedColumnKeys: string[],
+    pageConfig?: PdfPageConfig,
+  ) => {
     if (!exportRows.length) {
       toast({ title: "No Data", description: "No YORP records match the current filters." });
       return;
     }
 
+    if (!selectedColumnKeys.length) {
+      toast({
+        title: "No Columns Selected",
+        description: "Select at least one column to generate an export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportConfig = buildYorpRegistryExportConfig(selectedColumnKeys);
+    const exportTitle =
+      selectedSemester !== ALL_SEMESTERS_KEY
+        ? `YORP Registry - ${selectedSemesterLabel}`
+        : "YORP Registry";
+
     try {
       await exportReport(
         format,
         {
-          config: yorpRegistryExportConfig,
+          config: {
+            ...exportConfig,
+            title: exportTitle,
+            filenamePrefix: `yorp-registry-${selectedSemester.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+          },
           rows: exportRows,
-          metadataLines: [`Total Records: ${exportRows.length}`],
+          metadataLines: [
+            `Semester: ${selectedSemesterLabel}`,
+            `Total Records: ${exportRows.length}`,
+          ],
           filterSummaryLines: exportFilterSummary,
         },
         pageConfig,
@@ -291,7 +376,37 @@ export function YorpRegistryPage() {
         title="YORP Registry"
         description="View accredited youth organizations."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Select semester"
+                  className="flex h-11 min-w-[160px] max-w-[220px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <span className="truncate font-medium">{selectedSemesterLabel}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-[220px] max-h-[300px] overflow-y-auto data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0 shadow-lg"
+              >
+                {semesterOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.key}
+                    onClick={() => setSelectedSemester(option.key)}
+                    className={cn(
+                      "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default cursor-pointer",
+                      selectedSemester === option.key && "bg-bg-info-tertiary text-public-text-brand font-semibold",
+                    )}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button
               variant="outline"
               onClick={() => setExportDialogOpen(true)}
@@ -520,12 +635,15 @@ export function YorpRegistryPage() {
         onDeletionComplete={handleBulkDeletionComplete}
       />
 
-      <ExportReportDialog
+      <YorpRegistryExportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
-        reportTitle="YORP Registry"
-        description="Export all YORP records matching the current search and filters."
+        recordCount={filtered.length}
+        filterSummaryLines={exportFilterSummary}
+        selectedSemesterLabel={selectedSemesterLabel}
         onExport={handleExport}
+        initialPaperSize="a4"
+        initialOrientation="landscape"
       />
 
       <YorpQuarterlyReportDialog

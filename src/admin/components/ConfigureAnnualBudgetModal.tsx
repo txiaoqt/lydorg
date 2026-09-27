@@ -142,14 +142,14 @@ export const ConfigureAnnualBudgetModal = ({
               placeholder="e.g. 50000000"
               value={amountStr}
               onChange={(e) => setAmountStr(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3.5 py-2 font-cascadia text-sm font-semibold text-text-default outline-none transition-colors focus:border-public-bg-brand"
+              className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface px-3.5 py-2 font-cascadia text-sm font-semibold text-text-default outline-none transition-colors focus:border-public-bg-brand"
             />
             {amountStr.trim() !== "" && !Number.isNaN(parsedAmount) ? (
               <p className="font-cascadia text-xs font-semibold text-public-text-brand">
                 Preview: {formatCurrencyPreview(parsedAmount)}
               </p>
             ) : (
-              <p className="font-segoe text-[11px] text-slate-500">
+              <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                 Enter the approved statutory budget ceiling appropriated for youth PPAs in this fiscal year.
               </p>
             )}
@@ -165,14 +165,14 @@ export const ConfigureAnnualBudgetModal = ({
               placeholder="e.g. City Ordinance No. 2026-XX, Approved LYDO Youth Development Fund Appropriation..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="flex w-full rounded-md border border-slate-300 bg-white p-3 font-segoe text-xs text-text-default outline-none transition-colors focus:border-public-bg-brand placeholder:text-slate-400"
+              className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface p-3 font-segoe text-xs text-text-default outline-none transition-colors focus:border-public-bg-brand placeholder:text-slate-400"
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div className="flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
             <div className="flex flex-col">
               <span className="font-segoe text-xs font-semibold text-text-default">Active Allocation</span>
-              <span className="font-segoe text-[11px] text-slate-500">
+              <span className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                 Mark as the authoritative active budget for monitoring and headroom calculation.
               </span>
             </div>
@@ -180,16 +180,16 @@ export const ConfigureAnnualBudgetModal = ({
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand"
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-admin-surface text-public-bg-brand focus:ring-public-bg-brand"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+          <div className="flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-4">
             <button
               type="button"
               disabled={saving}
               onClick={() => onOpenChange(false)}
-              className="flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 font-segoe text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+              className="flex h-10 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-admin-surface px-4 py-2 font-segoe text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Cancel
             </button>

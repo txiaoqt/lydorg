@@ -686,6 +686,9 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
     activityName: existing?.activityName ?? "",
     activityDate: existing?.activityDate ?? "",
     venue: existing?.venue ?? "",
+    totalAttendees: existing?.totalAttendees !== null && existing?.totalAttendees !== undefined ? String(existing.totalAttendees) : "",
+    girlsAttendees: existing?.girlsAttendees !== null && existing?.girlsAttendees !== undefined ? String(existing.girlsAttendees) : "",
+    boysAttendees: existing?.boysAttendees !== null && existing?.boysAttendees !== undefined ? String(existing.boysAttendees) : "",
   });
   const [narrativePdf, setNarrativePdf] = useState<File | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -709,6 +712,9 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
         activityName: existing.activityName,
         activityDate: existing.activityDate,
         venue: existing.venue,
+        totalAttendees: existing.totalAttendees !== null && existing.totalAttendees !== undefined ? String(existing.totalAttendees) : "",
+        girlsAttendees: existing.girlsAttendees !== null && existing.girlsAttendees !== undefined ? String(existing.girlsAttendees) : "",
+        boysAttendees: existing.boysAttendees !== null && existing.boysAttendees !== undefined ? String(existing.boysAttendees) : "",
       });
     }
   }, [existing]);
@@ -743,10 +749,34 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
     const activityDate = form.activityDate.trim();
     const venue = form.venue.trim();
     const narrativeReport = narrativePdf?.name ?? existingNarrativePdf?.fileName ?? "";
+    const totalAttendeesNum = form.totalAttendees.trim() !== "" ? parseInt(form.totalAttendees.trim(), 10) : null;
+    const girlsAttendeesNum = form.girlsAttendees.trim() !== "" ? parseInt(form.girlsAttendees.trim(), 10) : null;
+    const boysAttendeesNum = form.boysAttendees.trim() !== "" ? parseInt(form.boysAttendees.trim(), 10) : null;
+
     if (!activityName || !activityDate || !venue || !narrativeReport) {
       toast({ title: "Missing details", description: "Complete the activity details and attach the narrative report PDF.", variant: "destructive" });
       return;
     }
+
+    if (submit) {
+      if (totalAttendeesNum === null || girlsAttendeesNum === null || boysAttendeesNum === null) {
+        toast({ title: "Attendance required", description: "Enter Total Attendees, Girls, and Boys counts.", variant: "destructive" });
+        return;
+      }
+      if (totalAttendeesNum < 1) {
+        toast({ title: "Invalid attendance", description: "Total attendees must be at least 1.", variant: "destructive" });
+        return;
+      }
+      if (girlsAttendeesNum < 0 || boysAttendeesNum < 0) {
+        toast({ title: "Invalid attendance", description: "Attendee counts cannot be negative.", variant: "destructive" });
+        return;
+      }
+      if (girlsAttendeesNum + boysAttendeesNum !== totalAttendeesNum) {
+        toast({ title: "Attendance mismatch", description: "Girls and boys counts must equal the total number of attendees.", variant: "destructive" });
+        return;
+      }
+    }
+
     if (submit && existingProofFiles.length + selectedFiles.length === 0) {
       toast({ title: "Proof required", description: "Attach at least one supporting file before submitting the PPA.", variant: "destructive" });
       return;
@@ -766,6 +796,9 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
           activityDate,
           venue,
           narrativeReport,
+          totalAttendees: totalAttendeesNum,
+          girlsAttendees: girlsAttendeesNum,
+          boysAttendees: boysAttendeesNum,
           status: existing.status,
           submittedAt: existing.submittedAt,
           adminRemarks: existing.adminRemarks,
@@ -781,6 +814,9 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
           activityDate,
           venue,
           narrativeReport,
+          totalAttendees: totalAttendeesNum,
+          girlsAttendees: girlsAttendeesNum,
+          boysAttendees: boysAttendeesNum,
           status: "draft",
           adminRemarks: "",
           submittedAt: "",
@@ -851,6 +887,15 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
         <label>Activity Name *<Input value={form.activityName} disabled={!editable} onChange={(event) => setForm((current) => ({ ...current, activityName: event.target.value }))} /></label>
         <label>Activity Date *<Input type="date" value={form.activityDate} disabled={!editable} onChange={(event) => setForm((current) => ({ ...current, activityDate: event.target.value }))} /></label>
         <label>Venue *<Input value={form.venue} disabled={!editable} onChange={(event) => setForm((current) => ({ ...current, venue: event.target.value }))} /></label>
+        <div className="pwa-stack" style={{ gap: "8px" }}>
+          <strong>Attendance *</strong>
+          <small className="text-muted-foreground" style={{ fontSize: "11px" }}>Girls and boys counts must equal the total number of attendees.</small>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+            <label style={{ fontSize: "11px" }}>Total *<Input type="number" min="0" value={form.totalAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, totalAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
+            <label style={{ fontSize: "11px" }}>Girls *<Input type="number" min="0" value={form.girlsAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, girlsAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
+            <label style={{ fontSize: "11px" }}>Boys *<Input type="number" min="0" value={form.boysAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, boysAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
+          </div>
+        </div>
         <div className="pwa-ppa-upload-field">
           <div className="pwa-ppa-file-section-heading">
             <div><strong>Narrative Report</strong><small>Required PDF document</small></div>

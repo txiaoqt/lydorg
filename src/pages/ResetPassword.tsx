@@ -4,6 +4,14 @@ import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import BrandLogo from "@/components/BrandLogo";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
 import {
@@ -111,6 +119,7 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [inlineError, setInlineError] = useState("");
   const [requestSent, setRequestSent] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const isEmailValid = useMemo(() => isValidEmailFormat(email), [email]);
@@ -247,12 +256,14 @@ const ResetPassword = () => {
         // Show generic confirmation to prevent enumeration even on unexpected backend responses
         setRequestSent(true);
         setResendCooldown(RESEND_COOLDOWN_SECONDS);
+        setShowSuccessModal(true);
       }
       return;
     }
 
     setRequestSent(true);
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    setShowSuccessModal(true);
   };
 
   const updatePassword = async (event: React.FormEvent) => {
@@ -321,6 +332,7 @@ const ResetPassword = () => {
     setEmail("");
     setTouchedEmail(false);
     setRequestSent(false);
+    setShowSuccessModal(false);
     setResendCooldown(0);
     setMode("request");
   };
@@ -341,43 +353,41 @@ const ResetPassword = () => {
   }, [password, confirmPassword]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 pt-20 pb-8 sm:py-8 text-foreground">
-      <div className="pointer-events-none absolute inset-0">
+    <div className="relative flex min-h-0 sm:min-h-screen flex-col items-center justify-start sm:justify-center overflow-hidden bg-background px-4 pt-5 pb-6 sm:py-12 text-foreground">
+      {/* Background ambient lighting */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
       </div>
 
-      {/* Page-level Brand Logo (upper-left viewport mark) */}
-      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
-        <Link to="/" className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
-        </Link>
-      </div>
+      <div className="relative z-10 w-full max-w-[390px] sm:max-w-md mx-auto space-y-4 sm:space-y-6">
+        {/* Brand Logo — centered above card */}
+        <div className="flex justify-center">
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
+          >
+            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+          </Link>
+        </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        <div className="space-y-5 rounded-2xl border border-border bg-card p-6 card-shadow sm:p-8">
+        {/* Card */}
+        <div className="space-y-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-card p-6 sm:p-8 shadow-xs">
           {mode === "request" ? (
-            <form onSubmit={requestReset} className="space-y-5">
-              <div>
-                <h1 className="text-2xl font-heading font-bold">Forgot your password?</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+            <form onSubmit={requestReset} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <h1 className="text-2xl sm:text-[28px] font-heading font-bold text-foreground tracking-tight">
+                  Forgot your password?
+                </h1>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Enter the email address associated with your account, and we&apos;ll send you a secure reset link to reset your password.
                 </p>
               </div>
 
-              {requestSent && (
-                <div role="status" className="rounded-lg border border-primary/30 bg-primary/10 p-3.5 text-sm text-foreground space-y-1">
-                  <p className="font-medium text-primary flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4" /> Reset link requested
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {GENERIC_RESET_MESSAGE}
-                  </p>
-                </div>
-              )}
-
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground/90">
+                  Email Address
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -390,6 +400,7 @@ const ResetPassword = () => {
                   placeholder="you@gmail.com"
                   autoComplete="email"
                   disabled={isLoading}
+                  className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
                   required
                 />
                 {touchedEmail && !email.trim() ? (
@@ -399,39 +410,41 @@ const ResetPassword = () => {
                   <p className="text-xs text-destructive">Please enter a valid email address.</p>
                 ) : null}
                 {inlineError ? (
-                  <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
                     {inlineError}
                   </p>
                 ) : null}
               </div>
 
-              <Button
-                type="submit"
-                className="w-full font-semibold"
-                disabled={isLoading || !isEmailValid || resendCooldown > 0}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : resendCooldown > 0 ? (
-                  `Resend available in ${resendCooldown}s`
-                ) : requestSent ? (
-                  "Resend password reset link"
-                ) : (
-                  "Send Reset Link"
-                )}
-              </Button>
+              <div className="pt-1">
+                <Button
+                  type="submit"
+                  className="w-full h-11 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] shadow-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={isLoading || !isEmailValid || resendCooldown > 0}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : resendCooldown > 0 ? (
+                    `Resend available in ${resendCooldown}s`
+                  ) : requestSent ? (
+                    "Resend password reset link"
+                  ) : (
+                    "Send Reset Link"
+                  )}
+                </Button>
+              </div>
             </form>
           ) : null}
 
           {mode === "verifying" ? (
-            <div className="space-y-4 py-2 text-center">
+            <div className="space-y-4 py-4 text-center">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
-              <div>
-                <h1 className="text-2xl font-heading font-bold">Verifying reset link</h1>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <div className="space-y-1">
+                <h1 className="text-2xl font-heading font-bold text-foreground tracking-tight">Verifying reset link</h1>
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   Please wait while we securely verify your password reset link.
                 </p>
               </div>
@@ -439,12 +452,12 @@ const ResetPassword = () => {
           ) : null}
 
           {mode === "update" ? (
-            <form onSubmit={updatePassword} className="space-y-5">
-              <div>
-                <h1 className="text-2xl font-heading font-bold">
+            <form onSubmit={updatePassword} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <h1 className="text-2xl sm:text-[28px] font-heading font-bold text-foreground tracking-tight">
                   {isAuthenticated || user ? "Set your account password" : "Create a new password"}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {isAuthenticated || user
                     ? "Establish a secure password for your account."
                     : "Choose a secure password you haven't used before."}
@@ -483,30 +496,32 @@ const ResetPassword = () => {
                 hint={confirmMatchHint}
               />
 
-              <Button
-                type="submit"
-                className="w-full font-semibold"
-                disabled={isLoading || !isPasswordValid(password) || password !== confirmPassword}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update Password"
-                )}
-              </Button>
+              <div className="pt-1">
+                <Button
+                  type="submit"
+                  className="w-full h-11 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] shadow-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={isLoading || !isPasswordValid(password) || password !== confirmPassword}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
+              </div>
             </form>
           ) : null}
 
           {mode === "invalid" ? (
             <div className="space-y-4 py-2 text-center">
-              <h1 className="text-2xl font-heading font-bold">Reset link unavailable</h1>
+              <h1 className="text-2xl font-heading font-bold text-foreground tracking-tight">Reset link unavailable</h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {inlineError || "Request a new password reset link and try again."}
               </p>
-              <Button type="button" className="w-full" onClick={requestAnotherLink}>
+              <Button type="button" className="w-full h-11 rounded-xl font-bold text-sm" onClick={requestAnotherLink}>
                 Request New Link
               </Button>
             </div>
@@ -514,47 +529,82 @@ const ResetPassword = () => {
 
           {mode === "updated" ? (
             <div className="flex flex-col items-center space-y-4 py-2 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
                 <CheckCircle2 className="h-8 w-8 text-success" aria-hidden="true" />
               </div>
-              <div>
-                <h1 className="text-2xl font-heading font-bold">Password updated</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
+              <div className="space-y-1">
+                <h1 className="text-2xl font-heading font-bold text-foreground tracking-tight">Password updated</h1>
+                <p className="text-sm text-muted-foreground">
                   Your new password is ready. Sign in again to continue.
                 </p>
               </div>
-              <Button className="w-full font-semibold" onClick={() => cancelRecovery("/signin")}>
+              <Button className="w-full h-11 rounded-xl font-bold text-sm" onClick={() => cancelRecovery("/signin")}>
                 Continue to Sign In
               </Button>
             </div>
           ) : null}
 
           {inlineError && mode !== "request" && mode !== "invalid" ? (
-            <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
               {inlineError}
             </p>
           ) : null}
         </div>
 
         {mode !== "updated" ? (
-          <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
-            <p>
+          <div className="space-y-2 text-center text-sm text-muted-foreground pt-1">
+            <p className="text-sm">
               Remember your password?{" "}
               <button
                 type="button"
                 onClick={() => cancelRecovery("/signin")}
-                className="font-medium text-primary hover:text-primary/80"
+                className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors focus-visible:outline-none focus-visible:underline cursor-pointer"
               >
                 Sign in
               </button>
             </p>
             <p>
-              <button type="button" onClick={() => cancelRecovery("/")} className="hover:text-foreground">
+              <button
+                type="button"
+                onClick={() => cancelRecovery("/")}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline cursor-pointer"
+              >
                 ← Back to home
               </button>
             </p>
           </div>
         ) : null}
+
+        {/* Success Dialog Modal */}
+        <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+          <DialogContent
+            hideCloseButton={true}
+            className="w-[calc(100vw-2rem)] max-w-[360px] sm:max-w-[400px] rounded-2xl border border-slate-200 dark:border-slate-800 bg-card p-6 sm:p-7 shadow-xl text-center space-y-4 sm:rounded-2xl"
+          >
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary">
+              <CheckCircle2 className="h-6 w-6 text-primary" />
+            </div>
+
+            <DialogHeader className="space-y-2 text-center sm:text-center">
+              <DialogTitle className="text-xl sm:text-2xl font-heading font-bold text-foreground tracking-tight text-center">
+                Reset link requested
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground leading-relaxed text-center px-1">
+                {GENERIC_RESET_MESSAGE}
+              </DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter className="pt-2 sm:justify-center">
+              <Button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full h-11 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] shadow-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+              >
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
@@ -582,7 +632,7 @@ const PasswordField = ({
   hint?: React.ReactNode;
 }) => (
   <div className="space-y-1.5">
-    <Label htmlFor={id}>{label}</Label>
+    <Label htmlFor={id} className="text-sm font-semibold text-foreground/90">{label}</Label>
     <div className="relative">
       <Input
         id={id}
@@ -591,17 +641,17 @@ const PasswordField = ({
         onChange={(event) => onChange(event.target.value)}
         onPaste={onPaste}
         maxLength={maxLength}
-        className="pr-11"
+        className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 pr-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
         autoComplete="new-password"
         required
       />
       <button
         type="button"
         onClick={onToggle}
-        className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-transparent hover:bg-transparent active:bg-transparent focus:bg-transparent text-muted-foreground transition-colors hover:text-foreground active:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-slate-800/60 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
       >
-        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        {visible ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
     </div>
     {hint}

@@ -212,9 +212,9 @@ export const TemplateFormDialog = ({
               ) : null}
             </div>
             {isAddingCategory ? (
-              <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-white p-3 shadow-xs">
+              <div className="flex flex-col gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface p-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-segoe text-xs font-semibold text-slate-700">Add New Category</span>
+                  <span className="font-segoe text-xs font-semibold text-text-default">Add New Category</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -222,7 +222,7 @@ export const TemplateFormDialog = ({
                       setNewCategoryName("");
                       setNewCategoryError(null);
                     }}
-                    className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     aria-label="Cancel adding category"
                   >
                     <X className="h-4 w-4" />

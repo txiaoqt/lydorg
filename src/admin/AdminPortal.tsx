@@ -3,7 +3,7 @@ import "./admin-inquiries.css";
 import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
 import "./pages/yorp-registry.css";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
 import {
   preflightRegistrationDeletion,
@@ -65,7 +65,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
-import { isLiquidationOverdue, statusLabelMap, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
+import { isLiquidationOverdue, statusLabelMap, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining } from "@/lib/revision-deadline";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
@@ -87,6 +87,11 @@ import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type Ren
 import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
 import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
 import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
+import {
+  ALL_SEMESTERS_KEY,
+  buildBudgetSemesterOptions,
+  isBudgetRequestInSemester,
+} from "@/lib/yorp-semester";
 import { OrganizationFundingTable, type OrganizationFundingRow } from "@/admin/components/OrganizationFundingTable";
 import {
   OrganizationBudgetDrawer,
@@ -520,7 +525,7 @@ type PendingAdminConfirmation =
   }
   | {
     kind: "budget";
-    action: "approve" | "submitted_hardcopy" | "cash_released" | "complete" | "needs_revision" | "reject";
+    action: "approve" | "submitted_hardcopy" | "cash_released" | "complete" | "needs_revision";
     budgetRequestId: string;
     organizationId: string;
     organizationName: string;
@@ -546,7 +551,7 @@ type PendingAdminConfirmation =
   }
   | {
     kind: "ypop_event";
-    action: "verified" | "needs_revision" | "rejected";
+    action: "verified" | "needs_revision";
     participationId: string;
     entryId: string;
     activityId: string;
@@ -557,7 +562,7 @@ type PendingAdminConfirmation =
   }
   | {
     kind: "ypop_org_activity";
-    action: "approved" | "needs_revision" | "rejected";
+    action: "approved" | "needs_revision";
     orgActivityId: string;
     entryId: string;
     organizationId: string;
@@ -577,16 +582,15 @@ const registrationReviewDecisionLabel: Record<RegistrationReviewDecision, string
 const registrationDecisionRequiresRemark = (decision: RegistrationReviewDecision) =>
   decision === "needs_revision" || decision === "reject";
 
-type BudgetReviewDecision = "approve" | "needs_revision" | "reject";
+type BudgetReviewDecision = "approve" | "needs_revision";
 
 const budgetReviewDecisionLabel: Record<BudgetReviewDecision, string> = {
   approve: "Approve",
   needs_revision: "Needs Revision",
-  reject: "Reject",
 };
 
 const budgetDecisionRequiresRemark = (decision: BudgetReviewDecision) =>
-  decision === "needs_revision" || decision === "reject";
+  decision === "needs_revision";
 
 type PendingDeleteConfirmation =
   | {
@@ -690,6 +694,7 @@ type RecentActivityEntry = {
 export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut, user } = useAuth();
 
   const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
@@ -852,8 +857,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const [isRenewalApproveDialogOpen, setIsRenewalApproveDialogOpen] = useState(false);
   const [isRenewalRevisionDialogOpen, setIsRenewalRevisionDialogOpen] = useState(false);
   const [isRenewalRejectDialogOpen, setIsRenewalRejectDialogOpen] = useState(false);
-  const [renewalCertificateUrnDraft, setRenewalCertificateUrnDraft] = useState("");
-  const [renewalCertificateUrnError, setRenewalCertificateUrnError] = useState("");
   const [renewalDecisionRemarksDraft, setRenewalDecisionRemarksDraft] = useState("");
   const [renewalDecisionSubmitting, setRenewalDecisionSubmitting] = useState(false);
   const [selectedBudgetRequestId, setSelectedBudgetRequestId] = useState<string | null>(null);
@@ -915,10 +918,29 @@ export default function AdminPortal({ section }: { section: string }) {
   const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "public">("overview");
   const [budgetInsightsExpanded, setBudgetInsightsExpanded] = useState(false);
   const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
+  const [budgetRequestsSemesterFilter, setBudgetRequestsSemesterFilter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("semester");
+      if (param) return param;
+    }
+    return ALL_SEMESTERS_KEY;
+  });
   const [budgetRequestsStatusFilter, setBudgetRequestsStatusFilter] = useState<BudgetRequestsStatusFilter>("all");
   const [budgetRequestsDistrictFilter, setBudgetRequestsDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [budgetRequestsBarangayFilter, setBudgetRequestsBarangayFilter] = useState("all");
   const [budgetRequestsClassificationFilter, setBudgetRequestsClassificationFilter] = useState("all");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && section === "budgets") {
+      const url = new URL(window.location.href);
+      if (budgetRequestsSemesterFilter && budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY) {
+        url.searchParams.set("semester", budgetRequestsSemesterFilter);
+      } else {
+        url.searchParams.delete("semester");
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [budgetRequestsSemesterFilter, section]);
   const [selectedBudgetRequestIds, setSelectedBudgetRequestIds] = useState<Set<string>>(new Set());
   const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
   const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
@@ -963,12 +985,13 @@ export default function AdminPortal({ section }: { section: string }) {
   const [entryReviewTab, setEntryReviewTab] = useState<"city_led" | "org_led">("city_led");
   const [collapsedEntryReviewGroups, setCollapsedEntryReviewGroups] = useState<string[]>([]);
   const [selectedEntryReviewGroupIds, setSelectedEntryReviewGroupIds] = useState<string[]>([]);
+  const [activeEntryReviewGroupId, setActiveEntryReviewGroupId] = useState<string | null>(null);
   const [activeEntryReviewFileId, setActiveEntryReviewFileId] = useState<string | null>(null);
   const [entryReviewPreviewUrl, setEntryReviewPreviewUrl] = useState("");
   const [entryReviewPreviewTitle, setEntryReviewPreviewTitle] = useState("");
   const [entryReviewPreviewCanInline, setEntryReviewPreviewCanInline] = useState(false);
   const [entryReviewPreviewLoading, setEntryReviewPreviewLoading] = useState(false);
-  const [entryReviewBulkDecision, setEntryReviewBulkDecision] = useState<"approve" | "needs_revision" | "reject">("approve");
+  const [entryReviewBulkDecision, setEntryReviewBulkDecision] = useState<"approve" | "needs_revision">("approve");
   const [entryReviewBulkRemark, setEntryReviewBulkRemark] = useState("");
   const [entryReviewConfirmOpen, setEntryReviewConfirmOpen] = useState(false);
   const [entryReviewSubmitting, setEntryReviewSubmitting] = useState(false);
@@ -976,16 +999,21 @@ export default function AdminPortal({ section }: { section: string }) {
   const [isYpopActivityPopoverOpen, setIsYpopActivityPopoverOpen] = useState(false);
   const ypopActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
   const ypopActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isYpopDecisionHelpOpen, setIsYpopDecisionHelpOpen] = useState(false);
+  const ypopDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const ypopDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setEntryReviewTab("city_led");
     setCollapsedEntryReviewGroups([]);
     setSelectedEntryReviewGroupIds([]);
+    setActiveEntryReviewGroupId(null);
     setActiveEntryReviewFileId(null);
     setEntryReviewBulkDecision("approve");
     setEntryReviewBulkRemark("");
     setYpopActivityVisibleCount(4);
     setIsYpopActivityPopoverOpen(false);
+    setIsYpopDecisionHelpOpen(false);
   }, [selectedYpopId]);
 
   // Activity Announcement Broadcast State
@@ -994,6 +1022,71 @@ export default function AdminPortal({ section }: { section: string }) {
   const [sentAnnouncementsByActivityId, setSentAnnouncementsByActivityId] = useState<
     Record<string, { status: string; recipientCount: number; sentAt?: string }>
   >({});
+
+  useEffect(() => {
+    if (section !== "ypop-validation") return;
+    const params = new URLSearchParams(location.search);
+    const targetOrgId = params.get("orgId") || params.get("organizationId");
+    if (!targetOrgId) return;
+
+    const targetTab = params.get("tab");
+    const targetSemester = params.get("semester");
+
+    const period =
+      (targetSemester ? state.ypopPeriods.find((p) => p.semesterKey === targetSemester) : null) ||
+      state.ypopPeriods.find((p) => p.status === "open") ||
+      [...state.ypopPeriods].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ||
+      null;
+
+    if (period) {
+      setSelectedYpopPeriodId(period.id);
+    }
+
+    const existingEntry = state.ypopEntries.find(
+      (e) => e.organizationId === targetOrgId && (!period || e.semester === period.semesterKey),
+    );
+
+    if (existingEntry) {
+      setSelectedYpopId(existingEntry.id);
+      setYpopAdminView("entry-review");
+      if (targetTab === "org_led" || targetTab === "city_led") {
+        setEntryReviewTab(targetTab);
+      }
+    } else if (period) {
+      const targetOrg = state.organizationProfiles.find((o) => o.id === targetOrgId);
+      if (targetOrg) {
+        const virtualEntryId = `virtual-${targetOrgId}-${period.semesterKey}`;
+        const newEntryPayload: YPOPEntry = {
+          id: virtualEntryId,
+          organizationId: targetOrg.id,
+          submittedBy: targetOrg.userId || "",
+          semester: period.semesterKey,
+          semesterLabel: period.semesterLabel,
+          pointsEarned: 0,
+          pointsRequired: 70,
+          totalPoints: 100,
+          status: "under_review",
+          adminRemarks: "",
+          submissionNote: "",
+          validationDeadline: period.validationDeadline || "",
+          submittedAt: new Date().toISOString(),
+          validatedAt: "",
+          revisionHistory: [],
+          orgLedProjectCount: 0,
+          cityLedAttendance: [],
+        };
+        const inState = state.ypopEntries.find((e) => e.id === virtualEntryId);
+        if (!inState) {
+          createYPOPEntry(newEntryPayload);
+        }
+        setSelectedYpopId(virtualEntryId);
+        setYpopAdminView("entry-review");
+        if (targetTab === "org_led" || targetTab === "city_led") {
+          setEntryReviewTab(targetTab);
+        }
+      }
+    }
+  }, [section, location.search, state.ypopPeriods, state.ypopEntries, state.organizationProfiles, createYPOPEntry]);
 
   useEffect(() => {
     if (section === "ypop" && state.ypopCityActivities.length > 0) {
@@ -1510,6 +1603,44 @@ export default function AdminPortal({ section }: { section: string }) {
     return state.budgetRequests.filter((r) => r.status !== "draft");
   }, [state.budgetRequests]);
 
+  const budgetSemesterOptions = useMemo(
+    () =>
+      buildBudgetSemesterOptions(
+        state.ypopPeriods,
+        state.budgetRequests,
+        state.organizationProfiles,
+        state.ypopEntries,
+      ),
+    [state.ypopPeriods, state.budgetRequests, state.organizationProfiles, state.ypopEntries],
+  );
+
+  const selectedBudgetSemesterLabel = useMemo(() => {
+    if (budgetRequestsSemesterFilter === ALL_SEMESTERS_KEY) return "All Semesters";
+    const found = budgetSemesterOptions.find(
+      (opt) => opt.key === budgetRequestsSemesterFilter || opt.label === budgetRequestsSemesterFilter,
+    );
+    return found ? found.label : budgetRequestsSemesterFilter;
+  }, [budgetRequestsSemesterFilter, budgetSemesterOptions]);
+
+  const semesterScopedBudgetRequests = useMemo(() => {
+    if (budgetRequestsSemesterFilter === ALL_SEMESTERS_KEY) return adminBudgetRequests;
+    return adminBudgetRequests.filter((request) =>
+      isBudgetRequestInSemester(
+        request,
+        budgetRequestsSemesterFilter,
+        budgetSemesterOptions,
+        state.ypopEntries,
+        state.ypopOrgActivities,
+      ),
+    );
+  }, [
+    adminBudgetRequests,
+    budgetRequestsSemesterFilter,
+    budgetSemesterOptions,
+    state.ypopEntries,
+    state.ypopOrgActivities,
+  ]);
+
   const availableFiscalYears = useMemo(() => {
     const years = new Set<number>();
     years.add(new Date().getFullYear());
@@ -1629,7 +1760,7 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [budgetReleaseStatuses, fyBudgetRequests, state.organizationProfiles, getLatestLiquidationReportForBudgetRequest]);
   const filteredAdminBudgetRequests = useMemo(() => {
     const query = budgetRequestsSearch.trim().toLowerCase();
-    return adminBudgetRequests.filter((request) => {
+    return semesterScopedBudgetRequests.filter((request) => {
       const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
       const matchesSearch =
         !query ||
@@ -1657,6 +1788,7 @@ export default function AdminPortal({ section }: { section: string }) {
       return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
     });
   }, [
+    semesterScopedBudgetRequests,
     budgetRequestsSearch,
     budgetRequestsStatusFilter,
     budgetRequestsDistrictFilter,
@@ -1718,7 +1850,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const filteredRegistrations = useMemo(() => {
     const query = registrationSearch.trim().toLowerCase();
     return state.organizationProfiles.filter((org) => {
-      if (org.profileStatus === "suspended_inactive") return false;
       const matchesSearch =
         !query ||
         [org.organizationName, org.organizationEmail, org.referenceId ?? "", org.barangay ?? "", org.district ?? ""]
@@ -2206,6 +2337,11 @@ export default function AdminPortal({ section }: { section: string }) {
   );
   const budgetRequestExportFilters = useMemo(() => {
     const summary: string[] = [];
+    if (budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY) {
+      summary.push(`Semester: ${selectedBudgetSemesterLabel}`);
+    } else {
+      summary.push("Semester: All Semesters");
+    }
     if (budgetRequestsSearch.trim()) summary.push(`Search: "${budgetRequestsSearch.trim()}"`);
     if (budgetRequestsStatusFilter !== "all") summary.push(`Status: ${budgetRequestsStatusFilter}`);
     if (budgetRequestsDistrictFilter !== "all") summary.push(`District: ${budgetRequestsDistrictFilter}`);
@@ -2213,6 +2349,8 @@ export default function AdminPortal({ section }: { section: string }) {
     if (budgetRequestsClassificationFilter !== "all") summary.push(`Classification: ${budgetRequestsClassificationFilter}`);
     return summary;
   }, [
+    budgetRequestsSemesterFilter,
+    selectedBudgetSemesterLabel,
     budgetRequestsBarangayFilter,
     budgetRequestsClassificationFilter,
     budgetRequestsDistrictFilter,
@@ -2241,13 +2379,22 @@ export default function AdminPortal({ section }: { section: string }) {
         }
         const totalApproved = budgetRequestExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
         const totalReleased = budgetRequestExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
+        const exportTitle =
+          budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY
+            ? `Budget Requests - ${selectedBudgetSemesterLabel}`
+            : "Budget Requests";
 
         await exportReport(
           format,
           {
-            config: budgetRequestExportConfig,
+            config: {
+              ...budgetRequestExportConfig,
+              title: exportTitle,
+              filenamePrefix: `budget-requests-${budgetRequestsSemesterFilter.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+            },
             rows: budgetRequestExportRows,
             metadataLines: [
+              `Semester: ${selectedBudgetSemesterLabel}`,
               `Total Requests: ${budgetRequestExportRows.length}`,
               `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
               `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
@@ -2359,7 +2506,7 @@ export default function AdminPortal({ section }: { section: string }) {
       revisions: state.documentSubmissions.filter((item) => item.status === "needs_revision").length,
       approvedDocs: state.documentSubmissions.filter((item) => item.status === "approved_green").length,
       pendingBudget: state.budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length,
-      approvedBudget: state.budgetRequests.filter((item) => item.status === "approved_for_ftf_green").length,
+      approvedBudget: state.budgetRequests.filter((item) => item.status === "awaiting_release" || item.status === "approved_for_ftf_green").length,
       releasedBudget: state.budgetRequests.filter((item) => item.status === "budget_released").length,
       pendingLiquidation: state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length,
       overdueLiquidation: state.liquidationReports.filter((item) => item.status === "overdue").length,
@@ -2711,8 +2858,6 @@ export default function AdminPortal({ section }: { section: string }) {
     setIsRenewalApproveDialogOpen(false);
     setIsRenewalRevisionDialogOpen(false);
     setIsRenewalRejectDialogOpen(false);
-    setRenewalCertificateUrnDraft("");
-    setRenewalCertificateUrnError("");
     setRenewalDecisionRemarksDraft("");
   }, [selectedRenewalId]);
 
@@ -2983,6 +3128,27 @@ export default function AdminPortal({ section }: { section: string }) {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isYpopActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isYpopDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (ypopDecisionHelpPanelRef.current?.contains(target)) return;
+      if (ypopDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsYpopDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsYpopDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isYpopDecisionHelpOpen]);
 
   useEffect(() => {
     if (selectedRenewalReviewFileIds.length > 1 && renewalBulkDecision !== "approve") {
@@ -3901,6 +4067,15 @@ export default function AdminPortal({ section }: { section: string }) {
   const submitRegistrationReviewDecisions = async () => {
     if (!selectedRegistrationProfile || !selectedRegistrationSubmission) return;
 
+    if (selectedRegistrationProfile.profileStatus === "suspended_inactive") {
+      toast({
+        title: "Organization Suspended",
+        description: "Review actions are unavailable because this organization account is permanently suspended.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const decision = registrationBulkDecision;
     const targetFiles = selectedRegistrationFiles.filter(
       (file) => selectedRegistrationReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
@@ -4075,6 +4250,7 @@ export default function AdminPortal({ section }: { section: string }) {
         }
       }
     } catch (error) {
+      await refreshAdminSnapshot();
       toast({
         title: "Unable to submit review decisions",
         description: error instanceof Error ? error.message : "The selected review decisions could not be saved.",
@@ -4256,30 +4432,20 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const handleApproveRenewalConfirm = async () => {
     if (!selectedRenewal || !selectedRenewalProfile) return;
-    const urn = renewalCertificateUrnDraft.trim();
-    if (!urn) {
-      setRenewalCertificateUrnError("Certificate URN is required.");
-      return;
-    }
-    const urnError = validateUrn(urn);
-    if (urnError) {
-      setRenewalCertificateUrnError(urnError);
-      return;
-    }
-    setRenewalCertificateUrnError("");
     setRenewalDecisionSubmitting(true);
     try {
-      await adminApproveRenewalInSupabase({
+      const approvalResult = await adminApproveRenewalInSupabase({
         renewalId: selectedRenewal.id,
-        certificateUrn: urn,
         adminRemarks: renewalDecisionRemarksDraft.trim() || undefined,
       });
+
+      const assignedUrn = approvalResult.certificateUrn;
 
       notifyOrganizationUser({
         userId: selectedRenewalProfile.userId,
         organizationId: selectedRenewalProfile.id,
         title: "Renewal Approved",
-        message: `Your organization renewal for ${selectedRenewalProfile.organizationName} has been approved! URN: ${urn}`,
+        message: `Your organization renewal for ${selectedRenewalProfile.organizationName} has been approved! New official URN: ${assignedUrn}`,
         type: "renewal_status_update",
         relatedType: "renewal",
         relatedId: selectedRenewal.id,
@@ -4287,7 +4453,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
       toast({
         title: "Renewal Approved",
-        description: `Renewal for ${selectedRenewalProfile.organizationName} has been approved with URN ${urn}.`,
+        description: `Renewal for ${selectedRenewalProfile.organizationName} has been approved with new official URN ${assignedUrn}.`,
       });
 
       setIsRenewalApproveDialogOpen(false);
@@ -4479,9 +4645,9 @@ export default function AdminPortal({ section }: { section: string }) {
       }
       return {
         title: "Confirm Document Rejection",
-        description: `Click the checkbox to acknowledge this rejection before marking ${pendingAdminConfirmation.fileName} as rejected.`,
-        checkboxLabel: "I acknowledge this rejection action.",
-        confirmLabel: "Reject Submission",
+        description: `Click the checkbox to acknowledge this rejection before marking ${pendingAdminConfirmation.fileName} as rejected. Rejecting a registration document will permanently suspend the organization account.`,
+        checkboxLabel: "I acknowledge that rejecting this document will permanently suspend the organization account.",
+        confirmLabel: "Reject & Suspend Account",
         showCommentBox: false,
         commentLabel: "",
         commentPlaceholder: "",
@@ -4504,7 +4670,7 @@ export default function AdminPortal({ section }: { section: string }) {
       if (pendingAdminConfirmation.action === "approve") {
         return {
           title: "Confirm Budget Approval",
-          description: `Click the checkbox to acknowledge this approval before marking ${pendingAdminConfirmation.activityTitle} as approved for face-to-face submission.`,
+          description: `Click the checkbox to acknowledge this approval before marking ${pendingAdminConfirmation.activityTitle} as approved (Awaiting Release).`,
           checkboxLabel: "I acknowledge this budget approval.",
           confirmLabel: "Approve Budget",
           showCommentBox: false,
@@ -4557,13 +4723,13 @@ export default function AdminPortal({ section }: { section: string }) {
         };
       }
       return {
-        title: "Confirm Budget Rejection",
-        description: `Click the checkbox and add a comment before rejecting ${pendingAdminConfirmation.activityTitle}.`,
-        checkboxLabel: "I acknowledge this rejection action.",
-        confirmLabel: "Reject Budget",
-        showCommentBox: true,
-        commentLabel: "Admin Comment",
-        commentPlaceholder: "Explain why the budget request was rejected.",
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
       };
     }
 
@@ -4671,13 +4837,13 @@ export default function AdminPortal({ section }: { section: string }) {
         };
       }
       return {
-        title: "Confirm Event Rejection",
-        description: `Click the checkbox and add a comment before rejecting the proof submitted for ${pendingAdminConfirmation.activityName}.`,
-        checkboxLabel: "I acknowledge this event rejection action.",
-        confirmLabel: "Reject Event Proof",
-        showCommentBox: true,
-        commentLabel: "Admin Comment",
-        commentPlaceholder: "Explain why this event proof is being rejected.",
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
       };
     }
 
@@ -4705,13 +4871,13 @@ export default function AdminPortal({ section }: { section: string }) {
         };
       }
       return {
-        title: "Confirm PPA Rejection",
-        description: `Click the checkbox and add a comment before rejecting ${pendingAdminConfirmation.activityName}.`,
-        checkboxLabel: "I acknowledge this PPA rejection action.",
-        confirmLabel: "Reject PPA",
-        showCommentBox: true,
-        commentLabel: "Admin Comment",
-        commentPlaceholder: "Explain why this organization-initiated activity is being rejected.",
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
       };
     }
 
@@ -4792,7 +4958,7 @@ export default function AdminPortal({ section }: { section: string }) {
           );
           toast({
             title: "Submission rejected",
-            description: `${pendingAdminConfirmation.organizationName}'s document submission is now rejected.`,
+            description: `${pendingAdminConfirmation.organizationName}'s document was rejected and the organization account is permanently suspended.`,
           });
         }
       } else if (pendingAdminConfirmation.kind === "budget") {
@@ -4873,11 +5039,11 @@ export default function AdminPortal({ section }: { section: string }) {
 
         if (pendingAdminConfirmation.action === "approve") {
           budgetPatch = {
-            status: "approved_for_ftf_green",
+            status: "awaiting_release",
             approvedAmount,
             goSignalAt: budgetHistoryNow,
             adminRemarks: "",
-            revisionHistory: [...existingHistory, { action: "approved_for_ftf_green", adminRemarks: "", changedAt: budgetHistoryNow }],
+            revisionHistory: [...existingHistory, { action: "awaiting_release", adminRemarks: "", changedAt: budgetHistoryNow }],
           };
         } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
           budgetPatch = {
@@ -4927,21 +5093,21 @@ export default function AdminPortal({ section }: { section: string }) {
             "Approved budget request",
             "budget_request",
             pendingAdminConfirmation.budgetRequestId,
-            `Marked budget request "${pendingAdminConfirmation.activityTitle}" as approved for face-to-face submission.`,
+            `Marked budget request "${pendingAdminConfirmation.activityTitle}" as approved (Awaiting Release).`,
             pendingAdminConfirmation.organizationId,
           );
           notifyOrganizationUser({
             userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
             organizationId: pendingAdminConfirmation.organizationId,
             title: "Budget request approved",
-            message: "The admin approved your budget request and issued the go signal for the next step.",
+            message: "Your budget request has been approved and is awaiting fund release.",
             type: "budget_go_signal",
             relatedType: "budget_request",
             relatedId: pendingAdminConfirmation.budgetRequestId,
           });
           toast({
             title: "Budget approved",
-            description: `${pendingAdminConfirmation.organizationName}'s budget request is now marked green.`,
+            description: `${pendingAdminConfirmation.organizationName}'s budget request is now approved and awaiting fund release.`,
           });
         } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
           await appendAuditLog(
@@ -5276,12 +5442,12 @@ export default function AdminPortal({ section }: { section: string }) {
         const adminRemarks = statusChangeRemarkDraft.trim();
 
         if (
-          (pendingAdminConfirmation.action === "needs_revision" || pendingAdminConfirmation.action === "rejected") &&
+          pendingAdminConfirmation.action === "needs_revision" &&
           !adminRemarks
         ) {
           toast({
             title: "Comment required",
-            description: "Please add a short comment before requesting a revision or rejecting this event proof.",
+            description: "Please add a short comment before requesting a revision for this event proof.",
             variant: "destructive",
           });
           return;
@@ -5435,27 +5601,6 @@ export default function AdminPortal({ section }: { section: string }) {
             title: "Revision requested",
             description: `${pendingAdminConfirmation.organizationName} was asked to revise the event proof.`,
           });
-        } else {
-          await appendAuditLog(
-            "Rejected YPOP event proof",
-            "ypop_event_participation",
-            pendingAdminConfirmation.participationId,
-            `Rejected the YPOP event proof "${pendingAdminConfirmation.activityName}".`,
-            pendingAdminConfirmation.organizationId,
-          );
-          notifyOrganizationUser({
-            userId: orgUserId,
-            organizationId: pendingAdminConfirmation.organizationId,
-            title: "YPOP event proof rejected",
-            message: adminRemarks,
-            type: "ypop_event_rejected",
-            relatedType: "ypop_event_participation",
-            relatedId: pendingAdminConfirmation.participationId,
-          });
-          toast({
-            title: "Event proof rejected",
-            description: `${pendingAdminConfirmation.organizationName}'s event proof was rejected.`,
-          });
         }
       } else if (pendingAdminConfirmation.kind === "ypop_org_activity") {
         const orgActivity =
@@ -5465,12 +5610,12 @@ export default function AdminPortal({ section }: { section: string }) {
         const adminRemarks = statusChangeRemarkDraft.trim();
 
         if (
-          (pendingAdminConfirmation.action === "needs_revision" || pendingAdminConfirmation.action === "rejected") &&
+          pendingAdminConfirmation.action === "needs_revision" &&
           !adminRemarks
         ) {
           toast({
             title: "Comment required",
-            description: "Please add a short comment before requesting a revision or rejecting this PPA log.",
+            description: "Please add a short comment before requesting a revision for this PPA log.",
             variant: "destructive",
           });
           return;
@@ -5606,27 +5751,6 @@ export default function AdminPortal({ section }: { section: string }) {
           toast({
             title: "Revision requested",
             description: `${pendingAdminConfirmation.organizationName} was asked to revise the organization-initiated activity log.`,
-          });
-        } else {
-          await appendAuditLog(
-            "Rejected YPOP organization-initiated activity",
-            "ypop_org_activity",
-            pendingAdminConfirmation.orgActivityId,
-            `Rejected the organization-initiated activity "${pendingAdminConfirmation.activityName}".`,
-            pendingAdminConfirmation.organizationId,
-          );
-          notifyOrganizationUser({
-            userId: orgUserId,
-            organizationId: pendingAdminConfirmation.organizationId,
-            title: "PPA log rejected",
-            message: adminRemarks,
-            type: "ypop_org_activity_rejected",
-            relatedType: "ypop_org_activity",
-            relatedId: pendingAdminConfirmation.orgActivityId,
-          });
-          toast({
-            title: "PPA rejected",
-            description: `${pendingAdminConfirmation.organizationName}'s organization-initiated activity log was rejected.`,
           });
         }
       } else if (pendingAdminConfirmation.kind === "transparency_post") {
@@ -6429,7 +6553,7 @@ export default function AdminPortal({ section }: { section: string }) {
     try {
       if (action === "approve") {
         await updateBudgetRequestInSupabase(request.id, {
-          status: "approved_for_ftf_green",
+          status: "awaiting_release",
           goSignalAt: new Date().toISOString(),
           approvedAmount: request.requestedAmount,
         });
@@ -6438,7 +6562,7 @@ export default function AdminPortal({ section }: { section: string }) {
           userId: request.submittedBy,
           organizationId: request.organizationId,
           title: "Budget request approved",
-          message: "The admin approved your budget request and issued the go signal for the next step.",
+          message: "The admin approved your budget request. Fund release is now pending.",
           type: "budget_go_signal",
           relatedType: "budget_request",
           relatedId: request.id,
@@ -6447,12 +6571,12 @@ export default function AdminPortal({ section }: { section: string }) {
           "Approved budget request",
           "budget_request",
           request.id,
-          `Marked budget request "${request.activityTitle}" as approved for face-to-face green.`,
+          `Marked budget request "${request.activityTitle}" as approved (Awaiting Release).`,
           request.organizationId,
         );
         toast({
           title: "Budget approved",
-          description: `${request.organizationName}'s budget request is now marked green.`,
+          description: `${request.organizationName}'s budget request is now approved and awaiting fund release.`,
         });
         return;
       }
@@ -6820,6 +6944,7 @@ export default function AdminPortal({ section }: { section: string }) {
         const approvedDocumentCount = selectedFiles.filter((file) => file.adminStatus === "approved_green").length;
         const allRequiredDocumentsApproved = selectedFiles.length === templateDocuments.length && approvedDocumentCount === templateDocuments.length;
         const isAutoVerified = selectedOrg?.profileStatus === "verified";
+        const isOrgSuspended = selectedOrg?.profileStatus === "suspended_inactive";
         const submittedDocumentCount = selectedFiles.length;
         const reviewedDocumentCount = selectedFiles.filter((file) => file.adminStatus !== "submitted" && file.adminStatus !== "under_admin_review").length;
         const needsRevisionCount = selectedFiles.filter((file) => file.adminStatus === "needs_revision").length;
@@ -6851,6 +6976,7 @@ export default function AdminPortal({ section }: { section: string }) {
         const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
         const decisionRequiresRemark = registrationDecisionRequiresRemark(registrationBulkDecision);
         const isRegistrationDecisionConfirmDisabled =
+          isOrgSuspended ||
           selectedBulkFiles.length === 0 ||
           registrationReviewSubmitting ||
           (selectedBulkFiles.length === 1 && decisionRequiresRemark && !registrationBulkRemark.trim());
@@ -7315,6 +7441,7 @@ export default function AdminPortal({ section }: { section: string }) {
                         selectedRegistrationCount > 0 &&
                         selectedRegistrationCount < selectableRegistrationFileIds.length;
                       const handleToggleSelectAllRegistration = () => {
+                        if (isOrgSuspended) return;
                         if (isAllRegistrationSelected) {
                           setSelectedRegistrationReviewFileIds((current) =>
                             current.filter((id) => !selectableRegistrationFileIds.includes(id)),
@@ -7337,7 +7464,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                   if (el) el.indeterminate = isRegistrationIndeterminate;
                                 }}
                                 checked={isAllRegistrationSelected}
-                                disabled={selectableRegistrationFileIds.length === 0}
+                                disabled={isOrgSuspended || selectableRegistrationFileIds.length === 0}
                                 onChange={handleToggleSelectAllRegistration}
                                 className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label="Select all"
@@ -7368,13 +7495,13 @@ export default function AdminPortal({ section }: { section: string }) {
                               tabIndex={0}
                               onClick={() => {
                                 setActiveRegistrationReviewFileId(file.id);
-                                if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
+                                if (!isLocked && !isOrgSuspended) setSelectedRegistrationReviewFileIds([file.id]);
                               }}
                               onKeyDown={(event) => {
                                 if (event.key !== "Enter" && event.key !== " ") return;
                                 event.preventDefault();
                                 setActiveRegistrationReviewFileId(file.id);
-                                if (!isLocked) setSelectedRegistrationReviewFileIds([file.id]);
+                                if (!isLocked && !isOrgSuspended) setSelectedRegistrationReviewFileIds([file.id]);
                               }}
                               className={cn(
                                 "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
@@ -7388,9 +7515,10 @@ export default function AdminPortal({ section }: { section: string }) {
                               <input
                                 type="checkbox"
                                 checked={isChecked}
-                                disabled={isLocked}
+                                disabled={isLocked || isOrgSuspended}
                                 onClick={(event) => event.stopPropagation()}
                                 onChange={() => {
+                                  if (isOrgSuspended) return;
                                   setSelectedRegistrationReviewFileIds((current) =>
                                     current.includes(file.id)
                                       ? current.filter((id) => id !== file.id)
@@ -7431,17 +7559,24 @@ export default function AdminPortal({ section }: { section: string }) {
 
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
-                      <button
-                        type="button"
-                        ref={registrationDecisionHelpTriggerRef}
-                        onClick={() => setIsRegistrationDecisionHelpOpen((current) => !current)}
-                        aria-label="Review rules"
-                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
-                      >
-                        <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
-                      </button>
-                      {isRegistrationDecisionHelpOpen ? (
+                      <div className="flex items-center gap-2">
+                        <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                        {isOrgSuspended ? (
+                          <RegistrationStatusPill status="suspended_inactive" />
+                        ) : null}
+                      </div>
+                      {!isOrgSuspended ? (
+                        <button
+                          type="button"
+                          ref={registrationDecisionHelpTriggerRef}
+                          onClick={() => setIsRegistrationDecisionHelpOpen((current) => !current)}
+                          aria-label="Review rules"
+                          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                        >
+                          <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                        </button>
+                      ) : null}
+                      {!isOrgSuspended && isRegistrationDecisionHelpOpen ? (
                         <div
                           ref={registrationDecisionHelpPanelRef}
                           className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
@@ -7458,7 +7593,38 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2 pt-4">
-                      {isAutoVerified ? (
+                      {isOrgSuspended ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle px-4 py-3">
+                            <Info className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />
+                            <p className="font-segoe text-[13px] leading-[140%] text-icon-danger-secondary">
+                              Review actions are unavailable because this organization account is permanently suspended.
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                            <Select disabled value="suspended">
+                              <SelectTrigger className="h-8 border-slate-300 text-[13px] text-slate-500 bg-slate-50 cursor-not-allowed">
+                                <SelectValue placeholder="Review unavailable — Account Suspended">
+                                  Review unavailable — Account Suspended
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="suspended">Review unavailable — Account Suspended</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors cursor-not-allowed opacity-[0.38]"
+                          >
+                            Confirm
+                          </button>
+                        </div>
+                      ) : isAutoVerified ? (
                         <div className="flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
                           <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
                           <div>
@@ -7626,12 +7792,15 @@ export default function AdminPortal({ section }: { section: string }) {
         const profilesNeedingRevisionCount = state.organizationProfiles.filter(
           (org) => org.profileStatus === "needs_update",
         ).length;
+        const suspendedCount = state.organizationProfiles.filter(
+          (org) => org.profileStatus === "suspended_inactive",
+        ).length;
 
         return (
           <div className="flex flex-col gap-4">
             <AdminPageHeader title="Registrations" description="Review incoming YORP accreditation submissions." />
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title="VERIFIED"
                 value={verifiedCount}
@@ -7649,6 +7818,12 @@ export default function AdminPortal({ section }: { section: string }) {
                 value={profilesNeedingRevisionCount}
                 icon={AlertCircle}
                 description="Submissions requiring corrections."
+              />
+              <StatsCard
+                title="SUSPENDED"
+                value={suspendedCount}
+                icon={UserX}
+                description="Organizations with permanently suspended accounts."
               />
             </div>
 
@@ -7959,13 +8134,6 @@ export default function AdminPortal({ section }: { section: string }) {
                       <button
                         type="button"
                         onClick={() => {
-                          const existingUrn = selectedOrg.urn || selectedOrg.organizationIdentifierNumber || "";
-                          const candidateUrn =
-                            existingUrn && !validateUrn(existingUrn)
-                              ? existingUrn
-                              : (selectedOrg.urn || selectedOrg.organizationIdentifierNumber || "");
-                          setRenewalCertificateUrnDraft(candidateUrn);
-                          setRenewalCertificateUrnError("");
                           setRenewalDecisionRemarksDraft("");
                           setIsRenewalApproveDialogOpen(true);
                         }}
@@ -8453,32 +8621,28 @@ export default function AdminPortal({ section }: { section: string }) {
                           Approve Organization Renewal
                         </DialogTitle>
                         <DialogDescription className="font-segoe text-sm text-slate-500">
-                          Assign an official Certificate Unique Registration Number (URN) to approve this renewal for{" "}
+                          Approve this accreditation renewal application for{" "}
                           <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>.
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-3 py-2">
-                        <div className="space-y-1">
-                          <label className="font-segoe text-xs font-semibold text-text-default">
-                            Certificate URN <span className="text-destructive">*</span>
-                          </label>
-                          <Input
-                            value={renewalCertificateUrnDraft}
-                            onChange={(e) => {
-                              setRenewalCertificateUrnDraft(e.target.value);
-                              setRenewalCertificateUrnError("");
-                            }}
-                            placeholder="17-26-010"
-                            className="font-cascadia text-sm uppercase"
-                          />
-                          {renewalCertificateUrnError ? (
-                            <p className="font-segoe text-xs text-destructive">{renewalCertificateUrnError}</p>
-                          ) : (
-                            <p className="font-segoe text-[11px] text-slate-400">
-                              Format: BB-YY-NNN (e.g. 17-26-010)
-                            </p>
-                          )}
+                      <div className="space-y-4 py-2">
+                        {/* URN Information Box */}
+                        <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-medium text-slate-500">Current URN</span>
+                            <span className="font-cascadia font-semibold text-text-default">
+                              {selectedOrg.urn || selectedOrg.organizationIdentifierNumber || "—"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/80">
+                            <span className="font-medium text-slate-500">New Term URN</span>
+                            <span className="inline-flex items-center gap-1.5 font-segoe font-medium text-public-text-brand text-xs">
+                              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                              Generated automatically upon approval
+                            </span>
+                          </div>
                         </div>
+
                         <div className="space-y-1">
                           <label className="font-segoe text-xs font-semibold text-text-default">
                             Admin Remarks (Optional)
@@ -8503,7 +8667,7 @@ export default function AdminPortal({ section }: { section: string }) {
                         </button>
                         <button
                           type="button"
-                          disabled={renewalDecisionSubmitting || !renewalCertificateUrnDraft.trim()}
+                          disabled={renewalDecisionSubmitting}
                           onClick={handleApproveRenewalConfirm}
                           className="inline-flex items-center gap-1.5 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-bg-brand-hover disabled:opacity-50"
                         >
@@ -8739,25 +8903,22 @@ export default function AdminPortal({ section }: { section: string }) {
               !Number.isNaN(parsedApprovedAmount) &&
               parsedApprovedAmount > 0);
           const isBudgetDecisionConfirmDisabled =
+            selectedBudgetReviewFiles.length === 0 ||
             budgetReviewSubmitting ||
             !isApprovedAmountValid ||
             (budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim());
 
           const submitBudgetReviewDecisions = async () => {
             if (!selectedBudgetRequest) return;
+            if (!selectedBudgetReviewFiles.length) return;
             setBudgetReviewSubmitting(true);
             const targetFileStatus: BudgetRequestFileAdminStatus =
               budgetBulkDecision === "approve"
                 ? "approved_green"
-                : budgetBulkDecision === "needs_revision"
-                  ? "needs_revision"
-                  : "rejected_red";
+                : "needs_revision";
 
             const remark = budgetBulkRemark.trim();
-            const filesToUpdate =
-              selectedBudgetReviewFiles.length > 0
-                ? selectedBudgetReviewFiles
-                : selectedBudgetRequestFiles.filter((file) => file.adminStatus !== "approved_green");
+            const filesToUpdate = selectedBudgetReviewFiles;
 
             for (const file of filesToUpdate) {
               try {
@@ -8784,9 +8945,7 @@ export default function AdminPortal({ section }: { section: string }) {
             );
 
             let targetParentStatus: BudgetRequest["status"] = selectedBudgetRequest.status;
-            if (budgetBulkDecision === "reject") {
-              targetParentStatus = "rejected_red";
-            } else if (
+            if (
               budgetBulkDecision === "needs_revision" ||
               allEffectiveFileStatuses.some((s) => s === "needs_revision")
             ) {
@@ -8798,7 +8957,7 @@ export default function AdminPortal({ section }: { section: string }) {
               (selectedBudgetRequestFiles.length === 0 ||
                 allEffectiveFileStatuses.every((s) => s === "approved_green"))
             ) {
-              targetParentStatus = "approved_for_ftf_green";
+              targetParentStatus = "awaiting_release";
             } else {
               // Unreviewed files still remain; keep parent in current pending review state
               targetParentStatus = selectedBudgetRequest.status;
@@ -8819,7 +8978,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   ...existingHistory,
                   { action: targetParentStatus, adminRemarks: remark, changedAt: budgetHistoryNow },
                 ],
-                ...(targetParentStatus === "approved_for_ftf_green"
+                ...(targetParentStatus === "awaiting_release"
                   ? {
                     approvedAmount: approvedAmountNum,
                     goSignalAt: budgetHistoryNow,
@@ -8832,7 +8991,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 updateBudgetRequest(selectedBudgetRequest.id, parentPatch);
                 await refreshAdminSnapshot();
 
-                if (targetParentStatus === "approved_for_ftf_green") {
+                if (targetParentStatus === "awaiting_release") {
                   const formattedApproved = `₱${approvedAmountNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                   const formattedRequested = `₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -8840,21 +8999,21 @@ export default function AdminPortal({ section }: { section: string }) {
                     "Approved budget request",
                     "budget_request",
                     selectedBudgetRequest.id,
-                    `Marked budget request "${selectedBudgetRequest.activityTitle}" as approved with approved amount ${formattedApproved} (Requested: ${formattedRequested}).`,
+                    `Marked budget request "${selectedBudgetRequest.activityTitle}" as approved (Awaiting Release) with approved amount ${formattedApproved} (Requested: ${formattedRequested}).`,
                     selectedBudgetRequest.organizationId,
                   ).catch(console.error);
                   notifyOrganizationUser({
                     userId: selectedBudgetOrganization?.userId ?? "",
                     organizationId: selectedBudgetRequest.organizationId,
                     title: "Budget request approved",
-                    message: `Your budget request for '${selectedBudgetRequest.activityTitle}' has been approved for ${formattedApproved}. Please prepare your hard copy requirements for face-to-face submission.`,
+                    message: `Your budget request for '${selectedBudgetRequest.activityTitle}' has been approved for ${formattedApproved} and is awaiting fund release.`,
                     type: "budget_go_signal",
                     relatedType: "budget_request",
                     relatedId: selectedBudgetRequest.id,
                   });
                   toast({
                     title: "Budget approved",
-                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget request is now marked green for ${formattedApproved}.`,
+                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget request is now approved and awaiting fund release for ${formattedApproved}.`,
                   });
                 } else if (targetParentStatus === "needs_revision") {
                   void appendAuditLog(
@@ -9120,11 +9279,19 @@ export default function AdminPortal({ section }: { section: string }) {
                           {selectedBudgetRequest.activityTitle}
                         </p>
                       </div>
+                      {selectedBudgetRequest.activityDescription ? (
+                        <div className="flex flex-col gap-1 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Purpose Description</p>
+                          <p className="font-segoe text-[13px] font-normal leading-[140%] text-text-default whitespace-pre-wrap">
+                            {selectedBudgetRequest.activityDescription}
+                          </p>
+                        </div>
+                      ) : null}
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Category</span>
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
                           <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
-                            {selectedBudgetRequest.purposeCategory || "General Purpose"}
+                            {formatAdvocacyLabel(selectedBudgetRequest.purposeCategory) || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
@@ -9538,9 +9705,23 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   </div>
 
+                  {selectedBudgetRequest.goSignalAt &&
+                    (selectedBudgetRequest.status === "awaiting_release" ||
+                      selectedBudgetRequest.status === "approved_for_ftf_green" ||
+                      selectedBudgetRequest.status === "hard_copy_submitted" ||
+                      selectedBudgetRequest.status === "budget_released" ||
+                      selectedBudgetRequest.status === "completed") ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                        Approved · {format(new Date(selectedBudgetRequest.goSignalAt), "MMMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    </div>
+                  ) : null}
+
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
                         {(selectedBudgetRequest.status === "submitted" ||
                           selectedBudgetRequest.status === "under_review" ||
@@ -9548,7 +9729,7 @@ export default function AdminPortal({ section }: { section: string }) {
                             <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate documents and issue formal budget proposal determination.</p>
                           )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <BudgetStatusPill status={selectedBudgetRequest.status} />
                         {(selectedBudgetRequest.status === "submitted" ||
                           selectedBudgetRequest.status === "under_review" ||
@@ -9588,14 +9769,19 @@ export default function AdminPortal({ section }: { section: string }) {
                       {(selectedBudgetRequest.status === "submitted" ||
                         selectedBudgetRequest.status === "under_review") && (
                           <>
-                            {selectedBudgetReviewFiles.length > 0 ? (
+                            {selectedBudgetReviewFiles.length === 0 ? (
+                              <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                                <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                                <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                              </div>
+                            ) : (
                               <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
                                 <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
                                   {selectedBudgetReviewFiles.length} document{selectedBudgetReviewFiles.length === 1 ? "" : "s"} selected.
                                 </p>
                               </div>
-                            ) : null}
+                            )}
 
                             <div className="flex flex-col gap-1.5">
                               <label className="font-segoe text-[13px] text-text-default">Decision</label>
@@ -9605,19 +9791,25 @@ export default function AdminPortal({ section }: { section: string }) {
                                   setBudgetBulkDecision(value as BudgetReviewDecision);
                                   setIsBudgetDecisionDirty(true);
                                 }}
+                                disabled={selectedBudgetReviewFiles.length === 0}
                               >
                                 <SelectTrigger className="h-8 border-slate-300 text-[13px]">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="approve">Approve</SelectItem>
-                                  <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                                  <SelectItem value="reject">Reject</SelectItem>
+                                  <SelectItem
+                                    value="needs_revision"
+                                    disabled={selectedBudgetReviewFiles.length > 1}
+                                    className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                                  >
+                                    Needs Revision
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
 
-                            {budgetBulkDecision === "approve" && (
+                            {selectedBudgetReviewFiles.length > 0 && budgetBulkDecision === "approve" && (
                               <div className="space-y-2.5 rounded-md border border-slate-200 bg-slate-50/70 p-3">
                                 <div className="flex items-center justify-between">
                                   <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
@@ -9675,7 +9867,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               </div>
                             )}
 
-                            {(budgetBulkDecision === "needs_revision" || budgetBulkDecision === "reject") && (
+                            {selectedBudgetReviewFiles.length === 1 && budgetBulkDecision === "needs_revision" && (
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-segoe text-[13px] text-text-default">
                                   Remarks <span className="text-destructive">*</span>
@@ -9686,11 +9878,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                     setBudgetBulkRemark(event.target.value);
                                     setIsBudgetRemarkDirty(true);
                                   }}
-                                  placeholder={
-                                    budgetBulkDecision === "needs_revision"
-                                      ? "Explain required revisions or document corrections..."
-                                      : "Explain the reason for rejecting this budget request..."
-                                  }
+                                  placeholder="Explain required revisions or document corrections..."
                                   rows={3}
                                   className="resize-none text-[13px]"
                                 />
@@ -9718,6 +9906,82 @@ export default function AdminPortal({ section }: { section: string }) {
                               <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
                             ) : null}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Awaiting Release stage (New Workflow) */}
+                      {selectedBudgetRequest.status === "awaiting_release" && (
+                        <div className="space-y-3">
+                          <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
+                            <p className="font-semibold">Approved — Awaiting Release</p>
+                            <p className="mt-0.5 text-[11px] text-slate-600">
+                              This budget proposal is approved for {`₱${(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}. When funds are disbursed, click below to mark the budget as released.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={budgetLifecycleSubmitting}
+                            onClick={() => {
+                              setBudgetLifecycleStage("budget_released");
+                              const executeRelease = async () => {
+                                setBudgetLifecycleSubmitting(true);
+                                try {
+                                  const budgetHistoryNow = new Date().toISOString();
+                                  const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
+                                  const approvedAmount = Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
+                                  const budgetPatch: Partial<BudgetRequest> = {
+                                    status: "budget_released",
+                                    releasedAmount: approvedAmount,
+                                    releaseDate: getManilaDateIso(),
+                                    goSignalAt: selectedBudgetRequest.goSignalAt || budgetHistoryNow,
+                                    adminRemarks: "",
+                                    revisionHistory: [
+                                      ...existingHistory,
+                                      { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow },
+                                    ],
+                                  };
+                                  await updateBudgetRequestInSupabase(selectedBudgetRequest.id, budgetPatch);
+                                  updateBudgetRequest(selectedBudgetRequest.id, budgetPatch);
+                                  await refreshAdminSnapshot();
+                                  void appendAuditLog(
+                                    "Budget cash released",
+                                    "budget_request",
+                                    selectedBudgetRequest.id,
+                                    `Released cash for budget request "${selectedBudgetRequest.activityTitle}".`,
+                                    selectedBudgetRequest.organizationId,
+                                  ).catch(console.error);
+                                  notifyOrganizationUser({
+                                    userId: selectedBudgetOrganization?.userId ?? "",
+                                    organizationId: selectedBudgetRequest.organizationId,
+                                    title: "Budget released",
+                                    message: "Your budget has been released.",
+                                    type: "budget_released",
+                                    relatedType: "budget_request",
+                                    relatedId: selectedBudgetRequest.id,
+                                  });
+                                  toast({
+                                    title: "Budget released",
+                                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget is now in monitoring and liquidation has been unlocked.`,
+                                  });
+                                } catch (err) {
+                                  console.error("Failed to release budget:", err);
+                                  toast({
+                                    title: "Release failed",
+                                    description: "Could not update budget request status.",
+                                    variant: "destructive",
+                                  });
+                                } finally {
+                                  setBudgetLifecycleSubmitting(false);
+                                }
+                              };
+                              void executeRelease();
+                            }}
+                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
+                          >
+                            {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+                            Budget Released
+                          </button>
                         </div>
                       )}
 
@@ -9891,10 +10155,10 @@ export default function AdminPortal({ section }: { section: string }) {
           );
         }
 
-        const pendingReviewBudgetRequestCount = state.budgetRequests.filter(
+        const pendingReviewBudgetRequestCount = semesterScopedBudgetRequests.filter(
           (r) => r.status === "submitted" || r.status === "under_review",
         ).length;
-        const pendingReviewBudgetRequestTodayCount = state.budgetRequests.filter((r) => {
+        const pendingReviewBudgetRequestTodayCount = semesterScopedBudgetRequests.filter((r) => {
           if (r.status !== "submitted" && r.status !== "under_review") return false;
           const createdDate = new Date(r.createdAt);
           const today = new Date();
@@ -9905,7 +10169,7 @@ export default function AdminPortal({ section }: { section: string }) {
             createdDate.getDate() === today.getDate()
           );
         }).length;
-        const releasedBudgetTotal = state.budgetRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+        const releasedBudgetTotal = semesterScopedBudgetRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
         const formatBudgetStatCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
         const budgetOrganizationsById = Object.fromEntries(state.organizationProfiles.map((org) => [org.id, org]));
 
@@ -9915,17 +10179,50 @@ export default function AdminPortal({ section }: { section: string }) {
               title="Budget Requests"
               description="Review funding requests for YPOP-approved projects."
               action={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setActiveReportExport("budget-requests");
-                  }}
-                  className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100"
-                >
-                  <Download className="h-4 w-4 text-slate-500" />
-                  <span>Export</span>
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Select semester"
+                        className="flex h-9 min-w-[160px] max-w-[220px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-1.5 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        <span className="truncate font-medium">{selectedBudgetSemesterLabel}</span>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-[220px] max-h-[300px] overflow-y-auto data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0 shadow-lg"
+                    >
+                      {budgetSemesterOptions.map((option) => (
+                        <DropdownMenuItem
+                          key={option.key}
+                          onClick={() => setBudgetRequestsSemesterFilter(option.key)}
+                          className={cn(
+                            "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default cursor-pointer",
+                            budgetRequestsSemesterFilter === option.key && "bg-bg-info-tertiary text-public-text-brand font-semibold",
+                          )}
+                        >
+                          {option.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveReportExport("budget-requests");
+                    }}
+                    disabled={filteredAdminBudgetRequests.length === 0}
+                    className="flex h-9 items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4 text-slate-500" />
+                    <span>Export</span>
+                  </Button>
+                </div>
               }
             />
 
@@ -10166,13 +10463,6 @@ export default function AdminPortal({ section }: { section: string }) {
                         >
                           Needs Revision
                         </SelectItem>
-                        <SelectItem
-                          value="reject"
-                          disabled={selectedLiquidationReviewFiles.length > 1}
-                          className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                        >
-                          Reject
-                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -10220,9 +10510,7 @@ export default function AdminPortal({ section }: { section: string }) {
             const targetStatus: BudgetRequestFileAdminStatus =
               liquidationBulkDecision === "approve"
                 ? "approved_green"
-                : liquidationBulkDecision === "needs_revision"
-                  ? "needs_revision"
-                  : "rejected_red";
+                : "needs_revision";
             const remark =
               selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow
                 ? liquidationBulkRemark.trim()
@@ -10253,9 +10541,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
               let targetParentStatus: LiquidationReport["status"] = selectedLiquidationReport.status;
 
-              if (liquidationBulkDecision === "reject") {
-                targetParentStatus = "rejected_red";
-              } else if (liquidationBulkDecision === "needs_revision") {
+              if (liquidationBulkDecision === "needs_revision") {
                 targetParentStatus = "needs_revision";
               } else if (
                 liquidationBulkDecision === "approve" &&
@@ -10399,64 +10685,50 @@ export default function AdminPortal({ section }: { section: string }) {
 
           const submitLiquidationLifecycleDecision = async () => {
             if (!selectedLiquidationReport) return;
-            if (liquidationLifecycleStage === selectedLiquidationReport.status) return;
+            if (selectedLiquidationReport.status === "completed_liquidated") return;
 
             setLiquidationLifecycleSubmitting(true);
             try {
               const liqHistoryNow = new Date().toISOString();
               const existingHistory = selectedLiquidationReport.revisionHistory ?? [];
 
-              let liqPatch: Partial<LiquidationReport> = {};
-              if (liquidationLifecycleStage === "completed_liquidated") {
-                liqPatch = {
-                  status: "completed_liquidated",
-                  completedAt: liqHistoryNow,
-                  remarks: "",
-                  revisionHistory: [
-                    ...existingHistory,
-                    { action: "completed_liquidated", adminRemarks: "", changedAt: liqHistoryNow },
-                  ],
-                };
-              } else if (liquidationLifecycleStage === "approved_for_ftf_green") {
-                liqPatch = {
-                  status: "approved_for_ftf_green",
-                  remarks: "",
-                  revisionHistory: [
-                    ...existingHistory,
-                    { action: "approved_for_ftf_green", adminRemarks: "", changedAt: liqHistoryNow },
-                  ],
-                };
-              }
+              const liqPatch: Partial<LiquidationReport> = {
+                status: "completed_liquidated",
+                completedAt: liqHistoryNow,
+                remarks: "",
+                revisionHistory: [
+                  ...existingHistory,
+                  { action: "completed_liquidated", adminRemarks: "", changedAt: liqHistoryNow },
+                ],
+              };
 
               await updateLiquidationReportInSupabase(selectedLiquidationReport.id, liqPatch);
               updateLiquidationReport(selectedLiquidationReport.id, liqPatch);
-              await refreshAdminState();
+              await refreshAdminSnapshot();
 
-              if (liquidationLifecycleStage === "completed_liquidated") {
-                void appendAuditLog(
-                  "Completed liquidation report",
-                  "liquidation_report",
-                  selectedLiquidationReport.id,
-                  `Recorded liquidation as completed/liquidated for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}".`,
-                  selectedLiquidationReport.organizationId,
-                ).catch(console.error);
-                notifyOrganizationUser({
-                  userId: selectedLiquidationOrganization?.userId ?? "",
-                  organizationId: selectedLiquidationReport.organizationId,
-                  title: "Liquidation completed",
-                  message: "Your liquidation report has been finalized and fully liquidated.",
-                  type: "liquidation_completed",
-                  relatedType: "liquidation_report",
-                  relatedId: selectedLiquidationReport.id,
-                });
-                toast({
-                  title: "Liquidation completed",
-                  description: `${selectedLiquidationOrganization?.organizationName ?? "Organization"}'s liquidation is now recorded as liquidated.`,
-                });
-              }
+              void appendAuditLog(
+                "Completed liquidation report",
+                "liquidation_report",
+                selectedLiquidationReport.id,
+                `Recorded liquidation as completed/liquidated for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}".`,
+                selectedLiquidationReport.organizationId,
+              ).catch(console.error);
+              notifyOrganizationUser({
+                userId: selectedLiquidationOrganization?.userId ?? "",
+                organizationId: selectedLiquidationReport.organizationId,
+                title: "Liquidation completed",
+                message: "Your liquidation report has been finalized and fully liquidated.",
+                type: "liquidation_completed",
+                relatedType: "liquidation_report",
+                relatedId: selectedLiquidationReport.id,
+              });
+              toast({
+                title: "Liquidation completed",
+                description: `${selectedLiquidationOrganization?.organizationName ?? "Organization"}'s liquidation is now recorded as liquidated.`,
+              });
             } catch (err) {
               console.error("Failed to update liquidation lifecycle decision:", err);
-              await refreshAdminState();
+              await refreshAdminSnapshot();
               toast({
                 title: "Update failed",
                 description: "Could not update liquidation report status. Please try again.",
@@ -10544,9 +10816,9 @@ export default function AdminPortal({ section }: { section: string }) {
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Category</span>
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
                           <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
-                            {linkedBudgetRequest?.purposeCategory || "General Purpose"}
+                            {formatAdvocacyLabel(linkedBudgetRequest?.purposeCategory) || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
@@ -10943,7 +11215,7 @@ export default function AdminPortal({ section }: { section: string }) {
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
                       <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
-                        Approved · {format(new Date(selectedLiquidationReport.goSignalAt), "d MMM yyyy")}
+                        Approved · {format(new Date(selectedLiquidationReport.goSignalAt), "MMMM d, yyyy 'at' h:mm a")}
                       </p>
                     </div>
                   ) : null}
@@ -10976,7 +11248,7 @@ export default function AdminPortal({ section }: { section: string }) {
                   ) : (
                     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                       <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
                           {(selectedLiquidationReport.status === "submitted" ||
                             selectedLiquidationReport.status === "under_review" ||
@@ -10985,7 +11257,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex shrink-0 items-center gap-2">
                           <LiquidationStatusLabel status={selectedLiquidationReport.status} deadlineAt={selectedLiquidationReport.deadlineAt} />
                           {(selectedLiquidationReport.status === "submitted" ||
                             selectedLiquidationReport.status === "under_review" ||
@@ -11049,74 +11321,25 @@ export default function AdminPortal({ section }: { section: string }) {
                             </div>
                           )}
 
-                        {/* Approved for FTF stage (Onsite Required) */}
-                        {selectedLiquidationReport.status === "approved_for_ftf_green" && (
+                        {/* Approved — Onsite Required stage (Sequential Action) */}
+                        {(selectedLiquidationReport.status === "approved_for_ftf_green" ||
+                          selectedLiquidationReport.status === "hard_copy_submitted") && (
                           <div className="space-y-3">
                             <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
-                              <p className="font-semibold">Approved for Face-to-Face Submission</p>
-                              <p className="mt-0.5 text-[11px] text-slate-600">Soft copies approved. Record final liquidation determination below once physical copies are verified onsite.</p>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
-                              <Select
-                                value={liquidationLifecycleStage}
-                                onValueChange={(value) => setLiquidationLifecycleStage(value as LiquidationReport["status"])}
-                              >
-                                <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="approved_for_ftf_green">Onsite Required</SelectItem>
-                                  <SelectItem value="completed_liquidated">Liquidated</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <p className="font-semibold">Approved — Onsite Required</p>
+                              <p className="mt-0.5 text-[11px] text-slate-600">
+                                The liquidation report has been approved. The organization must complete the required onsite process before the liquidation can be finalized.
+                              </p>
                             </div>
 
                             <button
                               type="button"
-                              disabled={liquidationLifecycleSubmitting || liquidationLifecycleStage === selectedLiquidationReport.status}
+                              disabled={liquidationLifecycleSubmitting}
                               onClick={submitLiquidationLifecycleDecision}
                               className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                             >
                               {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                              Confirm Document Decision
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Hardcopy Submitted stage (legacy) */}
-                        {selectedLiquidationReport.status === "hard_copy_submitted" && (
-                          <div className="space-y-3">
-                            <div className="rounded-md border border-border-progress-subtle bg-bg-progress-subtle p-3 text-xs text-text-progress">
-                              <p className="font-semibold">Hardcopy Submitted</p>
-                              <p className="mt-0.5 text-[11px] text-slate-600">Physical liquidation documents and receipts are on hand.</p>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
-                              <Select
-                                value={liquidationLifecycleStage}
-                                onValueChange={(value) => setLiquidationLifecycleStage(value as LiquidationReport["status"])}
-                              >
-                                <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="hard_copy_submitted">Hardcopy Submitted</SelectItem>
-                                  <SelectItem value="completed_liquidated">Liquidated</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <button
-                              type="button"
-                              disabled={liquidationLifecycleSubmitting || liquidationLifecycleStage === selectedLiquidationReport.status}
-                              onClick={submitLiquidationLifecycleDecision}
-                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
-                            >
-                              {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                              Confirm Document Decision
+                              Liquidated
                             </button>
                           </div>
                         )}
@@ -11769,13 +11992,13 @@ export default function AdminPortal({ section }: { section: string }) {
                         href="https://ytrace.app/budget-transparency"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                         Open Live Public Page <ArrowUpRight className="h-3.5 w-3.5" />
                       </a>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-sm">
                       <PublicBudgetOverview />
                     </div>
                   </div>
@@ -12617,17 +12840,34 @@ export default function AdminPortal({ section }: { section: string }) {
             }));
 
           const activeReviewGroups = entryReviewTab === "city_led" ? cityLedGroups : orgLedGroups;
-          const flattenedReviewFiles = activeReviewGroups.flatMap((group) => group.files);
-          const activeReviewFileIndex = flattenedReviewFiles.findIndex((f) => f.id === activeEntryReviewFileId);
-          const activeReviewFile = activeReviewFileIndex >= 0 ? flattenedReviewFiles[activeReviewFileIndex] : null;
+          const isSingleItemDecision = entryReviewBulkDecision === "needs_revision";
+
+          const effectiveActiveGroupId =
+            activeEntryReviewGroupId && selectedEntryReviewGroupIds.includes(activeEntryReviewGroupId)
+              ? activeEntryReviewGroupId
+              : selectedEntryReviewGroupIds.length > 0
+                ? selectedEntryReviewGroupIds[selectedEntryReviewGroupIds.length - 1]
+                : null;
+
+          const activeGroup = effectiveActiveGroupId
+            ? activeReviewGroups.find((g) => g.id === effectiveActiveGroupId) ?? null
+            : null;
+
+          const activeOrgActivity =
+            entryReviewTab === "org_led" && activeGroup
+              ? (orgActivities.find((a) => a.id === activeGroup.id) ?? null)
+              : null;
+
+          const activeGroupFiles = activeGroup ? activeGroup.files : [];
+          const activeReviewFile = activeGroupFiles.find((f) => f.id === activeEntryReviewFileId) ?? activeGroupFiles[0] ?? null;
+          const activeReviewFileIndex = activeReviewFile ? activeGroupFiles.findIndex((f) => f.id === activeReviewFile.id) : -1;
 
           const selectedBulkGroups = activeReviewGroups.filter((g) => selectedEntryReviewGroupIds.includes(g.id));
-          const entryReviewDecisionRequiresRemark = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
+          const entryReviewDecisionRequiresRemark = entryReviewBulkDecision === "needs_revision";
           const isEntryReviewConfirmDisabled =
             selectedBulkGroups.length === 0 ||
             entryReviewSubmitting ||
             (entryReviewBulkDecision === "needs_revision" && (selectedBulkGroups.length !== 1 || !entryReviewBulkRemark.trim())) ||
-            (entryReviewBulkDecision === "reject" && (selectedBulkGroups.length !== 1 || !entryReviewBulkRemark.trim())) ||
             (entryReviewBulkDecision === "approve" && selectedBulkGroups.length === 0);
 
           const submitEntryReviewDecisions = async () => {
@@ -12636,9 +12876,7 @@ export default function AdminPortal({ section }: { section: string }) {
             const targetStatus =
               entryReviewBulkDecision === "approve"
                 ? entryReviewTab === "city_led" ? "verified" : "approved"
-                : entryReviewBulkDecision === "needs_revision"
-                  ? "needs_revision"
-                  : "rejected";
+                : "needs_revision";
 
             const trimmedRemark = entryReviewBulkRemark.trim();
 
@@ -12654,21 +12892,9 @@ export default function AdminPortal({ section }: { section: string }) {
               }
             }
 
-            if (targetStatus === "rejected") {
-              if (selectedBulkGroups.length !== 1 || !trimmedRemark) {
-                toast({
-                  title: "Rejection Remark Required",
-                  description: "Reject applies to exactly one submission and requires a non-empty admin remark.",
-                  variant: "destructive",
-                });
-                setEntryReviewConfirmOpen(false);
-                return;
-              }
-            }
-
             setEntryReviewSubmitting(true);
             const now = new Date().toISOString();
-            const remark = (targetStatus === "needs_revision" || targetStatus === "rejected") ? trimmedRemark : "";
+            const remark = targetStatus === "needs_revision" ? trimmedRemark : "";
             const savedParticipations: YPOPEventParticipation[] = [];
             const savedOrgActivities: YPOPOrgActivity[] = [];
             const failedTitles: string[] = [];
@@ -13109,135 +13335,272 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 gap-4 pt-4 pb-2 sm:grid-cols-3">
-                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedCount}</p>
-                  </div>
-                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{requestRevisionCount}</p>
-                  </div>
-                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
-                  </div>
-                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
-                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
-                  <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
-                      {activeReviewFile?.fileName ?? "No document selected"}
-                    </p>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {flattenedReviewFiles.length ? (
-                        <div className="flex shrink-0 items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            disabled={activeReviewFileIndex <= 0}
-                            onClick={() =>
-                              setActiveEntryReviewFileId(
-                                flattenedReviewFiles[Math.max(0, activeReviewFileIndex - 1)]?.id ?? null,
-                              )
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
-                            Previous
-                          </button>
-                          <div className="flex items-center gap-1">
-                            {flattenedReviewFiles.slice(0, 5).map((file, index) => (
-                              <button
-                                key={file.id}
-                                type="button"
-                                onClick={() => setActiveEntryReviewFileId(file.id)}
-                                className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
-                                  activeReviewFile?.id === file.id
-                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                                    : "text-text-default hover:bg-slate-50",
-                                )}
-                              >
-                                {index + 1}
-                              </button>
-                            ))}
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px] items-stretch">
+                <div className="flex flex-1 flex-col gap-4">
+                  {!activeGroup ? (
+                    <div className="flex flex-1 min-h-[500px] lg:min-h-[560px] flex-col items-center justify-center rounded-md border border-slate-300 bg-admin-surface p-8 text-center shadow-sm">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
+                        <FolderOpen className="h-6 w-6" strokeWidth={1.5} />
+                      </div>
+                      <p className="font-segoe text-base font-semibold text-text-default">
+                        Select a Submission to view the details and file previews
+                      </p>
+                      <p className="mt-1 font-segoe text-sm text-slate-500 max-w-sm">
+                        Choose an item from the Document Queue on the right to inspect its activity information and preview uploaded documents.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {entryReviewTab === "org_led" && activeOrgActivity ? (
+                        <div className="space-y-4 rounded-md border border-slate-300 bg-admin-surface p-5 shadow-sm">
+                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Organization-Led Activity Details
+                              </p>
+                              <h2 className="mt-1 truncate font-segoe text-lg font-bold text-text-default">
+                                {activeOrgActivity.activityName || "Untitled Activity"}
+                              </h2>
+                            </div>
+                            <YpopDocumentStatusPill status={activeOrgActivity.status} />
                           </div>
-                          <button
-                            type="button"
-                            disabled={activeReviewFileIndex < 0 || activeReviewFileIndex >= flattenedReviewFiles.length - 1}
-                            onClick={() =>
-                              setActiveEntryReviewFileId(
-                                flattenedReviewFiles[Math.min(flattenedReviewFiles.length - 1, activeReviewFileIndex + 1)]?.id ?? null,
-                              )
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            Next
-                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
-                          </button>
+
+                          {/* Details Grid: Date & Venue */}
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="flex items-start gap-2.5 rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-public-bg-brand/10 text-public-bg-brand">
+                                <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Date Conducted</p>
+                                <p className="mt-0.5 font-segoe text-sm font-semibold text-text-default">
+                                  {activeOrgActivity.activityDate
+                                    ? (() => {
+                                        const raw = activeOrgActivity.activityDate;
+                                        const parts = raw.split("T")[0].split("-");
+                                        if (parts.length === 3) {
+                                          const year = parseInt(parts[0], 10);
+                                          const month = parseInt(parts[1], 10) - 1;
+                                          const day = parseInt(parts[2], 10);
+                                          const d = new Date(year, month, day);
+                                          if (!Number.isNaN(d.getTime())) {
+                                            return format(d, "MMMM d, yyyy");
+                                          }
+                                        }
+                                        const d = new Date(raw);
+                                        return !Number.isNaN(d.getTime()) ? format(d, "MMMM d, yyyy") : raw;
+                                      })()
+                                    : "Not specified"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-2.5 rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-public-bg-brand/10 text-public-bg-brand">
+                                <MapPin className="h-4 w-4" strokeWidth={1.75} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Venue / Location</p>
+                                <p className="mt-0.5 font-segoe text-sm font-semibold text-text-default truncate">
+                                  {activeOrgActivity.venue || "Not specified"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Description / Narrative */}
+                          {(activeOrgActivity.narrativeReport || (activeOrgActivity as any).description) ? (
+                            <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3.5 space-y-1">
+                              <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Activity Description</p>
+                              <p className="font-segoe text-sm text-text-default leading-relaxed whitespace-pre-wrap">
+                                {activeOrgActivity.narrativeReport || (activeOrgActivity as any).description}
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {/* Attendance Section */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Attendance
+                              </p>
+                              {activeOrgActivity.totalAttendees != null &&
+                              activeOrgActivity.girlsAttendees != null &&
+                              activeOrgActivity.boysAttendees != null &&
+                              activeOrgActivity.girlsAttendees + activeOrgActivity.boysAttendees === activeOrgActivity.totalAttendees ? (
+                                <span className="font-segoe text-[11px] font-medium text-text-success-default flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Sum Verified
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                              {/* Total */}
+                              <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Total</p>
+                                {activeOrgActivity.totalAttendees != null ? (
+                                  <>
+                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                      {activeOrgActivity.totalAttendees.toLocaleString()}
+                                    </p>
+                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                  </>
+                                ) : (
+                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                )}
+                              </div>
+
+                              {/* Girls */}
+                              <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Girls</p>
+                                {activeOrgActivity.girlsAttendees != null ? (
+                                  <>
+                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                      {activeOrgActivity.girlsAttendees.toLocaleString()}
+                                    </p>
+                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                  </>
+                                ) : (
+                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                )}
+                              </div>
+
+                              {/* Boys */}
+                              <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Boys</p>
+                                {activeOrgActivity.boysAttendees != null ? (
+                                  <>
+                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                      {activeOrgActivity.boysAttendees.toLocaleString()}
+                                    </p>
+                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                  </>
+                                ) : (
+                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ) : null}
-                      <button
-                        type="button"
-                        aria-label="Download documents"
-                        disabled={downloadDialogResolving || !flattenedReviewFiles.length}
-                        onClick={() =>
-                          void openDownloadDialog(
-                            activeReviewFile ? { fileName: activeReviewFile.fileName, fileUrl: activeReviewFile.fileUrl } : null,
-                            flattenedReviewFiles.map((file) => ({ fileName: file.fileName, fileUrl: file.fileUrl })),
-                            "YPOP-Submission-Documents.zip",
-                          )
-                        }
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
-                      >
-                        <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
-                    {activeReviewFile && entryReviewPreviewUrl ? (
-                      entryReviewPreviewCanInline ? (
-                        isImagePreviewFile(activeReviewFile.fileName) || isImagePreviewFile(entryReviewPreviewUrl) ? (
-                          <img
-                            src={entryReviewPreviewUrl}
-                            alt={entryReviewPreviewTitle}
-                            className="h-full w-full object-contain"
-                          />
-                        ) : (
-                          <iframe
-                            src={withHiddenPdfToolbar(entryReviewPreviewUrl)}
-                            title={entryReviewPreviewTitle}
-                            className="h-full min-h-[500px] w-full border-0"
-                          />
-                        )
-                      ) : (
-                        <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
-                          <p>This file cannot be previewed inline.</p>
-                          <button
-                            type="button"
-                            onClick={() => window.open(entryReviewPreviewUrl, "_blank", "noopener,noreferrer")}
-                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
-                          >
-                            <Eye className="h-4 w-4" strokeWidth={1.6} />
-                            Open File
-                          </button>
+                      <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm min-h-[520px] lg:min-h-0">
+                        <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
+                          <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                            {activeReviewFile?.fileName ?? "No document selected"}
+                          </p>
+                          <div className="flex shrink-0 items-center gap-2">
+                            {activeGroupFiles.length > 1 ? (
+                              <div className="flex shrink-0 items-center justify-between gap-2">
+                                <button
+                                  type="button"
+                                  disabled={activeReviewFileIndex <= 0}
+                                  onClick={() =>
+                                    setActiveEntryReviewFileId(
+                                      activeGroupFiles[Math.max(0, activeReviewFileIndex - 1)]?.id ?? null,
+                                    )
+                                  }
+                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                                >
+                                  <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
+                                  Previous
+                                </button>
+                                <div className="flex items-center gap-1">
+                                  {activeGroupFiles.slice(0, 5).map((file, index) => (
+                                    <button
+                                      key={file.id}
+                                      type="button"
+                                      onClick={() => setActiveEntryReviewFileId(file.id)}
+                                      className={cn(
+                                        "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                        activeReviewFile?.id === file.id
+                                          ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                          : "text-text-default hover:bg-slate-50",
+                                      )}
+                                    >
+                                      {index + 1}
+                                    </button>
+                                  ))}
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={activeReviewFileIndex < 0 || activeReviewFileIndex >= activeGroupFiles.length - 1}
+                                  onClick={() =>
+                                    setActiveEntryReviewFileId(
+                                      activeGroupFiles[Math.min(activeGroupFiles.length - 1, activeReviewFileIndex + 1)]?.id ?? null,
+                                    )
+                                  }
+                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                                >
+                                  Next
+                                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+                                </button>
+                              </div>
+                            ) : null}
+                            <button
+                              type="button"
+                              aria-label="Download documents"
+                              disabled={downloadDialogResolving || !activeGroupFiles.length}
+                              onClick={() =>
+                                void openDownloadDialog(
+                                  activeReviewFile ? { fileName: activeReviewFile.fileName, fileUrl: activeReviewFile.fileUrl } : null,
+                                  activeGroupFiles.map((file) => ({ fileName: file.fileName, fileUrl: file.fileUrl })),
+                                  "YPOP-Submission-Documents.zip",
+                                )
+                              }
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                            >
+                              <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                            </button>
+                          </div>
                         </div>
-                      )
-                    ) : activeReviewFile && entryReviewPreviewLoading ? (
-                      <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
-                    ) : (
-                      <div
-                        className="flex h-full min-h-[500px] w-full items-center justify-center"
-                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
-                      >
-                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+
+                        <div className="relative flex min-h-[500px] lg:min-h-[560px] flex-1 items-center justify-center overflow-hidden">
+                          {activeReviewFile && entryReviewPreviewUrl ? (
+                            entryReviewPreviewCanInline ? (
+                              isImagePreviewFile(activeReviewFile.fileName) || isImagePreviewFile(entryReviewPreviewUrl) ? (
+                                <img
+                                  src={entryReviewPreviewUrl}
+                                  alt={entryReviewPreviewTitle}
+                                  className="h-full w-full object-contain"
+                                />
+                              ) : (
+                                <iframe
+                                  src={withHiddenPdfToolbar(entryReviewPreviewUrl)}
+                                  title={entryReviewPreviewTitle}
+                                  className="h-full min-h-[500px] lg:min-h-[560px] w-full border-0"
+                                />
+                              )
+                            ) : (
+                              <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                                <p>This file cannot be previewed inline.</p>
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(entryReviewPreviewUrl, "_blank", "noopener,noreferrer")}
+                                  className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                                >
+                                  <Eye className="h-4 w-4" strokeWidth={1.6} />
+                                  Open File
+                                </button>
+                              </div>
+                            )
+                          ) : activeReviewFile && entryReviewPreviewLoading ? (
+                            <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                          ) : (
+                            <div
+                              className="flex h-full min-h-[500px] lg:min-h-[560px] w-full items-center justify-center"
+                              style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                            >
+                              <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -13247,6 +13610,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       onClick={() => {
                         setEntryReviewTab("city_led");
                         setSelectedEntryReviewGroupIds([]);
+                        setActiveEntryReviewGroupId(null);
                         setActiveEntryReviewFileId(null);
                       }}
                       className={cn(
@@ -13263,6 +13627,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       onClick={() => {
                         setEntryReviewTab("org_led");
                         setSelectedEntryReviewGroupIds([]);
+                        setActiveEntryReviewGroupId(null);
                         setActiveEntryReviewFileId(null);
                       }}
                       className={cn(
@@ -13298,10 +13663,23 @@ export default function AdminPortal({ section }: { section: string }) {
                           setSelectedEntryReviewGroupIds((current) =>
                             current.filter((id) => !selectableEntryReviewGroupIds.includes(id)),
                           );
+                          setActiveEntryReviewGroupId((current) =>
+                            selectableEntryReviewGroupIds.includes(current ?? "") ? null : current,
+                          );
+                          setActiveEntryReviewFileId(null);
                         } else {
                           setSelectedEntryReviewGroupIds((current) =>
                             Array.from(new Set([...current, ...selectableEntryReviewGroupIds])),
                           );
+                          setActiveEntryReviewGroupId((current) => {
+                            if (current && selectableEntryReviewGroupIds.includes(current)) return current;
+                            const firstGroup = selectableEntryReviewGroups[0];
+                            if (firstGroup) {
+                              setActiveEntryReviewFileId(firstGroup.files[0]?.id ?? null);
+                              return firstGroup.id;
+                            }
+                            return current;
+                          });
                         }
                       };
 
@@ -13331,40 +13709,88 @@ export default function AdminPortal({ section }: { section: string }) {
                       );
                     })()}
 
-                    <div className="space-y-2 pt-2">
+                    <div className="space-y-2 pt-2 max-h-[460px] lg:max-h-[520px] overflow-y-auto pr-1">
                       {activeReviewGroups.length ? (
                         activeReviewGroups.map((group) => {
                           const isCollapsed = collapsedEntryReviewGroups.includes(group.id);
                           const isGroupSelected = selectedEntryReviewGroupIds.includes(group.id);
                           const isLocked = group.status === "verified" || group.status === "approved";
-                          const isSingleItemDecision = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
+                          const isSingleItemDecision = entryReviewBulkDecision === "needs_revision";
                           const isSelectionDisabled = isLocked || (isSingleItemDecision && selectedEntryReviewGroupIds.length === 1 && !isGroupSelected);
                           return (
                             <div key={group.id} className="rounded-md border border-slate-200">
                               <div className="flex items-center justify-between gap-2 p-3">
-                                <div className="flex min-w-0 items-center gap-2">
+                                <div className="flex min-w-0 flex-1 items-center gap-2">
                                   <input
                                     type="checkbox"
                                     checked={isGroupSelected}
                                     disabled={isSelectionDisabled}
-                                    onChange={() =>
-                                      setSelectedEntryReviewGroupIds((current) =>
-                                        current.includes(group.id)
-                                          ? current.filter((id) => id !== group.id)
-                                          : isSingleItemDecision
-                                            ? [group.id]
-                                            : [...current, group.id],
-                                      )
-                                    }
+                                    onChange={() => {
+                                      if (isGroupSelected) {
+                                        setSelectedEntryReviewGroupIds((current) =>
+                                          current.filter((id) => id !== group.id),
+                                        );
+                                        setActiveEntryReviewGroupId((current) => {
+                                          if (current === group.id) {
+                                            const remaining = selectedEntryReviewGroupIds.filter((id) => id !== group.id);
+                                            const nextId = remaining[remaining.length - 1] ?? null;
+                                            if (nextId) {
+                                              const nextGroup = activeReviewGroups.find((g) => g.id === nextId);
+                                              setActiveEntryReviewFileId(nextGroup?.files[0]?.id ?? null);
+                                            } else {
+                                              setActiveEntryReviewFileId(null);
+                                            }
+                                            return nextId;
+                                          }
+                                          return current;
+                                        });
+                                      } else {
+                                        setSelectedEntryReviewGroupIds((current) =>
+                                          isSingleItemDecision ? [group.id] : [...current, group.id],
+                                        );
+                                        setActiveEntryReviewGroupId(group.id);
+                                        setActiveEntryReviewFileId(group.files[0]?.id ?? null);
+                                      }
+                                    }}
                                     className="h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                                     aria-label={`Select ${group.title}`}
                                   />
-                                  <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{group.title}</p>
-                                  {group.categoryLabel ? (
-                                    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-segoe text-[10px] font-semibold uppercase leading-[140%]", group.categoryPillClass)}>
-                                      {group.categoryLabel}
-                                    </span>
-                                  ) : null}
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => {
+                                      setSelectedEntryReviewGroupIds((current) =>
+                                        current.includes(group.id)
+                                          ? current
+                                          : isSingleItemDecision
+                                            ? [group.id]
+                                            : [...current, group.id],
+                                      );
+                                      setActiveEntryReviewGroupId(group.id);
+                                      setActiveEntryReviewFileId(group.files[0]?.id ?? null);
+                                    }}
+                                    onKeyDown={(event) => {
+                                      if (event.key !== "Enter" && event.key !== " ") return;
+                                      event.preventDefault();
+                                      setSelectedEntryReviewGroupIds((current) =>
+                                        current.includes(group.id)
+                                          ? current
+                                          : isSingleItemDecision
+                                            ? [group.id]
+                                            : [...current, group.id],
+                                      );
+                                      setActiveEntryReviewGroupId(group.id);
+                                      setActiveEntryReviewFileId(group.files[0]?.id ?? null);
+                                    }}
+                                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+                                  >
+                                    <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default hover:underline">{group.title}</p>
+                                    {group.categoryLabel ? (
+                                      <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-segoe text-[10px] font-semibold uppercase leading-[140%]", group.categoryPillClass)}>
+                                        {group.categoryLabel}
+                                      </span>
+                                    ) : null}
+                                  </div>
                                 </div>
                                 <button
                                   type="button"
@@ -13391,10 +13817,28 @@ export default function AdminPortal({ section }: { section: string }) {
                                           key={file.id}
                                           role="button"
                                           tabIndex={0}
-                                          onClick={() => setActiveEntryReviewFileId(file.id)}
+                                          onClick={() => {
+                                            setSelectedEntryReviewGroupIds((current) =>
+                                              current.includes(group.id)
+                                                ? current
+                                                : isSingleItemDecision
+                                                  ? [group.id]
+                                                  : [...current, group.id],
+                                            );
+                                            setActiveEntryReviewGroupId(group.id);
+                                            setActiveEntryReviewFileId(file.id);
+                                          }}
                                           onKeyDown={(event) => {
                                             if (event.key !== "Enter" && event.key !== " ") return;
                                             event.preventDefault();
+                                            setSelectedEntryReviewGroupIds((current) =>
+                                              current.includes(group.id)
+                                                ? current
+                                                : isSingleItemDecision
+                                                  ? [group.id]
+                                                  : [...current, group.id],
+                                            );
+                                            setActiveEntryReviewGroupId(group.id);
                                             setActiveEntryReviewFileId(file.id);
                                           }}
                                           className={cn(
@@ -13433,9 +13877,31 @@ export default function AdminPortal({ section }: { section: string }) {
                   </div>
 
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                    <div className="flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                       <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
-                      <CircleHelp className="h-[18px] w-[18px] shrink-0 text-slate-500" strokeWidth={1.6} />
+                      <button
+                        type="button"
+                        ref={ypopDecisionHelpTriggerRef}
+                        onClick={() => setIsYpopDecisionHelpOpen((current) => !current)}
+                        aria-label="Review rules"
+                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                      >
+                        <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                      </button>
+                      {isYpopDecisionHelpOpen ? (
+                        <div
+                          ref={ypopDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">{entryReviewTab === "city_led" ? "Verify" : "Approve"}</span> — multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision</span> — one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="flex flex-col gap-2 pt-4">
@@ -13445,16 +13911,14 @@ export default function AdminPortal({ section }: { section: string }) {
                           <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">
                             {entryReviewBulkDecision === "needs_revision"
                               ? "No documents selected. Select one submission to request revision."
-                              : entryReviewBulkDecision === "reject"
-                                ? "No documents selected. Select one submission to reject."
-                                : "No documents selected."}
+                              : "No documents selected."}
                           </p>
                         </div>
-                      ) : selectedBulkGroups.length > 1 && (entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject") ? (
+                      ) : selectedBulkGroups.length > 1 && entryReviewBulkDecision === "needs_revision" ? (
                         <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
                           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
                           <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
-                            {entryReviewBulkDecision === "needs_revision" ? "Request Revision" : "Reject"} is a single-submission action. Please select only one submission.
+                            Request Revision is a single-submission action. Please select only one submission.
                           </p>
                         </div>
                       ) : (
@@ -13471,12 +13935,12 @@ export default function AdminPortal({ section }: { section: string }) {
                         <Select
                           value={entryReviewBulkDecision}
                           onValueChange={(value) => {
-                            const newDecision = value as "approve" | "needs_revision" | "reject";
-                            if ((newDecision === "needs_revision" || newDecision === "reject") && selectedEntryReviewGroupIds.length > 1) {
+                            const newDecision = value as "approve" | "needs_revision";
+                            if (newDecision === "needs_revision" && selectedEntryReviewGroupIds.length > 1) {
                               setSelectedEntryReviewGroupIds([]);
                               toast({
                                 title: "Single Item Action",
-                                description: `${newDecision === "needs_revision" ? "Request Revision" : "Reject"} applies to one submission at a time. Select one submission to continue.`,
+                                description: "Request Revision applies to one submission at a time. Select one submission to continue.",
                               });
                             }
                             setEntryReviewBulkDecision(newDecision);
@@ -13495,13 +13959,6 @@ export default function AdminPortal({ section }: { section: string }) {
                             >
                               Request Revision
                             </SelectItem>
-                            <SelectItem
-                              value="reject"
-                              disabled={selectedBulkGroups.length > 1}
-                              className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
-                            >
-                              Reject
-                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -13514,17 +13971,13 @@ export default function AdminPortal({ section }: { section: string }) {
                           <Textarea
                             value={entryReviewBulkRemark}
                             onChange={(event) => setEntryReviewBulkRemark(event.target.value)}
-                            placeholder={
-                              entryReviewBulkDecision === "needs_revision"
-                                ? "Explain what the organization needs to revise or provide..."
-                                : "Explain the reason for rejection..."
-                            }
+                            placeholder="Explain what the organization needs to revise or provide..."
                             rows={3}
                             className="resize-none text-[13px]"
                           />
                           {!entryReviewBulkRemark.trim() && (
                             <p className="text-[11px] text-icon-danger-secondary font-medium">
-                              {entryReviewBulkDecision === "needs_revision" ? "Revision remark is required." : "Rejection remark is required."}
+                              Revision remark is required.
                             </p>
                           )}
                         </div>
@@ -13557,9 +14010,9 @@ export default function AdminPortal({ section }: { section: string }) {
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           {selectedBulkGroups.map((group) => {
-                            const isRevisionOrReject = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
-                            const remarkText = (selectedBulkGroups.length === 1 && isRevisionOrReject)
-                              ? entryReviewBulkRemark.trim() || (isRevisionOrReject ? "[Remark required]" : "—")
+                            const isRevision = entryReviewBulkDecision === "needs_revision";
+                            const remarkText = (selectedBulkGroups.length === 1 && isRevision)
+                              ? entryReviewBulkRemark.trim() || (isRevision ? "[Remark required]" : "—")
                               : "—";
                             return (
                               <div key={group.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
@@ -13569,9 +14022,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                 <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
                                   {entryReviewBulkDecision === "approve"
                                     ? entryReviewTab === "city_led" ? "Verify" : "Approve"
-                                    : entryReviewBulkDecision === "needs_revision"
-                                      ? "Request Revision"
-                                      : "Reject"}
+                                    : "Request Revision"}
                                 </p>
                                 <p className={cn(
                                   "font-segoe text-[11px] leading-[140%] min-w-0 break-words [overflow-wrap:anywhere]",
@@ -14827,6 +15278,9 @@ export default function AdminPortal({ section }: { section: string }) {
         onNavigate={handleAdminSectionNavigate}
         onSignOut={() => setSignOutConfirmOpen(true)}
         userProfile={{ name: user?.displayName ?? "Administrator", role: "Administrator", email: user?.email ?? "" }}
+        notifications={adminNotifications}
+        onMarkAllRead={() => markAllNotificationsRead()}
+        onMarkRead={(id) => markNotificationRead(id)}
       >
         {activeContent}
       </PortalShell>
@@ -14873,6 +15327,7 @@ export default function AdminPortal({ section }: { section: string }) {
         onOpenChange={(open) => {
           if (!open) setReplyDialogInquiry(null);
         }}
+        inquiryId={replyDialogInquiry?.id}
         email={replyDialogInquiry?.email ?? ""}
         subject={replyDialogInquiry?.subject ?? ""}
         organizationName={
@@ -15195,14 +15650,18 @@ export default function AdminPortal({ section }: { section: string }) {
             ? "Allocation by Barangay"
             : activeReportExport === "budget-monitoring"
               ? "Budget Monitoring"
-              : "Budget Requests"
+              : budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY
+                ? `Budget Requests (${selectedBudgetSemesterLabel})`
+                : "Budget Requests"
         }
         description={
           activeReportExport === "allocation-by-barangay"
             ? "Export all barangay allocation records matching the current filters."
             : activeReportExport === "budget-monitoring"
               ? "Export monitored budget activities, utilization rates, and liquidation statuses matching the current filters."
-              : "Export budget request records matching the current filters."
+              : budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY
+                ? `Export budget request records for ${selectedBudgetSemesterLabel} matching the current filters.`
+                : "Export budget request records matching the current filters."
         }
         onExport={handleReportExport}
       />

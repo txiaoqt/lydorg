@@ -28,6 +28,7 @@ import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 
 import { FeatureGate } from "./FeatureGate";
 import { StatusBadge } from "./StatusBadge";
+import { EndorsementGuidelinesModal } from "./EndorsementGuidelinesModal";
 
 export interface UserPortalDocumentWorkspaceViewProps {
   registrationPrerequisites?: any;
@@ -87,6 +88,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "review" | "revision">("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "name" | "updated">("newest");
+  const [endorsementModalOpen, setEndorsementModalOpen] = useState(false);
 
   // Safe Fallback Requirement List
   const docsList = templateDocuments || documentRequirements || [];
@@ -338,6 +340,20 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <span><strong>Review Process:</strong> Admin validation takes 2–3 business days.</span>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <span>
+                <strong>Endorsement Guidelines:</strong>{" "}
+                <button
+                  type="button"
+                  onClick={() => setEndorsementModalOpen(true)}
+                  className="inline-flex items-center gap-0.5 text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs cursor-pointer"
+                  aria-label="View endorsement or certification guidelines"
+                >
+                  View Guidelines →
+                </button>
+              </span>
             </div>
           </div>
         </Card>
@@ -710,6 +726,20 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <span><strong>Review Process:</strong> Admin validation takes 2–3 business days.</span>
               </div>
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <span>
+                  <strong>Endorsement Guidelines:</strong>{" "}
+                  <button
+                    type="button"
+                    onClick={() => setEndorsementModalOpen(true)}
+                    className="inline-flex items-center gap-0.5 text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs cursor-pointer"
+                    aria-label="View endorsement or certification guidelines"
+                  >
+                    View Guidelines →
+                  </button>
+                </span>
+              </div>
             </div>
           </Card>
 
@@ -778,6 +808,10 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
         </div>
       </div>
     </div>
+    <EndorsementGuidelinesModal
+      open={endorsementModalOpen}
+      onOpenChange={setEndorsementModalOpen}
+    />
     </FeatureGate>
   );
 };

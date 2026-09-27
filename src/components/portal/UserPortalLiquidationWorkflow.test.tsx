@@ -298,4 +298,68 @@ describe("UserPortal Liquidation Upload & Submission Workflow (TEST A - TEST J)"
     expect(canReviewStatus("under_review")).toBe(true);
     expect(canReviewStatus("needs_revision")).toBe(true);
   });
+
+  it("TEST K — Drawer renders Financial Overview, Activity Details, Schedule & Location, Activity Timeline, File Preview and no Remarks", () => {
+    const customBudget = {
+      id: "br-custom-1",
+      activityTitle: "Youth Tech Hackathon 2026",
+      purposeCategory: "Education & Skills Development",
+      activityDescription: "A weekend coding competition empowering youth to build community solutions.",
+      activityDate: "2026-09-15T00:00:00Z",
+      venue: "Pasig City Sports Complex",
+      requestedAmount: 50000,
+      approvedAmount: 45000,
+      releasedAmount: 45000,
+      status: "budget_released",
+      remarks: "Legacy remarks text that should NOT appear in UI",
+    };
+
+    const customReport = {
+      id: "rep-custom-1",
+      budgetRequestId: "br-custom-1",
+      status: "pending_activity_completion",
+      goSignalAt: "2026-08-01T00:00:00Z",
+      deadlineAt: "2026-09-30T00:00:00Z",
+      createdAt: "2026-08-01T00:00:00Z",
+    };
+
+    const props = buildProps({
+      liquidationReports: [customReport],
+      budgetRequests: [customBudget],
+      searchParams: new URLSearchParams("reportId=rep-custom-1"),
+    });
+
+    render(<UserPortalLiquidationWorkspaceView {...props} />);
+
+    // 1. Financial Overview
+    expect(screen.getByText("Financial Overview")).toBeInTheDocument();
+    expect(screen.getByText("Requested Amount")).toBeInTheDocument();
+    expect(screen.getByText("Approved Amount")).toBeInTheDocument();
+    expect(screen.getByText("Released Amount")).toBeInTheDocument();
+
+    // 2. Activity Details
+    expect(screen.getByText("Activity Details")).toBeInTheDocument();
+    expect(screen.getAllByText("Youth Tech Hackathon 2026").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Purpose Description")).toBeInTheDocument();
+    expect(screen.getByText("A weekend coding competition empowering youth to build community solutions.")).toBeInTheDocument();
+
+    // 3. Schedule & Location
+    expect(screen.getByText("Schedule & Location")).toBeInTheDocument();
+    expect(screen.getByText("Target Date")).toBeInTheDocument();
+    expect(screen.getByText("Venue / Location")).toBeInTheDocument();
+    expect(screen.getAllByText("Pasig City Sports Complex").length).toBeGreaterThanOrEqual(1);
+
+    // 4. Activity Timeline
+    expect(screen.getByText("Activity Timeline")).toBeInTheDocument();
+    expect(screen.getAllByText("Go Signal").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Deadline").length).toBeGreaterThanOrEqual(1);
+
+    // 5. File Preview section title
+    expect(screen.getByText("Liquidation Document")).toBeInTheDocument();
+
+    // 6. Remarks / Justification must NOT be displayed
+    expect(screen.queryByText("Legacy remarks text that should NOT appear in UI")).not.toBeInTheDocument();
+    expect(screen.queryByText("Remarks")).not.toBeInTheDocument();
+  });
 });
+

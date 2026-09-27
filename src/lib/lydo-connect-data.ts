@@ -29,6 +29,7 @@ export type BudgetRequestStatus =
   | "submitted"
   | "under_review"
   | "needs_revision"
+  | "awaiting_release"
   | "approved_for_ftf_green"
   | "rejected_red"
   | "hard_copy_submitted"
@@ -205,6 +206,9 @@ export type YPOPOrgActivity = {
   activityDate: string;
   venue: string;
   narrativeReport: string;
+  totalAttendees?: number | null;
+  girlsAttendees?: number | null;
+  boysAttendees?: number | null;
   status: YPOPOrgActivityStatus;
   adminRemarks: string;
   submittedAt: string;
@@ -579,6 +583,28 @@ export const advocacyOptions = [
   "agriculture",
 ] as const;
 export type Advocacy = (typeof advocacyOptions)[number];
+
+export const formatAdvocacyLabel = (advocacy?: string | null): string => {
+  if (!advocacy) return "";
+  const canonicalMap: Record<string, string> = {
+    education: "Education",
+    environment: "Environment",
+    health: "Health",
+    "peace building and security": "Peace Building and Security",
+    governance: "Governance",
+    "active citizenship": "Active Citizenship",
+    "global mobility": "Global Mobility",
+    "social inclusion and equity": "Social Inclusion and Equity",
+    "economic empowerment": "Economic Empowerment",
+    agriculture: "Agriculture",
+  };
+  const key = advocacy.trim().toLowerCase();
+  if (canonicalMap[key]) return canonicalMap[key];
+  return advocacy
+    .split(/[\s_-]+/)
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ""))
+    .join(" ");
+};
 
 export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
@@ -2673,6 +2699,7 @@ export const statusToneMap: Record<string, "default" | "secondary" | "destructiv
   approved_green: "default",
   rejected_red: "destructive",
   under_review: "outline",
+  awaiting_release: "default",
   approved_for_ftf_green: "default",
   hard_copy_submitted: "secondary",
   budget_released: "default",
@@ -2709,6 +2736,7 @@ export const statusLabelMap: Record<string, string> = {
   approved_green: "Approved",
   rejected_red: "Rejected",
   under_review: "Under Review",
+  awaiting_release: "Awaiting Release",
   approved_for_ftf_green: "Onsite Required",
   hard_copy_submitted: "Hardcopy Submitted",
   budget_released: "Budget Released",

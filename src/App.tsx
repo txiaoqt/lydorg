@@ -14,6 +14,7 @@ import GoogleOnboarding from "./pages/GoogleOnboarding";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import AdminPortal from "./admin/AdminPortal";
+import { AdminThemeProvider } from "./admin/context/AdminThemeContext";
 const LegalPolicy = lazy(() => import("./pages/LegalPolicy"));
 const Faqs = lazy(() => import("./pages/Faqs"));
 const Contacts = lazy(() => import("./pages/Contacts"));
@@ -131,13 +132,19 @@ export const RequireAdmin = ({ children }: { children: JSX.Element }) => {
   const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
   if (requireVerifiedEmail && user && user.isEmailVerified === false) {
     return (
-      <AdminDesktopGate>
-        <UnverifiedAdminAccessScreen email={user.email} onSignOut={signOut} />
-      </AdminDesktopGate>
+      <AdminThemeProvider>
+        <AdminDesktopGate>
+          <UnverifiedAdminAccessScreen email={user.email} onSignOut={signOut} />
+        </AdminDesktopGate>
+      </AdminThemeProvider>
     );
   }
 
-  return <AdminDesktopGate>{children}</AdminDesktopGate>;
+  return (
+    <AdminThemeProvider>
+      <AdminDesktopGate>{children}</AdminDesktopGate>
+    </AdminThemeProvider>
+  );
 };
 
 const RequireUser = ({ children }: { children: JSX.Element }) => {
@@ -238,6 +245,12 @@ const SurfaceThemeClass = () => {
     const shouldUsePublicTheme = !IS_ADMIN_SURFACE && !isAdminPath;
     document.body.classList.toggle("public-shell", shouldUsePublicTheme);
 
+    // If on a public route, clean up any lingering admin dark class so public portal is always pristine
+    if (shouldUsePublicTheme) {
+      document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark");
+    }
+
     return () => {
       document.body.classList.remove("public-shell");
     };
@@ -261,10 +274,10 @@ const App = () => (
               <Routes>
                   {IS_ADMIN_SURFACE ? (
                     <>
-                      <Route path={ADMIN_SIGNIN_PATH} element={<AdminDesktopGate><SignIn forcedMode="admin" /></AdminDesktopGate>} />
+                      <Route path={ADMIN_SIGNIN_PATH} element={<AdminThemeProvider><AdminDesktopGate><SignIn forcedMode="admin" /></AdminDesktopGate></AdminThemeProvider>} />
                       <Route path={USER_SIGNIN_PATH} element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="/auth/callback" element={<AuthCallback />} />
-                      <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
+                      <Route path="/admin/create-password" element={<AdminThemeProvider><AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate></AdminThemeProvider>} />
                       <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                       <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                       <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />
@@ -290,10 +303,10 @@ const App = () => (
                     </>
                   ) : (
                     <>
-                      <Route path="/admin/create-password" element={<AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate>} />
+                      <Route path="/admin/create-password" element={<AdminThemeProvider><AdminDesktopGate><AdminCreatePassword /></AdminDesktopGate></AdminThemeProvider>} />
                       {IS_COMBINED_SURFACE ? (
                         <>
-                          <Route path={ADMIN_SIGNIN_PATH} element={<AdminDesktopGate><SignIn forcedMode="admin" /></AdminDesktopGate>} />
+                          <Route path={ADMIN_SIGNIN_PATH} element={<AdminThemeProvider><AdminDesktopGate><SignIn forcedMode="admin" /></AdminDesktopGate></AdminThemeProvider>} />
                           <Route path="/admin" element={<RequireAdmin><AdminPortal section="overview" /></RequireAdmin>} />
                           <Route path="/admin/registrations" element={<RequireAdmin><AdminPortal section="registrations" /></RequireAdmin>} />
                           <Route path="/admin/renewals" element={<RequireAdmin><AdminPortal section="renewals" /></RequireAdmin>} />

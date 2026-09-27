@@ -206,14 +206,14 @@ export const BudgetMonitoringOverview = ({
                 <button
                   type="button"
                   aria-label="Select Fiscal Year"
-                  className="flex h-10 items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3.5 py-2 font-segoe text-sm font-semibold text-text-default shadow-sm transition-colors hover:bg-slate-50 focus:outline-none"
+                  className="flex h-10 items-center justify-between gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface px-3.5 py-2 font-segoe text-sm font-semibold text-text-default shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none"
                 >
                   <Calendar className="h-4 w-4 text-public-text-brand" />
                   <span>FY {selectedFiscalYear}</span>
                   <ChevronDown className="h-4 w-4 text-slate-400" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 rounded-md border-slate-300 bg-white p-1 shadow-lg">
+              <DropdownMenuContent align="end" className="w-48 rounded-md border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface p-1 shadow-lg">
                 {availableFiscalYears.map((fy) => (
                   <DropdownMenuItem
                     key={fy}
@@ -224,8 +224,8 @@ export const BudgetMonitoringOverview = ({
                     className={cn(
                       "flex items-center justify-between px-3 py-2 font-segoe text-xs cursor-pointer rounded-sm transition-colors",
                       fy === selectedFiscalYear
-                        ? "bg-public-bg-secondary-100 text-public-text-brand font-bold"
-                        : "text-text-default hover:bg-slate-100"
+                        ? "bg-public-bg-secondary-100 dark:bg-public-bg-secondary-900/30 text-public-text-brand font-bold"
+                        : "text-text-default hover:bg-slate-100 dark:hover:bg-slate-800"
                     )}
                   >
                     <span>FY {fy}</span>
@@ -244,7 +244,7 @@ export const BudgetMonitoringOverview = ({
               className={cn(
                 "flex h-10 items-center justify-center gap-1.5 rounded-md px-3.5 py-2 font-segoe text-xs font-semibold shadow-sm transition-colors",
                 isConfigured
-                  ? "border border-slate-300 bg-white text-text-default hover:bg-slate-50"
+                  ? "border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface text-text-default hover:bg-slate-50 dark:hover:bg-slate-850"
                   : "bg-public-bg-brand text-white hover:bg-bg-brand-hover"
               )}
             >
@@ -576,7 +576,7 @@ export const BudgetMonitoringOverview = ({
                         outerRadius={112}
                         minAngle={4}
                         paddingAngle={donutData.length > 1 ? 2 : 0}
-                        stroke="#ffffff"
+                        stroke="var(--yt-surface, #ffffff)"
                         strokeWidth={2}
                       >
                         {donutData.map((entry) => (
@@ -586,11 +586,20 @@ export const BudgetMonitoringOverview = ({
                       <Tooltip
                         formatter={(val: number) => [formatPesoAmount(val), "Approved"]}
                         contentStyle={{
-                          backgroundColor: "#ffffff",
-                          borderColor: "#CBD5E1",
+                          backgroundColor: "var(--yt-surface, #ffffff)",
+                          borderColor: "var(--yt-border, #CBD5E1)",
+                          color: "var(--yt-text, #172033)",
                           borderRadius: "6px",
                           fontSize: "12px",
                           fontFamily: "Segoe UI",
+                          boxShadow: "var(--yt-shadow-md)",
+                        }}
+                        itemStyle={{
+                          color: "var(--yt-text, #172033)",
+                        }}
+                        labelStyle={{
+                          color: "var(--yt-text, #172033)",
+                          fontWeight: 600,
                         }}
                       />
                     </PieChart>
@@ -640,18 +649,18 @@ export const BudgetMonitoringOverview = ({
                         setTableSearch(e.target.value);
                         setTablePage(0);
                       }}
-                      className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 font-segoe text-xs text-text-default placeholder:text-slate-400 focus:border-public-bg-brand focus:outline-none"
+                      className="h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface pl-9 pr-3 font-segoe text-xs text-text-default placeholder:text-slate-400 focus:border-public-bg-brand focus:outline-none"
                     />
                   </div>
-                  <span className="font-segoe text-xs text-slate-500">
+                  <span className="font-segoe text-xs text-slate-500 dark:text-slate-400">
                     {filteredCategories.length} {filteredCategories.length === 1 ? "category" : "categories"}
                   </span>
                 </div>
 
                 {/* Compact Table */}
-                <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-admin-surface">
                   <table className="w-full text-left font-segoe text-xs">
-                    <thead className="border-b border-slate-200 bg-slate-50/80 font-semibold text-slate-600">
+                    <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 font-semibold text-slate-600 dark:text-slate-300">
                       <tr>
                         <th className="px-3 py-2.5">Purpose / Category</th>
                         <th className="px-3 py-2.5 text-right">Approved</th>
@@ -659,13 +668,13 @@ export const BudgetMonitoringOverview = ({
                         <th className="px-3 py-2.5 text-right">% of Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                       {pagedCategories.length ? (
                         pagedCategories.map((item) => {
                           const color = getCategoryColor(item.category);
                           const pct = approvedBudget > 0 ? ((item.approvedAmount / approvedBudget) * 100).toFixed(1) : "0.0";
                           return (
-                            <tr key={item.category} className="hover:bg-slate-50/60 transition-colors">
+                            <tr key={item.category} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                               <td className="px-3 py-2.5">
                                 <div className="flex items-center gap-2">
                                   <span
@@ -680,7 +689,7 @@ export const BudgetMonitoringOverview = ({
                               <td className="px-3 py-2.5 text-right font-cascadia font-semibold text-text-default">
                                 {formatPesoAmount(item.approvedAmount)}
                               </td>
-                              <td className="px-3 py-2.5 text-right font-cascadia text-slate-600">
+                              <td className="px-3 py-2.5 text-right font-cascadia text-slate-600 dark:text-slate-400">
                                 {formatPesoAmount(item.releasedAmount)}
                               </td>
                               <td className="px-3 py-2.5 text-right font-cascadia font-bold text-public-text-brand">
@@ -691,7 +700,7 @@ export const BudgetMonitoringOverview = ({
                         })
                       ) : (
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-xs text-slate-500">
+                          <td colSpan={4} className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
                             No categories match your search.
                           </td>
                         </tr>
@@ -703,7 +712,7 @@ export const BudgetMonitoringOverview = ({
                 {/* Table Pagination */}
                 {totalPages > 1 && (
                   <div className="mt-3 flex items-center justify-between">
-                    <p className="font-segoe text-[11px] text-slate-500">
+                    <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                       Showing {clampedPage * TABLE_PAGE_SIZE + 1} &ndash;{" "}
                       {Math.min((clampedPage + 1) * TABLE_PAGE_SIZE, filteredCategories.length)} of{" "}
                       {filteredCategories.length}
@@ -713,18 +722,18 @@ export const BudgetMonitoringOverview = ({
                         type="button"
                         disabled={clampedPage === 0}
                         onClick={() => setTablePage((p) => Math.max(0, p - 1))}
-                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-admin-surface text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                       </button>
-                      <span className="px-2 font-segoe text-xs font-semibold text-slate-700">
+                      <span className="px-2 font-segoe text-xs font-semibold text-slate-700 dark:text-slate-200">
                         {clampedPage + 1} / {totalPages}
                       </span>
                       <button
                         type="button"
                         disabled={clampedPage >= totalPages - 1}
                         onClick={() => setTablePage((p) => Math.min(totalPages - 1, p + 1))}
-                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-admin-surface text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
                       >
                         <ChevronRight className="h-3.5 w-3.5" />
                       </button>

@@ -68,26 +68,7 @@ import {
 import { normalizeUrn, validateUrn } from "@/lib/urn-registration";
 import { checkSignupUrn, DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
 
-const GoogleIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      fill="#4285F4"
-      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-    />
-    <path
-      fill="#34A853"
-      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-    />
-    <path
-      fill="#EA4335"
-      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-    />
-  </svg>
-);
+import GoogleIcon from "@/components/GoogleIcon";
 
 export interface GoogleOnboardingDraftData {
   version: 1;
@@ -109,6 +90,43 @@ export interface GoogleOnboardingDraftData {
 }
 
 export const ONBOARDING_DRAFT_KEY_PREFIX = "ytrace-google-onboarding-draft:";
+export const SIGNUP_PREFILL_STORAGE_KEY = "ytrace-google-onboarding-prefill";
+
+export interface SignupPrefillData {
+  organizationName?: string;
+  isExistingOrganization?: boolean;
+  organizationIdentifierNumber?: string;
+}
+
+export const loadSignupPrefill = (): SignupPrefillData | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SIGNUP_PREFILL_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (err) {
+    console.warn("Failed to load signup prefill from localStorage:", err);
+    return null;
+  }
+};
+
+export const saveSignupPrefill = (data: SignupPrefillData): void => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SIGNUP_PREFILL_STORAGE_KEY, JSON.stringify(data));
+  } catch (err) {
+    console.warn("Failed to save signup prefill to localStorage:", err);
+  }
+};
+
+export const clearSignupPrefill = (): void => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(SIGNUP_PREFILL_STORAGE_KEY);
+  } catch (err) {
+    console.warn("Failed to clear signup prefill from localStorage:", err);
+  }
+};
 
 export const getGoogleOnboardingDraftStorageKey = (userId: string): string => {
   return `${ONBOARDING_DRAFT_KEY_PREFIX}${userId}`;
@@ -211,15 +229,17 @@ const GoogleOnboarding = () => {
         }
 
         const localDraft = loadGoogleOnboardingDraft(user.id);
+        const prefill = loadSignupPrefill();
+        const authenticatedEmail = user.email?.trim().toLowerCase() || "";
 
         const draft = createOrganizationProfileDraft(user.id, existing, {
-          organizationEmail: localDraft?.organizationEmail || existing?.organizationEmail || user.email || "",
-          organizationName: localDraft?.organizationName || existing?.organizationName || "",
+          organizationEmail: authenticatedEmail,
+          organizationName: localDraft?.organizationName || existing?.organizationName || prefill?.organizationName || "",
           contactNumber: localDraft?.contactNumber || existing?.contactNumber || "",
           district: localDraft?.district || existing?.district || "",
           barangay: localDraft?.barangay || existing?.barangay || "",
-          isExistingOrganization: localDraft?.isExistingOrganization ?? existing?.isExistingOrganization ?? false,
-          organizationIdentifierNumber: localDraft?.organizationIdentifierNumber || existing?.organizationIdentifierNumber || "",
+          isExistingOrganization: localDraft?.isExistingOrganization ?? existing?.isExistingOrganization ?? prefill?.isExistingOrganization ?? false,
+          organizationIdentifierNumber: localDraft?.organizationIdentifierNumber || existing?.organizationIdentifierNumber || prefill?.organizationIdentifierNumber || "",
         });
 
         if (localDraft?.majorClassification) {
@@ -253,14 +273,16 @@ const GoogleOnboarding = () => {
         if (!active) return;
         console.error("Failed to load organization profile:", err);
         const localDraft = loadGoogleOnboardingDraft(user.id);
+        const prefill = loadSignupPrefill();
+        const authenticatedEmail = user.email?.trim().toLowerCase() || "";
         const draft = createOrganizationProfileDraft(user.id, null, {
-          organizationEmail: localDraft?.organizationEmail || user.email || "",
-          organizationName: localDraft?.organizationName || "",
+          organizationEmail: authenticatedEmail,
+          organizationName: localDraft?.organizationName || prefill?.organizationName || "",
           contactNumber: localDraft?.contactNumber || "",
           district: localDraft?.district || "",
           barangay: localDraft?.barangay || "",
-          isExistingOrganization: localDraft?.isExistingOrganization ?? false,
-          organizationIdentifierNumber: localDraft?.organizationIdentifierNumber || "",
+          isExistingOrganization: localDraft?.isExistingOrganization ?? prefill?.isExistingOrganization ?? false,
+          organizationIdentifierNumber: localDraft?.organizationIdentifierNumber || prefill?.organizationIdentifierNumber || "",
         });
         if (localDraft?.majorClassification) draft.majorClassification = localDraft.majorClassification;
         if (localDraft?.subClassification) draft.subClassification = localDraft.subClassification;
@@ -286,7 +308,7 @@ const GoogleOnboarding = () => {
     return () => {
       active = false;
     };
-  }, [isInitialized, navigate, user?.id]);
+  }, [isInitialized, navigate, user?.id, user?.email]);
 
   // Persist form draft automatically to localStorage whenever the user modifies fields
   useEffect(() => {
@@ -326,6 +348,7 @@ const GoogleOnboarding = () => {
   }, [profileDraft?.isExistingOrganization, profileDraft?.organizationIdentifierNumber, urnError]);
 
   const handleFieldChange = <K extends keyof OrganizationProfile>(field: K, value: OrganizationProfile[K]) => {
+    if (field === "organizationEmail") return; // Immutable Google account email
     setProfileDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
     setFormError(null);
   };
@@ -363,6 +386,11 @@ const GoogleOnboarding = () => {
     e.preventDefault();
     if (!user?.id || !profileDraft || isSaving) return;
 
+    if (!user?.email || !user.email.trim()) {
+      setFormError("Authenticated Google email is missing. Please sign in again.");
+      return;
+    }
+
     setFormError(null);
 
     // 1. Validate Organization Name
@@ -372,9 +400,10 @@ const GoogleOnboarding = () => {
       return;
     }
 
-    // 2. Validate Email
-    if (!profileDraft.organizationEmail?.trim() || !organizationEmailPattern.test(profileDraft.organizationEmail.trim())) {
-      setFormError("Please enter a valid organization email address.");
+    // 2. Validate Email (Authoritative from authenticated Google user)
+    const authenticatedEmail = user.email.trim().toLowerCase();
+    if (!organizationEmailPattern.test(authenticatedEmail)) {
+      setFormError("The authenticated Google email address is invalid.");
       return;
     }
 
@@ -465,7 +494,7 @@ const GoogleOnboarding = () => {
       ...profileDraft,
       userId: user.id,
       organizationName: profileDraft.organizationName.trim(),
-      organizationEmail: profileDraft.organizationEmail.trim(),
+      organizationEmail: authenticatedEmail,
       contactNumber: sanitizedContact,
       district: profileDraft.district.trim(),
       barangay: profileDraft.barangay.trim(),
@@ -495,6 +524,7 @@ const GoogleOnboarding = () => {
 
       if (isComplete) {
         clearGoogleOnboardingDraft(user.id);
+        clearSignupPrefill();
         toast({
           title: "Registration completed!",
           description: "Your organization profile has been submitted successfully.",
@@ -529,14 +559,16 @@ const GoogleOnboarding = () => {
     );
   }
 
-  if (!profileDraft) {
+  if (!profileDraft || !user?.email) {
     return (
       <div className="min-h-screen bg-background grid place-items-center px-4 text-center">
         <Card className="max-w-md w-full p-6 text-center space-y-4 rounded-2xl border border-border/80 shadow-sm">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
           <h2 className="text-lg font-heading font-semibold">Unable to load profile session</h2>
           <p className="text-sm text-muted-foreground">
-            We could not establish your registration session. Please sign in again.
+            {!user?.email
+              ? "Your authenticated Google account does not provide an email address. Please sign in again with a valid Google account."
+              : "We could not establish your registration session. Please sign in again."}
           </p>
           <Button onClick={handleSignOut} className="w-full h-10 font-semibold">
             Return to Sign In
@@ -652,7 +684,7 @@ const GoogleOnboarding = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Organization Email */}
+                {/* Organization Email — Immutable from Google Account */}
                 <div className="space-y-1.5">
                   <Label htmlFor="org-email" className="text-xs font-semibold flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5 text-muted-foreground" />
@@ -662,13 +694,17 @@ const GoogleOnboarding = () => {
                   <Input
                     id="org-email"
                     type="email"
-                    placeholder="org@example.com"
-                    value={profileDraft.organizationEmail || ""}
-                    onChange={(e) => handleFieldChange("organizationEmail", e.target.value)}
-                    autoComplete="email"
-                    className="h-10 text-sm"
+                    value={user?.email || profileDraft.organizationEmail || ""}
+                    readOnly
+                    tabIndex={-1}
+                    aria-readonly="true"
+                    autoComplete="off"
+                    className="h-10 text-sm bg-muted/50 border-input text-foreground font-medium cursor-not-allowed select-none opacity-90"
                     required
                   />
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Email is linked to your Google account and cannot be changed during onboarding.
+                  </p>
                 </div>
 
                 {/* Contact Number */}

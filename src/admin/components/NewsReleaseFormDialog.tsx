@@ -494,7 +494,7 @@ export const NewsReleaseFormDialog = ({
         {/* Form Body - 5 Clear Sections */}
         <div className="flex flex-col gap-4">
           {/* SECTION 1: CONTENT */}
-          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-300 dark:border-slate-800 bg-admin-surface p-4 shadow-xs">
             <SectionHeader step={1} title="Content" />
 
             <div className="flex flex-col gap-1.5">
@@ -543,7 +543,7 @@ export const NewsReleaseFormDialog = ({
           </section>
 
           {/* SECTION 2: FACEBOOK POST */}
-          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-300 dark:border-slate-800 bg-admin-surface p-4 shadow-xs">
             <SectionHeader step={2} title="Facebook Post" />
 
             <div className="flex flex-col gap-1.5">
@@ -599,7 +599,7 @@ export const NewsReleaseFormDialog = ({
           </section>
 
           {/* SECTION 3: THUMBNAIL IMAGE */}
-          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-300 dark:border-slate-800 bg-admin-surface p-4 shadow-xs">
             <SectionHeader step={3} title="Thumbnail Image" />
 
             <div className="flex flex-col gap-2">
@@ -663,7 +663,7 @@ export const NewsReleaseFormDialog = ({
                             setImageError(null);
                             if (fileInputRef.current) fileInputRef.current.value = "";
                           }}
-                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 font-segoe text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs font-medium text-text-default transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95"
                         >
                           <RotateCcw className="h-3.5 w-3.5" />
                           <span>Revert</span>
@@ -676,7 +676,7 @@ export const NewsReleaseFormDialog = ({
                             setImageError(null);
                             if (fileInputRef.current) fileInputRef.current.value = "";
                           }}
-                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 font-segoe text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 active:scale-95"
+                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           <span>Remove</span>
@@ -686,7 +686,7 @@ export const NewsReleaseFormDialog = ({
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 font-segoe text-xs font-medium text-text-default shadow-2xs transition-colors hover:border-slate-400 hover:bg-slate-50 active:scale-95"
+                        className="flex h-8 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-3 font-segoe text-xs font-medium text-text-default shadow-2xs transition-colors hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95"
                       >
                         <UploadCloud className="h-3.5 w-3.5 text-public-bg-brand" />
                         <span>{hasSelectedNewFile || hasExistingThumbnail ? "Replace image" : "Upload image"}</span>
@@ -718,17 +718,17 @@ export const NewsReleaseFormDialog = ({
                       ? "border-public-bg-brand bg-public-bg-secondary-100/30"
                       : thumbnailError
                         ? "border-icon-danger-secondary bg-rose-50/40"
-                        : "border-slate-300 bg-slate-50 hover:border-public-bg-brand/60 hover:bg-slate-100/60",
+                        : "border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 hover:border-public-bg-brand/60 hover:bg-slate-100/60 dark:hover:bg-slate-800/60",
                   )}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-public-bg-brand shadow-xs">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-admin-surface text-public-bg-brand shadow-xs">
                     <UploadCloud className="h-5 w-5" strokeWidth={1.8} />
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="font-segoe text-xs font-semibold text-text-default">
                       Click to browse or drag and drop image
                     </span>
-                    <span className="font-segoe text-[11px] text-slate-500">
+                    <span className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                       Thumbnail must be uploaded directly (JPG, PNG, WebP up to 5 MB)
                     </span>
                   </div>
@@ -746,7 +746,7 @@ export const NewsReleaseFormDialog = ({
           </section>
 
           {/* SECTION 4: CATEGORY */}
-          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-300 dark:border-slate-800 bg-admin-surface p-4 shadow-xs">
             <SectionHeader step={4} title="Category" />
 
             <div className="flex flex-col gap-2">
@@ -787,7 +787,7 @@ export const NewsReleaseFormDialog = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="start"
-                    className="w-[--radix-dropdown-menu-trigger-width] border-slate-200 p-1 shadow-lg max-h-72 overflow-y-auto"
+                    className="w-[--radix-dropdown-menu-trigger-width] border-slate-200 dark:border-slate-800 p-1 shadow-lg max-h-72 overflow-y-auto"
                   >
                     {resolvedCategories.map((option) => {
                       const isSelected = category === option.name;
@@ -801,7 +801,7 @@ export const NewsReleaseFormDialog = ({
                           key={option.id || option.normalizedName || option.name}
                           className={cn(
                             "group/item flex cursor-pointer items-center justify-between font-segoe text-xs py-1.5",
-                            isSelected && "font-semibold text-public-bg-brand bg-slate-50",
+                            isSelected && "font-semibold text-public-bg-brand bg-slate-50 dark:bg-slate-800",
                           )}
                           onClick={() => {
                             onCategoryChange(option.name);
@@ -831,14 +831,14 @@ export const NewsReleaseFormDialog = ({
                                     setDeleteCategoryError(null);
                                     setCategoryToDelete(option);
                                   }}
-                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-400 opacity-60 transition-all hover:bg-rose-50 hover:text-rose-600 hover:opacity-100 focus:opacity-100"
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-400 opacity-60 transition-all hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 hover:opacity-100 focus:opacity-100"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
                                 </button>
                               ) : (
                                 <span
                                   title={`Category is in use by ${usageCount} news release(s)`}
-                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-300 cursor-not-allowed opacity-40"
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-40"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
                                 </span>
@@ -849,10 +849,10 @@ export const NewsReleaseFormDialog = ({
                       );
                     })}
 
-                    <DropdownMenuSeparator className="bg-slate-200" />
+                    <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-800" />
 
                     <DropdownMenuItem
-                      className="cursor-pointer font-segoe text-xs font-medium text-public-bg-brand hover:bg-public-bg-secondary-100"
+                      className="cursor-pointer font-segoe text-xs font-medium text-public-bg-brand hover:bg-public-bg-secondary-100 dark:hover:bg-slate-800"
                       onClick={() => {
                         setIsAddingCategory(true);
                         setTimeout(() => newCategoryInputRef.current?.focus(), 50);
@@ -866,13 +866,13 @@ export const NewsReleaseFormDialog = ({
 
                 {/* Inline Add Category Sub-Form */}
                 {isAddingCategory ? (
-                  <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 animate-in fade-in-50 duration-150">
+                  <div className="flex flex-col gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3 animate-in fade-in-50 duration-150">
                     <div className="flex items-center justify-between">
-                      <span className="font-segoe text-xs font-semibold text-slate-700">Add New Category</span>
+                      <span className="font-segoe text-xs font-semibold text-text-default">Add New Category</span>
                       <button
                         type="button"
                         onClick={handleCancelAddCategory}
-                        className="text-slate-400 hover:text-slate-600"
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                         aria-label="Cancel adding category"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -898,7 +898,7 @@ export const NewsReleaseFormDialog = ({
                         }}
                         placeholder="e.g. Community Outreach"
                         className={cn(
-                          "h-8 flex-1 rounded-md border border-slate-300 bg-white px-2.5 font-segoe text-xs outline-none focus-visible:border-public-bg-brand focus-visible:ring-1 focus-visible:ring-public-bg-brand",
+                          "h-8 flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs outline-none focus-visible:border-public-bg-brand focus-visible:ring-1 focus-visible:ring-public-bg-brand",
                           newCategoryError && "border-icon-danger-secondary",
                         )}
                       />
@@ -921,7 +921,7 @@ export const NewsReleaseFormDialog = ({
                         type="button"
                         disabled={isAddingCategorySubmitting}
                         onClick={handleCancelAddCategory}
-                        className="h-8 rounded-md border border-slate-300 bg-white px-2.5 font-segoe text-xs text-slate-600 hover:bg-slate-100 active:scale-95"
+                        className="h-8 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs text-text-default hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95"
                       >
                         Cancel
                       </button>
@@ -932,7 +932,7 @@ export const NewsReleaseFormDialog = ({
                         {newCategoryError}
                       </p>
                     ) : (
-                      <p className="font-segoe text-[11px] text-slate-500">
+                      <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                         New category will be immediately selected and persisted in the category registry.
                       </p>
                     )}
@@ -946,7 +946,7 @@ export const NewsReleaseFormDialog = ({
                   <span>{categoryError}</span>
                 </p>
               ) : (
-                <p className="font-segoe text-[11px] text-slate-500">
+                <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                   Required category tag shown on public news release cards and admin filters.
                 </p>
               )}
@@ -954,7 +954,7 @@ export const NewsReleaseFormDialog = ({
           </section>
 
           {/* SECTION 5: PUBLISHING */}
-          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <section className="flex flex-col gap-3.5 rounded-lg border border-slate-300 dark:border-slate-800 bg-admin-surface p-4 shadow-xs">
             <SectionHeader step={5} title="Publishing" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

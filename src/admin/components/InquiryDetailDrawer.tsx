@@ -194,7 +194,7 @@ export const InquiryDetailDrawer = ({
                   type="button"
                   disabled={saving}
                   onClick={() => onDeleteInquiry(inquiry)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 font-segoe text-xs sm:text-sm font-semibold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-50 disabled:opacity-50 active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-2 font-segoe text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 transition-colors hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-50 active:scale-95 cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                   Delete Inquiry

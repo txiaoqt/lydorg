@@ -46,9 +46,9 @@ interface CityActivityAnnouncementDialogProps {
 }
 
 const categoryPillClasses: Record<string, string> = {
-  mandatory: "border-red-200 bg-red-50 text-red-700",
-  invitational: "border-amber-200 bg-amber-50 text-amber-700",
-  partnership: "border-blue-200 bg-blue-50 text-blue-700",
+  mandatory: "border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300",
+  invitational: "border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
+  partnership: "border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300",
 };
 
 export const CityActivityAnnouncementDialog: React.FC<CityActivityAnnouncementDialogProps> = ({
@@ -217,7 +217,7 @@ export const CityActivityAnnouncementDialog: React.FC<CityActivityAnnouncementDi
                   Calculating...
                 </span>
               ) : eligibleCount !== null ? (
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50">
                   {eligibleCount} eligible {eligibleCount === 1 ? "organization" : "organizations"}
                 </span>
               ) : null}

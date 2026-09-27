@@ -64,6 +64,7 @@ type UserPortalShellProps = {
   userEmail?: string;
   notifications?: NotificationItem[];
   onMarkAllRead?: () => void;
+  onMarkRead?: (id: string) => void;
   groups: PortalNavGroup[];
   activeId: string;
   onNavigate: (id: string) => void;
@@ -81,6 +82,7 @@ export const UserPortalShell = ({
   userEmail,
   notifications,
   onMarkAllRead,
+  onMarkRead,
   groups,
   activeId,
   onNavigate,
@@ -88,6 +90,7 @@ export const UserPortalShell = ({
   children,
 }: UserPortalShellProps) => {
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme-mode");
@@ -107,6 +110,10 @@ export const UserPortalShell = ({
     : "";
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
   const recentNotifications = [...(notifications ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8);
+
+  useEffect(() => {
+    setNotificationDropdownOpen(false);
+  }, [activeId]);
 
   // Sync global document theme class
   useEffect(() => {
@@ -335,7 +342,11 @@ export const UserPortalShell = ({
             </button>
 
             {/* Notification Bell Dropdown */}
-            <DropdownMenu modal={false}>
+            <DropdownMenu
+              modal={false}
+              open={notificationDropdownOpen}
+              onOpenChange={setNotificationDropdownOpen}
+            >
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
@@ -388,44 +399,55 @@ export const UserPortalShell = ({
                     </div>
                   ) : (
                     recentNotifications.map((n) => (
-                      <div
+                      <DropdownMenuItem
                         key={n.id}
-                        onClick={() => onNavigate("notifications")}
-                        className={cn(
-                          "flex items-start gap-2 p-2 rounded-xl transition-colors cursor-pointer group",
-                          n.isRead
-                            ? "hover:bg-accent/40"
-                            : "bg-primary/[0.04] hover:bg-primary/[0.08]"
-                        )}
+                        asChild
+                        className="p-0 focus:bg-transparent cursor-pointer rounded-xl"
                       >
-                        <span
+                        <div
+                          onClick={() => {
+                            setNotificationDropdownOpen(false);
+                            if (!n.isRead && onMarkRead) {
+                              onMarkRead(n.id);
+                            }
+                            onNavigate("notifications");
+                          }}
                           className={cn(
-                            "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                            n.isRead ? "bg-transparent" : "bg-primary"
+                            "flex items-start gap-2 p-2 rounded-xl transition-colors cursor-pointer group w-full",
+                            n.isRead
+                              ? "hover:bg-accent/40"
+                              : "bg-primary/[0.04] hover:bg-primary/[0.08]"
                           )}
-                        />
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <div className="flex items-baseline justify-between gap-1.5">
-                            <p
-                              className={cn(
-                                "text-xs leading-tight truncate",
-                                n.isRead ? "font-medium text-foreground/80" : "font-bold text-foreground"
-                              )}
-                            >
-                              {n.title}
+                        >
+                          <span
+                            className={cn(
+                              "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
+                              n.isRead ? "bg-transparent" : "bg-primary"
+                            )}
+                          />
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div className="flex items-baseline justify-between gap-1.5">
+                              <p
+                                className={cn(
+                                  "text-xs leading-tight truncate",
+                                  n.isRead ? "font-medium text-foreground/80" : "font-bold text-foreground"
+                                )}
+                              >
+                                {n.title}
+                              </p>
+                              <span className="shrink-0 text-[10px] text-muted-foreground font-medium">
+                                {new Date(n.createdAt).toLocaleDateString("en-PH", {
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                            </div>
+                            <p className="line-clamp-1 text-[11px] text-muted-foreground leading-snug">
+                              {n.message}
                             </p>
-                            <span className="shrink-0 text-[10px] text-muted-foreground font-medium">
-                              {new Date(n.createdAt).toLocaleDateString("en-PH", {
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </span>
                           </div>
-                          <p className="line-clamp-1 text-[11px] text-muted-foreground leading-snug">
-                            {n.message}
-                          </p>
                         </div>
-                      </div>
+                      </DropdownMenuItem>
                     ))
                   )}
                 </div>
@@ -434,7 +456,10 @@ export const UserPortalShell = ({
 
                 {/* Fixed Footer Action */}
                 <DropdownMenuItem
-                  onClick={() => onNavigate("notifications")}
+                  onClick={() => {
+                    setNotificationDropdownOpen(false);
+                    onNavigate("notifications");
+                  }}
                   className="justify-center text-xs font-semibold text-primary cursor-pointer hover:bg-primary/10 rounded-xl py-1.5 shrink-0"
                 >
                   View All Notifications →

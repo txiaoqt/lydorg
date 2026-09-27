@@ -652,7 +652,7 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     dataType: "string",
     defaultValue: "Y-TRACE",
     isEditable: false,
-    badge: "Managed by System",
+    badge: "System",
     helperText: "noreply@ytrace.app (Y-TRACE)",
   },
   {
@@ -830,8 +830,10 @@ export const validateSystemSettingValue = (
       return { valid: false, error: "Exceeds maximum length of 100 characters" };
     }
     if (key.includes("email") || key === "general.support_email" || key === "email.reply_to_email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(str)) return { valid: false, error: "Must be a valid email address" };
+      if (str) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(str)) return { valid: false, error: "Must be a valid email address" };
+      }
     }
     if (key.includes("url") || key === "general.user_portal_url" || key === "general.admin_portal_url") {
       try {

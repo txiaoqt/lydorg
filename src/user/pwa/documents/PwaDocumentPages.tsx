@@ -43,7 +43,7 @@ type PendingFile = { id: string; file: File; documentTypeId: string };
 
 const approvedStatuses = new Set(["approved", "approved_green"]);
 const initialUploadStatuses = new Set(["draft"]);
-const correctionStatuses = new Set(["needs_revision", "rejected_red"]);
+const correctionStatuses = new Set(["needs_revision"]);
 const reviewStatuses = new Set(["uploaded", "ready_for_review", "submitted", "under_admin_review"]);
 
 const getDocumentPresentation = (file?: SubmissionFile) => {

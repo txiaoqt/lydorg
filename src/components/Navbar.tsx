@@ -22,7 +22,7 @@ const Navbar = () => {
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -66,11 +66,11 @@ const Navbar = () => {
   return (
     <nav className="fixed left-0 right-0 top-[32px] sm:top-[40px] z-50 bg-white shadow-public-nav border-b border-slate-100/80">
       <div className="mx-auto flex h-14 sm:h-16 lg:h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-10 lg:px-20">
-        <Link to="/" className="min-w-0 shrink-0">
+        <Link to="/" className="min-w-0 shrink-0 flex items-center">
           <img
             src="/FullNavbar.svg"
             alt="Y-TRACE"
-            className="h-7 w-auto sm:h-9 lg:h-[45px] object-contain"
+            className="h-8 w-auto sm:h-9 lg:h-[45px] object-contain"
           />
         </Link>
 
@@ -151,7 +151,7 @@ const Navbar = () => {
 
       {/* Content-driven compact modern mobile navigation panel with 100% solid opaque white background */}
       {mobileOpen ? (
-        <div className="fixed inset-x-0 top-[calc(32px+3.5rem)] sm:top-[calc(40px+4rem)] z-50 max-h-[calc(100dvh-32px-3.5rem-2rem)] overflow-y-auto rounded-b-2xl border-b border-x border-slate-200/90 bg-white px-4.5 pb-5 pt-3 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] lg:hidden safe-area-bottom">
+        <div className="fixed inset-x-0 top-[calc(32px+3.5rem)] sm:top-[calc(40px+4rem)] z-50 max-h-[calc(100dvh-32px-3.5rem-2rem)] overflow-y-auto rounded-b-2xl border-b border-x border-slate-200/90 bg-white px-4.5 pb-7 pt-3 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] lg:hidden safe-area-bottom">
           {/* Navigation Links */}
           <div className="flex flex-col gap-0.5">
             {navItems.map((item) => {
@@ -195,8 +195,8 @@ const Navbar = () => {
               >
                 Create an Account
               </Link>
-              <p className="text-center text-xs text-slate-400 font-medium pt-0.5">
-                Official Pasig City LYDO Portal
+              <p className="text-center text-xs text-slate-400 font-medium pt-1 pb-1">
+                Pasig City Youth Development Portal
               </p>
             </div>
           ) : (

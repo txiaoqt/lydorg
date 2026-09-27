@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Check, CheckCircle2, Eye, EyeOff, HelpCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, Eye, EyeOff, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { pasigDistrictBarangays, pasigDistrictOptions, type PasigDistrict } from "@/lib/pasig-districts";
@@ -65,6 +65,9 @@ import {
 } from "@/user/pwa/pwaAuthFlow";
 import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
 import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
+import { getAuthCallbackUrl } from "@/lib/auth-redirect";
+import GoogleIcon from "@/components/GoogleIcon";
+import { saveSignupPrefill } from "@/pages/GoogleOnboarding";
 
 type LegalPolicyType = "terms" | "privacy";
 type PolicyVersion = {
@@ -79,18 +82,18 @@ type PolicyVersion = {
 const FormSection = ({ title, children, hidden = false }: { title: string; children: React.ReactNode; hidden?: boolean }) => (
   <div className={`space-y-4 ${hidden ? "hidden" : ""}`}>
     <div className="flex items-center gap-3">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/90 whitespace-nowrap">
         {title}
       </span>
-      <div className="h-px flex-1 bg-border" />
+      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
     </div>
     {children}
   </div>
 );
 
 const RequiredLabel = ({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) => (
-  <Label htmlFor={htmlFor}>
-    {children} <span className="text-destructive" aria-hidden="true">*</span>
+  <Label htmlFor={htmlFor} className="text-sm font-semibold text-foreground/90">
+    {children} <span className="text-destructive font-bold" aria-hidden="true">*</span>
     <span className="sr-only"> required</span>
   </Label>
 );
@@ -109,9 +112,9 @@ const PasswordCriteriaChecklist = ({ password }: { password: string }) => {
   if (!password) return null;
 
   return (
-    <div className="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
+    <div className="space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 p-3.5 text-xs">
       <p className="font-semibold text-muted-foreground">Password Requirements:</p>
-      <ul className="space-y-1">
+      <ul className="space-y-1.5">
         {items.map((item) => (
           <li key={item.key} className="flex items-center gap-2 transition-colors">
             {item.valid ? (
@@ -145,6 +148,7 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [agreedToPolicies, setAgreedToPolicies] = useState(() => initialDraft?.agreedToPolicies ?? false);
   const [inlineError, setInlineError] = useState("");
   const [urnAvailability, setUrnAvailability] = useState<UrnAvailability>("idle");
@@ -266,7 +270,52 @@ const SignUp = () => {
 
   const displayPolicy = resolveDisplayPolicy(activePolicy);
 
-  const continueToAccount = async () => {
+  const handleGoogleSignUp = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isGoogleLoading || isCreating) return;
+    if (!supabase) {
+      setInlineError("Authentication service is currently unavailable.");
+      return;
+    }
+    setInlineError("");
+    setIsGoogleLoading(true);
+
+    try {
+      saveSignupPrefill({
+        organizationName: name.trim(),
+        isExistingOrganization,
+        organizationIdentifierNumber: isExistingOrganization ? normalizeUrn(organizationIdentifierNumber) : "",
+      });
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getAuthCallbackUrl({ pwaFlow }),
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
+      });
+
+      if (error) {
+        setIsGoogleLoading(false);
+        setInlineError(error.message || "Failed to initiate Google sign up.");
+      }
+    } catch (err) {
+      setIsGoogleLoading(false);
+      const message = err instanceof Error ? err.message : "Failed to initiate Google sign up.";
+      setInlineError(message);
+    }
+  };
+
+  const continueToAccount = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setInlineError("");
     setTouched((previous) => new Set([...previous, "name", "identifier"]));
     if (!name.trim()) {
@@ -290,7 +339,13 @@ const SignUp = () => {
       }
     }
     setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } catch {
+      // Ignore scroll errors in unsupported environments
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -463,460 +518,550 @@ const SignUp = () => {
 
   return (
     <div
-      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 pt-20 pb-10 sm:py-10 relative overflow-hidden`}
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-0 sm:min-h-screen bg-background text-foreground flex flex-col items-center justify-start sm:justify-center px-4 pt-5 pb-6 sm:py-12 relative overflow-hidden`}
       data-pwa-theme={pwaFlow ? pwaTheme : undefined}
       style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
     >
       {/* Background blobs */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-180px] right-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-[-190px] left-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
       </div>
 
-      {/* Page-level Brand Logo (upper-left viewport mark) */}
-      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
-        <Link
-          to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
-          className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
-        </Link>
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        
+      <div className="relative z-10 w-full max-w-[420px] sm:max-w-[460px] md:max-w-[480px] mx-auto space-y-4 sm:space-y-6">
+        {/* Brand Logo — centered above card */}
+        <div className="flex justify-center">
+          <Link
+            to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
+            className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
+          >
+            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+          </Link>
+        </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 card-shadow space-y-6">
-            <div>
-              <h1 className="text-2xl font-heading font-bold text-foreground">Create Organization Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Register your youth organization to access the Y-TRACE compliance portal.
-              </p>
-            </div>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-card p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="space-y-1.5 text-left">
+            <h1 className="text-2xl sm:text-[28px] font-heading font-bold text-foreground tracking-tight">
+              Create Organization Account
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Register your youth organization to access the Y-TRACE compliance portal.
+            </p>
+          </div>
 
-            <ol className="grid grid-cols-3" aria-label="Registration progress">
-              {(["Organization", "Account", "Verification"] as const).map((label, index) => {
-                const step = index + 1;
-                const isComplete = step < currentStep;
-                const isActive = step === currentStep;
-                return (
-                  <li key={label} className="relative flex flex-col items-center gap-2 text-center">
-                    {index > 0 ? (
-                      <span className={`absolute right-1/2 top-3.5 h-px w-full ${step <= currentStep ? "bg-primary" : "bg-border"}`} aria-hidden="true" />
-                    ) : null}
+          {/* Progress Indicator */}
+          <ol className="grid grid-cols-3 pt-1" aria-label="Registration progress">
+            {(["Organization", "Account", "Verification"] as const).map((label, index) => {
+              const step = index + 1;
+              const isComplete = step < currentStep;
+              const isActive = step === currentStep;
+              return (
+                <li key={label} className="relative flex flex-col items-center gap-2 text-center">
+                  {index > 0 ? (
                     <span
-                      className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${isActive || isComplete
+                      className={`absolute right-1/2 top-3.5 h-[2px] w-full transition-colors ${
+                        step <= currentStep ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
+                      }`}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  <span
+                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold transition-all shadow-xs ${
+                      isActive || isComplete
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card text-muted-foreground"
-                        }`}
-                      aria-current={isActive ? "step" : undefined}
-                    >
-                      {isComplete ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : step}
-                    </span>
-                    <span className={`text-[11px] font-medium sm:text-xs ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                      {label}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
+                        : "border-slate-300 dark:border-slate-700 bg-card text-muted-foreground"
+                    }`}
+                    aria-current={isActive ? "step" : undefined}
+                  >
+                    {isComplete ? <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" /> : step}
+                  </span>
+                  <span
+                    className={`text-[11px] sm:text-xs tracking-tight transition-colors ${
+                      isActive ? "font-bold text-primary" : isComplete ? "font-medium text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
 
-            {!useSupabaseAuth && (
-              <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2.5 text-sm text-warning">
-                Supabase is not configured. Add <code>VITE_SUPABASE_URL</code> and{" "}
-                <code>VITE_SUPABASE_ANON_KEY</code> in your <code>.env</code> file.
+          {!useSupabaseAuth && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">
+              Supabase is not configured. Add <code>VITE_SUPABASE_URL</code> and{" "}
+              <code>VITE_SUPABASE_ANON_KEY</code> in your <code>.env</code> file.
+            </div>
+          )}
+
+          {inlineError && (
+            <div
+              className="rounded-xl border border-destructive/40 bg-destructive/10 p-3.5 text-sm text-destructive flex items-start gap-2.5 shadow-xs"
+              role="alert"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <p className="text-xs font-medium">{inlineError}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+
+            {/* ── Section 1: Organization details ── */}
+            <FormSection title="Organization details" hidden={currentStep !== 1}>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <RequiredLabel htmlFor="name">Organization Name</RequiredLabel>
+                  <span className="text-xs text-muted-foreground font-normal">{name.length} / 100</span>
+                </div>
+                <Input
+                  id="name"
+                  placeholder="Enter your organization's name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setInlineError("");
+                  }}
+                  onBlur={() => touch("name")}
+                  maxLength={100}
+                  className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                  required
+                />
+                {touched.has("name") && !name.trim() ? (
+                  <p className="text-xs text-destructive">Organization name is required.</p>
+                ) : name.trim().length > 100 ? (
+                  <p className="text-xs text-destructive">Organization name must not exceed 100 characters.</p>
+                ) : null}
               </div>
-            )}
+            </FormSection>
 
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-
-              {/* ── Section 1: Organization details ── */}
-              <FormSection title="Organization details" hidden={currentStep !== 1}>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <RequiredLabel htmlFor="name">Organization Name</RequiredLabel>
-                    <span className="text-[11px] text-muted-foreground">{name.length} / 100</span>
-                  </div>
-                  <Input
-                    id="name"
-                    placeholder="Enter your organization's name"
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      setInlineError("");
-                    }}
-                    onBlur={() => touch("name")}
-                    maxLength={100}
-                    required
-                  />
-                  {touched.has("name") && !name.trim() ? (
-                    <p className="text-xs text-destructive">Organization name is required.</p>
-                  ) : name.trim().length > 100 ? (
-                    <p className="text-xs text-destructive">Organization name must not exceed 100 characters.</p>
+            <FormSection title="Account details" hidden={currentStep !== 2}>
+              <div className="space-y-1.5">
+                <RequiredLabel htmlFor="email">Email Address</RequiredLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@gmail.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setInlineError("");
+                  }}
+                  onBlur={() => touch("email")}
+                  autoComplete="email"
+                  aria-invalid={touched.has("email") && (!email.trim() || !isGmailEmail)}
+                  aria-describedby="signup-email-status"
+                  className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                  required
+                />
+                <div id="signup-email-status" aria-live="polite">
+                  {touched.has("email") && !email.trim() ? (
+                    <p className="text-xs text-destructive">Email Address is required.</p>
+                  ) : touched.has("email") && email && !isGmailEmail ? (
+                    <p className="text-xs text-destructive">Email must end with @gmail.com.</p>
                   ) : null}
                 </div>
-              </FormSection>
+              </div>
 
-              <FormSection title="Account details" hidden={currentStep !== 2}>
+              <div className="space-y-1.5">
+                <RequiredLabel htmlFor="contactNumber">Contact Number</RequiredLabel>
+                <Input
+                  id="contactNumber"
+                  type="tel"
+                  placeholder="09XXXXXXXXX"
+                  value={contactNumber}
+                  onChange={(e) => {
+                    setContactNumber(sanitizeContactNumber(e.target.value));
+                    setInlineError("");
+                  }}
+                  onBlur={() => touch("contactNumber")}
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={11}
+                  className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                  required
+                />
+                {touched.has("contactNumber") && !normalizedContactNumber ? (
+                  <p className="text-xs text-destructive">Contact number is required.</p>
+                ) : touched.has("contactNumber") && !isContactNumberValid ? (
+                  <p className="text-xs text-destructive">
+                    Must be 11 digits starting with 09.
+                  </p>
+                ) : null}
+              </div>
+            </FormSection>
+
+            {/* ── Section 2: Location ── */}
+            <FormSection title="Location" hidden={currentStep !== 2}>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="email">Email Address</RequiredLabel>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@gmail.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setInlineError("");
-                    }}
-                    onBlur={() => touch("email")}
-                    autoComplete="email"
-                    aria-invalid={touched.has("email") && (!email.trim() || !isGmailEmail)}
-                    aria-describedby="signup-email-status"
-                    required
-                  />
-                  <div id="signup-email-status" aria-live="polite">
-                    {touched.has("email") && !email.trim() ? (
-                      <p className="text-xs text-destructive">Email Address is required.</p>
-                    ) : touched.has("email") && email && !isGmailEmail ? (
-                      <p className="text-xs text-destructive">Email must end with @gmail.com.</p>
-                    ) : null}
-                  </div>
+                  <RequiredLabel htmlFor="district">District</RequiredLabel>
+                  <Select
+                    value={district}
+                    onValueChange={(v) => { setDistrict(v as PasigDistrict); touch("district"); }}
+                  >
+                    <SelectTrigger id="district" className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150">
+                      <SelectValue placeholder="Select district" />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      sideOffset={4}
+                      collisionPadding={8}
+                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-slate-200 dark:border-slate-800 shadow-lg"
+                    >
+                      {pasigDistrictOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt} className="cursor-pointer text-sm">
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {touched.has("district") && !district ? <p className="text-xs text-destructive">District is required.</p> : null}
                 </div>
 
                 <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="contactNumber">Contact Number</RequiredLabel>
-                  <Input
-                    id="contactNumber"
-                    type="tel"
-                    placeholder="09XXXXXXXXX"
-                    value={contactNumber}
-                    onChange={(e) => {
-                      setContactNumber(sanitizeContactNumber(e.target.value));
-                      setInlineError("");
-                    }}
-                    onBlur={() => touch("contactNumber")}
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    maxLength={11}
-                    required
-                  />
-                  {touched.has("contactNumber") && !normalizedContactNumber ? (
-                    <p className="text-xs text-destructive">Contact number is required.</p>
-                  ) : touched.has("contactNumber") && !isContactNumberValid ? (
-                    <p className="text-xs text-destructive">
-                      Must be 11 digits starting with 09.
-                    </p>
-                  ) : null}
-                </div>
-              </FormSection>
-
-              {/* ── Section 2: Location ── */}
-              <FormSection title="Location" hidden={currentStep !== 2}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <RequiredLabel htmlFor="district">District</RequiredLabel>
-                    <Select
-                      value={district}
-                      onValueChange={(v) => { setDistrict(v as PasigDistrict); touch("district"); }}
+                  <RequiredLabel htmlFor="barangay">Barangay</RequiredLabel>
+                  <Select
+                    value={barangayId}
+                    onValueChange={(v) => { setBarangayId(v); touch("barangay"); }}
+                    disabled={!district}
+                  >
+                    <SelectTrigger id="barangay" className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed">
+                      <SelectValue placeholder={district ? "Select Barangay" : "Choose district first"} />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      sideOffset={4}
+                      collisionPadding={8}
+                      hideScrollButtons
+                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-slate-200 dark:border-slate-800 shadow-lg"
                     >
-                      <SelectTrigger id="district" className="h-10">
-                        <SelectValue placeholder="Select district" />
-                      </SelectTrigger>
-                      <SelectContent
-                        position="popper"
-                        side="bottom"
-                        sideOffset={4}
-                        collisionPadding={8}
-                        className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
-                      >
-                        {pasigDistrictOptions.map((opt) => (
-                          <SelectItem key={opt} value={opt} className="cursor-pointer text-sm">
-                            {opt}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {touched.has("district") && !district ? <p className="text-xs text-destructive">District is required.</p> : null}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <RequiredLabel htmlFor="barangay">Barangay</RequiredLabel>
-                    <Select
-                      value={barangayId}
-                      onValueChange={(v) => { setBarangayId(v); touch("barangay"); }}
-                      disabled={!district}
-                    >
-                      <SelectTrigger id="barangay" className="h-10">
-                        <SelectValue placeholder={district ? "Select Barangay" : "Choose district first"} />
-                      </SelectTrigger>
-                      <SelectContent
-                        position="popper"
-                        side="bottom"
-                        sideOffset={4}
-                        collisionPadding={8}
-                        hideScrollButtons
-                        className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-border/80 shadow-lg"
-                      >
-                        {districtBarangays.map((b) => (
-                          <SelectItem key={b.id} value={b.id} className="cursor-pointer text-sm">
-                            {b.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {touched.has("barangay") && !barangayId ? <p className="text-xs text-destructive">Barangay is required.</p> : null}
-                  </div>
+                      {districtBarangays.map((b) => (
+                        <SelectItem key={b.id} value={b.id} className="cursor-pointer text-sm">
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {touched.has("barangay") && !barangayId ? <p className="text-xs text-destructive">Barangay is required.</p> : null}
                 </div>
-              </FormSection>
+              </div>
+            </FormSection>
 
-              {/* ── Section 3: Registration type ── */}
-              <FormSection title="Registration type" hidden={currentStep !== 1}>
+            {/* ── Section 3: Registration type ── */}
+            <FormSection title="Registration type" hidden={currentStep !== 1}>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     id="existing-organization"
                     checked={isExistingOrganization}
                     onCheckedChange={(checked) => setIsExistingOrganization(Boolean(checked))}
                     disabled={isCreating}
-                    className="shrink-0 mt-[3px]"
+                    className="shrink-0 mt-0.5 rounded-md border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
-                  <div>
-                    <Label htmlFor="existing-organization" className="text-sm font-medium cursor-pointer">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="existing-organization" className="text-sm font-semibold text-foreground cursor-pointer">
                       We already have a Unique Registration Number (URN)
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       Select this option if your organization has previously registered with the Pasig City Youth Development Office.
                     </p>
                   </div>
                 </div>
+              </div>
 
-                {!isExistingOrganization ? (
-                  <div className="space-y-1.5 pt-3">
-                    <Label className="text-sm font-medium text-foreground">Unique Registration Number (URN)</Label>
-                    <p className="text-xs text-muted-foreground bg-muted/40 border border-border/70 rounded-lg p-3">
-                      A URN will be assigned to your organization once your registration is successfully completed.
-                    </p>
+              {!isExistingOrganization ? (
+                <div className="space-y-1.5 pt-1">
+                  <Label className="text-sm font-semibold text-foreground/90">Unique Registration Number (URN)</Label>
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 text-xs text-muted-foreground leading-relaxed">
+                    A URN will be assigned to your organization once your registration is successfully completed.
                   </div>
-                ) : (
-                  <div className="space-y-1.5 pt-3">
-                    <div className="flex items-center gap-1.5">
-                      <RequiredLabel htmlFor="organizationIdentifierNumber">Unique Registration Number (URN)</RequiredLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary p-0.5"
-                            aria-label="URN help guidance"
-                          >
-                            <HelpCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent side="top" align="start" className="w-80 p-3.5 text-xs space-y-2">
-                          <div className="font-semibold text-foreground flex items-center gap-1.5">
-                            <HelpCircle className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
-                            About Unique Registration Number (URN)
-                          </div>
-                          <p className="leading-relaxed text-muted-foreground">
-                            Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record.
-                          </p>
-                          <p className="leading-relaxed text-muted-foreground">
-                            LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
-                          </p>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <Input
-                      id="organizationIdentifierNumber"
-                      placeholder="17-26-010"
-                      value={organizationIdentifierNumber}
-                      onChange={(e) => setOrganizationIdentifierNumber(e.target.value.toUpperCase())}
-                      onInput={(e) => { e.currentTarget.value = e.currentTarget.value.toUpperCase(); }}
-                      onBlur={() => touch("identifier")}
-                      required
-                    />
-                    {touched.has("identifier") && urnError ? (
-                      <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
-                    ) : urnAvailability === "registered" ? (
-                      <p id="urn-error" className="text-xs text-destructive">URN is unavailable.</p>
-                    ) : urnAvailability === "checking" ? (
-                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-                        Checking URN availability...
-                      </p>
-                    ) : !urnError && organizationIdentifierNumber.trim() && urnAvailability === "available" ? (
-                      <p id="urn-success" className="text-xs text-success">URN is acceptable.</p>
-                    ) : null}
+                </div>
+              ) : (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <RequiredLabel htmlFor="organizationIdentifierNumber">Unique Registration Number (URN)</RequiredLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary p-0.5"
+                          aria-label="URN help guidance"
+                        >
+                          <HelpCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="start" className="w-80 p-3.5 text-xs space-y-2 rounded-xl border-slate-200 dark:border-slate-800 shadow-lg">
+                        <div className="font-semibold text-foreground flex items-center gap-1.5">
+                          <HelpCircle className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                          About Unique Registration Number (URN)
+                        </div>
+                        <p className="leading-relaxed text-muted-foreground">
+                          Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record.
+                        </p>
+                        <p className="leading-relaxed text-muted-foreground">
+                          LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                )}
-              </FormSection>
-
-              {currentStep === 1 ? (
-                <div className="space-y-2.5">
-                  <Button type="button" className="w-full font-semibold" onClick={continueToAccount}>
-                    Continue to Account Details
-                  </Button>
-                  {inlineError ? (
-                    <p className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive">
-                      {inlineError}
+                  <Input
+                    id="organizationIdentifierNumber"
+                    placeholder="17-26-010"
+                    value={organizationIdentifierNumber}
+                    onChange={(e) => setOrganizationIdentifierNumber(e.target.value.toUpperCase())}
+                    onInput={(e) => { e.currentTarget.value = e.currentTarget.value.toUpperCase(); }}
+                    onBlur={() => touch("identifier")}
+                    className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150 uppercase"
+                    required
+                  />
+                  {touched.has("identifier") && urnError ? (
+                    <p id="urn-error" className="text-xs text-destructive">{urnError}</p>
+                  ) : urnAvailability === "registered" ? (
+                    <p id="urn-error" className="text-xs text-destructive">URN is unavailable.</p>
+                  ) : urnAvailability === "checking" ? (
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                      Checking URN availability...
                     </p>
+                  ) : !urnError && organizationIdentifierNumber.trim() && urnAvailability === "available" ? (
+                    <p id="urn-success" className="text-xs text-success font-medium">URN is acceptable.</p>
                   ) : null}
                 </div>
-              ) : null}
+              )}
+            </FormSection>
 
-              {/* ── Section 4: Account security ── */}
-              <FormSection title="Account security" hidden={currentStep !== 2}>
-                <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="password">Password</RequiredLabel>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a strong password"
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setInlineError("");
-                      }}
-                      onBlur={() => touch("password")}
-                      className="pr-10"
-                      autoComplete="new-password"
-                      maxLength={16}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent hover:bg-transparent active:bg-transparent focus:bg-transparent text-muted-foreground transition-colors hover:text-foreground active:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {touched.has("password") && !password ? <p className="text-xs text-destructive">Password is required.</p> : null}
-                </div>
-
-                <PasswordCriteriaChecklist password={password} />
-
-                <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="confirmPassword">Confirm Password</RequiredLabel>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Re-enter your password"
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        setInlineError("");
-                      }}
-                      onBlur={() => touch("confirmPassword")}
-                      onPaste={(event) => {
-                        event.preventDefault();
-                        setInlineError("For security, please manually retype your confirmation password.");
-                      }}
-                      className="pr-10"
-                      autoComplete="new-password"
-                      maxLength={16}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 bg-transparent hover:bg-transparent active:bg-transparent focus:bg-transparent text-muted-foreground transition-colors hover:text-foreground active:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                    >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {touched.has("confirmPassword") && !confirmPassword ? (
-                    <p className="text-xs text-destructive">Please confirm your password.</p>
-                  ) : confirmMatchHint}
-                </div>
-              </FormSection>
-
-              {/* ── Policy agreement ── */}
-              <div className={`items-start gap-3 rounded-xl border border-border/70 bg-muted/30 p-4 ${currentStep === 2 ? "flex" : "hidden"}`}>
-                <Checkbox
-                  id="policy-agreement"
-                  checked={agreedToPolicies}
-                  onCheckedChange={(checked) => {
-                    setAgreedToPolicies(Boolean(checked));
-                    touch("policies");
-                  }}
-                  disabled={isCreating}
-                  className="shrink-0 mt-[3px]"
-                />
-                <Label htmlFor="policy-agreement" className="text-sm font-normal leading-relaxed cursor-pointer">
-                  I have read and agree to the{" "}
-                  <button
-                    type="button"
-                    className="font-medium text-primary hover:underline"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setLegalPolicyType("privacy");
-                    }}
-                  >
-                    Privacy Policy
-                  </button>{" & "}
-                  <button
-                    type="button"
-                    className="font-medium text-primary hover:underline"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setLegalPolicyType("terms");
-                    }}
-                  >
-                    Terms of Service
-                  </button>{" "}
-                  <span className="text-destructive" aria-hidden="true">*</span>
-                </Label>
-              </div>
-              {currentStep === 2 && touched.has("policies") && !agreedToPolicies ? <p className="-mt-4 text-xs text-destructive">You must accept the Privacy Policy &amp; Terms of Service.</p> : null}
-
-              {/* Submit */}
-              <div className={`space-y-2.5 ${currentStep === 2 ? "" : "hidden"}`}>
-                <div className="grid grid-cols-[auto_1fr] gap-3">
-                  <Button type="button" variant="outline" onClick={() => { setInlineError(""); setCurrentStep(1); }} disabled={isCreating}>
-                    Back
-                  </Button>
+            {currentStep === 1 ? (
+              <div className="space-y-4 pt-1">
+                <div className="space-y-2.5">
                   <Button
-                    type="submit"
-                    className="font-semibold"
-                    disabled={!useSupabaseAuth || isCreating}
+                    type="button"
+                    className="w-full h-11 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] shadow-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      void continueToAccount(e);
+                    }}
+                    disabled={isGoogleLoading || isCreating}
                   >
-                    {isCreating ? (
+                    Continue to Account Details
+                  </Button>
+                </div>
+
+                {/* Google Sign-Up */}
+                <div className="space-y-3.5">
+                  <div className="relative my-1">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-wider">
+                      <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isGoogleLoading || isCreating || !useSupabaseAuth}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      void handleGoogleSignUp(e);
+                    }}
+                    className="w-full h-11 flex items-center justify-center gap-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-card text-foreground hover:bg-slate-50 dark:hover:bg-slate-900/60 active:scale-[0.98] transition-all duration-150 text-sm font-semibold shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    {isGoogleLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account…
+                        <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin text-muted-foreground" />
+                        <span>Connecting to Google…</span>
                       </>
                     ) : (
-                      "Continue to Verification"
+                      <>
+                        <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+                          <GoogleIcon className="h-[18px] w-[18px] shrink-0" />
+                        </div>
+                        <span>Continue with Google</span>
+                      </>
                     )}
-                  </Button>
+                  </button>
                 </div>
 
-                {inlineError && (
-                  <p className="rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+                {inlineError ? (
+                  <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
                     {inlineError}
                   </p>
-                )}
+                ) : null}
               </div>
-            </form>
-          </div>
+            ) : null}
+
+            {/* ── Section 4: Account security ── */}
+            <FormSection title="Account security" hidden={currentStep !== 2}>
+              <div className="space-y-1.5">
+                <RequiredLabel htmlFor="password">Password</RequiredLabel>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a strong password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setInlineError("");
+                    }}
+                    onBlur={() => touch("password")}
+                    className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 pr-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                    autoComplete="new-password"
+                    maxLength={16}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-slate-800/60 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {touched.has("password") && !password ? <p className="text-xs text-destructive">Password is required.</p> : null}
+              </div>
+
+              <PasswordCriteriaChecklist password={password} />
+
+              <div className="space-y-1.5">
+                <RequiredLabel htmlFor="confirmPassword">Confirm Password</RequiredLabel>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Re-enter your password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setInlineError("");
+                    }}
+                    onBlur={() => touch("confirmPassword")}
+                    onPaste={(event) => {
+                      event.preventDefault();
+                      setInlineError("For security, please manually retype your confirmation password.");
+                    }}
+                    className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 pr-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                    autoComplete="new-password"
+                    maxLength={16}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-slate-800/60 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {touched.has("confirmPassword") && !confirmPassword ? (
+                  <p className="text-xs text-destructive">Please confirm your password.</p>
+                ) : confirmMatchHint}
+              </div>
+            </FormSection>
+
+            {/* ── Policy agreement ── */}
+            <div className={`rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3.5 sm:p-4 ${currentStep === 2 ? "flex" : "hidden"} items-start gap-3`}>
+              <Checkbox
+                id="policy-agreement"
+                checked={agreedToPolicies}
+                onCheckedChange={(checked) => {
+                  setAgreedToPolicies(Boolean(checked));
+                  touch("policies");
+                }}
+                disabled={isCreating}
+                className="shrink-0 mt-0.5 rounded-md border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <Label htmlFor="policy-agreement" className="text-sm font-normal leading-relaxed text-foreground cursor-pointer">
+                I have read and agree to the{" "}
+                <button
+                  type="button"
+                  className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:underline cursor-pointer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setLegalPolicyType("privacy");
+                  }}
+                >
+                  Privacy Policy
+                </button>{" & "}
+                <button
+                  type="button"
+                  className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:underline cursor-pointer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setLegalPolicyType("terms");
+                  }}
+                >
+                  Terms of Service
+                </button>{" "}
+                <span className="text-destructive font-bold" aria-hidden="true">*</span>
+              </Label>
+            </div>
+            {currentStep === 2 && touched.has("policies") && !agreedToPolicies ? (
+              <p className="-mt-4 text-xs text-destructive">You must accept the Privacy Policy &amp; Terms of Service.</p>
+            ) : null}
+
+            {/* Submit */}
+            <div className={`space-y-2.5 pt-1 ${currentStep === 2 ? "" : "hidden"}`}>
+              <div className="grid grid-cols-[auto_1fr] gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 rounded-xl font-semibold text-sm border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] transition-all duration-150 px-5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                  onClick={() => { setInlineError(""); setCurrentStep(1); }}
+                  disabled={isCreating}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  className="h-11 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] shadow-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={!useSupabaseAuth || isCreating}
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account…
+                    </>
+                  ) : (
+                    "Continue to Verification"
+                  )}
+                </Button>
+              </div>
+
+              {inlineError && (
+                <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+                  {inlineError}
+                </p>
+              )}
+            </div>
+          </form>
+        </div>
 
         {/* Below-card links */}
-        <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
+        <div className="space-y-1.5 text-center text-sm text-muted-foreground pt-0.5">
           <p>
             Already have an account?{" "}
-            <Link to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"} className="font-medium text-primary hover:text-primary/80 transition-colors">
+            <Link
+              to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"}
+              className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors focus-visible:outline-none focus-visible:underline"
+            >
               Sign in
             </Link>
           </p>
           <p>
-            <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
+            <Link
+              to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline"
+            >
               ← Back to {pwaFlow ? "welcome" : "home"}
             </Link>
           </p>

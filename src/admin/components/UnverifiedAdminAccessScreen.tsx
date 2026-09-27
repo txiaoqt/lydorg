@@ -66,28 +66,28 @@ export const UnverifiedAdminAccessScreen = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-admin-page-bg flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="w-full max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-slate-200">
+      <div className="w-full max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
         <BrandLogo variant="light" size="sm" />
-        <span className="font-cascadia text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-100 px-2.5 py-1 rounded">
+        <span className="font-cascadia text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded">
           Admin Portal Gate
         </span>
       </div>
 
       {/* Main Content Card */}
       <main className="w-full max-w-md mx-auto my-auto py-8">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="bg-white dark:bg-admin-surface rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-6">
           {/* Icon + Title */}
           <div className="flex flex-col items-center text-center space-y-3">
-            <div className="h-14 w-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
+            <div className="h-14 w-14 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-2xs">
               <ShieldAlert className="h-7 w-7" strokeWidth={1.8} />
             </div>
             <div className="space-y-1">
-              <h1 className="font-segoe text-lg font-bold text-slate-900 tracking-tight">
+              <h1 className="font-segoe text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Administrator Email Verification Required
               </h1>
-              <p className="font-segoe text-xs text-slate-500 leading-relaxed max-w-sm">
+              <p className="font-segoe text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
                 Your administrator account email address must be verified before you can access the Admin Portal.
               </p>
             </div>
@@ -95,15 +95,15 @@ export const UnverifiedAdminAccessScreen = ({
 
           {/* Email Target Box */}
           {email && (
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3.5 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 p-3.5 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
                 <MailCheck className="h-4 w-4 text-public-bg-brand" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-segoe text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                <p className="font-segoe text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Target Administrator Email
                 </p>
-                <p className="font-segoe text-xs font-semibold text-slate-800 truncate">
+                <p className="font-segoe text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
                   {email}
                 </p>
               </div>
@@ -111,9 +111,9 @@ export const UnverifiedAdminAccessScreen = ({
           )}
 
           {/* Policy Information */}
-          <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3.5 text-xs text-amber-800 leading-relaxed space-y-1">
-            <p className="font-semibold text-amber-900">Security Policy Enforced</p>
-            <p className="text-[11px] text-amber-700 leading-normal">
+          <div className="rounded-xl border border-amber-100 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-3.5 text-xs text-amber-800 dark:text-amber-300 leading-relaxed space-y-1">
+            <p className="font-semibold text-amber-900 dark:text-amber-200">Security Policy Enforced</p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-normal">
               The system policy <strong className="font-mono">Require Verified Admin Email</strong> is active. Please confirm your email address through the verification link sent to your inbox, or request assistance from the Super Administrator.
             </p>
           </div>
@@ -146,9 +146,9 @@ export const UnverifiedAdminAccessScreen = ({
                 type="button"
                 variant="outline"
                 onClick={() => void onSignOut()}
-                className="w-full h-10 text-xs font-medium border-slate-200 text-slate-700 hover:bg-slate-50 gap-2"
+                className="w-full h-10 text-xs font-medium border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 gap-2"
               >
-                <LogOut className="h-3.5 w-3.5 text-slate-500" />
+                <LogOut className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Sign Out & Return to Login</span>
               </Button>
             )}
@@ -157,8 +157,8 @@ export const UnverifiedAdminAccessScreen = ({
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-5xl mx-auto pt-6 border-t border-slate-200 text-center">
-        <p className="font-segoe text-xs text-slate-400">
+      <footer className="w-full max-w-5xl mx-auto pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
+        <p className="font-segoe text-xs text-slate-400 dark:text-slate-500">
           Pasig City Youth Development Office (PCYDO) — Y-TRACE Security Gateway
         </p>
       </footer>

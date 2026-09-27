@@ -33,6 +33,7 @@ export const isBudgetApprovedStatus = (status?: string): boolean => {
   const s = status.toLowerCase().trim();
   return (
     s === "approved" ||
+    s === "awaiting_release" ||
     s === "approved_for_ftf_green" ||
     s === "budget_released" ||
     s === "completed" ||

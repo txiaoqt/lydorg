@@ -125,7 +125,7 @@ export const DeleteInquiryButton = ({
       onClick();
     }}
     className={cn(
-      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-400 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 active:scale-95 cursor-pointer",
+      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface text-slate-400 dark:text-slate-400 transition-colors hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400 active:scale-95 cursor-pointer",
       className,
     )}
   >
@@ -333,6 +333,7 @@ export const InquiriesTable = ({
         onOpenChange={(open) => {
           if (!open) setReplyDialogInquiry(null);
         }}
+        inquiryId={replyDialogInquiry?.id}
         email={replyDialogInquiry?.email ?? ""}
         subject={replyDialogInquiry?.subject ?? ""}
         organizationName={

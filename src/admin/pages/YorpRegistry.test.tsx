@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { YorpRegistryPage } from "@/admin/pages/YorpRegistry";
 import { LydoConnectProvider } from "@/lib/lydo-connect-store";
 import { writeAdminSession } from "@/lib/admin-auth";
@@ -13,7 +14,7 @@ window.ResizeObserver =
     disconnect: vi.fn(),
   }));
 
-describe("YorpRegistry Page Export Action", () => {
+describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
   beforeEach(() => {
     writeAdminSession({
       id: "admin-demo",
@@ -29,18 +30,41 @@ describe("YorpRegistry Page Export Action", () => {
     writeAdminSession(null);
   });
 
-  it("renders the Export button in the page header and opens the Export dialog", async () => {
+  it("renders the Semester dropdown with default 'All Semesters' inline with Export and Reports", () => {
     render(
-      <LydoConnectProvider>
-        <YorpRegistryPage />
-      </LydoConnectProvider>,
+      <MemoryRouter>
+        <LydoConnectProvider>
+          <YorpRegistryPage />
+        </LydoConnectProvider>
+      </MemoryRouter>,
     );
 
     // Verify page header is rendered
     expect(screen.getByText("YORP Registry")).toBeInTheDocument();
 
+    // Verify semester selector button is present with 'All Semesters'
+    const semesterSelector = screen.getByRole("button", { name: /select semester/i });
+    expect(semesterSelector).toBeInTheDocument();
+    expect(semesterSelector).toHaveTextContent("All Semesters");
+
+    // Open semester dropdown
+    fireEvent.click(semesterSelector);
+
+    // Verify dynamic options include "All Semesters"
+    expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders the Export button in the page header and opens the Export dialog with semester context", async () => {
+    render(
+      <MemoryRouter>
+        <LydoConnectProvider>
+          <YorpRegistryPage />
+        </LydoConnectProvider>
+      </MemoryRouter>,
+    );
+
     // Verify Export button is rendered in the header action area
-    const exportButton = screen.getByRole("button", { name: /export/i });
+    const exportButton = screen.getByRole("button", { name: /^export$/i });
     expect(exportButton).toBeInTheDocument();
     expect(exportButton).not.toBeDisabled();
 
@@ -50,14 +74,38 @@ describe("YorpRegistry Page Export Action", () => {
     // Verify Export dialog opens with YORP Registry title
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Export YORP Registry" })).toBeInTheDocument();
-    expect(screen.getByText(/Export all YORP records matching the current search and filters/i)).toBeInTheDocument();
+    expect(screen.getByText(/Choose the information you want included in your export/i)).toBeInTheDocument();
+    expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("allows opening semester dropdown and renders semester options", async () => {
+    render(
+      <MemoryRouter>
+        <LydoConnectProvider>
+          <YorpRegistryPage />
+        </LydoConnectProvider>
+      </MemoryRouter>,
+    );
+
+    const semesterSelector = screen.getByRole("button", { name: /select semester/i });
+    expect(semesterSelector).toBeInTheDocument();
+    expect(semesterSelector).toHaveTextContent("All Semesters");
+
+    // Radix dropdown opens on pointer down / click
+    fireEvent.pointerDown(semesterSelector, { pointerType: "mouse" });
+    fireEvent.click(semesterSelector);
+
+    // Verify 'All Semesters' option is present
+    expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders the Reports button in the page header and opens the Section 35 Quarterly Reports dialog", async () => {
     render(
-      <LydoConnectProvider>
-        <YorpRegistryPage />
-      </LydoConnectProvider>,
+      <MemoryRouter>
+        <LydoConnectProvider>
+          <YorpRegistryPage />
+        </LydoConnectProvider>
+      </MemoryRouter>,
     );
 
     // Verify Reports button is rendered in the header action area

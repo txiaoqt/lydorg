@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   DollarSign,
   CheckCircle2,
@@ -23,9 +23,10 @@ import {
   Loader2,
   ChevronDown,
   AlertCircle,
+  Send,
   FileEdit,
 } from "lucide-react";
-import { getBudgetPurposeCategoriesFromSupabase } from "@/lib/lydo-connect-supabase";
+import { formatAdvocacyLabel } from "@/lib/lydo-connect-data";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
 import { Card } from "@/components/ui/card";
@@ -128,10 +129,12 @@ export interface UserPortalBudgetWorkspaceViewProps {
   setNewVenue: (val: string) => void;
   newRequestedAmount: string;
   setNewRequestedAmount: (val: string) => void;
-  newRemarks: string;
-  setNewRemarks: (val: string) => void;
+  newRemarks?: string;
+  setNewRemarks?: (val: string) => void;
+  organizationAdvocacies?: string[];
   handleCreateOrUpdateBudgetRequest: (event: React.FormEvent, isDraft?: boolean) => Promise<void>;
   onReplaceBudgetFile?: (budgetRequestId: string, file: File) => Promise<void>;
+  onResubmitBudgetRequest?: (budgetRequestId: string) => Promise<void>;
 }
 
 export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceViewProps> = ({
@@ -171,10 +174,12 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   setNewVenue,
   newRequestedAmount,
   setNewRequestedAmount,
-  newRemarks,
+  newRemarks = "",
   setNewRemarks,
+  organizationAdvocacies = [],
   handleCreateOrUpdateBudgetRequest,
   onReplaceBudgetFile,
+  onResubmitBudgetRequest,
 }) => {
   const isDesktop = useIsDesktop();
   const [searchQuery, setSearchQuery] = useState("");
@@ -209,39 +214,16 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     }
   };
 
-  const DEFAULT_CANONICAL_CATEGORIES = [
-    "Leadership & Governance",
-    "Sports, Fitness & Recreation",
-    "Arts, Culture & Heritage",
-    "Environmental Protection & Climate Action",
-    "Education, Digital Literacy & Technology",
-    "Health, Mental Wellness & Anti-Drug Advocacy",
-    "Community Outreach & Social Inclusion",
-    "Economic Empowerment & Livelihood",
-    "Other / Custom Purpose",
-  ];
-
-  const [canonicalCategories, setCanonicalCategories] = useState<string[]>(DEFAULT_CANONICAL_CATEGORIES);
-  const [isCustomCategory, setIsCustomCategory] = useState<boolean>(false);
-
-  useEffect(() => {
-    let active = true;
-    void getBudgetPurposeCategoriesFromSupabase()
-      .then((cats) => {
-        if (!active || !cats.length) return;
-        const names = cats.filter((c) => c.isActive).map((c) => c.name);
-        if (!names.includes("Other / Custom Purpose")) {
-          names.push("Other / Custom Purpose");
-        }
-        setCanonicalCategories(names);
-      })
-      .catch(() => {
-        // Fallback to defaults
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const availableCategories = useMemo(() => {
+    const list = Array.isArray(organizationAdvocacies) ? [...organizationAdvocacies] : [];
+    if (
+      newPurposeCategory &&
+      !list.some((c) => c.trim().toLowerCase() === newPurposeCategory.trim().toLowerCase())
+    ) {
+      list.push(newPurposeCategory);
+    }
+    return list;
+  }, [organizationAdvocacies, newPurposeCategory]);
   const fileInputRef = budgetFileInputRef || internalFileInputRef;
   const [internalDraftFile, setInternalDraftFile] = useState<File | null>(null);
   const activeBudgetFileDraft = budgetFileDraft !== undefined ? budgetFileDraft : internalDraftFile;
@@ -594,21 +576,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       <label className="text-xs font-bold text-foreground">
                         Purpose &amp; Category <span className="text-red-500">*</span>
                       </label>
-                      {isCustomCategory && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsCustomCategory(false);
-                            setNewPurposeCategory(canonicalCategories[0] || "Leadership & Governance");
-                          }}
-                          className="text-[11px] font-semibold text-primary hover:underline"
-                        >
-                          Choose standard
-                        </button>
-                      )}
                     </div>
 
-                    {!isCustomCategory ? (
+                    {availableCategories.length > 0 ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
@@ -616,41 +586,51 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                             className="flex h-10 w-full items-center justify-between rounded-xl border border-border/80 bg-background px-3 text-xs font-medium text-foreground hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary/40"
                           >
                             <span className="truncate">
-                              {newPurposeCategory || "Select canonical purpose..."}
+                              {newPurposeCategory ? formatAdvocacyLabel(newPurposeCategory) : "Select Center of Youth Participation..."}
                             </span>
                             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[280px] max-h-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
-                          {canonicalCategories.map((cat) => (
-                            <DropdownMenuItem
-                              key={cat}
-                              onClick={() => {
-                                if (cat === "Other / Custom Purpose") {
-                                  setIsCustomCategory(true);
-                                  setNewPurposeCategory("");
-                                } else {
-                                  setNewPurposeCategory(cat);
-                                }
-                              }}
-                              className={cn(
-                                "cursor-pointer rounded-lg px-3 py-2 text-xs font-medium text-foreground hover:bg-muted focus:bg-muted",
-                                newPurposeCategory === cat && "bg-primary/10 text-primary font-bold"
-                              )}
-                            >
-                              {cat}
-                            </DropdownMenuItem>
-                          ))}
+                          {availableCategories.map((cat) => {
+                            const isSelected = newPurposeCategory.trim().toLowerCase() === cat.trim().toLowerCase();
+                            return (
+                              <DropdownMenuItem
+                                key={cat}
+                                onClick={() => setNewPurposeCategory(cat)}
+                                className={cn(
+                                  "cursor-pointer rounded-lg px-3 py-2 text-xs font-medium text-foreground hover:bg-muted focus:bg-muted",
+                                  isSelected && "bg-primary/10 text-primary font-bold"
+                                )}
+                              >
+                                {formatAdvocacyLabel(cat)}
+                              </DropdownMenuItem>
+                            );
+                          })}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Input
-                        type="text"
-                        placeholder="Specify custom purpose / category..."
-                        value={newPurposeCategory}
-                        onChange={(e) => setNewPurposeCategory(e.target.value)}
-                        className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
-                      />
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                        <div>
+                          <p className="font-semibold">No Centers of Youth Participation configured</p>
+                          <p className="text-[11px] text-amber-700/90 dark:text-amber-400/90 mt-0.5">
+                            Please configure your organization&apos;s Centers of Youth Participation in your Organization Profile before creating a budget request.
+                          </p>
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[11px] font-semibold text-primary underline mt-1"
+                            onClick={() => {
+                              setShowBudgetForm(false);
+                              navigate(userRouteMap["organization-profile"] || "/profile");
+                            }}
+                          >
+                            Go to Organization Profile &rarr;
+                          </Button>
+                        </div>
+                      </div>
                     )}
                   </div>
                   <div className="space-y-1.5">
@@ -708,11 +688,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Activity Description <span className="text-red-500">*</span></label>
+                  <label className="text-xs font-bold text-foreground">Purpose Description <span className="text-red-500">*</span></label>
                   <Textarea
                     rows={3}
                     required
-                    placeholder="Briefly describe the objectives, expected outcomes, and target participants..."
+                    placeholder="Briefly describe the purpose, objectives, expected outcomes, and target participants..."
                     value={newActivityDescription}
                     onChange={(e) => setNewActivityDescription(e.target.value)}
                     className="text-xs rounded-xl bg-background border-border/80 resize-y min-h-[76px] focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -763,19 +743,6 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                     className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">
-                  Additional Remarks / Justification <span className="text-muted-foreground font-normal text-[11px]">(Optional)</span>
-                </label>
-                <Textarea
-                  rows={2}
-                  placeholder="Any additional remarks for the reviewing officer..."
-                  value={newRemarks}
-                  onChange={(e) => setNewRemarks(e.target.value)}
-                  className="text-xs rounded-xl bg-background border-border/80 resize-y min-h-[64px] focus-visible:ring-1 focus-visible:ring-primary/40"
-                />
               </div>
             </Card>
 
@@ -1655,35 +1622,58 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                                 : `Resubmission deadline: ${deadlineText} (${remaining?.label})`}
                             </p>
                           )}
-                          {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
-                            <div className="pt-1 pl-5">
-                              <Button
-                                type="button"
-                                size="sm"
-                                disabled={isReplacingBudgetFile || isExpired}
-                                onClick={() => {
-                                  if (isExpired) return;
-                                  handleTriggerReplaceBudgetFile();
-                                }}
-                                className={cn(
-                                  "h-8 px-3 rounded-lg font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer",
-                                  isExpired
-                                    ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                    : "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"
-                                )}
-                              >
-                                {isReplacingBudgetFile ? (
-                                  <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    <span>Uploading Revised Proposal...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <FileUp className="h-3.5 w-3.5" />
-                                    <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
-                                  </>
-                                )}
-                              </Button>
+                          {selectedRequest.status === "needs_revision" && (
+                            <div className="pt-1.5 pl-5 flex flex-wrap items-center gap-2">
+                              {onReplaceBudgetFile && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isReplacingBudgetFile || isExpired}
+                                  onClick={() => {
+                                    if (isExpired) return;
+                                    handleTriggerReplaceBudgetFile();
+                                  }}
+                                  className={cn(
+                                    "h-8 px-3 rounded-lg font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer",
+                                    isExpired
+                                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                      : "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"
+                                  )}
+                                >
+                                  {isReplacingBudgetFile ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      <span>Uploading Revised Proposal...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FileUp className="h-3.5 w-3.5" />
+                                      <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                              {!isExpired && onResubmitBudgetRequest && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isSubmitting || isReplacingBudgetFile}
+                                  onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
+                                  className="h-8 px-3.5 rounded-lg font-semibold text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                                >
+                                  {isSubmitting ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      <span>Submitting...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="h-3.5 w-3.5" />
+                                      <span>Submit for Review</span>
+                                    </>
+                                  )}
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1733,13 +1723,13 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                           <div>
                             <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Purpose & Category</span>
                             <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
-                              {selectedRequest.purposeCategory || "General Purpose"}
+                              {formatAdvocacyLabel(selectedRequest.purposeCategory) || "General Purpose"}
                             </span>
                           </div>
                         </div>
                         {selectedRequest.activityDescription && (
                           <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Activity Description</span>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Purpose Description</span>
                             <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
                               {selectedRequest.activityDescription}
                             </p>
@@ -1747,8 +1737,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         )}
                         {selectedRequest.remarks && (
                           <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Additional Remarks / Justification</span>
-                            <p className="leading-relaxed text-xs text-muted-foreground italic mt-0.5 whitespace-pre-wrap break-words">
+                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Applicant Notes / Remarks</span>
+                            <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
                               {selectedRequest.remarks}
                             </p>
                           </div>
@@ -1791,7 +1781,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                   {/* PINNED FOOTER */}
                   <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
                     <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                      Budget Request • LYDO Pasig City
+                      Budget Request • Pasig City Youth Development Portal
                     </p>
                     <div className="flex items-center gap-2.5">
                       <SheetClose asChild>
@@ -1818,6 +1808,40 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                           <FileEdit className="h-4 w-4" />
                           <span>Edit Draft</span>
                         </Button>
+                      )}
+                      {selectedRequest.status === "needs_revision" && !(isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest)) && (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              startEditingBudgetRequest(selectedRequest);
+                              closeBudgetDetail();
+                              setShowBudgetForm(true);
+                            }}
+                            className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent text-foreground shadow-xs gap-1.5 cursor-pointer shrink-0 justify-center"
+                          >
+                            <FileEdit className="h-4 w-4" />
+                            <span>Edit Request</span>
+                          </Button>
+                          {onResubmitBudgetRequest && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isSubmitting || isReplacingBudgetFile}
+                              onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
+                              className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center"
+                            >
+                              {isSubmitting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                              <span>Submit for Review</span>
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -1919,35 +1943,58 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                                 : `Resubmission deadline: ${deadlineText} (${remaining?.label})`}
                             </p>
                           )}
-                          {selectedRequest.status === "needs_revision" && onReplaceBudgetFile && (
-                            <div className="pt-1 pl-5">
-                              <Button
-                                type="button"
-                                size="sm"
-                                disabled={isReplacingBudgetFile || isExpired}
-                                onClick={() => {
-                                  if (isExpired) return;
-                                  handleTriggerReplaceBudgetFile();
-                                }}
-                                className={cn(
-                                  "h-8.5 px-3.5 rounded-lg font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer",
-                                  isExpired
-                                    ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                    : "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"
-                                )}
-                              >
-                                {isReplacingBudgetFile ? (
-                                  <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    <span>Uploading Revised Proposal...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <FileUp className="h-3.5 w-3.5" />
-                                    <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
-                                  </>
-                                )}
-                              </Button>
+                          {selectedRequest.status === "needs_revision" && (
+                            <div className="pt-1.5 pl-5 flex flex-wrap items-center gap-2">
+                              {onReplaceBudgetFile && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isReplacingBudgetFile || isExpired}
+                                  onClick={() => {
+                                    if (isExpired) return;
+                                    handleTriggerReplaceBudgetFile();
+                                  }}
+                                  className={cn(
+                                    "h-8.5 px-3.5 rounded-lg font-semibold text-xs gap-1.5 shadow-2xs transition-all active:scale-[0.98] cursor-pointer",
+                                    isExpired
+                                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                      : "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"
+                                  )}
+                                >
+                                  {isReplacingBudgetFile ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      <span>Uploading Revised Proposal...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FileUp className="h-3.5 w-3.5" />
+                                      <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                              {!isExpired && onResubmitBudgetRequest && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isSubmitting || isReplacingBudgetFile}
+                                  onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
+                                  className="h-8.5 px-3.5 rounded-lg font-semibold text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                                >
+                                  {isSubmitting ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      <span>Submitting...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="h-3.5 w-3.5" />
+                                      <span>Submit for Review</span>
+                                    </>
+                                  )}
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1999,13 +2046,13 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                           <div>
                             <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Purpose & Category</span>
                             <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
-                              {selectedRequest.purposeCategory || "General Purpose"}
+                              {formatAdvocacyLabel(selectedRequest.purposeCategory) || "General Purpose"}
                             </span>
                           </div>
                         </div>
                         {selectedRequest.activityDescription && (
                           <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Activity Description</span>
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Purpose Description</span>
                             <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
                               {selectedRequest.activityDescription}
                             </p>
@@ -2013,8 +2060,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         )}
                         {selectedRequest.remarks && (
                           <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Additional Remarks / Justification</span>
-                            <p className="leading-relaxed text-xs text-muted-foreground italic mt-0.5 whitespace-pre-wrap break-words">
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Applicant Notes / Remarks</span>
+                            <p className="leading-relaxed text-xs text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
                               {selectedRequest.remarks}
                             </p>
                           </div>
@@ -2057,8 +2104,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                   {/* PINNED FOOTER */}
                   <div className="h-16 py-3 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                    <p className="text-xs text-muted-foreground font-medium truncate mr-3">
-                      Budget Request • LYDO Pasig City
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
+                      Budget Request • Pasig City Youth Development Portal
                     </p>
                     <div className="flex items-center gap-2">
                       <Button
@@ -2084,6 +2131,40 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                           <FileEdit className="h-3.5 w-3.5" />
                           <span>Edit Draft</span>
                         </Button>
+                      )}
+                      {selectedRequest.status === "needs_revision" && !(isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest)) && (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              startEditingBudgetRequest(selectedRequest);
+                              closeBudgetDetail();
+                              setShowBudgetForm(true);
+                            }}
+                            className="h-9 px-3.5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent text-foreground shadow-xs gap-1.5 cursor-pointer shrink-0 justify-center"
+                          >
+                            <FileEdit className="h-3.5 w-3.5" />
+                            <span>Edit Request</span>
+                          </Button>
+                          {onResubmitBudgetRequest && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isSubmitting || isReplacingBudgetFile}
+                              onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
+                              className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center"
+                            >
+                              {isSubmitting ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Send className="h-3.5 w-3.5" />
+                              )}
+                              <span>Submit for Review</span>
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

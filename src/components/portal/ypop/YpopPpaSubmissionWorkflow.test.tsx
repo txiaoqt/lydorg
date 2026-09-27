@@ -57,6 +57,9 @@ const mockDraftActivity: YPOPOrgActivity = {
   activityDate: "2026-09-10",
   venue: "Rainforest Park, Pasig City",
   narrativeReport: "Community tree planting with local youth volunteers.",
+  totalAttendees: 50,
+  girlsAttendees: 25,
+  boysAttendees: 25,
   status: "draft",
   adminRemarks: "",
   submittedAt: "",
@@ -222,6 +225,21 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
       target: { value: "2026-09-12" },
+    });
+    fireEvent.change(screen.getByLabelText(/Venue \/ Location/i), {
+      target: { value: "Rainforest Park, Pasig City" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Description/i), {
+      target: { value: "Leadership seminar for youth leaders." },
+    });
+    fireEvent.change(screen.getByLabelText(/Total Attendees/i), {
+      target: { value: "50" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Girls/i), {
+      target: { value: "25" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Boys/i), {
+      target: { value: "25" },
     });
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;

@@ -25,7 +25,7 @@ import {
 } from "@/lib/user-workflow-eligibility";
 import { getOrganizationRenewalCountdown } from "@/lib/organization-renewal";
 
-const approvedBudgetStatuses = new Set(["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
+const approvedBudgetStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
 const unlockedLiquidationStatuses = new Set(["budget_released", "completed"]);
 const approvedDocumentStatuses = new Set(["approved", "approved_green"]);
 const underReviewDocumentStatuses = new Set(["uploaded", "ready_for_review", "submitted", "under_admin_review"]);
@@ -223,7 +223,14 @@ export function usePwaPortalData() {
     if (!overdueLiquidations.length && !revisionLiquidations.length && daysUntilDeadline !== null && daysUntilDeadline <= 7) actions.push({ title: "Submit Liquidation", detail: `${daysUntilDeadline} day${daysUntilDeadline === 1 ? "" : "s"} remain before the deadline.`, path: PWA_ROUTES.liquidations, kind: "liquidation" });
     if (draftLiquidations.length) actions.push({ title: "Continue Liquidation Draft", detail: "Finish the current report draft.", path: PWA_ROUTES.liquidations, kind: "liquidation" });
 
+    const isSuspended =
+      profile?.profileStatus === "suspended_inactive" ||
+      documentFiles.some(
+        (file) => file.adminStatus === "rejected_red" && (!submission || !submission.renewalId),
+      );
+
     return {
+      isSuspended,
       templates, requiredTemplates, submission, documentFiles, approvedDocuments, underReviewDocuments,
       revisionDocuments, draftDocuments, missingDocuments, documentPercent, budgetRequests, latestBudget,
       releasedBudget, budgetPercent, releasedBudgetRequests, underReviewBudgetRequests, revisionBudgetRequests,

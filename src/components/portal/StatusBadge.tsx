@@ -49,6 +49,7 @@ export const statusBadgeToneMap: Record<string, StatusBadgeTone> = {
   pending: "info",
 
   // 3. PROGRESS / INTERMEDIATE MILESTONE — Teal
+  awaiting_release: "progress",
   approved_for_ftf_green: "progress",
   hard_copy_submitted: "progress",
   confirmed: "progress",

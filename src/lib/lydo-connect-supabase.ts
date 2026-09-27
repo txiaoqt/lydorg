@@ -125,6 +125,16 @@ type OrganizationProfileRow = {
   updated_at: string;
 };
 
+export const assertOrganizationNotSuspended = (
+  profile?: { profile_status?: string | null; profileStatus?: string | null } | null,
+  actionName = "This action",
+) => {
+  const status = profile?.profile_status ?? profile?.profileStatus;
+  if (status === "suspended_inactive") {
+    throw new Error(`${actionName} is not permitted because this organization account is permanently suspended.`);
+  }
+};
+
 type OrganizationAccreditationRow = {
   id: string;
   organization_id: string;
@@ -469,6 +479,9 @@ type YpopOrgActivityRow = {
   activity_date: string | null;
   venue: string | null;
   narrative_report: string | null;
+  total_attendees?: number | null;
+  girls_attendees?: number | null;
+  boys_attendees?: number | null;
   status: string;
   admin_remarks: string | null;
   submitted_at: string | null;
@@ -1009,6 +1022,9 @@ const mapYpopOrgActivity = (row: YpopOrgActivityRow): YPOPOrgActivity => ({
   activityDate: row.activity_date ?? "",
   venue: row.venue ?? "",
   narrativeReport: row.narrative_report ?? "",
+  totalAttendees: row.total_attendees !== null && row.total_attendees !== undefined ? Number(row.total_attendees) : null,
+  girlsAttendees: row.girls_attendees !== null && row.girls_attendees !== undefined ? Number(row.girls_attendees) : null,
+  boysAttendees: row.boys_attendees !== null && row.boys_attendees !== undefined ? Number(row.boys_attendees) : null,
   status: row.status as YPOPOrgActivity["status"],
   adminRemarks: row.admin_remarks ?? "",
   submittedAt: row.submitted_at ?? "",
@@ -1985,10 +2001,25 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
 
   if (!session?.user) throw new Error("Please sign in with your organization account first.");
 
+  const existingProfile = await fetchOrganizationProfile(session.user.id);
+  if (existingProfile) {
+    assertOrganizationNotSuspended(existingProfile, "Profile update");
+  }
+
+  const isGoogleUser =
+    session.user.app_metadata?.provider === "google" ||
+    (session.user.app_metadata?.providers as string[] | undefined)?.includes("google") ||
+    session.user.identities?.some((id) => id.provider === "google");
+
+  const authoritativeEmail =
+    isGoogleUser && session.user.email
+      ? session.user.email.trim().toLowerCase()
+      : profile.organizationEmail.trim() || session.user.email?.trim() || "";
+
   const payload = {
     user_id: session.user.id,
     organization_name: profile.organizationName.trim(),
-    organization_email: profile.organizationEmail.trim(),
+    organization_email: authoritativeEmail,
     contact_number: profile.contactNumber.trim(),
     district: profile.district.trim(),
     barangay: profile.barangay.trim(),
@@ -2237,6 +2268,8 @@ export const submitOrganizationDocumentToSupabase = async (params: {
     throw new Error("No organization profile was found for this account.");
   }
 
+  assertOrganizationNotSuspended(organizationProfile, "Document submission");
+
   let documentTypeRow: RequiredDocumentTypeRow;
   if (params.context?.documentTypeRow) {
     documentTypeRow = params.context.documentTypeRow;
@@ -2260,6 +2293,10 @@ export const submitOrganizationDocumentToSupabase = async (params: {
       ? params.context.submission
       : await ensureDocumentSubmission(organizationProfile.id, session.user.id);
 
+  if (submission.status === "rejected_red") {
+    throw new Error("This organization account is permanently suspended due to a rejected registration document.");
+  }
+
   const { data: existingRows, error: existingRowsError } = await supabase!
     .from("document_submission_files")
     .select("id,file_url,admin_status")
@@ -2271,6 +2308,9 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   const existingTargetFile = existingRows?.[0];
   if (existingTargetFile) {
     const fileStatus = existingTargetFile.admin_status;
+    if (fileStatus === "rejected_red") {
+      throw new Error("This rejected document cannot be re-uploaded. The organization account is permanently suspended.");
+    }
     if (["under_admin_review", "submitted", "ready_for_review", "under_review"].includes(fileStatus)) {
       throw new Error("This specific document is currently under admin review and cannot be modified until the review is complete.");
     }
@@ -2367,9 +2407,11 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
   const organizationProfile = await fetchOrganizationProfile(session.user.id);
   if (!organizationProfile) throw new Error("No organization profile was found for this account.");
 
+  assertOrganizationNotSuspended(organizationProfile, "Document replacement");
+
   const { data: existingFile, error: existingFileError } = await supabase
     .from("document_submission_files")
-    .select("id,submission_id")
+    .select("id,submission_id,admin_status")
     .eq("id", params.fileId)
     .single();
   if (existingFileError || !existingFile) {
@@ -2382,7 +2424,10 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
     .eq("organization_id", organizationProfile.id)
     .single();
   if (submissionError || !submission) throw new Error("The document submission could not be verified.");
-  if (!["needs_revision", "rejected_red"].includes(submission.status as string)) {
+  if (submission.status === "rejected_red" || (existingFile as any).admin_status === "rejected_red") {
+    throw new Error("This rejected document cannot be replaced. The organization account is permanently suspended.");
+  }
+  if (submission.status !== "needs_revision") {
     throw new Error("A document can only be replaced after the admin requests a revision.");
   }
 
@@ -2437,6 +2482,8 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
   const organizationProfile =
     contextOrganizationProfile || (await getAuthenticatedOrganizationContext()).organizationProfile;
 
+  assertOrganizationNotSuspended(organizationProfile, "Document submission");
+
   const { data: submission, error: submissionError } = await supabase!
     .from("document_submissions")
     .select("id,status,submitted_at")
@@ -2444,6 +2491,9 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
     .eq("organization_id", organizationProfile.id)
     .single();
   if (submissionError || !submission) throw new Error("The document submission could not be verified.");
+  if (submission.status === "rejected_red") {
+    throw new Error("This organization account is permanently suspended due to a rejected registration document.");
+  }
 
   const { data: attachedFiles, error: filesQueryError } = await supabase!
     .from("document_submission_files")
@@ -2506,7 +2556,12 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
   const organizationProfile = await fetchOrganizationProfile(session.user.id);
   if (!organizationProfile) throw new Error("No organization profile was found for this account.");
 
+  assertOrganizationNotSuspended(organizationProfile, "Batch document submission");
+
   const submission = await ensureDocumentSubmission(organizationProfile.id, session.user.id);
+  if (submission.status === "rejected_red") {
+    throw new Error("This organization account is permanently suspended due to a rejected registration document.");
+  }
 
   // Preload all active required document types in a single query
   let templateMapById = new Map<string, RequiredDocumentTypeRow>();
@@ -2714,10 +2769,11 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
   if (!supabase) throw new Error("Supabase is not configured.");
 
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  assertOrganizationNotSuspended(organizationProfile, "Document removal");
 
   const { data: existingRow, error: existingError } = await supabase!
     .from("document_submission_files")
-    .select("id,submission_id,file_url")
+    .select("id,submission_id,file_url,admin_status")
     .eq("id", fileId)
     .single();
 
@@ -2730,7 +2786,10 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
     .eq("organization_id", organizationProfile.id)
     .single();
   if (submissionError || !submission) throw new Error("The document submission could not be verified.");
-  if (!["draft", "needs_revision", "rejected_red"].includes(submission.status as string)) {
+  if (submission.status === "rejected_red" || (existingRow as any).admin_status === "rejected_red") {
+    throw new Error("This document cannot be removed because the organization account is permanently suspended.");
+  }
+  if (!["draft", "needs_revision"].includes(submission.status as string)) {
     throw new Error("Documents cannot be removed while the submission is under admin review.");
   }
 
@@ -2775,7 +2834,7 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
   if (submissionUpdateError) throw new Error(submissionUpdateError.message);
 };
 
-const getAuthenticatedOrganizationContext = async () => {
+const getAuthenticatedOrganizationContext = async (options?: { allowSuspended?: boolean }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
 
   const {
@@ -2786,6 +2845,10 @@ const getAuthenticatedOrganizationContext = async () => {
 
   const organizationProfile = await fetchOrganizationProfile(session.user.id);
   if (!organizationProfile) throw new Error("No organization profile was found for this account.");
+
+  if (!options?.allowSuspended) {
+    assertOrganizationNotSuspended(organizationProfile);
+  }
 
   return { session, organizationProfile };
 };
@@ -2937,6 +3000,15 @@ export const createBudgetRequestInSupabase = async (params: {
     throw new Error("Requested budget amount cannot exceed ₱100,000.");
   }
 
+  const orgAdvocacies = Array.isArray(organizationProfile.advocacies) ? organizationProfile.advocacies : [];
+  if (orgAdvocacies.length === 0) {
+    throw new Error("Your organization does not have any Centers of Youth Participation configured in its profile. Please update your profile before creating a budget request.");
+  }
+  const submittedCategory = params.budgetRequest.purposeCategory.trim();
+  if (!orgAdvocacies.includes(submittedCategory)) {
+    throw new Error("Selected Purpose & Category must be one of your organization's configured Centers of Youth Participation.");
+  }
+
   const payload = {
     organization_id: organizationProfile.id,
     submitted_by: session.user.id,
@@ -2948,10 +3020,10 @@ export const createBudgetRequestInSupabase = async (params: {
     approved_amount: params.budgetRequest.approvedAmount,
     released_amount: params.budgetRequest.releasedAmount,
     release_date: params.budgetRequest.releaseDate || null,
-    purpose_category: params.budgetRequest.purposeCategory.trim(),
+    purpose_category: submittedCategory,
     fiscal_year: params.budgetRequest.fiscalYear || (params.budgetRequest.activityDate ? new Date(params.budgetRequest.activityDate).getFullYear() : new Date().getFullYear()),
     status: params.budgetRequest.status,
-    remarks: params.budgetRequest.remarks.trim() || null,
+    remarks: params.budgetRequest.remarks ? params.budgetRequest.remarks.trim() || null : null,
     admin_remarks: params.budgetRequest.adminRemarks?.trim() || "",
     go_signal_at: params.budgetRequest.goSignalAt || null,
     hard_copy_submitted_at: params.budgetRequest.hardCopySubmittedAt || null,
@@ -3061,7 +3133,7 @@ export const updateBudgetRequestInSupabase = async (
 
   const { data: existingBudget, error: fetchErr } = await supabase
     .from("budget_requests")
-    .select("id,status,activity_title,requested_amount,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .select("id,status,activity_title,purpose_category,requested_amount,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", budgetRequestId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
@@ -3083,6 +3155,14 @@ export const updateBudgetRequestInSupabase = async (
 
   if (patch.requestedAmount !== undefined && patch.requestedAmount > 100000) {
     throw new Error("Requested budget amount cannot exceed ₱100,000.");
+  }
+
+  if (patch.purposeCategory !== undefined) {
+    const orgAdvocacies: string[] = Array.isArray(organizationProfile.advocacies) ? organizationProfile.advocacies : [];
+    const submittedCategory = patch.purposeCategory.trim();
+    if (orgAdvocacies.length > 0 && !orgAdvocacies.includes(submittedCategory) && existingBudget.purpose_category !== submittedCategory) {
+      throw new Error("Selected Purpose & Category must be one of your organization's configured Centers of Youth Participation.");
+    }
   }
 
   const payload: Record<string, unknown> = {};
@@ -4780,6 +4860,9 @@ export const createYpopOrgActivityInSupabase = async (
       activity_date: params.activityDate || null,
       venue: params.venue || null,
       narrative_report: params.narrativeReport ?? "",
+      total_attendees: params.totalAttendees !== undefined ? params.totalAttendees : null,
+      girls_attendees: params.girlsAttendees !== undefined ? params.girlsAttendees : null,
+      boys_attendees: params.boysAttendees !== undefined ? params.boysAttendees : null,
       status: initialStatus,
       admin_remarks: params.adminRemarks ?? "",
       submitted_at: submittedAt || null,
@@ -4824,7 +4907,7 @@ export const updateYpopOrgActivityInSupabase = async (
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: activity, error: activityError } = await supabase
     .from("ypop_org_activities")
-    .select("id,ypop_entry_id,status,activity_name,activity_date,venue,narrative_report,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .select("id,ypop_entry_id,status,activity_name,activity_date,venue,narrative_report,total_attendees,girls_attendees,boys_attendees,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
     .eq("id", activityId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
@@ -4874,6 +4957,23 @@ export const updateYpopOrgActivityInSupabase = async (
     if (!finalVenue) throw new Error("Venue / Location is required before submitting for review.");
     if (!finalNarrative) throw new Error("Description is required before submitting for review.");
 
+    const finalTotal = patch.totalAttendees !== undefined ? patch.totalAttendees : (activity.total_attendees !== null && activity.total_attendees !== undefined ? Number(activity.total_attendees) : null);
+    const finalGirls = patch.girlsAttendees !== undefined ? patch.girlsAttendees : (activity.girls_attendees !== null && activity.girls_attendees !== undefined ? Number(activity.girls_attendees) : null);
+    const finalBoys = patch.boysAttendees !== undefined ? patch.boysAttendees : (activity.boys_attendees !== null && activity.boys_attendees !== undefined ? Number(activity.boys_attendees) : null);
+
+    if (finalTotal === null || finalTotal === undefined || finalGirls === null || finalGirls === undefined || finalBoys === null || finalBoys === undefined) {
+      throw new Error("Attendee information is required before submitting for review.");
+    }
+    if (finalTotal < 1) {
+      throw new Error("Total attendees must be at least 1.");
+    }
+    if (finalGirls < 0 || finalBoys < 0) {
+      throw new Error("Attendee counts cannot be negative.");
+    }
+    if (finalGirls + finalBoys !== finalTotal) {
+      throw new Error("Girls and boys counts must equal the total number of attendees.");
+    }
+
     const { count, error: filesErr } = await supabase
       .from("ypop_org_activity_files")
       .select("id", { count: "exact", head: true })
@@ -4889,6 +4989,9 @@ export const updateYpopOrgActivityInSupabase = async (
   if (patch.activityDate !== undefined) dbPatch.activity_date = patch.activityDate || null;
   if (patch.venue !== undefined) dbPatch.venue = patch.venue || null;
   if (patch.narrativeReport !== undefined) dbPatch.narrative_report = patch.narrativeReport;
+  if (patch.totalAttendees !== undefined) dbPatch.total_attendees = patch.totalAttendees;
+  if (patch.girlsAttendees !== undefined) dbPatch.girls_attendees = patch.girlsAttendees;
+  if (patch.boysAttendees !== undefined) dbPatch.boys_attendees = patch.boysAttendees;
   if (patch.status !== undefined) {
     dbPatch.status = patch.status;
     if (patch.status === "pending_evaluation" || patch.status === "submitted") {
@@ -5462,6 +5565,9 @@ export const adminUpdateYpopEventParticipationInSupabase = async (
   id: string,
   patch: Partial<YPOPEventParticipation>,
 ): Promise<YPOPEventParticipation> => {
+  if (patch.status === "rejected" || (patch.status as string) === "rejected_red") {
+    throw new Error("Reject is no longer an available review decision. Only Verified and Needs Revision are allowed.");
+  }
   if (patch.status === "needs_revision" && !patch.adminRemarks?.trim()) {
     throw new Error("A non-empty admin remark is required when requesting revision.");
   }
@@ -5558,6 +5664,9 @@ export const adminUpdateBudgetRequestFileStatusInSupabase = async (
   id: string,
   patch: Partial<BudgetRequestFile>,
 ): Promise<BudgetRequestFile> => {
+  if (patch.adminStatus === "rejected_red" || (patch.adminStatus as string) === "rejected") {
+    throw new Error("Reject is no longer an available review decision. Only Approved and Needs Revision are allowed.");
+  }
   const adminSession = getAuthenticatedAdminSession();
   const { data, error } = await supabase!.rpc("admin_update_budget_request_file_status", {
     _session_token: adminSession.sessionToken,
@@ -5569,26 +5678,31 @@ export const adminUpdateBudgetRequestFileStatusInSupabase = async (
   const row = Array.isArray(data) ? data[0] : null;
   if (!row) throw new Error("No data returned from admin_update_budget_request_file_status.");
 
-  if (patch.adminStatus && ["approved_for_ftf_green", "needs_revision", "rejected_red", "approved", "rejected"].includes(patch.adminStatus)) {
+  if (patch.adminStatus && ["awaiting_release", "approved_green", "approved_for_ftf_green", "needs_revision", "rejected_red", "approved", "rejected"].includes(patch.adminStatus)) {
     const updatedStatus = patch.adminStatus;
     void (async () => {
       try {
         const { data: fileRow } = await supabase!
           .from("budget_request_files")
-          .select("request_id, file_name, budget_requests(organization_id, title)")
+          .select("budget_request_id, file_name")
           .eq("id", id)
-          .single();
-        const orgId = (fileRow as unknown as { budget_requests?: { organization_id?: string; title?: string } })?.budget_requests?.organization_id;
-        const reqTitle = (fileRow as unknown as { budget_requests?: { title?: string } })?.budget_requests?.title || fileRow?.file_name || "Budget Proposal";
-        if (orgId) {
-          await dispatchOrgTransactionalEmailInSupabase({
-            eventType: "budget_status_update",
-            organizationId: orgId,
-            referenceId: id,
-            status: updatedStatus,
-            remarks: patch.adminRemarks || undefined,
-            itemName: `Budget Request: ${reqTitle}`,
-          });
+          .maybeSingle();
+        if (fileRow?.budget_request_id) {
+          const { data: reqRow } = await supabase!
+            .from("budget_requests")
+            .select("organization_id, activity_title")
+            .eq("id", fileRow.budget_request_id)
+            .maybeSingle();
+          if (reqRow?.organization_id) {
+            await dispatchOrgTransactionalEmailInSupabase({
+              eventType: "budget_status_update",
+              organizationId: reqRow.organization_id,
+              referenceId: id,
+              status: updatedStatus,
+              remarks: patch.adminRemarks || undefined,
+              itemName: `Budget Request: ${reqRow.activity_title || fileRow?.file_name || "Budget Proposal"}`,
+            });
+          }
         }
       } catch (e) {
         console.warn("Non-fatal email dispatch error for budget file status update:", e);
@@ -5702,6 +5816,9 @@ export const adminUpdateLiquidationReportFileStatusInSupabase = async (
   id: string,
   patch: Partial<LiquidationReportFile>,
 ): Promise<LiquidationReportFile> => {
+  if (patch.adminStatus === "rejected_red" || (patch.adminStatus as string) === "rejected") {
+    throw new Error("Reject is no longer an available review decision. Only Approved and Needs Revision are allowed.");
+  }
   const adminSession = getAuthenticatedAdminSession();
   const { data, error } = await supabase!.rpc("admin_update_liquidation_report_file_status", {
     _session_token: adminSession.sessionToken,
@@ -5719,20 +5836,36 @@ export const adminUpdateLiquidationReportFileStatusInSupabase = async (
       try {
         const { data: fileRow } = await supabase!
           .from("liquidation_report_files")
-          .select("report_id, file_name, liquidation_reports(organization_id, activity_title)")
+          .select("liquidation_report_id, file_name")
           .eq("id", id)
-          .single();
-        const orgId = (fileRow as unknown as { liquidation_reports?: { organization_id?: string; activity_title?: string } })?.liquidation_reports?.organization_id;
-        const reportTitle = (fileRow as unknown as { liquidation_reports?: { activity_title?: string } })?.liquidation_reports?.activity_title || fileRow?.file_name || "Liquidation Packet";
-        if (orgId) {
-          await dispatchOrgTransactionalEmailInSupabase({
-            eventType: "liquidation_status_update",
-            organizationId: orgId,
-            referenceId: id,
-            status: updatedStatus,
-            remarks: patch.adminRemarks || undefined,
-            itemName: `Liquidation: ${reportTitle}`,
-          });
+          .maybeSingle();
+        if (fileRow?.liquidation_report_id) {
+          const { data: reportRow } = await supabase!
+            .from("liquidation_reports")
+            .select("organization_id, budget_request_id")
+            .eq("id", fileRow.liquidation_report_id)
+            .maybeSingle();
+          if (reportRow?.organization_id) {
+            let itemName = `Liquidation: ${fileRow.file_name || "Liquidation Packet"}`;
+            if (reportRow.budget_request_id) {
+              const { data: budgetRow } = await supabase!
+                .from("budget_requests")
+                .select("activity_title")
+                .eq("id", reportRow.budget_request_id)
+                .maybeSingle();
+              if (budgetRow?.activity_title) {
+                itemName = `Liquidation: ${budgetRow.activity_title}`;
+              }
+            }
+            await dispatchOrgTransactionalEmailInSupabase({
+              eventType: "liquidation_status_update",
+              organizationId: reportRow.organization_id,
+              referenceId: id,
+              status: updatedStatus,
+              remarks: patch.adminRemarks || undefined,
+              itemName,
+            });
+          }
         }
       } catch (e) {
         console.warn("Non-fatal email dispatch error for liquidation file status update:", e);
@@ -5747,6 +5880,9 @@ export const adminUpdateYpopOrgActivityInSupabase = async (
   id: string,
   patch: Partial<YPOPOrgActivity>,
 ): Promise<YPOPOrgActivity> => {
+  if (patch.status === "rejected" || (patch.status as string) === "rejected_red") {
+    throw new Error("Reject is no longer an available review decision. Only Approved and Needs Revision are allowed.");
+  }
   if (patch.status === "needs_revision" && !patch.adminRemarks?.trim()) {
     throw new Error("A non-empty admin remark is required when requesting revision.");
   }
@@ -6288,6 +6424,8 @@ export const userStartOrGetRenewalDraftInSupabase = async (
   isExisting: boolean;
 }> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  assertOrganizationNotSuspended(organizationProfile, "Renewal draft");
   const { data, error } = await supabase.rpc("user_start_or_get_renewal_draft", {
     p_organization_id: organizationId,
   });
@@ -6315,6 +6453,8 @@ export const userSubmitRenewalInSupabase = async (
   renewalId: string,
 ): Promise<{ success: boolean; renewalId: string; submittedAt: string }> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  assertOrganizationNotSuspended(organizationProfile, "Renewal submission");
   const { data, error } = await supabase.rpc("user_submit_renewal", {
     p_renewal_id: renewalId,
   });
@@ -6680,12 +6820,13 @@ export const adminRejectRenewalInSupabase = async (
 
 /**
  * Admin RPC: Atomically approve renewal application and issue next accreditation term.
- * Accepts either an object parameter `{ renewalId, certificateUrn, adminRemarks }` or positional `(renewalId, certificateUrn, adminRemarks)`.
+ * Authoritative URN is generated server-side.
+ * Accepts either an object parameter `{ renewalId, certificateUrn?, adminRemarks? }` or positional `(renewalId, certificateUrn?, adminRemarks?)`.
  */
 export const adminApproveRenewalInSupabase = async (
   paramsOrRenewalId: {
     renewalId: string;
-    certificateUrn: string;
+    certificateUrn?: string;
     adminRemarks?: string;
   } | string,
   maybeCertificateUrn?: string,
@@ -6698,17 +6839,18 @@ export const adminApproveRenewalInSupabase = async (
   startDate: string;
   endDate: string;
   certificateUrn: string;
+  previousUrn?: string;
 }> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
   const adminSession = getAuthenticatedAdminSession();
   const renewalId = typeof paramsOrRenewalId === "string" ? paramsOrRenewalId : paramsOrRenewalId.renewalId;
-  const certificateUrn = typeof paramsOrRenewalId === "string" ? maybeCertificateUrn || "" : paramsOrRenewalId.certificateUrn;
+  const certificateUrn = typeof paramsOrRenewalId === "string" ? maybeCertificateUrn || "" : paramsOrRenewalId.certificateUrn || "";
   const adminRemarks = typeof paramsOrRenewalId === "string" ? maybeAdminRemarks : paramsOrRenewalId.adminRemarks;
 
   const { data, error } = await supabase.rpc("admin_approve_renewal", {
     p_session_token: adminSession.sessionToken,
     p_renewal_id: renewalId,
-    p_certificate_urn: certificateUrn,
+    p_certificate_urn: certificateUrn || null,
     p_admin_remarks: adminRemarks?.trim() || null,
   });
 
@@ -6721,6 +6863,7 @@ export const adminApproveRenewalInSupabase = async (
     start_date: string;
     end_date: string;
     certificate_urn: string;
+    previous_urn?: string;
   };
 
   void (async () => {
@@ -6732,7 +6875,7 @@ export const adminApproveRenewalInSupabase = async (
           organizationId: ren.organization_id,
           referenceId: renewalId,
           remarks: adminRemarks?.trim() || undefined,
-          itemName: `Accreditation Renewal (URN: ${certificateUrn})`,
+          itemName: `Accreditation Renewal (URN: ${payload.certificate_urn})`,
         });
       }
     } catch (e) {
@@ -6748,6 +6891,7 @@ export const adminApproveRenewalInSupabase = async (
     startDate: payload.start_date,
     endDate: payload.end_date,
     certificateUrn: payload.certificate_urn,
+    previousUrn: payload.previous_urn,
   };
 };
 
@@ -7320,5 +7464,7 @@ export const dispatchOrgTransactionalEmailInSupabase = async (
     };
   }
 };
+
+
 
 

@@ -5,9 +5,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--yt-danger-border, #fecaca);
   border-radius: 0.75rem;
-  background: #fff7f7;
+  background: var(--yt-danger-bg, #fff7f7);
 }
 
 .admin-organization-danger-zone > div {
@@ -15,7 +15,7 @@
 }
 
 .admin-organization-danger-zone__eyebrow {
-  color: #b91c1c;
+  color: var(--yt-danger-text, #b91c1c);
   font-size: 0.68rem;
   font-weight: 750;
   letter-spacing: 0.12em;
@@ -24,7 +24,7 @@
 
 .admin-organization-danger-zone h3 {
   margin-top: 0.2rem;
-  color: #7f1d1d;
+  color: var(--yt-danger-text, #7f1d1d);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -32,7 +32,7 @@
 .admin-organization-danger-zone p:last-child {
   max-width: 34rem;
   margin-top: 0.3rem;
-  color: #7f1d1d;
+  color: var(--yt-text-muted, #7f1d1d);
   font-size: 0.75rem;
   line-height: 1.5;
 }
@@ -56,8 +56,8 @@
   margin-bottom: 0.25rem;
   place-items: center;
   border-radius: 999px;
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--yt-danger-bg, #fee2e2);
+  color: var(--yt-danger-text, #b91c1c);
 }
 
 .admin-organization-delete-dialog__icon svg {
@@ -102,10 +102,10 @@
 
 .admin-organization-delete-dialog__permanent-warning {
   padding: 0.875rem 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--yt-danger-border, #fecaca);
   border-radius: 0.625rem;
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--yt-danger-bg, #fef2f2);
+  color: var(--yt-danger-text, #991b1b);
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
@@ -116,9 +116,9 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--yt-danger-border, #fecaca);
   border-radius: 0.625rem;
-  background-color: #fef2f2;
+  background-color: var(--yt-danger-bg, #fef2f2);
   box-sizing: border-box;
 }
 
@@ -130,8 +130,8 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 0.375rem;
-  background-color: #fee2e2;
-  color: #dc2626;
+  background-color: var(--yt-danger-bg, #fee2e2);
+  color: var(--yt-danger-text, #dc2626);
 }
 
 .admin-organization-delete-dialog__warning-icon {

@@ -265,37 +265,37 @@ const VerifyEmail = () => {
 
   return (
     <div
-      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 pt-20 pb-8 sm:py-8 text-foreground`}
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-0 sm:min-h-screen flex-col items-center justify-start sm:justify-center overflow-hidden bg-background px-4 pt-5 pb-6 sm:py-12 text-foreground`}
       data-pwa-theme={pwaFlow ? pwaTheme : undefined}
       style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
     >
-      <div className="pointer-events-none absolute inset-0">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
       </div>
 
-      {/* Page-level Brand Logo (upper-left viewport mark) */}
-      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
-        <Link
-          to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
-          className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
-        </Link>
-      </div>
+      <div className="relative z-10 w-full max-w-[420px] sm:max-w-[460px] md:max-w-[480px] mx-auto space-y-4 sm:space-y-6">
+        {/* Brand Logo — centered above card */}
+        <div className="flex justify-center">
+          <Link
+            to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
+            className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
+          >
+            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+          </Link>
+        </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        <div className="space-y-6 rounded-2xl border border-border bg-card p-6 card-shadow sm:p-8">
-          <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">
+        <div className="space-y-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-card p-6 sm:p-8 shadow-xs">
+          <div className="space-y-1.5 text-left">
+            <h1 className="text-2xl sm:text-[28px] font-heading font-bold text-foreground tracking-tight">
               Create Organization Account
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Register your youth organization to start the compliance process.
             </p>
           </div>
 
-          <ol className="grid grid-cols-3" aria-label="Registration progress">
+          <ol className="grid grid-cols-3 pt-1" aria-label="Registration progress">
             {(["Organization", "Account", "Verification"] as const).map((label, index) => {
               const step = index + 1;
               const isComplete = step < 3;
@@ -303,21 +303,21 @@ const VerifyEmail = () => {
               return (
                 <li key={label} className="relative flex flex-col items-center gap-2 text-center">
                   {index > 0 ? (
-                    <span className="absolute right-1/2 top-3.5 h-px w-full bg-primary" aria-hidden="true" />
+                    <span className="absolute right-1/2 top-3.5 h-[2px] w-full bg-primary" aria-hidden="true" />
                   ) : null}
                   <span
-                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${
+                    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold transition-all shadow-xs ${
                       isActive || isComplete
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card text-muted-foreground"
+                        : "border-slate-300 dark:border-slate-700 bg-card text-muted-foreground"
                     }`}
                     aria-current={isActive ? "step" : undefined}
                   >
-                    {isComplete ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : step}
+                    {isComplete ? <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" /> : step}
                   </span>
                   <span
-                    className={`text-[11px] font-medium sm:text-xs ${
-                      isActive ? "text-primary" : "text-muted-foreground"
+                    className={`text-[11px] sm:text-xs tracking-tight transition-colors ${
+                      isActive ? "font-bold text-primary" : "text-muted-foreground"
                     }`}
                   >
                     {label}
@@ -440,8 +440,11 @@ const VerifyEmail = () => {
           </div>
         </div>
 
-        <div className="mt-5 text-center text-sm text-muted-foreground">
-          <Link to={pwaFlow ? pwaAuthRoute("/signup") : "/signup"} className="hover:text-foreground">
+        <div className="space-y-1.5 text-center text-sm text-muted-foreground pt-0.5">
+          <Link
+            to={pwaFlow ? pwaAuthRoute("/signup") : "/signup"}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline"
+          >
             ← Use a different email
           </Link>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
   Award,
@@ -11,9 +12,7 @@ import {
   Globe,
   HelpCircle,
   Loader2,
-  Mail,
   MapPin,
-  Phone,
   Shield,
   User,
   X,
@@ -170,35 +169,17 @@ const RepresentativeCard = ({
   icon: Icon,
   title,
   name,
-  email,
-  phone,
 }: {
   icon: LucideIcon;
   title: string;
   name: string;
-  email: string;
-  phone: string;
 }) => (
   <div className="flex flex-col gap-3 rounded-md border border-slate-300 bg-admin-surface p-6 shadow-sm">
     <div className="flex items-center gap-1.5 border-b border-slate-300 pb-3">
       <Icon className="h-[13px] w-[13px] shrink-0 text-slate-500" strokeWidth={1.6} />
       <p className="font-segoe text-[13px] font-semibold uppercase leading-none text-slate-500">{title}</p>
     </div>
-    <div className="flex flex-col gap-1.5">
-      <p className="font-segoe text-sm font-semibold leading-none text-text-default">{name || "Not provided"}</p>
-      {name ? (
-        <div className="flex flex-col gap-1.5">
-          <span className="flex items-center gap-1.5 font-segoe text-xs font-normal leading-[140%] text-slate-500">
-            <Mail className="h-[13px] w-[13px] shrink-0" strokeWidth={1.6} />
-            {email || "Not provided"}
-          </span>
-          <span className="flex items-center gap-1.5 font-segoe text-xs font-normal leading-[140%] text-slate-500">
-            <Phone className="h-[13px] w-[13px] shrink-0" strokeWidth={1.6} />
-            {phone || "Not provided"}
-          </span>
-        </div>
-      ) : null}
-    </div>
+    <p className="font-segoe text-sm font-semibold leading-none text-text-default">{name || "Not provided"}</p>
   </div>
 );
 
@@ -290,6 +271,7 @@ const EmptyTab = ({ label, description = "Coming soon." }: { label: string; desc
 );
 
 export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDetailDrawerProps) => {
+  const navigate = useNavigate();
   const { state } = useLydoConnect();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [now, setNow] = useState(() => Date.now());
@@ -300,6 +282,18 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
 
   const ypopBreakdownTriggerRef = useRef<HTMLButtonElement | null>(null);
   const ypopBreakdownPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const handleViewAllCityLed = () => {
+    if (!org) return;
+    onOpenChange(false);
+    navigate(`/admin/ypop-validation?orgId=${encodeURIComponent(org.id)}&tab=city_led`);
+  };
+
+  const handleViewAllOrgLed = () => {
+    if (!org) return;
+    onOpenChange(false);
+    navigate(`/admin/ypop-validation?orgId=${encodeURIComponent(org.id)}&tab=org_led`);
+  };
 
   useEffect(() => {
     if (!entry) return undefined;
@@ -441,7 +435,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
   const ypopData = useMemo(() => {
     if (!org) return null;
 
-    const openPeriod = [...state.ypopPeriods]
+    const openPeriod = [...(state.ypopPeriods ?? [])]
       .filter((period) => period.status === "open")
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
     if (!openPeriod) return null;
@@ -648,15 +642,11 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         icon={User}
                         title="Head of Organization"
                         name={org.representativeName}
-                        email={org.organizationEmail}
-                        phone={org.contactNumber}
                       />
                       <RepresentativeCard
                         icon={User}
                         title="Adviser"
                         name={org.adviserName}
-                        email={org.organizationEmail}
-                        phone={org.contactNumber}
                       />
                     </div>
 
@@ -939,9 +929,13 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         title="City-Led Activities Joined"
                         icon={Globe}
                         headerRight={
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand">
+                          <button
+                            type="button"
+                            onClick={handleViewAllCityLed}
+                            className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-bg-brand-hover hover:underline cursor-pointer"
+                          >
                             View All
-                          </span>
+                          </button>
                         }
                       >
                         {ypopData.joinedActivities.length ? (
@@ -972,9 +966,13 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         title="Organization-Initiated Activities"
                         icon={Globe}
                         headerRight={
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand">
+                          <button
+                            type="button"
+                            onClick={handleViewAllOrgLed}
+                            className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-bg-brand-hover hover:underline cursor-pointer"
+                          >
                             View All
-                          </span>
+                          </button>
                         }
                       >
                         <div className="flex items-baseline gap-2">

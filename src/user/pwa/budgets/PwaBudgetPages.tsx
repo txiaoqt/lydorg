@@ -5,7 +5,7 @@ import {
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
 import { toast } from "@/hooks/use-toast";
-import type { BudgetRequest } from "@/lib/lydo-connect-data";
+import { formatAdvocacyLabel, type BudgetRequest } from "@/lib/lydo-connect-data";
 import {
   createBudgetRequestInSupabase,
   resolveSupabaseFileUrl,
@@ -20,9 +20,9 @@ import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRout
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Filter = "all" | "draft" | "review" | "revision" | "approved";
 
-const lockedStatuses = new Set(["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
+const lockedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
 const reviewStatuses = new Set(["submitted", "under_review"]);
-const approvedStatuses = new Set(["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
+const approvedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
 const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
 const dateLabel = (value: string) => value ? new Date(value).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "Not set";
 
@@ -116,13 +116,12 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
         <dl>
           <div><dt>Proposed date</dt><dd>{dateLabel(request.activityDate)}</dd></div>
           <div><dt>Venue</dt><dd>{request.venue}</dd></div>
-          <div><dt>Category</dt><dd>{request.purposeCategory}</dd></div>
+          <div><dt>Purpose & Category</dt><dd>{formatAdvocacyLabel(request.purposeCategory)}</dd></div>
           <div><dt>Approved</dt><dd>{money.format(request.approvedAmount)}</dd></div>
           <div><dt>Released</dt><dd>{money.format(request.releasedAmount)}</dd></div>
           <div><dt>Updated</dt><dd>{dateLabel(request.updatedAt)}</dd></div>
         </dl>
-        <div className="pwa-detail-section"><h3>Description</h3><p>{request.activityDescription}</p></div>
-        <div className="pwa-detail-section"><h3>Your remarks</h3><p>{request.remarks || "No remarks."}</p></div>
+        <div className="pwa-detail-section"><h3>Purpose Description</h3><p>{request.activityDescription}</p></div>
         {request.adminRemarks ? <div className="pwa-admin-note"><strong>Admin remarks</strong><p>{request.adminRemarks}</p></div> : null}
       </section>
       <div className="pwa-button-stack">
@@ -143,17 +142,15 @@ type BudgetDraft = {
   venue: string;
   requestedAmount: string;
   purposeCategory: string;
-  remarks: string;
 };
 
-const draftFrom = (request?: BudgetRequest): BudgetDraft => ({
+const draftFrom = (request?: BudgetRequest, defaultCategory?: string): BudgetDraft => ({
   activityTitle: request?.activityTitle ?? "",
   activityDescription: request?.activityDescription ?? "",
   activityDate: request?.activityDate ?? "",
   venue: request?.venue ?? "",
   requestedAmount: request ? String(request.requestedAmount) : "",
-  purposeCategory: request?.purposeCategory ?? "",
-  remarks: request?.remarks ?? "",
+  purposeCategory: request?.purposeCategory || defaultCategory || "",
 });
 
 export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | "edit" }) {
@@ -161,7 +158,9 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
   const { go } = usePwaNavigation();
   const existing = mode === "edit" ? data.budgetRequests.find((item) => item.id === requestId) : undefined;
   const existingFile = existing ? data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === existing.id) : undefined;
-  const [draft, setDraft] = useState(() => draftFrom(existing));
+  const orgAdvocacies = data.profile?.advocacies || [];
+  const defaultCategory = orgAdvocacies[0] || "";
+  const [draft, setDraft] = useState(() => draftFrom(existing, defaultCategory));
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -175,9 +174,25 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
   const update = (field: keyof BudgetDraft, value: string) => setDraft((current) => ({ ...current, [field]: value }));
   const save = async (status: "draft" | "submitted", event: FormEvent) => {
     event.preventDefault();
+    if (orgAdvocacies.length === 0) {
+      toast({
+        title: "No Centers of Youth Participation",
+        description: "Your organization does not have any Centers of Youth Participation configured in its profile. Please update your profile before submitting a budget request.",
+        variant: "destructive",
+      });
+      return;
+    }
     const requestedAmount = Number(draft.requestedAmount);
     if (!draft.activityTitle.trim() || !draft.activityDescription.trim() || !draft.activityDate || !draft.venue.trim() || !draft.purposeCategory.trim() || requestedAmount <= 0) {
       toast({ title: "Complete the budget form", description: "All activity, amount, and category fields are required.", variant: "destructive" });
+      return;
+    }
+    if (!orgAdvocacies.includes(draft.purposeCategory) && (!existing || existing.purposeCategory !== draft.purposeCategory)) {
+      toast({
+        title: "Invalid Purpose & Category",
+        description: "Selected category must be one of your organization's configured Centers of Youth Participation.",
+        variant: "destructive",
+      });
       return;
     }
     if (requestedAmount > 100000) {
@@ -206,7 +221,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         releaseDate: existing?.releaseDate ?? "",
         purposeCategory: draft.purposeCategory.trim(),
         status,
-        remarks: draft.remarks.trim(),
+        remarks: "",
         adminRemarks: existing?.adminRemarks ?? "",
         goSignalAt: existing?.goSignalAt ?? "",
         hardCopySubmittedAt: existing?.hardCopySubmittedAt ?? "",
@@ -238,15 +253,38 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       <section className="pwa-card">
         <h2>Activity information</h2>
         <label>Activity title <input value={draft.activityTitle} onChange={(event) => update("activityTitle", event.target.value)} required /></label>
-        <label>Description <textarea rows={4} value={draft.activityDescription} onChange={(event) => update("activityDescription", event.target.value)} required /></label>
+        <label>Purpose Description <textarea rows={4} placeholder="Briefly describe the purpose, objectives, expected outcomes, and target participants..." value={draft.activityDescription} onChange={(event) => update("activityDescription", event.target.value)} required /></label>
         <label>Proposed date <input type="date" value={draft.activityDate} onChange={(event) => update("activityDate", event.target.value)} required /></label>
         <label>Venue <input value={draft.venue} onChange={(event) => update("venue", event.target.value)} required /></label>
       </section>
       <section className="pwa-card">
         <h2>Budget details</h2>
         <label>Requested amount (Max: ₱100,000) <span className="pwa-prefix-input"><span>PHP</span><input type="number" min="0.01" max="100000" step="any" inputMode="decimal" value={draft.requestedAmount} onFocus={(e) => { if (e.target.value === "0") e.target.select(); }} onClick={(e) => { if ((e.target as HTMLInputElement).value === "0") (e.target as HTMLInputElement).select(); }} onChange={(event) => { let val = event.target.value; if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) { val = val.replace(/^0+/, ""); if (val === "" || val.startsWith(".")) { val = "0" + val; } } update("requestedAmount", val); }} required /></span></label>
-        <label>Purpose / category <input value={draft.purposeCategory} onChange={(event) => update("purposeCategory", event.target.value)} required /></label>
-        <label>Remarks (Optional) <textarea rows={3} value={draft.remarks} onChange={(event) => update("remarks", event.target.value)} /></label>
+        <label>
+          Purpose & Category
+          {orgAdvocacies.length > 0 ? (
+            <select
+              value={draft.purposeCategory}
+              onChange={(event) => update("purposeCategory", event.target.value)}
+              required
+            >
+              {existing && !orgAdvocacies.includes(existing.purposeCategory) && (
+                <option value={existing.purposeCategory}>
+                  {formatAdvocacyLabel(existing.purposeCategory)}
+                </option>
+              )}
+              {orgAdvocacies.map((cyp) => (
+                <option key={cyp} value={cyp}>
+                  {formatAdvocacyLabel(cyp)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="pwa-form-helper text-amber-600">
+              No Centers of Youth Participation configured. Please configure them in your Organization Profile.
+            </p>
+          )}
+        </label>
       </section>
       <section className="pwa-card">
         <h2>Detailed budget PDF</h2>
@@ -255,7 +293,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       </section>
       <div className="pwa-sticky-actions">
         <button type="button" className="pwa-secondary-button" disabled={saving} onClick={(event) => void save("draft", event)}>{saving ? <Loader2 className="pwa-spin" /> : null} Save Draft</button>
-        <button type="submit" className="pwa-primary-button" disabled={saving}>{saving ? <Loader2 className="pwa-spin" /> : null} Submit Request</button>
+        <button type="submit" className="pwa-primary-button" disabled={saving || orgAdvocacies.length === 0}>{saving ? <Loader2 className="pwa-spin" /> : null} Submit Request</button>
       </div>
     </form>
   );

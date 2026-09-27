@@ -178,22 +178,20 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
     });
   });
 
-  // TEST D — No Duplicate Budget Request
-  it("TEST D: file replacement updates the existing budget request and creates no duplicates", () => {
+  // TEST D — File Replacement Preserves Needs Revision Status (No Auto-Submit)
+  it("TEST D: file replacement updates the file while preserving needs_revision status and admin remarks (does NOT auto-submit)", () => {
     let budgetStore = [mockNeedsRevisionRequest];
 
-    // Simulate replacement logic
+    // File replacement handler preserves workflow state without auto-transitioning to under_review/submitted
     const handleReplace = (requestId: string, _newFile: File) => {
       budgetStore = budgetStore.map((req) => {
         if (req.id !== requestId) return req;
         return {
           ...req,
-          status: "under_review" as const,
-          adminRemarks: "",
-          revisionHistory: [
-            ...(req.revisionHistory ?? []),
-            { action: "under_review", adminRemarks: "", changedAt: new Date().toISOString() },
-          ],
+          // Preserves needs_revision status and existing admin remarks
+          status: req.status,
+          adminRemarks: req.adminRemarks,
+          updatedAt: new Date().toISOString(),
         };
       });
     };
@@ -203,9 +201,8 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
 
     expect(budgetStore).toHaveLength(1);
     expect(budgetStore[0].id).toBe("br-rev-101");
-    expect(budgetStore[0].status).toBe("under_review");
-    expect(budgetStore[0].adminRemarks).toBe("");
-    expect(budgetStore[0].revisionHistory).toHaveLength(2);
+    expect(budgetStore[0].status).toBe("needs_revision");
+    expect(budgetStore[0].adminRemarks).toBe("Please attach venue cost breakdown.");
   });
 
   // TEST E — Approved Amount Less Than Requested
@@ -390,5 +387,59 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
     // Mobile dialog must provide Upload Revised Proposal action
     const replaceButtons = screen.getAllByRole("button", { name: /upload revised proposal/i });
     expect(replaceButtons.length).toBeGreaterThan(0);
+  });
+
+  // TEST N — Explicit Resubmission Action
+  it("TEST N: renders explicit 'Submit for Review' button in drawer and triggers onResubmitBudgetRequest", () => {
+    const onResubmitMock = vi.fn().mockResolvedValue(undefined);
+    const props = createBaseProps({ onResubmitBudgetRequest: onResubmitMock });
+    render(<UserPortalBudgetWorkspaceView {...props} />);
+
+    // Explicit Submit for Review buttons must be present in revision banner and pinned footer
+    const submitButtons = screen.getAllByRole("button", { name: /submit for review/i });
+    expect(submitButtons.length).toBeGreaterThan(0);
+
+    // Clicking Submit for Review triggers explicit resubmission handler
+    fireEvent.click(submitButtons[0]);
+    expect(onResubmitMock).toHaveBeenCalledWith("br-rev-101");
+  });
+
+  // TEST O — Expired/Locked Revision Prevents Resubmission
+  it("TEST O: expired revision deadline locks proposal and hides/disables resubmission actions", () => {
+    const expiredRequest: BudgetRequest = {
+      ...mockNeedsRevisionRequest,
+      revisionDueAt: "2026-08-01T00:00:00Z", // Past deadline
+    };
+    const onResubmitMock = vi.fn().mockResolvedValue(undefined);
+    const props = createBaseProps({
+      budgetRequests: [expiredRequest],
+      onResubmitBudgetRequest: onResubmitMock,
+    });
+    render(<UserPortalBudgetWorkspaceView {...props} />);
+
+    expect(screen.getByText("Revision Deadline Expired (Locked)")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /submit for review/i })).toBeNull();
+  });
+
+  // TEST P — Invariant: File Replacement Does Not Mutate Status
+  it("TEST P: file replacement and resubmission are decoupled — replacing a file does NOT trigger resubmission", async () => {
+    const onReplaceMock = vi.fn().mockResolvedValue(undefined);
+    const onResubmitMock = vi.fn().mockResolvedValue(undefined);
+    const props = createBaseProps({
+      onReplaceBudgetFile: onReplaceMock,
+      onResubmitBudgetRequest: onResubmitMock,
+    });
+    render(<UserPortalBudgetWorkspaceView {...props} />);
+
+    const fileInput = screen.getByTestId("replace-budget-file-input") as HTMLInputElement;
+    const testPdf = new File(["test pdf"], "test.pdf", { type: "application/pdf" });
+    fireEvent.change(fileInput, { target: { files: [testPdf] } });
+
+    await waitFor(() => {
+      expect(onReplaceMock).toHaveBeenCalledWith("br-rev-101", testPdf);
+    });
+
+    // onResubmit must NOT have been called automatically
+    expect(onResubmitMock).not.toHaveBeenCalled();
   });
 });

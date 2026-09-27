@@ -85,7 +85,7 @@ const mockClosedInquiry: InquiryRecord = {
   updatedAt: "2026-09-16T11:00:00.000Z",
 };
 
-describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availability", { timeout: 30000 }, () => {
+describe("Admin Inquiries Workflow — Option A: Gmail Compose Workflow", { timeout: 30000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -147,12 +147,13 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
     expect(screen.getByRole("button", { name: /Reply via Email/i })).toBeInTheDocument();
   });
 
-  it("TEST 4: ReplyEmailDialog renders 'Open Email & Mark as Reviewed' and 'Mark as Reviewed'", () => {
+  it("TEST 4: ReplyEmailDialog renders 'Open Gmail & Mark as Reviewed' and 'Mark as Reviewed without Email'", () => {
     const onMarkReviewedMock = vi.fn();
     render(
       <ReplyEmailDialog
         open={true}
         onOpenChange={vi.fn()}
+        inquiryId="inq-pending-1"
         email="juan@pasigyouth.org"
         subject="Inquiry Regarding YPOP Guidelines"
         organizationName="Pasig Youth Council"
@@ -161,11 +162,11 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
       />
     );
 
-    expect(screen.getByRole("button", { name: /Open Email & Mark as Reviewed/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Mark as Reviewed$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Open Gmail & Mark as Reviewed/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Mark as Reviewed without Email/i })).toBeInTheDocument();
     expect(screen.queryByText(/Mark as Responded/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Mark as Reviewed$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Mark as Reviewed without Email/i }));
     expect(onMarkReviewedMock).toHaveBeenCalledTimes(1);
   });
 
@@ -175,6 +176,7 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
       <ReplyEmailDialog
         open={true}
         onOpenChange={vi.fn()}
+        inquiryId="inq-reviewed-1"
         email="maria@sjya.org"
         subject="Accreditation Renewal Query"
         organizationName="San Joaquin Youth Alliance"
@@ -186,8 +188,8 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
     expect(
       screen.getByText(/This inquiry has already been marked as Reviewed/i)
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Open Email & Mark as Reviewed/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Mark as Reviewed$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Open Gmail & Mark as Reviewed/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Mark as Reviewed without Email/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Close/i }).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -232,7 +234,7 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
     expect(screen.queryByText("RESPONDED")).not.toBeInTheDocument();
   });
 
-  it("TEST 8: Reply via Email opens external compose URL with encoded recipient and subject", () => {
+  it("TEST 8: Reply via Email opens Google Account Chooser URL with encoded Gmail compose continue destination and marks as reviewed", () => {
     const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
     const onMarkReviewedMock = vi.fn();
 
@@ -240,6 +242,7 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
       <ReplyEmailDialog
         open={true}
         onOpenChange={vi.fn()}
+        inquiryId="inq-pending-1"
         email="juan@pasigyouth.org"
         subject="Inquiry Regarding YPOP Guidelines"
         organizationName="Pasig Youth Council"
@@ -248,19 +251,50 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
       />
     );
 
-    const openEmailBtn = screen.getByRole("button", { name: /Open Email & Mark as Reviewed/i });
+    const openEmailBtn = screen.getByRole("button", { name: /Open Gmail & Mark as Reviewed/i });
     fireEvent.click(openEmailBtn);
 
     expect(openSpy).toHaveBeenCalledWith(
-      expect.stringContaining("https://mail.google.com/mail/?view=cm&fs=1&to=juan%40pasigyouth.org&su=Re%3A%20Inquiry%20Regarding%20YPOP%20Guidelines"),
+      expect.stringContaining("https://accounts.google.com/AccountChooser?service=mail&continue="),
       "_blank",
       "noopener,noreferrer"
     );
+
+    // Verify the continue destination contains the encoded Gmail compose URL
+    const openedUrl = openSpy.mock.calls[0][0] as string;
+    const continueParam = new URL(openedUrl).searchParams.get("continue");
+    expect(continueParam).toBeDefined();
+    expect(continueParam).toContain("https://mail.google.com/mail/?view=cm&fs=1&to=juan%40pasigyouth.org&su=Re%3A%20Inquiry%20Regarding%20YPOP%20Guidelines");
+    expect(continueParam).not.toContain("/u/0");
+    expect(continueParam).not.toContain("/u/1");
+    expect(continueParam).not.toContain("from=");
+    expect(continueParam).not.toContain("sender=");
+
     expect(onMarkReviewedMock).toHaveBeenCalledTimes(1);
     openSpy.mockRestore();
   });
 
-  it("TEST 9: Delete inquiry button remains visible and callable for both pending and reviewed inquiries", () => {
+  it("TEST 9: ReplyEmailDialog functions without needing any inquiry email setting configured", () => {
+    render(
+      <ReplyEmailDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        inquiryId="inq-pending-1"
+        email="juan@pasigyouth.org"
+        subject="Inquiry Regarding YPOP Guidelines"
+        organizationName="Pasig Youth Council"
+        onMarkReviewed={vi.fn()}
+        inquiryStatus="pending_review"
+      />
+    );
+
+    expect(screen.queryByText(/Inquiry Reply Email Not Configured/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Google Account Chooser will open first/i)).toBeInTheDocument();
+    const openEmailBtn = screen.getByRole("button", { name: /Open Gmail & Mark as Reviewed/i });
+    expect(openEmailBtn).not.toBeDisabled();
+  });
+
+  it("TEST 10: Delete inquiry button remains visible and callable for both pending and reviewed inquiries", () => {
     const onDeleteMock = vi.fn();
     render(
       <InquiriesTable
@@ -279,44 +313,7 @@ describe("Admin Inquiries Workflow — Reviewed Terminology and Action Availabil
     const deleteButtons = screen.getAllByRole("button", { name: /Delete Inquiry/i });
     expect(deleteButtons.length).toBe(2);
 
-    fireEvent.click(deleteButtons[1]); // Click delete on reviewed inquiry
+    fireEvent.click(deleteButtons[1]);
     expect(onDeleteMock).toHaveBeenCalledWith(mockReviewedInquiry);
-  });
-
-  it("TEST 10: InquiryDetailDrawer hides ReplyEmailButton for Reviewed inquiries and shows it for Pending", () => {
-    const onReplyEmailMock = vi.fn();
-
-    // 1. Render drawer for Reviewed inquiry
-    const { rerender } = render(
-      <InquiryDetailDrawer
-        inquiry={mockReviewedInquiry}
-        referenceCode="INQ-002"
-        onOpenChange={vi.fn()}
-        onUpdateStatus={vi.fn()}
-        onReplyEmail={onReplyEmailMock}
-        onDeleteInquiry={vi.fn()}
-        saving={false}
-      />
-    );
-
-    expect(screen.queryByRole("button", { name: /Reply via Email/i })).not.toBeInTheDocument();
-
-    // 2. Rerender drawer for Pending inquiry
-    rerender(
-      <InquiryDetailDrawer
-        inquiry={mockPendingInquiry}
-        referenceCode="INQ-001"
-        onOpenChange={vi.fn()}
-        onUpdateStatus={vi.fn()}
-        onReplyEmail={onReplyEmailMock}
-        onDeleteInquiry={vi.fn()}
-        saving={false}
-      />
-    );
-
-    const replyBtn = screen.getByRole("button", { name: /Reply via Email/i });
-    expect(replyBtn).toBeInTheDocument();
-    fireEvent.click(replyBtn);
-    expect(onReplyEmailMock).toHaveBeenCalledTimes(1);
   });
 });
