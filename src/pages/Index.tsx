@@ -1,4 +1,4 @@
-import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Phone, Send, Shield, Users } from "lucide-react";
+import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Send, Shield, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -76,7 +76,7 @@ const Index = () => {
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewCanInline, setPreviewCanInline] = useState(true);
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
-  const { address: officeAddress, contactNumber, email: officialEmail } = usePublicContactInfo();
+  const { address: officeAddress, email: officialEmail } = usePublicContactInfo();
   const { isAuthenticated, role } = useAuth();
   const { hash } = useLocation();
   const { state } = useLydoConnect();
@@ -733,12 +733,12 @@ const Index = () => {
       </section>
 
       {/* Contact */}
-      <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
+      <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[80px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-8">
 
           {/* Title group */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+          <div className="flex flex-col gap-2 sm:gap-3 text-center sm:text-left">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-3 py-1 backdrop-blur-[4px] mx-auto sm:mx-0">
               <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
                 CONTACT
               </span>
@@ -746,85 +746,76 @@ const Index = () => {
             <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
               Get in Touch with PCYDO
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Reach us through any of the following contact information.
+            <p className="font-segoe font-normal leading-normal text-public-text-secondary text-sm sm:text-public-fs-body-sm max-w-xl">
+              Connect with the Pasig City Youth Development Office for accreditation inquiries, compliance assistance, and youth program support.
             </p>
           </div>
 
-          {/* Card frame — capped at 975px */}
-          <div className="mx-auto flex w-full max-w-[975px] flex-col gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px]">
+          {/* 3-column contact grid */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
 
-            {/* Address card — capped at 723px */}
-            <div className="mx-auto flex w-full max-w-[723px] flex-col items-center gap-2 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav text-center">
-              <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
-                <MapPin className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
+            {/* Office Address */}
+            <div className="flex flex-col items-center gap-3 sm:gap-4 rounded-2xl border border-public-bg-brand-subtle bg-white p-6 shadow-public-nav text-center transition-all hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-public-bg-tertiary-100 p-2.5 text-public-text-brand">
+                <MapPin className="h-6 w-6 text-public-text-brand" />
               </div>
-              <p className="font-segoe text-xs font-semibold uppercase leading-none text-public-text-secondary">
+              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-public-text-secondary">
                 Office Address
               </p>
-              <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
+              <p className="font-segoe text-sm sm:text-base font-semibold leading-snug text-public-text-brand">
                 {officeAddress}
               </p>
             </div>
 
-            {/* Card row — 3 columns */}
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-3">
-
-              {/* Contact Number */}
-              <div className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav text-center">
-                <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
-                  <Phone className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
-                </div>
-                <p className="font-segoe text-xs font-semibold uppercase leading-none text-public-text-secondary">
-                  Contact Number
-                </p>
-                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                  {contactNumber}
-                </p>
+            {/* Official Email */}
+            <div className="flex flex-col items-center gap-3 sm:gap-4 rounded-2xl border border-public-bg-brand-subtle bg-white p-6 shadow-public-nav text-center transition-all hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-public-bg-tertiary-100 p-2.5 text-public-text-brand">
+                <Mail className="h-6 w-6 text-public-text-brand" />
               </div>
-
-              {/* Official Email */}
-              <div className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav text-center">
-                <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
-                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
-                </div>
-                <p className="font-segoe text-xs font-semibold uppercase leading-none text-public-text-secondary">
-                  Official Email
-                </p>
-                <a
-                  href={`mailto:${officialEmail}`}
-                  className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand hover:underline"
-                >
-                  {officialEmail}
-                </a>
-              </div>
-
-              {/* Office Hours */}
-              <div className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav text-center">
-                <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
-                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-public-text-brand" />
-                </div>
-                <p className="font-segoe text-xs font-semibold uppercase leading-none text-public-text-secondary">
-                  Office Hours
-                </p>
-                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                  Monday–Thursday<br />7:00 AM – 6:00 PM
-                </p>
-              </div>
-
+              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-public-text-secondary">
+                Official Email
+              </p>
+              <a
+                href={`mailto:${officialEmail}`}
+                className="font-segoe text-sm sm:text-base font-semibold leading-snug text-public-text-brand hover:underline break-all"
+              >
+                {officialEmail}
+              </a>
             </div>
 
-            {/* View Contact Page CTA */}
-            <div className="flex justify-center pt-1 sm:pt-0">
-              <Link
-                to="/contacts"
-                className="flex items-center rounded-[8px] bg-public-bg-brand px-4 py-2.5 sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover shadow-xs"
-              >
-                View Contact Page
-              </Link>
+            {/* Office Hours */}
+            <div className="flex flex-col items-center gap-3 sm:gap-4 rounded-2xl border border-public-bg-brand-subtle bg-white p-6 shadow-public-nav text-center transition-all hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-public-bg-tertiary-100 p-2.5 text-public-text-brand">
+                <Clock className="h-6 w-6 text-public-text-brand" />
+              </div>
+              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-public-text-secondary">
+                Office Hours
+              </p>
+              <div className="font-segoe text-sm sm:text-base font-semibold leading-snug text-public-text-brand flex flex-col items-center gap-0.5">
+                <span>Mon – Thu: 7:00 AM – 6:00 PM</span>
+                <span className="text-xs font-normal text-slate-500">Fri – Sun: Closed</span>
+              </div>
             </div>
 
           </div>
+
+          {/* Action CTA */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <a
+              href={`mailto:${officialEmail}`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-public-bg-brand px-6 py-3 font-segoe text-sm font-semibold text-public-text-on-brand transition-all hover:bg-public-bg-brand-hover shadow-xs active:scale-[0.98]"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Email PCYDO Directly</span>
+            </a>
+            <Link
+              to="/faqs"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 font-segoe text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 active:scale-[0.98]"
+            >
+              <span>Browse Help &amp; FAQs</span>
+            </Link>
+          </div>
+
         </div>
       </section>
 

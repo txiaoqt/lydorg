@@ -87,7 +87,7 @@ describe("SubmitInquiryModal Component", () => {
     expect(screen.getByText("Organization Name")).toBeInTheDocument();
   });
 
-  it("handles input changes for email and subject while keeping Organization Name locked", () => {
+  it("renders Email Address as read-only, non-editable, and sourced from account", () => {
     const handleSetInquiryForm = vi.fn();
     render(
       <SubmitInquiryModal
@@ -96,7 +96,7 @@ describe("SubmitInquiryModal Component", () => {
         inquiryForm={{
           submitterName: "Pasig Youth Council",
           organizationName: "Pasig Youth Council",
-          email: "old@pasig.ph",
+          email: "auth@pasig.ph",
           subject: "",
           description: "",
         }}
@@ -106,9 +106,11 @@ describe("SubmitInquiryModal Component", () => {
       />
     );
 
-    const emailInput = screen.getByDisplayValue("old@pasig.ph");
-    fireEvent.change(emailInput, { target: { value: "new@pasig.ph" } });
-    expect(handleSetInquiryForm).toHaveBeenCalled();
+    const emailInput = screen.getByDisplayValue("auth@pasig.ph") as HTMLInputElement;
+    expect(emailInput).toHaveAttribute("readonly");
+    expect(emailInput.className).toContain("cursor-not-allowed");
+    expect(screen.getByText("Email Address")).toBeInTheDocument();
+    expect(screen.getByText(/Uses the email associated with your account/i)).toBeInTheDocument();
 
     const subjectInput = screen.getByPlaceholderText("e.g. Question about liquidation requirement");
     fireEvent.change(subjectInput, { target: { value: "New liquidation query" } });

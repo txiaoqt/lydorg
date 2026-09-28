@@ -35,32 +35,251 @@ type RecentActivityPreviewProps = RecentActivityListProps & {
   headerClassName?: string;
 };
 
-export const formatActivityActionLabel = (rawAction?: string) => {
-  if (!rawAction) return "Document Action Recorded";
-  const action = rawAction.toLowerCase().trim();
+export const formatActivityActionLabel = (
+  rawAction?: string,
+  metadata?: Record<string, unknown> | null,
+) => {
+  if (!rawAction) return "Activity Recorded";
+  let action = rawAction.trim();
 
-  if (action === "submitted_batch_document_review" || action === "batch_submitted" || action.includes("submitted batch") || action.includes("submitted_batch")) {
+  // Strip redundant date suffixes like " On AUGUST 6, 2026."
+  action = action.replace(/\s+On\s+[A-Za-z]+(?:\s+\d{1,2})?,?\s+\d{4}\.?$/i, "");
+  action = action.replace(/\.$/, "");
+
+  const lower = action.toLowerCase();
+
+  // 1. Internal/technical system action exclusions/mappings
+  if (
+    lower === "admin_notification_dispatched" ||
+    lower.includes("notification_dispatched") ||
+    lower.includes("notification dispatched")
+  ) {
+    return "Notification Processed";
+  }
+  if (lower === "document_review_decision_updated") {
+    return "Document Reviewed";
+  }
+
+  // 2. Check metadata or description for specific document requirement names
+  const docName = (metadata?.documentTypeName || metadata?.documentName || metadata?.name) as string | undefined;
+
+  // Extract document name from common patterns:
+  // "Organization account permanently suspended due to rejected registration document: [Name]"
+  const rejectionMatch = action.match(/rejected registration document:\s*([^.]+)/i);
+  if (rejectionMatch) {
+    return `${rejectionMatch[1].trim()} rejected`;
+  }
+
+  // "The admin requested revisions for [Name]. Remarks: ..."
+  const revisionMatch = action.match(/(?:requested revisions for|revisions for)\s+([^.]+?)(?:\.\s*Remarks:|$)/i);
+  if (revisionMatch) {
+    return `${revisionMatch[1].trim()} needs revision`;
+  }
+
+  // "Your registration document '[Name]' has been approved"
+  const approvedMatch = action.match(/document\s+['"]?([^'"]+)['"]?\s+has been approved/i);
+  if (approvedMatch) {
+    return `${approvedMatch[1].trim()} approved`;
+  }
+
+  // "[Name] was submitted by" or "[Name] submitted for review"
+  const submittedMatch = action.match(/^(.+?)\s+(?:was\s+)?submitted\s+by/i);
+  if (submittedMatch && !lower.startsWith("admin ") && !lower.startsWith("budget")) {
+    return `${submittedMatch[1].trim()} submitted for review`;
+  }
+
+  // If document name is known via metadata
+  if (docName) {
+    if (lower.includes("needs_revision") || lower.includes("revision")) {
+      return `${docName} needs revision`;
+    }
+    if (lower.includes("approved") || lower.includes("completed")) {
+      return `${docName} approved`;
+    }
+    if (lower.includes("rejected")) {
+      return `${docName} rejected`;
+    }
+    if (lower.includes("resubmit")) {
+      return `${docName} resubmitted for review`;
+    }
+    if (lower.includes("submit")) {
+      return `${docName} submitted for review`;
+    }
+    return `${docName} reviewed`;
+  }
+
+  // 3. Batch and document actions
+  if (
+    lower === "submitted_batch_document_review" ||
+    lower === "batch_submitted" ||
+    lower.includes("submitted batch") ||
+    lower.includes("submitted_batch") ||
+    lower.includes("batch document submission")
+  ) {
     return "Batch Documents Submitted";
   }
-  if (action === "reviewed_documents" || action === "documents_reviewed" || action.includes("reviewed_documents")) {
+  if (
+    lower === "reviewed_documents" ||
+    lower === "documents_reviewed" ||
+    lower === "review_documents" ||
+    lower.includes("reviewed_documents")
+  ) {
     return "Documents Reviewed";
   }
-  if (action === "approved_documents" || action === "document_approved" || action === "approved" || action.includes("approved")) {
+  if (
+    lower === "approved_documents" ||
+    lower === "document_approved" ||
+    lower === "approve_document_submission" ||
+    lower.includes("approved_documents") ||
+    lower.includes("approved the accreditation documents")
+  ) {
     return "Documents Approved";
   }
-  if (action === "needs_revision" || action === "revision_requested" || action.includes("revision")) {
+  if (
+    lower === "needs_revision" ||
+    lower === "revision_requested" ||
+    lower === "document_needs_revision"
+  ) {
     return "Revision Requested";
   }
-  if (action === "rejected_documents" || action === "document_rejected" || action === "rejected" || action.includes("rejected")) {
+  if (
+    lower === "rejected_documents" ||
+    lower === "document_rejected" ||
+    lower === "reject_document_submission"
+  ) {
     return "Document Rejected";
   }
-  if (action === "profile_updated" || action.includes("profile")) {
-    return "Profile Updated";
+
+  // 4. Liquidation actions
+  if (
+    lower === "completed_liquidation_report" ||
+    lower === "liquidation_report_completed" ||
+    lower === "completed liquidation report"
+  ) {
+    return "Liquidation Report Completed";
+  }
+  if (
+    lower === "reviewed_liquidation_report" ||
+    lower === "liquidation_report_reviewed" ||
+    lower === "reviewed liquidation report"
+  ) {
+    return "Liquidation Report Reviewed";
+  }
+  if (
+    lower === "approved_liquidation_report" ||
+    lower === "liquidation_report_approved" ||
+    lower === "approved liquidation report"
+  ) {
+    return "Liquidation Report Approved";
+  }
+  if (
+    lower === "submitted_liquidation_report" ||
+    lower === "liquidation_report_submitted" ||
+    lower === "submitted liquidation report"
+  ) {
+    return "Liquidation Report Submitted";
   }
 
-  return rawAction
+  // 5. Budget actions
+  if (
+    lower === "submitted_budget_request" ||
+    lower === "budget_request_submitted" ||
+    lower === "submitted budget request"
+  ) {
+    return "Budget Request Submitted";
+  }
+  if (
+    lower === "approved_budget_request" ||
+    lower === "budget_request_approved" ||
+    lower === "approved budget request"
+  ) {
+    return "Budget Request Approved";
+  }
+  if (
+    lower === "reviewed_budget_request" ||
+    lower === "budget_request_reviewed" ||
+    lower === "reviewed budget request"
+  ) {
+    return "Budget Request Reviewed";
+  }
+  if (
+    lower === "release_budget" ||
+    lower === "budget_released" ||
+    lower.includes("budget released")
+  ) {
+    return "Budget Released";
+  }
+
+  // 6. Organization Profile & Verification
+  if (
+    lower === "verify_organization_profile" ||
+    lower === "verified organization registration" ||
+    lower === "verified organization" ||
+    lower.includes("verified the organization profile")
+  ) {
+    return "Organization Profile Verified";
+  }
+  if (
+    lower === "profile_updated" ||
+    lower === "organization_profile_updated" ||
+    lower === "updated organization profile"
+  ) {
+    return "Profile Updated";
+  }
+  if (lower === "accreditation_expired" || lower.includes("accreditation expired")) {
+    return "Accreditation Expired";
+  }
+  if (
+    lower === "suspended_organization" ||
+    lower === "organization_suspended" ||
+    lower.includes("suspended organization")
+  ) {
+    return "Account Suspended";
+  }
+
+  // 7. If action has "Marked ... As Verified"
+  if (action.startsWith("Marked ") && action.endsWith(" As Verified")) {
+    return action;
+  }
+
+  // 8. Sanitize technical terms from raw action string
+  const sanitized = action
     .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\b(RPC|trigger|api|backend|database|internal|dispatched)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!sanitized || /^(execution|sync|process|action)$/i.test(sanitized)) {
+    return "Activity Recorded";
+  }
+
+  return sanitized.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+export const formatDocumentActivityLabel = (
+  log: any,
+  templateDocuments?: Array<{ id: string; name: string; databaseId?: string }>,
+) => {
+  if (!log) return "Document Action Recorded";
+
+  let docName = (log.metadata?.documentTypeName || log.metadata?.documentName) as string | undefined;
+
+  if (!docName && templateDocuments?.length && log.relatedId) {
+    const matched = templateDocuments.find(
+      (t) =>
+        t.id === log.relatedId ||
+        t.databaseId === log.relatedId ||
+        (t as any).documentTypeId === log.relatedId,
+    );
+    if (matched) {
+      docName = matched.name;
+    }
+  }
+
+  return formatActivityActionLabel(log.action || log.description || log.title, {
+    ...log.metadata,
+    ...(docName ? { documentTypeName: docName } : {}),
+  });
 };
 
 export const formatFullActivityTimestamp = (dateInput?: string | Date | null) => {

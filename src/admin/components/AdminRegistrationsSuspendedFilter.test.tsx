@@ -103,7 +103,7 @@ describe("Admin Registrations Suspended Filter & Table Suite", () => {
   };
 
   // 1. Filter tabs rendering
-  it("renders all 5 status tabs including Suspended", () => {
+  it("renders all 4 status tabs including Suspended", () => {
     render(
       <RegistrationsTable
         registrations={mockOrganizations}
@@ -125,7 +125,7 @@ describe("Admin Registrations Suspended Filter & Table Suite", () => {
     expect(screen.getByRole("button", { name: "All Status" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Verified" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pending Review" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Needs Update" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Needs Update" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Suspended" })).toBeInTheDocument();
   });
 

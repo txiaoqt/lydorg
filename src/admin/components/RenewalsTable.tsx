@@ -19,7 +19,7 @@ import {
 import { majorClassificationOptions, type OrganizationRenewalStatus } from "@/lib/lydo-connect-data";
 import { isRevisionExpired } from "@/lib/revision-deadline";
 
-export type RenewalStatusFilter = "all" | "submitted" | "pending_review" | "needs_revision" | "approved" | "rejected";
+export type RenewalStatusFilter = "all" | "pending_review" | "approved";
 
 export type AdminRenewalQueueEntry = {
   renewalId: string;
@@ -58,9 +58,7 @@ export type RenewalsTableProps = {
 
 const STATUS_TABS: { value: RenewalStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "submitted", label: "Submitted" },
   { value: "pending_review", label: "Pending Review" },
-  { value: "needs_revision", label: "Needs Revision" },
   { value: "approved", label: "Approved" },
 ];
 

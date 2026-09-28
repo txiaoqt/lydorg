@@ -368,18 +368,25 @@ begin
   end if;
 
   -- 4. Dynamic required document types
-  select coalesce(array_agg(id), '{}'::uuid[])
+  select coalesce(array_agg(rdt.id), '{}'::uuid[])
   into _required_type_ids
-  from public.required_document_types
-  where is_active = true
-    and applies_to in ('all', 'registration', 'new_registration');
+  from public.required_document_types rdt
+  where rdt.is_active = true
+    and coalesce(rdt.is_required, true) = true
+    and coalesce(rdt.template_scope, 'document_submission') = 'document_submission'
+    and (rdt.scope is null or rdt.scope in ('registration', 'both'))
+    and (
+      rdt.template_category is null
+      or rdt.template_category = '{}'
+      or 'yorp' = any(rdt.template_category)
+    );
 
   -- Fallback if no specific registration tags are set
   if array_length(_required_type_ids, 1) is null or array_length(_required_type_ids, 1) = 0 then
-    select coalesce(array_agg(id), '{}'::uuid[])
+    select coalesce(array_agg(rdt.id), '{}'::uuid[])
     into _required_type_ids
-    from public.required_document_types
-    where is_active = true;
+    from public.required_document_types rdt
+    where rdt.is_active = true;
   end if;
 
   _required_count := coalesce(array_length(_required_type_ids, 1), 0);
@@ -444,15 +451,15 @@ begin
       status,
       is_legacy_inferred,
       approved_by,
-      created_at,
-      updated_at
+      approved_at,
+      created_at
     ) values (
       _organization_id,
       1,
       _start_date,
       _end_date,
       _official_urn,
-      'active'::public.accreditation_status,
+      'active',
       false,
       _admin_id,
       _effective_verified_at,

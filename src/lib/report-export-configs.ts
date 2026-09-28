@@ -562,6 +562,12 @@ export const DEFAULT_YORP_REGISTRY_COLUMN_KEYS: string[] = [
   "verifiedDate",
 ];
 
+export const YORP_REGISTRY_REQUIRED_COLUMN_KEYS: string[] = [
+  "no",
+  "organizationName",
+  "urn",
+];
+
 export const YORP_REGISTRY_COLUMN_ORDER: string[] = [
   "no",
   "organizationName",

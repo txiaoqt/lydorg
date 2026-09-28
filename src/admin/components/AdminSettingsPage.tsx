@@ -362,7 +362,7 @@ export const AdminSettingsPage: React.FC = () => {
 
                 <SettingSection
                   title="System Information"
-                  description="Official office details and contact information displayed across Y-TRACE."
+                  description="Official office details and contact email displayed across Y-TRACE."
                 >
                   <div className="grid gap-3.5 sm:grid-cols-2">
                     <SettingInputField
@@ -392,24 +392,14 @@ export const AdminSettingsPage: React.FC = () => {
                     onChange={(val) => updateDraft("general.office_name", val)}
                   />
 
-                  <div className="grid gap-3.5 sm:grid-cols-2">
-                    <SettingInputField
-                      settingKey="general.support_email"
-                      value={draftSettings["general.support_email"]}
-                      error={validationErrors["general.support_email"]}
-                      disabled={!canManageSettings || isSaving}
-                      descriptionOverride="Official contact email displayed to youth organizations and citizens for inquiries."
-                      onChange={(val) => updateDraft("general.support_email", val)}
-                    />
-                    <SettingInputField
-                      settingKey="general.contact_number"
-                      value={draftSettings["general.contact_number"]}
-                      error={validationErrors["general.contact_number"]}
-                      disabled={!canManageSettings || isSaving}
-                      hideDescription
-                      onChange={(val) => updateDraft("general.contact_number", val)}
-                    />
-                  </div>
+                  <SettingInputField
+                    settingKey="general.support_email"
+                    value={draftSettings["general.support_email"]}
+                    error={validationErrors["general.support_email"]}
+                    disabled={!canManageSettings || isSaving}
+                    descriptionOverride="Official contact email displayed to youth organizations and citizens for inquiries."
+                    onChange={(val) => updateDraft("general.support_email", val)}
+                  />
 
                   <SettingInputField
                     settingKey="general.office_address"

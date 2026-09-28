@@ -94,17 +94,13 @@ export function PwaInquiries({ data }: { data: PortalData }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setForm((current) => current.email ? current : { ...current, email: profileEmail });
+    setForm((current) => ({ ...current, email: profileEmail }));
   }, [profileEmail]);
 
   const submit = async () => {
-    const email = form.email.trim();
+    const email = profileEmail.trim();
     if (!email || !form.subject.trim() || !form.description.trim()) {
-      toast({ title: "Missing details", description: "Please complete the email, subject, and description fields.", variant: "destructive" });
-      return;
-    }
-    if (!organizationEmailPattern.test(email)) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
+      toast({ title: "Missing details", description: "Please complete the required subject and description fields.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -117,7 +113,7 @@ export function PwaInquiries({ data }: { data: PortalData }) {
         description: form.description,
       });
       data.store.createInquiry(saved);
-      setForm({ email, subject: "", description: "" });
+      setForm({ email: profileEmail, subject: "", description: "" });
       toast({ title: "Inquiry sent", description: "Your inquiry is now pending review." });
     } catch (error) {
       toast({ title: "Unable to send inquiry", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
@@ -125,5 +121,5 @@ export function PwaInquiries({ data }: { data: PortalData }) {
       setSaving(false);
     }
   };
-  return <div className="pwa-stack"><PageIntro icon={HelpCircle} title="Inquiries" copy="Send a question to the LYDO and track earlier submissions." /><section className="pwa-card pwa-form-card"><label>Email<Input type="email" inputMode="email" autoComplete="email" placeholder="Email address" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></label><label>Subject<Input value={form.subject} onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))} /></label><label>Description<Textarea rows={4} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></label><Button disabled={saving || !form.email.trim() || !form.subject.trim() || !form.description.trim()} onClick={() => void submit()}>{saving ? "Sending..." : "Send Inquiry"}</Button></section><section className="pwa-record-list pwa-stack">{data.inquiries.map((item) => <article className="pwa-card" key={item.id}><div className="pwa-record-heading"><div><p className="font-mono text-xs font-semibold text-primary">{getInquiryReferenceCode(item, data.inquiries)}</p><h3>{item.subject}</h3><p>{dateLabel(item.createdAt)}</p></div><StatusBadge status={item.status} /></div><p>{item.description}</p>{item.adminRemarks ? <small className="pwa-admin-note">Admin: {item.adminRemarks}</small> : null}</article>)}</section></div>;
+  return <div className="pwa-stack"><PageIntro icon={HelpCircle} title="Inquiries" copy="Send a question to the LYDO and track earlier submissions." /><section className="pwa-card pwa-form-card"><label>Email<Input type="email" inputMode="email" autoComplete="email" placeholder="Email address" value={profileEmail} readOnly tabIndex={-1} className="cursor-not-allowed bg-muted/40 text-muted-foreground" /></label><label>Subject<Input value={form.subject} onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))} /></label><label>Description<Textarea rows={4} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></label><Button disabled={saving || !profileEmail.trim() || !form.subject.trim() || !form.description.trim()} onClick={() => void submit()}>{saving ? "Sending..." : "Send Inquiry"}</Button></section><section className="pwa-record-list pwa-stack">{data.inquiries.map((item) => <article className="pwa-card" key={item.id}><div className="pwa-record-heading"><div><p className="font-mono text-xs font-semibold text-primary">{getInquiryReferenceCode(item, data.inquiries)}</p><h3>{item.subject}</h3><p>{dateLabel(item.createdAt)}</p></div><StatusBadge status={item.status} /></div><p>{item.description}</p>{item.adminRemarks ? <small className="pwa-admin-note">Admin: {item.adminRemarks}</small> : null}</article>)}</section></div>;
 }

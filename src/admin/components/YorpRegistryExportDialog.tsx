@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Download,
@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   PDF_PAPER_SIZE_OPTIONS,
   type ExportFormat,
@@ -38,6 +39,7 @@ import {
   YORP_REGISTRY_AVAILABLE_COLUMNS,
   YORP_REGISTRY_COLUMN_GROUPS,
   YORP_REGISTRY_COLUMN_ORDER,
+  YORP_REGISTRY_REQUIRED_COLUMN_KEYS,
   type YorpRegistryColumnGroupKey,
 } from "@/lib/report-export-configs";
 
@@ -81,6 +83,43 @@ const FORMAT_CONFIGS: Record<
   },
 };
 
+function SectionSelectAllCheckbox({
+  checked,
+  indeterminate,
+  disabled,
+  onChange,
+  groupLabel,
+}: {
+  checked: boolean;
+  indeterminate: boolean;
+  disabled?: boolean;
+  onChange: () => void;
+  groupLabel: string;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.indeterminate = indeterminate;
+    }
+  }, [indeterminate]);
+
+  return (
+    <label className="inline-flex items-center gap-1.5 font-segoe text-xs font-semibold text-public-bg-brand hover:text-bg-brand-hover dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer select-none">
+      <input
+        ref={inputRef}
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={onChange}
+        className="h-3.5 w-3.5 shrink-0 rounded border-slate-300 dark:border-slate-600 text-public-bg-brand focus:ring-public-bg-brand accent-public-bg-brand cursor-pointer disabled:cursor-not-allowed"
+        aria-label={`Select all ${groupLabel} columns`}
+      />
+      <span>Select all</span>
+    </label>
+  );
+}
+
 export function YorpRegistryExportDialog({
   open,
   onOpenChange,
@@ -92,12 +131,13 @@ export function YorpRegistryExportDialog({
   initialOrientation = "landscape",
 }: YorpRegistryExportDialogProps) {
   const [selectedKeys, setSelectedKeys] = useState<string[]>(DEFAULT_YORP_REGISTRY_COLUMN_KEYS);
+  const [alwaysIncludeRequired, setAlwaysIncludeRequired] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("pdf");
   const [paperSize, setPaperSize] = useState<PdfPaperSize>(initialPaperSize);
   const [orientation, setOrientation] = useState<PdfOrientation>(initialOrientation);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // When dialog opens, reset to default if needed or keep current selections
+  // When dialog opens, reset paper setup or state if needed
   useEffect(() => {
     if (open) {
       setIsSubmitting(false);
@@ -110,7 +150,20 @@ export function YorpRegistryExportDialog({
   const selectedCount = selectedKeys.length;
   const totalAvailableCount = YORP_REGISTRY_AVAILABLE_COLUMNS.length;
 
+  const handleToggleAlwaysIncludeRequired = (checked: boolean) => {
+    setAlwaysIncludeRequired(checked);
+    if (checked) {
+      setSelectedKeys((prev) => {
+        const nextSet = new Set([...prev, ...YORP_REGISTRY_REQUIRED_COLUMN_KEYS]);
+        return YORP_REGISTRY_COLUMN_ORDER.filter((k) => nextSet.has(k));
+      });
+    }
+  };
+
   const handleToggleColumn = (key: string) => {
+    if (alwaysIncludeRequired && YORP_REGISTRY_REQUIRED_COLUMN_KEYS.includes(key)) {
+      return;
+    }
     setSelectedKeys((prev) => {
       const exists = prev.includes(key);
       if (exists) {
@@ -122,24 +175,67 @@ export function YorpRegistryExportDialog({
     });
   };
 
+  const handleToggleSection = (groupKey: YorpRegistryColumnGroupKey) => {
+    const groupColumns = columnsByGroup.get(groupKey) ?? [];
+    const groupKeys = groupColumns.map((col) => col.key);
+    const isAllGroupSelected = groupKeys.length > 0 && groupKeys.every((k) => selectedKeySet.has(k));
+
+    if (isAllGroupSelected) {
+      // Deselect columns in this group, respecting locked required fields if active
+      setSelectedKeys((prev) => {
+        const keysToRemove = new Set(
+          alwaysIncludeRequired
+            ? groupKeys.filter((k) => !YORP_REGISTRY_REQUIRED_COLUMN_KEYS.includes(k))
+            : groupKeys,
+        );
+        return prev.filter((k) => !keysToRemove.has(k));
+      });
+    } else {
+      // Select all columns in this group
+      setSelectedKeys((prev) => {
+        const nextSet = new Set([...prev, ...groupKeys]);
+        return YORP_REGISTRY_COLUMN_ORDER.filter((k) => nextSet.has(k));
+      });
+    }
+  };
+
   const handleSelectAll = () => {
     setSelectedKeys([...YORP_REGISTRY_COLUMN_ORDER]);
   };
 
   const handleClearAll = () => {
-    setSelectedKeys([]);
+    if (alwaysIncludeRequired) {
+      setSelectedKeys(
+        YORP_REGISTRY_COLUMN_ORDER.filter((k) => YORP_REGISTRY_REQUIRED_COLUMN_KEYS.includes(k)),
+      );
+    } else {
+      setSelectedKeys([]);
+    }
   };
 
   const handleResetDefault = () => {
-    setSelectedKeys([...DEFAULT_YORP_REGISTRY_COLUMN_KEYS]);
+    if (alwaysIncludeRequired) {
+      const nextSet = new Set([
+        ...DEFAULT_YORP_REGISTRY_COLUMN_KEYS,
+        ...YORP_REGISTRY_REQUIRED_COLUMN_KEYS,
+      ]);
+      setSelectedKeys(YORP_REGISTRY_COLUMN_ORDER.filter((k) => nextSet.has(k)));
+    } else {
+      setSelectedKeys([...DEFAULT_YORP_REGISTRY_COLUMN_KEYS]);
+    }
   };
 
   const handleGenerate = async () => {
     if (isSubmitting || selectedCount === 0) return;
     setIsSubmitting(true);
     try {
+      let finalKeys = selectedKeys;
+      if (alwaysIncludeRequired) {
+        const nextSet = new Set([...selectedKeys, ...YORP_REGISTRY_REQUIRED_COLUMN_KEYS]);
+        finalKeys = YORP_REGISTRY_COLUMN_ORDER.filter((k) => nextSet.has(k));
+      }
       const pageConfig: PdfPageConfig = { paperSize, orientation };
-      await onExport(selectedFormat, selectedKeys, pageConfig);
+      await onExport(selectedFormat, finalKeys, pageConfig);
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);
@@ -202,8 +298,8 @@ export function YorpRegistryExportDialog({
             </div>
           )}
 
-          {/* Column Selection Toolbar */}
-          <div className="space-y-2">
+          {/* Column Selection Toolbar & Controls */}
+          <div className="space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <label className="font-segoe text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
@@ -234,7 +330,13 @@ export function YorpRegistryExportDialog({
                 <span className="text-slate-300 dark:text-slate-700">·</span>
                 <button
                   type="button"
-                  disabled={isSubmitting || selectedCount === 0}
+                  disabled={
+                    isSubmitting ||
+                    (alwaysIncludeRequired
+                      ? selectedCount === YORP_REGISTRY_REQUIRED_COLUMN_KEYS.length &&
+                        YORP_REGISTRY_REQUIRED_COLUMN_KEYS.every((k) => selectedKeySet.has(k))
+                      : selectedCount === 0)
+                  }
                   onClick={handleClearAll}
                   className="rounded px-2 py-0.5 font-medium text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-text-default active:scale-95 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
                 >
@@ -254,11 +356,35 @@ export function YorpRegistryExportDialog({
               </div>
             </div>
 
+            {/* Always Include Required Fields Switch Card */}
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 px-3.5 py-2.5 transition-colors">
+              <div className="min-w-0 flex-1">
+                <label
+                  htmlFor="always-include-required-fields"
+                  className="block font-segoe text-xs font-semibold text-slate-900 dark:text-slate-100 cursor-pointer select-none"
+                >
+                  Always include required fields
+                </label>
+                <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                  Always include No., Organization Name, and URN in every export.
+                </p>
+              </div>
+              <Switch
+                id="always-include-required-fields"
+                checked={alwaysIncludeRequired}
+                onCheckedChange={handleToggleAlwaysIncludeRequired}
+                disabled={isSubmitting}
+                aria-label="Always include required fields"
+              />
+            </div>
+
             {/* 2x2 Column Groups Grid */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {YORP_REGISTRY_COLUMN_GROUPS.map((group) => {
                 const groupColumns = columnsByGroup.get(group.key) ?? [];
                 const groupSelectedCount = groupColumns.filter((col) => selectedKeySet.has(col.key)).length;
+                const isAllGroupSelected = groupColumns.length > 0 && groupSelectedCount === groupColumns.length;
+                const isIndeterminate = groupSelectedCount > 0 && groupSelectedCount < groupColumns.length;
 
                 return (
                   <div
@@ -269,38 +395,60 @@ export function YorpRegistryExportDialog({
                       <span className="font-segoe text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         {group.label}
                       </span>
-                      <span className="font-segoe text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                        {groupSelectedCount}/{groupColumns.length}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <SectionSelectAllCheckbox
+                          checked={isAllGroupSelected}
+                          indeterminate={isIndeterminate}
+                          disabled={isSubmitting}
+                          onChange={() => handleToggleSection(group.key)}
+                          groupLabel={group.label}
+                        />
+                        <span className="text-slate-300 dark:text-slate-700">·</span>
+                        <span className="font-segoe text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                          {groupSelectedCount}/{groupColumns.length}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="space-y-0.5 pt-0.5">
                       {groupColumns.map((col) => {
                         const isChecked = selectedKeySet.has(col.key);
+                        const isRequiredField = YORP_REGISTRY_REQUIRED_COLUMN_KEYS.includes(col.key);
+                        const isLockedRequired = alwaysIncludeRequired && isRequiredField;
+
                         return (
                           <label
                             key={col.key}
                             className={cn(
-                              "flex items-center justify-between gap-2.5 rounded-md px-2 py-1.5 text-left transition-all duration-150 cursor-pointer select-none active:scale-[0.99]",
-                              isChecked
-                                ? "bg-admin-surface dark:bg-slate-800/90 shadow-2xs border border-slate-200/90 dark:border-slate-700/70"
-                                : "hover:bg-slate-200/50 dark:hover:bg-slate-800/40 border border-transparent",
+                              "flex items-center justify-between gap-2.5 rounded-md px-2 py-1.5 text-left transition-all duration-150 select-none active:scale-[0.99]",
+                              isLockedRequired
+                                ? "bg-admin-surface dark:bg-slate-800/90 shadow-2xs border border-sky-200/80 dark:border-sky-900/60 cursor-default"
+                                : isChecked
+                                ? "bg-admin-surface dark:bg-slate-800/90 shadow-2xs border border-slate-200/90 dark:border-slate-700/70 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600"
+                                : "hover:bg-slate-200/50 dark:hover:bg-slate-800/40 border border-transparent cursor-pointer",
                             )}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <input
                                 type="checkbox"
                                 checked={isChecked}
-                                disabled={isSubmitting}
-                                onChange={() => handleToggleColumn(col.key)}
-                                className="h-4 w-4 shrink-0 rounded border-slate-300 dark:border-slate-600 text-public-bg-brand focus:ring-public-bg-brand accent-public-bg-brand cursor-pointer disabled:cursor-not-allowed"
+                                disabled={isSubmitting || isLockedRequired}
+                                onChange={() => !isLockedRequired && handleToggleColumn(col.key)}
+                                className={cn(
+                                  "h-4 w-4 shrink-0 rounded border-slate-300 dark:border-slate-600 text-public-bg-brand focus:ring-public-bg-brand accent-public-bg-brand",
+                                  isLockedRequired ? "cursor-not-allowed opacity-90" : "cursor-pointer",
+                                )}
                                 aria-label={col.label}
                               />
                               <span className="font-segoe text-xs font-medium text-text-default truncate">
                                 {col.label}
                               </span>
                             </div>
-                            {col.isDefault ? (
+                            {isLockedRequired ? (
+                              <span className="shrink-0 rounded bg-sky-100 dark:bg-sky-950/80 px-1.5 py-0.5 font-segoe text-[9.5px] font-semibold text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60">
+                                Required
+                              </span>
+                            ) : col.isDefault ? (
                               <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-segoe text-[9.5px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                                 Default
                               </span>
@@ -505,6 +653,3 @@ export function YorpRegistryExportDialog({
     </Dialog>
   );
 }
-
-
-

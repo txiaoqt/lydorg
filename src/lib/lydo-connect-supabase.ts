@@ -3306,6 +3306,10 @@ export const createInquiryInSupabase = async (params: {
 
   const canonicalOrgName = organizationProfile.organization_name || params.organizationName.trim();
   const canonicalSubmitterName = params.submitterName.trim() || organizationProfile.representative_name || canonicalOrgName;
+  const authoritativeEmail = (organizationProfile.organization_email || session.user.email || params.email || "").trim();
+  if (!authoritativeEmail) {
+    throw new Error("Authoritative account email is required.");
+  }
 
   const { data, error } = await supabase!
     .from("inquiries")
@@ -3314,7 +3318,7 @@ export const createInquiryInSupabase = async (params: {
       submitted_by: session.user.id,
       submitter_name: canonicalSubmitterName,
       organization_name: canonicalOrgName,
-      email: params.email.trim(),
+      email: authoritativeEmail,
       subject: trimmedSubject,
       description: trimmedDescription,
       status: "pending_review",

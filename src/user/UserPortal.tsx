@@ -50,7 +50,7 @@ import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isRevisionExpired, isSubmissionRevisionLocked } from "@/lib/revision-deadline";
+import { isRevisionExpired, isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,7 +83,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { RecentActivityList, RecentActivityPreview, type RecentActivityItem, formatActivityActionLabel, formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
+import {
+  RecentActivityList,
+  RecentActivityPreview,
+  type RecentActivityItem,
+  formatActivityActionLabel,
+  formatDocumentActivityLabel,
+  formatFullActivityTimestamp,
+} from "@/components/activity/RecentActivityPreview";
 import { PortalEmptyState, PortalIconBadge, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
 import { UserFeatureIcon } from "@/components/portal/UserFeatureIcon";
 import { UserPortalShell } from "@/components/portal/UserPortalShell";
@@ -333,6 +340,19 @@ const budgetActionLabels: Record<string, string> = {
   completed: "Completed",
   submitted: "Submitted for review",
   rejected_red: "Rejected",
+  draft: "Saved as draft",
+};
+const liquidationActionLabels: Record<string, string> = {
+  submitted: "Liquidation report submitted for review",
+  under_review: "Liquidation report reviewed",
+  under_admin_review: "Liquidation report reviewed",
+  approved: "Liquidation report approved",
+  approved_green: "Liquidation report approved",
+  completed: "Liquidation report completed",
+  needs_revision: "Liquidation report needs revision",
+  revision_requested: "Liquidation report needs revision",
+  rejected: "Liquidation report rejected",
+  rejected_red: "Liquidation report rejected",
   draft: "Saved as draft",
 };
 const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
@@ -988,11 +1008,11 @@ export default function UserPortal({ section }: { section: string }) {
     setInquiryForm((current) => ({
       submitterName: currentProfile.organizationName,
       organizationName: currentProfile.organizationName,
-      email: current.email.trim() ? current.email : currentProfile.organizationEmail,
+      email: currentProfile.organizationEmail || user?.email || "",
       subject: current.subject,
       description: current.description,
     }));
-  }, [currentProfile?.id, currentProfile?.organizationEmail, currentProfile?.organizationName]);
+  }, [currentProfile?.id, currentProfile?.organizationEmail, currentProfile?.organizationName, user?.email]);
   const profileSummaryRef = useRef<HTMLDivElement>(null);
   const profileEditRef = useRef<HTMLDivElement>(null);
   const profileYpopRef = useRef<HTMLDivElement>(null);
@@ -1499,17 +1519,83 @@ export default function UserPortal({ section }: { section: string }) {
 
     return droppedSelections;
   }, [batchDroppedFiles, templateDocuments]);
+  const isDocumentSubmissionLog = (log: ActivityLog) => {
+    if (log.action === "admin_notification_dispatched") return false;
+    const relatedType = log.relatedType?.toLowerCase() || "";
+    const action = log.action?.toLowerCase() || "";
+    const desc = log.description?.toLowerCase() || "";
+
+    // Strictly exclude other workflows even if misattributed
+    if (
+      relatedType.includes("liquidation") ||
+      relatedType.includes("budget") ||
+      relatedType.includes("ypop") ||
+      relatedType === "organization_profile" ||
+      relatedType === "news_release" ||
+      action.includes("liquidation") ||
+      action.includes("budget") ||
+      action.includes("ypop")
+    ) {
+      return false;
+    }
+
+    if (
+      relatedType === "document_submission" ||
+      relatedType === "document" ||
+      relatedType === "batch_documents" ||
+      relatedType === "registration_documents" ||
+      relatedType === "document_submission_file"
+    ) {
+      return true;
+    }
+
+    // Document-specific actions or descriptions
+    if (
+      action.includes("document") ||
+      action.includes("batch_submitted") ||
+      action.includes("submitted_batch") ||
+      desc.includes("document") ||
+      desc.includes("constitution") ||
+      desc.includes("by-laws") ||
+      desc.includes("registration form")
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
   const profileActivityLogEntries = useMemo(
     () =>
       state.activityLogs
-        .filter((log) => log.organizationId === currentProfile?.id && log.relatedType === "organization_profile")
+        .filter(
+          (log) =>
+            log.organizationId === currentProfile?.id &&
+            log.relatedType === "organization_profile" &&
+            log.action !== "admin_notification_dispatched",
+        )
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
     [currentProfile?.id, state.activityLogs],
   );
   const submissionLogs = useMemo(
     () =>
       state.activityLogs
-        .filter((log) => log.organizationId === currentProfile?.id)
+        .filter(
+          (log) =>
+            log.organizationId === currentProfile?.id &&
+            isDocumentSubmissionLog(log),
+        )
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
+    [currentProfile?.id, state.activityLogs],
+  );
+  const globalActivityLogEntries = useMemo(
+    () =>
+      state.activityLogs
+        .filter(
+          (log) =>
+            log.organizationId === currentProfile?.id &&
+            log.action !== "admin_notification_dispatched",
+        )
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
     [currentProfile?.id, state.activityLogs],
   );
@@ -2711,11 +2797,26 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     const files = budgetRequestFilesByBudgetId.get(budgetRequestId);
-    const hasFile = Array.isArray(files) ? files.length > 0 : Boolean(files);
-    if (!hasFile) {
+    const filesList = Array.isArray(files) ? files : files ? [files] : [];
+    if (!filesList.length) {
       toast({
         title: "Attach required document",
         description: "Please upload the revised budget proposal before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      isAwaitingResubmission({
+        status: existing.status,
+        revisionRequestedAt: existing.revisionRequestedAt,
+        files: filesList,
+      })
+    ) {
+      toast({
+        title: "Revised document required",
+        description: "Please upload the revised budget request file before submitting for review.",
         variant: "destructive",
       });
       return;
@@ -3101,14 +3202,14 @@ export default function UserPortal({ section }: { section: string }) {
 
     const organizationName = (currentProfile.organizationName || inquiryForm.organizationName || "").trim();
     const submitterName = (currentProfile.organizationName || inquiryForm.submitterName || organizationName).trim();
-    const email = inquiryForm.email.trim();
+    const authoritativeEmail = (currentProfile.organizationEmail || user?.email || inquiryForm.email || "").trim();
     const subject = inquiryForm.subject.trim();
     const description = inquiryForm.description.trim();
 
-    if (!organizationName || !email || !subject || !description) {
+    if (!organizationName || !authoritativeEmail || !subject || !description) {
       toast({
         title: "Missing details",
-        description: "Please complete the email, subject, and description fields.",
+        description: "Please complete the required subject and description fields.",
         variant: "destructive",
       });
       return;
@@ -3129,7 +3230,7 @@ export default function UserPortal({ section }: { section: string }) {
       const createdInquiry = await createInquiryInSupabase({
         submitterName,
         organizationName,
-        email,
+        email: authoritativeEmail,
         subject,
         description,
       });
@@ -3139,7 +3240,7 @@ export default function UserPortal({ section }: { section: string }) {
       setInquiryForm({
         submitterName: currentProfile.organizationName,
         organizationName: currentProfile.organizationName,
-        email: currentProfile.organizationEmail,
+        email: currentProfile.organizationEmail || user?.email || "",
         subject: "",
         description: "",
       });
@@ -3698,7 +3799,7 @@ export default function UserPortal({ section }: { section: string }) {
                 description: "Complete log of document submissions and review updates.",
                 activities: (submissionLogs || []).map((log: any) => ({
                   id: log.id,
-                  message: formatActivityActionLabel(log.action || log.description),
+                  message: formatDocumentActivityLabel(log, templateDocuments),
                   note: log.adminRemarks || log.remarks || undefined,
                   timestamp: log.createdAt,
                   timestampLabel: formatFullActivityTimestamp(log.createdAt),
@@ -4762,14 +4863,14 @@ export default function UserPortal({ section }: { section: string }) {
         open={profileActivityModalOpen}
         onOpenChange={setProfileActivityModalOpen}
         description="Complete timeline of document uploads, approvals, budget requests, liquidation updates, and inquiries for your organization."
-        activities={profileActivityLogEntries.map((log) => ({
+        activities={globalActivityLogEntries.map((log) => ({
           id: log.id,
-          message: log.description,
+          message: formatActivityActionLabel(log.action || log.description, log.metadata as Record<string, unknown>),
           note: (log as any).adminRemarks?.trim() || undefined,
           timestamp: log.createdAt,
           timestampLabel: formatDateTimeLabel(log.createdAt),
         }))}
-        emptyDescription="Profile changes and admin review actions will appear here."
+        emptyDescription="Organization activities and admin review actions will appear here."
       />
       <Dialog
         open={Boolean(budgetReviewNote)}

@@ -60,6 +60,7 @@ import {
   getRevisionTimeRemaining,
   isRevisionExpired,
   isSubmissionRevisionLocked,
+  isAwaitingResubmission,
 } from "@/lib/revision-deadline";
 
 import { computeBudgetWorkflowMetrics } from "@/lib/workflow-metrics";
@@ -1559,9 +1560,15 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
           <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl">
             {selectedRequest && (() => {
               const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
-              const primaryFile = Array.isArray(rawDrawerFile) ? rawDrawerFile[0] : rawDrawerFile;
+              const filesList = Array.isArray(rawDrawerFile) ? rawDrawerFile : rawDrawerFile ? [rawDrawerFile] : [];
+              const primaryFile = filesList[0];
               const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
               const activePreviewUrl = resolvedDrawerPreviewUrl || primaryFile?.fileUrl || "";
+              const isAwaitingResub = selectedRequest.status === "needs_revision" && isAwaitingResubmission({
+                status: selectedRequest.status,
+                revisionRequestedAt: selectedRequest.revisionRequestedAt,
+                files: filesList,
+              });
 
               return (
                 <>
@@ -1657,9 +1664,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                                 <Button
                                   type="button"
                                   size="sm"
-                                  disabled={isSubmitting || isReplacingBudgetFile}
+                                  disabled={isSubmitting || isReplacingBudgetFile || isAwaitingResub}
                                   onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
-                                  className="h-8 px-3.5 rounded-lg font-semibold text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                                  className="h-8 px-3.5 rounded-lg font-semibold text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isSubmitting ? (
                                     <>
@@ -1675,6 +1682,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                                 </Button>
                               )}
                             </div>
+                          )}
+                          {selectedRequest.status === "needs_revision" && !isExpired && isAwaitingResub && (
+                            <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium pl-5 pt-0.5">
+                              Please upload the revised budget request file before submitting for review.
+                            </p>
                           )}
                         </div>
                       );
@@ -1829,9 +1841,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                             <Button
                               type="button"
                               size="sm"
-                              disabled={isSubmitting || isReplacingBudgetFile}
+                              disabled={isSubmitting || isReplacingBudgetFile || isAwaitingResub}
                               onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
-                              className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center"
+                              className="h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isSubmitting ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -1863,9 +1875,15 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
           >
             {selectedRequest && (() => {
               const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
-              const primaryFile = Array.isArray(rawDrawerFile) ? rawDrawerFile[0] : rawDrawerFile;
+              const filesList = Array.isArray(rawDrawerFile) ? rawDrawerFile : rawDrawerFile ? [rawDrawerFile] : [];
+              const primaryFile = filesList[0];
               const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
               const activePreviewUrl = resolvedDrawerPreviewUrl || primaryFile?.fileUrl || "";
+              const isAwaitingResub = selectedRequest.status === "needs_revision" && isAwaitingResubmission({
+                status: selectedRequest.status,
+                revisionRequestedAt: selectedRequest.revisionRequestedAt,
+                files: filesList,
+              });
 
               return (
                 <>
@@ -1978,9 +1996,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                                 <Button
                                   type="button"
                                   size="sm"
-                                  disabled={isSubmitting || isReplacingBudgetFile}
+                                  disabled={isSubmitting || isReplacingBudgetFile || isAwaitingResub}
                                   onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
-                                  className="h-8.5 px-3.5 rounded-lg font-semibold text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                                  className="h-8.5 px-3.5 rounded-lg font-semibold text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isSubmitting ? (
                                     <>
@@ -1996,6 +2014,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                                 </Button>
                               )}
                             </div>
+                          )}
+                          {selectedRequest.status === "needs_revision" && !isExpired && isAwaitingResub && (
+                            <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium pl-5 pt-0.5">
+                              Please upload the revised budget request file before submitting for review.
+                            </p>
                           )}
                         </div>
                       );
@@ -2152,9 +2175,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                             <Button
                               type="button"
                               size="sm"
-                              disabled={isSubmitting || isReplacingBudgetFile}
+                              disabled={isSubmitting || isReplacingBudgetFile || isAwaitingResub}
                               onClick={() => void onResubmitBudgetRequest(selectedRequest.id)}
-                              className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center"
+                              className="h-9 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 cursor-pointer transition-all active:scale-[0.98] shrink-0 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isSubmitting ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -23,7 +23,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { formatActivityActionLabel, formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
+import {
+  formatActivityActionLabel,
+  formatDocumentActivityLabel,
+  formatFullActivityTimestamp,
+} from "@/components/activity/RecentActivityPreview";
 import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 
 import { FeatureGate } from "./FeatureGate";
@@ -754,10 +758,11 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
 
             <div className="space-y-4 border-l border-border/60 pl-6 relative">
               {logsList.slice(0, 5).map((log, idx) => {
-                const actionTitle = formatActivityActionLabel(log.action || log.description || log.title);
+                const actionTitle = formatDocumentActivityLabel(log, templateDocuments);
                 const fullTime = formatFullActivityTimestamp(log.createdAt || log.timestamp);
-                const isApproved = actionTitle.includes("Approved") || actionTitle.includes("Completed");
-                const isRevision = actionTitle.includes("Revision") || actionTitle.includes("Rejected");
+                const lowerTitle = actionTitle.toLowerCase();
+                const isApproved = lowerTitle.includes("approved") || lowerTitle.includes("completed");
+                const isRevision = lowerTitle.includes("revision") || lowerTitle.includes("rejected");
 
                 return (
                   <div key={log.id || idx} className="relative space-y-1">
@@ -789,7 +794,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                 );
               })}
               {logsList.length === 0 && (
-                <p className="text-xs text-muted-foreground italic">No recent submission activity recorded.</p>
+                <p className="text-xs text-muted-foreground italic">No recent activity.</p>
               )}
             </div>
 

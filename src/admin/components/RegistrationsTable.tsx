@@ -18,7 +18,7 @@ import {
 } from "@/lib/pasig-districts";
 import { majorClassificationOptions, type OrganizationProfile } from "@/lib/lydo-connect-data";
 
-export type RegistrationStatusFilter = "all" | OrganizationProfile["profileStatus"];
+export type RegistrationStatusFilter = "all" | "verified" | "pending_review" | "suspended_inactive";
 
 export const isDeletableRegistrationStatus = (status: OrganizationProfile["profileStatus"]) =>
   status === "incomplete" || status === "pending_review" || status === "needs_update";
@@ -46,7 +46,6 @@ const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
   { value: "verified", label: "Verified" },
   { value: "pending_review", label: "Pending Review" },
-  { value: "needs_update", label: "Needs Update" },
   { value: "suspended_inactive", label: "Suspended" },
 ];
 

@@ -17,7 +17,6 @@ import AdminPortal from "./admin/AdminPortal";
 import { AdminThemeProvider } from "./admin/context/AdminThemeContext";
 const LegalPolicy = lazy(() => import("./pages/LegalPolicy"));
 const Faqs = lazy(() => import("./pages/Faqs"));
-const Contacts = lazy(() => import("./pages/Contacts"));
 import ResetPassword from "./pages/ResetPassword";
 import AdminCreatePassword from "./pages/AdminCreatePassword";
 const SiteMap = lazy(() => import("./pages/SiteMap"));
@@ -72,7 +71,7 @@ const PolicyAgreementGate = ({ children }: { children: JSX.Element }) => {
   });
 
   const isPublicPath =
-    ["/", "/about", "/faqs", "/contacts", "/site-map", "/terms", "/privacy", "/public-templates", "/budget-transparency", "/advocacy"].includes(pathname) ||
+    ["/", "/about", "/faqs", "/site-map", "/terms", "/privacy", "/public-templates", "/budget-transparency", "/advocacy"].includes(pathname) ||
     pathname.startsWith("/news-releases");
 
   if (isInitialized && isPasswordRecoverySession && pathname !== "/reset-password" && !isAdminCreatePasswordRoute) {
@@ -336,7 +335,7 @@ const App = () => (
                       <Route path="/budget-transparency" element={<Suspense fallback={<PublicPageLoader />}><PublicBudgetTransparency /></Suspense>} />
                       <Route path="/about" element={<Suspense fallback={<PublicPageLoader />}><About /></Suspense>} />
                       <Route path="/faqs" element={<Suspense fallback={<PublicPageLoader />}><Faqs /></Suspense>} />
-                      <Route path="/contacts" element={<Suspense fallback={<PublicPageLoader />}><Contacts /></Suspense>} />
+                      <Route path="/contacts" element={<Navigate to="/faqs" replace />} />
                       <Route path="/site-map" element={<Suspense fallback={<PublicPageLoader />}><SiteMap /></Suspense>} />
                       <Route path="/terms" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />
                       <Route path="/privacy" element={<Suspense fallback={<PublicPageLoader />}><LegalPolicy /></Suspense>} />

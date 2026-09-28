@@ -123,7 +123,7 @@ export function usePwaPortalData() {
       .filter((item) => item.userId === user?.id)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const activities = [...state.activityLogs]
-      .filter((item) => item.organizationId === organizationId)
+      .filter((item) => item.organizationId === organizationId && item.action !== "admin_notification_dispatched")
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const profileActivities = activities.filter((item) => item.relatedType === "organization_profile");
     const cityLedParticipations = [...state.ypopEventParticipations]

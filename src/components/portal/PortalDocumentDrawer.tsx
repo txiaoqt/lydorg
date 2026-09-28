@@ -7,6 +7,9 @@ import {
   FileUp,
   Trash2,
   AlertCircle,
+  Clock,
+  Lock,
+  Unlock,
   X,
   FileCheck,
 } from "lucide-react";
@@ -29,6 +32,7 @@ import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewM
 import { isApprovedRegistrationDocument } from "@/lib/document-file-access";
 import { type SubmissionFile, resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
 import {
+  calculateRevisionDeadline,
   formatRevisionDeadline,
   getRevisionTimeRemaining,
   isRevisionAdminUnlocked,
@@ -147,13 +151,39 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
     adminStatus === "under_admin_review" ||
     adminStatus === "under_review";
 
+  const effectiveDueAt =
+    file?.revisionDueAt ||
+    (file?.reviewedAt || file?.uploadedAt
+      ? calculateRevisionDeadline(file.reviewedAt || file.uploadedAt).dueAt
+      : null);
   const isRevisionAdminUnlockedState = !isTemplate && isNeedsRevision && isRevisionAdminUnlocked(file);
   const isRevisionDeadlineExpired =
     !isTemplate &&
     isNeedsRevision &&
-    isSubmissionRevisionLocked(file);
-  const revisionDeadlineFormatted = !isTemplate && isNeedsRevision ? formatRevisionDeadline(file?.revisionDueAt) : "";
-  const revisionTimeRemaining = !isTemplate && isNeedsRevision ? getRevisionTimeRemaining(file?.revisionDueAt, undefined, isRevisionAdminUnlockedState) : null;
+    isSubmissionRevisionLocked(file ? { ...file, revisionDueAt: effectiveDueAt } : file);
+  const revisionDeadlineFormatted = !isTemplate && isNeedsRevision && effectiveDueAt ? formatRevisionDeadline(effectiveDueAt) : "";
+  const revisionTimeRemaining = !isTemplate && isNeedsRevision ? getRevisionTimeRemaining(effectiveDueAt, undefined, isRevisionAdminUnlockedState) : null;
+  const isExpiringSoon =
+    !isRevisionDeadlineExpired &&
+    !isRevisionAdminUnlockedState &&
+    (revisionTimeRemaining?.days ?? 5) < 3;
+
+  const getRemainingTimeText = () => {
+    if (!revisionTimeRemaining) return "";
+    if (revisionTimeRemaining.days >= 2) {
+      return `${revisionTimeRemaining.days} days remaining to resubmit`;
+    }
+    if (revisionTimeRemaining.days === 1) {
+      return "1 day remaining to resubmit";
+    }
+    if (revisionTimeRemaining.hours >= 1) {
+      return `${revisionTimeRemaining.hours} ${revisionTimeRemaining.hours === 1 ? "hour" : "hours"} remaining to resubmit`;
+    }
+    if (revisionTimeRemaining.minutes >= 1) {
+      return `${revisionTimeRemaining.minutes} ${revisionTimeRemaining.minutes === 1 ? "minute" : "minutes"} remaining to resubmit`;
+    }
+    return "Less than a minute remaining to resubmit";
+  };
 
   // Formatted Date
   const formattedDate = file?.uploadedAt
@@ -273,6 +303,154 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
       ? "Waiting for Admin Review"
       : "Attached Document • Y-TRACE Compliance");
 
+  // Revision / Rejection Notice Component
+  const renderRevisionNotice = (isMobile = false) => {
+    if (isTemplate || (!isNeedsRevision && !isRejected)) {
+      return null;
+    }
+
+    if (isRejected) {
+      return (
+        <div
+          data-testid="revision-notice-card"
+          data-notice-state="rejected"
+          className={cn(
+            "rounded-xl border p-3 text-xs space-y-1.5 bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200",
+            isMobile && "p-2.5 sm:p-3 space-y-1 mt-0.5"
+          )}
+        >
+          <div className="flex items-center gap-1.5 font-bold">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>Admin Review Rejection</span>
+          </div>
+          {file?.adminRemarks && (
+            <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
+              "{file.adminRemarks}"
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // Needs Revision cases:
+    if (isRevisionAdminUnlockedState) {
+      return (
+        <div
+          data-testid="revision-notice-card"
+          data-notice-state="unlocked"
+          className={cn(
+            "rounded-xl border p-3 text-xs space-y-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200",
+            isMobile && "p-2.5 sm:p-3 space-y-1 mt-0.5"
+          )}
+        >
+          <div className="flex items-center justify-between gap-2 font-bold">
+            <div className="flex items-center gap-1.5">
+              <Unlock className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>Resubmission window reopened</span>
+            </div>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300">
+              Unlocked by Admin
+            </span>
+          </div>
+          {file?.adminRemarks && (
+            <p className="text-[11px] leading-relaxed pl-5 font-normal italic text-emerald-950/80 dark:text-emerald-100/80">
+              <span className="font-semibold not-italic">Admin Feedback: </span>"{file.adminRemarks}"
+            </p>
+          )}
+          <p className="text-[11px] leading-relaxed pl-5 text-emerald-800 dark:text-emerald-300">
+            This submission has been unlocked by a PCYDO administrator. You may now upload your corrected document and resubmit.
+            {revisionDeadlineFormatted && (
+              <span className="block text-[10px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5">
+                (Original deadline: {revisionDeadlineFormatted})
+              </span>
+            )}
+          </p>
+        </div>
+      );
+    }
+
+    if (isRevisionDeadlineExpired) {
+      return (
+        <div
+          data-testid="revision-notice-card"
+          data-notice-state="expired"
+          className={cn(
+            "rounded-xl border p-3 text-xs space-y-1.5 bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200",
+            isMobile && "p-2.5 sm:p-3 space-y-1 mt-0.5"
+          )}
+        >
+          <div className="flex items-center justify-between gap-2 font-bold">
+            <div className="flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
+              <span>Resubmission period ended</span>
+            </div>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-800 dark:text-rose-300">
+              Locked
+            </span>
+          </div>
+          {file?.adminRemarks && (
+            <p className="text-[11px] leading-relaxed pl-5 font-normal italic text-rose-950/80 dark:text-rose-100/80">
+              <span className="font-semibold not-italic">Admin Feedback: </span>"{file.adminRemarks}"
+            </p>
+          )}
+          <p className="text-[11px] leading-relaxed pl-5 text-rose-800 dark:text-rose-300">
+            The 5-day resubmission period has ended. This submission is now locked. Contact the PCYDO administrator if you need the submission to be reopened.
+          </p>
+        </div>
+      );
+    }
+
+    // Active Resubmission Window
+    const remainingText = getRemainingTimeText();
+    return (
+      <div
+        data-testid="revision-notice-card"
+        data-notice-state={isExpiringSoon ? "expiring-soon" : "active"}
+        className={cn(
+          "rounded-xl border p-3 text-xs space-y-1.5 transition-colors",
+          isExpiringSoon
+            ? "bg-amber-500/15 border-amber-500/50 text-amber-950 dark:text-amber-100 ring-1 ring-amber-500/20"
+            : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200",
+          isMobile && "p-2.5 sm:p-3 space-y-1 mt-0.5"
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 font-bold">
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>Resubmission window</span>
+          </div>
+          {remainingText && (
+            <span
+              data-testid="revision-remaining-badge"
+              className={cn(
+                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-tight",
+                isExpiringSoon
+                  ? "bg-amber-500/25 text-amber-950 dark:text-amber-100 border border-amber-500/40"
+                  : "bg-amber-500/20 text-amber-900 dark:text-amber-200"
+              )}
+            >
+              {remainingText}
+            </span>
+          )}
+        </div>
+        {file?.adminRemarks && (
+          <p className="text-[11px] leading-relaxed pl-5 font-normal italic text-amber-950/80 dark:text-amber-100/80">
+            <span className="font-semibold not-italic">Admin Feedback: </span>"{file.adminRemarks}"
+          </p>
+        )}
+        <p className="text-[11px] leading-relaxed pl-5 text-amber-900/90 dark:text-amber-200/90 font-normal">
+          Please submit your revised document before the deadline. Once the 5-day resubmission period ends, this submission will be locked and can only be reopened by a PCYDO administrator.
+        </p>
+        {revisionDeadlineFormatted && (
+          <div className="pl-5 pt-0.5 flex items-center gap-1 text-[11px] font-semibold text-amber-950 dark:text-amber-100">
+            <span>Deadline:</span>
+            <span>{revisionDeadlineFormatted}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // DESKTOP Header Content (Preserved 100% untouched for desktop Sheet)
   const renderDesktopHeader = (closeAction: React.ReactNode) => (
     <div className="p-4 sm:p-5 border-b border-border/70 bg-card shrink-0 space-y-3">
@@ -332,52 +510,8 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
         {closeAction}
       </div>
 
-      {/* Admin Remarks Callout if Needs Revision or Rejected (Attached Mode Only) */}
-      {!isTemplate && (isNeedsRevision || isRejected) && (
-        <div
-          className={cn(
-            "rounded-xl border p-3 text-xs space-y-1.5",
-            isRevisionDeadlineExpired || isRejected
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
-              : isRevisionAdminUnlockedState
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
-              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
-          )}
-        >
-          <div className="flex items-center gap-1.5 font-bold">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>
-              {isRevisionAdminUnlockedState
-                ? "Needs Revision • Unlocked by Admin"
-                : isRevisionDeadlineExpired
-                ? "Revision Locked"
-                : isRejected
-                ? "Admin Review Rejection"
-                : "Admin Review Remarks"}
-            </span>
-          </div>
-          {file?.adminRemarks && (
-            <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
-              "{file.adminRemarks}"
-            </p>
-          )}
-          {isRevisionAdminUnlockedState ? (
-            <p className="text-[11px] font-semibold pl-5 text-emerald-800 dark:text-emerald-300">
-              {revisionDeadlineFormatted
-                ? `Original deadline: ${revisionDeadlineFormatted}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
-                : "This submission has been unlocked by an administrator. You may now upload corrected files and resubmit."}
-            </p>
-          ) : isRevisionDeadlineExpired ? (
-            <p className="text-[11px] font-semibold pl-5 text-rose-800 dark:text-rose-300">
-              The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.
-            </p>
-          ) : revisionDeadlineFormatted ? (
-            <p className="text-[11px] font-semibold pl-5">
-              {`Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
-            </p>
-          ) : null}
-        </div>
-      )}
+      {/* Admin Remarks / Revision Notice Callout */}
+      {renderRevisionNotice(false)}
 
       {/* Action Controls Bar */}
       <div className="flex flex-wrap items-center gap-2.5 pt-2 sm:pt-2.5">
@@ -645,52 +779,8 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
         {closeAction}
       </div>
 
-      {/* Admin Remarks Callout if Needs Revision or Rejected (Attached Mode Only) */}
-      {!isTemplate && (isNeedsRevision || isRejected) && (
-        <div
-          className={cn(
-            "rounded-xl border p-2.5 sm:p-3 text-xs space-y-1 mt-0.5",
-            isRevisionDeadlineExpired || isRejected
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
-              : isRevisionAdminUnlockedState
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
-              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
-          )}
-        >
-          <div className="flex items-center gap-1.5 font-bold">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>
-              {isRevisionAdminUnlockedState
-                ? "Needs Revision • Unlocked by Admin"
-                : isRevisionDeadlineExpired
-                ? "Revision Locked"
-                : isRejected
-                ? "Admin Review Rejection"
-                : "Admin Review Remarks"}
-            </span>
-          </div>
-          {file?.adminRemarks && (
-            <p className="text-[11px] leading-relaxed pl-5 font-normal italic">
-              "{file.adminRemarks}"
-            </p>
-          )}
-          {isRevisionAdminUnlockedState ? (
-            <p className="text-[11px] font-semibold pl-5 text-emerald-800 dark:text-emerald-300">
-              {revisionDeadlineFormatted
-                ? `Original deadline: ${revisionDeadlineFormatted}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
-                : "This submission has been unlocked by an administrator. You may now upload corrected files and resubmit."}
-            </p>
-          ) : isRevisionDeadlineExpired ? (
-            <p className="text-[11px] font-semibold pl-5 text-rose-800 dark:text-rose-300">
-              The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.
-            </p>
-          ) : revisionDeadlineFormatted ? (
-            <p className="text-[11px] font-semibold pl-5">
-              {`Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
-            </p>
-          ) : null}
-        </div>
-      )}
+      {/* Admin Remarks / Revision Notice Callout */}
+      {renderRevisionNotice(true)}
 
       {/* Mobile Action Controls Area */}
       <div className="w-full pt-1.5 pb-0.5">

@@ -7,7 +7,7 @@ import {
   ClipboardCheck,
   FileCheck2,
   LogIn,
-  Phone,
+  Mail,
   ScrollText,
   ShieldCheck,
   UserPlus,
@@ -33,7 +33,7 @@ type PublicPage = "help" | "faqs" | "contact" | "privacy" | "terms";
 const websiteFallbacks: Record<PublicPage, string> = {
   help: "/faqs",
   faqs: "/faqs",
-  contact: "/contacts",
+  contact: "/faqs",
   privacy: "/privacy",
   terms: "/terms",
 };
@@ -161,7 +161,7 @@ function PwaPublicHelpPage() {
   const navigate = useNavigate();
   const links = [
     { label: "Frequently Asked Questions", path: pwaPublicRoute("faqs"), icon: BookOpen },
-    { label: "Contact LYDO / PCYDO", path: pwaPublicRoute("contact"), icon: Phone },
+    { label: "Contact LYDO / PCYDO", path: pwaPublicRoute("contact"), icon: Mail },
     { label: "Privacy Policy", path: pwaPublicRoute("privacy"), icon: ShieldCheck },
     { label: "Terms of Service", path: pwaPublicRoute("terms"), icon: ScrollText },
   ];

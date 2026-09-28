@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Info, Mail, MapPin, Phone, Shield, Users } from "lucide-react";
+import { BookOpen, Info, Mail, MapPin, Shield, Users } from "lucide-react";
 import { LegalPolicyView } from "@/components/LegalPolicyView";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
@@ -18,7 +18,6 @@ const faqs = [
 const contact = {
   address: "Eulogio Amang Rodriguez Ave, Pasig, 1609 Metro Manila",
   officer: "Ms. Colleen Gail A. De Guzman",
-  phone: "+63 917 123 4567",
   email: "lydo.office@prototype.local",
 };
 
@@ -80,7 +79,7 @@ export function PwaFaqPage() {
 }
 
 export function PwaContactPage() {
-  const { address, contactNumber, email } = usePublicContactInfo();
+  const { address, email } = usePublicContactInfo();
   return (
     <div className="pwa-stack">
       <section className="pwa-card pwa-settings-detail-card">
@@ -89,7 +88,6 @@ export function PwaContactPage() {
       </section>
       <section className="pwa-card pwa-contact-list">
         <div><span className="pwa-menu-icon"><Info /></span><span><small>Officer in charge</small><strong>{contact.officer}</strong></span></div>
-        <a href={`tel:${contactNumber}`}><span className="pwa-menu-icon"><Phone /></span><span><small>Contact Number</small><strong>{contactNumber}</strong></span></a>
         <a href={`mailto:${email}`}><span className="pwa-menu-icon"><Mail /></span><span><small>Email</small><strong>{email}</strong></span></a>
       </section>
     </div>

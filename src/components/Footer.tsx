@@ -1,4 +1,4 @@
-import { ArrowRight, Mail, Phone } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
@@ -9,7 +9,7 @@ const desktopLinkClass =
   "font-segoe text-sm font-normal leading-relaxed text-white/75 transition-colors hover:text-white";
 
 const Footer = () => {
-  const { contactNumber, email } = usePublicContactInfo();
+  const { email } = usePublicContactInfo();
   return (
     <footer className="bg-gradient-to-r from-[#0E2F66] to-[#1A5CA8] px-4 py-8 sm:px-6 sm:py-10 lg:px-[64px] lg:py-12">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-8 lg:gap-6">
@@ -45,7 +45,6 @@ const Footer = () => {
                 <Link to="/public-templates" className={mobileLinkClass}>Forms &amp; Templates</Link>
                 <Link to="/news-releases" className={mobileLinkClass}>News Releases</Link>
                 <Link to="/faqs" className={mobileLinkClass}>FAQs</Link>
-                <Link to="/contacts" className={mobileLinkClass}>Contacts</Link>
                 <Link to="/site-map" className={mobileLinkClass}>Site Map</Link>
               </div>
             </div>
@@ -68,23 +67,18 @@ const Footer = () => {
               </h4>
               <div className="flex flex-col gap-2 sm:gap-[12px]">
                 <div className="flex items-center gap-2 text-sm sm:text-public-fs-body-md text-white/90">
-                  <Phone className="h-3.5 w-3.5 sm:hidden shrink-0 text-white/70" />
-                  <span>{contactNumber}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm sm:text-public-fs-body-md text-white/90">
                   <Mail className="h-3.5 w-3.5 sm:hidden shrink-0 text-white/70" />
                   <a href={`mailto:${email}`} className="underline underline-offset-2 hover:text-white">
                     {email}
                   </a>
                 </div>
-                <Link
-                  to="/contacts"
+                <a
+                  href={`mailto:${email}`}
                   className="mt-1 sm:mt-0 flex items-center justify-center sm:justify-start gap-1.5 rounded-xl bg-white px-3.5 py-2.5 text-sm font-bold text-[#0E2F66] hover:bg-white/95 transition-all shadow-sm active:scale-[0.98] sm:bg-transparent sm:p-0 sm:text-white/80 sm:hover:text-white sm:shadow-none"
                 >
-                  <span className="sm:hidden">View Contact Page</span>
-                  <span className="hidden sm:inline">Contact Us</span>
+                  <span>Send an Email</span>
                   <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -118,7 +112,6 @@ const Footer = () => {
               <Link to="/about" className={desktopLinkClass}>About</Link>
               <Link to="/faqs" className={desktopLinkClass}>FAQs</Link>
               <Link to="/budget-transparency" className={desktopLinkClass}>Budget Transparency</Link>
-              <Link to="/contacts" className={desktopLinkClass}>Contacts</Link>
               <Link to="/public-templates" className={desktopLinkClass}>Forms &amp; Templates</Link>
               <Link to="/site-map" className={desktopLinkClass}>Site Map</Link>
             </div>
@@ -145,22 +138,18 @@ const Footer = () => {
               </h4>
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2 text-sm text-white/80">
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-white/60" />
-                  <span>{contactNumber}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-white/80">
                   <Mail className="h-3.5 w-3.5 shrink-0 text-white/60" />
                   <a href={`mailto:${email}`} className="underline underline-offset-2 hover:text-white">
                     {email}
                   </a>
                 </div>
-                <Link
-                  to="/contacts"
+                <a
+                  href={`mailto:${email}`}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition-colors mt-0.5"
                 >
-                  <span>Contact Us</span>
+                  <span>Send an Email</span>
                   <ArrowRight className="h-3.5 w-3.5 shrink-0" />
-                </Link>
+                </a>
               </div>
             </div>
 

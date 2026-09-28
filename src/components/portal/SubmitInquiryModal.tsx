@@ -113,18 +113,16 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
                   </Label>
                   <Input
                     id="inquiry-email"
-                    required
+                    readOnly
+                    tabIndex={-1}
                     type="email"
                     value={inquiryForm?.email || ""}
-                    onChange={(e) =>
-                      setInquiryForm((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
                     placeholder="email@organization.org"
-                    className="rounded-xl text-xs h-9 bg-background border-border/80 focus-visible:ring-1.5 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
+                    className="rounded-xl text-xs h-9 bg-muted/50 border-border/80 text-muted-foreground cursor-not-allowed select-none font-medium focus-visible:ring-0"
                   />
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Uses the email associated with your account.
+                  </p>
                 </div>
               </div>
             </div>

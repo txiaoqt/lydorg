@@ -66,7 +66,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
-import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining } from "@/lib/revision-deadline";
+import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining, isAwaitingResubmission, hasGenuineResubmission } from "@/lib/revision-deadline";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
 import { StatsCard } from "@/admin/components/StatsCard";
@@ -280,7 +280,7 @@ const RegistrationContactBox = ({
   );
 };
 
-const DocumentQueueStatusPill = ({ status }: { status: SubmissionFile["adminStatus"] }) => {
+const DocumentQueueStatusPill = ({ status, isAwaiting }: { status: SubmissionFile["adminStatus"]; isAwaiting?: boolean }) => {
   if (status === "approved_green") {
     return (
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
@@ -296,6 +296,13 @@ const DocumentQueueStatusPill = ({ status }: { status: SubmissionFile["adminStat
     );
   }
   if (status === "needs_revision") {
+    if (isAwaiting) {
+      return (
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+          Awaiting Resubmission
+        </span>
+      );
+    }
     return (
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
@@ -309,7 +316,7 @@ const DocumentQueueStatusPill = ({ status }: { status: SubmissionFile["adminStat
   );
 };
 
-const YpopDocumentStatusPill = ({ status }: { status: YPOPEventParticipationStatus | YPOPOrgActivityStatus }) => {
+const YpopDocumentStatusPill = ({ status, isAwaiting }: { status: YPOPEventParticipationStatus | YPOPOrgActivityStatus; isAwaiting?: boolean }) => {
   if (status === "verified" || status === "approved") {
     return (
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
@@ -325,6 +332,13 @@ const YpopDocumentStatusPill = ({ status }: { status: YPOPEventParticipationStat
     );
   }
   if (status === "needs_revision") {
+    if (isAwaiting) {
+      return (
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+          Awaiting Resubmission
+        </span>
+      );
+    }
     return (
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
@@ -1859,9 +1873,13 @@ export default function AdminPortal({ section }: { section: string }) {
       const matchesStatus =
         registrationStatusFilter === "all"
           ? true
-          : registrationStatusFilter === "pending_review"
-            ? org.profileStatus === "pending_review" || org.profileStatus === "incomplete"
-            : org.profileStatus === registrationStatusFilter;
+          : registrationStatusFilter === "verified"
+            ? org.profileStatus === "verified"
+            : registrationStatusFilter === "pending_review"
+              ? org.profileStatus === "pending_review" || org.profileStatus === "incomplete"
+              : registrationStatusFilter === "suspended_inactive"
+                ? org.profileStatus === "suspended_inactive"
+                : true;
       const matchesDistrict = registrationDistrictFilter === "all" || org.district === registrationDistrictFilter;
       const matchesBarangay = registrationBarangayFilter === "all" || org.barangay === registrationBarangayFilter;
       const matchesClassification =
@@ -1893,9 +1911,7 @@ export default function AdminPortal({ section }: { section: string }) {
             ? entry.renewalStatus === "approved"
             : renewalStatusFilter === "pending_review"
               ? entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted" || entry.renewalStatus === "submitted"
-              : renewalStatusFilter === "needs_revision"
-                ? entry.renewalStatus === "needs_revision"
-                : entry.renewalStatus === renewalStatusFilter;
+              : true;
       const matchesDistrict = renewalDistrictFilter === "all" || entry.district === renewalDistrictFilter;
       const matchesBarangay = renewalBarangayFilter === "all" || entry.barangay === renewalBarangayFilter;
       const matchesClassification =
@@ -4898,6 +4914,25 @@ export default function AdminPortal({ section }: { section: string }) {
     setProcessingAdminConfirmation(true);
     try {
       if (pendingAdminConfirmation.kind === "document") {
+        if (pendingAdminConfirmation.action === "approve") {
+          const selectedFile = state.documentSubmissionFiles.find((f) => f.id === pendingAdminConfirmation.fileId);
+          if (
+            selectedFile?.adminStatus === "needs_revision" &&
+            isAwaitingResubmission({
+              adminStatus: selectedFile.adminStatus,
+              revisionRequestedAt: selectedFile.revisionRequestedAt,
+              uploadedAt: selectedFile.uploadedAt,
+            })
+          ) {
+            toast({
+              title: "Awaiting Resubmission",
+              description: "The organization must submit a revised document before it can be approved.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
         const status =
           pendingAdminConfirmation.action === "approve"
             ? "approved_green"
@@ -4966,6 +5001,25 @@ export default function AdminPortal({ section }: { section: string }) {
         const selectedBudget = state.budgetRequests.find((item) => item.id === pendingAdminConfirmation.budgetRequestId) ?? null;
         const budgetStatus = selectedBudget?.status ?? pendingAdminConfirmation.currentStatus;
         const approvedAmount = Number(selectedBudget?.approvedAmount || pendingAdminConfirmation.requestedAmount || 0);
+
+        if (pendingAdminConfirmation.action === "approve") {
+          const reqFiles = state.budgetRequestFiles.filter((f) => f.budgetRequestId === pendingAdminConfirmation.budgetRequestId);
+          if (
+            budgetStatus === "needs_revision" &&
+            isAwaitingResubmission({
+              status: budgetStatus,
+              revisionRequestedAt: selectedBudget?.revisionRequestedAt,
+              files: reqFiles,
+            })
+          ) {
+            toast({
+              title: "Awaiting Resubmission",
+              description: "The organization must submit a revised budget request file before it can be approved.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
 
         if (pendingAdminConfirmation.action === "approve" && !approvableBudgetStatuses.has(budgetStatus)) {
           toast({
@@ -5441,6 +5495,24 @@ export default function AdminPortal({ section }: { section: string }) {
           state.ypopEventParticipations.find((item) => item.id === pendingAdminConfirmation.participationId) ?? null;
         const adminRemarks = statusChangeRemarkDraft.trim();
 
+        if (pendingAdminConfirmation.action === "verified") {
+          const eventFiles = state.ypopEventFiles.filter((f) => f.participationId === pendingAdminConfirmation.participationId);
+          const isAwaiting = participation?.status === "needs_revision" && isAwaitingResubmission({
+            status: participation.status,
+            revisionRequestedAt: participation.revisionRequestedAt,
+            proofSubmittedAt: participation.proofSubmittedAt,
+            files: eventFiles.map((f) => ({ uploadedAt: f.uploadedAt, id: f.id })),
+          });
+          if (isAwaiting) {
+            toast({
+              title: "Resubmission required",
+              description: "The organization must submit a revised event proof before it can be verified.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
         if (
           pendingAdminConfirmation.action === "needs_revision" &&
           !adminRemarks
@@ -5608,6 +5680,24 @@ export default function AdminPortal({ section }: { section: string }) {
         const relatedEntry =
           state.ypopEntries.find((item) => item.id === pendingAdminConfirmation.entryId) ?? null;
         const adminRemarks = statusChangeRemarkDraft.trim();
+
+        if (pendingAdminConfirmation.action === "approved") {
+          const orgFiles = (state.ypopOrgActivityFiles ?? []).filter((f) => f.orgActivityId === pendingAdminConfirmation.orgActivityId);
+          const isAwaiting = orgActivity?.status === "needs_revision" && isAwaitingResubmission({
+            status: orgActivity.status,
+            revisionRequestedAt: orgActivity.revisionRequestedAt,
+            submittedAt: orgActivity.submittedAt,
+            files: orgFiles.map((f) => ({ uploadedAt: f.uploadedAt, id: f.id })),
+          });
+          if (isAwaiting) {
+            toast({
+              title: "Resubmission required",
+              description: "The organization must submit a revised PPA log before it can be approved.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
 
         if (
           pendingAdminConfirmation.action === "needs_revision" &&
@@ -6552,6 +6642,24 @@ export default function AdminPortal({ section }: { section: string }) {
   ) => {
     try {
       if (action === "approve") {
+        const existingReq = state.budgetRequests.find((b) => b.id === request.id);
+        const reqFiles = state.budgetRequestFiles.filter((f) => f.budgetRequestId === request.id);
+        if (
+          existingReq?.status === "needs_revision" &&
+          isAwaitingResubmission({
+            status: existingReq.status,
+            revisionRequestedAt: existingReq.revisionRequestedAt,
+            files: reqFiles,
+          })
+        ) {
+          toast({
+            title: "Awaiting Resubmission",
+            description: "The organization must submit a revised budget request file before it can be approved.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         await updateBudgetRequestInSupabase(request.id, {
           status: "awaiting_release",
           goSignalAt: new Date().toISOString(),
@@ -6972,6 +7080,13 @@ export default function AdminPortal({ section }: { section: string }) {
           ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
           : -1;
         const selectedBulkFiles = orderedSubmittedFiles.filter((entry) => selectedRegistrationReviewFileIds.includes(entry.file.id));
+        const hasUnrevisedSelectedFiles = selectedBulkFiles.some((entry) =>
+          isAwaitingResubmission({
+            adminStatus: entry.file.adminStatus,
+            revisionRequestedAt: entry.file.revisionRequestedAt,
+            uploadedAt: entry.file.uploadedAt,
+          }),
+        );
         const missingDocumentCount = Math.max(templateDocuments.length - submittedDocumentCount, 0);
         const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
         const decisionRequiresRemark = registrationDecisionRequiresRemark(registrationBulkDecision);
@@ -6979,6 +7094,7 @@ export default function AdminPortal({ section }: { section: string }) {
           isOrgSuspended ||
           selectedBulkFiles.length === 0 ||
           registrationReviewSubmitting ||
+          (registrationBulkDecision === "approve" && hasUnrevisedSelectedFiles) ||
           (selectedBulkFiles.length === 1 && decisionRequiresRemark && !registrationBulkRemark.trim());
 
         if (selectedOrg) {
@@ -7320,7 +7436,7 @@ export default function AdminPortal({ section }: { section: string }) {
                 ) : null}
               </div>
 
-              {reviewSummaryCard}
+              {!isAutoVerified ? reviewSummaryCard : null}
 
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
@@ -7532,7 +7648,14 @@ export default function AdminPortal({ section }: { section: string }) {
                                   <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
                                     {documentType.name}
                                   </p>
-                                  <DocumentQueueStatusPill status={file.adminStatus} />
+                                  <DocumentQueueStatusPill
+                                    status={file.adminStatus}
+                                    isAwaiting={isAwaitingResubmission({
+                                      adminStatus: file.adminStatus,
+                                      revisionRequestedAt: file.revisionRequestedAt,
+                                      uploadedAt: file.uploadedAt,
+                                    })}
+                                  />
                                 </div>
                                 <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
                                   {file.fileName}
@@ -7655,6 +7778,13 @@ export default function AdminPortal({ section }: { section: string }) {
                             <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                               <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
                               <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                            </div>
+                          ) : registrationBulkDecision === "approve" && hasUnrevisedSelectedFiles ? (
+                            <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                              <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                                Awaiting Resubmission: The organization must submit a revised document before it can be approved.
+                              </p>
                             </div>
                           ) : (
                             <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
@@ -7892,11 +8022,19 @@ export default function AdminPortal({ section }: { section: string }) {
         const selectedBulkFiles = orderedSubmittedFiles.filter((entry) =>
           selectedRenewalReviewFileIds.includes(entry.file.id),
         );
+        const hasUnrevisedSelectedRenewalFiles = selectedBulkFiles.some((entry) =>
+          isAwaitingResubmission({
+            adminStatus: entry.file.adminStatus,
+            revisionRequestedAt: entry.file.revisionRequestedAt,
+            uploadedAt: entry.file.uploadedAt,
+          }),
+        );
         const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
         const decisionRequiresRemark = registrationDecisionRequiresRemark(renewalBulkDecision);
         const isRenewalDecisionConfirmDisabled =
           selectedBulkFiles.length === 0 ||
           renewalReviewSubmitting ||
+          (renewalBulkDecision === "approve" && hasUnrevisedSelectedRenewalFiles) ||
           (selectedBulkFiles.length === 1 && decisionRequiresRemark && !renewalBulkRemark.trim());
 
         if (selectedRenewalRecord && selectedOrg) {
@@ -8446,7 +8584,14 @@ export default function AdminPortal({ section }: { section: string }) {
                                   <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
                                     {documentType.name}
                                   </p>
-                                  <DocumentQueueStatusPill status={file.adminStatus} />
+                                  <DocumentQueueStatusPill
+                                    status={file.adminStatus}
+                                    isAwaiting={isAwaitingResubmission({
+                                      adminStatus: file.adminStatus,
+                                      revisionRequestedAt: file.revisionRequestedAt,
+                                      uploadedAt: file.uploadedAt,
+                                    })}
+                                  />
                                 </div>
                                 <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
                                   {file.fileName}
@@ -8504,6 +8649,13 @@ export default function AdminPortal({ section }: { section: string }) {
                         <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
                           <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                        </div>
+                      ) : renewalBulkDecision === "approve" && hasUnrevisedSelectedRenewalFiles ? (
+                        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                            Awaiting Resubmission: The organization must submit a revised document before it can be approved.
+                          </p>
                         </div>
                       ) : (
                         <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
@@ -8902,15 +9054,34 @@ export default function AdminPortal({ section }: { section: string }) {
             (budgetApprovedAmountDraft.trim() !== "" &&
               !Number.isNaN(parsedApprovedAmount) &&
               parsedApprovedAmount > 0);
+          const hasUnrevisedSelectedBudgetFiles = selectedBudgetReviewFiles.some(
+            (file) =>
+              (file.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision") &&
+              isAwaitingResubmission({
+                adminStatus: file.adminStatus,
+                revisionRequestedAt: selectedBudgetRequest?.revisionRequestedAt,
+                uploadedAt: file.uploadedAt,
+              }),
+          );
           const isBudgetDecisionConfirmDisabled =
             selectedBudgetReviewFiles.length === 0 ||
             budgetReviewSubmitting ||
             !isApprovedAmountValid ||
-            (budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim());
+            (budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim()) ||
+            (budgetBulkDecision === "approve" && hasUnrevisedSelectedBudgetFiles);
 
           const submitBudgetReviewDecisions = async () => {
             if (!selectedBudgetRequest) return;
             if (!selectedBudgetReviewFiles.length) return;
+            if (budgetBulkDecision === "approve" && hasUnrevisedSelectedBudgetFiles) {
+              toast({
+                title: "Resubmission required",
+                description: "The organization must submit a revised budget proposal before it can be approved.",
+                variant: "destructive",
+              });
+              setIsBudgetDecisionConfirmOpen(false);
+              return;
+            }
             setBudgetReviewSubmitting(true);
             const targetFileStatus: BudgetRequestFileAdminStatus =
               budgetBulkDecision === "approve"
@@ -9687,7 +9858,17 @@ export default function AdminPortal({ section }: { section: string }) {
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-start justify-between gap-2">
                                   <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
-                                  <DocumentQueueStatusPill status={file.adminStatus} />
+                                  <DocumentQueueStatusPill
+                                    status={file.adminStatus}
+                                    isAwaiting={
+                                      (file.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision") &&
+                                      isAwaitingResubmission({
+                                        adminStatus: file.adminStatus,
+                                        revisionRequestedAt: selectedBudgetRequest?.revisionRequestedAt,
+                                        uploadedAt: file.uploadedAt,
+                                      })
+                                    }
+                                  />
                                 </div>
                                 <div className="flex items-center gap-2 pt-1">
                                   <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
@@ -9811,6 +9992,14 @@ export default function AdminPortal({ section }: { section: string }) {
 
                             {selectedBudgetReviewFiles.length > 0 && budgetBulkDecision === "approve" && (
                               <div className="space-y-2.5 rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                                {hasUnrevisedSelectedBudgetFiles && (
+                                  <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+                                    <p className="font-semibold">Awaiting Resubmission</p>
+                                    <p className="mt-0.5 text-[11px] text-amber-700">
+                                      The organization must submit a revised budget document before it can be approved.
+                                    </p>
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between">
                                   <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
                                   <span className="font-mono text-[13px] font-bold text-text-default">
@@ -12802,6 +12991,7 @@ export default function AdminPortal({ section }: { section: string }) {
             categoryLabel?: string;
             categoryPillClass?: string;
             status: YPOPEventParticipationStatus | YPOPOrgActivityStatus;
+            isAwaiting?: boolean;
             files: Array<{ id: string; fileName: string; fileUrl: string; uploadedAt: string }>;
           };
 
@@ -12810,34 +13000,56 @@ export default function AdminPortal({ section }: { section: string }) {
             .map((participation) => {
               const activity = semesterActivities.find((a) => a.id === participation.activityId);
               const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : undefined;
+              const files = (eventFilesByParticipationId.get(participation.id) ?? []).map((f) => ({
+                id: f.id,
+                fileName: f.fileName,
+                fileUrl: f.fileUrl,
+                uploadedAt: f.uploadedAt,
+              }));
+              const isAwaiting =
+                participation.status === "needs_revision" &&
+                isAwaitingResubmission({
+                  status: participation.status,
+                  revisionRequestedAt: participation.revisionRequestedAt,
+                  proofSubmittedAt: participation.proofSubmittedAt,
+                  files,
+                });
               return {
                 id: participation.id,
                 title: activity?.name || participation.activityName,
                 categoryLabel: category ? YPOP_CITY_LED_CATEGORY_LABELS[category] : undefined,
                 categoryPillClass: category ? entryReviewCategoryPillClasses[category] : undefined,
                 status: participation.status,
-                files: (eventFilesByParticipationId.get(participation.id) ?? []).map((f) => ({
-                  id: f.id,
-                  fileName: f.fileName,
-                  fileUrl: f.fileUrl,
-                  uploadedAt: f.uploadedAt,
-                })),
+                isAwaiting,
+                files,
               };
             });
 
           const orgLedGroups: EntryReviewGroup[] = orgActivities
             .filter((activity) => activity.status !== "draft")
-            .map((activity) => ({
-              id: activity.id,
-              title: activity.activityName,
-              status: activity.status,
-              files: (orgActivityFilesByActivityId.get(activity.id) ?? []).map((f) => ({
+            .map((activity) => {
+              const files = (orgActivityFilesByActivityId.get(activity.id) ?? []).map((f) => ({
                 id: f.id,
                 fileName: f.fileName,
                 fileUrl: f.fileUrl,
                 uploadedAt: f.uploadedAt,
-              })),
-            }));
+              }));
+              const isAwaiting =
+                activity.status === "needs_revision" &&
+                isAwaitingResubmission({
+                  status: activity.status,
+                  revisionRequestedAt: activity.revisionRequestedAt,
+                  submittedAt: activity.submittedAt,
+                  files,
+                });
+              return {
+                id: activity.id,
+                title: activity.activityName,
+                status: activity.status,
+                isAwaiting,
+                files,
+              };
+            });
 
           const activeReviewGroups = entryReviewTab === "city_led" ? cityLedGroups : orgLedGroups;
           const isSingleItemDecision = entryReviewBulkDecision === "needs_revision";
@@ -12863,15 +13075,26 @@ export default function AdminPortal({ section }: { section: string }) {
           const activeReviewFileIndex = activeReviewFile ? activeGroupFiles.findIndex((f) => f.id === activeReviewFile.id) : -1;
 
           const selectedBulkGroups = activeReviewGroups.filter((g) => selectedEntryReviewGroupIds.includes(g.id));
+          const hasUnrevisedSelectedGroups = selectedBulkGroups.some((g) => g.isAwaiting);
           const entryReviewDecisionRequiresRemark = entryReviewBulkDecision === "needs_revision";
           const isEntryReviewConfirmDisabled =
             selectedBulkGroups.length === 0 ||
             entryReviewSubmitting ||
             (entryReviewBulkDecision === "needs_revision" && (selectedBulkGroups.length !== 1 || !entryReviewBulkRemark.trim())) ||
-            (entryReviewBulkDecision === "approve" && selectedBulkGroups.length === 0);
+            (entryReviewBulkDecision === "approve" && (selectedBulkGroups.length === 0 || hasUnrevisedSelectedGroups));
 
           const submitEntryReviewDecisions = async () => {
             if (!selectedBulkGroups.length || entryReviewSubmitting) return;
+
+            if (entryReviewBulkDecision === "approve" && hasUnrevisedSelectedGroups) {
+              toast({
+                title: "Resubmission required",
+                description: "The organization must submit a revised file before this item can be approved.",
+                variant: "destructive",
+              });
+              setEntryReviewConfirmOpen(false);
+              return;
+            }
 
             const targetStatus =
               entryReviewBulkDecision === "approve"
@@ -13364,7 +13587,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                 {activeOrgActivity.activityName || "Untitled Activity"}
                               </h2>
                             </div>
-                            <YpopDocumentStatusPill status={activeOrgActivity.status} />
+                            <YpopDocumentStatusPill status={activeOrgActivity.status} isAwaiting={activeGroup?.isAwaiting} />
                           </div>
 
                           {/* Details Grid: Date & Venue */}
@@ -13849,7 +14072,7 @@ export default function AdminPortal({ section }: { section: string }) {
                                           <div className="min-w-0 flex-1 space-y-1">
                                             <div className="flex items-start justify-between gap-2">
                                               <p className="truncate font-cascadia text-xs font-semibold leading-none text-text-default">{file.fileName}</p>
-                                              <YpopDocumentStatusPill status={group.status} />
+                                              <YpopDocumentStatusPill status={group.status} isAwaiting={group.isAwaiting} />
                                             </div>
                                             <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
                                               Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
@@ -13926,6 +14149,15 @@ export default function AdminPortal({ section }: { section: string }) {
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
                           <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
                             {selectedBulkGroups.length} document{selectedBulkGroups.length === 1 ? "" : "s"} selected.
+                          </p>
+                        </div>
+                      )}
+
+                      {entryReviewBulkDecision === "approve" && hasUnrevisedSelectedGroups && (
+                        <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+                          <p className="font-semibold">Awaiting Resubmission</p>
+                          <p className="mt-0.5 text-[11px] text-amber-700">
+                            The organization must submit a revised file before this item can be {entryReviewTab === "city_led" ? "verified" : "approved"}.
                           </p>
                         </div>
                       )}

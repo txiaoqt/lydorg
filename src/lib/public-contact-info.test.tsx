@@ -8,19 +8,10 @@ import {
   fetchPublicSystemSettings,
   ADMIN_SETTINGS_STORAGE_KEY,
 } from "@/lib/admin-system-settings";
-import Contacts from "@/pages/Contacts";
 import Footer from "@/components/Footer";
 import Index from "@/pages/Index";
 import { PwaContactPage } from "@/user/pwa/PwaInformationPages";
 import { supabase } from "@/lib/supabase";
-
-// Mock leaflet map and leaflet css to prevent canvas/DOM errors in jsdom
-vi.mock("react-leaflet", () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TileLayer: () => <div data-testid="tile-layer" />,
-  Marker: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Popup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
@@ -73,67 +64,45 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     window.localStorage.removeItem(ADMIN_SETTINGS_STORAGE_KEY);
   });
 
-  it("defaults to official contact number '(02) 8643-1111' and reply-to email 'lydo@pasigcity.gov.ph'", () => {
+  it("preserves default settings values for compatibility", () => {
     expect(getEffectiveSystemSetting("general.contact_number")).toBe("(02) 8643-1111");
     expect(getEffectiveSystemSetting("email.reply_to_email")).toBe("lydo@pasigcity.gov.ph");
   });
 
-  it("renders 'Contact Number' label and dynamic values on Contacts page without 'Telephone'", () => {
-    render(
-      <BrowserRouter>
-        <Contacts />
-      </BrowserRouter>,
-    );
-
-    // Verify label changed from Telephone to Contact Number
-    expect(screen.getByText("Contact Number")).toBeInTheDocument();
-    expect(screen.queryByText("Telephone")).toBeNull();
-
-    // Verify dynamic default contact number and email (appears on both page card and footer)
-    const phoneMatches = screen.getAllByText("(02) 8643-1111");
-    expect(phoneMatches.length).toBeGreaterThanOrEqual(1);
-
-    const emailMatches = screen.getAllByText("lydo@pasigcity.gov.ph");
-    expect(emailMatches.length).toBeGreaterThanOrEqual(1);
-
-    // Verify mailto links
-    const mailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
-    expect(mailLinks.length).toBeGreaterThanOrEqual(1);
-    mailLinks.forEach((link) => {
-      expect(link).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
-    });
-  });
-
-  it("renders dynamic contact number, label, and email on Homepage (Index)", () => {
+  it("renders dynamic email, address, and office hours on Homepage (Index) without phone number", () => {
     render(
       <BrowserRouter>
         <Index />
       </BrowserRouter>,
     );
 
-    expect(screen.getByText("Contact Number")).toBeInTheDocument();
+    // Verify phone labels and contact number are absent
+    expect(screen.queryByText("Contact Number")).toBeNull();
     expect(screen.queryByText("Contact Numbers")).toBeNull();
     expect(screen.queryByText("Telephone")).toBeNull();
+    expect(screen.queryByText("(02) 8643-1111")).toBeNull();
 
-    const phoneMatches = screen.getAllByText("(02) 8643-1111");
-    expect(phoneMatches.length).toBeGreaterThanOrEqual(1);
-
+    // Verify official email and office address
     const emailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
     emailLinks.forEach((link) => {
       expect(link).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
     });
+
+    expect(screen.getByText("Office Hours")).toBeInTheDocument();
+    expect(screen.getByText("Mon – Thu: 7:00 AM – 6:00 PM")).toBeInTheDocument();
+    expect(screen.getByText("Fri – Sun: Closed")).toBeInTheDocument();
   });
 
-  it("renders dynamic contact number and email in Footer with dynamic mailto link", () => {
+  it("renders dynamic email in Footer with mailto link without contact number", () => {
     render(
       <BrowserRouter>
         <Footer />
       </BrowserRouter>,
     );
 
-    const contactNumbers = screen.getAllByText("(02) 8643-1111");
-    expect(contactNumbers.length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("(02) 8643-1111")).toBeNull();
+    expect(screen.queryByText("Contact Number")).toBeNull();
 
     const emailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
@@ -142,12 +111,11 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     });
   });
 
-  it("dynamically updates contact number and email when system settings are modified", () => {
+  it("dynamically updates email when system settings are modified", () => {
     const TestComponent = () => {
-      const { contactNumber, email } = usePublicContactInfo();
+      const { email } = usePublicContactInfo();
       return (
         <div>
-          <span data-testid="contact-number">{contactNumber}</span>
           <a data-testid="email-link" href={`mailto:${email}`}>
             {email}
           </a>
@@ -157,57 +125,33 @@ describe("Public Contact Information & Dynamic System Settings", () => {
 
     render(<TestComponent />);
 
-    expect(screen.getByTestId("contact-number")).toHaveTextContent("(02) 8643-1111");
     expect(screen.getByTestId("email-link")).toHaveTextContent("lydo@pasigcity.gov.ph");
     expect(screen.getByTestId("email-link")).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
 
-    // Simulate Admin changing settings to 09984801602
+    // Simulate Admin changing reply-to email setting
     act(() => {
       writeCachedSystemSettings({
-        "general.contact_number": "09984801602",
         "email.reply_to_email": "custom-reply@pasigcity.gov.ph",
       });
     });
 
-    expect(screen.getByTestId("contact-number")).toHaveTextContent("09984801602");
     expect(screen.getByTestId("email-link")).toHaveTextContent("custom-reply@pasigcity.gov.ph");
     expect(screen.getByTestId("email-link")).toHaveAttribute("href", "mailto:custom-reply@pasigcity.gov.ph");
-
-    // Simulate Admin changing settings again to 123456789
-    act(() => {
-      writeCachedSystemSettings({
-        "general.contact_number": "123456789",
-      });
-    });
-
-    expect(screen.getByTestId("contact-number")).toHaveTextContent("123456789");
 
     // Restore
     act(() => {
       writeCachedSystemSettings({
-        "general.contact_number": "(02) 8643-1111",
         "email.reply_to_email": "lydo@pasigcity.gov.ph",
       });
     });
 
-    expect(screen.getByTestId("contact-number")).toHaveTextContent("(02) 8643-1111");
     expect(screen.getByTestId("email-link")).toHaveTextContent("lydo@pasigcity.gov.ph");
   });
 
-  it("renders authoritative default office address on both Home and Contacts pages", () => {
+  it("renders authoritative default office address on Home page", () => {
     const defaultAddress = "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City";
     expect(getEffectiveSystemSetting("general.office_address")).toBe(defaultAddress);
 
-    // Check Contacts page
-    const { unmount: unmountContacts } = render(
-      <BrowserRouter>
-        <Contacts />
-      </BrowserRouter>,
-    );
-    expect(screen.getAllByText(defaultAddress).length).toBeGreaterThanOrEqual(1);
-    unmountContacts();
-
-    // Check Home page
     render(
       <BrowserRouter>
         <Index />
@@ -216,25 +160,14 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     expect(screen.getAllByText(defaultAddress).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("dynamically synchronizes modified office address ending in 'Pasig Cit' to Home, Contacts, and PWA pages", () => {
+  it("dynamically synchronizes modified office address to Home and PWA pages", () => {
     const customAddress = "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig Cit";
 
     act(() => {
       writeCachedSystemSettings({
         "general.office_address": customAddress,
-        "general.contact_number": "09984801602",
       });
     });
-
-    // Check Contacts Page
-    const { unmount: unmountContacts } = render(
-      <BrowserRouter>
-        <Contacts />
-      </BrowserRouter>,
-    );
-    expect(screen.getAllByText(customAddress).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("09984801602").length).toBeGreaterThanOrEqual(1);
-    unmountContacts();
 
     // Check Home Page
     const { unmount: unmountHome } = render(
@@ -243,13 +176,13 @@ describe("Public Contact Information & Dynamic System Settings", () => {
       </BrowserRouter>,
     );
     expect(screen.getAllByText(customAddress).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("09984801602").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("(02) 8643-1111")).toBeNull();
     unmountHome();
 
     // Check PWA Contact Page
     render(<PwaContactPage />);
     expect(screen.getByText(customAddress)).toBeInTheDocument();
-    expect(screen.getByText("09984801602")).toBeInTheDocument();
+    expect(screen.queryByText("(02) 8643-1111")).toBeNull();
   });
 
   it("fetches live public system settings from Supabase RPC get_public_system_settings", async () => {

@@ -279,3 +279,62 @@ export const isSubmissionRevisionLocked = (
   return false;
 };
 
+export interface ResubmissionCheckItem {
+  status?: string | null;
+  adminStatus?: string | null;
+  revisionRequestedAt?: string | null;
+  uploadedAt?: string | null;
+  proofSubmittedAt?: string | null;
+  submittedAt?: string | null;
+  files?: Array<{ uploadedAt?: string | null; id?: string }>;
+}
+
+/**
+ * Checks whether an item in Needs Revision state has a genuine replacement/resubmission.
+ * A genuine resubmission is verified if any replacement file upload timestamp or
+ * resubmission timestamp is strictly newer than the revisionRequestedAt timestamp.
+ */
+export const hasGenuineResubmission = (item?: ResubmissionCheckItem | null): boolean => {
+  if (!item) return false;
+  if (!item.revisionRequestedAt) return true;
+
+  const revReqTime = new Date(item.revisionRequestedAt).getTime();
+  if (Number.isNaN(revReqTime)) return true;
+
+  if (item.uploadedAt) {
+    const uploadedTime = new Date(item.uploadedAt).getTime();
+    if (!Number.isNaN(uploadedTime) && uploadedTime > revReqTime) return true;
+  }
+
+  if (item.proofSubmittedAt) {
+    const proofTime = new Date(item.proofSubmittedAt).getTime();
+    if (!Number.isNaN(proofTime) && proofTime > revReqTime) return true;
+  }
+
+  if (item.submittedAt) {
+    const submittedTime = new Date(item.submittedAt).getTime();
+    if (!Number.isNaN(submittedTime) && submittedTime > revReqTime) return true;
+  }
+
+  if (item.files && item.files.length > 0) {
+    const hasNewerFile = item.files.some((file) => {
+      if (!file.uploadedAt) return false;
+      const fileTime = new Date(file.uploadedAt).getTime();
+      return !Number.isNaN(fileTime) && fileTime > revReqTime;
+    });
+    if (hasNewerFile) return true;
+  }
+
+  return false;
+};
+
+/**
+ * Checks whether an item is currently in Needs Revision AND awaiting a genuine replacement/resubmission.
+ */
+export const isAwaitingResubmission = (item?: ResubmissionCheckItem | null): boolean => {
+  if (!item) return false;
+  const rawStatus = (item.adminStatus ?? item.status)?.trim().toLowerCase();
+  if (rawStatus !== "needs_revision") return false;
+  return !hasGenuineResubmission(item);
+};
+

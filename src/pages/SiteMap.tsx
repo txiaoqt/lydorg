@@ -15,7 +15,6 @@ const siteMapSections = [
       { label: "Forms & Templates", href: "/public-templates" },
       { label: "News Releases", href: "/news-releases" },
       { label: "FAQs", href: "/faqs" },
-      { label: "Contacts", href: "/contacts" },
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms" },
       { label: "Site Map", href: "/site-map" },
@@ -35,8 +34,7 @@ const siteMapSections = [
       { label: "Liquidation Reports", href: "/liquidation-reporting" },
       { label: "News Releases", href: "/portal-news-releases" },
       { label: "Notifications", href: "/notifications" },
-      { label: "Inquiry / Support", href: "/contacts" },
-
+      { label: "Inquiry / Support", href: "/faqs" },
     ],
   },
 ];
