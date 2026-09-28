@@ -3097,10 +3097,17 @@ export const updateBudgetRequestInSupabase = async (
       }
     }
 
+    const mappedStatus =
+      patch.status === "approved" || patch.status === "awaiting_release"
+        ? "approved_for_ftf_green"
+        : patch.status === "rejected"
+        ? "rejected_red"
+        : patch.status ?? null;
+
     const { data, error } = await supabase.rpc("update_admin_budget_request", {
       _session_token: adminSession.sessionToken,
       _budget_request_id: budgetRequestId,
-      _status: patch.status ?? null,
+      _status: mappedStatus,
       _approved_amount: patch.approvedAmount ?? null,
       _released_amount: patch.releasedAmount ?? null,
       _release_date: patch.releaseDate || null,
