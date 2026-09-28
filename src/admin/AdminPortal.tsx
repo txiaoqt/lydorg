@@ -101,6 +101,16 @@ import {
 import { PublicBudgetSnapshotConfigPage } from "@/admin/components/PublicBudgetSnapshotConfigPage";
 import { BudgetMonitoringOverview } from "@/admin/components/BudgetMonitoringOverview";
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
+import {
+  type BudgetMonitoringFilters,
+  DEFAULT_BUDGET_MONITORING_FILTERS,
+  filterBudgetRequests,
+  aggregatePurposeCategories,
+  aggregateOrganizationFundingRows,
+  APPROVED_BUDGET_STATUSES,
+  RELEASED_BUDGET_STATUSES,
+  type TimePeriodOption,
+} from "@/lib/budget-monitoring-filters";
 import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
 import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase } from "@/lib/lydo-connect-supabase";
 import {
@@ -708,8 +718,8 @@ type RecentActivityEntry = {
 export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
-  const location = useLocation();
   const { signOut, user } = useAuth();
+  const isSuperAdmin = user?.roleCode === "super_admin" || readAdminSession()?.roleCode === "super_admin";
 
   const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
   if (requireVerifiedEmail && user && user.isEmailVerified === false) {
@@ -930,6 +940,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [liquidationPreviewCanInline, setLiquidationPreviewCanInline] = useState(false);
   const [liquidationPreviewLoading, setLiquidationPreviewLoading] = useState(false);
   const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "public">("overview");
+  const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(DEFAULT_BUDGET_MONITORING_FILTERS);
   const [budgetInsightsExpanded, setBudgetInsightsExpanded] = useState(false);
   const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
   const [budgetRequestsSemesterFilter, setBudgetRequestsSemesterFilter] = useState<string>(() => {
@@ -2674,6 +2685,159 @@ export default function AdminPortal({ section }: { section: string }) {
       .sort((a, b) => b.approvedAmount - a.approvedAmount);
   }, [fyBudgetRequests]);
 
+  const latestLiquidationByRequestId = useMemo(() => {
+    const map = new Map<string, LiquidationReport>();
+    state.liquidationReports.forEach((report) => {
+      const existing = map.get(report.budgetRequestId);
+      if (!existing) {
+        map.set(report.budgetRequestId, report);
+      } else {
+        const existingTime = new Date(existing.updatedAt || existing.createdAt).getTime();
+        const reportTime = new Date(report.updatedAt || report.createdAt).getTime();
+        if (reportTime > existingTime) {
+          map.set(report.budgetRequestId, report);
+        }
+      }
+    });
+    return map;
+  }, [state.liquidationReports]);
+
+  const filteredBudgetMonitoringRequests = useMemo(() => {
+    return filterBudgetRequests(
+      adminBudgetRequests,
+      budgetMonitoringFilters,
+      organizationProfileById,
+      latestLiquidationByRequestId,
+      selectedFiscalYear
+    );
+  }, [
+    adminBudgetRequests,
+    budgetMonitoringFilters,
+    organizationProfileById,
+    latestLiquidationByRequestId,
+    selectedFiscalYear,
+  ]);
+
+  const budgetMonitoringApprovedTotal = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((r) => APPROVED_BUDGET_STATUSES.has(r.status))
+      .reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0);
+  }, [filteredBudgetMonitoringRequests]);
+
+  const budgetMonitoringReleasedTotal = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((r) => RELEASED_BUDGET_STATUSES.has(r.status))
+      .reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+  }, [filteredBudgetMonitoringRequests]);
+
+  const budgetMonitoringLiquidatedTotal = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((r) => {
+        const liq = latestLiquidationByRequestId.get(r.id);
+        return liq?.status === "completed_liquidated" || r.status === "completed";
+      })
+      .reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+  }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId]);
+
+  const budgetMonitoringPurposeCategories = useMemo(() => {
+    return aggregatePurposeCategories(
+      filteredBudgetMonitoringRequests,
+      latestLiquidationByRequestId,
+      budgetMonitoringFilters.sortBy
+    );
+  }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId, budgetMonitoringFilters.sortBy]);
+
+  const budgetMonitoringOrganizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
+    return aggregateOrganizationFundingRows(
+      filteredBudgetMonitoringRequests,
+      state.organizationProfiles,
+      latestLiquidationByRequestId,
+      budgetMonitoringFilters.sortBy
+    );
+  }, [
+    filteredBudgetMonitoringRequests,
+    state.organizationProfiles,
+    latestLiquidationByRequestId,
+    budgetMonitoringFilters.sortBy,
+  ]);
+
+  const budgetMonitoringFilterOptions = useMemo(() => {
+    const categorySet = new Set<string>();
+    fyBudgetRequests.forEach((r) => {
+      if (r.purposeCategory && r.purposeCategory.trim()) {
+        categorySet.add(r.purposeCategory.trim());
+      }
+    });
+    if (categorySet.size === 0) {
+      adminBudgetRequests.forEach((r) => {
+        if (r.purposeCategory && r.purposeCategory.trim()) {
+          categorySet.add(r.purposeCategory.trim());
+        }
+      });
+    }
+    const availableCategories = Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+
+    const availableClassifications = Array.from(
+      new Set(
+        state.organizationProfiles
+          .map((o) => o.majorClassification?.trim())
+          .filter((c): c is string => Boolean(c))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    const availableDistricts = Array.from(
+      new Set(
+        state.organizationProfiles
+          .map((o) => o.district?.trim())
+          .filter((d): d is string => Boolean(d))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    const sourceOrgs =
+      budgetMonitoringFilters.district === "all"
+        ? state.organizationProfiles
+        : state.organizationProfiles.filter(
+            (o) => o.district?.trim() === budgetMonitoringFilters.district.trim()
+          );
+    const availableBarangays = Array.from(
+      new Set(
+        sourceOrgs
+          .map((o) => o.barangay?.trim())
+          .filter((b): b is string => Boolean(b))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    return {
+      availableTimePeriods: [
+        "current_fy",
+        "previous_fy",
+        "ytd",
+        "last_30_days",
+        "last_90_days",
+        "last_6_months",
+        "custom",
+        "all_time",
+      ] as TimePeriodOption[],
+      availableCategories,
+      availableStatuses: [
+        { value: "submitted_under_review", label: "Submitted / Under Review" },
+        { value: "needs_revision", label: "Needs Revision" },
+        { value: "awaiting_release", label: "Awaiting Release" },
+        { value: "budget_released", label: "Budget Released" },
+        { value: "completed", label: "Completed" },
+        { value: "rejected_red", label: "Rejected" },
+      ],
+      availableClassifications,
+      availableDistricts,
+      availableBarangays,
+    };
+  }, [
+    fyBudgetRequests,
+    adminBudgetRequests,
+    state.organizationProfiles,
+    budgetMonitoringFilters.district,
+  ]);
+
   const organizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
     return state.organizationProfiles
       .map((org) => {
@@ -4022,12 +4186,21 @@ export default function AdminPortal({ section }: { section: string }) {
         next.delete(registrationDeleteTarget.id);
         return next;
       });
+      const wasSuspended = registrationDeleteTarget.profileStatus === "suspended_inactive";
+      const targetName = registrationDeleteTarget.organizationName;
       setRegistrationDeleteTarget(null);
       setRegistrationDeleteConfirmation("");
-      toast({
-        title: "Registration account permanently deleted.",
-        description: `Account and associated records for ${registrationDeleteTarget.organizationName} have been removed.`,
-      });
+      if (wasSuspended) {
+        toast({
+          title: "Suspended registration deleted.",
+          description: "The organization can now start a new registration.",
+        });
+      } else {
+        toast({
+          title: "Registration account permanently deleted.",
+          description: `Account and associated records for ${targetName} have been removed.`,
+        });
+      }
 
       try {
         const snapshot = await loadAdminPortalSupabaseState();
@@ -7321,7 +7494,8 @@ export default function AdminPortal({ section }: { section: string }) {
                     {submittedDocumentCount}/{templateDocuments.length} Documents Submitted
                   </span>
                   <RegistrationStatusPill status={selectedOrg.profileStatus} />
-                  {selectedOrg.profileStatus !== "verified" && selectedOrg.profileStatus !== "suspended_inactive" ? (
+                  {((selectedOrg.profileStatus !== "verified" && selectedOrg.profileStatus !== "suspended_inactive") ||
+                    (selectedOrg.profileStatus === "suspended_inactive" && isSuperAdmin)) ? (
                     <Button
                       type="button"
                       variant="outline"
@@ -7974,6 +8148,7 @@ export default function AdminPortal({ section }: { section: string }) {
               onDelete={(organization) => void openRegistrationDeleteDialog(organization)}
               selectedOrgIds={selectedRegistrationIds}
               onSelectedOrgIdsChange={setSelectedRegistrationIds}
+              isSuperAdmin={isSuperAdmin}
             />
           </div>
         );
@@ -11861,18 +12036,22 @@ export default function AdminPortal({ section }: { section: string }) {
                       availableFiscalYears={availableFiscalYears}
                       annualAllocation={selectedFYAllocation}
                       onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
-                      approvedBudget={budgetApprovedTotal}
-                      releasedBudget={budgetMonitoringAnalysis.totalReleased}
-                      liquidatedBudget={totalLiquidated}
-                      pendingDisbursement={Math.max(budgetApprovedTotal - budgetMonitoringAnalysis.totalReleased, 0)}
-                      activeInField={Math.max(budgetMonitoringAnalysis.totalReleased - totalLiquidated, 0)}
-                      categoryBreakdown={purposeCategoryBreakdown}
+                      approvedBudget={budgetMonitoringApprovedTotal}
+                      releasedBudget={budgetMonitoringReleasedTotal}
+                      liquidatedBudget={budgetMonitoringLiquidatedTotal}
+                      pendingDisbursement={Math.max(budgetMonitoringApprovedTotal - budgetMonitoringReleasedTotal, 0)}
+                      activeInField={Math.max(budgetMonitoringReleasedTotal - budgetMonitoringLiquidatedTotal, 0)}
+                      categoryBreakdown={budgetMonitoringPurposeCategories}
                       formatPesoAmount={formatPesoAmount}
                       formatCompactPeso={formatCompactPeso}
+                      filters={budgetMonitoringFilters}
+                      onChangeFilters={setBudgetMonitoringFilters}
+                      onResetFilters={() => setBudgetMonitoringFilters(DEFAULT_BUDGET_MONITORING_FILTERS)}
+                      filterOptions={budgetMonitoringFilterOptions}
                     />
 
                     <OrganizationFundingTable
-                      rows={organizationFundingRows}
+                      rows={budgetMonitoringOrganizationFundingRows}
                       searchValue={organizationFundingSearch}
                       onSearchChange={setOrganizationFundingSearch}
                       classificationFilter={organizationFundingClassificationFilter}
@@ -15945,14 +16124,33 @@ export default function AdminPortal({ section }: { section: string }) {
                   <AlertTriangle />
                 </div>
                 <AlertDialogTitle>
-                  Permanently delete this registration?
+                  {registrationDeleteTarget.profileStatus === "suspended_inactive"
+                    ? "Delete Suspended Registration?"
+                    : "Permanently delete this registration?"}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete the organization account, registration records, submitted
-                  documents, uploaded files, and other organization-owned records associated with this account.
-                  This action cannot be undone.
+                  {registrationDeleteTarget.profileStatus === "suspended_inactive"
+                    ? "This will permanently remove the suspended registration and its associated registration data. The organization will no longer be able to continue this registration. After deletion, the organization may start a new registration from the beginning. This action cannot be undone."
+                    : "This will permanently delete the organization account, registration records, submitted documents, uploaded files, and other organization-owned records associated with this account. This action cannot be undone."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
+              {registrationDeleteTarget.profileStatus === "suspended_inactive" ? (
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-1.5 font-segoe text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Organization:</span>
+                    <strong className="font-semibold text-text-default">{registrationDeleteTarget.organizationName}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Registration:</span>
+                    <span className="font-cascadia font-semibold text-text-default">{registrationDeleteTarget.referenceId || "—"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Status:</span>
+                    <span className="font-semibold text-red-600">Suspended</span>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="admin-organization-delete-dialog__summary">
                 <p className="admin-organization-delete-dialog__summary-title">

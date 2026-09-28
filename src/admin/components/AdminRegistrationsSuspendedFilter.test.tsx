@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { RegistrationsTable, StatusPill } from "./RegistrationsTable";
+import { isDeletableRegistrationStatus, RegistrationsTable, StatusPill } from "./RegistrationsTable";
 import type { OrganizationProfile } from "@/lib/lydo-connect-data";
 
 describe("Admin Registrations Suspended Filter & Table Suite", () => {
@@ -232,5 +232,119 @@ describe("Admin Registrations Suspended Filter & Table Suite", () => {
     // Suspended + District 1 -> 0
     const districtNoMatch = filterFn(mockOrganizations, "suspended_inactive", "", "District 1");
     expect(districtNoMatch.length).toBe(0);
+  });
+
+  // 5. Super Admin Suspended Deletion Gating & Permissions
+  describe("Super Admin Suspended Deletion Eligibility & UI Controls", () => {
+    it("evaluates isDeletableRegistrationStatus correctly for Super Admin vs Regular Admin", () => {
+      // Super Admin can delete suspended registrations
+      expect(isDeletableRegistrationStatus("suspended_inactive", true)).toBe(true);
+
+      // Regular Admin / non-super admin CANNOT delete suspended registrations
+      expect(isDeletableRegistrationStatus("suspended_inactive", false)).toBe(false);
+      expect(isDeletableRegistrationStatus("suspended_inactive", undefined)).toBe(false);
+
+      // Verified registrations are NEVER deletable from registration workflow
+      expect(isDeletableRegistrationStatus("verified", true)).toBe(false);
+      expect(isDeletableRegistrationStatus("verified", false)).toBe(false);
+
+      // Active unverified registration stages are deletable by any admin
+      expect(isDeletableRegistrationStatus("pending_review", false)).toBe(true);
+      expect(isDeletableRegistrationStatus("needs_update", false)).toBe(true);
+      expect(isDeletableRegistrationStatus("incomplete", false)).toBe(true);
+    });
+
+    it("renders Delete button for suspended registration when isSuperAdmin={true}", () => {
+      const handleDelete = vi.fn();
+      const suspendedOrgOnly = mockOrganizations.filter((o) => o.profileStatus === "suspended_inactive");
+
+      render(
+        <RegistrationsTable
+          registrations={suspendedOrgOnly}
+          documentCountsByOrgId={documentCounts}
+          searchValue=""
+          onSearchChange={vi.fn()}
+          statusFilter="suspended_inactive"
+          onStatusFilterChange={vi.fn()}
+          districtFilter="all"
+          onDistrictFilterChange={vi.fn()}
+          barangayFilter="all"
+          onBarangayFilterChange={vi.fn()}
+          classificationFilter="all"
+          onClassificationFilterChange={vi.fn()}
+          onReview={vi.fn()}
+          onDelete={handleDelete}
+          isSuperAdmin={true}
+        />,
+      );
+
+      const deleteBtn = screen.getByRole("button", {
+        name: /Delete registration for Delta Suspended Org/i,
+      });
+      expect(deleteBtn).toBeInTheDocument();
+
+      fireEvent.click(deleteBtn);
+      expect(handleDelete).toHaveBeenCalledWith(suspendedOrgOnly[0]);
+    });
+
+    it("does NOT render Delete button for suspended registration when isSuperAdmin is false or omitted", () => {
+      const handleDelete = vi.fn();
+      const suspendedOrgOnly = mockOrganizations.filter((o) => o.profileStatus === "suspended_inactive");
+
+      const { unmount } = render(
+        <RegistrationsTable
+          registrations={suspendedOrgOnly}
+          documentCountsByOrgId={documentCounts}
+          searchValue=""
+          onSearchChange={vi.fn()}
+          statusFilter="suspended_inactive"
+          onStatusFilterChange={vi.fn()}
+          districtFilter="all"
+          onDistrictFilterChange={vi.fn()}
+          barangayFilter="all"
+          onBarangayFilterChange={vi.fn()}
+          classificationFilter="all"
+          onClassificationFilterChange={vi.fn()}
+          onReview={vi.fn()}
+          onDelete={handleDelete}
+          isSuperAdmin={false}
+        />,
+      );
+
+      expect(
+        screen.queryByRole("button", { name: /Delete registration for Delta Suspended Org/i }),
+      ).not.toBeInTheDocument();
+
+      unmount();
+
+      render(
+        <RegistrationsTable
+          registrations={suspendedOrgOnly}
+          documentCountsByOrgId={documentCounts}
+          searchValue=""
+          onSearchChange={vi.fn()}
+          statusFilter="suspended_inactive"
+          onStatusFilterChange={vi.fn()}
+          districtFilter="all"
+          onDistrictFilterChange={vi.fn()}
+          barangayFilter="all"
+          onBarangayFilterChange={vi.fn()}
+          classificationFilter="all"
+          onClassificationFilterChange={vi.fn()}
+          onReview={vi.fn()}
+          onDelete={handleDelete}
+        />,
+      );
+
+      expect(
+        screen.queryByRole("button", { name: /Delete registration for Delta Suspended Org/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("updates queue dataset when a suspended organization is removed", () => {
+      const activeOrgsAfterDeletion = mockOrganizations.filter((o) => o.id !== "org-4");
+      expect(activeOrgsAfterDeletion.some((o) => o.profileStatus === "suspended_inactive")).toBe(false);
+      expect(activeOrgsAfterDeletion.length).toBe(3);
+    });
   });
 });

@@ -11,6 +11,7 @@ import {
   getCategoryColor,
   createCategoryColorResolver,
 } from "@/lib/budget-category-colors";
+import { DEFAULT_BUDGET_MONITORING_FILTERS } from "@/lib/budget-monitoring-filters";
 
 // Variable to capture props passed to Recharts Pie
 let capturedPieProps: any = null;
@@ -264,7 +265,7 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
   });
 
   // ==========================================
-  // TABLE PAGINATION AND SEARCH TESTS
+  // TABLE PAGINATION AND FILTERING TESTS
   // ==========================================
 
   it("Pagination: Page 2 preserves consistent colors and never collides with Other Categories", () => {
@@ -272,11 +273,9 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     const resolver = createCategoryColorResolver(sampleCategories);
 
     // Click Next Page button
-    const nextButtons = screen.getAllByRole("button");
-    const nextBtn = nextButtons.find((btn) => btn.querySelector("svg.lucide-chevron-right"));
+    const nextBtn = screen.getByLabelText("Next page");
     expect(nextBtn).toBeDefined();
-
-    fireEvent.click(nextBtn!);
+    fireEvent.click(nextBtn);
 
     // Now on Page 2 (categories at index 5, 6, 7, 8)
     const page2Categories = sampleCategories.slice(5, 9);
@@ -297,46 +296,81 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     });
 
     // Return to Page 1
-    const prevBtn = nextButtons.find((btn) => btn.querySelector("svg.lucide-chevron-left"));
+    const prevBtn = screen.getByLabelText("Previous page");
     expect(prevBtn).toBeDefined();
-    fireEvent.click(prevBtn!);
+    fireEvent.click(prevBtn);
 
     // Page 1 colors are still exact
     const top5 = sampleCategories.slice(0, 5);
     const tableRowsP1 = container.querySelectorAll("tbody tr");
     top5.forEach((item, idx) => {
       const colorDot = tableRowsP1[idx].querySelector("span.rounded-full") as HTMLElement;
-      const expectedRgb = hexToRgb(resolver(item.category));
-      expect(colorDot.style.backgroundColor).toBe(expectedRgb);
+      expect(colorDot.style.backgroundColor).toBe(hexToRgb(resolver(item.category)));
     });
   });
 
-  it("Search filtering: searching for a category retains its exact pre-search color", () => {
-    const { container } = render(<BudgetMonitoringOverview {...defaultProps} />);
-    const resolver = createCategoryColorResolver(sampleCategories);
+  it("Filters control: Replaces free-text search box with proper Filters button and Popover trigger", () => {
+    render(<BudgetMonitoringOverview {...defaultProps} />);
 
-    const targetCategory = sampleCategories[3]; // "dasdad"
-    const targetExpectedColorHex = resolver(targetCategory.category);
-    const targetExpectedRgb = hexToRgb(targetExpectedColorHex);
+    // Old free-text search box MUST NOT exist
+    const searchInput = screen.queryByPlaceholderText(/Search purpose \/ category/i);
+    expect(searchInput).toBeNull();
 
-    const searchInput = screen.getByPlaceholderText(/Search purpose \/ category/i);
-    fireEvent.change(searchInput, { target: { value: "dasdad" } });
+    // New Filters button MUST exist
+    const filtersBtn = screen.getByRole("button", { name: /Open Budget Filters/i });
+    expect(filtersBtn).toBeInTheDocument();
+    expect(filtersBtn).toHaveTextContent("Filters");
+  });
 
-    // Table now has 1 filtered row
-    const filteredRows = container.querySelectorAll("tbody tr");
-    expect(filteredRows.length).toBe(1);
+  it("Filter synchronization: Single category filter recalculates 100% of Total on Donut and Table", () => {
+    const singleFilteredCategory: PurposeCategoryItem[] = [
+      { category: "Clean and Green Drive", approvedAmount: 20000, releasedAmount: 15000, count: 1 },
+    ];
+    render(
+      <BudgetMonitoringOverview
+        {...defaultProps}
+        categoryBreakdown={singleFilteredCategory}
+        approvedBudget={20000}
+        releasedBudget={15000}
+        filters={{
+          ...DEFAULT_BUDGET_MONITORING_FILTERS,
+          purposeCategory: "Clean and Green Drive",
+        }}
+      />
+    );
 
-    const colorDot = filteredRows[0].querySelector("span.rounded-full") as HTMLElement;
-    expect(colorDot.style.backgroundColor).toBe(targetExpectedRgb);
+    expect(capturedPieProps.data.length).toBe(1);
+    expect(capturedPieProps.data[0].name).toBe("Clean and Green Drive");
+    expect(capturedPieProps.data[0].pctDisplay).toBe("100%");
 
-    // Clear search and verify original colors are restored
-    fireEvent.change(searchInput, { target: { value: "" } });
-    const restoredRows = container.querySelectorAll("tbody tr");
-    expect(restoredRows.length).toBe(5);
+    // Table displays 100.0% of total
+    expect(screen.getAllByText("100.0%").length).toBeGreaterThan(0);
+    expect(screen.getByText("Category: Clean and Green Drive")).toBeInTheDocument();
+  });
 
-    sampleCategories.slice(0, 5).forEach((item, idx) => {
-      const dot = restoredRows[idx].querySelector("span.rounded-full") as HTMLElement;
-      expect(dot.style.backgroundColor).toBe(hexToRgb(resolver(item.category)));
-    });
+  it("Empty State: Displays clear empty message when filters produce no results", () => {
+    const onResetMock = vi.fn();
+    render(
+      <BudgetMonitoringOverview
+        {...defaultProps}
+        categoryBreakdown={[]}
+        approvedBudget={0}
+        releasedBudget={0}
+        filters={{
+          ...DEFAULT_BUDGET_MONITORING_FILTERS,
+          district: "District 99",
+        }}
+        onResetFilters={onResetMock}
+      />
+    );
+
+    expect(
+      screen.getByText(/No budget records match the selected filters/i)
+    ).toBeInTheDocument();
+
+    const resetButtons = screen.getAllByRole("button", { name: /Reset Filters/i });
+    expect(resetButtons.length).toBeGreaterThan(0);
+    fireEvent.click(resetButtons[0]);
+    expect(onResetMock).toHaveBeenCalled();
   });
 });

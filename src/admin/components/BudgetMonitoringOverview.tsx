@@ -8,8 +8,8 @@ import {
   ChevronRight,
   Coins,
   FileSpreadsheet,
-  Info,
-  Search,
+  FilterX,
+  RotateCcw,
   Settings,
   SlidersHorizontal,
 } from "lucide-react";
@@ -23,6 +23,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { createCategoryColorResolver } from "@/lib/budget-category-colors";
+import {
+  BudgetMonitoringFilters,
+  DEFAULT_BUDGET_MONITORING_FILTERS,
+  getActiveFilterCount,
+} from "@/lib/budget-monitoring-filters";
+import {
+  BudgetMonitoringFilterPopover,
+  type BudgetMonitoringFilterOptions,
+} from "./BudgetMonitoringFilterPopover";
+import { BudgetMonitoringFilterSummary } from "./BudgetMonitoringFilterSummary";
 
 export type PurposeCategoryItem = {
   category: string;
@@ -45,6 +55,11 @@ type BudgetMonitoringOverviewProps = {
   categoryBreakdown: PurposeCategoryItem[];
   formatPesoAmount: (value?: number | null) => string;
   formatCompactPeso: (value: number) => string;
+  // Dynamic filter state & options
+  filters?: BudgetMonitoringFilters;
+  onChangeFilters?: (next: BudgetMonitoringFilters) => void;
+  onResetFilters?: () => void;
+  filterOptions?: BudgetMonitoringFilterOptions;
 };
 
 const TABLE_PAGE_SIZE = 5;
@@ -79,10 +94,28 @@ export const BudgetMonitoringOverview = ({
   categoryBreakdown,
   formatPesoAmount,
   formatCompactPeso,
+  filters: parentFilters,
+  onChangeFilters: parentOnChangeFilters,
+  onResetFilters: parentOnResetFilters,
+  filterOptions,
 }: BudgetMonitoringOverviewProps) => {
-  const [tableSearch, setTableSearch] = useState("");
+  // Local fallback filter state if not controlled externally
+  const [localFilters, setLocalFilters] = useState<BudgetMonitoringFilters>(
+    DEFAULT_BUDGET_MONITORING_FILTERS
+  );
   const [tablePage, setTablePage] = useState(0);
 
+  const activeFilters = parentFilters ?? localFilters;
+  const handleFilterChange = parentOnChangeFilters ?? ((next: BudgetMonitoringFilters) => {
+    setLocalFilters(next);
+    setTablePage(0);
+  });
+  const handleResetFilters = parentOnResetFilters ?? (() => {
+    setLocalFilters(DEFAULT_BUDGET_MONITORING_FILTERS);
+    setTablePage(0);
+  });
+
+  const activeFilterCount = getActiveFilterCount(activeFilters);
   const isConfigured = annualAllocation !== null;
   const totalFYBudget = isConfigured ? annualAllocation.totalAmount : null;
 
@@ -169,21 +202,42 @@ export const BudgetMonitoringOverview = ({
     return slices;
   }, [categoryBreakdown, approvedBudget, getCategoryColor]);
 
-  // Search & pagination for the compact categories detail table
-  const filteredCategories = useMemo(() => {
-    const q = tableSearch.trim().toLowerCase();
-    if (!q) return categoryBreakdown;
-    return categoryBreakdown.filter((c) => c.category.toLowerCase().includes(q));
-  }, [categoryBreakdown, tableSearch]);
+  // Derived filter options if not supplied externally
+  const resolvedFilterOptions: BudgetMonitoringFilterOptions = useMemo(() => {
+    if (filterOptions) return filterOptions;
+    return {
+      availableTimePeriods: [
+        "current_fy",
+        "previous_fy",
+        "ytd",
+        "last_30_days",
+        "last_90_days",
+        "last_6_months",
+        "custom",
+        "all_time",
+      ],
+      availableCategories: categoryBreakdown.map((c) => c.category),
+      availableStatuses: [
+        { value: "submitted_under_review", label: "Submitted / Under Review" },
+        { value: "needs_revision", label: "Needs Revision" },
+        { value: "awaiting_release", label: "Awaiting Release" },
+        { value: "budget_released", label: "Budget Released" },
+        { value: "completed", label: "Completed" },
+      ],
+      availableClassifications: [],
+      availableDistricts: [],
+      availableBarangays: [],
+    };
+  }, [filterOptions, categoryBreakdown]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / TABLE_PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(categoryBreakdown.length / TABLE_PAGE_SIZE));
   const clampedPage = Math.min(tablePage, totalPages - 1);
   const pagedCategories = useMemo(() => {
-    return filteredCategories.slice(
+    return categoryBreakdown.slice(
       clampedPage * TABLE_PAGE_SIZE,
       clampedPage * TABLE_PAGE_SIZE + TABLE_PAGE_SIZE
     );
-  }, [filteredCategories, clampedPage]);
+  }, [categoryBreakdown, clampedPage]);
 
   return (
     <div className="space-y-6">
@@ -200,7 +254,7 @@ export const BudgetMonitoringOverview = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Real Interactive Fiscal Year Selector (Part 4, 21) */}
+            {/* Real Interactive Fiscal Year Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -237,7 +291,7 @@ export const BudgetMonitoringOverview = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Admin Configuration Entry Point (Part 3, 22) */}
+            {/* Admin Configuration Entry Point */}
             <button
               type="button"
               onClick={onOpenConfigureModal}
@@ -254,7 +308,7 @@ export const BudgetMonitoringOverview = ({
           </div>
         </div>
 
-        {/* 2. Unconfigured State Alert Banner (Part 9) */}
+        {/* 2. Unconfigured State Alert Banner */}
         {!isConfigured && (
           <div className="m-6 mb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-amber-300 bg-amber-50/80 p-4">
             <div className="flex items-start gap-3">
@@ -282,7 +336,7 @@ export const BudgetMonitoringOverview = ({
           </div>
         )}
 
-        {/* 3. Deficit Warning Alert Banner (Part 8) */}
+        {/* 3. Deficit Warning Alert Banner */}
         {isDeficit && (
           <div className="m-6 mb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-red-300 bg-red-50/90 p-4">
             <div className="flex items-start gap-3">
@@ -312,10 +366,10 @@ export const BudgetMonitoringOverview = ({
           </div>
         )}
 
-        {/* 4. PRIMARY KPI HEADER (Part 12) */}
+        {/* 4. PRIMARY KPI HEADER */}
         <div className="p-6">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Card 1: FY Budget Allocation */}
+            {/* Card 1: FY Budget Allocation (Global Statutory Baseline) */}
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -438,7 +492,7 @@ export const BudgetMonitoringOverview = ({
             </div>
           </div>
 
-          {/* 5. UTILIZATION PIPELINE (Part 13) */}
+          {/* 5. UTILIZATION PIPELINE */}
           <div className="mt-6 rounded-md border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -549,21 +603,56 @@ export const BudgetMonitoringOverview = ({
         </div>
       </div>
 
-      {/* 6. BUDGET ALLOCATION BY PURPOSE (Parts 14, 15, 16) */}
+      {/* 6. BUDGET ALLOCATION BY PURPOSE WITH PROPER FILTERING AND SORTING */}
       <div className="rounded-md border border-slate-300 bg-admin-surface shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h3 className="font-segoe text-base font-bold leading-none text-text-default">
-            Budget Allocation by Purpose
-          </h3>
-          <p className="mt-1 font-segoe text-xs text-slate-500">
-            Committed and released budget distributions grouped by canonical youth purpose for FY {selectedFiscalYear}.
-          </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
+          <div>
+            <h3 className="font-segoe text-base font-bold leading-none text-text-default">
+              Budget Allocation by Purpose
+            </h3>
+            <p className="mt-1 font-segoe text-xs text-slate-500">
+              Committed and released budget distributions grouped by canonical youth purpose.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Filter Drawer / Popover Component */}
+            <BudgetMonitoringFilterPopover
+              filters={activeFilters}
+              onChangeFilters={handleFilterChange}
+              onResetFilters={handleResetFilters}
+              options={resolvedFilterOptions}
+              selectedFiscalYear={selectedFiscalYear}
+            />
+
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="flex h-9 items-center gap-1 rounded-md border border-slate-300 px-2.5 font-segoe text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                title="Reset all filters"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Active Filter Summary Bar */}
+        <div className="px-6 pt-4">
+          <BudgetMonitoringFilterSummary
+            filters={activeFilters}
+            onChangeFilters={handleFilterChange}
+            onResetFilters={handleResetFilters}
+            selectedFiscalYear={selectedFiscalYear}
+          />
         </div>
 
         <div className="p-6">
           {categoryBreakdown.length > 0 && approvedBudget > 0 ? (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-              {/* Left Column: Recharts Donut (Top 5 + Other) with coherent denominator (Parts 15, 16) */}
+              {/* Left Column: Recharts Donut (Top 5 + Other) with coherent denominator */}
               <div className="flex flex-col items-center justify-center lg:col-span-5">
                 <div className="relative h-[240px] w-[240px] shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
@@ -576,7 +665,7 @@ export const BudgetMonitoringOverview = ({
                         outerRadius={112}
                         minAngle={4}
                         paddingAngle={donutData.length > 1 ? 2 : 0}
-                        stroke="var(--yt-surface, #ffffff)"
+                        stroke="#ffffff"
                         strokeWidth={2}
                       >
                         {donutData.map((entry) => (
@@ -635,25 +724,15 @@ export const BudgetMonitoringOverview = ({
                 </div>
               </div>
 
-              {/* Right Column: Scalable compact searchable/paginated table (Part 15) */}
+              {/* Right Column: Scalable compact synchronized table */}
               <div className="flex flex-col lg:col-span-7">
-                {/* Search Bar */}
+                {/* Header count indicator */}
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search purpose / category..."
-                      value={tableSearch}
-                      onChange={(e) => {
-                        setTableSearch(e.target.value);
-                        setTablePage(0);
-                      }}
-                      className="h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface pl-9 pr-3 font-segoe text-xs text-text-default placeholder:text-slate-400 focus:border-public-bg-brand focus:outline-none"
-                    />
-                  </div>
+                  <span className="font-segoe text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    Category Allocation Breakdown
+                  </span>
                   <span className="font-segoe text-xs text-slate-500 dark:text-slate-400">
-                    {filteredCategories.length} {filteredCategories.length === 1 ? "category" : "categories"}
+                    {categoryBreakdown.length} {categoryBreakdown.length === 1 ? "category" : "categories"}
                   </span>
                 </div>
 
@@ -701,7 +780,7 @@ export const BudgetMonitoringOverview = ({
                       ) : (
                         <tr>
                           <td colSpan={4} className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                            No categories match your search.
+                            No categories match the selected filters.
                           </td>
                         </tr>
                       )}
@@ -714,12 +793,13 @@ export const BudgetMonitoringOverview = ({
                   <div className="mt-3 flex items-center justify-between">
                     <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
                       Showing {clampedPage * TABLE_PAGE_SIZE + 1} &ndash;{" "}
-                      {Math.min((clampedPage + 1) * TABLE_PAGE_SIZE, filteredCategories.length)} of{" "}
-                      {filteredCategories.length}
+                      {Math.min((clampedPage + 1) * TABLE_PAGE_SIZE, categoryBreakdown.length)} of{" "}
+                      {categoryBreakdown.length}
                     </p>
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
+                        aria-label="Previous page"
                         disabled={clampedPage === 0}
                         onClick={() => setTablePage((p) => Math.max(0, p - 1))}
                         className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-admin-surface text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
@@ -731,6 +811,7 @@ export const BudgetMonitoringOverview = ({
                       </span>
                       <button
                         type="button"
+                        aria-label="Next page"
                         disabled={clampedPage >= totalPages - 1}
                         onClick={() => setTablePage((p) => Math.min(totalPages - 1, p + 1))}
                         className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-admin-surface text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
@@ -742,7 +823,29 @@ export const BudgetMonitoringOverview = ({
                 )}
               </div>
             </div>
+          ) : activeFilterCount > 0 ? (
+            /* Clear Empty State for Active Filters */
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                <FilterX className="h-6 w-6" />
+              </div>
+              <h4 className="mt-3 font-segoe text-sm font-semibold text-text-default">
+                No budget records match the selected filters.
+              </h4>
+              <p className="mt-1 max-w-sm font-segoe text-xs text-slate-500">
+                Try broadening your time period, category, status, or location criteria to see budget allocations.
+              </p>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="mt-4 flex items-center gap-1.5 rounded-md bg-public-bg-brand px-3.5 py-2 font-segoe text-xs font-semibold text-white shadow-xs hover:bg-bg-brand-hover transition-colors"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset Filters
+              </button>
+            </div>
           ) : (
+            /* Empty State when no approved requests exist for FY */
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                 <FileSpreadsheet className="h-6 w-6" />

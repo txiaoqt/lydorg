@@ -455,12 +455,38 @@ const validateOrganizationTarget = async (
 };
 
 /**
+ * Checks whether the calling administrator possesses the super_admin role.
+ */
+const isSuperAdminCaller = async (
+  client: ReturnType<typeof createClient>,
+  adminId: string,
+): Promise<boolean> => {
+  const { data: adminRow } = await client
+    .from("admin_accounts")
+    .select("role_id")
+    .eq("id", adminId)
+    .maybeSingle();
+
+  if (!adminRow?.role_id) return false;
+
+  const { data: roleRow } = await client
+    .from("roles")
+    .select("code")
+    .eq("id", adminRow.role_id)
+    .maybeSingle();
+
+  return roleRow?.code === "super_admin";
+};
+
+/**
  * Validates whether the target organization is in an unverified registration stage
- * and does not possess an existing local accreditation ledger.
+ * (or permanently suspended when requested by Super Admin) and does not possess an
+ * existing local accreditation ledger.
  */
 const verifyRegistrationEligibility = async (
   client: ReturnType<typeof createClient>,
   target: OrganizationTarget,
+  isSuperAdmin = false,
 ) => {
   const status = target.profile_status;
   if (status === "verified") {
@@ -471,13 +497,14 @@ const verifyRegistrationEligibility = async (
     );
   }
   if (status === "suspended_inactive") {
-    throw new SafeDeletionError(
-      "Suspended organizations cannot be deleted from the Registrations workflow.",
-      403,
-      "registration_eligibility",
-    );
-  }
-  if (!status || !["incomplete", "pending_review", "needs_update"].includes(status)) {
+    if (!isSuperAdmin) {
+      throw new SafeDeletionError(
+        "Only super administrators may delete permanently suspended registrations.",
+        403,
+        "authorization",
+      );
+    }
+  } else if (!status || !["incomplete", "pending_review", "needs_update"].includes(status)) {
     throw new SafeDeletionError(
       "Only unverified registration-stage organizations can be deleted from the Registrations workflow.",
       403,
@@ -933,6 +960,8 @@ Deno.serve(async (request) => {
       });
     }
 
+    const isSuperAdmin = await isSuperAdminCaller(client, admin.admin_id);
+
     // 2. REGISTRATION PREFLIGHT
     if (action === "registration_preflight") {
       if (!validation.target) {
@@ -941,7 +970,7 @@ Deno.serve(async (request) => {
       if (validation.isProtected) {
         throw new SafeDeletionError("Administrator accounts cannot be deleted.", 403, "protection_check");
       }
-      await verifyRegistrationEligibility(client, validation.target);
+      await verifyRegistrationEligibility(client, validation.target, isSuperAdmin);
       const manifest = await buildDeletionManifest(client, validation.target, supabaseUrl);
       return json({
         organization: { id: validation.target.id, name: validation.target.organization_name, urn: validation.target.urn },
@@ -973,7 +1002,7 @@ Deno.serve(async (request) => {
         throw new SafeDeletionError("Administrator accounts cannot be deleted.", 403, "protection_check");
       }
 
-      await verifyRegistrationEligibility(client, validation.target);
+      await verifyRegistrationEligibility(client, validation.target, isSuperAdmin);
 
       if (
         normalizeConfirmation(payload.confirmationName ?? "") !==

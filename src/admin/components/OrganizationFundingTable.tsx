@@ -123,22 +123,7 @@ export const OrganizationFundingTable = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-            >
-              <span className="whitespace-nowrap">Fiscal Year</span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px] rounded-b-md rounded-t-none border-slate-300 p-0">
-            <DropdownMenuItem disabled className="rounded-none px-4 py-2.5 font-segoe text-sm text-slate-400">
-              Coming soon
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+
       </div>
 
       {/* Column headers */}

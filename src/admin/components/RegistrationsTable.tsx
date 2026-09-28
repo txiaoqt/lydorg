@@ -20,8 +20,14 @@ import { majorClassificationOptions, type OrganizationProfile } from "@/lib/lydo
 
 export type RegistrationStatusFilter = "all" | "verified" | "pending_review" | "suspended_inactive";
 
-export const isDeletableRegistrationStatus = (status: OrganizationProfile["profileStatus"]) =>
-  status === "incomplete" || status === "pending_review" || status === "needs_update";
+export const isDeletableRegistrationStatus = (
+  status: OrganizationProfile["profileStatus"],
+  isSuperAdmin?: boolean,
+) =>
+  status === "incomplete" ||
+  status === "pending_review" ||
+  status === "needs_update" ||
+  (Boolean(isSuperAdmin) && status === "suspended_inactive");
 
 type RegistrationsTableProps = {
   registrations: OrganizationProfile[];
@@ -40,6 +46,7 @@ type RegistrationsTableProps = {
   onDelete?: (organization: OrganizationProfile) => void;
   selectedOrgIds?: Set<string>;
   onSelectedOrgIdsChange?: (selectedIds: Set<string>) => void;
+  isSuperAdmin?: boolean;
 };
 
 const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
@@ -127,6 +134,7 @@ export const RegistrationsTable = ({
   onDelete,
   selectedOrgIds,
   onSelectedOrgIdsChange,
+  isSuperAdmin,
 }: RegistrationsTableProps) => {
   const [page, setPage] = useState(0);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
@@ -487,7 +495,7 @@ export const RegistrationsTable = ({
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                       Review
                     </button>
-                    {isDeletableRegistrationStatus(org.profileStatus) && onDelete ? (
+                    {isDeletableRegistrationStatus(org.profileStatus, isSuperAdmin) && onDelete ? (
                       <button
                         type="button"
                         onClick={() => onDelete(org)}
