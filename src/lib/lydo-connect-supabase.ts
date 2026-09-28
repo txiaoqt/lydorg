@@ -3112,20 +3112,30 @@ export const updateBudgetRequestInSupabase = async (
       _revision_history: finalRevisionHistory ?? null,
     });
 
-    // Also persist deadline timestamps directly if status changed to needs_revision
-    if (patch.status === "needs_revision" && revisionDueAt) {
-      await supabase
-        .from("budget_requests")
-        .update({
-          revision_requested_at: revisionRequestedAt,
-          revision_due_at: revisionDueAt,
-          revision_locked_at: null,
-        })
-        .eq("id", budgetRequestId);
+    if (error) {
+      console.error("update_admin_budget_request error:", error);
+      throw new Error(error.message || "Failed to update the budget request.");
     }
 
     const updatedRow = Array.isArray(data) ? data[0] : null;
-    if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the budget request.");
+    if (!updatedRow) throw new Error("Failed to update the budget request: No data returned.");
+
+    // Best-effort secondary update for direct environments if supported
+    if (patch.status === "needs_revision" && revisionDueAt) {
+      try {
+        await supabase
+          .from("budget_requests")
+          .update({
+            revision_requested_at: revisionRequestedAt,
+            revision_due_at: revisionDueAt,
+            revision_locked_at: null,
+          })
+          .eq("id", budgetRequestId);
+      } catch (directErr) {
+        console.warn("Non-fatal secondary timestamp update skipped:", directErr);
+      }
+    }
+
     return mapBudgetRequest(updatedRow as BudgetRequestRow);
   }
 
