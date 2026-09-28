@@ -62,6 +62,7 @@ const quickLinks = [
   { icon: FileText, title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.", href: "/public-templates" },
   { icon: Globe, title: "News Releases", description: "Stay updated with the latest official announcements and events from PCYDO.", href: "/news-releases" },
   { icon: HelpCircle, title: "FAQs", description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
+  { icon: MapPin, title: "Contacts", description: "Get in touch with the PCYDO office, find office hours, and visit us.", href: "/contacts" },
 ];
 
 const Index = () => {
@@ -801,19 +802,20 @@ const Index = () => {
 
           {/* Action CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              to="/contacts"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-public-bg-brand px-6 py-3 font-segoe text-sm font-semibold text-public-text-on-brand transition-all hover:bg-public-bg-brand-hover shadow-xs active:scale-[0.98]"
+            >
+              <MapPin className="h-4 w-4" />
+              <span>View Contact Page</span>
+            </Link>
             <a
               href={`mailto:${officialEmail}`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-public-bg-brand px-6 py-3 font-segoe text-sm font-semibold text-public-text-on-brand transition-all hover:bg-public-bg-brand-hover shadow-xs active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 font-segoe text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-[0.98]"
             >
               <Mail className="h-4 w-4" />
               <span>Email PCYDO Directly</span>
             </a>
-            <Link
-              to="/faqs"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 font-segoe text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 active:scale-[0.98]"
-            >
-              <span>Browse Help &amp; FAQs</span>
-            </Link>
           </div>
 
         </div>

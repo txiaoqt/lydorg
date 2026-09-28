@@ -209,15 +209,6 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     helperText: "e.g. lydo@pasigcity.gov.ph",
   },
   {
-    key: "general.contact_number",
-    category: "general",
-    label: "Official Contact Number",
-    description: "Official telephone or mobile number displayed for inquiries.",
-    dataType: "string",
-    defaultValue: "(02) 8643-1111",
-    helperText: "e.g. (02) 8643-1111",
-  },
-  {
     key: "general.office_address",
     category: "general",
     label: "Office Address",

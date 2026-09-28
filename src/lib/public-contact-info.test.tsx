@@ -10,8 +10,16 @@ import {
 } from "@/lib/admin-system-settings";
 import Footer from "@/components/Footer";
 import Index from "@/pages/Index";
+import Contacts from "@/pages/Contacts";
 import { PwaContactPage } from "@/user/pwa/PwaInformationPages";
 import { supabase } from "@/lib/supabase";
+
+vi.mock("react-leaflet", () => ({
+  MapContainer: ({ children }: any) => <div data-testid="map-container">{children}</div>,
+  TileLayer: () => <div data-testid="tile-layer" />,
+  Marker: ({ children }: any) => <div data-testid="map-marker">{children}</div>,
+  Popup: ({ children }: any) => <div data-testid="map-popup">{children}</div>,
+}));
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
@@ -65,8 +73,9 @@ describe("Public Contact Information & Dynamic System Settings", () => {
   });
 
   it("preserves default settings values for compatibility", () => {
-    expect(getEffectiveSystemSetting("general.contact_number")).toBe("(02) 8643-1111");
+    expect(getEffectiveSystemSetting("general.support_email")).toBe("lydo@pasigcity.gov.ph");
     expect(getEffectiveSystemSetting("email.reply_to_email")).toBe("lydo@pasigcity.gov.ph");
+    expect(getEffectiveSystemSetting("general.office_address")).toBe("3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City");
   });
 
   it("renders dynamic email, address, and office hours on Homepage (Index) without phone number", () => {
@@ -209,5 +218,35 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     const loaded = await fetchPublicSystemSettings();
     expect(loaded["general.contact_number"]).toBe("09984801602");
     expect(loaded["general.office_address"]).toBe("3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig Cit");
+  });
+
+  it("renders restored Contacts page with Office Address, Official Email, and Office Hours, and without phone number", () => {
+    render(
+      <BrowserRouter>
+        <Contacts />
+      </BrowserRouter>,
+    );
+
+    // Verify page header
+    expect(screen.getByRole("heading", { level: 1, name: "Contact Us" })).toBeInTheDocument();
+
+    // Verify phone labels and numbers are absent
+    expect(screen.queryByText("Contact Number")).toBeNull();
+    expect(screen.queryByText("Official Contact Number")).toBeNull();
+    expect(screen.queryByText("(02) 8643-1111")).toBeNull();
+
+    // Verify office address
+    expect(screen.getByText("Office Address")).toBeInTheDocument();
+    expect(screen.getAllByText("3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City").length).toBeGreaterThanOrEqual(1);
+
+    // Verify official email
+    expect(screen.getByText("Official Email")).toBeInTheDocument();
+    const emailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
+    expect(emailLinks.length).toBeGreaterThanOrEqual(1);
+
+    // Verify office hours
+    expect(screen.getByText("Office Hours")).toBeInTheDocument();
+    expect(screen.getByText("Monday - Thursday")).toBeInTheDocument();
+    expect(screen.getByText("7:00 AM – 6:00 PM")).toBeInTheDocument();
   });
 });

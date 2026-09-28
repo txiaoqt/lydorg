@@ -45,6 +45,7 @@ const Footer = () => {
                 <Link to="/public-templates" className={mobileLinkClass}>Forms &amp; Templates</Link>
                 <Link to="/news-releases" className={mobileLinkClass}>News Releases</Link>
                 <Link to="/faqs" className={mobileLinkClass}>FAQs</Link>
+                <Link to="/contacts" className={mobileLinkClass}>Contacts</Link>
                 <Link to="/site-map" className={mobileLinkClass}>Site Map</Link>
               </div>
             </div>
@@ -113,6 +114,7 @@ const Footer = () => {
               <Link to="/faqs" className={desktopLinkClass}>FAQs</Link>
               <Link to="/budget-transparency" className={desktopLinkClass}>Budget Transparency</Link>
               <Link to="/public-templates" className={desktopLinkClass}>Forms &amp; Templates</Link>
+              <Link to="/contacts" className={desktopLinkClass}>Contacts</Link>
               <Link to="/site-map" className={desktopLinkClass}>Site Map</Link>
             </div>
           </div>

@@ -53,14 +53,14 @@ describe("Navbar Component - Restored Mobile Hamburger Navigation", () => {
 
     expect(screen.getByRole("button", { name: /Close navigation menu/i })).toBeInTheDocument();
 
-    // Verify all 6 nav items exist inside mobile menu (Contacts removed)
+    // Verify all 7 nav items exist inside mobile menu (including Contacts)
     expect(screen.getAllByRole("link", { name: /Home/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /About/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /Budget Transparency/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /Forms & Templates/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /News Releases/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /FAQs/i }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByRole("link", { name: /Contacts/i })).toBeNull();
+    expect(screen.getAllByRole("link", { name: /Contacts/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders authentication CTA buttons and Pasig City Youth Development Portal label in mobile menu", () => {
