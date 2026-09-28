@@ -291,7 +291,7 @@ BEGIN
   -- 4. AUTOMATIC REGISTRATION VERIFICATION:
   -- Only evaluate when not suspended, not renewal, and overall submission status reached approved_green
   IF _renewal_id IS NULL AND _org_id IS NOT NULL AND _overall_status = 'approved_green' THEN
-    PERFORM public.evaluate_and_apply_automatic_registration_verification(_admin_id, _org_id, _submission_id, _reviewed_at);
+    PERFORM public.evaluate_and_apply_automatic_registration_verification(_org_id, _admin_id);
   END IF;
 
   RETURN QUERY
