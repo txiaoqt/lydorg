@@ -303,8 +303,8 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
       expect(headings.length).toBeGreaterThanOrEqual(1);
     });
     expect(screen.getByText("Civic Fiscal Openness")).toBeInTheDocument();
-    expect(screen.getByText(/Pasig City Youth Development/i)).toBeInTheDocument();
-    expect(screen.getByText(/Financial Execution Progression/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Pasig City Youth Development/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("Budget Execution Pipeline · FY 2026")).toBeInTheDocument();
   });
 
   // TEST PUB 8 — User Portal Route /public-transparency renders PublicBudgetOverview
@@ -341,7 +341,7 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
 
     expect(screen.getByText("Public Portal Preview")).toBeInTheDocument();
     expect(screen.getByText("Open Live Public Page")).toBeInTheDocument();
-    expect(screen.getByText(/Financial Execution Progression/i)).toBeInTheDocument();
+    expect(screen.getByText("Budget Execution Pipeline · FY 2026")).toBeInTheDocument();
     // Confirms NO Admin mutation buttons inside the public overview
     expect(screen.queryByText("Configure FY Budget")).toBeNull();
   });
@@ -382,7 +382,7 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
 
     const fyTrigger = screen.getByRole("button", { name: /Select Fiscal Year/i });
     expect(fyTrigger).toBeInTheDocument();
-    expect(screen.getByText(/FY 2026/)).toBeInTheDocument();
+    expect(fyTrigger).toHaveTextContent("FY 2026");
 
     // Verify FY switcher reflects new fiscal year prop
     const unconfiguredSummary = getUnconfiguredPublicBudgetSummary(2025);
@@ -396,7 +396,7 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     );
 
     expect(screen.getByRole("button", { name: /Select Fiscal Year. Currently FY 2025/i })).toBeInTheDocument();
-    expect(screen.getByText(/Annual Budget Not Configured for FY 2025/i)).toBeInTheDocument();
+    expect(screen.getByText(/FY Budget Allocation Not Configured for FY 2025/i)).toBeInTheDocument();
   });
 
   // TEST PUB 12 — Responsive layout verification across breakpoints
@@ -464,38 +464,42 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
   });
 
   // TEST B — Progression remains
-  it("TEST B — Progression remains: displays 4 numbered stages with clean concise labels", () => {
+  it("TEST B — Progression uses the canonical financial labels and state colors", () => {
     render(
       <MemoryRouter>
         <PublicBudgetOverview data={sampleSummary} />
       </MemoryRouter>
     );
 
-    expect(screen.getByText("1. Annual Budget")).toBeInTheDocument();
-    expect(screen.getByText("2. Approved Grants")).toBeInTheDocument();
-    expect(screen.getByText("3. Disbursed")).toBeInTheDocument();
-    expect(screen.getByText("4. Audited & Cleared")).toBeInTheDocument();
+    expect(screen.getByText("1. FY Budget Allocation")).toBeInTheDocument();
+    expect(screen.getByText("2. Approved / Committed")).toBeInTheDocument();
+    expect(screen.getByText("3. Released Budget")).toBeInTheDocument();
+    expect(screen.getByText("4. Liquidated Budget")).toBeInTheDocument();
+    expect(screen.queryByText("Approved Grants")).toBeNull();
+    expect(screen.queryByText("Audited & Cleared")).toBeNull();
+    const track = screen.getByRole("img", { name: /Budget execution pipeline/ });
+    expect(track.querySelectorAll("[data-budget-state]")).toHaveLength(3);
+    expect(screen.queryByRole("progressbar")).toBeNull();
 
     // Verifies accurate decimal formatting for small non-zero audit rates
-    expect(screen.getByText("0.02% of disbursed")).toBeInTheDocument();
-    expect(screen.queryByText("0% of disbursed")).toBeNull();
+    expect(screen.getByText("0.02% of Released Budget")).toBeInTheDocument();
+    expect(screen.queryByText("0% of Released Budget")).toBeNull();
   });
 
   // TEST C — Available amount preserved
-  it("TEST C — Available amount preserved: Available for New Grants is visible exactly once as supporting metric", () => {
+  it("TEST C — Remaining Headroom preserves the authoritative signed amount", () => {
     render(
       <MemoryRouter>
         <PublicBudgetOverview data={sampleSummary} />
       </MemoryRouter>
     );
 
-    const availableLabels = screen.getAllByText(/Available for New Grants:/i);
-    expect(availableLabels).toHaveLength(1);
+    expect(screen.getByText("Remaining Headroom")).toBeInTheDocument();
     expect(screen.getByText("-₱43,687,070.00")).toBeInTheDocument();
   });
 
   // TEST D — Deficit preserved
-  it("TEST D — Deficit preserved: shows Allocation Ceiling Reached banner and Deficit: ceiling reached badge", () => {
+  it("TEST D — Deficit preserved: shows an Allocation Ceiling Reached banner with the supplemental appropriation guidance", () => {
     render(
       <MemoryRouter>
         <PublicBudgetOverview data={sampleSummary} />
@@ -503,7 +507,7 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
     );
 
     expect(screen.getByText("Allocation Ceiling Reached")).toBeInTheDocument();
-    expect(screen.getByText(/Deficit: ceiling reached/i)).toBeInTheDocument();
+    expect(screen.getByText(/Further grant approvals require supplemental city appropriation/i)).toBeInTheDocument();
   });
 
   // TEST E — No duplicate amounts
@@ -515,7 +519,7 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
     );
 
     // Progression container holds the authoritative numbers
-    const progressionHeading = screen.getByRole("heading", { name: "Financial Execution Progression" });
+    const progressionHeading = screen.getByRole("heading", { name: "Budget Execution Pipeline · FY 2026" });
     expect(progressionHeading).toBeInTheDocument();
 
     // Check that there is no separate redundant KPI cards container above the progression

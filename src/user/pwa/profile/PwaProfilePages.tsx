@@ -40,6 +40,8 @@ import {
   isValidPersonName,
   isValidFacebookUrl,
   mapOrganizationProfileError,
+  validateAdditionalEmails,
+  validateAdditionalContactNumbers,
 } from "@/lib/organization-profile-domain";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
@@ -436,6 +438,14 @@ function ProfileDetails({ data }: { data: PortalData }) {
       ))}
       <ProfileSection title="Contacts & Socials">
         <dl className="pwa-profile-fields">
+          <ProfileField label="Primary Email" value={requiredValue(profile?.organizationEmail)} />
+          {(profile?.additionalEmails || []).map((email, idx) => (
+            <ProfileField key={`view-email-${idx}`} label={`Additional Email ${idx + 1}`} value={email} />
+          ))}
+          <ProfileField label="Primary Contact Number" value={requiredValue(profile?.contactNumber)} />
+          {(profile?.additionalContactNumbers || []).map((phone, idx) => (
+            <ProfileField key={`view-phone-${idx}`} label={`Additional Contact ${idx + 1}`} value={phone} />
+          ))}
           <ProfileField label="Facebook Page" value={profile?.facebookPageUrl ? "Open Facebook Page" : "Not provided"} link={profile?.facebookPageUrl || undefined} />
         </dl>
       </ProfileSection>
@@ -552,6 +562,30 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
   const toggleAdvocacy = (advocacy: OrganizationProfile["advocacies"][number]) =>
     setDraft((current) => ({ ...current, advocacies: current.advocacies.includes(advocacy) ? current.advocacies.filter((item) => item !== advocacy) : [...current.advocacies, advocacy] }));
 
+  const addAdditionalEmail = () => setField("additionalEmails", [...(draft.additionalEmails || []), ""]);
+  const updateAdditionalEmail = (idx: number, val: string) => {
+    const next = [...(draft.additionalEmails || [])];
+    next[idx] = val;
+    setField("additionalEmails", next);
+  };
+  const removeAdditionalEmail = (idx: number) => {
+    const next = [...(draft.additionalEmails || [])];
+    next.splice(idx, 1);
+    setField("additionalEmails", next);
+  };
+
+  const addAdditionalPhone = () => setField("additionalContactNumbers", [...(draft.additionalContactNumbers || []), ""]);
+  const updateAdditionalPhone = (idx: number, val: string) => {
+    const next = [...(draft.additionalContactNumbers || [])];
+    next[idx] = val;
+    setField("additionalContactNumbers", next);
+  };
+  const removeAdditionalPhone = (idx: number) => {
+    const next = [...(draft.additionalContactNumbers || [])];
+    next.splice(idx, 1);
+    setField("additionalContactNumbers", next);
+  };
+
   const sectionSummary = useMemo(() => ({
     basic: draft.organizationName && draft.organizationEmail && draft.contactNumber ? "Complete" : "Missing information",
     location: draft.majorClassification && draft.subClassification ? "Complete" : "Missing information",
@@ -626,7 +660,9 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       userId: data.user.id,
       organizationName: draft.organizationName.trim(),
       organizationEmail: draft.organizationEmail.trim(),
+      additionalEmails: (draft.additionalEmails ?? []).map((e) => e.trim()).filter(Boolean),
       contactNumber: draft.contactNumber.trim(),
+      additionalContactNumbers: (draft.additionalContactNumbers ?? []).map((c) => c.trim()).filter(Boolean),
       district: draft.district.trim(),
       barangay: draft.barangay.trim(),
       organizationIdentifierNumber: isAlreadyVerified
@@ -674,6 +710,16 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     }
     if (!philippineContactNumberPattern.test(next.contactNumber)) {
       toast({ title: "Invalid contact number", description: "Enter an 11-digit Philippine mobile number starting with 09.", variant: "destructive" });
+      return;
+    }
+    const emailValidation = validateAdditionalEmails(next.organizationEmail, draft.additionalEmails ?? []);
+    if (!emailValidation.isValid) {
+      toast({ title: "Invalid email address", description: emailValidation.error, variant: "destructive" });
+      return;
+    }
+    const contactValidation = validateAdditionalContactNumbers(next.contactNumber, draft.additionalContactNumbers ?? []);
+    if (!contactValidation.isValid) {
+      toast({ title: "Invalid contact number", description: contactValidation.error, variant: "destructive" });
       return;
     }
     if (next.representativeName && !isValidPersonName(next.representativeName)) {
@@ -742,8 +788,26 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
               {section.id === "basic" ? (
                 <div className="pwa-profile-editor-grid">
                   <EditorField label="Organization Name" required><Input value={draft.organizationName} readOnly /></EditorField>
-                  <EditorField label="Organization Email" required><Input value={draft.organizationEmail} readOnly /></EditorField>
-                  <EditorField label="Contact Number" required>
+                  <EditorField label="Primary Organization Email" required><Input value={draft.organizationEmail} readOnly /></EditorField>
+                  {(draft.additionalEmails || []).map((email, idx) => (
+                    <div key={`pwa-email-${idx}`} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Additional Email #{idx + 1}</span>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeAdditionalEmail(idx)} className="h-6 text-xs text-destructive hover:bg-destructive/10">Remove</Button>
+                      </div>
+                      <Input
+                        type="email"
+                        value={email}
+                        placeholder="additional@email.com"
+                        onChange={(e) => updateAdditionalEmail(idx, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={addAdditionalEmail} className="w-full text-xs">
+                    + Add another email
+                  </Button>
+
+                  <EditorField label="Primary Contact Number" required>
                     <Input
                       value={draft.contactNumber}
                       onChange={(event) => setField("contactNumber", event.target.value.replace(/\D/g, "").slice(0, 11))}
@@ -753,6 +817,24 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                       placeholder="09XXXXXXXXX"
                     />
                   </EditorField>
+                  {(draft.additionalContactNumbers || []).map((phone, idx) => (
+                    <div key={`pwa-phone-${idx}`} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Additional Contact Number #{idx + 1}</span>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeAdditionalPhone(idx)} className="h-6 text-xs text-destructive hover:bg-destructive/10">Remove</Button>
+                      </div>
+                      <Input
+                        value={phone}
+                        inputMode="numeric"
+                        maxLength={11}
+                        placeholder="09XXXXXXXXX"
+                        onChange={(e) => updateAdditionalPhone(idx, e.target.value.replace(/\D/g, "").slice(0, 11))}
+                      />
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={addAdditionalPhone} className="w-full text-xs">
+                    + Add another contact number
+                  </Button>
                 </div>
               ) : null}
               {section.id === "location" ? (

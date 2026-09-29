@@ -1,30 +1,42 @@
+import { BUDGET_MONITORING_COLORS, BUDGET_MONITORING_LABELS, deriveBudgetMonitoringMetrics } from "@/lib/budget-monitoring-presentation";
+import { BudgetExecutionPipeline } from "@/components/portal/BudgetExecutionPipeline";
+
 type BudgetMonitoringSummaryCardProps = {
   fiscalYearLabel: string;
   annualAllocation: number | null;
+  totalApproved: number;
   totalReleased: number;
   totalLiquidated: number;
   onManageRequests: () => void;
 };
 
-const formatCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
+const pesoFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const formatCurrency = (value: number | null) => value === null ? "—" : pesoFormatter.format(value);
 
 const BudgetStatChip = ({
   title,
   amount,
   className,
   titleClassName,
+  valueClassName,
 }: {
   title: string;
   amount: number | null;
   className: string;
   titleClassName?: string;
+  valueClassName?: string;
 }) => (
-  <div className={`flex h-[90px] w-full flex-col justify-between rounded-lg border px-4 py-3 shadow-2xs ${className}`}>
-    <p className={`font-segoe text-[11px] font-semibold uppercase tracking-wider ${titleClassName ?? "text-muted-foreground"}`}>
+  <div className={`flex h-[90px] min-w-0 w-full flex-col justify-between rounded-lg border px-3 py-3 shadow-2xs ${className}`}>
+    <p className={`break-words font-segoe text-[11px] font-semibold uppercase leading-tight tracking-wider ${titleClassName ?? "text-muted-foreground"}`}>
       {title}
     </p>
-    <p className="font-cascadia text-base font-bold leading-[120%] tracking-tight text-foreground">
-      {formatCurrency(amount ?? 0)}
+    <p className={`font-cascadia text-base font-bold leading-[120%] tracking-tight ${valueClassName ?? "text-foreground"}`}>
+      {formatCurrency(amount)}
     </p>
   </div>
 );
@@ -32,14 +44,16 @@ const BudgetStatChip = ({
 export const BudgetMonitoringSummaryCard = ({
   fiscalYearLabel,
   annualAllocation,
+  totalApproved,
   totalReleased,
   totalLiquidated,
   onManageRequests,
 }: BudgetMonitoringSummaryCardProps) => {
-  const allocation = annualAllocation ?? 0;
-  const releasedPct = allocation > 0 ? Math.min((totalReleased / allocation) * 100, 100) : 0;
-  const liquidatedPct = allocation > 0 ? Math.min((totalLiquidated / allocation) * 100, 100 - releasedPct) : 0;
-  const available = Math.max(allocation - totalReleased, 0);
+  const metrics = deriveBudgetMonitoringMetrics({
+    allocation: annualAllocation,
+    approved: totalApproved,
+    released: totalReleased,
+  });
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 shadow-xs lg:flex-[3]">
@@ -47,7 +61,7 @@ export const BudgetMonitoringSummaryCard = ({
         <div className="flex flex-col gap-1">
           <h2 className="font-segoe text-lg font-semibold leading-none text-foreground">Budget Monitoring</h2>
           <p className="font-segoe text-[13px] font-normal leading-none text-muted-foreground">
-            Track the office&rsquo;s FY budget allocation, releases, and liquidated funds.
+            Track the office&rsquo;s allocation, approved commitments, releases, and completed liquidations for this fiscal year.
           </p>
         </div>
         <button
@@ -62,58 +76,61 @@ export const BudgetMonitoringSummaryCard = ({
       <div className="flex flex-col gap-3 px-3 py-3">
         <div className="flex items-center justify-between">
           <p className="font-segoe text-[13px] font-semibold leading-none text-foreground">
-            Annual Allocation &middot; {fiscalYearLabel}
+            {BUDGET_MONITORING_LABELS.allocation} &middot; {fiscalYearLabel}
           </p>
           <p className="font-cascadia text-[13px] font-bold leading-none text-foreground/90">
-            {formatCurrency(allocation)}
+            {formatCurrency(annualAllocation)}
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/80 border border-border/40">
-            <div className="h-full bg-amber-500 transition-all duration-300" style={{ width: `${releasedPct}%` }} />
-            <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${liquidatedPct}%` }} />
-          </div>
-          <div className="flex flex-wrap items-center gap-4 pt-0.5">
-            <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium leading-none text-muted-foreground">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-              Budget Released
-            </span>
-            <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium leading-none text-muted-foreground">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-              Budget Liquidated
-            </span>
-            <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium leading-none text-muted-foreground">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
-              Available
-            </span>
-          </div>
+        <div className="border-t border-border pt-3">
+          <p className="mb-3 font-segoe text-xs font-semibold text-foreground">
+            Budget Execution Pipeline &middot; {fiscalYearLabel}
+          </p>
+          <BudgetExecutionPipeline
+            releasedAndLiquidated={totalReleased}
+            pendingDisbursement={metrics.pendingDisbursement}
+            remainingHeadroom={metrics.remainingHeadroom}
+            totalAllocation={annualAllocation}
+            formatAmount={formatCurrency}
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5 px-0 pb-3">
+      <div className="grid grid-cols-2 gap-2.5 px-0 pb-3 xl:grid-cols-3">
         <BudgetStatChip
-          title="Total Budget"
+          title={BUDGET_MONITORING_LABELS.allocation}
           amount={annualAllocation}
           className="border-border bg-card/90"
+          valueClassName={BUDGET_MONITORING_COLORS.allocation.value}
         />
         <BudgetStatChip
-          title="Released"
+          title={BUDGET_MONITORING_LABELS.committed}
+          amount={totalApproved}
+          className="border-blue-200 bg-blue-50"
+          titleClassName={BUDGET_MONITORING_COLORS.committed.value}
+          valueClassName={BUDGET_MONITORING_COLORS.committed.value}
+        />
+        <BudgetStatChip
+          title={BUDGET_MONITORING_LABELS.released}
           amount={totalReleased}
-          className="border-amber-500/30 bg-amber-500/10 dark:border-amber-500/25 dark:bg-amber-500/10"
-          titleClassName="text-amber-600 dark:text-amber-400"
+          className={`${BUDGET_MONITORING_COLORS.released.border} ${BUDGET_MONITORING_COLORS.released.surface}`}
+          titleClassName={BUDGET_MONITORING_COLORS.released.value}
+          valueClassName={BUDGET_MONITORING_COLORS.released.value}
         />
         <BudgetStatChip
-          title="Liquidated"
+          title={BUDGET_MONITORING_LABELS.liquidated}
           amount={totalLiquidated}
-          className="border-emerald-500/30 bg-emerald-500/10 dark:border-emerald-500/25 dark:bg-emerald-500/10"
-          titleClassName="text-emerald-600 dark:text-emerald-400"
+          className={`${BUDGET_MONITORING_COLORS.liquidated.border} ${BUDGET_MONITORING_COLORS.liquidated.surface}`}
+          titleClassName={BUDGET_MONITORING_COLORS.liquidated.value}
+          valueClassName={BUDGET_MONITORING_COLORS.liquidated.value}
         />
         <BudgetStatChip
-          title="Available"
-          amount={annualAllocation === null ? 0 : available}
-          className="border-sky-500/30 bg-sky-500/10 dark:border-sky-500/25 dark:bg-sky-500/10"
-          titleClassName="text-sky-600 dark:text-sky-400"
+          title={BUDGET_MONITORING_LABELS.remainingHeadroom}
+          amount={metrics.remainingHeadroom}
+          className={`${BUDGET_MONITORING_COLORS.remainingHeadroom.border} ${BUDGET_MONITORING_COLORS.remainingHeadroom.surface}`}
+          titleClassName={BUDGET_MONITORING_COLORS.remainingHeadroom.value}
+          valueClassName={metrics.isDeficit ? "text-rose-700" : BUDGET_MONITORING_COLORS.remainingHeadroom.value}
         />
       </div>
     </div>

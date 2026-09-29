@@ -24,8 +24,12 @@ import {
   AlertCircle,
   Medal,
   CalendarDays,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Trash2,
+  Copy,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -115,6 +119,41 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
   // Form dirty tracker
   const [isFormDirty, setIsFormDirty] = useState(false);
+  const { toast } = useToast();
+
+  const handleAddEmail = () => {
+    const current = profileDraft.additionalEmails || [];
+    onFieldChange("additionalEmails", [...current, ""]);
+  };
+
+  const handleUpdateAdditionalEmail = (index: number, value: string) => {
+    const current = [...(profileDraft.additionalEmails || [])];
+    current[index] = value;
+    onFieldChange("additionalEmails", current);
+  };
+
+  const handleRemoveAdditionalEmail = (index: number) => {
+    const current = [...(profileDraft.additionalEmails || [])];
+    current.splice(index, 1);
+    onFieldChange("additionalEmails", current);
+  };
+
+  const handleAddPhone = () => {
+    const current = profileDraft.additionalContactNumbers || [];
+    onFieldChange("additionalContactNumbers", [...current, ""]);
+  };
+
+  const handleUpdateAdditionalPhone = (index: number, value: string) => {
+    const current = [...(profileDraft.additionalContactNumbers || [])];
+    current[index] = value;
+    onFieldChange("additionalContactNumbers", current);
+  };
+
+  const handleRemoveAdditionalPhone = (index: number) => {
+    const current = [...(profileDraft.additionalContactNumbers || [])];
+    current.splice(index, 1);
+    onFieldChange("additionalContactNumbers", current);
+  };
 
   const onFieldChange = (field: string, val: any) => {
     handleProfileFieldChange(field, val);
@@ -293,7 +332,10 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Organization Email <span className="text-red-500">*</span></label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground">Organization Email <span className="text-red-500">*</span></label>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Primary</span>
+                </div>
                 <Input
                   type="email"
                   value={profileDraft.organizationEmail || ""}
@@ -301,9 +343,13 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   placeholder="Organization email"
                   readOnly
                 />
+                <p className="text-[11px] text-muted-foreground">Official account email. Manage additional contact emails in Section 5 below.</p>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Contact Number <span className="text-red-500">*</span></label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground">Contact Number <span className="text-red-500">*</span></label>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Primary</span>
+                </div>
                 <Input
                   value={profileDraft.contactNumber || ""}
                   inputMode="numeric"
@@ -312,6 +358,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   placeholder="09XXXXXXXXX"
                   readOnly
                 />
+                <p className="text-[11px] text-muted-foreground">Primary mobile number. Manage all contact numbers in Section 5 below.</p>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">District <span className="text-red-500">*</span></label>
@@ -550,13 +597,149 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
           </div>
 
-          {/* Section 5: Location & Socials */}
+          {/* Section 5: Contacts, Location & Socials */}
           <div className="space-y-4 pt-3 border-t border-border/40">
             <div className="border-b border-border/60 pb-1.5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Globe className="h-3.5 w-3.5" /> 5. Location & Facebook Page
+                <Globe className="h-3.5 w-3.5" /> 5. Contact Channels, Location & Facebook Page
               </h3>
-              <p className="text-[11px] text-muted-foreground">Physical office, headquarters, or community base in Pasig City.</p>
+              <p className="text-[11px] text-muted-foreground">Manage multiple contact emails, contact numbers, headquarters address, and social links.</p>
+            </div>
+
+            {/* Sub-section: Organization Email Addresses */}
+            <div className="space-y-3 p-3.5 sm:p-4 rounded-xl border border-border/60 bg-accent/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-primary" /> Email Addresses
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground">Add multiple organization contact emails. No email verification code is required.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddEmail}
+                  className="h-7 px-2.5 rounded-lg border-border text-xs font-semibold text-primary hover:bg-primary/10 gap-1 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" /> Add another email
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {/* Primary Email */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-foreground">Primary Official Email</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                      Primary
+                    </span>
+                  </div>
+                  <Input
+                    type="email"
+                    value={profileDraft.organizationEmail || ""}
+                    readOnly
+                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Additional Emails */}
+                {(profileDraft.additionalEmails || []).map((email: string, index: number) => (
+                  <div key={`edit-email-${index}`} className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-semibold text-foreground">Additional Email #{index + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="email"
+                        placeholder="e.g. secretariat@example.com"
+                        value={email}
+                        onChange={(e) => handleUpdateAdditionalEmail(index, e.target.value)}
+                        className="h-9 text-xs rounded-xl bg-background border-border flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveAdditionalEmail(index)}
+                        className="h-9 px-2.5 rounded-xl text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sub-section: Contact Numbers */}
+            <div className="space-y-3 p-3.5 sm:p-4 rounded-xl border border-border/60 bg-accent/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-primary" /> Contact Numbers
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground">Add multiple contact numbers. No OTP or SMS verification required.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddPhone}
+                  className="h-7 px-2.5 rounded-lg border-border text-xs font-semibold text-primary hover:bg-primary/10 gap-1 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" /> Add another contact number
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {/* Primary Contact Number */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-foreground">Primary Contact Number <span className="text-red-500">*</span></span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                      Primary
+                    </span>
+                  </div>
+                  <Input
+                    value={profileDraft.contactNumber || ""}
+                    inputMode="numeric"
+                    maxLength={11}
+                    onChange={(e) => onFieldChange("contactNumber", e.target.value.replace(/\D/g, "").slice(0, 11))}
+                    placeholder="09XXXXXXXXX"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+
+                {/* Additional Contact Numbers */}
+                {(profileDraft.additionalContactNumbers || []).map((phone: string, index: number) => (
+                  <div key={`edit-phone-${index}`} className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-semibold text-foreground">Additional Contact Number #{index + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={phone}
+                        inputMode="numeric"
+                        maxLength={11}
+                        placeholder="09XXXXXXXXX"
+                        onChange={(e) => handleUpdateAdditionalPhone(index, e.target.value.replace(/\D/g, "").slice(0, 11))}
+                        className="h-9 text-xs rounded-xl bg-background border-border flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveAdditionalPhone(index)}
+                        className="h-9 px-2.5 rounded-xl text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Office / Community Address */}
@@ -888,58 +1071,219 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
           {/* TAB 5: CONTACTS & SOCIALS */}
           {activeProfileTab === "contacts-socials" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Card 1: Official Contact Channels */}
               <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" /> Leadership & Head of Organization
-                </h3>
-                <div className="space-y-3 text-xs">
-                  <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
-                    <p className="font-bold text-foreground text-sm">{getRepresentativeDisplayName(profile) || "Unassigned Head of Organization"}</p>
+                <div className="border-b border-border/40 pb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" /> Contact Channels
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Official communication endpoints registered for this organization.
+                  </p>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  {/* Email Addresses */}
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Mail className="h-3 w-3 text-muted-foreground" /> Email Addresses
+                    </span>
+                    <div className="space-y-1.5">
+                      {/* Primary Email */}
+                      <div className="bg-accent/20 px-3.5 py-2.5 rounded-xl border border-border/50 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`mailto:${profile.organizationEmail}`}
+                              className="font-bold text-foreground text-xs hover:text-primary hover:underline truncate block"
+                            >
+                              {profile.organizationEmail || "No official email provided"}
+                            </a>
+                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                              Primary
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">Official Organization Email</span>
+                        </div>
+                        {profile.organizationEmail && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(profile.organizationEmail);
+                              toast({ title: "Copied", description: "Email copied to clipboard." });
+                            }}
+                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+                            title="Copy email"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Additional Emails */}
+                      {(profile.additionalEmails || []).map((email: string, idx: number) => (
+                        <div
+                          key={`additional-email-${idx}-${email}`}
+                          className="bg-accent/10 px-3.5 py-2 rounded-xl border border-border/40 flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <a
+                              href={`mailto:${email}`}
+                              className="font-semibold text-foreground text-xs hover:text-primary hover:underline truncate block"
+                            >
+                              {email}
+                            </a>
+                            <span className="text-[10px] text-muted-foreground">Additional Email</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(email);
+                              toast({ title: "Copied", description: "Email copied to clipboard." });
+                            }}
+                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+                            title="Copy email"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
-                    <p className="font-bold text-foreground text-sm">{getAdviserDisplayName(profile) || "Unassigned Adviser"}</p>
+
+                  {/* Contact Numbers */}
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Phone className="h-3 w-3 text-muted-foreground" /> Contact Numbers
+                    </span>
+                    <div className="space-y-1.5">
+                      {/* Primary Contact Number */}
+                      <div className="bg-accent/20 px-3.5 py-2.5 rounded-xl border border-border/50 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`tel:${profile.contactNumber}`}
+                              className="font-bold text-foreground text-xs hover:text-primary hover:underline truncate block"
+                            >
+                              {profile.contactNumber || "No contact number provided"}
+                            </a>
+                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                              Primary
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">Primary Mobile Number</span>
+                        </div>
+                        {profile.contactNumber && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(profile.contactNumber);
+                              toast({ title: "Copied", description: "Contact number copied to clipboard." });
+                            }}
+                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+                            title="Copy number"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Additional Contact Numbers */}
+                      {(profile.additionalContactNumbers || []).map((num: string, idx: number) => (
+                        <div
+                          key={`additional-phone-${idx}-${num}`}
+                          className="bg-accent/10 px-3.5 py-2 rounded-xl border border-border/40 flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <a
+                              href={`tel:${num}`}
+                              className="font-semibold text-foreground text-xs hover:text-primary hover:underline truncate block"
+                            >
+                              {num}
+                            </a>
+                            <span className="text-[10px] text-muted-foreground">Additional Contact Number</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(num);
+                              toast({ title: "Copied", description: "Contact number copied to clipboard." });
+                            }}
+                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+                            title="Copy number"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </Card>
 
-              <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-primary" /> Location & Social Media
-                </h3>
-                <div className="space-y-3 text-xs">
-                  <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground">Office Address</span>
-                    <p className="font-bold text-foreground text-sm leading-relaxed">{getOrganizationAddressDisplay(profile) || "Address not provided"}</p>
+              {/* Card 2 & 3: Leadership and Location & Socials */}
+              <div className="space-y-4 sm:space-y-6">
+                <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" /> Leadership & Head of Organization
+                  </h3>
+                  <div className="space-y-3 text-xs">
+                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
+                      <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
+                      <p className="font-bold text-foreground text-sm">{getRepresentativeDisplayName(profile) || "Unassigned Head of Organization"}</p>
+                    </div>
+                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
+                      <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
+                      <p className="font-bold text-foreground text-sm">{getAdviserDisplayName(profile) || "Unassigned Adviser"}</p>
+                    </div>
                   </div>
-                  <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 flex items-center justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Facebook Page</span>
-                      {profile.facebookPageUrl ? (
-                        <a
-                          href={profile.facebookPageUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-bold text-primary text-xs truncate block hover:underline pt-0.5 break-all"
-                        >
-                          {profile.facebookPageUrl}
-                        </a>
-                      ) : (
-                        <p className="text-muted-foreground italic text-xs pt-0.5">Not provided</p>
+                </Card>
+
+                <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" /> Location & Social Media
+                  </h3>
+                  <div className="space-y-3 text-xs">
+                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
+                      <span className="text-xs font-semibold text-muted-foreground">Office Address</span>
+                      <p className="font-bold text-foreground text-sm leading-relaxed">{getOrganizationAddressDisplay(profile) || "Address not provided"}</p>
+                    </div>
+                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-semibold text-muted-foreground">Facebook Page</span>
+                        {profile.facebookPageUrl ? (
+                          <a
+                            href={profile.facebookPageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-bold text-primary text-xs truncate block hover:underline pt-0.5 break-all"
+                          >
+                            {profile.facebookPageUrl}
+                          </a>
+                        ) : (
+                          <p className="text-muted-foreground italic text-xs pt-0.5">Not provided</p>
+                        )}
+                      </div>
+                      {profile.facebookPageUrl && (
+                        <Button type="button" variant="ghost" size="sm" asChild className="h-8 w-8 p-0 shrink-0 text-primary hover:bg-primary/10">
+                          <a href={profile.facebookPageUrl} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
                       )}
                     </div>
-                    {profile.facebookPageUrl && (
-                      <Button type="button" variant="ghost" size="sm" asChild className="h-8 w-8 p-0 shrink-0 text-primary hover:bg-primary/10">
-                        <a href={profile.facebookPageUrl} target="_blank" rel="noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
             </div>
           )}
 

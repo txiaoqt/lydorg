@@ -89,7 +89,9 @@ type OrganizationProfileRow = {
   user_id: string;
   organization_name: string;
   organization_email: string;
+  additional_emails?: string[] | null;
   contact_number: string;
+  additional_contact_numbers?: string[] | null;
   district: string;
   barangay: string;
   is_existing_organization: boolean | null;
@@ -640,7 +642,9 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   userId: row.user_id,
   organizationName: row.organization_name,
   organizationEmail: row.organization_email,
+  additionalEmails: Array.isArray(row.additional_emails) ? row.additional_emails : [],
   contactNumber: row.contact_number,
+  additionalContactNumbers: Array.isArray(row.additional_contact_numbers) ? row.additional_contact_numbers : [],
   district: row.district,
   barangay: row.barangay,
   isExistingOrganization: Boolean(row.is_existing_organization),
@@ -2052,7 +2056,9 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     user_id: session.user.id,
     organization_name: profile.organizationName.trim(),
     organization_email: authoritativeEmail,
+    additional_emails: (profile.additionalEmails ?? []).map((e) => e.trim()).filter(Boolean),
     contact_number: profile.contactNumber.trim(),
+    additional_contact_numbers: (profile.additionalContactNumbers ?? []).map((c) => c.trim()).filter(Boolean),
     district: profile.district.trim(),
     barangay: profile.barangay.trim(),
     is_existing_organization: Boolean(profile.isExistingOrganization),

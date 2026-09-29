@@ -2023,37 +2023,6 @@ export default function AdminPortal({ section }: { section: string }) {
     setInquiryStatusDraft(normalizedStatus);
     setInquiryAdminRemarksDraft(inquiry.adminRemarks);
   };
-  const budgetMonitoringAnalysis = useMemo(() => {
-    const totalApproved = budgetMonitoringEntries.reduce((sum, entry) => sum + entry.approvedAmount, 0);
-    const totalReleased = budgetMonitoringEntries.reduce((sum, entry) => sum + entry.releasedAmount, 0);
-    const totalRemaining = Math.max(totalApproved - totalReleased, 0);
-    const utilizationRate = totalApproved > 0 ? Math.round((totalReleased / totalApproved) * 100) : 0;
-    const overdueCount = budgetMonitoringEntries.filter((entry) => entry.riskLabel === "Overdue").length;
-    const needsAttentionCount = budgetMonitoringEntries.filter((entry) => entry.riskLabel === "Needs Attention").length;
-    const completedCount = budgetMonitoringEntries.filter((entry) => entry.riskLabel === "Completed").length;
-    const onTrackCount = budgetMonitoringEntries.filter((entry) => entry.riskLabel === "On Track").length;
-    const pendingLiquidationCount = budgetMonitoringEntries.filter((entry) => !entry.liquidationReportId).length;
-
-    const insights = [
-      `${budgetMonitoringEntries.length} cash-released budget${budgetMonitoringEntries.length === 1 ? "" : "s"} are now under automatic monitoring.`,
-      `${pendingLiquidationCount} budget${pendingLiquidationCount === 1 ? "" : "s"} still need an attached liquidation record.`,
-      `${overdueCount} budget${overdueCount === 1 ? "" : "s"} are flagged overdue or past deadline.`,
-      `${utilizationRate}% of approved funds have been released so far.`,
-    ];
-
-    return {
-      totalApproved,
-      totalReleased,
-      totalRemaining,
-      utilizationRate,
-      overdueCount,
-      needsAttentionCount,
-      completedCount,
-      onTrackCount,
-      pendingLiquidationCount,
-      insights,
-    };
-  }, [budgetMonitoringEntries]);
   const organizationProfileById = useMemo(
     () => new Map(state.organizationProfiles.map((organization) => [organization.id, organization] as const)),
     [state.organizationProfiles],
@@ -7147,8 +7116,9 @@ export default function AdminPortal({ section }: { section: string }) {
                   annualAllocationFiscalYear ? `FY ${annualAllocationFiscalYear}-${annualAllocationFiscalYear + 1}` : "FY —"
                 }
                 annualAllocation={annualAllocation}
-                totalReleased={budgetMonitoringAnalysis.totalReleased}
-                totalLiquidated={totalLiquidated}
+                totalApproved={budgetMonitoringApprovedTotal}
+                totalReleased={budgetMonitoringReleasedTotal}
+                totalLiquidated={budgetMonitoringLiquidatedTotal}
                 onManageRequests={() => navigate(routeMap["budget-utilization"])}
               />
               <RecentActivityLogCard
@@ -7586,13 +7556,22 @@ export default function AdminPortal({ section }: { section: string }) {
                         icon={Mail}
                         label="EMAIL"
                         title={selectedOrg.organizationEmail}
-                        description="Verified Portal Account"
+                        description={
+                          selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0
+                            ? `+${selectedOrg.additionalEmails.length} more (${selectedOrg.additionalEmails.join(", ")})`
+                            : "Verified Portal Account"
+                        }
                         showCopy
                       />
                       <RegistrationContactBox
                         icon={Phone}
                         label="CONTACT"
                         title={selectedOrg.contactNumber || "N/A"}
+                        description={
+                          selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0
+                            ? `+${selectedOrg.additionalContactNumbers.length} more (${selectedOrg.additionalContactNumbers.join(", ")})`
+                            : undefined
+                        }
                       />
                       <RegistrationContactBox
                         icon={Globe}
@@ -8532,10 +8511,28 @@ export default function AdminPortal({ section }: { section: string }) {
                     <div>
                       <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Email Address</p>
                       <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationEmail || "—"}</p>
+                      {selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0 ? (
+                        <div className="mt-1 space-y-0.5">
+                          {selectedOrg.additionalEmails.map((email: string, idx: number) => (
+                            <p key={`admin-org-email-${idx}`} className="font-segoe text-xs text-slate-500">
+                              <span className="font-medium text-slate-400">Alt:</span> {email}
+                            </p>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <div>
                       <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Contact Number</p>
                       <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.contactNumber || "—"}</p>
+                      {selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0 ? (
+                        <div className="mt-1 space-y-0.5">
+                          {selectedOrg.additionalContactNumbers.map((phone: string, idx: number) => (
+                            <p key={`admin-org-phone-${idx}`} className="font-segoe text-xs text-slate-500">
+                              <span className="font-medium text-slate-400">Alt:</span> {phone}
+                            </p>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <div>
                       <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Facebook Page</p>
@@ -9678,14 +9675,20 @@ export default function AdminPortal({ section }: { section: string }) {
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
                           <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Contact</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default text-right">
                             {selectedBudgetOrganization?.contactNumber || "—"}
+                            {selectedBudgetOrganization?.additionalContactNumbers && selectedBudgetOrganization.additionalContactNumbers.length > 0
+                              ? ` (+${selectedBudgetOrganization.additionalContactNumbers.length})`
+                              : ""}
                           </span>
                         </div>
                         <div className="flex items-center justify-between py-2">
                           <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Email</span>
-                          <span className="truncate font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="truncate font-segoe text-[13px] font-semibold leading-none text-text-default text-right">
                             {selectedBudgetOrganization?.organizationEmail || "—"}
+                            {selectedBudgetOrganization?.additionalEmails && selectedBudgetOrganization.additionalEmails.length > 0
+                              ? ` (+${selectedBudgetOrganization.additionalEmails.length})`
+                              : ""}
                           </span>
                         </div>
                       </div>
@@ -11942,29 +11945,6 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       case "budget-monitoring":
       case "public-transparency-posts": {
-        const totalFYBudget = annualAllocation ?? 0;
-        const releasedBudget = budgetMonitoringAnalysis.totalReleased;
-        const liquidatedBudget = totalLiquidated;
-        const approvedBudget = budgetApprovedTotal;
-        const pendingDisbursement = Math.max(approvedBudget - releasedBudget, 0);
-        const activeInField = Math.max(releasedBudget - liquidatedBudget, 0);
-        const rawHeadroom = annualAllocation !== null ? annualAllocation - approvedBudget : 0;
-        const remainingHeadroom = rawHeadroom;
-        const percentClearedOfReleased = releasedBudget > 0 ? Math.round((liquidatedBudget / releasedBudget) * 100) : 0;
-        const percentAvailable =
-          annualAllocation !== null && annualAllocation > 0
-            ? ((Math.max(remainingHeadroom, 0) / annualAllocation) * 100).toFixed(1)
-            : "0.0";
-        const utilizationBarTotal = Math.max(annualAllocation ?? 0, approvedBudget, releasedBudget, 1);
-        const rawLiquidatedPct = utilizationBarTotal > 0 ? (liquidatedBudget / utilizationBarTotal) * 100 : 0;
-        const liquidatedPct = liquidatedBudget > 0 ? Math.min(Math.max(rawLiquidatedPct, 1), 100) : 0;
-        const rawActiveInFieldPct = utilizationBarTotal > 0 ? (activeInField / utilizationBarTotal) * 100 : 0;
-        const activeInFieldPct =
-          activeInField > 0 ? Math.min(Math.max(rawActiveInFieldPct, 1), 100 - liquidatedPct) : 0;
-        const remainingPct = Math.max(100 - liquidatedPct - activeInFieldPct, 0);
-
-
-
         return (
           <div className="space-y-4">
             {isConfiguringPublicSnapshot ? (
@@ -12045,7 +12025,6 @@ export default function AdminPortal({ section }: { section: string }) {
                       releasedBudget={budgetMonitoringReleasedTotal}
                       liquidatedBudget={budgetMonitoringLiquidatedTotal}
                       pendingDisbursement={Math.max(budgetMonitoringApprovedTotal - budgetMonitoringReleasedTotal, 0)}
-                      activeInField={Math.max(budgetMonitoringReleasedTotal - budgetMonitoringLiquidatedTotal, 0)}
                       categoryBreakdown={budgetMonitoringPurposeCategories}
                       formatPesoAmount={formatPesoAmount}
                       formatCompactPeso={formatCompactPeso}
@@ -12372,7 +12351,10 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
 
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-sm">
-                      <PublicBudgetOverview />
+                      <PublicBudgetOverview
+                        selectedFiscalYear={selectedFiscalYear}
+                        availableFiscalYears={availableFiscalYears}
+                      />
                     </div>
                   </div>
                 ) : null}

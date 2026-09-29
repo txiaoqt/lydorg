@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
 import { createCategoryColorResolver } from "@/lib/budget-category-colors";
+import { BUDGET_MONITORING_COLORS, BUDGET_MONITORING_LABELS, deriveBudgetMonitoringMetrics } from "@/lib/budget-monitoring-presentation";
+import { BudgetExecutionPipeline } from "@/components/portal/BudgetExecutionPipeline";
 import {
   BudgetMonitoringFilters,
   DEFAULT_BUDGET_MONITORING_FILTERS,
@@ -51,7 +53,6 @@ type BudgetMonitoringOverviewProps = {
   releasedBudget: number;
   liquidatedBudget: number;
   pendingDisbursement: number;
-  activeInField: number;
   categoryBreakdown: PurposeCategoryItem[];
   formatPesoAmount: (value?: number | null) => string;
   formatCompactPeso: (value: number) => string;
@@ -90,7 +91,6 @@ export const BudgetMonitoringOverview = ({
   releasedBudget,
   liquidatedBudget,
   pendingDisbursement,
-  activeInField,
   categoryBreakdown,
   formatPesoAmount,
   formatCompactPeso,
@@ -119,12 +119,11 @@ export const BudgetMonitoringOverview = ({
   const isConfigured = annualAllocation !== null;
   const totalFYBudget = isConfigured ? annualAllocation.totalAmount : null;
 
-  // Authoritative financial calculations
-  // Headroom = FY Budget - Approved (NOT FY Budget - Released)
-  const rawHeadroom = totalFYBudget !== null ? totalFYBudget - approvedBudget : null;
-  const isDeficit = rawHeadroom !== null && rawHeadroom < 0;
-  const deficitAmount = isDeficit ? Math.abs(rawHeadroom) : 0;
-  const remainingHeadroom = rawHeadroom;
+  const { isDeficit, deficitAmount, remainingHeadroom } = deriveBudgetMonitoringMetrics({
+    allocation: totalFYBudget,
+    approved: approvedBudget,
+    released: releasedBudget,
+  });
 
   // Utilization progression percentages
   const percentClearedOfReleased =
@@ -134,20 +133,6 @@ export const BudgetMonitoringOverview = ({
     totalFYBudget !== null && totalFYBudget > 0 && remainingHeadroom !== null
       ? ((Math.max(remainingHeadroom, 0) / totalFYBudget) * 100).toFixed(1)
       : null;
-
-  // Pipeline proportions for the authoritative progression bar
-  // Base is totalFYBudget if configured and not exceeded; if exceeded or unconfigured, base is approvedBudget or releasedBudget
-  const pipelineBaseline = Math.max(totalFYBudget ?? 0, approvedBudget, releasedBudget, 1);
-  const liquidatedBarPct = Math.min((liquidatedBudget / pipelineBaseline) * 100, 100);
-  const activeInFieldBarPct = Math.min((activeInField / pipelineBaseline) * 100, 100 - liquidatedBarPct);
-  const pendingDisbursementBarPct = Math.min(
-    (pendingDisbursement / pipelineBaseline) * 100,
-    100 - liquidatedBarPct - activeInFieldBarPct
-  );
-  const headroomBarPct =
-    isConfigured && !isDeficit && remainingHeadroom !== null
-      ? Math.max(100 - liquidatedBarPct - activeInFieldBarPct - pendingDisbursementBarPct, 0)
-      : 0;
 
   // Single deterministic category -> color resolver for the master categoryBreakdown list
   const getCategoryColor = useMemo(
@@ -374,7 +359,7 @@ export const BudgetMonitoringOverview = ({
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    FY Budget Allocation
+                    {BUDGET_MONITORING_LABELS.allocation}
                   </p>
                   <span
                     className={cn(
@@ -387,16 +372,16 @@ export const BudgetMonitoringOverview = ({
                     {isConfigured ? "Baseline" : "Unset"}
                   </span>
                 </div>
-                <p className="font-cascadia text-lg font-bold leading-tight text-text-default">
+                <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.allocation.value)}>
                   {isConfigured ? formatPesoAmount(totalFYBudget) : "Not Configured"}
                 </p>
-                <p className="font-segoe text-xs text-slate-500">
+                  <p className="font-segoe text-xs text-slate-600">
                   {annualAllocation?.statutoryBaselineNotes || "Approved annual statutory ceiling"}
                 </p>
               </div>
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-slate-500">Remaining Headroom</span>
+                <span className="font-segoe text-[11px] text-slate-500">{BUDGET_MONITORING_LABELS.remainingHeadroom}</span>
                 <span
                   className={cn(
                     "font-cascadia text-[11px] font-bold",
@@ -404,7 +389,7 @@ export const BudgetMonitoringOverview = ({
                       ? "text-slate-400"
                       : isDeficit
                       ? "text-red-600"
-                      : "text-emerald-700"
+                      : BUDGET_MONITORING_COLORS.remainingHeadroom.value
                   )}
                 >
                   {!isConfigured
@@ -420,22 +405,22 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Approved / Committed
+                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-blue-700">
+                    {BUDGET_MONITORING_LABELS.committed}
                   </p>
                   <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-blue-700 uppercase">
                     Committed
                   </span>
                 </div>
-                <p className="font-cascadia text-lg font-bold leading-tight text-blue-700">
+                <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.committed.value)}>
                   {formatPesoAmount(approvedBudget)}
                 </p>
-                <p className="font-segoe text-xs text-slate-500">Approved by administrators</p>
+                <p className="font-segoe text-xs text-blue-800">Approved and committed by administrators</p>
               </div>
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-slate-500">Pending Disbursement</span>
-                <span className="font-cascadia text-[11px] font-bold text-text-default">
+                <span className="font-segoe text-[11px] text-blue-700">{BUDGET_MONITORING_LABELS.pendingDisbursement}</span>
+                <span className={cn("font-cascadia text-[11px] font-bold", BUDGET_MONITORING_COLORS.pendingDisbursement.value)}>
                   {formatPesoAmount(pendingDisbursement)}
                 </span>
               </div>
@@ -445,33 +430,27 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Released Budget
+                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-cyan-700">
+                    {BUDGET_MONITORING_LABELS.released}
                   </p>
-                  <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-cyan-700 uppercase">
-                    Disbursed
+                    <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-cyan-700 uppercase">
+                    Released Budget
                   </span>
                 </div>
-                <p className="font-cascadia text-lg font-bold leading-tight text-cyan-700">
+                <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.released.value)}>
                   {formatPesoAmount(releasedBudget)}
                 </p>
                 <p className="font-segoe text-xs text-slate-500">Disbursed to youth organizations</p>
               </div>
 
-              <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-slate-500">Active in Field</span>
-                <span className="font-cascadia text-[11px] font-bold text-text-default">
-                  {formatPesoAmount(activeInField)}
-                </span>
-              </div>
             </div>
 
             {/* Card 4: Liquidated Budget */}
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Liquidated Budget
+                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                    {BUDGET_MONITORING_LABELS.liquidated}
                   </p>
                   <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-emerald-700 uppercase">
                     Audited
@@ -480,11 +459,11 @@ export const BudgetMonitoringOverview = ({
                 <p className="font-cascadia text-lg font-bold leading-tight text-emerald-700">
                   {formatPesoAmount(liquidatedBudget)}
                 </p>
-                <p className="font-segoe text-xs text-slate-500">Audited with official receipts</p>
+                <p className="font-segoe text-xs text-emerald-800">Released funds cleared through liquidation review</p>
               </div>
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-slate-500">Cleared of Released</span>
+                <span className="font-segoe text-[11px] text-emerald-800">Cleared of Released Budget</span>
                 <span className="font-segoe text-[11px] font-bold text-emerald-700">
                   {percentClearedOfReleased}% Cleared
                 </span>
@@ -500,104 +479,31 @@ export const BudgetMonitoringOverview = ({
                   Budget Execution Pipeline &middot; FY {selectedFiscalYear}
                 </p>
                 <span className="font-segoe text-[11px] text-slate-500">
-                  (Progression: Allocation &rarr; Approved &rarr; Released &rarr; Liquidated)
+                  Current allocation position across released funds, pending disbursement, and remaining headroom
                 </span>
               </div>
 
-              {percentAvailable !== null ? (
-                <p className="font-segoe text-xs font-semibold text-slate-600">
-                  <span className="font-cascadia text-emerald-700 font-bold">{percentAvailable}%</span> Available for New Grants
-                </p>
-              ) : isDeficit ? (
+              {isDeficit ? (
                 <span className="rounded bg-red-100 px-2 py-0.5 font-segoe text-xs font-bold text-red-700">
                   Over-Budget Deficit
                 </span>
+              ) : percentAvailable !== null ? (
+                <p className="font-segoe text-xs font-semibold text-slate-600">
+                  <span className="font-cascadia font-bold text-slate-700">{percentAvailable}%</span> of FY Budget Allocation remains uncommitted
+                </p>
               ) : (
-                <span className="font-segoe text-xs text-amber-700">Baseline Required for Available %</span>
+                <span className="font-segoe text-xs text-amber-800">Configure the FY Budget Allocation to calculate headroom</span>
               )}
             </div>
 
-            {/* Authoritative Single Progression Track */}
-            <div className="mt-3 flex h-3.5 w-full overflow-hidden rounded-full bg-slate-200">
-              <div
-                className="h-full bg-emerald-600 transition-all duration-300"
-                style={{ width: `${liquidatedBarPct}%` }}
-                title={`Liquidated: ${formatPesoAmount(liquidatedBudget)}`}
+            <div className="mt-3 border-t border-slate-200 pt-4">
+              <BudgetExecutionPipeline
+                releasedAndLiquidated={releasedBudget}
+                pendingDisbursement={pendingDisbursement}
+                remainingHeadroom={remainingHeadroom}
+                totalAllocation={totalFYBudget}
+                formatAmount={formatPesoAmount}
               />
-              <div
-                className="h-full bg-public-bg-brand transition-all duration-300"
-                style={{ width: `${activeInFieldBarPct}%` }}
-                title={`Active in Field: ${formatPesoAmount(activeInField)}`}
-              />
-              <div
-                className="h-full bg-blue-300 transition-all duration-300"
-                style={{ width: `${pendingDisbursementBarPct}%` }}
-                title={`Pending Disbursement: ${formatPesoAmount(pendingDisbursement)}`}
-              />
-              {headroomBarPct > 0 && (
-                <div
-                  className="h-full bg-emerald-100 transition-all duration-300"
-                  style={{ width: `${headroomBarPct}%` }}
-                  title={`Remaining Headroom: ${formatPesoAmount(remainingHeadroom)}`}
-                />
-              )}
-            </div>
-
-            {/* Pipeline Chips Legend */}
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-200">
-              <div className="flex flex-wrap items-center gap-4">
-                <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium text-text-default">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-600" />
-                  Liquidated &amp; Cleared:{" "}
-                  <span className="font-cascadia font-bold text-emerald-700">
-                    {formatPesoAmount(liquidatedBudget)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium text-text-default">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-public-bg-brand" />
-                  Active in Field:{" "}
-                  <span className="font-cascadia font-bold text-public-text-brand">
-                    {formatPesoAmount(activeInField)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium text-text-default">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-blue-300" />
-                  Pending Disbursement:{" "}
-                  <span className="font-cascadia font-bold text-text-default">
-                    {formatPesoAmount(pendingDisbursement)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 font-segoe text-[11px] font-medium text-text-default">
-                  <span
-                    className={cn(
-                      "h-2.5 w-2.5 shrink-0 rounded-full",
-                      !isConfigured ? "bg-slate-300" : isDeficit ? "bg-red-500" : "bg-emerald-100 border border-emerald-400"
-                    )}
-                  />
-                  Remaining Headroom:{" "}
-                  <span
-                    className={cn(
-                      "font-cascadia font-bold",
-                      !isConfigured ? "text-slate-500" : isDeficit ? "text-red-600" : "text-emerald-700"
-                    )}
-                  >
-                    {!isConfigured
-                      ? "Unavailable"
-                      : isDeficit
-                      ? `-${formatPesoAmount(deficitAmount)}`
-                      : formatPesoAmount(remainingHeadroom)}
-                  </span>
-                </span>
-              </div>
-
-              {isConfigured && (
-                <div className="font-segoe text-[11px] text-slate-500">
-                  Total Statutory Ceiling:{" "}
-                  <span className="font-cascadia font-bold text-text-default">
-                    {formatPesoAmount(totalFYBudget)}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>

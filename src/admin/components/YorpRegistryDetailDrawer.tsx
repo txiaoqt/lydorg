@@ -666,8 +666,27 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                     <SectionCard title="Contact & Socials" icon={Globe}>
                       <div className="flex flex-col gap-3">
                         <CopyableField label="Primary Email" value={org.organizationEmail || "Not provided"} />
-                        <CopyableField label="Alternative Email" value="Not provided" />
+                        {org.additionalEmails && org.additionalEmails.length > 0 ? (
+                          org.additionalEmails.map((email: string, idx: number) => (
+                            <CopyableField
+                              key={`drawer-alt-email-${idx}`}
+                              label={`Additional Email ${idx + 1}`}
+                              value={email}
+                            />
+                          ))
+                        ) : (
+                          <CopyableField label="Additional Email" value="Not provided" />
+                        )}
                         <CopyableField label="Mobile Number" value={org.contactNumber || "Not provided"} />
+                        {org.additionalContactNumbers && org.additionalContactNumbers.length > 0 ? (
+                          org.additionalContactNumbers.map((phone: string, idx: number) => (
+                            <CopyableField
+                              key={`drawer-alt-phone-${idx}`}
+                              label={`Additional Contact ${idx + 1}`}
+                              value={phone}
+                            />
+                          ))
+                        ) : null}
                         <CopyableField label="Facebook Page" value={org.facebookPageUrl || "Not provided"} />
                       </div>
                     </SectionCard>

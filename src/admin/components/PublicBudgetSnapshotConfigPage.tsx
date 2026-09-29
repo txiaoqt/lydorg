@@ -11,6 +11,7 @@ import {
   adminSavePublicBudgetSourcesInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import type { PublicBudgetSnapshotSettings } from "@/lib/lydo-connect-data";
+import { BUDGET_MONITORING_LABELS } from "@/lib/budget-monitoring-presentation";
 
 type DraftSource = { amount: string; purpose: string };
 
@@ -44,11 +45,11 @@ const SNAPSHOT_COMPONENT_TOGGLES: {
   label: string;
   description: string;
 }[] = [
-  { key: "showUtilizationProgress", label: "Budget Utilization Progress", description: "The liquidated / active-in-field / remaining-headroom progress bar." },
-  { key: "showTotalFyBudget", label: "Total FY Budget", description: "Total annual allocation for the selected fiscal year." },
-  { key: "showApprovedBudget", label: "Approved Budget", description: "Total approved and pending-disbursement amount." },
-  { key: "showReleasedBudget", label: "Released Budget", description: "Total disbursed to organizations, active in the field." },
-  { key: "showLiquidatedBudget", label: "Liquidated Budget", description: "Total audited and cleared with official receipts." },
+  { key: "showUtilizationProgress", label: "Budget Execution Progress", description: `${BUDGET_MONITORING_LABELS.releasedAndLiquidated}, ${BUDGET_MONITORING_LABELS.pendingDisbursement}, and ${BUDGET_MONITORING_LABELS.remainingHeadroom}.` },
+  { key: "showTotalFyBudget", label: BUDGET_MONITORING_LABELS.allocation, description: "Annual statutory allocation for the selected fiscal year." },
+  { key: "showApprovedBudget", label: BUDGET_MONITORING_LABELS.committed, description: "Total budget approved and committed for the selected fiscal year." },
+  { key: "showReleasedBudget", label: BUDGET_MONITORING_LABELS.released, description: "Total funds released to organizations for the selected fiscal year." },
+  { key: "showLiquidatedBudget", label: BUDGET_MONITORING_LABELS.liquidated, description: "Released funds cleared through liquidation review for the selected fiscal year." },
   { key: "showAllocationBreakdown", label: "Budget Allocation Breakdown", description: "Chart showing what portion of the total goes to each purpose (from the FY Budget Allocation entries above)." },
 ];
 
@@ -177,7 +178,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
               <div className="flex flex-col gap-1">
                 <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Allocation</p>
                 <p className="font-segoe text-[13px] font-normal leading-[140%] text-slate-500">
-                  Enter the budget source(s) available this fiscal year and what each is for. These feed the Total FY Budget figure — add as many as apply.
+                  Enter the budget source(s) available this fiscal year and what each is for. These make up the FY Budget Allocation — add as many as apply.
                 </p>
               </div>
               <Select value={String(sourcesFiscalYear)} onValueChange={(value) => setSourcesFiscalYear(Number(value))}>
@@ -248,7 +249,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-300 pt-4">
-              <p className="font-segoe text-sm font-normal text-slate-500">Total FY Budget</p>
+              <p className="font-segoe text-sm font-normal text-slate-500">FY Budget Allocation</p>
               <p className="font-cascadia text-lg font-bold text-text-default">{formatPeso(totalFyBudget)}</p>
             </div>
           </div>

@@ -150,6 +150,8 @@ import {
   isValidSuffix,
   organizationEmailPattern,
   philippineContactNumberPattern,
+  validateAdditionalEmails,
+  validateAdditionalContactNumbers,
 } from "@/lib/organization-profile-domain";
 import {
   getYpopEventJoinEligibility,
@@ -2298,7 +2300,9 @@ export default function UserPortal({ section }: { section: string }) {
       userId: user.id,
       organizationName: profileDraft.organizationName.trim(),
       organizationEmail: profileDraft.organizationEmail.trim(),
+      additionalEmails: (profileDraft.additionalEmails ?? []).map((e) => e.trim()).filter(Boolean),
       contactNumber: profileDraft.contactNumber.trim(),
+      additionalContactNumbers: (profileDraft.additionalContactNumbers ?? []).map((c) => c.trim()).filter(Boolean),
       district: profileDraft.district.trim(),
       barangay: profileDraft.barangay.trim(),
       isExistingOrganization: profileDraft.isExistingOrganization,
@@ -2382,6 +2386,28 @@ export default function UserPortal({ section }: { section: string }) {
       toast({
         title: "Invalid contact number",
         description: "Please enter an 11-digit Philippine mobile number starting with 09.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const emailValidation = validateAdditionalEmails(trimmedProfile.organizationEmail, profileDraft.additionalEmails ?? []);
+    if (!emailValidation.isValid) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "contact-social"])));
+      toast({
+        title: "Invalid email address",
+        description: emailValidation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const contactValidation = validateAdditionalContactNumbers(trimmedProfile.contactNumber, profileDraft.additionalContactNumbers ?? []);
+    if (!contactValidation.isValid) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "contact-social"])));
+      toast({
+        title: "Invalid contact number",
+        description: contactValidation.error,
         variant: "destructive",
       });
       return;

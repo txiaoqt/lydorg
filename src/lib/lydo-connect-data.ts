@@ -955,7 +955,9 @@ export type OrganizationProfile = {
   userId: string;
   organizationName: string;
   organizationEmail: string;
+  additionalEmails?: string[];
   contactNumber: string;
+  additionalContactNumbers?: string[];
   district: string;
   barangay: string;
   isExistingOrganization: boolean;
@@ -1095,6 +1097,29 @@ export function formatAddress(
 
   if (parts.length === 0) return fallback;
   return mode === "multi-line" ? parts.join("\n") : parts.join(", ");
+}
+
+/**
+ * Returns all organization contact emails (primary official email first, followed by additional emails).
+ */
+export function getAllOrganizationEmails(profile?: Partial<OrganizationProfile> | null): string[] {
+  if (!profile) return [];
+  const primary = profile.organizationEmail?.trim() || "";
+  const additional = (profile.additionalEmails || []).map((e) => e.trim()).filter(Boolean);
+  return primary ? [primary, ...additional.filter((e) => e.toLowerCase() !== primary.toLowerCase())] : additional;
+}
+
+/**
+ * Returns all organization contact numbers (primary contact first, followed by additional numbers).
+ */
+export function getAllOrganizationContactNumbers(profile?: Partial<OrganizationProfile> | null): string[] {
+  if (!profile) return [];
+  const primary = profile.contactNumber?.trim() || "";
+  const additional = (profile.additionalContactNumbers || []).map((c) => c.trim()).filter(Boolean);
+  const primaryDigits = primary.replace(/\D/g, "");
+  return primary
+    ? [primary, ...additional.filter((c) => c.replace(/\D/g, "") !== primaryDigits)]
+    : additional;
 }
 
 export function getRepresentativeDisplayName(

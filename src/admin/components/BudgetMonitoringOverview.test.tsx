@@ -87,7 +87,6 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     releasedBudget: 5000000,
     liquidatedBudget: 2000000,
     pendingDisbursement: 3000000,
-    activeInField: 1000000,
     categoryBreakdown: sampleCategories,
     formatPesoAmount: (val?: number | null) =>
       val !== null && val !== undefined ? `₱${Number(val).toLocaleString()}` : "—",
@@ -262,6 +261,33 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     expect(capturedPieProps.data.length).toBe(6);
     const resolver2026 = createCategoryColorResolver(sampleCategories);
     expect(capturedPieProps.data[0].color).toBe(resolver2026("adsdasdasdasda"));
+  });
+
+  it("keeps four summary metrics and one proportional three-segment pipeline", () => {
+    render(
+      <BudgetMonitoringOverview
+        {...defaultProps}
+        annualAllocation={{ ...defaultProps.annualAllocation, totalAmount: 150_000 }}
+        approvedBudget={44_656}
+        releasedBudget={21_213}
+        liquidatedBudget={10_000}
+        pendingDisbursement={23_443}
+      />,
+    );
+
+    expect(screen.getByText("FY Budget Allocation")).toBeInTheDocument();
+    expect(screen.getByText("Approved / Committed")).toBeInTheDocument();
+    expect(screen.getAllByText("Released Budget")).toHaveLength(2);
+    expect(screen.getByText("Liquidated Budget")).toBeInTheDocument();
+    expect(screen.queryByText("Active in Field")).toBeNull();
+    expect(screen.getByText("Budget Execution Pipeline · FY 2026")).toBeInTheDocument();
+    const track = screen.getByRole("img", { name: /Budget execution pipeline/ });
+    const widths = Array.from(track.querySelectorAll<HTMLElement>("[data-budget-state]"), (segment) => parseFloat(segment.style.width));
+    expect(widths).toHaveLength(3);
+    expect(widths[0]).toBeCloseTo((21_213 / 150_000) * 100, 6);
+    expect(widths.reduce((sum, width) => sum + width, 0)).toBeCloseTo(100, 6);
+    expect(track).toHaveAttribute("aria-label", expect.stringContaining("Released & Liquidated: ₱21,213"));
+    expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
   // ==========================================

@@ -146,6 +146,94 @@ export const getMissingEditableProfileRequirements = (profile?: Partial<Organiza
 
 const normalizeText = (value?: string | null) => value?.trim() ?? "";
 
+/**
+ * Validates a list of additional organization emails against the primary email.
+ * - Checks format of each additional email
+ * - Enforces case-insensitive uniqueness against primary email and other additional emails
+ * - Ensures no empty records
+ */
+export const validateAdditionalEmails = (
+  primaryEmail: string,
+  additionalEmails: string[] = [],
+): { isValid: boolean; error?: string } => {
+  const primaryClean = primaryEmail.trim().toLowerCase();
+  const seen = new Set<string>();
+  if (primaryClean) {
+    seen.add(primaryClean);
+  }
+
+  for (let i = 0; i < additionalEmails.length; i++) {
+    const raw = additionalEmails[i];
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return {
+        isValid: false,
+        error: `Additional email #${i + 1} cannot be blank. Please enter a valid email address or remove the field.`,
+      };
+    }
+    if (!organizationEmailPattern.test(trimmed)) {
+      return {
+        isValid: false,
+        error: `"${trimmed}" is not a valid email address.`,
+      };
+    }
+    const lower = trimmed.toLowerCase();
+    if (seen.has(lower)) {
+      return {
+        isValid: false,
+        error: `"${trimmed}" is a duplicate email address. Each organization email must be unique.`,
+      };
+    }
+    seen.add(lower);
+  }
+
+  return { isValid: true };
+};
+
+/**
+ * Validates a list of additional contact numbers against the primary contact number.
+ * - Checks format (11-digit Philippine mobile starting with 09)
+ * - Enforces uniqueness against primary contact number and other additional contact numbers
+ * - Ensures no empty records
+ */
+export const validateAdditionalContactNumbers = (
+  primaryContact: string,
+  additionalContacts: string[] = [],
+): { isValid: boolean; error?: string } => {
+  const primaryDigits = primaryContact.replace(/\D/g, "");
+  const seen = new Set<string>();
+  if (primaryDigits) {
+    seen.add(primaryDigits);
+  }
+
+  for (let i = 0; i < additionalContacts.length; i++) {
+    const raw = additionalContacts[i];
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return {
+        isValid: false,
+        error: `Additional contact number #${i + 1} cannot be blank. Please enter a valid number or remove the field.`,
+      };
+    }
+    if (!philippineContactNumberPattern.test(trimmed)) {
+      return {
+        isValid: false,
+        error: `"${trimmed}" is not a valid 11-digit Philippine mobile number starting with 09.`,
+      };
+    }
+    const digits = trimmed.replace(/\D/g, "");
+    if (seen.has(digits)) {
+      return {
+        isValid: false,
+        error: `"${trimmed}" is a duplicate contact number. Each organization contact number must be unique.`,
+      };
+    }
+    seen.add(digits);
+  }
+
+  return { isValid: true };
+};
+
 export const createBlankOrganizationProfile = (
   userId: string,
   defaults?: Partial<
@@ -153,7 +241,9 @@ export const createBlankOrganizationProfile = (
       OrganizationProfile,
       | "organizationName"
       | "organizationEmail"
+      | "additionalEmails"
       | "contactNumber"
+      | "additionalContactNumbers"
       | "district"
       | "barangay"
       | "isExistingOrganization"
@@ -169,7 +259,9 @@ export const createBlankOrganizationProfile = (
     userId,
     organizationName: defaults?.organizationName ?? "",
     organizationEmail: defaults?.organizationEmail ?? "",
+    additionalEmails: defaults?.additionalEmails ?? [],
     contactNumber: defaults?.contactNumber ?? "",
+    additionalContactNumbers: defaults?.additionalContactNumbers ?? [],
     district: defaults?.district ?? "",
     barangay: defaults?.barangay ?? "",
     isExistingOrganization: isExisting,
@@ -222,7 +314,9 @@ export const createOrganizationProfileDraft = (
       OrganizationProfile,
       | "organizationName"
       | "organizationEmail"
+      | "additionalEmails"
       | "contactNumber"
+      | "additionalContactNumbers"
       | "district"
       | "barangay"
       | "isExistingOrganization"
@@ -245,7 +339,13 @@ export const createOrganizationProfileDraft = (
     ...profile,
     organizationName: normalizeText(profile.organizationName) || blank.organizationName,
     organizationEmail: normalizeText(profile.organizationEmail) || blank.organizationEmail,
+    additionalEmails: Array.isArray(profile.additionalEmails)
+      ? profile.additionalEmails.map((e) => e.trim()).filter(Boolean)
+      : (defaults?.additionalEmails ?? []),
     contactNumber: normalizeText(profile.contactNumber) || blank.contactNumber,
+    additionalContactNumbers: Array.isArray(profile.additionalContactNumbers)
+      ? profile.additionalContactNumbers.map((c) => c.trim()).filter(Boolean)
+      : (defaults?.additionalContactNumbers ?? []),
     district: normalizeText(profile.district) || blank.district,
     barangay: normalizeText(profile.barangay) || blank.barangay,
     isExistingOrganization: isExisting,

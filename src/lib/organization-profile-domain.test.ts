@@ -9,8 +9,10 @@ import {
   isAddressComplete,
   getOrganizationProfileCompletionCount,
   createBlankOrganizationProfile,
+  validateAdditionalEmails,
+  validateAdditionalContactNumbers,
 } from "./organization-profile-domain";
-import { formatAddress, formatPersonName } from "./lydo-connect-data";
+import { formatAddress, formatPersonName, getAllOrganizationEmails, getAllOrganizationContactNumbers } from "./lydo-connect-data";
 
 describe("organization-profile-domain validations", () => {
   describe("isValidFacebookUrl", () => {
@@ -185,4 +187,119 @@ describe("organization-profile-domain validations", () => {
       expect(getOrganizationProfileCompletionCount(complete)).toBe(11);
     });
   });
+
+  describe("validateAdditionalEmails", () => {
+    const primary = "official@pasigyouth.org.ph";
+
+    it("passes with empty additional emails array", () => {
+      expect(validateAdditionalEmails(primary, []).isValid).toBe(true);
+    });
+
+    it("passes with valid distinct additional emails", () => {
+      const result = validateAdditionalEmails(primary, [
+        "secretariat@pasigyouth.org.ph",
+        "finance@pasigyouth.org.ph",
+      ]);
+      expect(result.isValid).toBe(true);
+    });
+
+    it("rejects empty or whitespace-only additional email", () => {
+      const result = validateAdditionalEmails(primary, [""]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("cannot be blank");
+
+      const whitespaceResult = validateAdditionalEmails(primary, ["   "]);
+      expect(whitespaceResult.isValid).toBe(false);
+      expect(whitespaceResult.error).toContain("cannot be blank");
+    });
+
+    it("rejects malformed email format", () => {
+      const result = validateAdditionalEmails(primary, ["not-an-email"]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("is not a valid email address");
+    });
+
+    it("rejects duplicate of primary email (case-insensitive)", () => {
+      const result = validateAdditionalEmails(primary, ["OFFICIAL@pasigyouth.org.ph"]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("duplicate email address");
+    });
+
+    it("rejects duplicate among additional emails (case-insensitive)", () => {
+      const result = validateAdditionalEmails(primary, [
+        "info@pasigyouth.org.ph",
+        "INFO@pasigyouth.org.ph",
+      ]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("duplicate email address");
+    });
+  });
+
+  describe("validateAdditionalContactNumbers", () => {
+    const primary = "09171234567";
+
+    it("passes with empty additional contacts array", () => {
+      expect(validateAdditionalContactNumbers(primary, []).isValid).toBe(true);
+    });
+
+    it("passes with valid distinct additional 11-digit 09 contact numbers", () => {
+      const result = validateAdditionalContactNumbers(primary, [
+        "09181234567",
+        "09281234567",
+      ]);
+      expect(result.isValid).toBe(true);
+    });
+
+    it("rejects empty or whitespace-only additional contact number", () => {
+      const result = validateAdditionalContactNumbers(primary, [""]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("cannot be blank");
+    });
+
+    it("rejects invalid contact number format", () => {
+      const tooShort = validateAdditionalContactNumbers(primary, ["091712345"]);
+      expect(tooShort.isValid).toBe(false);
+      expect(tooShort.error).toContain("not a valid 11-digit Philippine mobile number");
+
+      const notStarting09 = validateAdditionalContactNumbers(primary, ["02812345678"]);
+      expect(notStarting09.isValid).toBe(false);
+      expect(notStarting09.error).toContain("not a valid 11-digit Philippine mobile number");
+    });
+
+    it("rejects duplicate of primary contact number", () => {
+      const result = validateAdditionalContactNumbers(primary, ["09171234567"]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("duplicate contact number");
+    });
+
+    it("rejects duplicate among additional contact numbers", () => {
+      const result = validateAdditionalContactNumbers(primary, [
+        "09281234567",
+        "09281234567",
+      ]);
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("duplicate contact number");
+    });
+  });
+
+  describe("getAllOrganizationEmails and getAllOrganizationContactNumbers", () => {
+    it("returns primary and distinct additional emails preserving order", () => {
+      const profile = {
+        organizationEmail: "primary@pasig.ph",
+        additionalEmails: ["secondary@pasig.ph", "PRIMARY@pasig.ph", "tertiary@pasig.ph"],
+      };
+      const emails = getAllOrganizationEmails(profile);
+      expect(emails).toEqual(["primary@pasig.ph", "secondary@pasig.ph", "tertiary@pasig.ph"]);
+    });
+
+    it("returns primary and distinct additional contact numbers preserving order", () => {
+      const profile = {
+        contactNumber: "09171111111",
+        additionalContactNumbers: ["09182222222", "09171111111", "09193333333"],
+      };
+      const contacts = getAllOrganizationContactNumbers(profile);
+      expect(contacts).toEqual(["09171111111", "09182222222", "09193333333"]);
+    });
+  });
 });
+
