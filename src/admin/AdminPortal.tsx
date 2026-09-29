@@ -84,7 +84,6 @@ import { CityActivityAnnouncementDialog } from "@/admin/components/CityActivityA
 import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
 import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
-import { RenewalTestEnvironmentPanel } from "@/admin/components/RenewalTestEnvironmentPanel";
 import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
 import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
 import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
@@ -101,16 +100,18 @@ import {
 } from "@/admin/components/OrganizationBudgetDrawer";
 import { PublicBudgetSnapshotConfigPage } from "@/admin/components/PublicBudgetSnapshotConfigPage";
 import { BudgetMonitoringOverview } from "@/admin/components/BudgetMonitoringOverview";
+import { BudgetMonitoringPageControls } from "@/admin/components/BudgetMonitoringPageControls";
+import { advocacyOptions } from "@/lib/lydo-connect-data";
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
 import {
   type BudgetMonitoringFilters,
-  DEFAULT_BUDGET_MONITORING_FILTERS,
+  createDefaultBudgetMonitoringFilters,
   filterBudgetRequests,
+  matchesFiscalPeriod,
   aggregatePurposeCategories,
   aggregateOrganizationFundingRows,
   APPROVED_BUDGET_STATUSES,
   RELEASED_BUDGET_STATUSES,
-  type TimePeriodOption,
 } from "@/lib/budget-monitoring-filters";
 import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
 import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase } from "@/lib/lydo-connect-supabase";
@@ -525,7 +526,7 @@ const renderRegistrationDetailCard = (params: {
   </div>
 );
 
-const budgetReleaseStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
+const budgetReleaseStatuses = new Set<string>(["budget_released", "completed"]);
 const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["submitted", "under_review", "needs_revision"]);
 const liquidationApprovableStatuses = new Set<LiquidationReport["status"]>(["submitted", "under_review", "needs_revision"]);
 const liquidationLockedStatuses = new Set<LiquidationReport["status"]>(["completed_liquidated"]);
@@ -550,7 +551,7 @@ type PendingAdminConfirmation =
   }
   | {
     kind: "budget";
-    action: "approve" | "submitted_hardcopy" | "cash_released" | "complete" | "needs_revision";
+    action: "approve" | "needs_revision" | "reject";
     budgetRequestId: string;
     organizationId: string;
     organizationName: string;
@@ -675,6 +676,7 @@ type BarangayAllocationEntry = {
   organizationCount: number;
   releasedBudgetCount: number;
   approvedAmount: number;
+  requestedAmount: number;
   releasedAmount: number;
   remainingAmount: number;
   utilizationRate: number;
@@ -910,7 +912,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const budgetDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isBudgetDecisionConfirmOpen, setIsBudgetDecisionConfirmOpen] = useState(false);
   const [budgetReviewSubmitting, setBudgetReviewSubmitting] = useState(false);
-  const [budgetLifecycleStage, setBudgetLifecycleStage] = useState<BudgetRequest["status"]>("awaiting_release");
   const [budgetLifecycleSubmitting, setBudgetLifecycleSubmitting] = useState(false);
   const [liquidationInfoCollapsed, setLiquidationInfoCollapsed] = useState(true);
   const [liquidationActivityVisibleCount, setLiquidationActivityVisibleCount] = useState(4);
@@ -941,7 +942,9 @@ export default function AdminPortal({ section }: { section: string }) {
   const [liquidationPreviewCanInline, setLiquidationPreviewCanInline] = useState(false);
   const [liquidationPreviewLoading, setLiquidationPreviewLoading] = useState(false);
   const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "public">("overview");
-  const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(DEFAULT_BUDGET_MONITORING_FILTERS);
+  const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(() =>
+    createDefaultBudgetMonitoringFilters(Number(getEffectiveSystemSetting("budget.default_fiscal_year") || new Date().getFullYear())),
+  );
   const [budgetInsightsExpanded, setBudgetInsightsExpanded] = useState(false);
   const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
   const [budgetRequestsSemesterFilter, setBudgetRequestsSemesterFilter] = useState<string>(() => {
@@ -978,9 +981,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [budgetMonitoringSearch, setBudgetMonitoringSearch] = useState("");
   const [budgetMonitoringRiskFilter, setBudgetMonitoringRiskFilter] = useState("all");
   const [organizationFundingSearch, setOrganizationFundingSearch] = useState("");
-  const [organizationFundingClassificationFilter, setOrganizationFundingClassificationFilter] = useState("all");
   const [barangayDetailSearch, setBarangayDetailSearch] = useState("");
-  const [barangayDetailClassificationFilter, setBarangayDetailClassificationFilter] = useState("all");
   const [selectedOrganizationBudgetDetailId, setSelectedOrganizationBudgetDetailId] = useState<string | null>(null);
   const [isConfiguringPublicSnapshot, setIsConfiguringPublicSnapshot] = useState(false);
   const [registrationSearch, setRegistrationSearch] = useState("");
@@ -993,8 +994,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const [renewalDistrictFilter, setRenewalDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [renewalBarangayFilter, setRenewalBarangayFilter] = useState("all");
   const [renewalClassificationFilter, setRenewalClassificationFilter] = useState("all");
-  const [budgetAllocationDistrictFilter, setBudgetAllocationDistrictFilter] = useState("all");
-  const [budgetAllocationBarangayFilter, setBudgetAllocationBarangayFilter] = useState("all");
   const [budgetAllocationMobilePage, setBudgetAllocationMobilePage] = useState(1);
   const [budgetAllocationSearch, setBudgetAllocationSearch] = useState("");
   const [collapsedAllocationDistricts, setCollapsedAllocationDistricts] = useState<string[]>([]);
@@ -1395,7 +1394,6 @@ export default function AdminPortal({ section }: { section: string }) {
   );
   useEffect(() => {
     if (selectedBudgetRequest) {
-      setBudgetLifecycleStage(selectedBudgetRequest.status);
     }
   }, [selectedBudgetRequest?.id, selectedBudgetRequest?.status]);
   const selectedLiquidationReport = useMemo(
@@ -1446,10 +1444,9 @@ export default function AdminPortal({ section }: { section: string }) {
       const title =
         entry.action === "needs_revision" ? "Revision Requested"
           : entry.action === "rejected_red" ? "Rejected"
-            : entry.action === "approved_for_ftf_green" ? "Onsite Required"
-              : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+            : entry.action === "approved_for_ftf_green" || entry.action === "hard_copy_submitted" ? "Awaiting Release"
                 : entry.action === "budget_released" ? "Budget Released"
-                  : entry.action === "completed" ? "Completed"
+                  : entry.action === "completed" ? "Budget Released"
                     : entry.action.replaceAll("_", " ");
       return {
         key: `budget-history-${idx}-${entry.changedAt}`,
@@ -1588,9 +1585,7 @@ export default function AdminPortal({ section }: { section: string }) {
         return rightTime - leftTime;
       })[0] ?? null;
   const [annualAllocations, setAnnualAllocations] = useState<AnnualBudgetAllocation[]>([]);
-  const [selectedFiscalYear, setSelectedFiscalYear] = useState<number>(
-    () => Number(getEffectiveSystemSetting("budget.default_fiscal_year") || new Date().getFullYear()),
-  );
+  const selectedFiscalYear = budgetMonitoringFilters.fiscalPeriod.fiscalYear;
   const [isConfigureAnnualBudgetModalOpen, setIsConfigureAnnualBudgetModalOpen] = useState<boolean>(false);
 
   const loadAnnualBudgetAllocations = useCallback(async () => {
@@ -1669,6 +1664,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const availableFiscalYears = useMemo(() => {
     const years = new Set<number>();
+    [2024, 2025, 2026].forEach((year) => years.add(year));
     years.add(new Date().getFullYear());
     annualAllocations.forEach((a) => years.add(a.fiscalYear));
     adminBudgetRequests.forEach((req) => {
@@ -1699,10 +1695,15 @@ export default function AdminPortal({ section }: { section: string }) {
     });
   }, [state.budgetRequests, state.liquidationReports, selectedFiscalYear, getBudgetRequestFiscalYear]);
 
+  const periodBudgetRequests = useMemo(
+    () => adminBudgetRequests.filter(request => matchesFiscalPeriod(request, budgetMonitoringFilters.fiscalPeriod)),
+    [adminBudgetRequests, budgetMonitoringFilters.fiscalPeriod],
+  );
+
   const budgetMonitoringEntries = useMemo<BudgetMonitoringEntry[]>(() => {
     const now = new Date();
 
-    return fyBudgetRequests
+    return periodBudgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .map((request) => {
         const liquidation = getLatestLiquidationReportForBudgetRequest(request.id);
@@ -1722,7 +1723,7 @@ export default function AdminPortal({ section }: { section: string }) {
         const overdueEnabled = Boolean(getEffectiveSystemSetting("workflow.overdue_indicators_enabled"));
         const reminderEnabled = Boolean(getEffectiveSystemSetting("workflow.review_reminder_enabled"));
 
-        if (liquidationStatus === "completed_liquidated" || request.status === "completed") {
+        if (liquidationStatus === "completed_liquidated") {
           riskLabel = "Completed";
         } else if (!liquidation && requestAgeInDays >= escalateDays) {
           riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
@@ -1783,7 +1784,7 @@ export default function AdminPortal({ section }: { section: string }) {
         }
         return right.approvedAmount - left.approvedAmount;
       });
-  }, [budgetReleaseStatuses, fyBudgetRequests, state.organizationProfiles, getLatestLiquidationReportForBudgetRequest]);
+  }, [budgetReleaseStatuses, periodBudgetRequests, state.organizationProfiles, getLatestLiquidationReportForBudgetRequest]);
   const filteredAdminBudgetRequests = useMemo(() => {
     const query = budgetRequestsSearch.trim().toLowerCase();
     return semesterScopedBudgetRequests.filter((request) => {
@@ -1804,8 +1805,10 @@ export default function AdminPortal({ section }: { section: string }) {
           ? true
           : budgetRequestsStatusFilter === "under_review"
             ? request.status === "under_review" || request.status === "submitted"
+            : budgetRequestsStatusFilter === "awaiting_release"
+              ? request.status === "awaiting_release" || ["approved_for_ftf_green", "hard_copy_submitted"].includes(String(request.status))
             : budgetRequestsStatusFilter === "budget_released"
-              ? request.status === "budget_released" || request.status === "completed"
+              ? request.status === "budget_released" || String(request.status) === "completed"
               : request.status === budgetRequestsStatusFilter;
       const matchesDistrict = budgetRequestsDistrictFilter === "all" || requestOrganization?.district === budgetRequestsDistrictFilter;
       const matchesBarangay = budgetRequestsBarangayFilter === "all" || requestOrganization?.barangay === budgetRequestsBarangayFilter;
@@ -1859,20 +1862,6 @@ export default function AdminPortal({ section }: { section: string }) {
     state.organizationProfiles,
     visibleLiquidationReports,
   ]);
-  const filteredBudgetMonitoringEntries = useMemo(() => {
-    const query = budgetMonitoringSearch.trim().toLowerCase();
-    return budgetMonitoringEntries.filter((entry) => {
-      const linkedRequest = state.budgetRequests.find((request) => request.id === entry.budgetRequestId) ?? null;
-      const matchesSearch =
-        !query ||
-        [entry.title, entry.organizationName, buildPublicRecordCode("BR", linkedRequest, state.budgetRequests)]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      const matchesRisk = budgetMonitoringRiskFilter === "all" || entry.riskLabel === budgetMonitoringRiskFilter;
-      return matchesSearch && matchesRisk;
-    });
-  }, [budgetMonitoringEntries, budgetMonitoringRiskFilter, budgetMonitoringSearch, state.budgetRequests]);
   const filteredRegistrations = useMemo(() => {
     const query = registrationSearch.trim().toLowerCase();
     return state.organizationProfiles.filter((org) => {
@@ -2027,11 +2016,40 @@ export default function AdminPortal({ section }: { section: string }) {
     () => new Map(state.organizationProfiles.map((organization) => [organization.id, organization] as const)),
     [state.organizationProfiles],
   );
+  const latestLiquidationByRequestId = useMemo(() => {
+    const map = new Map<string, LiquidationReport>();
+    state.liquidationReports.forEach((report) => {
+      const existing = map.get(report.budgetRequestId);
+      if (!existing || new Date(report.updatedAt || report.createdAt).getTime() > new Date(existing.updatedAt || existing.createdAt).getTime()) map.set(report.budgetRequestId, report);
+    });
+    return map;
+  }, [state.liquidationReports]);
+  const dashboardBudgetTotals = useMemo(() => {
+    const approved = fyBudgetRequests.filter(r => APPROVED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0);
+    const released = fyBudgetRequests.filter(r => RELEASED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+    const liquidated = fyBudgetRequests.filter(r => latestLiquidationByRequestId.get(r.id)?.status === "completed_liquidated").reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+    return { approved, released, liquidated };
+  }, [fyBudgetRequests, latestLiquidationByRequestId]);
+  const filteredBudgetMonitoringRequests = useMemo(
+    () => filterBudgetRequests(adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId),
+    [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId],
+  );
+  const filteredBudgetMonitoringEntries = useMemo(() => {
+    const query = budgetMonitoringSearch.trim().toLowerCase();
+    const visibleRequestIds = new Set(filteredBudgetMonitoringRequests.map(request => request.id));
+    return budgetMonitoringEntries.filter((entry) => {
+      const linkedRequest = state.budgetRequests.find((request) => request.id === entry.budgetRequestId) ?? null;
+      if (!visibleRequestIds.has(entry.budgetRequestId)) return false;
+      const matchesSearch = !query || [entry.title, entry.organizationName, buildPublicRecordCode("BR", linkedRequest, state.budgetRequests)].join(" ").toLowerCase().includes(query);
+      const matchesRisk = budgetMonitoringRiskFilter === "all" || entry.riskLabel === budgetMonitoringRiskFilter;
+      return matchesSearch && matchesRisk;
+    });
+  }, [budgetMonitoringEntries, filteredBudgetMonitoringRequests, budgetMonitoringRiskFilter, budgetMonitoringSearch, state.budgetRequests]);
   const budgetAllocationRows = useMemo<BarangayAllocationEntry[]>(() => {
     const grouped = new Map<string, BarangayAllocationEntry>();
     const organizationIdsByGroup = new Map<string, Set<string>>();
 
-    fyBudgetRequests
+    filteredBudgetMonitoringRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .forEach((request) => {
         const organization = organizationProfileById.get(request.organizationId) ?? null;
@@ -2041,9 +2059,7 @@ export default function AdminPortal({ section }: { section: string }) {
         const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
         const remainingAmount = Math.max(approvedAmount - releasedAmount, 0);
         const utilizationRate = approvedAmount > 0 ? Math.round((releasedAmount / approvedAmount) * 100) : 0;
-        const isLiquidated = fyLiquidationReports.some(
-          (lr) => lr.budgetRequestId === request.id && lr.status === "completed_liquidated",
-        );
+        const isLiquidated = latestLiquidationByRequestId.get(request.id)?.status === "completed_liquidated";
         const liquidatedAmount = isLiquidated ? releasedAmount : 0;
         const key = `${district}::${barangay}`;
         const organizationIds = organizationIdsByGroup.get(key) ?? new Set<string>();
@@ -2055,6 +2071,7 @@ export default function AdminPortal({ section }: { section: string }) {
           existing.organizationCount = organizationIds.size;
           existing.releasedBudgetCount += 1;
           existing.approvedAmount += approvedAmount;
+          existing.requestedAmount += Number(request.requestedAmount || 0);
           existing.releasedAmount += releasedAmount;
           existing.remainingAmount += remainingAmount;
           existing.utilizationRate = existing.approvedAmount > 0 ? Math.round((existing.releasedAmount / existing.approvedAmount) * 100) : 0;
@@ -2068,6 +2085,7 @@ export default function AdminPortal({ section }: { section: string }) {
           organizationCount: organizationIds.size,
           releasedBudgetCount: 1,
           approvedAmount,
+          requestedAmount: Number(request.requestedAmount || 0),
           releasedAmount,
           remainingAmount,
           utilizationRate,
@@ -2075,35 +2093,25 @@ export default function AdminPortal({ section }: { section: string }) {
         });
       });
 
+    const { sortBy } = budgetMonitoringFilters;
     return [...grouped.values()].sort((left, right) => {
       if (left.district !== right.district) return left.district.localeCompare(right.district);
-      if (left.releasedAmount !== right.releasedAmount) return right.releasedAmount - left.releasedAmount;
-      return left.barangay.localeCompare(right.barangay);
+      const nameCompare = left.barangay.localeCompare(right.barangay);
+      if (sortBy === "org_desc" || sortBy === "category_desc") return -nameCompare;
+      if (sortBy === "org_asc" || sortBy === "category_asc") return nameCompare;
+      const amountKey = sortBy.startsWith("approved") ? "approvedAmount" : sortBy.startsWith("requested") ? "requestedAmount" : sortBy.startsWith("liquidated") ? "liquidatedAmount" : "releasedAmount";
+      const amountCompare = left[amountKey] - right[amountKey];
+      if (amountCompare) return sortBy.endsWith("_asc") ? amountCompare : -amountCompare;
+      return nameCompare;
     });
-  }, [organizationProfileById, fyBudgetRequests, fyLiquidationReports]);
-  const budgetAllocationDistrictOptions = useMemo(
-    () =>
-      Array.from(new Set(state.organizationProfiles.map((organization) => organization.district?.trim()).filter((value): value is string => Boolean(value))))
-        .sort((left, right) => left.localeCompare(right)),
-    [state.organizationProfiles],
-  );
-  const budgetAllocationBarangayOptions = useMemo(() => {
-    const sourceRows =
-      budgetAllocationDistrictFilter === "all"
-        ? budgetAllocationRows
-        : budgetAllocationRows.filter((row) => row.district === budgetAllocationDistrictFilter);
-    return Array.from(new Set(sourceRows.map((row) => row.barangay)))
-      .sort((left, right) => left.localeCompare(right));
-  }, [budgetAllocationDistrictFilter, budgetAllocationRows]);
+  }, [organizationProfileById, filteredBudgetMonitoringRequests, latestLiquidationByRequestId, budgetMonitoringFilters.sortBy]);
   const filteredBudgetAllocationRows = useMemo(() => {
     const query = budgetAllocationSearch.trim().toLowerCase();
     return budgetAllocationRows.filter((row) => {
-      if (budgetAllocationDistrictFilter !== "all" && row.district !== budgetAllocationDistrictFilter) return false;
-      if (budgetAllocationBarangayFilter !== "all" && row.barangay !== budgetAllocationBarangayFilter) return false;
       if (query && !row.barangay.toLowerCase().includes(query) && !row.district.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [budgetAllocationBarangayFilter, budgetAllocationDistrictFilter, budgetAllocationRows, budgetAllocationSearch]);
+  }, [budgetAllocationRows, budgetAllocationSearch]);
   const budgetAllocationMobilePageSize = 6;
   const budgetAllocationMobilePageCount = Math.max(
     1,
@@ -2132,17 +2140,16 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [pagedBudgetAllocationRows]);
   useEffect(() => {
     setBudgetAllocationMobilePage(1);
-  }, [budgetAllocationBarangayFilter, budgetAllocationDistrictFilter, budgetAllocationSearch]);
+  }, [budgetAllocationSearch, filteredBudgetMonitoringRequests]);
   useEffect(() => {
     setBarangayDetailSearch("");
-    setBarangayDetailClassificationFilter("all");
   }, [selectedBudgetAllocation]);
   const selectedBudgetAllocationOrganizationDetails = useMemo<BarangayAllocationOrganizationDetail[]>(() => {
     if (!selectedBudgetAllocation) return [];
 
     const grouped = new Map<string, BarangayAllocationOrganizationDetail>();
 
-    fyBudgetRequests
+    filteredBudgetMonitoringRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .forEach((request) => {
         const organization = organizationProfileById.get(request.organizationId);
@@ -2194,7 +2201,7 @@ export default function AdminPortal({ section }: { section: string }) {
       if (right.releasedAmount !== left.releasedAmount) return right.releasedAmount - left.releasedAmount;
       return left.organizationName.localeCompare(right.organizationName);
     });
-  }, [organizationProfileById, selectedBudgetAllocation, fyBudgetRequests]);
+  }, [organizationProfileById, selectedBudgetAllocation, filteredBudgetMonitoringRequests]);
   const budgetAllocationSummary = useMemo(() => {
     const totalApproved = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.approvedAmount, 0);
     const totalReleased = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.releasedAmount, 0);
@@ -2362,11 +2369,19 @@ export default function AdminPortal({ section }: { section: string }) {
     return summary;
   }, [budgetMonitoringRiskFilter, budgetMonitoringSearch]);
   const allocationExportFilters = useMemo(() => {
-    const summary: string[] = [];
-    if (budgetAllocationDistrictFilter !== "all") summary.push(`District: ${budgetAllocationDistrictFilter}`);
-    if (budgetAllocationBarangayFilter !== "all") summary.push(`Barangay: ${budgetAllocationBarangayFilter}`);
-    return summary;
-  }, [budgetAllocationBarangayFilter, budgetAllocationDistrictFilter]);
+    const period = budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year"
+      ? `FY ${budgetMonitoringFilters.fiscalPeriod.fiscalYear}`
+      : `${budgetMonitoringFilters.fiscalPeriod.startDate} to ${budgetMonitoringFilters.fiscalPeriod.endDate}`;
+    return [period, ...[
+      budgetMonitoringFilters.purposeCategory !== "all" ? `Purpose: ${budgetMonitoringFilters.purposeCategory}` : null,
+      budgetMonitoringFilters.budgetStatus !== "all" ? `Status: ${budgetMonitoringFilters.budgetStatus}` : null,
+      budgetMonitoringFilters.majorClassification !== "all" ? `Classification: ${budgetMonitoringFilters.majorClassification}` : null,
+      budgetMonitoringFilters.district !== "all" ? `District: ${budgetMonitoringFilters.district}` : null,
+      budgetMonitoringFilters.barangay !== "all" ? `Barangay: ${budgetMonitoringFilters.barangay}` : null,
+      budgetMonitoringFilters.releaseStatus !== "all" ? `Release: ${budgetMonitoringFilters.releaseStatus}` : null,
+      budgetMonitoringFilters.liquidationStatus !== "all" ? `Liquidation: ${budgetMonitoringFilters.liquidationStatus}` : null,
+    ].filter((value): value is string => Boolean(value))];
+  }, [budgetMonitoringFilters]);
   const handleReportExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
     try {
       if (activeReportExport === "budget-requests") {
@@ -2503,7 +2518,7 @@ export default function AdminPortal({ section }: { section: string }) {
       revisions: state.documentSubmissions.filter((item) => item.status === "needs_revision").length,
       approvedDocs: state.documentSubmissions.filter((item) => item.status === "approved_green").length,
       pendingBudget: state.budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length,
-      approvedBudget: state.budgetRequests.filter((item) => item.status === "awaiting_release" || item.status === "approved_for_ftf_green").length,
+      approvedBudget: state.budgetRequests.filter((item) => item.status === "awaiting_release" || item.status === "approved_for_ftf_green" || item.status === "hard_copy_submitted").length,
       releasedBudget: state.budgetRequests.filter((item) => item.status === "budget_released").length,
       pendingLiquidation: state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length,
       overdueLiquidation: state.liquidationReports.filter((item) => item.status === "overdue").length,
@@ -2624,7 +2639,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const budgetApprovedTotal = useMemo(
     () =>
       fyBudgetRequests
-        .filter((r) => ["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
+        .filter((r) => ["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
         .reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0),
     [fyBudgetRequests],
   );
@@ -2632,7 +2647,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const purposeCategoryBreakdown = useMemo(() => {
     const totals = new Map<string, { approvedAmount: number; releasedAmount: number; count: number }>();
     fyBudgetRequests
-      .filter((r) => ["approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
+      .filter((r) => ["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
       .forEach((r) => {
         const category = (r.purposeCategory || "").trim() || "General / Uncategorized";
         const app = r.approvedAmount || r.requestedAmount || 0;
@@ -2655,39 +2670,6 @@ export default function AdminPortal({ section }: { section: string }) {
       .sort((a, b) => b.approvedAmount - a.approvedAmount);
   }, [fyBudgetRequests]);
 
-  const latestLiquidationByRequestId = useMemo(() => {
-    const map = new Map<string, LiquidationReport>();
-    state.liquidationReports.forEach((report) => {
-      const existing = map.get(report.budgetRequestId);
-      if (!existing) {
-        map.set(report.budgetRequestId, report);
-      } else {
-        const existingTime = new Date(existing.updatedAt || existing.createdAt).getTime();
-        const reportTime = new Date(report.updatedAt || report.createdAt).getTime();
-        if (reportTime > existingTime) {
-          map.set(report.budgetRequestId, report);
-        }
-      }
-    });
-    return map;
-  }, [state.liquidationReports]);
-
-  const filteredBudgetMonitoringRequests = useMemo(() => {
-    return filterBudgetRequests(
-      adminBudgetRequests,
-      budgetMonitoringFilters,
-      organizationProfileById,
-      latestLiquidationByRequestId,
-      selectedFiscalYear
-    );
-  }, [
-    adminBudgetRequests,
-    budgetMonitoringFilters,
-    organizationProfileById,
-    latestLiquidationByRequestId,
-    selectedFiscalYear,
-  ]);
-
   const budgetMonitoringApprovedTotal = useMemo(() => {
     return filteredBudgetMonitoringRequests
       .filter((r) => APPROVED_BUDGET_STATUSES.has(r.status))
@@ -2704,7 +2686,7 @@ export default function AdminPortal({ section }: { section: string }) {
     return filteredBudgetMonitoringRequests
       .filter((r) => {
         const liq = latestLiquidationByRequestId.get(r.id);
-        return liq?.status === "completed_liquidated" || r.status === "completed";
+        return liq?.status === "completed_liquidated";
       })
       .reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
   }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId]);
@@ -2732,82 +2714,18 @@ export default function AdminPortal({ section }: { section: string }) {
   ]);
 
   const budgetMonitoringFilterOptions = useMemo(() => {
-    const categorySet = new Set<string>();
-    fyBudgetRequests.forEach((r) => {
-      if (r.purposeCategory && r.purposeCategory.trim()) {
-        categorySet.add(r.purposeCategory.trim());
-      }
-    });
-    if (categorySet.size === 0) {
-      adminBudgetRequests.forEach((r) => {
-        if (r.purposeCategory && r.purposeCategory.trim()) {
-          categorySet.add(r.purposeCategory.trim());
-        }
-      });
-    }
-    const availableCategories = Array.from(categorySet).sort((a, b) => a.localeCompare(b));
-
-    const availableClassifications = Array.from(
-      new Set(
-        state.organizationProfiles
-          .map((o) => o.majorClassification?.trim())
-          .filter((c): c is string => Boolean(c))
-      )
-    ).sort((a, b) => a.localeCompare(b));
-
-    const availableDistricts = Array.from(
-      new Set(
-        state.organizationProfiles
-          .map((o) => o.district?.trim())
-          .filter((d): d is string => Boolean(d))
-      )
-    ).sort((a, b) => a.localeCompare(b));
-
-    const sourceOrgs =
-      budgetMonitoringFilters.district === "all"
-        ? state.organizationProfiles
-        : state.organizationProfiles.filter(
-            (o) => o.district?.trim() === budgetMonitoringFilters.district.trim()
-          );
-    const availableBarangays = Array.from(
-      new Set(
-        sourceOrgs
-          .map((o) => o.barangay?.trim())
-          .filter((b): b is string => Boolean(b))
-      )
-    ).sort((a, b) => a.localeCompare(b));
-
-    return {
-      availableTimePeriods: [
-        "current_fy",
-        "previous_fy",
-        "ytd",
-        "last_30_days",
-        "last_90_days",
-        "last_6_months",
-        "custom",
-        "all_time",
-      ] as TimePeriodOption[],
-      availableCategories,
-      availableStatuses: [
-        { value: "submitted_under_review", label: "Submitted / Under Review" },
-        { value: "needs_revision", label: "Needs Revision" },
-        { value: "awaiting_release", label: "Awaiting Release" },
-        { value: "budget_released", label: "Budget Released" },
-        { value: "completed", label: "Completed" },
-        { value: "rejected_red", label: "Rejected" },
-      ],
-      availableClassifications,
-      availableDistricts,
-      availableBarangays,
-    };
-  }, [
-    fyBudgetRequests,
-    adminBudgetRequests,
-    state.organizationProfiles,
-    budgetMonitoringFilters.district,
-  ]);
-
+    const withoutPurpose = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, purposeCategory: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const withoutClassification = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, majorClassification: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const withoutDistrict = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, district: "all", barangay: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const withoutBarangay = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, barangay: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const canonical = new Set<string>(advocacyOptions);
+    const availableCategories = Array.from(new Set(withoutPurpose.map(r => (r.purposeCategory || "").trim().toLowerCase()).filter(value => canonical.has(value))));
+    const profilesFor = (requests: BudgetRequest[]) => Array.from(new Set(requests.map(r => r.organizationId))).map(id => organizationProfileById.get(id)).filter((profile): profile is NonNullable<typeof profile> => Boolean(profile));
+    const availableClassifications = Array.from(new Set(profilesFor(withoutClassification).map(o => o.majorClassification?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    const availableDistricts = Array.from(new Set(profilesFor(withoutDistrict).map(o => o.district?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    const availableBarangays = Array.from(new Set(profilesFor(withoutBarangay).map(o => o.barangay?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    return { availableCategories, availableClassifications, availableDistricts, availableBarangays };
+  }, [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId]);
   const organizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
     return state.organizationProfiles
       .map((org) => {
@@ -2859,7 +2777,7 @@ export default function AdminPortal({ section }: { section: string }) {
       totalRequested: orgRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0),
       totalReleased: orgRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0),
       totalLiquidated: requests.reduce((sum, r) => sum + (r.isLiquidated ? r.releasedAmount : 0), 0),
-      completedCount: requests.filter((r) => r.isLiquidated || r.status === "completed").length,
+      completedCount: requests.filter((r) => r.isLiquidated).length,
       requests,
     };
   }, [selectedOrganizationBudgetDetailId, state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
@@ -3463,7 +3381,7 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [state.budgetRequests, selectedBudgetRequestIds]);
 
   const hasReleasedOrCompletedSelected = useMemo(() => {
-    return selectedBudgetRequests.some((r) => r.status === "budget_released" || r.status === "completed");
+    return selectedBudgetRequests.some((r) => r.status === "budget_released" || String(r.status) === "completed");
   }, [selectedBudgetRequests]);
 
   const hasPreReleaseAdvancedStageSelected = useMemo(() => {
@@ -4837,39 +4755,6 @@ export default function AdminPortal({ section }: { section: string }) {
           commentPlaceholder: "",
         };
       }
-      if (pendingAdminConfirmation.action === "submitted_hardcopy") {
-        return {
-          title: "Confirm Hardcopy Submission",
-          description: `Click the checkbox to acknowledge that the hard copy for ${pendingAdminConfirmation.activityTitle} has been submitted.`,
-          checkboxLabel: "I acknowledge this hardcopy submission.",
-          confirmLabel: "Mark Submitted Hardcopy",
-          showCommentBox: false,
-          commentLabel: "",
-          commentPlaceholder: "",
-        };
-      }
-      if (pendingAdminConfirmation.action === "cash_released") {
-        return {
-          title: "Confirm Cash Release",
-          description: `Click the checkbox to confirm that cash has been released for ${pendingAdminConfirmation.activityTitle}. This will move the budget to monitoring and unlock liquidation.`,
-          checkboxLabel: "I acknowledge this cash release.",
-          confirmLabel: "Release Cash",
-          showCommentBox: false,
-          commentLabel: "",
-          commentPlaceholder: "",
-        };
-      }
-      if (pendingAdminConfirmation.action === "complete") {
-        return {
-          title: "Confirm Budget Completion",
-          description: `Click the checkbox to mark the budget request "${pendingAdminConfirmation.activityTitle}" as completed.`,
-          checkboxLabel: "I acknowledge this completion action.",
-          confirmLabel: "Mark Completed",
-          showCommentBox: false,
-          commentLabel: "",
-          commentPlaceholder: "",
-        };
-      }
       if (pendingAdminConfirmation.action === "needs_revision") {
         return {
           title: "Confirm Budget Revision",
@@ -5174,42 +5059,6 @@ export default function AdminPortal({ section }: { section: string }) {
         }
 
         if (
-          pendingAdminConfirmation.action === "submitted_hardcopy" &&
-          budgetStatus !== "approved_for_ftf_green"
-        ) {
-          toast({
-            title: "Action unavailable",
-            description: "Hard copy submission can only be recorded after the budget is approved for FTF submission.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (
-          pendingAdminConfirmation.action === "cash_released" &&
-          budgetStatus !== "hard_copy_submitted"
-        ) {
-          toast({
-            title: "Action unavailable",
-            description: "Cash can only be released after the hard copy has been recorded as submitted.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (
-          pendingAdminConfirmation.action === "complete" &&
-          budgetStatus !== "budget_released"
-        ) {
-          toast({
-            title: "Action unavailable",
-            description: "Budget request can only be completed after cash has been released.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (
           pendingAdminConfirmation.action === "needs_revision" &&
           !adminRemarks
         ) {
@@ -5241,27 +5090,6 @@ export default function AdminPortal({ section }: { section: string }) {
             goSignalAt: budgetHistoryNow,
             adminRemarks: "",
             revisionHistory: [...existingHistory, { action: "awaiting_release", adminRemarks: "", changedAt: budgetHistoryNow }],
-          };
-        } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
-          budgetPatch = {
-            status: "hard_copy_submitted",
-            hardCopySubmittedAt: budgetHistoryNow,
-            adminRemarks: "",
-            revisionHistory: [...existingHistory, { action: "hard_copy_submitted", adminRemarks: "", changedAt: budgetHistoryNow }],
-          };
-        } else if (pendingAdminConfirmation.action === "cash_released") {
-          budgetPatch = {
-            status: "budget_released",
-            releasedAmount: approvedAmount,
-            releaseDate: getManilaDateIso(),
-            adminRemarks: "",
-            revisionHistory: [...existingHistory, { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow }],
-          };
-        } else if (pendingAdminConfirmation.action === "complete") {
-          budgetPatch = {
-            status: "completed",
-            adminRemarks: "",
-            revisionHistory: [...existingHistory, { action: "completed", adminRemarks: "", changedAt: budgetHistoryNow }],
           };
         } else if (pendingAdminConfirmation.action === "needs_revision") {
           const deadline = calculateRevisionDeadline();
@@ -5305,60 +5133,6 @@ export default function AdminPortal({ section }: { section: string }) {
           toast({
             title: "Budget approved",
             description: `${pendingAdminConfirmation.organizationName}'s budget request is now approved and awaiting fund release.`,
-          });
-        } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
-          await appendAuditLog(
-            "Budget hard copy submitted",
-            "budget_request",
-            pendingAdminConfirmation.budgetRequestId,
-            `Recorded hard copy submission for budget request "${pendingAdminConfirmation.activityTitle}".`,
-            pendingAdminConfirmation.organizationId,
-          );
-          toast({
-            title: "Hard copy recorded",
-            description: `${pendingAdminConfirmation.organizationName}'s hard copy has been marked as submitted.`,
-          });
-        } else if (pendingAdminConfirmation.action === "cash_released") {
-          await appendAuditLog(
-            "Budget cash released",
-            "budget_request",
-            pendingAdminConfirmation.budgetRequestId,
-            `Released cash for budget request "${pendingAdminConfirmation.activityTitle}".`,
-            pendingAdminConfirmation.organizationId,
-          );
-          notifyOrganizationUser({
-            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
-            organizationId: pendingAdminConfirmation.organizationId,
-            title: "Budget released",
-            message: "Your budget has been released.",
-            type: "budget_released",
-            relatedType: "budget_request",
-            relatedId: pendingAdminConfirmation.budgetRequestId,
-          });
-          toast({
-            title: "Cash released",
-            description: `${pendingAdminConfirmation.organizationName}'s budget is now in monitoring and liquidation has been unlocked.`,
-          });
-        } else if (pendingAdminConfirmation.action === "complete") {
-          await appendAuditLog(
-            "Completed budget request",
-            "budget_request",
-            pendingAdminConfirmation.budgetRequestId,
-            `Marked budget request "${pendingAdminConfirmation.activityTitle}" as completed.`,
-            pendingAdminConfirmation.organizationId,
-          );
-          notifyOrganizationUser({
-            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
-            organizationId: pendingAdminConfirmation.organizationId,
-            title: "Budget request completed",
-            message: "Your budget request has been finalized and marked completed.",
-            type: "budget_released",
-            relatedType: "budget_request",
-            relatedId: pendingAdminConfirmation.budgetRequestId,
-          });
-          toast({
-            title: "Budget completed",
-            description: `${pendingAdminConfirmation.organizationName}'s budget request is now completed.`,
           });
         } else if (pendingAdminConfirmation.action === "needs_revision") {
           await appendAuditLog(
@@ -7116,9 +6890,9 @@ export default function AdminPortal({ section }: { section: string }) {
                   annualAllocationFiscalYear ? `FY ${annualAllocationFiscalYear}-${annualAllocationFiscalYear + 1}` : "FY —"
                 }
                 annualAllocation={annualAllocation}
-                totalApproved={budgetMonitoringApprovedTotal}
-                totalReleased={budgetMonitoringReleasedTotal}
-                totalLiquidated={budgetMonitoringLiquidatedTotal}
+                totalApproved={dashboardBudgetTotals.approved}
+                totalReleased={dashboardBudgetTotals.released}
+                totalLiquidated={dashboardBudgetTotals.liquidated}
                 onManageRequests={() => navigate(routeMap["budget-utilization"])}
               />
               <RecentActivityLogCard
@@ -9150,10 +8924,6 @@ export default function AdminPortal({ section }: { section: string }) {
               />
             </div>
 
-            {(import.meta.env.DEV || import.meta.env.MODE !== "production") && (
-              <RenewalTestEnvironmentPanel />
-            )}
-
             <RenewalsTable
               renewals={filteredRenewals}
               searchValue={renewalSearch}
@@ -9442,111 +9212,6 @@ export default function AdminPortal({ section }: { section: string }) {
             setIsBudgetRemarkDirty(false);
             lastInitializedBudgetIdRef.current = null;
             setSelectedBudgetRequestSnapshot(null);
-          };
-
-          const submitBudgetLifecycleDecision = async () => {
-            if (!selectedBudgetRequest) return;
-            if (budgetLifecycleStage === selectedBudgetRequest.status) return;
-
-            setBudgetLifecycleSubmitting(true);
-            try {
-              const budgetHistoryNow = new Date().toISOString();
-              const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
-              const approvedAmount = Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
-
-              let budgetPatch: Partial<BudgetRequest> = {};
-
-              if (budgetLifecycleStage === "hard_copy_submitted") {
-                budgetPatch = {
-                  status: "hard_copy_submitted",
-                  hardCopySubmittedAt: budgetHistoryNow,
-                  adminRemarks: "",
-                  revisionHistory: [
-                    ...existingHistory,
-                    { action: "hard_copy_submitted", adminRemarks: "", changedAt: budgetHistoryNow },
-                  ],
-                };
-              } else if (budgetLifecycleStage === "budget_released") {
-                budgetPatch = {
-                  status: "budget_released",
-                  releasedAmount: approvedAmount,
-                  releaseDate: getManilaDateIso(),
-                  goSignalAt: selectedBudgetRequest.goSignalAt || budgetHistoryNow,
-                  adminRemarks: "",
-                  revisionHistory: [
-                    ...existingHistory,
-                    { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow },
-                  ],
-                };
-              } else if (budgetLifecycleStage === "approved_for_ftf_green") {
-                budgetPatch = {
-                  status: "approved_for_ftf_green",
-                  adminRemarks: "",
-                  revisionHistory: [
-                    ...existingHistory,
-                    { action: "approved_for_ftf_green", adminRemarks: "", changedAt: budgetHistoryNow },
-                  ],
-                };
-              }
-
-              try {
-                await updateBudgetRequestInSupabase(selectedBudgetRequest.id, budgetPatch);
-                updateBudgetRequest(selectedBudgetRequest.id, budgetPatch);
-                await refreshAdminSnapshot();
-
-                if (budgetLifecycleStage === "hard_copy_submitted") {
-                  void appendAuditLog(
-                    "Budget hard copy submitted",
-                    "budget_request",
-                    selectedBudgetRequest.id,
-                    `Recorded hard copy submission for budget request "${selectedBudgetRequest.activityTitle}".`,
-                    selectedBudgetRequest.organizationId,
-                  ).catch(console.error);
-                  toast({
-                    title: "Hard copy recorded",
-                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s hard copy has been marked as submitted.`,
-                  });
-                } else if (budgetLifecycleStage === "budget_released") {
-                  void appendAuditLog(
-                    "Budget cash released",
-                    "budget_request",
-                    selectedBudgetRequest.id,
-                    `Released cash for budget request "${selectedBudgetRequest.activityTitle}".`,
-                    selectedBudgetRequest.organizationId,
-                  ).catch(console.error);
-                  notifyOrganizationUser({
-                    userId: selectedBudgetOrganization?.userId ?? "",
-                    organizationId: selectedBudgetRequest.organizationId,
-                    title: "Budget released",
-                    message: "Your budget has been released.",
-                    type: "budget_released",
-                    relatedType: "budget_request",
-                    relatedId: selectedBudgetRequest.id,
-                  });
-                  toast({
-                    title: "Cash released",
-                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget is now in monitoring and liquidation has been unlocked.`,
-                  });
-                }
-              } catch (err) {
-                console.error("Failed to update lifecycle decision:", err);
-                await refreshAdminSnapshot();
-                toast({
-                  title: "Update failed",
-                  description: "Could not update budget request status. Please try again.",
-                  variant: "destructive",
-                });
-              }
-            } catch (err) {
-              console.error("Failed to update lifecycle decision:", err);
-              toast({
-                title: "Update failed",
-                description: "Could not update budget request status.",
-                variant: "destructive",
-              });
-            } finally {
-              setBudgetLifecycleSubmitting(false);
-            }
           };
 
           return (
@@ -10074,7 +9739,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       selectedBudgetRequest.status === "approved_for_ftf_green" ||
                       selectedBudgetRequest.status === "hard_copy_submitted" ||
                       selectedBudgetRequest.status === "budget_released" ||
-                      selectedBudgetRequest.status === "completed") ? (
+                      String(selectedBudgetRequest.status) === "completed") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
                       <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
@@ -10295,7 +9960,6 @@ export default function AdminPortal({ section }: { section: string }) {
                             type="button"
                             disabled={budgetLifecycleSubmitting}
                             onClick={() => {
-                              setBudgetLifecycleStage("budget_released");
                               const executeRelease = async () => {
                                 setBudgetLifecycleSubmitting(true);
                                 try {
@@ -10357,81 +10021,8 @@ export default function AdminPortal({ section }: { section: string }) {
                         </div>
                       )}
 
-                      {/* Approved for FTF stage (Onsite Required) */}
-                      {selectedBudgetRequest.status === "approved_for_ftf_green" && (
-                        <div className="space-y-3">
-                          <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
-                            <p className="font-semibold">Approved for Face-to-Face Submission</p>
-                            <p className="mt-0.5 text-[11px] text-slate-600">The user has been notified to submit physical copies onsite. Record receipt below once received.</p>
-                          </div>
-
-                          <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Lifecycle Stage</label>
-                            <Select
-                              value={budgetLifecycleStage}
-                              onValueChange={(value) => setBudgetLifecycleStage(value as BudgetRequest["status"])}
-                            >
-                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="approved_for_ftf_green">Onsite Required</SelectItem>
-                                <SelectItem value="hard_copy_submitted">Hardcopy Submitted</SelectItem>
-                                <SelectItem value="budget_released">Budget Released</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <button
-                            type="button"
-                            disabled={budgetLifecycleSubmitting || budgetLifecycleStage === selectedBudgetRequest.status}
-                            onClick={submitBudgetLifecycleDecision}
-                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
-                          >
-                            {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            Confirm Decision
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Hardcopy Submitted stage */}
-                      {selectedBudgetRequest.status === "hard_copy_submitted" && (
-                        <div className="space-y-3">
-                          <div className="rounded-md border border-role-blue-border bg-role-blue-bg p-3 text-xs text-role-blue-text">
-                            <p className="font-semibold">Hardcopy Submitted</p>
-                            <p className="mt-0.5 text-[11px] text-slate-600">Physical proposal documents received. Release approved funds to initiate monitoring.</p>
-                          </div>
-
-                          <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Lifecycle Stage</label>
-                            <Select
-                              value={budgetLifecycleStage}
-                              onValueChange={(value) => setBudgetLifecycleStage(value as BudgetRequest["status"])}
-                            >
-                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="hard_copy_submitted">Hardcopy Submitted</SelectItem>
-                                <SelectItem value="budget_released">Budget Released</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <button
-                            type="button"
-                            disabled={budgetLifecycleSubmitting || budgetLifecycleStage === selectedBudgetRequest.status}
-                            onClick={submitBudgetLifecycleDecision}
-                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
-                          >
-                            {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            Confirm Decision
-                          </button>
-                        </div>
-                      )}
-
                       {/* Budget Released stage - Final Terminal State */}
-                      {selectedBudgetRequest.status === "budget_released" && (
+                      {(selectedBudgetRequest.status === "budget_released" || String(selectedBudgetRequest.status) === "completed") && (
                         <div className="rounded-md border border-border-mandatory-subtle bg-bg-mandatory-subtle p-4 space-y-2">
                           <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-5 w-5 text-text-mandatory" />
@@ -10439,19 +10030,6 @@ export default function AdminPortal({ section }: { section: string }) {
                           </div>
                           <p className="font-segoe text-xs leading-[140%] text-slate-600">
                             This budget request has reached its final lifecycle stage. Liquidation processing is now available.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Completed stage (legacy records) */}
-                      {selectedBudgetRequest.status === "completed" && (
-                        <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-4 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-5 w-5 text-positive-secondary" />
-                            <p className="font-semibold text-sm text-positive-secondary">Request Completed</p>
-                          </div>
-                          <p className="font-segoe text-xs leading-[140%] text-slate-600">
-                            This budget request has finalized all review, release, and completion milestones.
                           </p>
                         </div>
                       )}
@@ -10661,14 +10239,12 @@ export default function AdminPortal({ section }: { section: string }) {
                     {selectedBudgetRequests.map((req) => {
                       const amount = Math.round(Number(req.releasedAmount || req.approvedAmount || req.requestedAmount || 0));
                       const statusLabel =
-                        req.status === "completed"
-                          ? "Completed"
+                        String(req.status) === "completed"
+                          ? "Budget Released"
                           : req.status === "budget_released"
                             ? "Budget Released"
-                            : req.status === "approved_for_ftf_green"
-                              ? "Onsite Required"
-                              : req.status === "hard_copy_submitted"
-                                ? "Hardcopy Submitted"
+                            : req.status === "approved_for_ftf_green" || req.status === "hard_copy_submitted"
+                              ? "Awaiting Release"
                                 : req.status === "needs_revision"
                                   ? "Needs Revision"
                                   : req.status === "rejected_red"
@@ -12013,13 +11589,19 @@ export default function AdminPortal({ section }: { section: string }) {
                   </>
                 ) : null}
 
+                <BudgetMonitoringPageControls
+                  filters={budgetMonitoringFilters}
+                  availableFiscalYears={availableFiscalYears}
+                  filterOptions={budgetMonitoringFilterOptions}
+                  onChangeFilters={setBudgetMonitoringFilters}
+                  onResetFilters={() => setBudgetMonitoringFilters(current => ({ ...createDefaultBudgetMonitoringFilters(current.fiscalPeriod.fiscalYear), fiscalPeriod: current.fiscalPeriod }))}
+                />
+
                 {budgetMonitoringTab === "overview" ? (
                   <>
                     <BudgetMonitoringOverview
                       selectedFiscalYear={selectedFiscalYear}
-                      onSelectFiscalYear={setSelectedFiscalYear}
-                      availableFiscalYears={availableFiscalYears}
-                      annualAllocation={selectedFYAllocation}
+                      annualAllocation={budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" ? selectedFYAllocation : null}
                       onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
                       approvedBudget={budgetMonitoringApprovedTotal}
                       releasedBudget={budgetMonitoringReleasedTotal}
@@ -12028,18 +11610,12 @@ export default function AdminPortal({ section }: { section: string }) {
                       categoryBreakdown={budgetMonitoringPurposeCategories}
                       formatPesoAmount={formatPesoAmount}
                       formatCompactPeso={formatCompactPeso}
-                      filters={budgetMonitoringFilters}
-                      onChangeFilters={setBudgetMonitoringFilters}
-                      onResetFilters={() => setBudgetMonitoringFilters(DEFAULT_BUDGET_MONITORING_FILTERS)}
-                      filterOptions={budgetMonitoringFilterOptions}
                     />
 
                     <OrganizationFundingTable
                       rows={budgetMonitoringOrganizationFundingRows}
                       searchValue={organizationFundingSearch}
                       onSearchChange={setOrganizationFundingSearch}
-                      classificationFilter={organizationFundingClassificationFilter}
-                      onClassificationFilterChange={setOrganizationFundingClassificationFilter}
                       onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
                     />
                   </>
@@ -12065,11 +11641,9 @@ export default function AdminPortal({ section }: { section: string }) {
                       </div>
 
                       <OrganizationFundingTable
-                        rows={organizationFundingRows.filter((row) => row.barangay === selectedBudgetAllocation.barangay)}
+                        rows={budgetMonitoringOrganizationFundingRows.filter((row) => row.barangay === selectedBudgetAllocation.barangay)}
                         searchValue={barangayDetailSearch}
                         onSearchChange={setBarangayDetailSearch}
-                        classificationFilter={barangayDetailClassificationFilter}
-                        onClassificationFilterChange={setBarangayDetailClassificationFilter}
                         onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
                       />
                     </div>
@@ -12108,82 +11682,7 @@ export default function AdminPortal({ section }: { section: string }) {
                             />
                           </div>
 
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                type="button"
-                                className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-                              >
-                                <span className="truncate">{budgetAllocationDistrictFilter === "all" ? "All districts" : budgetAllocationDistrictFilter}</span>
-                                <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[180px] rounded-b-md rounded-t-none border-slate-300 p-0">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setBudgetAllocationDistrictFilter("all");
-                                  setBudgetAllocationBarangayFilter("all");
-                                }}
-                                className={cn(
-                                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                                  budgetAllocationDistrictFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
-                                )}
-                              >
-                                All districts
-                              </DropdownMenuItem>
-                              {budgetAllocationDistrictOptions.map((district) => (
-                                <DropdownMenuItem
-                                  key={district}
-                                  onClick={() => {
-                                    setBudgetAllocationDistrictFilter(district);
-                                    setBudgetAllocationBarangayFilter("all");
-                                  }}
-                                  className={cn(
-                                    "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                                    budgetAllocationDistrictFilter === district && "bg-bg-info-tertiary text-public-text-brand",
-                                  )}
-                                >
-                                  {district}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                type="button"
-                                className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-                              >
-                                <span className="truncate">{budgetAllocationBarangayFilter === "all" ? "All barangays" : budgetAllocationBarangayFilter}</span>
-                                <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[220px] rounded-b-md rounded-t-none border-slate-300 p-0">
-                              <DropdownMenuItem
-                                onClick={() => setBudgetAllocationBarangayFilter("all")}
-                                className={cn(
-                                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                                  budgetAllocationBarangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
-                                )}
-                              >
-                                All barangays
-                              </DropdownMenuItem>
-                              {budgetAllocationBarangayOptions.map((barangay) => (
-                                <DropdownMenuItem
-                                  key={barangay}
-                                  onClick={() => setBudgetAllocationBarangayFilter(barangay)}
-                                  className={cn(
-                                    "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                                    budgetAllocationBarangayFilter === barangay && "bg-bg-info-tertiary text-public-text-brand",
-                                  )}
-                                >
-                                  {barangay}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                          </div>
 
                         <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
                           <span className="w-[22%]">Barangay</span>
@@ -12336,7 +11835,7 @@ export default function AdminPortal({ section }: { section: string }) {
                         <div>
                           <h2 className="font-segoe text-sm font-bold text-text-default">Public Portal Preview</h2>
                           <p className="font-segoe text-xs text-slate-500">
-                            Live preview of the shared budget transparency overview published to citizens and youth organizations.
+                            Live public snapshot for the selected fiscal year. Admin filters apply to the monitoring views, while this preview shows the published citywide totals.
                           </p>
                         </div>
                       </div>
@@ -12354,6 +11853,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       <PublicBudgetOverview
                         selectedFiscalYear={selectedFiscalYear}
                         availableFiscalYears={availableFiscalYears}
+                        showFiscalYearSelector={false}
                       />
                     </div>
                   </div>

@@ -128,12 +128,13 @@ const addMonthsToIso = (iso: string, months: number) => {
   return nextDate.toISOString();
 };
 
-const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
+const approvedBudgetStatuses = new Set<string>([
+  "awaiting_release",
   "approved_for_ftf_green",
+  "hard_copy_submitted",
   "budget_released",
-  "completed",
 ]);
-const liquidationUnlockedBudgetStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
+const liquidationUnlockedBudgetStatuses = new Set<BudgetRequest["status"]>(["budget_released"]);
 
 export const clearAccountScopedState = (base: LydoConnectState): LydoConnectState => ({
   ...base,

@@ -1,14 +1,7 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
 import { ReferenceCodeChip } from "@/admin/components/InquiriesTable";
-import { majorClassificationOptions } from "@/lib/lydo-connect-data";
+import { cn } from "@/lib/utils";
 
 export type OrganizationFundingRow = {
   organizationId: string;
@@ -17,6 +10,7 @@ export type OrganizationFundingRow = {
   majorClassification: string;
   barangay: string;
   totalRequested: number;
+  totalApproved?: number;
   totalReleased: number;
   totalLiquidated: number;
 };
@@ -25,8 +19,6 @@ type OrganizationFundingTableProps = {
   rows: OrganizationFundingRow[];
   searchValue: string;
   onSearchChange: (value: string) => void;
-  classificationFilter: string;
-  onClassificationFilterChange: (value: string) => void;
   onView: (organizationId: string) => void;
 };
 
@@ -38,8 +30,6 @@ export const OrganizationFundingTable = ({
   rows,
   searchValue,
   onSearchChange,
-  classificationFilter,
-  onClassificationFilterChange,
   onView,
 }: OrganizationFundingTableProps) => {
   const [page, setPage] = useState(0);
@@ -49,10 +39,9 @@ export const OrganizationFundingTable = ({
     return rows.filter((row) => {
       const matchesSearch =
         !query || row.urn.toLowerCase().includes(query) || row.organizationName.toLowerCase().includes(query);
-      const matchesClassification = classificationFilter === "all" || row.majorClassification === classificationFilter;
-      return matchesSearch && matchesClassification;
+      return matchesSearch;
     });
-  }, [rows, searchValue, classificationFilter]);
+  }, [rows, searchValue]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
@@ -81,48 +70,6 @@ export const OrganizationFundingTable = ({
             className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
-            >
-              <span className="whitespace-nowrap">{classificationFilter === "all" ? "All major classifications" : classificationFilter}</span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[240px] rounded-b-md rounded-t-none border-slate-300 p-0">
-            <DropdownMenuItem
-              onClick={() => {
-                onClassificationFilterChange("all");
-                setPage(0);
-              }}
-              className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                classificationFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
-              )}
-            >
-              All major classifications
-            </DropdownMenuItem>
-            {majorClassificationOptions.map((classification) => (
-              <DropdownMenuItem
-                key={classification}
-                onClick={() => {
-                  onClassificationFilterChange(classification);
-                  setPage(0);
-                }}
-                className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
-                  classificationFilter === classification && "bg-bg-info-tertiary text-public-text-brand",
-                )}
-              >
-                {classification}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
 
       </div>
 

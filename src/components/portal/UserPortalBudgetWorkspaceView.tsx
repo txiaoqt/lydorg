@@ -26,7 +26,7 @@ import {
   Send,
   FileEdit,
 } from "lucide-react";
-import { formatAdvocacyLabel } from "@/lib/lydo-connect-data";
+import { formatAdvocacyLabel, getBudgetRequestStatusLabel } from "@/lib/lydo-connect-data";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
 import { Card } from "@/components/ui/card";
@@ -217,14 +217,15 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
   const availableCategories = useMemo(() => {
     const list = Array.isArray(organizationAdvocacies) ? [...organizationAdvocacies] : [];
+    const historicalCategory = editingBudgetRequest?.purposeCategory;
     if (
-      newPurposeCategory &&
-      !list.some((c) => c.trim().toLowerCase() === newPurposeCategory.trim().toLowerCase())
+      historicalCategory &&
+      !list.some((category) => category.trim().toLowerCase() === historicalCategory.trim().toLowerCase())
     ) {
-      list.push(newPurposeCategory);
+      list.push(historicalCategory);
     }
     return list;
-  }, [organizationAdvocacies, newPurposeCategory]);
+  }, [organizationAdvocacies, editingBudgetRequest?.purposeCategory]);
   const fileInputRef = budgetFileInputRef || internalFileInputRef;
   const [internalDraftFile, setInternalDraftFile] = useState<File | null>(null);
   const activeBudgetFileDraft = budgetFileDraft !== undefined ? budgetFileDraft : internalDraftFile;
@@ -389,9 +390,8 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     return (
       s === "approved" ||
       s === "awaiting_release" ||
-      s === "approved_for_ftf_green" ||
+      s === "awaiting_release" ||
       s === "budget_released" ||
-      s === "completed" ||
       s === "approved_released" ||
       s === "budget_approved_green"
     );
@@ -400,7 +400,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const isBudgetReleased = (status?: string) => {
     if (!status) return false;
     const s = status.toLowerCase().trim();
-    return s === "budget_released" || s === "completed";
+    return s === "budget_released";
   };
 
   const isBudgetPending = (status?: string) => {
@@ -1332,7 +1332,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         {req.activityTitle || "Proposal Activity"}
                       </h3>
                       <div className="pt-0.5">
-                        <PortalStatusBadge status={req.status} />
+                        <PortalStatusBadge status={req.status} label={getBudgetRequestStatusLabel(String(req.status))} />
                       </div>
                     </div>
 
@@ -1454,7 +1454,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
                             {/* Column 2: Status Badge */}
                             <td className="py-3.5 px-4">
-                              <PortalStatusBadge status={req.status} />
+                              <PortalStatusBadge status={req.status} label={getBudgetRequestStatusLabel(String(req.status))} />
                             </td>
 
                             {/* Column 3: Amounts */}
@@ -1591,7 +1591,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                         {selectedRequest.activityTitle || "Budget Request"}
                       </SheetTitle>
                       <div className="flex items-center gap-2 pt-0.5">
-                        <PortalStatusBadge status={selectedRequest.status} />
+                        <PortalStatusBadge status={selectedRequest.status} label={getBudgetRequestStatusLabel(String(selectedRequest.status))} />
                       </div>
                       <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5">
                         {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
@@ -1922,7 +1922,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       </DialogTitle>
                       {/* Row 3: Status Badge + Supporting Metadata */}
                       <div className="flex items-center flex-wrap gap-2 pt-0.5">
-                        <PortalStatusBadge status={selectedRequest.status} />
+                        <PortalStatusBadge status={selectedRequest.status} label={getBudgetRequestStatusLabel(String(selectedRequest.status))} />
                         <span className="text-muted-foreground/40 hidden xs:inline">•</span>
                         <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate max-w-[220px] sm:max-w-xs">
                           {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}

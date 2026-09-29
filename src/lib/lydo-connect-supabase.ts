@@ -58,6 +58,8 @@ import { getAdminAppUrl } from "./auth-redirect";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { calculateRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked } from "./revision-deadline";
 import { supabase, supabaseUrl } from "./supabase";
+import { getPasigDistrictForBarangay } from "./pasig-districts";
+import { isCanonicalPurposeCategory } from "./budget-category-colors";
 
 const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
 const TEMPLATE_FILES_BUCKET = "template-files";
@@ -139,6 +141,10 @@ type OrganizationProfileRow = {
   accreditation_start_date?: string | null;
   accreditation_expires_at?: string | null;
   is_renewal_test_account?: boolean | null;
+  is_seeded_sample_data?: boolean | null;
+  seed_batch?: string | null;
+  seed_source_year?: number | null;
+  seed_source_record_number?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -272,6 +278,10 @@ type BudgetRequestRow = {
   revision_unlocked_at?: string | null;
   revision_unlocked_by?: string | null;
   revision_history: unknown[] | null;
+  is_seeded_sample_data?: boolean | null;
+  seed_batch?: string | null;
+  seed_source_year?: number | null;
+  seed_source_record_number?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -306,6 +316,10 @@ type LiquidationReportRow = {
   revision_locked_at?: string | null;
   revision_unlocked_at?: string | null;
   revision_unlocked_by?: string | null;
+  is_seeded_sample_data?: boolean | null;
+  seed_batch?: string | null;
+  seed_source_year?: number | null;
+  seed_source_record_number?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -636,7 +650,11 @@ const formatDateOnly = (value: string | null | undefined) => {
   return date.toISOString().slice(0, 10);
 };
 
-const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfile => ({
+const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfile => {
+  const addressBarangay = row.address_barangay?.trim() || row.barangay || "";
+  const barangay = addressBarangay || row.barangay;
+  const district = getPasigDistrictForBarangay(barangay) || row.district;
+  return ({
   id: row.id,
   referenceId: row.reference_id ?? "",
   userId: row.user_id,
@@ -645,8 +663,8 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   additionalEmails: Array.isArray(row.additional_emails) ? row.additional_emails : [],
   contactNumber: row.contact_number,
   additionalContactNumbers: Array.isArray(row.additional_contact_numbers) ? row.additional_contact_numbers : [],
-  district: row.district,
-  barangay: row.barangay,
+  district,
+  barangay,
   isExistingOrganization: Boolean(row.is_existing_organization),
   organizationIdentifierNumber: row.organization_identifier_number ?? "",
   registrationType: row.registration_type ?? (row.is_existing_organization ? "existing_urn" : "new_organization"),
@@ -673,7 +691,7 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   addressUnitBuilding: row.address_unit_building ?? "",
   addressStreet: row.address_street ?? "",
   addressSubdivision: row.address_subdivision ?? "",
-  addressBarangay: row.address_barangay ?? row.barangay ?? "",
+  addressBarangay,
   addressCity: row.address_city ?? "Pasig City",
   addressProvince: row.address_province ?? "Metro Manila",
   addressZipCode: row.address_zip_code ?? "",
@@ -692,9 +710,14 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   accreditationStartDate: row.accreditation_start_date ?? null,
   accreditationExpiresAt: row.accreditation_expires_at ?? null,
   isRenewalTestAccount: Boolean(row.is_renewal_test_account),
+  isSeededSampleData: Boolean(row.is_seeded_sample_data),
+  seedBatch: row.seed_batch ?? null,
+  seedSourceYear: row.seed_source_year ?? null,
+  seedSourceRecordNumber: row.seed_source_record_number ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
-});
+  });
+};
 
 export const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null => {
   const localDocumentType =
@@ -802,6 +825,10 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   updatedAt: row.updated_at,
   userNote: row.user_note ?? "",
   revisionHistory: (row.revision_history ?? []) as BudgetRequest["revisionHistory"],
+  isSeededSampleData: Boolean(row.is_seeded_sample_data),
+  seedBatch: row.seed_batch ?? null,
+  seedSourceYear: row.seed_source_year ?? null,
+  seedSourceRecordNumber: row.seed_source_record_number ?? null,
 });
 
 const mapDocumentSubmission = (row: DocumentSubmissionRow): DocumentSubmission => ({
@@ -856,6 +883,10 @@ const mapLiquidationReport = (row: LiquidationReportRow): LiquidationReport => (
   revisionLockedAt: row.revision_locked_at ?? null,
   revisionUnlockedAt: row.revision_unlocked_at ?? null,
   revisionUnlockedBy: row.revision_unlocked_by ?? null,
+  isSeededSampleData: Boolean(row.is_seeded_sample_data),
+  seedBatch: row.seed_batch ?? null,
+  seedSourceYear: row.seed_source_year ?? null,
+  seedSourceRecordNumber: row.seed_source_record_number ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -2037,6 +2068,12 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
 
   if (!session?.user) throw new Error("Please sign in with your organization account first.");
 
+  const headquartersBarangay = profile.addressBarangay?.trim() || profile.barangay.trim();
+  const headquartersDistrict = getPasigDistrictForBarangay(headquartersBarangay);
+  if (!headquartersDistrict) {
+    throw new Error("Select a valid Pasig City headquarters Barangay before saving.");
+  }
+
   const existingProfile = await fetchOrganizationProfile(session.user.id);
   if (existingProfile) {
     assertOrganizationNotSuspended(existingProfile, "Profile update");
@@ -2059,8 +2096,8 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     additional_emails: (profile.additionalEmails ?? []).map((e) => e.trim()).filter(Boolean),
     contact_number: profile.contactNumber.trim(),
     additional_contact_numbers: (profile.additionalContactNumbers ?? []).map((c) => c.trim()).filter(Boolean),
-    district: profile.district.trim(),
-    barangay: profile.barangay.trim(),
+    district: headquartersDistrict,
+    barangay: headquartersBarangay,
     is_existing_organization: Boolean(profile.isExistingOrganization),
     organization_identifier_number: profile.isExistingOrganization || profile.profileStatus === "verified"
       ? (profile.organizationIdentifierNumber?.trim() || profile.urn?.trim() || "")
@@ -2083,7 +2120,7 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     address_unit_building: profile.addressUnitBuilding?.trim() || null,
     address_street: profile.addressStreet?.trim() || null,
     address_subdivision: profile.addressSubdivision?.trim() || null,
-    address_barangay: profile.addressBarangay?.trim() || profile.barangay?.trim() || null,
+    address_barangay: headquartersBarangay,
     address_city: profile.addressCity?.trim() || "Pasig City",
     address_province: profile.addressProvince?.trim() || "Metro Manila",
     address_zip_code: profile.addressZipCode?.trim() || null,
@@ -7133,6 +7170,8 @@ export const getUnconfiguredPublicBudgetSummary = (targetYear: number): PublicBu
   percentLiquidated: null,
   purposeCategories: [],
   districtAllocations: [],
+  unmappedPurposeAmount: 0,
+  unassignedDistrictAmount: 0,
   availableFiscalYears: [],
   lastUpdated: new Date().toISOString(),
 });
@@ -7156,6 +7195,45 @@ export const getPublicBudgetSummaryFromSupabase = async (
       return getUnconfiguredPublicBudgetSummary(targetYear);
     }
     const res = (data ?? {}) as any;
+    const approvedBudget = normalizeNumeric(res.approved_budget ?? res.approvedBudget);
+    const rawPurposeCategories = (res.purpose_categories ?? res.purposeCategories ?? []) as any[];
+    const purposeCategories = rawPurposeCategories
+      .filter((category) => isCanonicalPurposeCategory(category?.category))
+      .map((category) => ({
+        category: category.category.trim(),
+        amount: normalizeNumeric(category.amount),
+        percentage: normalizeNumeric(category.percentage),
+      }));
+    const purposeTotal = purposeCategories.reduce((sum, category) => sum + category.amount, 0);
+    const rawDistrictAllocations = (
+      res.district_allocations ?? res.districtAllocations ?? res.district_breakdown ?? res.districtBreakdown ?? []
+    ) as any[];
+    const normalizeDistrict = (district?: string | null): "District I" | "District II" | null => {
+      const normalized = district?.trim().toLowerCase().replace(/\s+/g, " ");
+      if (["district i", "district 1", "dist 1", "d1"].includes(normalized ?? "")) return "District I";
+      if (["district ii", "district 2", "dist 2", "d2"].includes(normalized ?? "")) return "District II";
+      return null;
+    };
+    const mappedDistrictRows = rawDistrictAllocations.map((district) => ({
+      district: normalizeDistrict(district?.district),
+      amount: normalizeNumeric(district?.amount),
+      percentage: normalizeNumeric(district?.percentage),
+    }));
+    const districtAllocations = mappedDistrictRows
+      .filter((district): district is typeof district & { district: "District I" | "District II" } => Boolean(district.district))
+      .map((district) => ({
+        district: district.district,
+        amount: district.amount,
+        percentage: district.percentage,
+      }));
+    const unmappedPurposeAmount = res.unmapped_purpose_amount !== undefined || res.unmappedPurposeAmount !== undefined
+      ? normalizeNumeric(res.unmapped_purpose_amount ?? res.unmappedPurposeAmount)
+      : Math.max(approvedBudget - purposeTotal, 0);
+    const unassignedDistrictAmount = res.unassigned_district_amount !== undefined || res.unassignedDistrictAmount !== undefined
+      ? normalizeNumeric(res.unassigned_district_amount ?? res.unassignedDistrictAmount)
+      : mappedDistrictRows
+          .filter((district) => !district.district)
+          .reduce((sum, district) => sum + district.amount, 0);
     return {
       fiscalYear: res.fiscal_year ?? res.fiscalYear ?? targetYear,
       isConfigured: Boolean(res.is_configured ?? res.isConfigured),
@@ -7165,7 +7243,7 @@ export const getPublicBudgetSummaryFromSupabase = async (
           : res.annualBudget !== null && res.annualBudget !== undefined
           ? normalizeNumeric(res.annualBudget)
           : null,
-      approvedBudget: normalizeNumeric(res.approved_budget ?? res.approvedBudget),
+      approvedBudget,
       releasedBudget: normalizeNumeric(res.released_budget ?? res.releasedBudget),
       liquidatedBudget: normalizeNumeric(res.liquidated_budget ?? res.liquidatedBudget),
       remainingHeadroom:
@@ -7194,18 +7272,10 @@ export const getPublicBudgetSummaryFromSupabase = async (
           : res.percentLiquidated !== null && res.percentLiquidated !== undefined
           ? normalizeNumeric(res.percentLiquidated)
           : null,
-      purposeCategories: (((res.purpose_categories ?? res.purposeCategories) ?? []) as any[]).map((c) => ({
-        category: c.category ?? "Other Community Programs",
-        amount: normalizeNumeric(c.amount),
-        percentage: normalizeNumeric(c.percentage),
-      })),
-      districtAllocations: (res.district_allocations ?? res.districtAllocations)
-        ? (((res.district_allocations ?? res.districtAllocations) as any[]).map((d) => ({
-            district: d.district,
-            amount: normalizeNumeric(d.amount),
-            percentage: normalizeNumeric(d.percentage),
-          })))
-        : undefined,
+      purposeCategories,
+      districtAllocations,
+      unmappedPurposeAmount,
+      unassignedDistrictAmount,
       availableFiscalYears: res.available_fiscal_years ?? res.availableFiscalYears ?? undefined,
       lastUpdated: res.last_updated ?? res.lastUpdated ?? new Date().toISOString(),
     };
@@ -7715,4 +7785,127 @@ export const adminResetRenewalTestScenarioInSupabase = async (): Promise<{
       daysRemaining: number | null;
     };
   };
+};
+
+export type SeedYorpSampleDatasetResult = {
+  success: boolean;
+  batch_name: string;
+  total_records: number;
+  created_count: number;
+  updated_count: number;
+  year_breakdown: {
+    "2024": number;
+    "2025": number;
+    "2026": number;
+  };
+  organizations?: number;
+  registration_packets?: number;
+  document_records?: number;
+  required_documents_per_organization?: number;
+  organizations_document_complete?: number;
+  missing_requirements?: number;
+  duplicate_requirements?: number;
+  budget_requests?: number;
+  awaiting_release?: number;
+  released?: number;
+  liquidated?: number;
+  renewal_test_organization_excluded?: boolean;
+  timestamp: string;
+};
+
+export type CleanupYorpSampleDatasetResult = {
+  success: boolean;
+  batch_name: string;
+  deleted_organizations: number;
+  deleted_budget_requests: number;
+  deleted_liquidations: number;
+  deleted_users: number;
+  storage_seed_assets_deleted?: number;
+  renewal_test_organization_excluded?: boolean;
+  timestamp: string;
+};
+
+export type YorpSampleDatasetStatus = {
+  is_development_or_test_environment: boolean;
+  seed_batch: string;
+  total_seeded_organizations: number;
+  expected_total: number;
+  year_breakdown: {
+    "2024": number;
+    "2025": number;
+    "2026": number;
+  };
+  budget_breakdown: {
+    awaiting_release: number;
+    budget_released: number;
+    completed: number;
+    liquidated_reports: number;
+  };
+  registration_breakdown?: {
+    packets: number;
+    document_records: number;
+    required_documents_per_organization: number;
+    organizations_complete: number;
+    missing_requirements: number;
+    duplicate_requirements: number;
+    mapped_seed_assets: number;
+    asset_mapping_complete: boolean;
+    renewal_test_organization_excluded: boolean;
+  };
+  last_seeded_at: string | null;
+};
+
+/**
+ * Admin RPC: Get current status and breakdown of seeded PCYDO YORP sample dataset.
+ */
+export const adminGetYorpSampleDatasetStatusInSupabase = async (
+  batchName: string = "PCYDO-YORP-2024-2026"
+): Promise<YorpSampleDatasetStatus> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_get_yorp_sample_dataset_status", {
+    _session_token: adminSession.sessionToken,
+    _batch_name: batchName,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as YorpSampleDatasetStatus;
+};
+
+/**
+ * Admin RPC: Execute bulk seeding of authoritative 84 PCYDO YORP sample organizations with verified state,
+ * URNs, accreditations, contacts, and realistic budget requests.
+ */
+export const adminSeedYorpSampleDatasetInSupabase = async (
+  batchName: string = "PCYDO-YORP-2024-2026"
+): Promise<SeedYorpSampleDatasetResult> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_seed_yorp_sample_dataset", {
+    _session_token: adminSession.sessionToken,
+    _batch_name: batchName,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as SeedYorpSampleDatasetResult;
+};
+
+/**
+ * Admin RPC: Safely clean up all seeded sample data belonging to the specified batch.
+ */
+export const adminCleanupYorpSampleDatasetInSupabase = async (
+  batchName: string = "PCYDO-YORP-2024-2026"
+): Promise<CleanupYorpSampleDatasetResult> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_cleanup_yorp_sample_dataset", {
+    _session_token: adminSession.sessionToken,
+    _batch_name: batchName,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as CleanupYorpSampleDatasetResult;
 };

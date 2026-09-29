@@ -1,40 +1,23 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useLayoutEffect, useRef } from "react";
 import {
   AlertCircle,
   AlertTriangle,
-  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Coins,
   FileSpreadsheet,
-  FilterX,
-  RotateCcw,
   Settings,
   SlidersHorizontal,
 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
-import { createCategoryColorResolver } from "@/lib/budget-category-colors";
+import { getCategoryColor, isCanonicalPurposeCategory } from "@/lib/budget-category-colors";
 import { BUDGET_MONITORING_COLORS, BUDGET_MONITORING_LABELS, deriveBudgetMonitoringMetrics } from "@/lib/budget-monitoring-presentation";
 import { BudgetExecutionPipeline } from "@/components/portal/BudgetExecutionPipeline";
-import {
-  BudgetMonitoringFilters,
-  DEFAULT_BUDGET_MONITORING_FILTERS,
-  getActiveFilterCount,
-} from "@/lib/budget-monitoring-filters";
-import {
-  BudgetMonitoringFilterPopover,
-  type BudgetMonitoringFilterOptions,
-} from "./BudgetMonitoringFilterPopover";
-import { BudgetMonitoringFilterSummary } from "./BudgetMonitoringFilterSummary";
+import { formatBudgetPurposeCategory } from "@/lib/lydo-connect-data";
+import { getDonutLabelLayout } from "./budget-donut-layout";
 
 export type PurposeCategoryItem = {
   category: string;
@@ -45,8 +28,6 @@ export type PurposeCategoryItem = {
 
 type BudgetMonitoringOverviewProps = {
   selectedFiscalYear: number;
-  onSelectFiscalYear: (fiscalYear: number) => void;
-  availableFiscalYears: number[];
   annualAllocation: AnnualBudgetAllocation | null;
   onOpenConfigureModal: () => void;
   approvedBudget: number;
@@ -56,11 +37,6 @@ type BudgetMonitoringOverviewProps = {
   categoryBreakdown: PurposeCategoryItem[];
   formatPesoAmount: (value?: number | null) => string;
   formatCompactPeso: (value: number) => string;
-  // Dynamic filter state & options
-  filters?: BudgetMonitoringFilters;
-  onChangeFilters?: (next: BudgetMonitoringFilters) => void;
-  onResetFilters?: () => void;
-  filterOptions?: BudgetMonitoringFilterOptions;
 };
 
 const TABLE_PAGE_SIZE = 5;
@@ -83,8 +59,6 @@ export function formatPercentageDisplay(valueOrPct: number, total?: number): str
 
 export const BudgetMonitoringOverview = ({
   selectedFiscalYear,
-  onSelectFiscalYear,
-  availableFiscalYears,
   annualAllocation,
   onOpenConfigureModal,
   approvedBudget,
@@ -94,28 +68,23 @@ export const BudgetMonitoringOverview = ({
   categoryBreakdown,
   formatPesoAmount,
   formatCompactPeso,
-  filters: parentFilters,
-  onChangeFilters: parentOnChangeFilters,
-  onResetFilters: parentOnResetFilters,
-  filterOptions,
 }: BudgetMonitoringOverviewProps) => {
-  // Local fallback filter state if not controlled externally
-  const [localFilters, setLocalFilters] = useState<BudgetMonitoringFilters>(
-    DEFAULT_BUDGET_MONITORING_FILTERS
-  );
   const [tablePage, setTablePage] = useState(0);
-
-  const activeFilters = parentFilters ?? localFilters;
-  const handleFilterChange = parentOnChangeFilters ?? ((next: BudgetMonitoringFilters) => {
-    setLocalFilters(next);
-    setTablePage(0);
-  });
-  const handleResetFilters = parentOnResetFilters ?? (() => {
-    setLocalFilters(DEFAULT_BUDGET_MONITORING_FILTERS);
-    setTablePage(0);
-  });
-
-  const activeFilterCount = getActiveFilterCount(activeFilters);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(520);
+  useLayoutEffect(() => {
+    const element = chartRef.current;
+    if (!element) return;
+    const measure = () => {
+      const width = element.getBoundingClientRect().width;
+      if (width > 0) setChartWidth(Math.round(width));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   const isConfigured = annualAllocation !== null;
   const totalFYBudget = isConfigured ? annualAllocation.totalAmount : null;
 
@@ -134,86 +103,90 @@ export const BudgetMonitoringOverview = ({
       ? ((Math.max(remainingHeadroom, 0) / totalFYBudget) * 100).toFixed(1)
       : null;
 
-  // Single deterministic category -> color resolver for the master categoryBreakdown list
-  const getCategoryColor = useMemo(
-    () => createCategoryColorResolver(categoryBreakdown),
-    [categoryBreakdown]
+  const canonicalDonutCategories = useMemo(
+    () => categoryBreakdown.filter((item) => item.approvedAmount > 0 && isCanonicalPurposeCategory(item.category)),
+    [categoryBreakdown],
+  );
+  const donutTotal = useMemo(
+    () => canonicalDonutCategories.reduce((sum, item) => sum + item.approvedAmount, 0),
+    [canonicalDonutCategories],
   );
 
-  // Top 5 categories + Other consolidation for Donut Visualization (Part 15 & 16)
-  // Coherent denominator: slices sum to approvedBudget, center value = approvedBudget
+  // The donut always uses every real category in the current filtered dataset.
+  // Its denominator is the sum of those same categories so the center reconciles.
   const donutData = useMemo(() => {
-    if (!categoryBreakdown.length || approvedBudget <= 0) return [];
-
-    if (categoryBreakdown.length <= 5) {
-      return categoryBreakdown.map((item) => {
-        const pctDisplay = formatPercentageDisplay(item.approvedAmount, approvedBudget);
-        return {
-          name: item.category,
-          value: item.approvedAmount,
-          color: getCategoryColor(item.category),
-          pct: Math.round((item.approvedAmount / approvedBudget) * 100),
-          pctDisplay,
-        };
-      });
-    }
-
-    const top5 = categoryBreakdown.slice(0, 5);
-    const others = categoryBreakdown.slice(5);
-    const otherAmount = others.reduce((sum, item) => sum + item.approvedAmount, 0);
-
-    const slices = top5.map((item) => {
-      const pctDisplay = formatPercentageDisplay(item.approvedAmount, approvedBudget);
-      return {
-        name: item.category,
+    if (donutTotal <= 0) return [];
+    return canonicalDonutCategories.map((item) => ({
+        name: formatBudgetPurposeCategory(item.category),
         value: item.approvedAmount,
         color: getCategoryColor(item.category),
-        pct: Math.round((item.approvedAmount / approvedBudget) * 100),
-        pctDisplay,
-      };
-    });
+        pctDisplay: formatPercentageDisplay(item.approvedAmount, donutTotal),
+      }));
+  }, [canonicalDonutCategories, donutTotal]);
 
-    if (otherAmount > 0) {
-      const otherPctDisplay = formatPercentageDisplay(otherAmount, approvedBudget);
-      slices.push({
-        name: "Other Categories",
-        value: otherAmount,
-        color: getCategoryColor("Other Categories"),
-        pct: Math.round((otherAmount / approvedBudget) * 100),
-        pctDisplay: otherPctDisplay,
-      });
-    }
+  const donutLabelLayout = useMemo(() => getDonutLabelLayout(donutData, chartWidth), [donutData, chartWidth]);
 
-    return slices;
-  }, [categoryBreakdown, approvedBudget, getCategoryColor]);
+  const renderDonutLabel = (props: Record<string, any>) => {
+    const name = String(props.name ?? props.payload?.name ?? "");
+    const layout = donutLabelLayout.positions.get(name);
+    if (!layout) return null;
 
-  // Derived filter options if not supplied externally
-  const resolvedFilterOptions: BudgetMonitoringFilterOptions = useMemo(() => {
-    if (filterOptions) return filterOptions;
-    return {
-      availableTimePeriods: [
-        "current_fy",
-        "previous_fy",
-        "ytd",
-        "last_30_days",
-        "last_90_days",
-        "last_6_months",
-        "custom",
-        "all_time",
-      ],
-      availableCategories: categoryBreakdown.map((c) => c.category),
-      availableStatuses: [
-        { value: "submitted_under_review", label: "Submitted / Under Review" },
-        { value: "needs_revision", label: "Needs Revision" },
-        { value: "awaiting_release", label: "Awaiting Release" },
-        { value: "budget_released", label: "Budget Released" },
-        { value: "completed", label: "Completed" },
-      ],
-      availableClassifications: [],
-      availableDistricts: [],
-      availableBarangays: [],
-    };
-  }, [filterOptions, categoryBreakdown]);
+    const slice = donutData.find((s) => s.name === name);
+    const pctDisplay = slice?.pctDisplay ?? "";
+
+    // Adapt if Recharts provides a shifted cx/cy in specific viewport contexts
+    const dx = props.cx !== undefined ? Number(props.cx) - donutLabelLayout.cx : 0;
+    const dy = props.cy !== undefined ? Number(props.cy) - donutLabelLayout.cy : 0;
+    const transform = dx !== 0 || dy !== 0 ? `translate(${dx}, ${dy})` : undefined;
+
+    const textX = layout.textX;
+    const textAnchor = layout.side === "right" ? "start" : "end";
+
+    return (
+      <g
+        key={name}
+        aria-label={`${name}, ${pctDisplay}`}
+        transform={transform}
+        className="pointer-events-none select-none"
+      >
+        {/* Two-stage leader line: slice arc -> elbow -> horizontal connector */}
+        <path
+          d={layout.leaderLine.pathD}
+          fill="none"
+          stroke="var(--yt-border-strong, #94a3b8)"
+          strokeWidth={1.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Crisp label block: category name with visual emphasis, percentage underneath */}
+        <text
+          x={textX}
+          y={layout.top + 10}
+          textAnchor={textAnchor}
+          fill="var(--yt-text, #1e293b)"
+          fontSize={11}
+          fontWeight={600}
+          fontFamily="Segoe UI, -apple-system, sans-serif"
+        >
+          {layout.lines.map((line, index) => (
+            <tspan key={`${name}-${index}`} x={textX} dy={index === 0 ? 0 : 13}>
+              {line}
+            </tspan>
+          ))}
+          <tspan
+            x={textX}
+            dy={14}
+            fill="var(--yt-text-muted, #64748b)"
+            fontSize={10}
+            fontWeight={500}
+            fontFamily="Cascadia Code, Segoe UI, monospace"
+          >
+            {pctDisplay}
+          </tspan>
+        </text>
+      </g>
+    );
+  };
 
   const totalPages = Math.max(1, Math.ceil(categoryBreakdown.length / TABLE_PAGE_SIZE));
   const clampedPage = Math.min(tablePage, totalPages - 1);
@@ -239,43 +212,6 @@ export const BudgetMonitoringOverview = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Real Interactive Fiscal Year Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Select Fiscal Year"
-                  className="flex h-10 items-center justify-between gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface px-3.5 py-2 font-segoe text-sm font-semibold text-text-default shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none"
-                >
-                  <Calendar className="h-4 w-4 text-public-text-brand" />
-                  <span>FY {selectedFiscalYear}</span>
-                  <ChevronDown className="h-4 w-4 text-slate-400" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 rounded-md border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface p-1 shadow-lg">
-                {availableFiscalYears.map((fy) => (
-                  <DropdownMenuItem
-                    key={fy}
-                    onClick={() => {
-                      onSelectFiscalYear(fy);
-                      setTablePage(0);
-                    }}
-                    className={cn(
-                      "flex items-center justify-between px-3 py-2 font-segoe text-xs cursor-pointer rounded-sm transition-colors",
-                      fy === selectedFiscalYear
-                        ? "bg-public-bg-secondary-100 dark:bg-public-bg-secondary-900/30 text-public-text-brand font-bold"
-                        : "text-text-default hover:bg-slate-100 dark:hover:bg-slate-800"
-                    )}
-                  >
-                    <span>FY {fy}</span>
-                    {fy === selectedFiscalYear && (
-                      <span className="text-[10px] text-public-text-brand font-semibold">Active</span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             {/* Admin Configuration Entry Point */}
             <button
               type="button"
@@ -521,58 +457,31 @@ export const BudgetMonitoringOverview = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Filter Drawer / Popover Component */}
-            <BudgetMonitoringFilterPopover
-              filters={activeFilters}
-              onChangeFilters={handleFilterChange}
-              onResetFilters={handleResetFilters}
-              options={resolvedFilterOptions}
-              selectedFiscalYear={selectedFiscalYear}
-            />
-
-            {activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="flex h-9 items-center gap-1 rounded-md border border-slate-300 px-2.5 font-segoe text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-                title="Reset all filters"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Reset</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Active Filter Summary Bar */}
-        <div className="px-6 pt-4">
-          <BudgetMonitoringFilterSummary
-            filters={activeFilters}
-            onChangeFilters={handleFilterChange}
-            onResetFilters={handleResetFilters}
-            selectedFiscalYear={selectedFiscalYear}
-          />
         </div>
 
         <div className="p-6">
-          {categoryBreakdown.length > 0 && approvedBudget > 0 ? (
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-              {/* Left Column: Recharts Donut (Top 5 + Other) with coherent denominator */}
-              <div className="flex flex-col items-center justify-center lg:col-span-5">
-                <div className="relative h-[240px] w-[240px] shrink-0">
-                  <ResponsiveContainer width="100%" height="100%">
+          {categoryBreakdown.length > 0 && donutTotal > 0 ? (
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-12 xl:items-center">
+              {/* Every filtered category gets its own slice and external label. */}
+              <div className="flex min-w-0 flex-col items-center justify-center xl:col-span-6">
+                <div ref={chartRef} className="relative h-auto w-full min-w-0 shrink-0">
+                  <ResponsiveContainer width="100%" height={donutLabelLayout.chartHeight}>
                     <PieChart>
                       <Pie
                         data={donutData}
                         dataKey="value"
                         nameKey="name"
-                        innerRadius={78}
-                        outerRadius={112}
-                        minAngle={4}
-                        paddingAngle={donutData.length > 1 ? 2 : 0}
+                        cx={donutLabelLayout.cx}
+                        cy={donutLabelLayout.cy}
+                        innerRadius={donutLabelLayout.innerRadius}
+                        outerRadius={donutLabelLayout.radius}
+                        startAngle={90}
+                        endAngle={-270}
+                        paddingAngle={donutData.length > 1 ? Math.min(1.5, 8 / donutData.length) : 0}
                         stroke="#ffffff"
                         strokeWidth={2}
+                        label={donutLabelLayout.compact ? false : renderDonutLabel}
+                        labelLine={false}
                       >
                         {donutData.map((entry) => (
                           <Cell key={entry.name} fill={entry.color} />
@@ -603,7 +512,7 @@ export const BudgetMonitoringOverview = ({
                   {/* Coherent Center Label: Denominator matches slices! */}
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
                     <p className="font-cascadia text-xl font-bold leading-tight text-public-text-brand">
-                      {formatCompactPeso(approvedBudget)}
+                      {formatCompactPeso(donutTotal)}
                     </p>
                     <p className="mt-0.5 font-segoe text-[11px] font-medium text-slate-500">
                       Total Approved
@@ -613,25 +522,21 @@ export const BudgetMonitoringOverview = ({
                     </p>
                   </div>
                 </div>
-
-                {/* Donut Legend */}
-                <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 px-2 text-center">
-                  {donutData.map((slice) => (
-                    <div key={slice.name} className="flex items-center gap-1.5">
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: slice.color }}
-                      />
-                      <span className="font-segoe text-[11px] text-slate-600 truncate max-w-[140px]">
-                        {slice.name} ({slice.pctDisplay || `${slice.pct}%`})
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {donutLabelLayout.compact && (
+                  <ul className="grid w-full grid-cols-1 gap-x-4 gap-y-2 px-1 pb-1 sm:grid-cols-2" aria-label="Budget allocation categories">
+                    {donutData.map((slice) => (
+                      <li key={slice.name} className="flex min-w-0 items-start gap-2 text-xs text-text-default">
+                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} aria-hidden="true" />
+                        <span className="min-w-0 flex-1 leading-snug">{slice.name}</span>
+                        <span className="shrink-0 font-cascadia text-[11px] text-slate-500">{slice.pctDisplay}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Right Column: Scalable compact synchronized table */}
-              <div className="flex flex-col lg:col-span-7">
+              <div className="flex flex-col xl:col-span-6">
                 {/* Header count indicator */}
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <span className="font-segoe text-xs font-semibold text-slate-600 dark:text-slate-300">
@@ -667,7 +572,7 @@ export const BudgetMonitoringOverview = ({
                                     style={{ backgroundColor: color }}
                                   />
                                   <span className="font-medium text-text-default truncate max-w-[200px]">
-                                    {item.category}
+                                    {formatBudgetPurposeCategory(item.category)}
                                   </span>
                                 </div>
                               </td>
@@ -728,27 +633,6 @@ export const BudgetMonitoringOverview = ({
                   </div>
                 )}
               </div>
-            </div>
-          ) : activeFilterCount > 0 ? (
-            /* Clear Empty State for Active Filters */
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
-                <FilterX className="h-6 w-6" />
-              </div>
-              <h4 className="mt-3 font-segoe text-sm font-semibold text-text-default">
-                No budget records match the selected filters.
-              </h4>
-              <p className="mt-1 max-w-sm font-segoe text-xs text-slate-500">
-                Try broadening your time period, category, status, or location criteria to see budget allocations.
-              </p>
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="mt-4 flex items-center gap-1.5 rounded-md bg-public-bg-brand px-3.5 py-2 font-segoe text-xs font-semibold text-white shadow-xs hover:bg-bg-brand-hover transition-colors"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Reset Filters
-              </button>
             </div>
           ) : (
             /* Empty State when no approved requests exist for FY */

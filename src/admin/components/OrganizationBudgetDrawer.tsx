@@ -86,7 +86,7 @@ export const OrganizationBudgetDrawer = ({ detail, onOpenChange, onReviewRequest
 
                 <div className="flex items-baseline gap-2">
                   <p className="font-segoe text-2xl font-semibold leading-[140%] text-text-default">{detail.completedCount}</p>
-                  <p className="font-segoe text-xs font-semibold leading-[140%] text-slate-500">total requests completed</p>
+                  <p className="font-segoe text-xs font-semibold leading-[140%] text-slate-500">liquidated requests</p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2.5">

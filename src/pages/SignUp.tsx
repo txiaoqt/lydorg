@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AlertCircle, Check, CheckCircle2, Eye, EyeOff, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { pasigDistrictBarangays, pasigDistrictOptions, type PasigDistrict } from "@/lib/pasig-districts";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -138,8 +137,6 @@ const SignUp = () => {
   const [name, setName] = useState(() => initialDraft?.organizationName ?? "");
   const [email, setEmail] = useState(() => initialDraft?.email ?? "");
   const [contactNumber, setContactNumber] = useState(() => initialDraft?.contactNumber ?? "");
-  const [district, setDistrict] = useState<PasigDistrict | "">(() => (initialDraft?.district as PasigDistrict) ?? "");
-  const [barangayId, setBarangayId] = useState(() => initialDraft?.barangayId ?? "");
   const [isExistingOrganization, setIsExistingOrganization] = useState(() => initialDraft?.isExistingOrganization ?? false);
   const [organizationIdentifierNumber, setOrganizationIdentifierNumber] = useState(() => initialDraft?.organizationIdentifierNumber ?? "");
   const [password, setPassword] = useState("");
@@ -171,9 +168,6 @@ const SignUp = () => {
   const isGmailEmail = isGmailFormat(email);
   const normalizedContactNumber = contactNumber.trim();
   const isContactNumberValid = /^09\d{9}$/.test(normalizedContactNumber);
-  const districtBarangays = district ? pasigDistrictBarangays[district] : [];
-  const selectedBarangayName = districtBarangays.find((b) => b.id === barangayId)?.name ?? "N/A";
-  const selectedDistrictName = district || "N/A";
   const normalizedIdentifierNumber = isExistingOrganization
     ? normalizeUrn(organizationIdentifierNumber)
     : "";
@@ -187,8 +181,6 @@ const SignUp = () => {
     email.trim() &&
     isGmailEmail &&
     isContactNumberValid &&
-    district &&
-    barangayId &&
     isIdentifierValid &&
     password &&
     isPasswordValid(password) &&
@@ -211,13 +203,6 @@ const SignUp = () => {
     }
     return null;
   }, [password, confirmPassword]);
-
-  // Reset barangay when district changes
-  useEffect(() => {
-    if (!district) { setBarangayId(""); return; }
-    const opts = pasigDistrictBarangays[district];
-    if (!opts.some((b) => b.id === barangayId)) setBarangayId("");
-  }, [barangayId, district]);
 
   // Clear identifier when existing-org is unchecked
   useEffect(() => {
@@ -365,8 +350,6 @@ const SignUp = () => {
       !name.trim() ? "Organization Name" : "",
       !email.trim() ? "Email Address" : "",
       !normalizedContactNumber ? "Contact Number" : "",
-      !district ? "District" : "",
-      !barangayId ? "Barangay" : "",
       isExistingOrganization && !normalizedIdentifierNumber ? "Unique Registration Number (URN)" : "",
       !password ? "Password" : "",
       !confirmPassword ? "Confirm Password" : "",
@@ -374,7 +357,7 @@ const SignUp = () => {
     ].filter(Boolean);
 
     if (missingFields.length) {
-      setTouched(new Set(["name", "email", "contactNumber", "district", "barangay", "identifier", "password", "confirmPassword", "policies"]));
+      setTouched(new Set(["name", "email", "contactNumber", "identifier", "password", "confirmPassword", "policies"]));
       setInlineError(`Complete all required fields: ${missingFields.join(", ")}.`);
       return;
     }
@@ -462,8 +445,6 @@ const SignUp = () => {
       organizationIdentifierNumber: normalizedIdentifierNumber,
       email: email.trim().toLowerCase(),
       contactNumber: normalizedContactNumber,
-      district,
-      barangayId,
       agreedToPolicies,
     });
 
@@ -473,9 +454,6 @@ const SignUp = () => {
       password,
       organizationName: name.trim(),
       contactNumber: normalizedContactNumber,
-      district,
-      barangayId,
-      barangayName: selectedBarangayName,
       isExistingOrganization,
       organizationIdentifierNumber: normalizedIdentifierNumber,
       pwaFlow,
@@ -688,65 +666,6 @@ const SignUp = () => {
                     Must be 11 digits starting with 09.
                   </p>
                 ) : null}
-              </div>
-            </FormSection>
-
-            {/* ── Section 2: Location ── */}
-            <FormSection title="Location" hidden={currentStep !== 2}>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="district">District</RequiredLabel>
-                  <Select
-                    value={district}
-                    onValueChange={(v) => { setDistrict(v as PasigDistrict); touch("district"); }}
-                  >
-                    <SelectTrigger id="district" className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150">
-                      <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      side="bottom"
-                      sideOffset={4}
-                      collisionPadding={8}
-                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-slate-200 dark:border-slate-800 shadow-lg"
-                    >
-                      {pasigDistrictOptions.map((opt) => (
-                        <SelectItem key={opt} value={opt} className="cursor-pointer text-sm">
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {touched.has("district") && !district ? <p className="text-xs text-destructive">District is required.</p> : null}
-                </div>
-
-                <div className="space-y-1.5">
-                  <RequiredLabel htmlFor="barangay">Barangay</RequiredLabel>
-                  <Select
-                    value={barangayId}
-                    onValueChange={(v) => { setBarangayId(v); touch("barangay"); }}
-                    disabled={!district}
-                  >
-                    <SelectTrigger id="barangay" className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed">
-                      <SelectValue placeholder={district ? "Select Barangay" : "Choose district first"} />
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      side="bottom"
-                      sideOffset={4}
-                      collisionPadding={8}
-                      hideScrollButtons
-                      className="max-h-[280px] w-[var(--radix-select-trigger-width)] rounded-xl border-slate-200 dark:border-slate-800 shadow-lg"
-                    >
-                      {districtBarangays.map((b) => (
-                        <SelectItem key={b.id} value={b.id} className="cursor-pointer text-sm">
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {touched.has("barangay") && !barangayId ? <p className="text-xs text-destructive">Barangay is required.</p> : null}
-                </div>
               </div>
             </FormSection>
 
@@ -1129,14 +1048,6 @@ const SignUp = () => {
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">Contact Number</span>
                 <span className="font-medium text-foreground text-right">{normalizedContactNumber}</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">District</span>
-                <span className="font-medium text-foreground">{selectedDistrictName}</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Barangay</span>
-                <span className="font-medium text-foreground">{selectedBarangayName}</span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">Existing Organization</span>

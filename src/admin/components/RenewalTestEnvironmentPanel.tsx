@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  ChevronDown,
   Copy,
   ExternalLink,
   FlaskConical,
@@ -39,12 +40,14 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
   onNavigateToRenewals,
   className,
 }) => {
-  const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [testAccount, setTestAccount] = useState<RenewalTestAccountDetails | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<"30" | "60" | "90" | "grace_10" | "custom">("30");
   const [customDate, setCustomDate] = useState<string>("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const disclosureId = useId();
 
   const isDevOrTestEnv = import.meta.env.DEV || import.meta.env.MODE !== "production";
 
@@ -66,10 +69,10 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
   };
 
   useEffect(() => {
-    if (isDevOrTestEnv) {
+    if (isDevOrTestEnv && isExpanded) {
       void fetchAccountState();
     }
-  }, [isDevOrTestEnv]);
+  }, [isDevOrTestEnv, isExpanded]);
 
   const handleCopy = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -184,32 +187,52 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
   const isGrace = eligibility?.windowStatus === "expired";
   const isTooEarly = eligibility?.windowStatus === "too_early";
   const isLapsed = eligibility?.windowStatus === "lapsed";
+  const windowSummary = isWindowOpen
+    ? "Renewal window open"
+    : isGrace
+    ? "In grace period"
+    : isTooEarly
+    ? "Window not open yet"
+    : isLapsed
+    ? "Accreditation lapsed"
+    : loading
+    ? "Loading eligibility…"
+    : "Eligibility loads when expanded";
 
   return (
-    <div className={cn("space-y-6 rounded-2xl border border-indigo-500/20 bg-card p-6 shadow-sm", className)}>
-      {/* Header & Badges */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-              <FlaskConical className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
-                Renewal Test Environment
-                <Badge variant="outline" className="border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-xs font-semibold uppercase">
-                  Dev / Test Only
-                </Badge>
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Safe, isolated test scenario to manually exercise the complete real Y-TRACE Renewal lifecycle.
-              </p>
-            </div>
-          </div>
-        </div>
+    <section className={cn("overflow-hidden rounded-xl border border-indigo-500/20 bg-card", className)}>
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        aria-controls={disclosureId}
+        onClick={() => setIsExpanded((expanded) => !expanded)}
+        className="group flex w-full items-center gap-3 px-4 py-3 text-left outline-none transition-colors hover:bg-indigo-500/[0.035] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+          <FlaskConical className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-sm font-semibold text-foreground">Renewal Test Environment</span>
+            <Badge variant="outline" className="border-indigo-500/30 bg-indigo-500/10 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+              Dev / Test Only
+            </Badge>
+          </span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Safe, isolated renewal lifecycle testing · {testAccount?.organization.name || "Y-TRACE Renewal Test Organization"}
+          </span>
+          <span className="mt-1 block text-[11px] font-medium text-indigo-700 dark:text-indigo-300">
+            {windowSummary}
+          </span>
+        </span>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150", isExpanded && "rotate-180")} aria-hidden="true" />
+      </button>
 
-        <div className="flex items-center gap-2">
+      <div id={disclosureId} hidden={!isExpanded} className="space-y-4 border-t border-border/60 p-4 sm:p-5">
+      {isExpanded && <>
+        <div className="flex justify-end">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => void fetchAccountState()}
@@ -220,8 +243,6 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
             Refresh
           </Button>
         </div>
-      </div>
-
       {loading && !testAccount ? (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="h-7 w-7 animate-spin text-indigo-500 mb-2" />
@@ -544,7 +565,9 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
           </Button>
         </div>
       )}
-    </div>
+      </>}
+      </div>
+    </section>
   );
 };
 export default RenewalTestEnvironmentPanel;

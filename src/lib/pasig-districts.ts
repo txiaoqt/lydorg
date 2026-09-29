@@ -40,6 +40,22 @@ export const pasigDistrictBarangays: Record<PasigDistrict, BarangayOption[]> = {
 
 export const pasigDistrictOptions: PasigDistrict[] = ["District I", "District II"];
 
+export const getPasigDistrictForBarangay = (barangayName?: string | null): PasigDistrict | "" => {
+  const normalized = (barangayName ?? "")
+    .trim()
+    .replace(/^(barangay|brgy\.?)\s+/i, "")
+    .toLocaleLowerCase();
+  if (!normalized) return "";
+  return pasigDistrictOptions.find((district) =>
+    pasigDistrictBarangays[district].some((barangay) =>
+      barangay.name.toLocaleLowerCase() === normalized || barangay.id.toLocaleLowerCase() === normalized,
+    ),
+  ) ?? "";
+};
+
+export const getAllPasigBarangayOptions = (): BarangayOption[] =>
+  Object.values(pasigDistrictBarangays).flat().sort((a, b) => a.name.localeCompare(b.name));
+
 export const getBarangayOptionsForDistrict = (
   district: "all" | PasigDistrict,
 ): BarangayOption[] => {

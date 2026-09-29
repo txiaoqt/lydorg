@@ -4,6 +4,8 @@ import {
   pasigDistrictOptions,
   getBarangayOptionsForDistrict,
   isBarangayInDistrict,
+  getAllPasigBarangayOptions,
+  getPasigDistrictForBarangay,
 } from "./pasig-districts";
 
 describe("pasig-districts Canonical Location Helpers", () => {
@@ -118,6 +120,23 @@ describe("pasig-districts Canonical Location Helpers", () => {
       expect(isBarangayInDistrict("barangay-santolan", "District II")).toBe(true);
       expect(isBarangayInDistrict("KAPITOLYO", "District I")).toBe(true);
       expect(isBarangayInDistrict("santolan", "District II")).toBe(true);
+    });
+  });
+
+  describe("headquarters district derivation", () => {
+    it("derives all 30 barangays from their canonical district without requiring district-first selection", () => {
+      for (const district of pasigDistrictOptions) {
+        for (const barangay of pasigDistrictBarangays[district]) {
+          expect(getPasigDistrictForBarangay(barangay.name)).toBe(district);
+        }
+      }
+      expect(getAllPasigBarangayOptions()).toHaveLength(30);
+      expect(getPasigDistrictForBarangay("Barangay Santolan")).toBe("District II");
+    });
+
+    it("returns no district for unrecognized locations", () => {
+      expect(getPasigDistrictForBarangay("Malanday")).toBe("");
+      expect(getPasigDistrictForBarangay("")).toBe("");
     });
   });
 });

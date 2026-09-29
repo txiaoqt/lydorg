@@ -7,11 +7,11 @@ import {
   formatPercentageDisplay,
 } from "./BudgetMonitoringOverview";
 import {
-  OTHER_CATEGORY_COLOR,
   getCategoryColor,
   createCategoryColorResolver,
 } from "@/lib/budget-category-colors";
 import { DEFAULT_BUDGET_MONITORING_FILTERS } from "@/lib/budget-monitoring-filters";
+import { BudgetMonitoringPageControls } from "./BudgetMonitoringPageControls";
 
 // Variable to capture props passed to Recharts Pie
 let capturedPieProps: any = null;
@@ -58,15 +58,16 @@ function hexToRgb(hex: string): string {
 
 describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut Visibility", () => {
   const sampleCategories: PurposeCategoryItem[] = [
-    { category: "adsdasdasdasda", approvedAmount: 131312312, releasedAmount: 0, count: 1 },
-    { category: "asdasda", approvedAmount: 12323213, releasedAmount: 0, count: 1 },
-    { category: "dsadas", approvedAmount: 12323, releasedAmount: 0, count: 1 },
-    { category: "dasdad", approvedAmount: 12312, releasedAmount: 0, count: 1 },
-    { category: "DSADASDA", approvedAmount: 12122, releasedAmount: 0, count: 1 },
-    { category: "Youth Livelihood Initiative", approvedAmount: 50000, releasedAmount: 0, count: 1 },
-    { category: "Community Health Outreach", approvedAmount: 40000, releasedAmount: 0, count: 1 },
-    { category: "Digital Skills Boot Camp", approvedAmount: 30000, releasedAmount: 0, count: 1 },
-    { category: "Clean and Green Drive", approvedAmount: 20000, releasedAmount: 0, count: 1 },
+    { category: "education", approvedAmount: 131312312, releasedAmount: 0, count: 1 },
+    { category: "environment", approvedAmount: 12323213, releasedAmount: 0, count: 1 },
+    { category: "health", approvedAmount: 12323, releasedAmount: 0, count: 1 },
+    { category: "peace building and security", approvedAmount: 12312, releasedAmount: 0, count: 1 },
+    { category: "governance", approvedAmount: 12122, releasedAmount: 0, count: 1 },
+    { category: "active citizenship", approvedAmount: 50000, releasedAmount: 0, count: 1 },
+    { category: "global mobility", approvedAmount: 40000, releasedAmount: 0, count: 1 },
+    { category: "social inclusion and equity", approvedAmount: 30000, releasedAmount: 0, count: 1 },
+    { category: "economic empowerment", approvedAmount: 20000, releasedAmount: 0, count: 1 },
+    { category: "agriculture", approvedAmount: 10000, releasedAmount: 0, count: 1 },
   ];
 
   const totalApproved = sampleCategories.reduce((s, c) => s + c.approvedAmount, 0);
@@ -97,10 +98,10 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
   // PART 8 REQUIRED TESTS (TESTS A through F)
   // ==========================================
 
-  it("TEST A — The <Pie> configuration includes minAngle = 4", () => {
+  it("TEST A — The <Pie> keeps value-proportional slices without imposing a minimum angle", () => {
     render(<BudgetMonitoringOverview {...defaultProps} />);
     expect(capturedPieProps).toBeDefined();
-    expect(capturedPieProps.minAngle).toBe(4);
+    expect(capturedPieProps.minAngle).toBeUndefined();
     expect(capturedPieProps.stroke).toBe("#ffffff");
     expect(capturedPieProps.strokeWidth).toBe(2);
   });
@@ -111,7 +112,7 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
 
     expect(capturedPieProps).toBeDefined();
     const data = capturedPieProps.data;
-    expect(data.length).toBe(6); // Top 5 + Other Categories
+    expect(data.length).toBe(sampleCategories.length);
 
     data.forEach((entry: any) => {
       expect(entry.value).toBeGreaterThan(0);
@@ -139,10 +140,10 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     expect(capturedPieProps).toBeDefined();
     const data = capturedPieProps.data;
 
-    // Slices at index 2, 3, 4 are the tiny categories: dsadas (₱12,323), dasdad (₱12,312), DSADASDA (₱12,122)
-    const tinyCategory1 = data.find((d: any) => d.name === "dsadas");
-    const tinyCategory2 = data.find((d: any) => d.name === "dasdad");
-    const tinyCategory3 = data.find((d: any) => d.name === "DSADASDA");
+    // Slices at index 2, 3, 4 are canonical purposes with small allocations.
+    const tinyCategory1 = data.find((d: any) => d.name === "Health");
+    const tinyCategory2 = data.find((d: any) => d.name === "Peace Building And Security");
+    const tinyCategory3 = data.find((d: any) => d.name === "Governance");
 
     expect(tinyCategory1).toBeDefined();
     expect(tinyCategory1.value).toBe(12323);
@@ -156,10 +157,17 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     expect(tinyCategory3.value).toBe(12122);
     expect(tinyCategory3.pctDisplay).toBe("<1%");
 
-    // Verify the legend displays "<1%" instead of misleading "0%"
-    expect(screen.getByText(/dsadas \(<1%\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/dasdad \(<1%\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/DSADASDA \(<1%\)/i)).toBeInTheDocument();
+    // Every small category still gets its own external label.
+    for (const slice of [tinyCategory1, tinyCategory2, tinyCategory3]) {
+      const label = capturedPieProps.label({
+        name: slice.name,
+        midAngle: 20,
+        cx: 200,
+        cy: 150,
+        outerRadius: 90,
+      });
+      expect(label.props["aria-label"]).toContain("<1%");
+    }
   });
 
   it("TEST D — Percentage formatter correctly formats whole, sub-1%, and zero percentages", () => {
@@ -177,10 +185,10 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     expect(formatPercentageDisplay(0, total)).toBe("0%");
   });
 
-  it("TEST E — Top 5 + Other remains dynamic across varying category counts", () => {
+  it("TEST E — Every real category gets its own donut segment with no catch-all", () => {
     // 1 Category: exactly 1 slice, 100%, no Other Categories
     const singleCategory: PurposeCategoryItem[] = [
-      { category: "Single Focus", approvedAmount: 500000, releasedAmount: 0, count: 1 },
+      { category: "education", approvedAmount: 500000, releasedAmount: 0, count: 1 },
     ];
     const { unmount: unmount1 } = render(
       <BudgetMonitoringOverview
@@ -190,7 +198,7 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
       />
     );
     expect(capturedPieProps.data.length).toBe(1);
-    expect(capturedPieProps.data[0].name).toBe("Single Focus");
+    expect(capturedPieProps.data[0].name).toBe("Education");
     expect(capturedPieProps.data[0].pctDisplay).toBe("100%");
     unmount1();
 
@@ -225,20 +233,36 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     expect(capturedPieProps.data.find((d: any) => d.name === "Other Categories")).toBeUndefined();
     unmount3();
 
-    // 9 Categories: exactly 6 slices (Top 5 + consolidated Other Categories)
+    // Every current canonical category gets its own distinct slice.
     render(<BudgetMonitoringOverview {...defaultProps} />);
-    expect(capturedPieProps.data.length).toBe(6);
-    const otherSlice = capturedPieProps.data.find((d: any) => d.name === "Other Categories");
-    expect(otherSlice).toBeDefined();
-    expect(otherSlice.color).toBe(OTHER_CATEGORY_COLOR);
-    const expectedOtherSum = sampleCategories.slice(5).reduce((s, c) => s + c.approvedAmount, 0);
-    expect(otherSlice.value).toBe(expectedOtherSum);
+    expect(capturedPieProps.data.length).toBe(sampleCategories.length);
+    expect(capturedPieProps.data.map((d: any) => d.name)).toEqual(sampleCategories.map((item) =>
+      item.category.split(" ").map((word) => word[0].toUpperCase() + word.slice(1)).join(" "),
+    ));
+    expect(capturedPieProps.data.map((d: any) => d.name)).not.toContain("Other Categories");
+    expect(capturedPieProps.data.map((d: any) => d.name)).not.toContain("Other Programs");
+    expect(capturedPieProps.data.reduce((sum: number, d: any) => sum + d.value, 0)).toBe(totalApproved);
+    expect(new Set(capturedPieProps.data.map((d: any) => d.color)).size).toBe(sampleCategories.length);
+    expect(typeof capturedPieProps.label).toBe("function");
+    expect(capturedPieProps.labelLine).toBe(false);
+    expect(capturedPieProps.minAngle).toBeUndefined();
+    for (const slice of capturedPieProps.data) {
+      const label = capturedPieProps.label({
+        name: slice.name,
+        midAngle: 20,
+        cx: 200,
+        cy: 150,
+        outerRadius: 90,
+      });
+      expect(label).not.toBeNull();
+      expect(label.props["aria-label"]).toContain(slice.name);
+    }
   });
 
   it("TEST F — FY/category changes do not break color mapping", () => {
     const fy2025Categories: PurposeCategoryItem[] = [
-      { category: "Environment & Climate Action", approvedAmount: 800000, releasedAmount: 0, count: 2 },
-      { category: "Arts & Culture", approvedAmount: 400000, releasedAmount: 0, count: 1 },
+      { category: "environment", approvedAmount: 800000, releasedAmount: 0, count: 2 },
+      { category: "agriculture", approvedAmount: 400000, releasedAmount: 0, count: 1 },
     ];
     const fy2025Total = 1200000;
 
@@ -253,14 +277,31 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
 
     expect(capturedPieProps.data.length).toBe(2);
     const resolver2025 = createCategoryColorResolver(fy2025Categories);
-    expect(capturedPieProps.data[0].color).toBe(resolver2025("Environment & Climate Action"));
-    expect(capturedPieProps.data[1].color).toBe(resolver2025("Arts & Culture"));
+    expect(capturedPieProps.data[0].color).toBe(resolver2025("environment"));
+    expect(capturedPieProps.data[1].color).toBe(resolver2025("agriculture"));
 
     // Switch back to FY 2026
     rerender(<BudgetMonitoringOverview {...defaultProps} />);
-    expect(capturedPieProps.data.length).toBe(6);
+    expect(capturedPieProps.data.length).toBe(sampleCategories.length);
     const resolver2026 = createCategoryColorResolver(sampleCategories);
-    expect(capturedPieProps.data[0].color).toBe(resolver2026("adsdasdasdasda"));
+    expect(capturedPieProps.data[0].color).toBe(resolver2026("education"));
+  });
+
+  it.each([2024, 2025, 2026])("keeps the FY %i label and full filtered donut total synchronized", (year) => {
+    const selected = sampleCategories.slice(0, year === 2024 ? 2 : year === 2025 ? 8 : 10);
+    const selectedTotal = selected.reduce((sum, category) => sum + category.approvedAmount, 0);
+    render(
+      <BudgetMonitoringOverview
+        {...defaultProps}
+        selectedFiscalYear={year}
+        categoryBreakdown={selected}
+        approvedBudget={selectedTotal}
+      />,
+    );
+    expect(capturedPieProps.data).toHaveLength(selected.length);
+    expect(capturedPieProps.data.reduce((sum: number, slice: { value: number }) => sum + slice.value, 0)).toBe(selectedTotal);
+    expect(screen.getByText(`FY ${year}`, { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByText(defaultProps.formatCompactPeso(selectedTotal), { selector: "p.text-public-text-brand" })).toBeInTheDocument();
   });
 
   it("keeps four summary metrics and one proportional three-segment pipeline", () => {
@@ -294,7 +335,7 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
   // TABLE PAGINATION AND FILTERING TESTS
   // ==========================================
 
-  it("Pagination: Page 2 preserves consistent colors and never collides with Other Categories", () => {
+  it("Pagination: Page 2 preserves the canonical color mapping", () => {
     const { container } = render(<BudgetMonitoringOverview {...defaultProps} />);
     const resolver = createCategoryColorResolver(sampleCategories);
 
@@ -303,10 +344,10 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     expect(nextBtn).toBeDefined();
     fireEvent.click(nextBtn);
 
-    // Now on Page 2 (categories at index 5, 6, 7, 8)
-    const page2Categories = sampleCategories.slice(5, 9);
+    // Now on Page 2 (the remaining canonical categories after the first five)
+    const page2Categories = sampleCategories.slice(5, 10);
     const tableRows = container.querySelectorAll("tbody tr");
-    expect(tableRows.length).toBe(4);
+    expect(tableRows.length).toBe(page2Categories.length);
 
     page2Categories.forEach((item, idx) => {
       const row = tableRows[idx];
@@ -317,8 +358,7 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
       const expectedRgb = hexToRgb(expectedColorHex);
       expect(colorDot.style.backgroundColor).toBe(expectedRgb);
 
-      // Must NOT collide with Other Categories slate color
-      expect(colorDot.style.backgroundColor).not.toBe(hexToRgb(OTHER_CATEGORY_COLOR));
+      expect(colorDot.style.backgroundColor).toBe(hexToRgb(getCategoryColor(item.category)));
     });
 
     // Return to Page 1
@@ -335,22 +375,17 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
     });
   });
 
-  it("Filters control: Replaces free-text search box with proper Filters button and Popover trigger", () => {
-    render(<BudgetMonitoringOverview {...defaultProps} />);
-
-    // Old free-text search box MUST NOT exist
-    const searchInput = screen.queryByPlaceholderText(/Search purpose \/ category/i);
-    expect(searchInput).toBeNull();
-
-    // New Filters button MUST exist
-    const filtersBtn = screen.getByRole("button", { name: /Open Budget Filters/i });
-    expect(filtersBtn).toBeInTheDocument();
-    expect(filtersBtn).toHaveTextContent("Filters");
+  it("Page controls keep the fiscal period separate from panel filters", () => {
+    render(<BudgetMonitoringPageControls filters={DEFAULT_BUDGET_MONITORING_FILTERS} availableFiscalYears={[2026, 2025, 2024]} filterOptions={{ availableCategories: [], availableClassifications: [], availableDistricts: [], availableBarangays: [] }} onChangeFilters={vi.fn()} onResetFilters={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /Select fiscal period/i })).toHaveTextContent(/FY/);
+    expect(screen.getByRole("button", { name: /Open Budget Filters/i })).toHaveTextContent("Filters");
+    fireEvent.click(screen.getByRole("button", { name: /Open Budget Filters/i }));
+    expect(screen.queryByText("Time Period")).toBeNull();
   });
 
   it("Filter synchronization: Single category filter recalculates 100% of Total on Donut and Table", () => {
     const singleFilteredCategory: PurposeCategoryItem[] = [
-      { category: "Clean and Green Drive", approvedAmount: 20000, releasedAmount: 15000, count: 1 },
+      { category: "environment", approvedAmount: 20000, releasedAmount: 15000, count: 1 },
     ];
     render(
       <BudgetMonitoringOverview
@@ -360,43 +395,29 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
         releasedBudget={15000}
         filters={{
           ...DEFAULT_BUDGET_MONITORING_FILTERS,
-          purposeCategory: "Clean and Green Drive",
+          purposeCategory: "environment",
         }}
       />
     );
 
     expect(capturedPieProps.data.length).toBe(1);
-    expect(capturedPieProps.data[0].name).toBe("Clean and Green Drive");
+    expect(capturedPieProps.data[0].name).toBe("Environment");
     expect(capturedPieProps.data[0].pctDisplay).toBe("100%");
 
     // Table displays 100.0% of total
     expect(screen.getAllByText("100.0%").length).toBeGreaterThan(0);
-    expect(screen.getByText("Category: Clean and Green Drive")).toBeInTheDocument();
   });
 
   it("Empty State: Displays clear empty message when filters produce no results", () => {
-    const onResetMock = vi.fn();
     render(
       <BudgetMonitoringOverview
         {...defaultProps}
         categoryBreakdown={[]}
         approvedBudget={0}
         releasedBudget={0}
-        filters={{
-          ...DEFAULT_BUDGET_MONITORING_FILTERS,
-          district: "District 99",
-        }}
-        onResetFilters={onResetMock}
       />
     );
 
-    expect(
-      screen.getByText(/No budget records match the selected filters/i)
-    ).toBeInTheDocument();
-
-    const resetButtons = screen.getAllByRole("button", { name: /Reset Filters/i });
-    expect(resetButtons.length).toBeGreaterThan(0);
-    fireEvent.click(resetButtons[0]);
-    expect(onResetMock).toHaveBeenCalled();
+    expect(screen.getByText(/No Approved Budget Requests for FY 2026/i)).toBeInTheDocument();
   });
 });

@@ -24,6 +24,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getPasigDistrictForBarangay } from "@/lib/pasig-districts";
 
 export interface PortalPublicProfilePreviewDialogProps {
   open: boolean;
@@ -94,6 +95,8 @@ export const PortalPublicProfilePreviewDialog: React.FC<
   }, [profile?.profileImageUrl]);
 
   const hasAdvocacies = Array.isArray(profile?.advocacies) && profile.advocacies.length > 0;
+  const headquartersBarangay = profile?.addressBarangay || profile?.barangay;
+  const headquartersDistrict = getPasigDistrictForBarangay(headquartersBarangay) || profile?.district;
   const recentEvents = (joinedYpopEvents || []).slice(0, 3);
   const initials = getInitials(profileName);
 
@@ -170,7 +173,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                   <p className="text-xs text-muted-foreground/90 flex items-center gap-1.5 pt-0.5">
                     <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span>
-                      {profile?.barangay || "Pasig City"}, {profile?.district || "District I"}
+                      {headquartersBarangay || "Pasig City"}, {headquartersDistrict || "District I"}
                     </span>
                   </p>
                 </div>
@@ -232,7 +235,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                       Jurisdiction / Location
                     </dt>
                     <dd className="font-bold text-foreground text-xs sm:text-sm pt-0.5">
-                      {profile?.barangay || "Pasig City"}, {profile?.district || "District I"}
+                      {headquartersBarangay || "Pasig City"}, {headquartersDistrict || "District I"}
                     </dd>
                   </div>
 

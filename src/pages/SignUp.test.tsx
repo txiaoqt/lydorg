@@ -199,4 +199,20 @@ describe("Organization Sign-Up Google Authentication Integration", () => {
       expect(alert).toHaveTextContent("OAuth provider configuration error");
     });
   });
+
+  it("keeps headquarters location out of account signup so it is completed in Section 5", async () => {
+    render(
+      <MemoryRouter initialEntries={["/signup"]}>
+        <SignUp />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByPlaceholderText("Enter your organization's name"), {
+      target: { value: "Pasig Youth Alliance" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Account Details/i }));
+
+    await waitFor(() => expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument());
+    expect(screen.queryByLabelText(/^District/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Barangay/i)).not.toBeInTheDocument();
+  });
 });

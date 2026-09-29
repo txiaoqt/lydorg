@@ -65,10 +65,15 @@ describe("RenewalTestEnvironmentPanel", () => {
     vi.mocked(lydoConnectSupabase.adminGetOrCreateRenewalTestAccountInSupabase).mockResolvedValue(mockTestAccountDetails);
 
     render(<RenewalTestEnvironmentPanel />);
+    const disclosure = screen.getByRole("button", { name: /Renewal Test Environment/ });
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    expect(disclosure).toHaveTextContent("Y-TRACE Renewal Test Organization");
+    expect(lydoConnectSupabase.adminGetOrCreateRenewalTestAccountInSupabase).not.toHaveBeenCalled();
+    fireEvent.click(disclosure);
 
     await waitFor(() => {
       expect(screen.getByText("Renewal Test Environment")).toBeInTheDocument();
-      expect(screen.getByText("Y-TRACE Renewal Test Organization")).toBeInTheDocument();
+      expect(screen.getAllByText("Y-TRACE Renewal Test Organization").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("renewal.test@pasigcity.gov.ph")).toBeInTheDocument();
       expect(screen.getByText("RenewalTest2026!")).toBeInTheDocument();
       expect(screen.getByText("Renewal Window OPEN")).toBeInTheDocument();
@@ -95,6 +100,7 @@ describe("RenewalTestEnvironmentPanel", () => {
     });
 
     render(<RenewalTestEnvironmentPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Renewal Test Environment/ }));
 
     await waitFor(() => {
       expect(screen.getByText("Renewal Test Environment")).toBeInTheDocument();
@@ -133,6 +139,7 @@ describe("RenewalTestEnvironmentPanel", () => {
     });
 
     render(<RenewalTestEnvironmentPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Renewal Test Environment/ }));
 
     await waitFor(() => {
       expect(screen.getByText("Renewal Test Environment")).toBeInTheDocument();
@@ -157,6 +164,7 @@ describe("RenewalTestEnvironmentPanel", () => {
     });
 
     render(<RenewalTestEnvironmentPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /Renewal Test Environment/ }));
 
     await waitFor(() => {
       expect(screen.getByText("Renewal Test Environment")).toBeInTheDocument();

@@ -25,7 +25,7 @@ export type LiquidationStatusHelper = {
 export const isBudgetReleasedStatus = (status?: string): boolean => {
   if (!status) return false;
   const s = status.toLowerCase().trim();
-  return s === "budget_released" || s === "completed";
+  return s === "budget_released";
 };
 
 export const isBudgetApprovedStatus = (status?: string): boolean => {
@@ -36,7 +36,6 @@ export const isBudgetApprovedStatus = (status?: string): boolean => {
     s === "awaiting_release" ||
     s === "approved_for_ftf_green" ||
     s === "budget_released" ||
-    s === "completed" ||
     s === "approved_released" ||
     s === "budget_approved_green"
   );

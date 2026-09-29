@@ -25,8 +25,8 @@ import {
 } from "@/lib/user-workflow-eligibility";
 import { getOrganizationRenewalCountdown } from "@/lib/organization-renewal";
 
-const approvedBudgetStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
-const unlockedLiquidationStatuses = new Set(["budget_released", "completed"]);
+const approvedBudgetStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
+const unlockedLiquidationStatuses = new Set(["budget_released"]);
 const approvedDocumentStatuses = new Set(["approved", "approved_green"]);
 const underReviewDocumentStatuses = new Set(["uploaded", "ready_for_review", "submitted", "under_admin_review"]);
 const revisionDocumentStatuses = new Set(["needs_revision", "rejected_red"]);
@@ -78,7 +78,7 @@ export function usePwaPortalData() {
     const releasedBudget = budgetRequests.reduce((sum, item) => sum + Number(item.releasedAmount || 0), 0);
     const budgetPercent = latestBudget && approvedBudgetStatuses.has(latestBudget.status) ? 100 : 0;
     const draftBudgetRequests = budgetRequests.filter((item) => item.status === "draft");
-    const releasedBudgetRequests = budgetRequests.filter((item) => item.status === "budget_released" || item.status === "completed").length;
+    const releasedBudgetRequests = budgetRequests.filter((item) => item.status === "budget_released").length;
     const underReviewBudgetRequests = budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length;
     const revisionBudgetRequests = budgetRequests.filter((item) => item.status === "needs_revision");
 

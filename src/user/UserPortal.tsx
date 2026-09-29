@@ -345,10 +345,10 @@ const budgetNativeSelectClass =
 const budgetActionLabels: Record<string, string> = {
   needs_revision: "Revision requested",
   awaiting_release: "Awaiting Release",
-  approved_for_ftf_green: "Submit Onsite",
-  hard_copy_submitted: "Hardcopy Submitted",
+  approved_for_ftf_green: "Awaiting Release",
+  hard_copy_submitted: "Awaiting Release",
   budget_released: "Budget released",
-  completed: "Completed",
+  completed: "Budget Released",
   submitted: "Submitted for review",
   rejected_red: "Rejected",
   draft: "Saved as draft",
@@ -366,13 +366,13 @@ const liquidationActionLabels: Record<string, string> = {
   rejected_red: "Liquidation report rejected",
   draft: "Saved as draft",
 };
-const approvedBudgetStatuses = new Set<BudgetRequest["status"]>([
+const approvedBudgetStatuses = new Set<string>([
   "awaiting_release",
   "approved_for_ftf_green",
+  "hard_copy_submitted",
   "budget_released",
-  "completed",
 ]);
-const liquidationUnlockedBudgetStatuses = new Set<BudgetRequest["status"]>(["budget_released", "completed"]);
+const liquidationUnlockedBudgetStatuses = new Set<BudgetRequest["status"]>(["budget_released"]);
 const ADMIN_RECIPIENT_ID = "admin-demo";
 const createNotificationId = () => `notif-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const createBatchUploadDraftId = () => `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -2730,7 +2730,11 @@ export default function UserPortal({ section }: { section: string }) {
     const isCategoryValid = userAdvocacies.some(
       (adv) => adv.trim().toLowerCase() === nextBudgetRequest.purposeCategory.trim().toLowerCase()
     );
-    if (!isCategoryValid && !existingBudgetRequest) {
+    const categoryUnchangedForHistory = Boolean(
+      existingBudgetRequest &&
+      nextBudgetRequest.purposeCategory.trim().toLowerCase() === existingBudgetRequest.purposeCategory.trim().toLowerCase()
+    );
+    if (!isCategoryValid && !categoryUnchangedForHistory) {
       toast({
         title: "Invalid Purpose & Category",
         description: "The selected category must match one of your organization's configured Centers of Youth Participation.",
@@ -3452,12 +3456,12 @@ export default function UserPortal({ section }: { section: string }) {
         }
 
         const releasedBudgets = budgetRequests.filter(
-          (b) => b.status === "budget_released" || b.status === "completed",
+          (b) => b.status === "budget_released",
         );
         const revisionBudgets = budgetRequests.filter((b) => b.status === "needs_revision");
-        const awaitingReleaseBudgets = budgetRequests.filter((b) => b.status === "awaiting_release");
-        const approvedFtfBudgets = budgetRequests.filter((b) => b.status === "approved_for_ftf_green");
-        const hardCopyBudgets = budgetRequests.filter((b) => b.status === "hard_copy_submitted");
+        const awaitingReleaseBudgets = budgetRequests.filter((b) =>
+          ["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted"].includes(String(b.status)),
+        );
         const pendingBudgets = budgetRequests.filter((b) => b.status === "submitted" || b.status === "draft");
 
         const releasedBudgetsWithLiquidation = releasedBudgets.map((b) => {
@@ -3537,28 +3541,6 @@ export default function UserPortal({ section }: { section: string }) {
             title: "Awaiting Fund Release",
             description:
               "Your budget request has been approved. The LYDO admin will notify you once funds are released.",
-            ctaLabel: "Open Budget",
-            onClick: () => navigate(userRouteMap["budget-request"]),
-            icon: ClipboardList,
-            tone: "bg-primary/10 text-primary",
-          });
-        } else if (approvedFtfBudgets.length > 0) {
-          dashboardTasks.push({
-            key: "budget-hardcopy",
-            title: "Prepare your hard copy submission",
-            description:
-              "Your budget request is approved for face-to-face processing. Prepare the required hard copy next.",
-            ctaLabel: "Open Budget",
-            onClick: () => navigate(userRouteMap["budget-request"]),
-            icon: ClipboardList,
-            tone: "bg-primary/10 text-primary",
-          });
-        } else if (hardCopyBudgets.length > 0) {
-          dashboardTasks.push({
-            key: "budget-release-wait",
-            title: "Wait for cash release",
-            description:
-              "Your hard copy has already been submitted. The next update will be the release of your approved budget.",
             ctaLabel: "Open Budget",
             onClick: () => navigate(userRouteMap["budget-request"]),
             icon: ClipboardList,

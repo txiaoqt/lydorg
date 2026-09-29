@@ -24,8 +24,6 @@ export type BudgetRequestsStatusFilter =
   | "under_review"
   | "needs_revision"
   | "awaiting_release"
-  | "approved_for_ftf_green"
-  | "hard_copy_submitted"
   | "budget_released";
 
 type BudgetRequestsTableProps = {
@@ -70,10 +68,10 @@ export const StatusPill = ({
   revisionDueAt?: string | null;
   revisionLockedAt?: string | null;
 }) => {
-  if (status === "budget_released" || status === "completed") {
+  if (status === "budget_released" || String(status) === "completed") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
-        {status === "completed" ? "Completed" : "Budget Released"}
+        Budget Released
       </span>
     );
   }
@@ -87,14 +85,14 @@ export const StatusPill = ({
   if (status === "hard_copy_submitted") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-progress-subtle bg-bg-progress-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-progress">
-        Hardcopy Submitted
+        Awaiting Release
       </span>
     );
   }
   if (status === "approved_for_ftf_green") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-progress-subtle bg-bg-progress-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-progress">
-        Onsite Required
+        Awaiting Release
       </span>
     );
   }

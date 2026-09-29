@@ -30,11 +30,17 @@ export type BudgetRequestStatus =
   | "under_review"
   | "needs_revision"
   | "awaiting_release"
-  | "approved_for_ftf_green"
   | "rejected_red"
-  | "hard_copy_submitted"
-  | "budget_released"
-  | "completed";
+  | "budget_released";
+
+/** Read-only labels for historical Budget Request statuses normalized by the database on write. */
+export function getBudgetRequestStatusLabel(status: string): string | undefined {
+  if (status === "completed" || status === "budget_released") return "Budget Released";
+  if (["approved_for_ftf_green", "hard_copy_submitted", "approved", "approved_green"].includes(status)) {
+    return "Awaiting Release";
+  }
+  return undefined;
+}
 
 export type LiquidationStatus =
   | "pending_activity_completion"
@@ -586,24 +592,25 @@ export type Advocacy = (typeof advocacyOptions)[number];
 
 export const formatAdvocacyLabel = (advocacy?: string | null): string => {
   if (!advocacy) return "";
-  const canonicalMap: Record<string, string> = {
-    education: "Education",
-    environment: "Environment",
-    health: "Health",
-    "peace building and security": "Peace Building and Security",
-    governance: "Governance",
-    "active citizenship": "Active Citizenship",
-    "global mobility": "Global Mobility",
-    "social inclusion and equity": "Social Inclusion and Equity",
-    "economic empowerment": "Economic Empowerment",
-    agriculture: "Agriculture",
-  };
-  const key = advocacy.trim().toLowerCase();
-  if (canonicalMap[key]) return canonicalMap[key];
+  const key = advocacy.trim().replace(/\s+/g, " ").toLowerCase();
+  const canonicalAdvocacy = advocacyOptions.find((option) => option === key);
+  if (canonicalAdvocacy) {
+    return canonicalAdvocacy
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
   return advocacy
     .split(/[\s_-]+/)
     .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ""))
     .join(" ");
+};
+
+export const formatBudgetPurposeCategory = (category?: string | null): string => {
+  if (!category) return "";
+  const normalized = category.trim().replace(/\s+/g, " ").toLowerCase();
+  const canonicalAdvocacy = advocacyOptions.find((advocacy) => advocacy === normalized);
+  return canonicalAdvocacy ? formatAdvocacyLabel(canonicalAdvocacy) : category.trim();
 };
 
 export const requiredDocumentTypes: RequiredDocumentType[] = [
@@ -1010,6 +1017,10 @@ export type OrganizationProfile = {
   accreditationExpiresAt?: string | null;
   accreditationStatus?: AccreditationStatus | null;
   isRenewalTestAccount?: boolean;
+  isSeededSampleData?: boolean;
+  seedBatch?: string | null;
+  seedSourceYear?: number | null;
+  seedSourceRecordNumber?: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -1287,6 +1298,8 @@ export type BudgetRequest = {
   revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
   budgetRequestType?: BudgetRequestType;
   ypopEntryId?: string;
+  isSeededSampleData?: boolean;
+  seedBatch?: string | null;
 };
 
 export type AnnualBudgetAllocation = {
@@ -1312,6 +1325,8 @@ export type BudgetCategorySummary = {
   approvedAmount: number;
   releasedAmount: number;
   requestCount: number;
+  isSeededSampleData?: boolean;
+  seedBatch?: string | null;
 };
 
 export type BudgetMonitoringSummary = {
@@ -1360,6 +1375,10 @@ export type PublicBudgetSummary = {
   percentLiquidated: number | null;
   purposeCategories: PublicPurposeCategory[];
   districtAllocations?: PublicDistrictAllocation[];
+  /** Approved amounts whose purpose does not match the organization's selected CYP. */
+  unmappedPurposeAmount?: number;
+  /** Approved amounts without a canonical District I or District II profile mapping. */
+  unassignedDistrictAmount?: number;
   availableFiscalYears?: number[];
   lastUpdated: string;
 };
@@ -1397,6 +1416,8 @@ export type LiquidationReport = {
   createdAt: string;
   updatedAt: string;
   revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
+  isSeededSampleData?: boolean;
+  seedBatch?: string | null;
 };
 
 export type PublicBudgetSource = {
@@ -2026,8 +2047,8 @@ export const seedState: LydoSeedState = {
       organizationName: "San Jose Youth Alliance",
       organizationEmail: "sjya@example.com",
       contactNumber: "",
-      district: "",
-      barangay: "",
+      district: "District I",
+      barangay: "San Jose",
       isExistingOrganization: false,
       organizationIdentifierNumber: "",
       majorClassification: "",
@@ -2035,7 +2056,14 @@ export const seedState: LydoSeedState = {
       advocacies: [],
       adviserName: "",
       representativeName: "",
-      address: "",
+      addressUnitBuilding: "",
+      addressStreet: "San Jose Community Road",
+      addressSubdivision: "",
+      addressBarangay: "San Jose",
+      addressCity: "Pasig City",
+      addressProvince: "Metro Manila",
+      addressZipCode: "",
+      address: "San Jose Community Road, San Jose, Pasig City, Metro Manila",
       facebookPageUrl: "",
       profileStatus: "verified",
       verifiedAt: "2026-03-15T08:00:00.000Z",
@@ -2051,8 +2079,8 @@ export const seedState: LydoSeedState = {
       organizationName: "Malanday Youth Council",
       organizationEmail: "myc@example.com",
       contactNumber: "09189876543",
-      district: "District 2",
-      barangay: "Malanday",
+      district: "District II",
+      barangay: "Manggahan",
       isExistingOrganization: true,
       organizationIdentifierNumber: "ML-YO-2024-007",
       majorClassification: "Youth Organization",
@@ -2060,7 +2088,14 @@ export const seedState: LydoSeedState = {
       advocacies: ["governance", "environment"],
       adviserName: "Mr. Roberto Aquino",
       representativeName: "Maria Santos",
-      address: "456 Mabini Ave., Malanday, Pasig City",
+      addressUnitBuilding: "",
+      addressStreet: "456 Mabini Ave.",
+      addressSubdivision: "",
+      addressBarangay: "Manggahan",
+      addressCity: "Pasig City",
+      addressProvince: "Metro Manila",
+      addressZipCode: "",
+      address: "456 Mabini Ave., Manggahan, Pasig City, Metro Manila",
       facebookPageUrl: "",
       profileStatus: "pending_review",
       verifiedAt: "",
@@ -2076,8 +2111,8 @@ export const seedState: LydoSeedState = {
       organizationName: "Banaba SK Youth Federation",
       organizationEmail: "bskf@example.com",
       contactNumber: "09201112233",
-      district: "District 1",
-      barangay: "Banaba",
+      district: "District I",
+      barangay: "Kapitolyo",
       isExistingOrganization: false,
       organizationIdentifierNumber: "",
       majorClassification: "Youth-Serving Organization",
@@ -2085,7 +2120,14 @@ export const seedState: LydoSeedState = {
       advocacies: ["social inclusion and equity", "economic empowerment"],
       adviserName: "",
       representativeName: "Ana Reyes",
-      address: "",
+      addressUnitBuilding: "",
+      addressStreet: "Kapitolyo Community Road",
+      addressSubdivision: "",
+      addressBarangay: "Kapitolyo",
+      addressCity: "Pasig City",
+      addressProvince: "Metro Manila",
+      addressZipCode: "",
+      address: "Kapitolyo Community Road, Kapitolyo, Pasig City, Metro Manila",
       facebookPageUrl: "",
       profileStatus: "incomplete",
       verifiedAt: "",
@@ -2367,14 +2409,14 @@ export const seedState: LydoSeedState = {
       releasedAmount: 0,
       releaseDate: "",
       purposeCategory: "Environmental",
-      status: "approved_for_ftf_green",
-      remarks: "Approved. Awaiting hard copy submission.",
+      status: "awaiting_release",
+      remarks: "Approved. Awaiting fund release.",
       goSignalAt: "2026-04-28T00:00:00.000Z",
       hardCopySubmittedAt: "",
       createdAt: "2026-04-15T11:00:00.000Z",
       updatedAt: "2026-04-28T00:00:00.000Z",
       revisionHistory: [
-        { action: "approved_for_ftf_green", adminRemarks: "Approved. Please submit the hard copy to the LYDO office before the activity date.", changedAt: "2026-04-28T00:00:00.000Z" },
+        { action: "awaiting_release", adminRemarks: "Approved and awaiting fund release.", changedAt: "2026-04-28T00:00:00.000Z" },
       ],
     },
   ],

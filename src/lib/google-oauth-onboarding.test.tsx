@@ -509,6 +509,23 @@ describe("Google OAuth Onboarding & Auth Callback Flow", () => {
     };
   });
 
+  it("collects headquarters Barangay in Section 5 and derives a read-only District there", async () => {
+    mockFetchProfile.mockResolvedValue(null);
+    render(
+      <MemoryRouter initialEntries={["/google-onboarding"]}>
+        <Routes>
+          <Route path="/google-onboarding" element={<GoogleOnboarding />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText("5. Leadership & Headquarters")).toBeInTheDocument());
+    expect(document.getElementById("org-district")).toBeNull();
+    expect(document.getElementById("org-barangay")).toBeNull();
+    expect(document.getElementById("address-barangay")).toBeInTheDocument();
+    expect(document.getElementById("address-district")).toHaveAttribute("readonly");
+  });
+
   // TEST 10 — Google callback code does not enter recovery
   it("TEST 10: Google callback code does not enter recovery", async () => {
     const recoveryCheck = parsePasswordRecoveryUrl("https://example.com/auth/callback?code=test-oauth-code");

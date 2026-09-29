@@ -43,6 +43,7 @@ import {
   getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import { cn } from "@/lib/utils";
+import { getPasigDistrictForBarangay } from "@/lib/pasig-districts";
 
 export interface UserPortalOrganizationProfileWorkspaceViewProps {
   profile: any;
@@ -104,6 +105,8 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
   const profileStatus = currentProfile?.profileStatus ?? profileDraft.profileStatus;
   const profileName = currentProfile?.organizationName?.trim() || profile.organizationName || "Organization Profile";
   const profileSubClass = formatSubClassificationLabel(profile.subClassification) || "N/A";
+  const headquartersBarangay = currentProfile?.addressBarangay || currentProfile?.barangay || profile?.addressBarangay || profile?.barangay;
+  const headquartersDistrict = getPasigDistrictForBarangay(headquartersBarangay) || currentProfile?.district || profile?.district;
 
   // Calculate consistent URN display using authentic database value
   const profileUrn =
@@ -204,7 +207,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
               <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-0.5 text-xs text-muted-foreground font-medium pt-0.5 leading-snug">
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>{profile.district || "District I"} • {profile.barangay || "Pasig City"}</span>
+                  <span>{headquartersDistrict || "District I"} • {headquartersBarangay || "Pasig City"}</span>
                 </span>
                 {getRepresentativeDisplayName(profile) && (
                   <>
@@ -361,24 +364,6 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <p className="text-[11px] text-muted-foreground">Primary mobile number. Manage all contact numbers in Section 5 below.</p>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">District <span className="text-red-500">*</span></label>
-                <Input
-                  value={profileDraft.district || ""}
-                  className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
-                  placeholder="District"
-                  readOnly
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Barangay <span className="text-red-500">*</span></label>
-                <Input
-                  value={profileDraft.barangay || ""}
-                  className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
-                  placeholder="Barangay"
-                  readOnly
-                />
-              </div>
-              <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">Organization Type</label>
                 <Input
                   value={profileDraft.isExistingOrganization ? "Existing Organization" : "Youth Organization"}
@@ -467,11 +452,18 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
           </div>
 
-          {/* Section 4: Leadership */}
+          {/* Section 5: Leadership & Headquarters */}
           <div className="space-y-4 pt-3 border-t border-border/40">
             <div className="border-b border-border/60 pb-1.5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5" /> 4. Leadership & Head of Organization
+                <Globe className="h-3.5 w-3.5" /> 5. Leadership & Headquarters
+              </h3>
+              <p className="text-[11px] text-muted-foreground">Manage organization leadership and the structured headquarters address.</p>
+            </div>
+          <div className="space-y-4">
+            <div className="border-b border-border/60 pb-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" /> Head of Organization & Official Adviser
               </h3>
               <p className="text-[11px] text-muted-foreground">Authorized youth leaders and adult advisers registered for the organization.</p>
             </div>
@@ -597,14 +589,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
           </div>
 
-          {/* Section 5: Contacts, Location & Socials */}
-          <div className="space-y-4 pt-3 border-t border-border/40">
-            <div className="border-b border-border/60 pb-1.5">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Globe className="h-3.5 w-3.5" /> 5. Contact Channels, Location & Facebook Page
-              </h3>
-              <p className="text-[11px] text-muted-foreground">Manage multiple contact emails, contact numbers, headquarters address, and social links.</p>
-            </div>
+
 
             {/* Sub-section: Organization Email Addresses */}
             <div className="space-y-3 p-3.5 sm:p-4 rounded-xl border border-border/60 bg-accent/10">
@@ -788,10 +773,22 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   </label>
                   <Input
                     value={profileDraft.addressBarangay || profileDraft.barangay || ""}
-                    onChange={(e) => onFieldChange("addressBarangay", e.target.value)}
-                    placeholder="e.g. Kapitolyo"
-                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    readOnly
+                    aria-readonly="true"
+                    placeholder="Barangay"
+                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
                     required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">District</label>
+                  <Input
+                  value={getPasigDistrictForBarangay(profileDraft.addressBarangay || profileDraft.barangay) || profileDraft.district || ""}
+                    readOnly
+                    aria-readonly="true"
+                    placeholder="Derived from Barangay"
+                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
                   />
                 </div>
 
@@ -910,7 +907,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">District & Barangay</span>
-                      <p className="font-bold text-foreground text-sm">{profile.district || "District I"} • {profile.barangay || "Pasig City"}</p>
+                      <p className="font-bold text-foreground text-sm">{headquartersDistrict || "District I"} • {headquartersBarangay || "Pasig City"}</p>
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">Registration URN</span>
@@ -1009,11 +1006,11 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 </div>
                 <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                   <span className="text-xs font-semibold text-muted-foreground">District</span>
-                  <p className="font-bold text-foreground text-sm sm:text-base">{profile.district || "Not set"}</p>
+                  <p className="font-bold text-foreground text-sm sm:text-base">{headquartersDistrict || "Not set"}</p>
                 </div>
                 <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                   <span className="text-xs font-semibold text-muted-foreground">Barangay</span>
-                  <p className="font-bold text-foreground text-sm sm:text-base">{profile.barangay || "Not set"}</p>
+                  <p className="font-bold text-foreground text-sm sm:text-base">{headquartersBarangay || "Not set"}</p>
                 </div>
                 <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1 sm:col-span-2">
                   <span className="text-xs font-semibold text-muted-foreground">Unique Registration Number (URN)</span>

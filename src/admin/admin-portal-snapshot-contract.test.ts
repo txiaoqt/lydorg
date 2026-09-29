@@ -65,6 +65,11 @@ describe("Admin Portal Snapshot Contract & OCR Removal Regression Tests", () => 
         revisionHistory: [],
         uploadedAt: "2026-09-17T08:00:00.000Z",
         reviewedAt: "2026-09-17T09:00:00.000Z",
+        revisionRequestedAt: null,
+        revisionDueAt: null,
+        revisionLocked: false,
+        revisionUnlockedAt: null,
+        revisionUnlockedBy: null,
         createdAt: "2026-09-17T08:00:00.000Z",
         updatedAt: "2026-09-17T09:00:00.000Z",
       });

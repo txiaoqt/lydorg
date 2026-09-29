@@ -27,7 +27,7 @@ vi.mock("@/hooks/use-auth", () => ({
  * TEST PUB 3 — Unconfigured FY
  * TEST PUB 4 — Correct Headroom
  * TEST PUB 5 — Deficit
- * TEST PUB 6 — Top 5 + Other
+ * TEST PUB 6 — All canonical categories retained without an artificial aggregate
  * TEST PUB 7 — Public Route /budget-transparency renders successfully
  * TEST PUB 8 — User Portal Route /public-transparency renders PublicBudgetOverview and NOT 'Section not found'
  * TEST PUB 9 — Admin Preview uses the same shared component
@@ -60,16 +60,16 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     percentReleased: 66.7,
     percentLiquidated: 50,
     purposeCategories: [
-      { category: "Sports, Fitness & Recreation", amount: 15_000_000, percentage: 33.3 },
-      { category: "Education & Technology", amount: 12_000_000, percentage: 26.7 },
-      { category: "Leadership & Governance", amount: 8_000_000, percentage: 17.8 },
-      { category: "Health & Mental Wellness", amount: 5_000_000, percentage: 11.1 },
-      { category: "Environmental Protection", amount: 3_000_000, percentage: 6.7 },
-      { category: "Other Programs", amount: 2_000_000, percentage: 4.4 },
+      { category: "education", amount: 15_000_000, percentage: 33.3 },
+      { category: "environment", amount: 12_000_000, percentage: 26.7 },
+      { category: "health", amount: 8_000_000, percentage: 17.8 },
+      { category: "governance", amount: 5_000_000, percentage: 11.1 },
+      { category: "agriculture", amount: 3_000_000, percentage: 6.7 },
+      { category: "active citizenship", amount: 2_000_000, percentage: 4.4 },
     ],
     districtAllocations: [
-      { district: "District 1", amount: 25_000_000, percentage: 55.6 },
-      { district: "District 2", amount: 20_000_000, percentage: 44.4 },
+      { district: "District I", amount: 25_000_000, percentage: 55.6 },
+      { district: "District II", amount: 20_000_000, percentage: 44.4 },
     ],
     availableFiscalYears: [2026, 2025],
     lastUpdated: "2026-09-13T08:00:00.000Z",
@@ -89,11 +89,11 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     percentReleased: 100,
     percentLiquidated: 0,
     purposeCategories: [
-      { category: "Youth Leadership", amount: 131_312_312, percentage: 91.4 },
-      { category: "Community Outreach", amount: 12_323_213, percentage: 8.6 },
-      { category: "Other Programs", amount: 51_545, percentage: 0 },
+      { category: "education", amount: 131_312_312, percentage: 91.4 },
+      { category: "social inclusion and equity", amount: 12_323_213, percentage: 8.6 },
+      { category: "governance", amount: 51_545, percentage: 0 },
     ],
-    districtAllocations: [{ district: "District 1", amount: 143_687_070, percentage: 100 }],
+    districtAllocations: [{ district: "District I", amount: 143_687_070, percentage: 100 }],
     availableFiscalYears: [2026],
     lastUpdated: "2026-09-13T08:00:00.000Z",
   };
@@ -131,6 +131,39 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     expect(summary.isConfigured).toBe(true);
     expect(summary.annualBudget).toBe(100_000_000);
     expect(summary.approvedBudget).toBe(45_000_000);
+  });
+
+  it("maps the RPC district_breakdown contract to canonical public districts", async () => {
+    vi.spyOn(supabase, "rpc").mockResolvedValueOnce({
+      data: {
+        fiscal_year: 2026,
+        approved_budget: 100,
+        purpose_categories: [
+          { category: "education", amount: 90, percentage: 90 },
+          { category: "Other Programs", amount: 10, percentage: 10 },
+        ],
+        district_breakdown: [
+          { district: "District 1", amount: 60, percentage: 60 },
+          { district: "District II", amount: 30, percentage: 30 },
+          { district: "Citywide / Unassigned", amount: 10, percentage: 10 },
+        ],
+      },
+      error: null,
+      count: null,
+      status: 200,
+      statusText: "OK",
+    });
+
+    const summary = await getPublicBudgetSummaryFromSupabase(2026);
+    expect(summary.districtAllocations).toEqual([
+      { district: "District I", amount: 60, percentage: 60 },
+      { district: "District II", amount: 30, percentage: 30 },
+    ]);
+    expect(summary.unassignedDistrictAmount).toBe(10);
+    expect(summary.purposeCategories).toEqual([
+      { category: "education", amount: 90, percentage: 90 },
+    ]);
+    expect(summary.unmappedPurposeAmount).toBe(10);
   });
 
   // TEST PUB 2 — Sanitized response
@@ -224,46 +257,64 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     expect(remainingHeadroom < 0).toBe(true);
   });
 
-  // TEST PUB 6 — Top 5 + Other
-  it("TEST PUB 6 — Top 5 + Other: consolidates 6th+ categories into Other Programs and guarantees sum equals approvedBudget", () => {
+  // TEST PUB 6 — All categories remain individually available in intended order
+  it("TEST PUB 6 — keeps every real category in amount order and never creates Other Programs", () => {
     const rawItems = [
-      { category: "Cat 1", amount: 50 },
-      { category: "Cat 2", amount: 40 },
-      { category: "Cat 3", amount: 30 },
-      { category: "Cat 4", amount: 20 },
-      { category: "Cat 5", amount: 10 },
-      { category: "Cat 6", amount: 8 },
-      { category: "Cat 7", amount: 2 },
+      { category: "education", amount: 50 },
+      { category: "environment", amount: 40 },
+      { category: "health", amount: 30 },
+      { category: "governance", amount: 20 },
+      { category: "active citizenship", amount: 10 },
+      { category: "agriculture", amount: 8 },
+      { category: "global mobility", amount: 2 },
     ];
     const approvedBudget = rawItems.reduce((s, i) => s + i.amount, 0); // 160
 
     const sorted = [...rawItems].sort((a, b) => b.amount - a.amount);
-    const top5 = sorted.slice(0, 5);
-    const others = sorted.slice(5);
-    const otherAmount = others.reduce((s, i) => s + i.amount, 0); // 10
+    const allocations = sorted.map((category) => ({
+      ...category,
+      percentage: (category.amount / approvedBudget) * 100,
+    }));
 
-    const consolidated = [
-      ...top5.map((c) => ({
-        category: c.category,
-        amount: c.amount,
-        percentage: (c.amount / approvedBudget) * 100,
-      })),
-      ...(otherAmount > 0
-        ? [
-            {
-              category: "Other Programs",
-              amount: otherAmount,
-              percentage: (otherAmount / approvedBudget) * 100,
-            },
-          ]
-        : []),
-    ];
+    expect(allocations).toHaveLength(7);
+    expect(allocations.slice(0, 5).map((item) => item.category)).toEqual(rawItems.slice(0, 5).map((item) => item.category));
+    expect(allocations.slice(5).map((item) => item.category)).toEqual(["agriculture", "global mobility"]);
+    expect(allocations.some((item) => item.category === "Other Programs")).toBe(false);
+    expect(allocations.reduce((sum, item) => sum + item.amount, 0)).toBe(approvedBudget);
+  });
 
-    expect(consolidated).toHaveLength(6);
-    expect(consolidated[5].category).toBe("Other Programs");
-    expect(consolidated[5].amount).toBe(10);
-    const sum = consolidated.reduce((s, c) => s + c.amount, 0);
-    expect(sum).toBe(approvedBudget);
+  it("renders every provided canonical category in a bounded scroll region without renaming categories", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <PublicBudgetOverview data={mockConfiguredSummary} />
+      </MemoryRouter>,
+    );
+
+    const purposeRegion = screen.getByRole("region", { name: "Purpose allocations for FY 2026" });
+    expect(purposeRegion).toHaveClass("max-h-[240px]");
+    expect(Array.from(purposeRegion.children)).toHaveLength(6);
+    expect(screen.getByText("Active Citizenship")).toBeInTheDocument();
+    expect(screen.queryByText("Other Programs")).toBeNull();
+    expect(container.querySelector("[aria-label='District allocations for FY 2026']")).not.toBeNull();
+  });
+
+  it("reports aggregate district records with missing Barangay mapping without inventing a district", () => {
+    render(
+      <MemoryRouter>
+        <PublicBudgetOverview
+          data={{
+            ...mockConfiguredSummary,
+            districtAllocations: [],
+            unassignedDistrictAmount: 25_000,
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText(/No approved allocations could be assigned to District I or District II/i)).toBeInTheDocument();
+    expect(screen.getByText(/Unassigned: ₱25,000\.00/)).toBeInTheDocument();
+    expect(screen.queryByText("Citywide / Unassigned")).toBeNull();
+    expect(screen.queryByText(/data is not available/i)).toBeNull();
   });
 
   // TEST PUB 7 — Public Route /budget-transparency renders successfully
@@ -399,6 +450,72 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     expect(screen.getByText(/FY Budget Allocation Not Configured for FY 2025/i)).toBeInTheDocument();
   });
 
+  it("fetches the newly selected fiscal year and updates both purpose and district sections", async () => {
+    const rpcSpy = vi.spyOn(supabase, "rpc")
+      .mockResolvedValueOnce({
+        data: {
+          fiscal_year: 2026,
+          is_configured: true,
+          annual_budget: 1_000,
+          approved_budget: 260,
+          released_budget: 0,
+          liquidated_budget: 0,
+          remaining_headroom: 740,
+          is_deficit: false,
+          deficit_amount: 0,
+          purpose_categories: [{ category: "education", amount: 260, percentage: 100 }],
+          district_allocations: [{ district: "District I", amount: 260, percentage: 100 }],
+          available_fiscal_years: [2026, 2025],
+          last_updated: "2026-09-30T00:00:00.000Z",
+        },
+        error: null,
+        count: null,
+        status: 200,
+        statusText: "OK",
+      } as any)
+      .mockResolvedValueOnce({
+        data: {
+          fiscal_year: 2025,
+          is_configured: true,
+          annual_budget: 1_000,
+          approved_budget: 300,
+          released_budget: 0,
+          liquidated_budget: 0,
+          remaining_headroom: 700,
+          is_deficit: false,
+          deficit_amount: 0,
+          purpose_categories: [{ category: "environment", amount: 300, percentage: 100 }],
+          district_allocations: [{ district: "District II", amount: 300, percentage: 100 }],
+          available_fiscal_years: [2026, 2025],
+          last_updated: "2025-09-30T00:00:00.000Z",
+        },
+        error: null,
+        count: null,
+        status: 200,
+        statusText: "OK",
+      } as any);
+
+    render(<PublicBudgetOverview availableFiscalYears={[2026, 2025]} />);
+
+    await waitFor(() => expect(rpcSpy).toHaveBeenCalledWith(
+      "get_public_budget_monitoring_summary",
+      { _fiscal_year: 2026 },
+    ));
+    await screen.findByRole("region", { name: "District allocations for FY 2026" });
+
+    fireEvent.keyDown(screen.getByRole("button", { name: /Select Fiscal Year/i }), { key: "Enter" });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "FY 2025" }));
+
+    await waitFor(() => expect(rpcSpy).toHaveBeenCalledWith(
+      "get_public_budget_monitoring_summary",
+      { _fiscal_year: 2025 },
+    ));
+    expect(await screen.findByRole("heading", { name: "Budget Execution Pipeline · FY 2025" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Purpose allocations for FY 2025" })).toHaveTextContent("Environment");
+    expect(screen.getByRole("region", { name: "District allocations for FY 2025" })).toHaveTextContent("District II");
+    expect(screen.queryByRole("region", { name: "Purpose allocations for FY 2026" })).toBeNull();
+  });
+
   // TEST PUB 12 — Responsive layout verification across breakpoints
   it("TEST PUB 12 — Responsive layout verification across breakpoints (360px to 1920px)", () => {
     const { container } = render(
@@ -441,10 +558,11 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
     percentReleased: 100,
     percentLiquidated: 0.02,
     purposeCategories: [
-      { category: "Youth Leadership", amount: 131_312_312, percentage: 91.4 },
-      { category: "Community Outreach", amount: 12_323_213, percentage: 8.6 },
+      { category: "education", amount: 131_312_312, percentage: 91.4 },
+      { category: "social inclusion and equity", amount: 12_323_213, percentage: 8.6 },
+      { category: "governance", amount: 51_545, percentage: 0 },
     ],
-    districtAllocations: [{ district: "District 1", amount: 143_687_070, percentage: 100 }],
+    districtAllocations: [{ district: "District I", amount: 143_687_070, percentage: 100 }],
     availableFiscalYears: [2026],
     lastUpdated: "2026-09-13T08:00:00.000Z",
   };

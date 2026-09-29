@@ -10,7 +10,7 @@ import { isOrganizationProfileComplete } from "./organization-profile-domain";
 import { isUrnRegistration } from "./urn-registration";
 
 const approvedDocumentStatuses = new Set(["approved", "approved_green"]);
-const releasedBudgetStatuses = new Set(["budget_released", "completed"]);
+const releasedBudgetStatuses = new Set(["budget_released"]);
 
 export type WorkflowRequirement = {
   id: "profile" | "registration" | "documents" | "ypop_participation" | "ypop_qualification" | "budget_released" | "activity_completed" | "liquidation";
@@ -179,7 +179,6 @@ export function resolveLiquidationWorkflowEligibility({
     documentFiles,
   });
   const releasedBudget = budgetRequests.find((request) => releasedBudgetStatuses.has(request.status)) ?? null;
-  const completedActivityBudget = budgetRequests.find((request) => request.status === "completed") ?? null;
   const isLiquidationAvailable = hasLiquidation || Boolean(releasedBudget);
   const requirements: WorkflowRequirement[] = [
     { id: "profile", label: "Complete organization profile", met: registration.profileComplete },
@@ -191,7 +190,6 @@ export function resolveLiquidationWorkflowEligibility({
     ...registration,
     requirements,
     releasedBudget,
-    completedActivityBudget,
     eligible: registration.profileComplete && registration.registrationVerified && Boolean(releasedBudget),
   };
 }

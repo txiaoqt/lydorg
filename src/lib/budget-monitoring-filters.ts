@@ -7,15 +7,9 @@ import type {
 import type { PurposeCategoryItem } from "@/admin/components/BudgetMonitoringOverview";
 import type { OrganizationFundingRow } from "@/admin/components/OrganizationFundingTable";
 
-export type TimePeriodOption =
-  | "current_fy"
-  | "previous_fy"
-  | "ytd"
-  | "last_30_days"
-  | "last_90_days"
-  | "last_6_months"
-  | "custom"
-  | "all_time";
+export type BudgetMonitoringFiscalPeriod =
+  | { mode: "fiscal_year"; fiscalYear: number }
+  | { mode: "custom"; fiscalYear: number; startDate: string; endDate: string };
 
 export type SortByOption =
   | "approved_desc"
@@ -31,14 +25,12 @@ export type SortByOption =
   | "org_asc"
   | "org_desc";
 
-export type ReleaseStatusFilter = "all" | "not_released" | "partially_released" | "fully_released";
+export type ReleaseStatusFilter = "all" | "not_released" | "fully_released";
 
-export type LiquidationStatusFilter = "all" | "not_liquidated" | "partially_liquidated" | "fully_liquidated";
+export type LiquidationStatusFilter = "all" | "not_liquidated" | "fully_liquidated";
 
 export interface BudgetMonitoringFilters {
-  timePeriod: TimePeriodOption;
-  customStartDate?: string;
-  customEndDate?: string;
+  fiscalPeriod: BudgetMonitoringFiscalPeriod;
   purposeCategory: string; // "all" or specific category name
   budgetStatus: string; // "all" or specific status or group
   majorClassification: string; // "all" or specific classification
@@ -49,10 +41,8 @@ export interface BudgetMonitoringFilters {
   sortBy: SortByOption;
 }
 
-export const DEFAULT_BUDGET_MONITORING_FILTERS: BudgetMonitoringFilters = {
-  timePeriod: "current_fy",
-  customStartDate: "",
-  customEndDate: "",
+export const createDefaultBudgetMonitoringFilters = (fiscalYear: number): BudgetMonitoringFilters => ({
+  fiscalPeriod: { mode: "fiscal_year", fiscalYear },
   purposeCategory: "all",
   budgetStatus: "all",
   majorClassification: "all",
@@ -61,18 +51,9 @@ export const DEFAULT_BUDGET_MONITORING_FILTERS: BudgetMonitoringFilters = {
   releaseStatus: "all",
   liquidationStatus: "all",
   sortBy: "approved_desc",
-};
+});
 
-export const TIME_PERIOD_LABELS: Record<TimePeriodOption, string> = {
-  current_fy: "Current Fiscal Year",
-  previous_fy: "Previous Fiscal Year",
-  ytd: "Year to Date (YTD)",
-  last_30_days: "Last 30 Days",
-  last_90_days: "Last 90 Days",
-  last_6_months: "Last 6 Months",
-  custom: "Custom Date Range",
-  all_time: "All Time",
-};
+export const DEFAULT_BUDGET_MONITORING_FILTERS = createDefaultBudgetMonitoringFilters(new Date().getFullYear());
 
 export const SORT_BY_LABELS: Record<SortByOption, string> = {
   approved_desc: "Approved Amount — Highest to Lowest",
@@ -92,14 +73,12 @@ export const SORT_BY_LABELS: Record<SortByOption, string> = {
 export const RELEASE_STATUS_LABELS: Record<ReleaseStatusFilter, string> = {
   all: "All Release Statuses",
   not_released: "Not Released",
-  partially_released: "Partially Released",
   fully_released: "Fully Released",
 };
 
 export const LIQUIDATION_STATUS_LABELS: Record<LiquidationStatusFilter, string> = {
   all: "All Liquidation Statuses",
   not_liquidated: "Not Liquidated",
-  partially_liquidated: "Partially Liquidated",
   fully_liquidated: "Fully Liquidated",
 };
 
@@ -120,23 +99,17 @@ export const RELEASED_BUDGET_STATUSES = new Set<string>([
   "released",
 ]);
 
-/**
- * Resolves the primary date for a budget request record.
- */
-export function getBudgetRequestRecordDate(r: BudgetRequest): Date {
-  if (r.createdAt) {
-    const d = new Date(r.createdAt);
-    if (!Number.isNaN(d.getTime())) return d;
+/** Custom ranges use the budget activity date, falling back to the actual release date. */
+export function getBudgetRequestMonitoringDate(r: BudgetRequest): string | null {
+  const candidates = [r.activityDate, r.releaseDate];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const dateOnly = candidate.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && !Number.isNaN(Date.parse(`${dateOnly}T00:00:00Z`))) {
+      return dateOnly;
+    }
   }
-  if (r.releaseDate) {
-    const d = new Date(r.releaseDate);
-    if (!Number.isNaN(d.getTime())) return d;
-  }
-  if (r.activityDate) {
-    const d = new Date(r.activityDate);
-    if (!Number.isNaN(d.getTime())) return d;
-  }
-  return new Date();
+  return null;
 }
 
 /**
@@ -161,78 +134,13 @@ export function getBudgetRequestFiscalYear(r: BudgetRequest): number {
   return new Date().getFullYear();
 }
 
-/**
- * Checks if a budget request matches a time period filter.
- */
-export function matchesTimePeriod(
-  r: BudgetRequest,
-  timePeriod: TimePeriodOption,
-  selectedFiscalYear: number,
-  customStartDate?: string,
-  customEndDate?: string,
-  referenceNow: Date = new Date()
-): boolean {
-  const reqFy = getBudgetRequestFiscalYear(r);
-  const recDate = getBudgetRequestRecordDate(r);
-  const recTime = recDate.getTime();
-
-  switch (timePeriod) {
-    case "current_fy":
-      return reqFy === selectedFiscalYear;
-
-    case "previous_fy":
-      return reqFy === selectedFiscalYear - 1;
-
-    case "ytd": {
-      const startOfYear = new Date(referenceNow.getFullYear(), 0, 1, 0, 0, 0, 0).getTime();
-      const endOfToday = new Date(referenceNow.getFullYear(), referenceNow.getMonth(), referenceNow.getDate(), 23, 59, 59, 999).getTime();
-      return recTime >= startOfYear && recTime <= endOfToday;
-    }
-
-    case "last_30_days": {
-      const thirtyDaysAgo = new Date(referenceNow.getTime() - 30 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
-      const endOfToday = new Date(referenceNow.getFullYear(), referenceNow.getMonth(), referenceNow.getDate(), 23, 59, 59, 999).getTime();
-      return recTime >= thirtyDaysAgo && recTime <= endOfToday;
-    }
-
-    case "last_90_days": {
-      const ninetyDaysAgo = new Date(referenceNow.getTime() - 90 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
-      const endOfToday = new Date(referenceNow.getFullYear(), referenceNow.getMonth(), referenceNow.getDate(), 23, 59, 59, 999).getTime();
-      return recTime >= ninetyDaysAgo && recTime <= endOfToday;
-    }
-
-    case "last_6_months": {
-      const sixMonthsAgo = new Date(referenceNow.getTime() - 180 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
-      const endOfToday = new Date(referenceNow.getFullYear(), referenceNow.getMonth(), referenceNow.getDate(), 23, 59, 59, 999).getTime();
-      return recTime >= sixMonthsAgo && recTime <= endOfToday;
-    }
-
-    case "custom": {
-      if (!customStartDate && !customEndDate) return true;
-      let passStart = true;
-      let passEnd = true;
-
-      if (customStartDate) {
-        const start = new Date(`${customStartDate}T00:00:00`).getTime();
-        if (!Number.isNaN(start)) {
-          passStart = recTime >= start;
-        }
-      }
-
-      if (customEndDate) {
-        const end = new Date(`${customEndDate}T23:59:59.999`).getTime();
-        if (!Number.isNaN(end)) {
-          passEnd = recTime <= end;
-        }
-      }
-
-      return passStart && passEnd;
-    }
-
-    case "all_time":
-    default:
-      return true;
+export function matchesFiscalPeriod(r: BudgetRequest, period: BudgetMonitoringFiscalPeriod): boolean {
+  if (period.mode === "fiscal_year") {
+    return getBudgetRequestFiscalYear(r) === period.fiscalYear;
   }
+
+  const date = getBudgetRequestMonitoringDate(r);
+  return Boolean(date && period.startDate && period.endDate && period.startDate <= period.endDate && date >= period.startDate && date <= period.endDate);
 }
 
 /**
@@ -245,9 +153,6 @@ export function matchesReleaseStatus(r: BudgetRequest, filter: ReleaseStatusFilt
 
   if (filter === "not_released") {
     return released === 0;
-  }
-  if (filter === "partially_released") {
-    return released > 0 && (approved === 0 || released < approved);
   }
   if (filter === "fully_released") {
     return approved > 0 && released >= approved;
@@ -265,20 +170,14 @@ export function matchesLiquidationStatus(
 ): boolean {
   if (filter === "all") return true;
   const liquidation = liquidationMap.get(r.id);
-  const isCompletedLiquidated = liquidation?.status === "completed_liquidated" || r.status === "completed";
+const isCompletedLiquidated = liquidation?.status === "completed_liquidated";
   const released = Number(r.releasedAmount || 0);
 
   if (filter === "fully_liquidated") {
     return isCompletedLiquidated;
   }
-  if (filter === "partially_liquidated") {
-    return (
-      !isCompletedLiquidated &&
-      Boolean(liquidation && ["under_review", "approved_for_ftf_green", "hard_copy_submitted"].includes(liquidation.status))
-    );
-  }
   if (filter === "not_liquidated") {
-    return !isCompletedLiquidated && (!liquidation || liquidation.status === "pending_activity_completion" || liquidation.status === "not_started" || liquidation.status === "overdue" || liquidation.status === "draft" || liquidation.status === "submitted" || liquidation.status === "needs_revision");
+    return !isCompletedLiquidated;
   }
   return true;
 }
@@ -298,15 +197,11 @@ export function matchesBudgetStatus(r: BudgetRequest, statusFilter: string): boo
   if (statusFilter === "awaiting_release") {
     return (
       r.status === "awaiting_release" ||
-      r.status === "approved_for_ftf_green" ||
-      r.status === "hard_copy_submitted"
+      ["approved_for_ftf_green", "hard_copy_submitted"].includes(String(r.status))
     );
   }
   if (statusFilter === "budget_released") {
     return r.status === "budget_released";
-  }
-  if (statusFilter === "completed") {
-    return r.status === "completed";
   }
   if (statusFilter === "rejected_red") {
     return r.status === "rejected_red";
@@ -323,12 +218,10 @@ export function filterBudgetRequests(
   filters: BudgetMonitoringFilters,
   organizationMap: Map<string, OrganizationProfile>,
   liquidationMap: Map<string, LiquidationReport>,
-  selectedFiscalYear: number,
-  referenceNow: Date = new Date()
 ): BudgetRequest[] {
   return requests.filter((r) => {
-    // 1. Time Period
-    if (!matchesTimePeriod(r, filters.timePeriod, selectedFiscalYear, filters.customStartDate, filters.customEndDate, referenceNow)) {
+    // 1. Fiscal period or explicit activity/release date range
+    if (!matchesFiscalPeriod(r, filters.fiscalPeriod)) {
       return false;
     }
 
@@ -394,7 +287,7 @@ export function aggregatePurposeCategories(
     const isApproved = APPROVED_BUDGET_STATUSES.has(r.status);
     const isReleased = RELEASED_BUDGET_STATUSES.has(r.status);
     const liquidation = liquidationMap.get(r.id);
-    const isLiquidated = liquidation?.status === "completed_liquidated" || r.status === "completed";
+    const isLiquidated = liquidation?.status === "completed_liquidated";
 
     const app = isApproved ? Number(r.approvedAmount || r.requestedAmount || 0) : 0;
     const rel = isReleased ? Number(r.releasedAmount || 0) : 0;
@@ -487,11 +380,12 @@ export function aggregateOrganizationFundingRows(
     if (!orgRequests || orgRequests.length === 0) return;
 
     const totalRequested = orgRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0);
+    const totalApproved = orgRequests.reduce((sum, r) => sum + (APPROVED_BUDGET_STATUSES.has(r.status) ? (r.approvedAmount || r.requestedAmount || 0) : 0), 0);
     const totalReleased = orgRequests.reduce((sum, r) => {
       return sum + (RELEASED_BUDGET_STATUSES.has(r.status) ? r.releasedAmount || 0 : 0);
     }, 0);
     const totalLiquidated = orgRequests.reduce((sum, r) => {
-      const isLiquidated = liquidationMap.get(r.id)?.status === "completed_liquidated" || r.status === "completed";
+      const isLiquidated = liquidationMap.get(r.id)?.status === "completed_liquidated";
       return sum + (isLiquidated ? r.releasedAmount || 0 : 0);
     }, 0);
 
@@ -502,6 +396,7 @@ export function aggregateOrganizationFundingRows(
       majorClassification: org.majorClassification || "Unclassified",
       barangay: org.barangay?.trim() || "Unassigned Barangay",
       totalRequested,
+      totalApproved,
       totalReleased,
       totalLiquidated,
     });
@@ -527,10 +422,10 @@ export function aggregateOrganizationFundingRows(
       case "requested_asc":
         return left.totalRequested - right.totalRequested || left.organizationName.localeCompare(right.organizationName);
       case "approved_asc":
-        return left.totalRequested - right.totalRequested || left.organizationName.localeCompare(right.organizationName);
+        return (left.totalApproved || 0) - (right.totalApproved || 0) || left.organizationName.localeCompare(right.organizationName);
       case "approved_desc":
       default:
-        return right.totalReleased - left.totalReleased || left.organizationName.localeCompare(right.organizationName);
+        return (right.totalApproved || 0) - (left.totalApproved || 0) || left.organizationName.localeCompare(right.organizationName);
     }
   });
 
@@ -542,7 +437,6 @@ export function aggregateOrganizationFundingRows(
  */
 export function getActiveFilterCount(filters: BudgetMonitoringFilters): number {
   let count = 0;
-  if (filters.timePeriod !== "current_fy") count += 1;
   if (filters.purposeCategory !== "all") count += 1;
   if (filters.budgetStatus !== "all") count += 1;
   if (filters.majorClassification !== "all") count += 1;

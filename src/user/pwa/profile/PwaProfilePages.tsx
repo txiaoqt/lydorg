@@ -34,6 +34,7 @@ import {
   resubmitOrganizationUrnInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
+import { getAllPasigBarangayOptions, getPasigDistrictForBarangay } from "@/lib/pasig-districts";
 import {
   organizationEmailPattern,
   philippineContactNumberPattern,
@@ -538,6 +539,8 @@ function EditorField({ label, children, required }: { label: string; children: R
 }
 
 export function PwaProfileEdit({ data }: { data: PortalData }) {
+  const canChooseHeadquartersLocation = !data.profile;
+  const barangayOptions = useMemo(() => getAllPasigBarangayOptions(), []);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const openImageDialog = () => {
     if (data.profilePercent < 100) {
@@ -590,13 +593,8 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     basic: draft.organizationName && draft.organizationEmail && draft.contactNumber ? "Complete" : "Missing information",
     location: draft.majorClassification && draft.subClassification ? "Complete" : "Missing information",
     advocacy: `${draft.advocacies.length} selected`,
-    leadership:
-      (draft.representativeFirstName && draft.representativeLastName && draft.adviserFirstName && draft.adviserLastName) ||
-      (draft.representativeName && draft.adviserName)
-        ? "Complete"
-        : "Missing information",
     contact:
-      (draft.addressStreet && (draft.addressBarangay || draft.barangay)) || draft.address
+      (draft.addressStreet && (draft.addressBarangay || draft.barangay) && draft.representativeFirstName && draft.representativeLastName && draft.adviserFirstName && draft.adviserLastName) || draft.address
         ? (draft.facebookPageUrl ? "Complete" : "1 field missing")
         : "Missing information",
   }), [draft]);
@@ -627,6 +625,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     const addrStreet = draft.addressStreet?.trim() || "";
     const addrSubdivision = draft.addressSubdivision?.trim() || "";
     const addrBarangay = draft.addressBarangay?.trim() || draft.barangay?.trim() || "";
+    const derivedDistrict = getPasigDistrictForBarangay(addrBarangay);
     const addrCity = draft.addressCity?.trim() || "Pasig City";
     const addrProvince = draft.addressProvince?.trim() || "Metro Manila";
     const addrZipCode = draft.addressZipCode?.trim() || "";
@@ -663,8 +662,8 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       additionalEmails: (draft.additionalEmails ?? []).map((e) => e.trim()).filter(Boolean),
       contactNumber: draft.contactNumber.trim(),
       additionalContactNumbers: (draft.additionalContactNumbers ?? []).map((c) => c.trim()).filter(Boolean),
-      district: draft.district.trim(),
-      barangay: draft.barangay.trim(),
+      district: derivedDistrict,
+      barangay: addrBarangay,
       organizationIdentifierNumber: isAlreadyVerified
         ? (data.profile?.organizationIdentifierNumber?.trim() || draft.organizationIdentifierNumber?.trim() || data.profile?.urn?.trim() || "")
         : draft.organizationIdentifierNumber.trim(),
@@ -772,8 +771,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     { id: "basic", label: "Basic Information" },
     { id: "location", label: "Location & Classification" },
     { id: "advocacy", label: "Centers of Youth Participation" },
-    { id: "leadership", label: "Leadership" },
-    { id: "contact", label: "Contact & Social" },
+    { id: "contact", label: "5. Leadership & Headquarters" },
   ] as const;
   return (
     <div className="pwa-stack pwa-profile-editor">
@@ -839,8 +837,6 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
               ) : null}
               {section.id === "location" ? (
                 <div className="pwa-profile-editor-grid">
-                  <EditorField label="District" required><Input value={draft.district} readOnly /></EditorField>
-                  <EditorField label="Barangay" required><Input value={draft.barangay} readOnly /></EditorField>
                   <EditorField label="Organization Type"><Input value={draft.isExistingOrganization ? "Existing Organization" : "New Organization"} readOnly /></EditorField>
                   <EditorField label="Unique Registration Number (URN)">
                     <Input
@@ -870,7 +866,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   {advocacyOptions.map((item) => <label key={item}><input type="checkbox" checked={draft.advocacies.includes(item)} onChange={() => toggleAdvocacy(item)} /><span>{item}</span></label>)}
                 </div>
               ) : null}
-              {section.id === "leadership" ? (
+              {section.id === "contact" ? (
                 <div className="pwa-profile-editor-grid">
                   <EditorField label="Head First Name" required><Input value={draft.representativeFirstName || ""} onChange={(event) => setField("representativeFirstName", event.target.value)} placeholder="e.g. Juan" /></EditorField>
                   <EditorField label="Head Middle Name (Optional)"><Input value={draft.representativeMiddleName || ""} onChange={(event) => setField("representativeMiddleName", event.target.value)} placeholder="e.g. Crisostomo" /></EditorField>
@@ -880,14 +876,26 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   <EditorField label="Adviser Middle Name (Optional)"><Input value={draft.adviserMiddleName || ""} onChange={(event) => setField("adviserMiddleName", event.target.value)} placeholder="e.g. Clara" /></EditorField>
                   <EditorField label="Adviser Last Name" required><Input value={draft.adviserLastName || ""} onChange={(event) => setField("adviserLastName", event.target.value)} placeholder="e.g. delos Santos" /></EditorField>
                   <EditorField label="Adviser Suffix (Optional)"><Input value={draft.adviserSuffix || ""} onChange={(event) => setField("adviserSuffix", event.target.value)} placeholder="e.g. Jr., III" /></EditorField>
-                </div>
-              ) : null}
-              {section.id === "contact" ? (
-                <div className="pwa-profile-editor-grid">
                   <EditorField label="Unit / Room / Building / House / Lot"><Input value={draft.addressUnitBuilding || ""} onChange={(event) => setField("addressUnitBuilding", event.target.value)} placeholder="e.g. Room 201, Block 5 Lot 2" /></EditorField>
                   <EditorField label="Street Address" required><Input value={draft.addressStreet || ""} onChange={(event) => setField("addressStreet", event.target.value)} placeholder="e.g. 101 Test Center Way" /></EditorField>
                   <EditorField label="Subdivision / Village (Optional)"><Input value={draft.addressSubdivision || ""} onChange={(event) => setField("addressSubdivision", event.target.value)} placeholder="e.g. Kapitolyo Heights" /></EditorField>
-                  <EditorField label="Barangay" required><Input value={draft.addressBarangay || draft.barangay || ""} onChange={(event) => setField("addressBarangay", event.target.value)} placeholder="e.g. Kapitolyo" /></EditorField>
+                  <EditorField label={canChooseHeadquartersLocation ? "Barangay" : "Barangay (administrative changes only)"} required>
+                    {canChooseHeadquartersLocation ? (
+                      <select
+                        value={draft.addressBarangay || draft.barangay || ""}
+                        onChange={(event) => {
+                          const barangay = event.target.value;
+                          setField("addressBarangay", barangay);
+                          setField("barangay", barangay);
+                          setField("district", getPasigDistrictForBarangay(barangay));
+                        }}
+                      >
+                        <option value="">Select headquarters Barangay</option>
+                        {barangayOptions.map((barangay) => <option key={barangay.id} value={barangay.name}>{barangay.name}</option>)}
+                      </select>
+                    ) : <Input value={draft.addressBarangay || draft.barangay || ""} readOnly aria-readonly="true" />}
+                  </EditorField>
+                  <EditorField label="District (derived)" required><Input value={getPasigDistrictForBarangay(draft.addressBarangay || draft.barangay) || ""} readOnly aria-readonly="true" /></EditorField>
                   <EditorField label="City / Municipality"><Input value={draft.addressCity || "Pasig City"} onChange={(event) => setField("addressCity", event.target.value)} /></EditorField>
                   <EditorField label="Province"><Input value={draft.addressProvince || "Metro Manila"} onChange={(event) => setField("addressProvince", event.target.value)} /></EditorField>
                   <EditorField label="ZIP Code"><Input value={draft.addressZipCode || ""} onChange={(event) => setField("addressZipCode", event.target.value)} placeholder="e.g. 1603" /></EditorField>

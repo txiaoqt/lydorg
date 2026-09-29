@@ -10,7 +10,7 @@ import {
   aggregatePurposeCategories,
   aggregateOrganizationFundingRows,
   getActiveFilterCount,
-  matchesTimePeriod,
+  matchesFiscalPeriod,
   matchesReleaseStatus,
   matchesLiquidationStatus,
   matchesBudgetStatus,
@@ -197,8 +197,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       DEFAULT_BUDGET_MONITORING_FILTERS,
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     // 4 requests belong to FY 2026 (req-1, req-2, req-3, req-5)
@@ -209,11 +207,9 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   it("2. Time Period: Previous Fiscal Year filters to FY 2025 records", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, timePeriod: "previous_fy" },
+      { ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     expect(filtered.length).toBe(1);
@@ -221,17 +217,15 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     expect(getBudgetRequestFiscalYear(filtered[0])).toBe(2025);
   });
 
-  it("3. Time Period: All Time returns all records regardless of FY", () => {
+  it("3. Fiscal year selection scopes results to the selected year", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, timePeriod: "all_time" },
+      { ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
-    expect(filtered.length).toBe(5);
+    expect(filtered.map((request) => request.id)).toEqual(["req-4"]);
   });
 
   it("4. Time Period: Custom date range properly slices records within [start, end]", () => {
@@ -239,19 +233,28 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       mockRequests,
       {
         ...DEFAULT_BUDGET_MONITORING_FILTERS,
-        timePeriod: "custom",
-        customStartDate: "2026-03-01",
-        customEndDate: "2026-04-15",
+        fiscalPeriod: { mode: "custom", fiscalYear: 2026, startDate: "2026-03-01", endDate: "2026-04-15" },
       },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
-    // req-1 (2026-03-01) and req-2 (2026-04-01) match
-    expect(filtered.length).toBe(2);
-    expect(filtered.map((r) => r.id)).toEqual(["req-1", "req-2"]);
+    // req-1 activity date is in range; req-2 activity date is Apr 20 even though it was created in range.
+    expect(filtered.map((r) => r.id)).toEqual(["req-1"]);
+  });
+
+  it("custom dates use activity date then release date, never createdAt", () => {
+    const releaseFallback = { ...mockRequests[0], id: "release-fallback", activityDate: "", releaseDate: "2026-04-03" };
+    const createdOnly = { ...mockRequests[0], id: "created-only", activityDate: "", releaseDate: "", createdAt: "2026-04-03T00:00:00Z" };
+    const range = { mode: "custom" as const, fiscalYear: 2026, startDate: "2026-04-01", endDate: "2026-04-10" };
+    expect(matchesFiscalPeriod(releaseFallback, range)).toBe(true);
+    expect(matchesFiscalPeriod(createdOnly, range)).toBe(false);
+  });
+
+  it("explicit fiscal_year remains authoritative over activity dates", () => {
+    const conflicting = { ...mockRequests[0], fiscalYear: 2025, activityDate: "2026-03-15" };
+    expect(matchesFiscalPeriod(conflicting, { mode: "fiscal_year", fiscalYear: 2025 })).toBe(true);
+    expect(matchesFiscalPeriod(conflicting, { mode: "fiscal_year", fiscalYear: 2026 })).toBe(false);
   });
 
   it("5. Purpose / Category filter: Dynamic and narrows results exclusively to matching category", () => {
@@ -263,8 +266,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     expect(filtered.length).toBe(1);
@@ -284,8 +285,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       { ...DEFAULT_BUDGET_MONITORING_FILTERS, budgetStatus: "awaiting_release" },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
     expect(awaiting.length).toBe(1);
     expect(awaiting[0].id).toBe("req-3");
@@ -297,8 +296,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       { ...DEFAULT_BUDGET_MONITORING_FILTERS, budgetStatus: "budget_released" },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
     expect(released.length).toBe(1);
     expect(released[0].id).toBe("req-2");
@@ -314,8 +311,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     // org-1 has req-1, req-3, req-5
@@ -334,8 +329,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     expect(filteredDistrict1.length).toBe(3);
@@ -352,37 +345,30 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     expect(filteredBarangay.length).toBe(3);
   });
 
-  it("9. Release Status filter: Not Released, Partially Released, Fully Released", () => {
+  it("9. Release Status filter: Not Released and Fully Released", () => {
     // Not Released
     const notReleased = filterBudgetRequests(
       mockRequests,
       { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "not_released" },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
     expect(notReleased.map((r) => r.id)).toContain("req-3");
     expect(notReleased.map((r) => r.id)).toContain("req-5");
 
-    // Partially Released (released < approved)
-    const partiallyReleased = filterBudgetRequests(
+    // Partial historical values remain in the data but have no separate filter.
+    const fullyReleasedOnly = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "partially_released" },
+      { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "fully_released" },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
-    expect(partiallyReleased.length).toBe(1);
-    expect(partiallyReleased[0].id).toBe("req-2");
+    expect(fullyReleasedOnly.map((request) => request.id)).toEqual(["req-1"]);
 
     // Fully Released
     const fullyReleased = filterBudgetRequests(
@@ -390,8 +376,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "fully_released" },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
     expect(fullyReleased.length).toBe(1);
     expect(fullyReleased[0].id).toBe("req-1");
@@ -403,8 +387,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       { ...DEFAULT_BUDGET_MONITORING_FILTERS, liquidationStatus: "fully_liquidated" },
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
     expect(fullyLiquidated.length).toBe(1);
     expect(fullyLiquidated[0].id).toBe("req-1");
@@ -416,8 +398,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       DEFAULT_BUDGET_MONITORING_FILTERS,
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     // Sort by Approved descending
@@ -441,8 +421,6 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
       DEFAULT_BUDGET_MONITORING_FILTERS,
       orgMap,
       liquidationMap,
-      2026,
-      refNow
     );
 
     const orgRows = aggregateOrganizationFundingRows(
@@ -468,6 +446,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
 
   it("13. Active filter counter accurately counts non-default filters", () => {
     expect(getActiveFilterCount(DEFAULT_BUDGET_MONITORING_FILTERS)).toBe(0);
+    expect(getActiveFilterCount({ ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "custom", fiscalYear: 2026, startDate: "2026-01-01", endDate: "2026-02-01" } })).toBe(0);
 
     const withTwoFilters = {
       ...DEFAULT_BUDGET_MONITORING_FILTERS,

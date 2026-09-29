@@ -1,8 +1,8 @@
 import React from "react";
+import { formatBudgetPurposeCategory } from "@/lib/lydo-connect-data";
 import { X } from "lucide-react";
 import {
   BudgetMonitoringFilters,
-  TIME_PERIOD_LABELS,
   RELEASE_STATUS_LABELS,
   LIQUIDATION_STATUS_LABELS,
   SORT_BY_LABELS,
@@ -13,52 +13,22 @@ interface BudgetMonitoringFilterSummaryProps {
   filters: BudgetMonitoringFilters;
   onChangeFilters: (next: BudgetMonitoringFilters) => void;
   onResetFilters: () => void;
-  selectedFiscalYear: number;
 }
 
 export const BudgetMonitoringFilterSummary = ({
   filters,
   onChangeFilters,
   onResetFilters,
-  selectedFiscalYear,
 }: BudgetMonitoringFilterSummaryProps) => {
   const activeCount = getActiveFilterCount(filters);
   if (activeCount === 0) return null;
 
   const chips: { key: string; label: string; onRemove: () => void }[] = [];
 
-  if (filters.timePeriod !== "current_fy") {
-    let label = TIME_PERIOD_LABELS[filters.timePeriod];
-    if (filters.timePeriod === "previous_fy") {
-      label = `FY ${selectedFiscalYear - 1}`;
-    } else if (filters.timePeriod === "custom") {
-      if (filters.customStartDate && filters.customEndDate) {
-        label = `${filters.customStartDate} to ${filters.customEndDate}`;
-      } else if (filters.customStartDate) {
-        label = `From ${filters.customStartDate}`;
-      } else if (filters.customEndDate) {
-        label = `Until ${filters.customEndDate}`;
-      } else {
-        label = "Custom Date Range";
-      }
-    }
-    chips.push({
-      key: "timePeriod",
-      label: `Period: ${label}`,
-      onRemove: () =>
-        onChangeFilters({
-          ...filters,
-          timePeriod: "current_fy",
-          customStartDate: "",
-          customEndDate: "",
-        }),
-    });
-  }
-
   if (filters.purposeCategory !== "all") {
     chips.push({
       key: "purposeCategory",
-      label: `Category: ${filters.purposeCategory}`,
+      label: `Category: ${formatBudgetPurposeCategory(filters.purposeCategory)}`,
       onRemove: () => onChangeFilters({ ...filters, purposeCategory: "all" }),
     });
   }
@@ -69,7 +39,6 @@ export const BudgetMonitoringFilterSummary = ({
     else if (filters.budgetStatus === "needs_revision") statusLabel = "Needs Revision";
     else if (filters.budgetStatus === "awaiting_release") statusLabel = "Awaiting Release";
     else if (filters.budgetStatus === "budget_released") statusLabel = "Budget Released";
-    else if (filters.budgetStatus === "completed") statusLabel = "Completed";
     else if (filters.budgetStatus === "rejected_red") statusLabel = "Rejected";
 
     chips.push({

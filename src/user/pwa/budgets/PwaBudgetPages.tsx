@@ -5,7 +5,7 @@ import {
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
 import { toast } from "@/hooks/use-toast";
-import { formatAdvocacyLabel, type BudgetRequest } from "@/lib/lydo-connect-data";
+import { formatAdvocacyLabel, getBudgetRequestStatusLabel, type BudgetRequest } from "@/lib/lydo-connect-data";
 import {
   createBudgetRequestInSupabase,
   resolveSupabaseFileUrl,
@@ -20,9 +20,9 @@ import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRout
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Filter = "all" | "draft" | "review" | "revision" | "approved";
 
-const lockedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
+const lockedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
 const reviewStatuses = new Set(["submitted", "under_review"]);
-const approvedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"]);
+const approvedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
 const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
 const dateLabel = (value: string) => value ? new Date(value).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "Not set";
 
@@ -75,7 +75,7 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
       <section className="pwa-compact-card-list">
         {visible.map((request) => (
           <button key={request.id} type="button" className="pwa-card pwa-transaction-card" onClick={() => go(pwaBudgetDetailRoute(request.id))}>
-            <span className="pwa-transaction-heading"><strong>{request.activityTitle || "Untitled activity"}</strong><StatusBadge status={request.status} /></span>
+            <span className="pwa-transaction-heading"><strong>{request.activityTitle || "Untitled activity"}</strong><StatusBadge status={request.status} label={getBudgetRequestStatusLabel(String(request.status))} /></span>
             <span className="pwa-transaction-amount">{money.format(request.requestedAmount)}</span>
             <span className="pwa-transaction-date">{dateLabel(request.activityDate)}</span>
             <span className="pwa-transaction-meta">
@@ -111,7 +111,7 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
     <div className="pwa-stack">
       <PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" />
       <section className="pwa-card pwa-transaction-detail">
-        <div className="pwa-detail-title"><div><small>Budget request</small><h2>{request.activityTitle}</h2></div><StatusBadge status={request.status} /></div>
+        <div className="pwa-detail-title"><div><small>Budget request</small><h2>{request.activityTitle}</h2></div><StatusBadge status={request.status} label={getBudgetRequestStatusLabel(String(request.status))} /></div>
         <strong className="pwa-detail-amount">{money.format(request.requestedAmount)}</strong>
         <dl>
           <div><dt>Proposed date</dt><dd>{dateLabel(request.activityDate)}</dd></div>
@@ -187,7 +187,10 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       toast({ title: "Complete the budget form", description: "All activity, amount, and category fields are required.", variant: "destructive" });
       return;
     }
-    if (!orgAdvocacies.includes(draft.purposeCategory) && (!existing || existing.purposeCategory !== draft.purposeCategory)) {
+    const categoryUnchangedForHistory = Boolean(
+      existing && existing.purposeCategory.trim().toLowerCase() === draft.purposeCategory.trim().toLowerCase()
+    );
+    if (!orgAdvocacies.some((category) => category.trim().toLowerCase() === draft.purposeCategory.trim().toLowerCase()) && !categoryUnchangedForHistory) {
       toast({
         title: "Invalid Purpose & Category",
         description: "Selected category must be one of your organization's configured Centers of Youth Participation.",

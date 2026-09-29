@@ -23,9 +23,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { PublicBudgetSummary } from "@/lib/lydo-connect-data";
+import { formatBudgetPurposeCategory, type PublicBudgetSummary } from "@/lib/lydo-connect-data";
 import { getPublicBudgetSummaryFromSupabase } from "@/lib/lydo-connect-supabase";
-import { getCategoryColor } from "@/lib/budget-category-colors";
+import { getCategoryColor, isCanonicalPurposeCategory } from "@/lib/budget-category-colors";
 import { BUDGET_MONITORING_COLORS, BUDGET_MONITORING_LABELS, deriveBudgetMonitoringMetrics } from "@/lib/budget-monitoring-presentation";
 import { BudgetExecutionPipeline } from "@/components/portal/BudgetExecutionPipeline";
 
@@ -96,7 +96,7 @@ export default function PublicBudgetOverview({
   const isControlledData = propData !== undefined;
   const activeData = isControlledData ? propData : internalData;
   const isLoading = propLoading !== undefined ? propLoading : internalLoading;
-  const activeFY = propSelectedFiscalYear ?? activeData?.fiscalYear ?? internalFY;
+  const activeFY = propSelectedFiscalYear ?? (isControlledData ? activeData?.fiscalYear : internalFY) ?? internalFY;
 
   // Derive available FYs from props, active data, or defaults
   const resolvedAvailableFYs = (
@@ -156,8 +156,20 @@ export default function PublicBudgetOverview({
     approved: approvedBudget,
     released: releasedBudget,
   });
-  const purposeCategories = activeData?.purposeCategories ?? [];
-  const districtAllocations = activeData?.districtAllocations ?? [];
+  const rawPurposeCategories = activeData?.purposeCategories ?? [];
+  const purposeCategories = rawPurposeCategories.filter((item) =>
+    isCanonicalPurposeCategory(item.category),
+  );
+  const districtAllocations = (activeData?.districtAllocations ?? []).filter(
+    (item) => item.district === "District I" || item.district === "District II",
+  );
+  const unmappedPurposeAmount = activeData?.unmappedPurposeAmount ?? Math.max(
+    approvedBudget - purposeCategories.reduce((sum, item) => sum + item.amount, 0),
+    0,
+  );
+  const unassignedDistrictAmount = activeData?.unassignedDistrictAmount ?? (activeData?.districtAllocations ?? [])
+    .filter((item) => item.district !== "District I" && item.district !== "District II")
+    .reduce((sum, item) => sum + item.amount, 0);
   const lastUpdatedText = formatLastUpdated(activeData?.lastUpdated);
 
   const auditedPctDisplay = useMemo(() => {
@@ -442,7 +454,7 @@ export default function PublicBudgetOverview({
                     Where the Youth Budget Goes
                   </h2>
                   <p className="text-xs text-slate-500 font-segoe">
-                    Top 5 purpose categories and community funding areas.
+                    Approved allocations by canonical purpose, ordered by amount.
                   </p>
                 </div>
                 <span className="text-xs font-semibold text-slate-500 font-cascadia">
@@ -455,20 +467,25 @@ export default function PublicBudgetOverview({
                   No approved youth grant allocations for FY {activeFY} yet.
                 </div>
               ) : (
-                <div className="space-y-3.5 pt-1">
+                <div
+                  role="region"
+                  aria-label={`Purpose allocations for FY ${activeFY}`}
+                  tabIndex={0}
+                  className="max-h-[240px] space-y-3.5 overflow-y-auto overscroll-contain pt-1 pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
+                >
                   {purposeCategories.map((item) => {
                     const color = getCategoryColor(item.category);
                     return (
                       <div key={item.category} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-2 text-xs font-semibold">
-                          <span className="text-slate-800 truncate font-segoe flex items-center gap-2">
+                        <div className="flex items-start justify-between gap-3 text-xs font-semibold">
+                          <span className="flex min-w-0 flex-1 items-start gap-2 text-slate-800 font-segoe">
                             <span
-                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                              className="mt-0.5 h-2.5 w-2.5 rounded-full shrink-0"
                               style={{ backgroundColor: color }}
                             />
-                            <span>{item.category}</span>
+                            <span className="min-w-0 break-words">{formatBudgetPurposeCategory(item.category)}</span>
                           </span>
-                          <span className="text-slate-900 font-cascadia shrink-0">
+                          <span className="shrink-0 text-right text-slate-900 font-cascadia">
                             {formatPesoAmount(item.amount)}
                             <span className="text-slate-400 font-normal ml-1.5">
                               ({item.percentage}%)
@@ -489,6 +506,11 @@ export default function PublicBudgetOverview({
                   })}
                 </div>
               )}
+              {unmappedPurposeAmount > 0 && (
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                  {formatPesoAmount(unmappedPurposeAmount)} in approved records does not match a canonical Purpose / Category selected for its organization, so it is excluded from the category list.
+                </p>
+              )}
             </div>
 
             {/* 5. Geographic Transparency: District Allocations */}
@@ -503,11 +525,23 @@ export default function PublicBudgetOverview({
               </div>
 
               {districtAllocations.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-sm font-segoe">
-                  District allocation data is not available for FY {activeFY}.
+                <div className="py-6 text-center text-slate-500 text-sm font-segoe">
+                  {unassignedDistrictAmount > 0 ? (
+                    <>
+                      <p>No approved allocations could be assigned to District I or District II for FY {activeFY}.</p>
+                      <p className="mt-2 font-semibold text-slate-700">Unassigned: {formatPesoAmount(unassignedDistrictAmount)}</p>
+                    </>
+                  ) : (
+                    <p>No approved district allocations for FY {activeFY}.</p>
+                  )}
                 </div>
               ) : (
-                <div className="space-y-3 pt-1">
+                <div
+                  role="region"
+                  aria-label={`District allocations for FY ${activeFY}`}
+                  tabIndex={0}
+                  className="max-h-[320px] space-y-3 overflow-y-auto overscroll-contain pt-1 pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
+                >
                   {districtAllocations.map((dist) => (
                     <div
                       key={dist.district}
@@ -534,6 +568,12 @@ export default function PublicBudgetOverview({
                     </div>
                   ))}
                 </div>
+              )}
+
+              {districtAllocations.length > 0 && unassignedDistrictAmount > 0 && (
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                  {formatPesoAmount(unassignedDistrictAmount)} in approved records could not be mapped from the organization’s headquarters Barangay to a Pasig district.
+                </p>
               )}
 
               <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-[11px] text-blue-900 leading-relaxed font-segoe">

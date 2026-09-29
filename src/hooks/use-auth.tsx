@@ -67,9 +67,6 @@ type SignUpParams = {
   password: string;
   organizationName?: string;
   contactNumber?: string;
-  district?: string;
-  barangayId?: string;
-  barangayName?: string;
   isExistingOrganization?: boolean;
   organizationIdentifierNumber?: string;
   pwaFlow?: boolean;
@@ -622,9 +619,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password,
     organizationName,
     contactNumber,
-    district,
-    barangayId,
-    barangayName,
     isExistingOrganization,
     organizationIdentifierNumber,
     pwaFlow,
@@ -676,9 +670,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       display_name: organizationName ?? "",
       organization_name: organizationName ?? "",
       contact_number: contactNumber ?? "",
-      district: district ?? "",
-      barangay_id: barangayId ?? "",
-      barangay_name: barangayName ?? "",
       is_existing_organization: Boolean(isExistingOrganization),
       organization_identifier_number: organizationIdentifierNumber ?? "",
       registration_type: isExistingOrganization ? "existing_urn" : "new_organization",
