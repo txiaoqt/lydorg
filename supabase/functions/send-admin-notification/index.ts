@@ -847,7 +847,7 @@ function generateAdminEmailHtml(params: {
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
                 <tr>
                   <td align="left">
-                    <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/FullNavbar.svg" height="32" alt="${safeSystemName}" style="display: block; height: 32px; width: auto; max-height: 36px; border: 0; outline: none; text-decoration: none;" />
+                    <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/FullNavbar.svg" height="40" alt="${safeSystemName}" style="display: block; height: 40px; width: auto; max-height: 44px; border: 0; outline: none; text-decoration: none;" />
                   </td>
                 </tr>
               </table>
@@ -928,11 +928,11 @@ function generateAdminEmailHtml(params: {
                 3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City
               </p>
               <p style="margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 16px; color: #93c5fd;">
-                <a href="mailto:lydo@pasigcity.gov.ph" style="color: #93c5fd; text-decoration: none;">lydo@pasigcity.gov.ph</a> &bull;
-                <a href="https://ytrace.app" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">ytrace.app</a> &bull;
-                <a href="https://ytrace.app/privacy-policy" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Privacy Policy</a> &bull;
-                <a href="https://ytrace.app/terms-of-service" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Terms of Service</a> &bull;
-                <a href="https://www.facebook.com/PasigCityLYDO" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: none;">Facebook</a>
+                <a href="mailto:lydo@pasigcity.gov.ph" style="color: #ffffff; text-decoration: none;">lydo@pasigcity.gov.ph</a> &bull;
+                <a href="https://ytrace.app" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">ytrace.app</a> &bull;
+                <a href="https://ytrace.app/privacy" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">Privacy</a> &bull;
+                <a href="https://ytrace.app/terms" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">Terms of Service</a> &bull;
+                <a href="https://www.facebook.com/profile.php?id=100064071040238" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">Facebook</a>
               </p>
               <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 15px; color: #93c5fd;">
                 &copy; 2026 ${safeSystemName} &middot; ${safeOfficeName}. All rights reserved.

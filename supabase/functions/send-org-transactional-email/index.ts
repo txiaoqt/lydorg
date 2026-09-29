@@ -358,7 +358,6 @@ function generateOrgEmailHtml(params: {
   const {
     systemName,
     officeName,
-    officeAcronym,
     supportEmail,
     organizationName,
     title,
@@ -377,276 +376,153 @@ function generateOrgEmailHtml(params: {
   } = params;
 
   const currentYear = new Date().getFullYear();
+  const safeSystemName = sanitizeHtml(systemName);
+  const safeOfficeName = sanitizeHtml(officeName);
+  const safeSupportEmail = sanitizeHtml(supportEmail);
+  const safeOrganizationName = sanitizeHtml(organizationName);
+  const safeTitle = sanitizeHtml(title);
+  const safeDescription = sanitizeHtml(description);
+  const safeActionUrl = sanitizeHtml(actionUrl);
+  const safeActionLabel = sanitizeHtml(actionLabel);
+  const safeTimestamp = sanitizeHtml(timestamp);
+  const safeItemName = itemName ? sanitizeHtml(itemName) : "";
+  const safeStatusLabel = statusLabel ? sanitizeHtml(statusLabel) : "";
+  const safeReferenceId = referenceId ? sanitizeHtml(referenceId) : "";
+  const safeRemarks = remarks ? sanitizeHtml(remarks) : "";
 
-  return `<!DOCTYPE html>
+  const itemRow = itemName
+    ? `<tr>
+        <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">Submission / Item</td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; word-break: break-word;">${safeItemName}</td>
+      </tr>`
+    : "";
+  const statusRow = statusLabel
+    ? `<tr>
+        <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">Status</td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; word-break: break-word;">${safeStatusLabel}</td>
+      </tr>`
+    : "";
+  const referenceRow = referenceId
+    ? `<tr>
+        <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">Reference ID</td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; word-break: break-word;">${safeReferenceId}</td>
+      </tr>`
+    : "";
+  const remarksBlock = remarks
+    ? `<div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #e2e8f0;">
+        <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b;">Review Remarks / Instructions</p>
+        <p style="margin: 0; padding: 12px; border-radius: 6px; background-color: #ffffff; font-size: 13px; line-height: 1.6; color: #334155; white-space: pre-wrap; word-break: break-word;">${safeRemarks}</p>
+      </div>`
+    : "";
+
+  return `<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${sanitizeHtml(title)}</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #f1f5f9;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #1e293b;
-      -webkit-font-smoothing: antialiased;
-    }
-    .wrapper {
-      width: 100%;
-      background-color: #f1f5f9;
-      padding: 40px 16px;
-      box-sizing: border-box;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    }
-    .header {
-      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-      padding: 32px 32px 28px 32px;
-      text-align: center;
-      color: #ffffff;
-    }
-    .header-logo {
-      display: inline-block;
-      margin-bottom: 12px;
-    }
-    .header-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0 0 4px 0;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .header-subtitle {
-      font-size: 13px;
-      margin: 0;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 400;
-    }
-    .content {
-      padding: 32px;
-    }
-    .badge-wrapper {
-      margin-bottom: 16px;
-    }
-    .status-badge {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.75px;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      background-color: ${badgeBg};
-      color: ${badgeColor};
-      border: 1px solid ${badgeBorder};
-    }
-    .title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0 0 12px 0;
-      line-height: 1.3;
-    }
-    .salutation {
-      font-size: 14px;
-      font-weight: 600;
-      color: #334155;
-      margin: 0 0 16px 0;
-    }
-    .description {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #475569;
-      margin: 0 0 24px 0;
-    }
-    .card {
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-    .card-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 0 0 12px 0;
-    }
-    .details-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .details-table td {
-      padding: 6px 0;
-      font-size: 13px;
-      vertical-align: top;
-    }
-    .details-label {
-      color: #64748b;
-      width: 38%;
-      font-weight: 500;
-    }
-    .details-value {
-      color: #0f172a;
-      font-weight: 600;
-      text-align: right;
-    }
-    .remarks-box {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px dashed #cbd5e1;
-    }
-    .remarks-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #d97706;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 0 0 6px 0;
-    }
-    .remarks-content {
-      font-size: 13px;
-      color: #334155;
-      background-color: #ffffff;
-      padding: 12px;
-      border-radius: 6px;
-      border-left: 3px solid #f59e0b;
-      margin: 0;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-    .button-container {
-      text-align: center;
-      margin: 32px 0 24px 0;
-    }
-    .button {
-      display: inline-block;
-      background-color: #0284c7;
-      color: #ffffff !important;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      padding: 12px 28px;
-      border-radius: 6px;
-      text-align: center;
-    }
-    .footer {
-      background-color: #f8fafc;
-      padding: 24px 32px;
-      text-align: center;
-      border-top: 1px solid #e2e8f0;
-      font-size: 12px;
-      color: #64748b;
-      line-height: 1.6;
-    }
-    .footer-links {
-      margin-top: 8px;
-      color: #94a3b8;
-    }
-    .footer a {
-      color: #0284c7;
-      text-decoration: none;
-    }
-    @media only screen and (max-width: 600px) {
-      .header { padding: 24px 20px; }
-      .content { padding: 24px 20px; }
-      .footer { padding: 20px; }
-      .button { display: block; width: 100%; box-sizing: border-box; }
-    }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="container">
-      <div class="header">
-        <div class="header-logo">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="8" fill="rgba(255, 255, 255, 0.2)"/>
-            <path d="M12 28V12L20 20L28 12V28" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="header-title">${sanitizeHtml(systemName)}</div>
-        <div class="header-subtitle">${sanitizeHtml(officeName)} (${sanitizeHtml(officeAcronym)})</div>
-      </div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${safeTitle} - ${safeSystemName}</title>
+    <style>
+      body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+      img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+      @media only screen and (max-width: 600px) {
+        .email-outer-td { padding: 20px 12px !important; }
+        .email-inner-card { padding: 24px 18px !important; }
+        .email-footer-td { padding: 20px 16px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; color: transparent; line-height: 1px; font-size: 1px;">
+      ${safeTitle} - ${safeSystemName} Organization Notification.
+    </div>
 
-      <div class="content">
-        <div class="badge-wrapper">
-          <span class="status-badge">${sanitizeHtml(badge)}</span>
-        </div>
-
-        <h1 class="title">${sanitizeHtml(title)}</h1>
-
-        <p class="salutation">Dear ${sanitizeHtml(organizationName)},</p>
-
-        <p class="description">${sanitizeHtml(description)}</p>
-
-        <div class="card">
-          <div class="card-title">Transaction Details</div>
-          <table class="details-table">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; background-color: #f8fafc;">
+      <tr>
+        <td align="center" class="email-outer-td" style="padding: 40px 16px;">
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 540px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03);">
             <tr>
-              <td class="details-label">Organization</td>
-              <td class="details-value">${sanitizeHtml(organizationName)}</td>
+              <td class="email-inner-card" style="padding: 32px 32px 28px; text-align: left;">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td align="left">
+                      <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/FullNavbar.svg" height="40" alt="${safeSystemName}" style="display: block; height: 40px; width: auto; max-height: 44px; border: 0; outline: none; text-decoration: none;" />
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 0 0 6px; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #1d4ed8;">Organization Notification</p>
+                <h1 style="margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.4px; color: #0f172a;">${safeTitle}</h1>
+                <p style="margin: 0 0 8px; font-size: 14px; line-height: 20px; font-weight: 600; color: #334155;">Dear ${safeOrganizationName},</p>
+                <p style="margin: 0 0 24px; font-size: 14px; line-height: 20px; color: #475569;">${safeDescription}</p>
+
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 18px 20px;">
+                      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 14px;">
+                        <tr>
+                          <td style="vertical-align: middle; padding-right: 10px;">
+                            <h2 style="margin: 0; font-size: 15px; line-height: 1.3; font-weight: 700; color: #0f172a;">Transaction Details</h2>
+                          </td>
+                          <td align="right" style="vertical-align: middle; white-space: nowrap;">
+                            <span style="display: inline-block; padding: 3px 9px; border: 1px solid ${badgeBorder}; border-radius: 12px; background-color: ${badgeBg}; color: ${badgeColor}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${sanitizeHtml(badge)}</span>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">Organization</td>
+                          <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; word-break: break-word;">${safeOrganizationName}</td>
+                        </tr>
+                        ${itemRow}
+                        ${statusRow}
+                        ${referenceRow}
+                        <tr>
+                          <td style="padding: 10px 0; font-size: 13px; color: #64748b; font-weight: 500; width: 38%; vertical-align: top;">Processed Date</td>
+                          <td style="padding: 10px 0; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; vertical-align: top; word-break: break-word;">${safeTimestamp}</td>
+                        </tr>
+                      </table>
+                      ${remarksBlock}
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 8px;">
+                  <tr>
+                    <td align="center">
+                      <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td align="center" style="background-color: #0e3a7a; border-radius: 6px;">
+                            <a href="${safeActionUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 11px 26px; border-radius: 6px; color: #ffffff; text-decoration: none; font-size: 13px; line-height: 1.2; font-weight: 600; letter-spacing: 0.2px;">${safeActionLabel} &rarr;</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
             </tr>
-            ${itemName ? `
+
             <tr>
-              <td class="details-label">Submission / Item</td>
-              <td class="details-value">${sanitizeHtml(itemName)}</td>
-            </tr>
-            ` : ""}
-            ${statusLabel ? `
-            <tr>
-              <td class="details-label">Status</td>
-              <td class="details-value">${sanitizeHtml(statusLabel)}</td>
-            </tr>
-            ` : ""}
-            ${referenceId ? `
-            <tr>
-              <td class="details-label">Reference ID</td>
-              <td class="details-value" style="font-family: monospace; font-size: 11px;">${sanitizeHtml(referenceId)}</td>
-            </tr>
-            ` : ""}
-            <tr>
-              <td class="details-label">Processed Date</td>
-              <td class="details-value">${sanitizeHtml(timestamp)}</td>
+              <td class="email-footer-td" style="background-color: #0e3a7a; padding: 24px 28px; text-align: center;">
+                <p style="margin: 0 0 6px; font-size: 13px; line-height: 18px; font-weight: 700; color: #ffffff;">${safeOfficeName}</p>
+                <p style="margin: 0 0 8px; font-size: 11px; line-height: 16px; color: #bfdbfe;">3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City</p>
+                <p style="margin: 0 0 10px; font-size: 11px; line-height: 16px; color: #ffffff;">
+                  <a href="mailto:${safeSupportEmail}" style="color: #ffffff; text-decoration: none;">${safeSupportEmail}</a> &bull;
+                  <a href="https://ytrace.app" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">ytrace.app</a> &bull;
+                  <a href="https://ytrace.app/privacy" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">Privacy</a> &bull;
+                  <a href="https://ytrace.app/terms" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">Terms of Service</a> &bull;
+                  <a href="https://www.facebook.com/profile.php?id=100064071040238" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none;">Facebook</a>
+                </p>
+                <p style="margin: 0; font-size: 11px; line-height: 15px; color: #bfdbfe;">&copy; ${currentYear} ${safeSystemName} &middot; ${safeOfficeName}. All rights reserved.</p>
+              </td>
             </tr>
           </table>
-
-          ${remarks ? `
-          <div class="remarks-box">
-            <div class="remarks-label">Review Remarks / Instructions</div>
-            <p class="remarks-content">${sanitizeHtml(remarks)}</p>
-          </div>
-          ` : ""}
-        </div>
-
-        <div class="button-container">
-          <a href="${sanitizeHtml(actionUrl)}" class="button" target="_blank" rel="noopener noreferrer">
-            ${sanitizeHtml(actionLabel)} &rarr;
-          </a>
-        </div>
-      </div>
-
-      <div class="footer">
-        <p style="margin: 0 0 8px 0;">This is an automated administrative notification sent by <strong>${sanitizeHtml(systemName)}</strong> on behalf of the <strong>${sanitizeHtml(officeName)}</strong>.</p>
-        <p style="margin: 0;">If you have questions or require assistance, you may reply directly to this email or contact <a href="mailto:${sanitizeHtml(supportEmail)}">${sanitizeHtml(supportEmail)}</a>.</p>
-        <div class="footer-links">
-          &copy; ${currentYear} City Government of Pasig • Pasig City LYDO
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>`;
 }
 

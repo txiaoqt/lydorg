@@ -57,10 +57,10 @@ const overviewCards = [
 ];
 
 const quickLinks = [
-  { icon: Info, title: "About", description: "Learn about PCYDO and its mandate for Pasig City youth organizations.", href: "/about" },
-  { icon: Banknote, title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.", href: "/budget-transparency" },
   { icon: FileText, title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.", href: "/public-templates" },
+  { icon: Banknote, title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.", href: "/budget-transparency" },
   { icon: Globe, title: "News Releases", description: "Stay updated with the latest official announcements and events from PCYDO.", href: "/news-releases" },
+  { icon: Info, title: "About", description: "Learn about PCYDO and its mandate for Pasig City youth organizations.", href: "/about" },
   { icon: HelpCircle, title: "FAQs", description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
   { icon: MapPin, title: "Contacts", description: "Get in touch with the PCYDO office, find office hours, and visit us.", href: "/contacts" },
 ];
@@ -287,39 +287,37 @@ const Index = () => {
       </section>
 
       {/* Quick Access */}
-      <section className="bg-public-bg-section py-7 sm:py-12 lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px] px-4 sm:px-6 lg:px-[64px]">
+      <section className="bg-public-bg-section py-7 sm:py-10 lg:py-16">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 sm:gap-6 lg:gap-8 px-4 sm:px-6 lg:px-[64px]">
           {/* Title block */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                QUICK LINKS
-              </span>
-            </div>
+          <div className="flex max-w-3xl flex-col gap-2 sm:gap-3">
             <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
               Explore the Portal
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Access the portal's key sections — from compliance forms and official news releases to FAQs and information about PCYDO.
+            <p className="font-segoe font-normal leading-[1.5] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
+              Find official forms, review budget information, or get updates and help from PCYDO.
             </p>
           </div>
 
           {/* Cards grid */}
-          <div className="grid gap-3 sm:gap-4 lg:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-6">
             {quickLinks.map(({ icon: Icon, title, description, href }) => (
               <Link
                 key={href}
                 to={href}
-                className="flex flex-col gap-3 sm:gap-4 lg:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-3.5 sm:p-5 lg:p-[24px] shadow-public-nav transition-shadow hover:shadow-public-card"
+                className="group flex h-full flex-col gap-4 rounded-xl border border-public-bg-brand-subtle bg-white p-4 shadow-public-nav transition-colors hover:border-public-border-brand hover:bg-public-bg-brand-subtle/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2 sm:p-5 lg:p-6"
               >
-                <div className="flex h-9 w-9 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-brand p-1.5 sm:p-2 lg:p-[8px]">
-                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-white" />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-public-bg-brand sm:h-12 sm:w-12">
+                    <Icon aria-hidden="true" className="h-6 w-6 text-white" />
+                  </div>
+                  <ArrowRight aria-hidden="true" className="h-5 w-5 shrink-0 text-public-text-brand transition-transform group-hover:translate-x-1" />
                 </div>
-                <div className="flex flex-col gap-1.5 sm:gap-2 lg:gap-[8px]">
-                  <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-base sm:text-public-fs-subtitle-sm">
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-segoe font-semibold leading-[1.25] tracking-[-0.02em] text-public-text-brand text-base sm:text-public-fs-subtitle-sm">
                     {title}
                   </h3>
-                  <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-sm sm:text-public-fs-body-sm">
+                  <p className="font-segoe font-normal leading-[1.5] text-left text-public-text-secondary text-sm sm:text-public-fs-body-sm">
                     {description}
                   </p>
                 </div>

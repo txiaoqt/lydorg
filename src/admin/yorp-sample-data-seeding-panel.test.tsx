@@ -8,6 +8,7 @@ vi.mock("@/lib/lydo-connect-supabase", async () => {
   const actual = await vi.importActual<typeof import("@/lib/lydo-connect-supabase")>("@/lib/lydo-connect-supabase");
   return {
     ...actual,
+    adminAuthorizeYorpSampleDatasetSeedInSupabase: vi.fn(),
     adminGetYorpSampleDatasetStatusInSupabase: vi.fn(),
     adminSeedYorpSampleDatasetInSupabase: vi.fn(),
     adminCleanupYorpSampleDatasetInSupabase: vi.fn(),
@@ -51,6 +52,7 @@ const mockDatasetStatus: lydoConnectSupabase.YorpSampleDatasetStatus = {
 describe("YorpSampleDataSeedingPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(lydoConnectSupabase.adminAuthorizeYorpSampleDatasetSeedInSupabase).mockResolvedValue();
     vi.mocked(lydoConnectSupabase.adminGetYorpSampleDatasetStatusInSupabase).mockResolvedValue(mockDatasetStatus);
   });
 
@@ -74,6 +76,93 @@ describe("YorpSampleDataSeedingPanel", () => {
     expect(screen.getAllByText(/2024:\s*31/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/2025:\s*47/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/2026:\s*6/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders zero counts only after a successful zero-status response", async () => {
+    vi.mocked(lydoConnectSupabase.adminGetYorpSampleDatasetStatusInSupabase).mockResolvedValue({
+      ...mockDatasetStatus,
+      total_seeded_organizations: 0,
+      budget_breakdown: {
+        awaiting_release: 0,
+        budget_released: 0,
+        completed: 0,
+        liquidated_reports: 0,
+      },
+      registration_breakdown: {
+        ...mockDatasetStatus.registration_breakdown!,
+        packets: 0,
+        document_records: 0,
+        organizations_complete: 0,
+      },
+    });
+
+    render(<YorpSampleDataSeedingPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /PCYDO YORP Sample Dataset/i }));
+
+    await waitFor(() => expect(screen.getByText("Not Seeded")).toBeInTheDocument());
+    expect(screen.getByText((_, element) => element?.tagName === "DD" && element.textContent?.includes("seeded") === true)).toHaveTextContent("0 seeded");
+    expect(screen.getByText("0 / 84 complete")).toBeInTheDocument();
+    expect(screen.getByText("0 packets")).toBeInTheDocument();
+    expect(screen.getByText("0 file records")).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.tagName === "DD" && element.textContent?.includes("requests") === true)).toHaveTextContent("0 requests");
+    expect(screen.getByText(/0 awaiting/)).toBeInTheDocument();
+    expect(screen.getByText(/0 released/)).toBeInTheDocument();
+    expect(screen.getByText(/0 liquidated/)).toBeInTheDocument();
+  });
+
+  it("shows status unavailable and keeps destructive/reconstructive actions disabled on RPC failure", async () => {
+    const rpcError = new Error("Admin account is not authorized.");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(lydoConnectSupabase.adminGetYorpSampleDatasetStatusInSupabase).mockRejectedValue(rpcError);
+
+    render(<YorpSampleDataSeedingPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /PCYDO YORP Sample Dataset/i }));
+
+    expect(await screen.findByRole("button", { name: /Status unavailable/i })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Unable to retrieve the current dataset status. Refresh to try again.");
+    expect(screen.queryByText(/0 seeded/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 packets/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 file records/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 requests/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 liquidated/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Seed Dataset" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Cleanup Seeded Data/i })).toBeDisabled();
+    expect(consoleError).toHaveBeenCalledWith("Failed to load YORP sample dataset status:", rpcError);
+
+    consoleError.mockRestore();
+  });
+
+  it("retries the status RPC when Refresh is clicked after a failure", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(lydoConnectSupabase.adminGetYorpSampleDatasetStatusInSupabase)
+      .mockRejectedValueOnce(new Error("temporary failure"))
+      .mockResolvedValueOnce(mockDatasetStatus);
+
+    render(<YorpSampleDataSeedingPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /PCYDO YORP Sample Dataset/i }));
+
+    expect(await screen.findByRole("button", { name: /Status unavailable/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() => expect(screen.getByText("84 / 84 Complete")).toBeInTheDocument());
+    expect(lydoConnectSupabase.adminGetYorpSampleDatasetStatusInSupabase).toHaveBeenCalledTimes(2);
+    consoleError.mockRestore();
+  });
+
+  it("verifies server-side Super Admin access before enabling Seed", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(lydoConnectSupabase.adminAuthorizeYorpSampleDatasetSeedInSupabase)
+      .mockRejectedValueOnce(new Error("Only a Super Admin can seed the YORP sample dataset."));
+
+    render(<YorpSampleDataSeedingPanel />);
+    fireEvent.click(screen.getByRole("button", { name: /PCYDO YORP Sample Dataset/i }));
+
+    await waitFor(() => {
+      expect(lydoConnectSupabase.adminAuthorizeYorpSampleDatasetSeedInSupabase).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: /Reseed \/ Repair Dataset/i })).toBeDisabled();
+    });
+    expect(lydoConnectSupabase.adminSeedYorpSampleDatasetInSupabase).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("toggles the dataset preview table with search and filters", async () => {

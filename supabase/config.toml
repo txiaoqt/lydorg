@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.send-admin-notification]
 verify_jwt = false
+
+[functions.admin-seed-yorp-sample-dataset]
+verify_jwt = false

@@ -48,6 +48,18 @@ export function usePwaPortalData() {
   const organizationId = profile?.id ?? "";
 
   const data = useMemo(() => {
+    const activeTemplates = state.templates.filter(
+      (template) => (template.templateActive ?? true) && template.isActive !== false,
+    );
+    const seenTemplateIds = new Set<string>();
+    const templates = activeTemplates
+      .filter((template) => {
+        const key = template.databaseId || template.id;
+        if (seenTemplateIds.has(key)) return false;
+        seenTemplateIds.add(key);
+        return true;
+      })
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     const requiredTemplates = [...state.templates]
       .filter(isRegistrationRequirementTemplate)
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));

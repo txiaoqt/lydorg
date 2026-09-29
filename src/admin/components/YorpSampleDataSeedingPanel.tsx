@@ -28,6 +28,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
+  adminAuthorizeYorpSampleDatasetSeedInSupabase,
   adminCleanupYorpSampleDatasetInSupabase,
   adminGetYorpSampleDatasetStatusInSupabase,
   adminSeedYorpSampleDatasetInSupabase,
@@ -45,14 +46,19 @@ export interface YorpSampleDataSeedingPanelProps {
   onRefreshGlobalData?: () => void;
 }
 
+type DatasetStatusState =
+  | { kind: "loading" }
+  | { kind: "success"; data: YorpSampleDatasetStatus }
+  | { kind: "error"; error: unknown };
+
 export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProps> = ({
   className,
   onRefreshGlobalData,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [statusState, setStatusState] = useState<DatasetStatusState>({ kind: "loading" });
+  const [seedAccessVerified, setSeedAccessVerified] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
-  const [status, setStatus] = useState<YorpSampleDatasetStatus | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const disclosureId = useId();
@@ -65,15 +71,25 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
   const isDevOrTestEnv = import.meta.env.DEV || import.meta.env.MODE !== "production";
 
   const fetchStatus = async () => {
+    setStatusState({ kind: "loading" });
+    setSeedAccessVerified(false);
     try {
-      setLoading(true);
       const data = await adminGetYorpSampleDatasetStatusInSupabase();
-      setStatus(data);
-    } catch (err: any) {
+      setStatusState({ kind: "success", data });
+      if (
+        data.is_development_or_test_environment &&
+        data.registration_breakdown?.asset_mapping_complete === true
+      ) {
+        try {
+          await adminAuthorizeYorpSampleDatasetSeedInSupabase();
+          setSeedAccessVerified(true);
+        } catch (err: unknown) {
+          console.error("YORP sample seed access verification failed:", err);
+        }
+      }
+    } catch (err: unknown) {
       console.error("Failed to load YORP sample dataset status:", err);
-      // Suppress noisy alert if server returns unauthorized or offline
-    } finally {
-      setLoading(false);
+      setStatusState({ kind: "error", error: err });
     }
   };
 
@@ -150,6 +166,8 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
     return null;
   }
 
+  const status = statusState.kind === "success" ? statusState.data : null;
+  const isLoading = statusState.kind === "loading";
   const isFullySeeded = Boolean(
     status &&
       status.total_seeded_organizations === 84 &&
@@ -160,7 +178,8 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
       status.registration_breakdown.duplicate_requirements === 0 &&
       status.budget_breakdown.awaiting_release + status.budget_breakdown.budget_released + status.budget_breakdown.completed === 84
   );
-  const canReconstructDocuments = status?.registration_breakdown?.asset_mapping_complete === true;
+  const canReconstructDocuments =
+    statusState.kind === "success" && statusState.data.registration_breakdown?.asset_mapping_complete === true;
 
   return (
     <section
@@ -188,13 +207,17 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
                 "px-1.5 py-0 font-mono text-[10px] font-semibold uppercase tracking-wide",
                 isFullySeeded
                   ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                  : statusState.kind === "error"
+                  ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
                   : (status?.total_seeded_organizations ?? 0) > 0
                   ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
                   : "border-slate-300 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               )}
             >
-              {loading
+              {isLoading
                 ? "Checking…"
+                : statusState.kind === "error"
+                ? "Status unavailable"
                 : isFullySeeded
                 ? "84 / 84 Complete"
                 : (status?.total_seeded_organizations ?? 0) > 0
@@ -221,6 +244,13 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             Reconstructs and repairs only the designated sample dataset through server-side RPCs. The Renewal Test Organization is explicitly excluded. Seeded test accounts use synthetic identities; never use this reset against live data.
           </div>
         </div>
+
+        {statusState.kind === "error" && (
+          <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-100">
+            <strong className="font-semibold">Status unavailable.</strong>{" "}
+            Unable to retrieve the current dataset status. Refresh to try again.
+          </div>
+        )}
 
         {status && !canReconstructDocuments && (
           <div role="status" className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
@@ -261,10 +291,10 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             variant="outline"
             size="sm"
             onClick={fetchStatus}
-            disabled={loading || actionInProgress !== null}
+            disabled={isLoading || actionInProgress !== null}
             className="h-8 gap-1.5 text-xs"
           >
-            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+            <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
             Refresh
           </Button>
 
@@ -272,7 +302,8 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             type="button"
             size="sm"
             onClick={handleSeedDataset}
-            disabled={actionInProgress !== null || !canReconstructDocuments}
+            disabled={actionInProgress !== null || !canReconstructDocuments || !seedAccessVerified}
+            title={!seedAccessVerified ? "Verifying an authorized Super Admin session for the test environment." : undefined}
             className="h-8 gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium shadow-sm"
           >
             {actionInProgress === "seeding" ? (
@@ -283,13 +314,13 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             {isFullySeeded ? "Reseed / Repair Dataset" : "Seed Dataset"}
           </Button>
 
-          {(status?.total_seeded_organizations ?? 0) > 0 && (
+          {(statusState.kind === "error" || (status?.total_seeded_organizations ?? 0) > 0) && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setShowCleanupConfirm(true)}
-              disabled={actionInProgress !== null || !canReconstructDocuments}
+              disabled={actionInProgress !== null || statusState.kind !== "success" || !canReconstructDocuments}
               className="h-8 gap-1.5 text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-950/40"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -322,14 +353,20 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             <span className="text-[10px] font-normal text-slate-400">Batch: PCYDO-YORP-2024-2026</span>
           </dt>
           <dd className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {status?.total_seeded_organizations ?? 0} <span className="text-xs font-normal text-slate-500">seeded</span>
+            {status ? <>{status.total_seeded_organizations} <span className="text-xs font-normal text-slate-500">seeded</span></> : isLoading ? "Checking status…" : "Unavailable"}
           </dd>
           <dd className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-slate-600 dark:text-slate-300">
-            <span>2024: {status?.year_breakdown?.["2024"] ?? 0}</span>
-            <span>•</span>
-            <span>2025: {status?.year_breakdown?.["2025"] ?? 0}</span>
-            <span>•</span>
-            <span>2026: {status?.year_breakdown?.["2026"] ?? 0}</span>
+            {status ? (
+              <>
+                <span>2024: {status.year_breakdown["2024"]}</span>
+                <span>•</span>
+                <span>2025: {status.year_breakdown["2025"]}</span>
+                <span>•</span>
+                <span>2026: {status.year_breakdown["2026"]}</span>
+              </>
+            ) : (
+              <span>{isLoading ? "Checking status…" : "Status unavailable"}</span>
+            )}
           </dd>
         </div>
 
@@ -337,16 +374,22 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
         <div className="py-4 sm:px-4 sm:py-4">
           <dt className="text-xs font-semibold text-slate-700 dark:text-slate-300">Registration documents</dt>
           <dd className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {status?.registration_breakdown?.organizations_complete ?? 0} / 84 complete
+            {status ? `${status.registration_breakdown?.organizations_complete ?? 0} / 84 complete` : isLoading ? "Checking status…" : "Unavailable"}
           </dd>
           <dd className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-slate-600 dark:text-slate-300">
-            <span>{status?.registration_breakdown?.packets ?? 0} packets</span>
-            <span>•</span>
-            <span>{status?.registration_breakdown?.document_records ?? 0} file records</span>
-            <span>•</span>
-            <span>{status?.registration_breakdown?.missing_requirements ?? 0} missing</span>
-            <span>•</span>
-            <span>{status?.registration_breakdown?.duplicate_requirements ?? 0} duplicate</span>
+            {status?.registration_breakdown ? (
+              <>
+                <span>{status.registration_breakdown.packets} packets</span>
+                <span>•</span>
+                <span>{status.registration_breakdown.document_records} file records</span>
+                <span>•</span>
+                <span>{status.registration_breakdown.missing_requirements} missing</span>
+                <span>•</span>
+                <span>{status.registration_breakdown.duplicate_requirements} duplicate</span>
+              </>
+            ) : (
+              <span>{isLoading ? "Checking status…" : "Status unavailable"}</span>
+            )}
           </dd>
         </div>
 
@@ -357,16 +400,25 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             <span className="text-[10px] font-normal text-slate-400">Sample records</span>
           </dt>
           <dd className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {(status?.budget_breakdown?.awaiting_release ?? 0) +
-              (status?.budget_breakdown?.budget_released ?? 0)}{" "}
-            <span className="text-xs font-normal text-slate-500">requests</span>
+            {status ? (
+              <>
+                {status.budget_breakdown.awaiting_release + status.budget_breakdown.budget_released}{" "}
+                <span className="text-xs font-normal text-slate-500">requests</span>
+              </>
+            ) : isLoading ? "Checking status…" : "Unavailable"}
           </dd>
           <dd className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-slate-600 dark:text-slate-300">
-            <span title="Awaiting Release">⏳ {status?.budget_breakdown?.awaiting_release ?? 0} awaiting</span>
-            <span>•</span>
-            <span title="Budget Released">💸 {status?.budget_breakdown?.budget_released ?? 0} released</span>
-            <span>•</span>
-            <span title="Liquidation reports completed">✅ {status?.budget_breakdown?.liquidated_reports ?? 0} liquidated</span>
+            {status ? (
+              <>
+                <span title="Awaiting Release">⏳ {status.budget_breakdown.awaiting_release} awaiting</span>
+                <span>•</span>
+                <span title="Budget Released">💸 {status.budget_breakdown.budget_released} released</span>
+                <span>•</span>
+                <span title="Liquidation reports completed">✅ {status.budget_breakdown.liquidated_reports} liquidated</span>
+              </>
+            ) : (
+              <span>{isLoading ? "Checking status…" : "Status unavailable"}</span>
+            )}
           </dd>
         </div>
       </dl>

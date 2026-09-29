@@ -7869,27 +7869,59 @@ export const adminGetYorpSampleDatasetStatusInSupabase = async (
     _batch_name: batchName,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   return data as YorpSampleDatasetStatus;
+};
+
+const invokeYorpSeedBridge = async (action: "authorize" | "seed", sessionToken: string) => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+
+  const { data, error } = await supabase.functions.invoke("admin-seed-yorp-sample-dataset", {
+    body: { action },
+    headers: { "x-admin-session-token": sessionToken },
+  });
+
+  if (error) {
+    let message = error.message || "The YORP seed service is unavailable.";
+    const context = (error as { context?: unknown }).context;
+    if (context instanceof Response) {
+      const body = await context.clone().json().catch(() => null) as {
+        error?: unknown;
+        code?: unknown;
+        detail?: unknown;
+      } | null;
+      if (typeof body?.error === "string" && body.error.trim()) {
+        const code = typeof body.code === "string" ? ` [${body.code}]` : "";
+        const detail = typeof body.detail === "string" && body.detail.trim() ? ` ${body.detail}` : "";
+        message = `${body.error}${code}${detail}`;
+      }
+    }
+    throw new Error(message);
+  }
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("The YORP seed service returned an invalid response.");
+  }
+  return data as Record<string, unknown>;
+};
+
+/** Verifies this custom admin session with the server-side YORP seed bridge without seeding. */
+export const adminAuthorizeYorpSampleDatasetSeedInSupabase = async (): Promise<void> => {
+  const adminSession = getAuthenticatedAdminSession();
+  const data = await invokeYorpSeedBridge("authorize", adminSession.sessionToken);
+  if (data.authorized !== true) throw new Error("This Super Admin session is not authorized to seed the YORP sample dataset.");
 };
 
 /**
  * Admin RPC: Execute bulk seeding of authoritative 84 PCYDO YORP sample organizations with verified state,
  * URNs, accreditations, contacts, and realistic budget requests.
  */
-export const adminSeedYorpSampleDatasetInSupabase = async (
-  batchName: string = "PCYDO-YORP-2024-2026"
-): Promise<SeedYorpSampleDatasetResult> => {
+export const adminSeedYorpSampleDatasetInSupabase = async (): Promise<SeedYorpSampleDatasetResult> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
   const adminSession = getAuthenticatedAdminSession();
-
-  const { data, error } = await supabase.rpc("admin_seed_yorp_sample_dataset", {
-    _session_token: adminSession.sessionToken,
-    _batch_name: batchName,
-  });
-
-  if (error) throw new Error(error.message);
-  return data as SeedYorpSampleDatasetResult;
+  const data = await invokeYorpSeedBridge("seed", adminSession.sessionToken);
+  if (data.success !== true) throw new Error("The YORP sample dataset seed did not complete successfully.");
+  return data as unknown as SeedYorpSampleDatasetResult;
 };
 
 /**
