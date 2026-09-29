@@ -31,12 +31,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { PortalPublicProfilePreviewDialog } from "./PortalPublicProfilePreviewDialog";
 import {
   formatAdvocacyLabel,
   getRepresentativeDisplayName,

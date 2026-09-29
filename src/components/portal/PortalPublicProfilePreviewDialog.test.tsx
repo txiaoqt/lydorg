@@ -56,7 +56,7 @@ describe("PortalPublicProfilePreviewDialog", () => {
   it("renders verified institutional details correctly in editorial grid", () => {
     render(<PortalPublicProfilePreviewDialog {...defaultProps} />);
 
-    expect(screen.getByText("Authorized Representative")).toBeDefined();
+    expect(screen.getByText("Authorized Head of Organization")).toBeDefined();
     expect(screen.getByText("Juan Dela Cruz")).toBeDefined();
 
     expect(screen.getByText("Organization Adviser")).toBeDefined();
@@ -65,7 +65,7 @@ describe("PortalPublicProfilePreviewDialog", () => {
     expect(screen.getByText("Unique Registration Number (URN)")).toBeDefined();
     expect(screen.getByText("URN-PASIG-2026-0089")).toBeDefined();
 
-    expect(screen.getByText("Advocacy Focus Areas")).toBeDefined();
+    expect(screen.getByText("Centers of Youth Participation")).toBeDefined();
     expect(screen.getByText("Education")).toBeDefined();
     expect(screen.getByText("Environment")).toBeDefined();
     expect(screen.getByText("Youth Leadership")).toBeDefined();
@@ -203,9 +203,9 @@ describe("PortalPublicProfilePreviewDialog", () => {
       />
     );
 
-    expect(screen.getByText("Unassigned Representative")).toBeDefined();
+    expect(screen.getByText("Unassigned Head of Organization")).toBeDefined();
     expect(screen.getByText("Unassigned Adviser")).toBeDefined();
-    expect(screen.queryByText("Advocacy Focus Areas")).toBeNull();
+    expect(screen.queryByText("Centers of Youth Participation")).toBeNull();
   });
 
   it("gracefully falls back to organization initials when image is missing or fails to load", () => {
