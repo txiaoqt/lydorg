@@ -100,6 +100,7 @@ import {
 } from "@/admin/components/OrganizationBudgetDrawer";
 import { PublicBudgetSnapshotConfigPage } from "@/admin/components/PublicBudgetSnapshotConfigPage";
 import { BudgetMonitoringOverview } from "@/admin/components/BudgetMonitoringOverview";
+import { PasigBudgetMap } from "@/admin/components/PasigBudgetMap";
 import { BudgetMonitoringPageControls } from "@/admin/components/BudgetMonitoringPageControls";
 import { advocacyOptions } from "@/lib/lydo-connect-data";
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
@@ -941,7 +942,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [liquidationPreviewEmptyMessage, setLiquidationPreviewEmptyMessage] = useState("");
   const [liquidationPreviewCanInline, setLiquidationPreviewCanInline] = useState(false);
   const [liquidationPreviewLoading, setLiquidationPreviewLoading] = useState(false);
-  const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "public">("overview");
+  const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "map" | "public">("overview");
   const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(() =>
     createDefaultBudgetMonitoringFilters(Number(getEffectiveSystemSetting("budget.default_fiscal_year") || new Date().getFullYear())),
   );
@@ -2034,6 +2035,24 @@ export default function AdminPortal({ section }: { section: string }) {
     () => filterBudgetRequests(adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId),
     [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId],
   );
+  const pasigBudgetMapRows = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((request) => APPROVED_BUDGET_STATUSES.has(request.status) || RELEASED_BUDGET_STATUSES.has(request.status))
+      .map((request) => {
+        const organization = organizationProfileById.get(request.organizationId) ?? null;
+        const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
+        const releasedAmount = RELEASED_BUDGET_STATUSES.has(request.status) ? Number(request.releasedAmount || 0) : 0;
+        const liquidatedAmount = latestLiquidationByRequestId.get(request.id)?.status === "completed_liquidated" ? releasedAmount : 0;
+        return {
+          district: organization?.district?.trim() || "Unassigned District",
+          barangay: organization?.barangay?.trim() || "Unassigned Barangay",
+          organizationId: request.organizationId,
+          approvedAmount,
+          releasedAmount,
+          liquidatedAmount,
+        };
+      });
+  }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId, organizationProfileById]);
   const filteredBudgetMonitoringEntries = useMemo(() => {
     const query = budgetMonitoringSearch.trim().toLowerCase();
     const visibleRequestIds = new Set(filteredBudgetMonitoringRequests.map(request => request.id));
@@ -11565,18 +11584,18 @@ export default function AdminPortal({ section }: { section: string }) {
                       }
                     />
 
-                    <div className="flex h-[52px] w-fit items-center gap-0 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1 shadow-sm">
-                      {(["overview", "barangay-allocation", "public"] as const).map((tab) => {
+                    <div className="monitoring-tabs flex min-h-[52px] w-fit items-center gap-0 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1 shadow-sm">
+                      {(["overview", "map", "barangay-allocation", "public"] as const).map((tab) => {
                         const isActive = budgetMonitoringTab === tab;
-                        const Icon = tab === "overview" ? PieChartIcon : tab === "barangay-allocation" ? MapPin : Globe;
-                        const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : "Public Preview";
+                        const Icon = tab === "overview" ? PieChartIcon : tab === "barangay-allocation" || tab === "map" ? MapPin : Globe;
+                        const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : tab === "map" ? "Map" : "Public Preview";
                         return (
                           <button
                             key={tab}
                             type="button"
                             onClick={() => setBudgetMonitoringTab(tab)}
                             className={cn(
-                              "flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-sm font-semibold leading-[140%] transition-colors",
+                              "flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-sm font-semibold leading-[140%] transition-colors",
                               isActive ? "bg-admin-surface text-public-text-brand" : "text-segmented-control-inactive-text",
                             )}
                           >
@@ -11619,6 +11638,16 @@ export default function AdminPortal({ section }: { section: string }) {
                       onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
                     />
                   </>
+                ) : budgetMonitoringTab === "map" ? (
+                  <PasigBudgetMap
+                    rows={pasigBudgetMapRows}
+                    organizationRows={budgetMonitoringOrganizationFundingRows}
+                    formatPesoAmount={formatPesoAmount}
+                    selectedDistrict={budgetMonitoringFilters.district}
+                    selectedBarangay={budgetMonitoringFilters.barangay}
+                    fiscalPeriodLabel={budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" ? `FY ${budgetMonitoringFilters.fiscalPeriod.fiscalYear}` : "Custom date range"}
+                    onViewOrganization={setSelectedOrganizationBudgetDetailId}
+                  />
                 ) : budgetMonitoringTab === "barangay-allocation" ? (
                   selectedBudgetAllocation ? (
                     <div className="space-y-4">
