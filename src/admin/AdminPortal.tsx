@@ -65,7 +65,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
-import { isLiquidationOverdue, statusLabelMap, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation } from "@/lib/lydo-connect-data";
+import { isLiquidationOverdue, statusLabelMap, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation, getRepresentativeDisplayName, getAdviserDisplayName } from "@/lib/lydo-connect-data";
 import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining, isAwaitingResubmission, hasGenuineResubmission } from "@/lib/revision-deadline";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
@@ -84,6 +84,7 @@ import { CityActivityAnnouncementDialog } from "@/admin/components/CityActivityA
 import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
 import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
+import { RenewalTestEnvironmentPanel } from "@/admin/components/RenewalTestEnvironmentPanel";
 import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
 import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
 import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
@@ -909,7 +910,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const budgetDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isBudgetDecisionConfirmOpen, setIsBudgetDecisionConfirmOpen] = useState(false);
   const [budgetReviewSubmitting, setBudgetReviewSubmitting] = useState(false);
-  const [budgetLifecycleStage, setBudgetLifecycleStage] = useState<BudgetRequest["status"]>("approved_for_ftf_green");
+  const [budgetLifecycleStage, setBudgetLifecycleStage] = useState<BudgetRequest["status"]>("awaiting_release");
   const [budgetLifecycleSubmitting, setBudgetLifecycleSubmitting] = useState(false);
   const [liquidationInfoCollapsed, setLiquidationInfoCollapsed] = useState(true);
   const [liquidationActivityVisibleCount, setLiquidationActivityVisibleCount] = useState(4);
@@ -7578,8 +7579,8 @@ export default function AdminPortal({ section }: { section: string }) {
                       <RegistrationContactBox
                         icon={UserRound}
                         label="HEAD OF ORGANIZATION"
-                        title={selectedOrg.representativeName || "N/A"}
-                        description={`Adviser: ${selectedOrg.adviserName || "N/A"}`}
+                        title={getRepresentativeDisplayName(selectedOrg, "N/A")}
+                        description={`Adviser: ${getAdviserDisplayName(selectedOrg, "N/A")}`}
                       />
                       <RegistrationContactBox
                         icon={Mail}
@@ -9152,6 +9153,10 @@ export default function AdminPortal({ section }: { section: string }) {
               />
             </div>
 
+            {(import.meta.env.DEV || import.meta.env.MODE !== "production") && (
+              <RenewalTestEnvironmentPanel />
+            )}
+
             <RenewalsTable
               renewals={filteredRenewals}
               searchValue={renewalSearch}
@@ -9668,7 +9673,7 @@ export default function AdminPortal({ section }: { section: string }) {
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
                           <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Head of Organization</span>
                           <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
-                            {selectedBudgetOrganization?.representativeName || "—"}
+                            {selectedBudgetOrganization ? getRepresentativeDisplayName(selectedBudgetOrganization, "—") : "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">

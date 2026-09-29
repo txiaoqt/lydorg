@@ -105,8 +105,23 @@ type OrganizationProfileRow = {
   major_classification: string | null;
   sub_classification: string | null;
   advocacies: string[] | null;
+  representative_first_name?: string | null;
+  representative_middle_name?: string | null;
+  representative_last_name?: string | null;
+  representative_suffix?: string | null;
+  adviser_first_name?: string | null;
+  adviser_middle_name?: string | null;
+  adviser_last_name?: string | null;
+  adviser_suffix?: string | null;
   adviser_name: string | null;
   representative_name: string | null;
+  address_unit_building?: string | null;
+  address_street?: string | null;
+  address_subdivision?: string | null;
+  address_barangay?: string | null;
+  address_city?: string | null;
+  address_province?: string | null;
+  address_zip_code?: string | null;
   address: string | null;
   facebook_page_url: string | null;
   profile_image_url?: string | null;
@@ -121,6 +136,7 @@ type OrganizationProfileRow = {
   current_accreditation_id?: string | null;
   accreditation_start_date?: string | null;
   accreditation_expires_at?: string | null;
+  is_renewal_test_account?: boolean | null;
   created_at: string;
   updated_at: string;
 };
@@ -640,8 +656,23 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   majorClassification: (row.major_classification ?? "") as OrganizationProfile["majorClassification"],
   subClassification: (row.sub_classification ?? "") as OrganizationProfile["subClassification"],
   advocacies: (row.advocacies ?? []) as OrganizationProfile["advocacies"],
+  representativeFirstName: row.representative_first_name ?? "",
+  representativeMiddleName: row.representative_middle_name ?? "",
+  representativeLastName: row.representative_last_name ?? "",
+  representativeSuffix: row.representative_suffix ?? "",
+  adviserFirstName: row.adviser_first_name ?? "",
+  adviserMiddleName: row.adviser_middle_name ?? "",
+  adviserLastName: row.adviser_last_name ?? "",
+  adviserSuffix: row.adviser_suffix ?? "",
   adviserName: row.adviser_name ?? "",
   representativeName: row.representative_name ?? "",
+  addressUnitBuilding: row.address_unit_building ?? "",
+  addressStreet: row.address_street ?? "",
+  addressSubdivision: row.address_subdivision ?? "",
+  addressBarangay: row.address_barangay ?? row.barangay ?? "",
+  addressCity: row.address_city ?? "Pasig City",
+  addressProvince: row.address_province ?? "Metro Manila",
+  addressZipCode: row.address_zip_code ?? "",
   address: row.address ?? "",
   facebookPageUrl: row.facebook_page_url ?? "",
   profileImageUrl: row.profile_image_url ?? "",
@@ -656,6 +687,7 @@ const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfil
   currentAccreditationId: row.current_accreditation_id ?? null,
   accreditationStartDate: row.accreditation_start_date ?? null,
   accreditationExpiresAt: row.accreditation_expires_at ?? null,
+  isRenewalTestAccount: Boolean(row.is_renewal_test_account),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -2034,6 +2066,21 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     major_classification: profile.majorClassification || null,
     sub_classification: profile.subClassification || null,
     advocacies: profile.advocacies,
+    representative_first_name: profile.representativeFirstName?.trim() || null,
+    representative_middle_name: profile.representativeMiddleName?.trim() || null,
+    representative_last_name: profile.representativeLastName?.trim() || null,
+    representative_suffix: profile.representativeSuffix?.trim() || null,
+    adviser_first_name: profile.adviserFirstName?.trim() || null,
+    adviser_middle_name: profile.adviserMiddleName?.trim() || null,
+    adviser_last_name: profile.adviserLastName?.trim() || null,
+    adviser_suffix: profile.adviserSuffix?.trim() || null,
+    address_unit_building: profile.addressUnitBuilding?.trim() || null,
+    address_street: profile.addressStreet?.trim() || null,
+    address_subdivision: profile.addressSubdivision?.trim() || null,
+    address_barangay: profile.addressBarangay?.trim() || profile.barangay?.trim() || null,
+    address_city: profile.addressCity?.trim() || "Pasig City",
+    address_province: profile.addressProvince?.trim() || "Metro Manila",
+    address_zip_code: profile.addressZipCode?.trim() || null,
     adviser_name: profile.adviserName.trim() || null,
     representative_name: profile.representativeName.trim() || null,
     address: profile.address.trim() || null,
@@ -2050,7 +2097,7 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
   const { data, error } = await supabase
     .from("organization_profiles")
     .upsert(payload, { onConflict: "user_id" })
-    .select("id,reference_id,user_id,organization_name,organization_email,contact_number,district,barangay,is_existing_organization,organization_identifier_number,registration_type,urn,urn_normalized,urn_review_status,urn_admin_remarks,urn_reviewed_by,urn_reviewed_at,verification_method,major_classification,sub_classification,advocacies,adviser_name,representative_name,address,facebook_page_url,profile_image_url,directory_visibility,directory_show_representative,directory_show_adviser,profile_status,verified_at,internal_notes,yorp_registered_year,yorp_renewed_year,created_at,updated_at")
+    .select("*")
     .single();
 
   if (error || !data) {
@@ -2077,6 +2124,8 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
 
   return mapOrganizationProfile(data as OrganizationProfileRow);
 };
+
+export const saveOrganizationProfileInSupabase = upsertOrganizationProfileInSupabase;
 
 export const updateOrganizationProfileReviewInSupabase = async (
   organizationProfileId: string,
@@ -3099,7 +3148,7 @@ export const updateBudgetRequestInSupabase = async (
 
     const mappedStatus =
       patch.status === "approved" || patch.status === "awaiting_release"
-        ? "approved_for_ftf_green"
+        ? "awaiting_release"
         : patch.status === "rejected"
         ? "rejected_red"
         : patch.status ?? null;
@@ -4244,45 +4293,16 @@ export const updateTemplateScopeInSupabase = async (
 ) => {
   if (!supabase) return;
   const resolvedId = await resolveTemplateDatabaseId(databaseId, name);
-  const serviceKey =
-    (typeof process !== "undefined" ? process.env?.SUPABASE_SERVICE_ROLE_KEY : "") ||
-    (typeof import.meta !== "undefined" && import.meta.env
-      ? (import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY as string | undefined) ||
-        (import.meta.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined)
-      : "") ||
-    "";
-
-  if (serviceKey && supabaseUrl) {
-    try {
-      const res = await fetch(`${supabaseUrl}/rest/v1/required_document_types?id=eq.${resolvedId}`, {
-        method: "PATCH",
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify({ scope }),
-      });
-      if (!res.ok) {
-        const err = await res.text();
-        console.warn("Service role update for template scope returned:", err);
-      }
-    } catch (err) {
-      console.warn("Failed to update template scope via service role:", err);
+  try {
+    const { error } = await supabase
+      .from("required_document_types")
+      .update({ scope })
+      .eq("id", resolvedId);
+    if (error) {
+      console.warn("Direct scope update returned:", error.message);
     }
-  } else {
-    try {
-      const { error } = await supabase
-        .from("required_document_types")
-        .update({ scope })
-        .eq("id", resolvedId);
-      if (error) {
-        console.warn("Direct scope update returned:", error.message);
-      }
-    } catch (err) {
-      console.warn("Failed direct scope update:", err);
-    }
+  } catch (err) {
+    console.warn("Failed direct scope update:", err);
   }
 };
 
@@ -7486,6 +7506,207 @@ export const dispatchOrgTransactionalEmailInSupabase = async (
   }
 };
 
+// ============================================================================
+// RENEWAL TEST ENVIRONMENT CLIENT HELPERS (DEV/TEST ONLY)
+// ============================================================================
 
+export type RenewalTestAccountDetails = {
+  isNew: boolean;
+  credentials: {
+    email: string;
+    temporaryPassword?: string;
+  };
+  organization: {
+    id: string;
+    name: string;
+    email: string;
+    userId: string;
+    barangay: string;
+    district: string;
+    contactNumber: string;
+    profileStatus: string;
+    urn: string;
+    isRenewalTestAccount: boolean;
+    representativeName?: string;
+    adviserName?: string;
+    address?: string;
+    majorClassification?: string;
+    subClassification?: string;
+    advocacies?: string[];
+    facebookPageUrl?: string;
+  };
+  accreditation: {
+    id: string;
+    termNumber: number;
+    startDate: string;
+    endDate: string;
+    certificateUrn: string;
+    status: string;
+    derivedStatus: string;
+  } | null;
+  eligibility: {
+    canDraft: boolean;
+    canSubmit: boolean;
+    windowStatus: "open" | "too_early" | "expired" | "lapsed";
+    daysRemaining: number | null;
+    daysUntilOpen?: number | null;
+    daysPastExpiry?: number | null;
+    expiresAt?: string | null;
+  };
+  activeRenewal: {
+    id: string;
+    cycleNumber: number;
+    status: string;
+    submittedAt: string | null;
+    reviewedAt: string | null;
+  } | null;
+};
 
+export type PrepareRenewalScenarioResult = {
+  success: boolean;
+  organizationId: string;
+  accreditationId: string;
+  startDate: string;
+  endDate: string;
+  derivedStatus: string;
+  daysRemaining: number | null;
+  eligibility: {
+    canDraft: boolean;
+    canSubmit: boolean;
+    windowStatus: string;
+    daysRemaining?: number | null;
+    daysUntilOpen?: number | null;
+    daysPastExpiry?: number | null;
+  };
+};
 
+/**
+ * Admin RPC: Get or create the dedicated Renewal Test Account (idempotent, dev/test only).
+ */
+export const adminGetOrCreateRenewalTestAccountInSupabase = async (): Promise<RenewalTestAccountDetails> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_get_or_create_renewal_test_account", {
+    p_session_token: adminSession.sessionToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as RenewalTestAccountDetails;
+};
+
+export type EnsureRenewalTestAccountProfileResult = {
+  success: boolean;
+  organizationId: string;
+  organizationName: string;
+  representativeName: string;
+  adviserName: string;
+  address: string;
+  majorClassification: string;
+  subClassification: string;
+  advocacies: string[];
+  facebookPageUrl: string;
+  district: string;
+  barangay: string;
+  urn: string;
+  profileStatus: string;
+};
+
+/**
+ * Admin RPC: Ensure the dedicated Renewal Test Account has complete, authoritative profile data.
+ */
+export const adminEnsureRenewalTestAccountProfileInSupabase = async (): Promise<EnsureRenewalTestAccountProfileResult> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_ensure_renewal_test_account_profile", {
+    p_session_token: adminSession.sessionToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as EnsureRenewalTestAccountProfileResult;
+};
+
+/**
+ * Admin RPC: Prepare the test organization accreditation inside a test renewal window.
+ */
+export const adminPrepareRenewalTestScenarioInSupabase = async (params: {
+  expirationDaysAhead?: number;
+  customExpirationDate?: string;
+}): Promise<PrepareRenewalScenarioResult> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_prepare_renewal_test_scenario", {
+    p_session_token: adminSession.sessionToken,
+    p_expiration_days_ahead: params.expirationDaysAhead ?? null,
+    p_custom_expiration_date: params.customExpirationDate ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as PrepareRenewalScenarioResult;
+};
+
+/**
+ * Admin RPC: Restore the test organization's accreditation to standard 3-year term.
+ */
+export const adminRestoreRenewalTestScenarioInSupabase = async (): Promise<{
+  success: boolean;
+  organizationId: string;
+  endDate: string;
+  derivedStatus: string;
+}> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_restore_renewal_test_scenario", {
+    p_session_token: adminSession.sessionToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as {
+    success: boolean;
+    organizationId: string;
+    endDate: string;
+    derivedStatus: string;
+  };
+};
+
+/**
+ * Admin RPC: Reset the test organization scenario to a clean Cycle 2 ready state for repeated testing.
+ */
+export const adminResetRenewalTestScenarioInSupabase = async (): Promise<{
+  success: boolean;
+  organizationId: string;
+  termNumber: number;
+  endDate: string;
+  derivedStatus: string;
+  eligibility: {
+    canDraft: boolean;
+    canSubmit: boolean;
+    windowStatus: string;
+    daysRemaining: number | null;
+  };
+}> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+
+  const { data, error } = await supabase.rpc("admin_reset_renewal_test_scenario", {
+    p_session_token: adminSession.sessionToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as {
+    success: boolean;
+    organizationId: string;
+    termNumber: number;
+    endDate: string;
+    derivedStatus: string;
+    eligibility: {
+      canDraft: boolean;
+      canSubmit: boolean;
+      windowStatus: string;
+      daysRemaining: number | null;
+    };
+  };
+};

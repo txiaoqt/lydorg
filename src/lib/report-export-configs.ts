@@ -1,4 +1,9 @@
-import type { OrganizationProfile } from "@/lib/lydo-connect-data";
+import {
+  type OrganizationProfile,
+  getOrganizationAddressDisplay,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
+} from "@/lib/lydo-connect-data";
 import { addYears } from "date-fns";
 import {
   formatCurrencyCsv,
@@ -148,12 +153,12 @@ export const mapOrganizationProfileToYorpExportRow = (
         : organization.registrationType === "existing"
         ? "Existing Organization"
         : organization.registrationType || "",
-    address: (organization.address || "").trim(),
+    address: getOrganizationAddressDisplay(organization),
     district: (organization.district || resolveDistrictFromBarangay(organization.barangay) || "").trim(),
     barangay: (organization.barangay || "").trim(),
     urn: (organization.urn || organization.yorpUniqueRegistrationNumber || "").trim(),
-    organizationHead: (organization.representativeName || "").trim(),
-    adviserName: (organization.adviserName || "").trim(),
+    organizationHead: getRepresentativeDisplayName(organization),
+    adviserName: getAdviserDisplayName(organization),
     contactNumber: (organization.contactNumber || organization.officialContactNumber || "").trim(),
     email: (organization.organizationEmail || organization.officialEmailAddress || "").trim(),
     facebookPageUrl: (organization.facebookPageUrl || "").trim(),

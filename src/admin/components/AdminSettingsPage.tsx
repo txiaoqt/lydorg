@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminTheme } from "@/admin/context/AdminThemeContext";
+import { RenewalTestEnvironmentPanel } from "@/admin/components/RenewalTestEnvironmentPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -600,6 +601,12 @@ export const AdminSettingsPage: React.FC = () => {
                     </div>
                   </SettingSection>
                 </div>
+
+                {(import.meta.env.DEV || import.meta.env.MODE !== "production") && (
+                  <div className="pt-2">
+                    <RenewalTestEnvironmentPanel onNavigateToRenewals={() => navigate("/admin/renewals")} />
+                  </div>
+                )}
               </TabsContent>
 
               {/* ───────────────────────────────────────────────────────────────── */}

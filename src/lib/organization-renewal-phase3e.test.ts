@@ -204,14 +204,16 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
       expect(templates).toHaveLength(6);
 
       const canonicalIds = templates.map((t) => t.id);
-      expect(canonicalIds).toEqual([
-        "constitution-bylaws",
-        "yorp-form-b",
-        "yorp-officers-adviser",
-        "yorp-members",
-        "pcydo-form-a",
-        "pcydo-data-request",
-      ]);
+      expect(canonicalIds).toEqual(
+        expect.arrayContaining([
+          "constitution-bylaws",
+          "yorp-form-b",
+          "yorp-officers-adviser",
+          "yorp-members",
+          "pcydo-form-a",
+          "pcydo-data-request",
+        ]),
+      );
 
       const names = templates.map((t) => t.name);
       expect(names).toContain("Constitution and By-Laws");

@@ -32,6 +32,9 @@ import {
   YPOP_SCORE_THRESHOLD,
   type SubmissionFile,
   type YPOPCityActivityCategory,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
+  getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
@@ -641,12 +644,12 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                       <RepresentativeCard
                         icon={User}
                         title="Head of Organization"
-                        name={org.representativeName}
+                        name={getRepresentativeDisplayName(org)}
                       />
                       <RepresentativeCard
                         icon={User}
                         title="Adviser"
-                        name={org.adviserName}
+                        name={getAdviserDisplayName(org)}
                       />
                     </div>
 
@@ -656,7 +659,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                           <DataField label="District" value={org.district || "—"} />
                           <DataField label="Barangay" value={org.barangay || "—"} />
                         </div>
-                        <DataField label="Full Address" value={org.address || "Not provided"} />
+                        <DataField label="Full Address" value={getOrganizationAddressDisplay(org) || "Not provided"} />
                       </div>
                     </SectionCard>
 

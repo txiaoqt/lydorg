@@ -932,6 +932,23 @@ export type YorpQuarterlyReport = {
   metadata: YorpQuarterlyReportMetadata;
 };
 
+export type StructuredPersonName = {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  suffix?: string;
+};
+
+export type StructuredAddress = {
+  unitBuilding?: string;
+  street: string;
+  subdivision?: string;
+  barangay: string;
+  city: string;
+  province: string;
+  zipCode?: string;
+};
+
 export type OrganizationProfile = {
   id: string;
   referenceId: string;
@@ -954,8 +971,27 @@ export type OrganizationProfile = {
   majorClassification: MajorClassification | "";
   subClassification: SubClassification | "";
   advocacies: Advocacy[];
+  // Structured Person Names
+  representativeFirstName?: string;
+  representativeMiddleName?: string;
+  representativeLastName?: string;
+  representativeSuffix?: string;
+  adviserFirstName?: string;
+  adviserMiddleName?: string;
+  adviserLastName?: string;
+  adviserSuffix?: string;
+  // Legacy person name compatibility fields (auto-synchronized)
   adviserName: string;
   representativeName: string;
+  // Structured Address
+  addressUnitBuilding?: string;
+  addressStreet?: string;
+  addressSubdivision?: string;
+  addressBarangay?: string;
+  addressCity?: string;
+  addressProvince?: string;
+  addressZipCode?: string;
+  // Legacy address compatibility field (auto-synchronized)
   address: string;
   facebookPageUrl: string;
   profileImageUrl?: string;
@@ -971,9 +1007,157 @@ export type OrganizationProfile = {
   accreditationStartDate?: string | null;
   accreditationExpiresAt?: string | null;
   accreditationStatus?: AccreditationStatus | null;
+  isRenewalTestAccount?: boolean;
   createdAt: string;
   updatedAt: string;
 };
+
+/**
+ * Canonical Person-Name Display Formatter
+ * Input: { firstName, middleName?, lastName, suffix? } | string | null
+ * Produces clean display names:
+ * - "Christopher Natada"
+ * - "Christopher Miguel Natada"
+ * - "Christopher Natada Jr."
+ * - "Christopher Miguel Natada Jr."
+ */
+export function formatPersonName(
+  person?:
+    | {
+        firstName?: string | null;
+        middleName?: string | null;
+        lastName?: string | null;
+        suffix?: string | null;
+      }
+    | string
+    | null,
+  fallback = ""
+): string {
+  if (!person) return fallback;
+  if (typeof person === "string") {
+    const trimmed = person.trim();
+    return trimmed || fallback;
+  }
+  const parts = [
+    person.firstName?.trim(),
+    person.middleName?.trim(),
+    person.lastName?.trim(),
+    person.suffix?.trim(),
+  ].filter(Boolean) as string[];
+
+  if (parts.length === 0) return fallback;
+  return parts.join(" ");
+}
+
+/**
+ * Canonical Address Formatter
+ * Formats structured or legacy address into a single-line or multi-line address.
+ * Omits missing components and prevents "undefined", "null", "N/A", or duplicate commas.
+ */
+export function formatAddress(
+  address?:
+    | {
+        unitBuilding?: string | null;
+        street?: string | null;
+        subdivision?: string | null;
+        barangay?: string | null;
+        city?: string | null;
+        province?: string | null;
+        zipCode?: string | null;
+      }
+    | string
+    | null,
+  fallback = "",
+  mode: "single-line" | "multi-line" = "single-line"
+): string {
+  if (!address) return fallback;
+  if (typeof address === "string") {
+    const trimmed = address.trim();
+    return trimmed && trimmed.toUpperCase() !== "N/A" ? trimmed : fallback;
+  }
+
+  const parts: string[] = [];
+  const add = (val?: string | null) => {
+    if (!val) return;
+    const clean = val.trim();
+    if (clean && clean.toUpperCase() !== "N/A" && clean.toLowerCase() !== "null" && clean.toLowerCase() !== "undefined") {
+      parts.push(clean);
+    }
+  };
+
+  add(address.unitBuilding);
+  add(address.street);
+  add(address.subdivision);
+  add(address.barangay);
+  add(address.city);
+  add(address.province);
+  add(address.zipCode);
+
+  if (parts.length === 0) return fallback;
+  return mode === "multi-line" ? parts.join("\n") : parts.join(", ");
+}
+
+export function getRepresentativeDisplayName(
+  profile?: Partial<OrganizationProfile> | null,
+  fallback = "Unassigned Head of Organization"
+): string {
+  if (!profile) return fallback;
+  if (profile.representativeFirstName?.trim() || profile.representativeLastName?.trim()) {
+    return formatPersonName(
+      {
+        firstName: profile.representativeFirstName,
+        middleName: profile.representativeMiddleName,
+        lastName: profile.representativeLastName,
+        suffix: profile.representativeSuffix,
+      },
+      fallback
+    );
+  }
+  return formatPersonName(profile.representativeName, fallback);
+}
+
+export function getAdviserDisplayName(
+  profile?: Partial<OrganizationProfile> | null,
+  fallback = "Unassigned Adviser"
+): string {
+  if (!profile) return fallback;
+  if (profile.adviserFirstName?.trim() || profile.adviserLastName?.trim()) {
+    return formatPersonName(
+      {
+        firstName: profile.adviserFirstName,
+        middleName: profile.adviserMiddleName,
+        lastName: profile.adviserLastName,
+        suffix: profile.adviserSuffix,
+      },
+      fallback
+    );
+  }
+  return formatPersonName(profile.adviserName, fallback);
+}
+
+export function getOrganizationAddressDisplay(
+  profile?: Partial<OrganizationProfile> | null,
+  fallback = "Address not provided",
+  mode: "single-line" | "multi-line" = "single-line"
+): string {
+  if (!profile) return fallback;
+  if (profile.addressStreet?.trim() || profile.addressBarangay?.trim() || profile.addressUnitBuilding?.trim()) {
+    return formatAddress(
+      {
+        unitBuilding: profile.addressUnitBuilding,
+        street: profile.addressStreet,
+        subdivision: profile.addressSubdivision,
+        barangay: profile.addressBarangay || profile.barangay,
+        city: profile.addressCity || "Pasig City",
+        province: profile.addressProvince || "Metro Manila",
+        zipCode: profile.addressZipCode,
+      },
+      fallback,
+      mode
+    );
+  }
+  return formatAddress(profile.address, fallback, mode);
+}
 
 export type SubmissionFile = {
   id: string;

@@ -14,6 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
 import {
+  formatAdvocacyLabel,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
+} from "@/lib/lydo-connect-data";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -200,7 +205,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                     <dd className="font-bold text-foreground text-sm flex items-center gap-1.5 pt-0.5">
                       <User className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
                       <span className="truncate">
-                        {profile?.representativeName || "Unassigned Head of Organization"}
+                        {getRepresentativeDisplayName(profile) || "Unassigned Head of Organization"}
                       </span>
                     </dd>
                   </div>
@@ -212,7 +217,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                     <dd className="font-bold text-foreground text-sm flex items-center gap-1.5 pt-0.5">
                       <User className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
                       <span className="truncate">
-                        {profile?.adviserName || "Unassigned Adviser"}
+                        {getAdviserDisplayName(profile) || "Unassigned Adviser"}
                       </span>
                     </dd>
                   </div>
@@ -268,7 +273,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                             key={adv}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-muted/40 text-[11px] font-medium text-foreground/85 border border-border/50 hover:bg-muted/70 transition-colors"
                           >
-                            {adv}
+                            {formatAdvocacyLabel(adv) || adv}
                           </span>
                         ))}
                       </div>

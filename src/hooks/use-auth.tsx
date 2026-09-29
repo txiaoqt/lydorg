@@ -35,6 +35,8 @@ export type AuthUser = {
   id: string;
   email: string;
   displayName: string;
+  givenName?: string;
+  familyName?: string;
   roleCode?: string;
   permissionCodes?: string[];
   isEmailVerified?: boolean;
@@ -294,6 +296,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           (profileResp.data?.display_name as string | undefined)?.trim() ||
           (profileResp.data?.full_name as string | undefined)?.trim() ||
           defaultDisplayName,
+        givenName:
+          (authUser.user_metadata?.given_name as string | undefined)?.trim() ||
+          (authUser.user_metadata?.first_name as string | undefined)?.trim() ||
+          "",
+        familyName:
+          (authUser.user_metadata?.family_name as string | undefined)?.trim() ||
+          (authUser.user_metadata?.last_name as string | undefined)?.trim() ||
+          "",
         isEmailVerified: isEmailConfirmed,
         profileHints: {
           contactNumber:

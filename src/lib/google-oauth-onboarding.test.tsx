@@ -878,9 +878,11 @@ describe("Google OAuth Onboarding & Auth Callback Flow", () => {
     // Fill in required fields
     fireEvent.change(screen.getByPlaceholderText(/e.g. Pasig Youth Leadership Council/i), { target: { value: "Pasig Innovators" } });
     fireEvent.change(screen.getByPlaceholderText("09171234567"), { target: { value: "09171234567" } });
-    fireEvent.change(screen.getByPlaceholderText(/Room\/Unit, Street Address/i), { target: { value: "Caruncho Ave" } });
-    fireEvent.change(screen.getByPlaceholderText(/Full name of head of organization/i), { target: { value: "Angelica Pasig" } });
-    fireEvent.change(screen.getByPlaceholderText(/Full name of organization adviser/i), { target: { value: "Prof Cruz" } });
+    fireEvent.change(screen.getByPlaceholderText(/101 Test Center Way/i), { target: { value: "Caruncho Ave" } });
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Juan/i), { target: { value: "Angelica" } });
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Ibarra/i), { target: { value: "Pasig" } });
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Maria/i), { target: { value: "Prof" } });
+    fireEvent.change(screen.getByPlaceholderText(/e.g. delos Santos/i), { target: { value: "Cruz" } });
 
     // Verify official email field is read-only and displays Google email
     const emailInput = screen.getByLabelText(/Official Email Address/i) as HTMLInputElement;

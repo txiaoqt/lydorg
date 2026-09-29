@@ -138,12 +138,16 @@ import {
   resolveRegistrationDocumentAccess,
 } from "@/lib/document-file-access";
 import {
+  createBlankOrganizationProfile,
+  createOrganizationProfileDraft,
   getMissingEditableProfileRequirements,
   getOrganizationProfileCompletionCount,
   getOrganizationProfileCompletionTarget,
   isOrganizationProfileComplete,
   isValidFacebookUrl,
   isValidPersonName,
+  isValidPersonNamePart,
+  isValidSuffix,
   organizationEmailPattern,
   philippineContactNumberPattern,
 } from "@/lib/organization-profile-domain";
@@ -192,6 +196,11 @@ import {
   deriveTemplateCategory,
   resolveCleanTemplateDownloadFileName,
   type OrganizationRenewalRecord,
+  formatPersonName,
+  formatAddress,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
+  getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import {
   loadLydoConnectSupabaseState,
@@ -431,111 +440,6 @@ const WebsiteWorkflowNotice = ({
     </CardContent>
   </Card>
 );
-
-const createBlankOrganizationProfile = (
-  userId: string,
-  defaults?: Partial<
-    Pick<
-      OrganizationProfile,
-      | "organizationName"
-      | "organizationEmail"
-      | "contactNumber"
-      | "district"
-      | "barangay"
-      | "isExistingOrganization"
-      | "organizationIdentifierNumber"
-    >
-  >,
-): OrganizationProfile => {
-  const isExisting = Boolean(defaults?.isExistingOrganization);
-  const existingIdentifier = isExisting ? (defaults?.organizationIdentifierNumber ?? "") : "";
-
-  return {
-    id: `draft-${userId || "organization"}`,
-    userId,
-    organizationName: defaults?.organizationName ?? "",
-    organizationEmail: defaults?.organizationEmail ?? "",
-    contactNumber: defaults?.contactNumber ?? "",
-    district: defaults?.district ?? "",
-    barangay: defaults?.barangay ?? "",
-    isExistingOrganization: isExisting,
-    organizationIdentifierNumber: existingIdentifier,
-    registrationType: isExisting ? "existing_urn" : "new_organization",
-    urn: existingIdentifier,
-    urnNormalized: existingIdentifier ? existingIdentifier.trim().toUpperCase() : "",
-    urnReviewStatus: isExisting ? "pending" : "not_applicable",
-    urnAdminRemarks: "",
-    urnReviewedBy: "",
-    urnReviewedAt: "",
-    verificationMethod: null,
-    majorClassification: "",
-    subClassification: "",
-    advocacies: [],
-    adviserName: "",
-    representativeName: "",
-    address: "",
-    facebookPageUrl: "",
-    profileStatus: "incomplete",
-    verifiedAt: "",
-    internalNotes: "",
-    yorpRegisteredYear: null,
-    yorpRenewedYear: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-};
-
-const createOrganizationProfileDraft = (
-  userId: string,
-  profile: OrganizationProfile | null,
-  defaults?: Partial<
-    Pick<
-      OrganizationProfile,
-      | "organizationName"
-      | "organizationEmail"
-      | "contactNumber"
-      | "district"
-      | "barangay"
-      | "isExistingOrganization"
-      | "organizationIdentifierNumber"
-    >
-  >,
-): OrganizationProfile => {
-  const blank = createBlankOrganizationProfile(userId, defaults);
-  if (!profile) return blank;
-
-  const isExisting = Boolean(profile.isExistingOrganization);
-  const identifier = isExisting
-    ? normalizeText(profile.organizationIdentifierNumber) || blank.organizationIdentifierNumber
-    : profile.profileStatus === "verified"
-      ? normalizeText(profile.organizationIdentifierNumber)
-      : "";
-
-  return {
-    ...blank,
-    ...profile,
-    organizationName: normalizeText(profile.organizationName) || blank.organizationName,
-    organizationEmail: normalizeText(profile.organizationEmail) || blank.organizationEmail,
-    contactNumber: normalizeText(profile.contactNumber) || blank.contactNumber,
-    district: normalizeText(profile.district) || blank.district,
-    barangay: normalizeText(profile.barangay) || blank.barangay,
-    isExistingOrganization: isExisting,
-    organizationIdentifierNumber: identifier,
-    registrationType: isExisting ? "existing_urn" : "new_organization",
-    urn: isExisting ? identifier : profile.profileStatus === "verified" ? profile.urn : "",
-    urnNormalized: isExisting && identifier ? identifier.trim().toUpperCase() : profile.profileStatus === "verified" ? (profile.urnNormalized || "") : "",
-    urnReviewStatus: isExisting ? profile.urnReviewStatus || "pending" : "not_applicable",
-    majorClassification: normalizeText(profile.majorClassification) as OrganizationProfile["majorClassification"],
-    subClassification: normalizeText(profile.subClassification) as OrganizationProfile["subClassification"],
-    adviserName: normalizeText(profile.adviserName),
-    representativeName: normalizeText(profile.representativeName),
-    address: normalizeText(profile.address),
-    facebookPageUrl: normalizeText(profile.facebookPageUrl),
-    verifiedAt: normalizeText(profile.verifiedAt),
-    internalNotes: normalizeText(profile.internalNotes),
-    advocacies: Array.isArray(profile.advocacies) ? [...profile.advocacies] : [],
-  };
-};
 
 const createBlankBudgetRequest = (
   organizationId: string,
@@ -2347,6 +2251,48 @@ export default function UserPortal({ section }: { section: string }) {
       ? (currentProfile?.verifiedAt || profileDraft.verifiedAt || new Date().toISOString())
       : "";
 
+    const repFirstName = profileDraft.representativeFirstName?.trim() || "";
+    const repMiddleName = profileDraft.representativeMiddleName?.trim() || "";
+    const repLastName = profileDraft.representativeLastName?.trim() || "";
+    const repSuffix = profileDraft.representativeSuffix?.trim() || "";
+
+    const advFirstName = profileDraft.adviserFirstName?.trim() || "";
+    const advMiddleName = profileDraft.adviserMiddleName?.trim() || "";
+    const advLastName = profileDraft.adviserLastName?.trim() || "";
+    const advSuffix = profileDraft.adviserSuffix?.trim() || "";
+
+    const addrUnitBuilding = profileDraft.addressUnitBuilding?.trim() || "";
+    const addrStreet = profileDraft.addressStreet?.trim() || "";
+    const addrSubdivision = profileDraft.addressSubdivision?.trim() || "";
+    const addrBarangay = profileDraft.addressBarangay?.trim() || profileDraft.barangay?.trim() || "";
+    const addrCity = profileDraft.addressCity?.trim() || "Pasig City";
+    const addrProvince = profileDraft.addressProvince?.trim() || "Metro Manila";
+    const addrZipCode = profileDraft.addressZipCode?.trim() || "";
+
+    const computedRepName = formatPersonName({
+      firstName: repFirstName,
+      middleName: repMiddleName,
+      lastName: repLastName,
+      suffix: repSuffix,
+    }) || profileDraft.representativeName?.trim() || "";
+
+    const computedAdviserName = formatPersonName({
+      firstName: advFirstName,
+      middleName: advMiddleName,
+      lastName: advLastName,
+      suffix: advSuffix,
+    }) || profileDraft.adviserName?.trim() || "";
+
+    const computedAddress = formatAddress({
+      unitBuilding: addrUnitBuilding,
+      street: addrStreet,
+      subdivision: addrSubdivision,
+      barangay: addrBarangay,
+      city: addrCity,
+      province: addrProvince,
+      zipCode: addrZipCode,
+    }) || profileDraft.address?.trim() || "";
+
     const trimmedProfile: OrganizationProfile = {
       ...profileDraft,
       userId: user.id,
@@ -2371,9 +2317,24 @@ export default function UserPortal({ section }: { section: string }) {
       majorClassification: profileDraft.majorClassification,
       subClassification: profileDraft.subClassification,
       advocacies: [...profileDraft.advocacies],
-      adviserName: profileDraft.adviserName.trim(),
-      representativeName: profileDraft.representativeName.trim(),
-      address: profileDraft.address.trim(),
+      representativeFirstName: repFirstName,
+      representativeMiddleName: repMiddleName,
+      representativeLastName: repLastName,
+      representativeSuffix: repSuffix,
+      adviserFirstName: advFirstName,
+      adviserMiddleName: advMiddleName,
+      adviserLastName: advLastName,
+      adviserSuffix: advSuffix,
+      addressUnitBuilding: addrUnitBuilding,
+      addressStreet: addrStreet,
+      addressSubdivision: addrSubdivision,
+      addressBarangay: addrBarangay,
+      addressCity: addrCity,
+      addressProvince: addrProvince,
+      addressZipCode: addrZipCode,
+      representativeName: computedRepName,
+      adviserName: computedAdviserName,
+      address: computedAddress,
       facebookPageUrl: profileDraft.facebookPageUrl.trim(),
       profileStatus: nextProfileStatus,
       verifiedAt: nextVerifiedAt,
@@ -2421,6 +2382,80 @@ export default function UserPortal({ section }: { section: string }) {
       toast({
         title: "Invalid contact number",
         description: "Please enter an 11-digit Philippine mobile number starting with 09.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (repFirstName && !isValidPersonNamePart(repFirstName, true)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Head of Organization First Name",
+        description: "Head of organization first name contains invalid characters. Numbers and symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (repMiddleName && !isValidPersonNamePart(repMiddleName, false)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Head of Organization Middle Name",
+        description: "Head of organization middle name contains invalid characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (repLastName && !isValidPersonNamePart(repLastName, true)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Head of Organization Last Name",
+        description: "Head of organization last name contains invalid characters. Numbers and symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (repSuffix && !isValidSuffix(repSuffix)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Head of Organization Suffix",
+        description: "Head of organization suffix contains invalid characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (advFirstName && !isValidPersonNamePart(advFirstName, true)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Adviser First Name",
+        description: "Adviser first name contains invalid characters. Numbers and symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (advMiddleName && !isValidPersonNamePart(advMiddleName, false)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Adviser Middle Name",
+        description: "Adviser middle name contains invalid characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (advLastName && !isValidPersonNamePart(advLastName, true)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Adviser Last Name",
+        description: "Adviser last name contains invalid characters. Numbers and symbols are not allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (advSuffix && !isValidSuffix(advSuffix)) {
+      setProfileEditorOpenSections((current) => Array.from(new Set([...current, "leadership"])));
+      toast({
+        title: "Invalid Adviser Suffix",
+        description: "Adviser suffix contains invalid characters.",
         variant: "destructive",
       });
       return;

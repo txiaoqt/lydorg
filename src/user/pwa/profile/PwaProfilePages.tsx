@@ -18,6 +18,11 @@ import {
   majorClassificationOptions,
   subClassificationOptions,
   type OrganizationProfile,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
+  getOrganizationAddressDisplay,
+  formatPersonName,
+  formatAddress,
 } from "@/lib/lydo-connect-data";
 import {
   ORGANIZATION_PROFILE_IMAGE_MAX_BYTES,
@@ -371,15 +376,15 @@ function ProfileOverview({ data }: { data: PortalData }) {
       </ProfileSection>
       <ProfileSection title="Leadership">
         <dl className="pwa-profile-fields">
-          <ProfileField label="Head of Organization" value={displayValue(profile?.representativeName)} />
-          <ProfileField label="Adviser" value={displayValue(profile?.adviserName)} />
+          <ProfileField label="Head of Organization" value={displayValue(getRepresentativeDisplayName(profile))} />
+          <ProfileField label="Adviser" value={displayValue(getAdviserDisplayName(profile))} />
         </dl>
       </ProfileSection>
       <ProfileSection title="Contact Snapshot">
         <dl className="pwa-profile-fields">
           <ProfileField label="Organization Email" value={displayValue(profile?.organizationEmail)} />
           <ProfileField label="Contact Number" value={displayValue(profile?.contactNumber)} />
-          <ProfileField label="Complete Address" value={displayValue(profile?.address)} />
+          <ProfileField label="Complete Address" value={displayValue(getOrganizationAddressDisplay(profile))} />
         </dl>
       </ProfileSection>
       <ProfileSection title="Centers of Youth Participation">
@@ -418,8 +423,8 @@ function ProfileDetails({ data }: { data: PortalData }) {
       ["Sub-classification", profile?.subClassification ? formatSubClassificationLabel(profile.subClassification) : "Missing information"],
     ]],
     ["Leadership", [
-      ["Head of Organization", displayValue(profile?.representativeName)],
-      ["Adviser", displayValue(profile?.adviserName)],
+      ["Head of Organization", displayValue(getRepresentativeDisplayName(profile))],
+      ["Adviser", displayValue(getAdviserDisplayName(profile))],
     ]],
   ] as const;
   return (
@@ -551,8 +556,15 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     basic: draft.organizationName && draft.organizationEmail && draft.contactNumber ? "Complete" : "Missing information",
     location: draft.majorClassification && draft.subClassification ? "Complete" : "Missing information",
     advocacy: `${draft.advocacies.length} selected`,
-    leadership: draft.representativeName && draft.adviserName ? "Complete" : "Missing information",
-    contact: draft.address ? (draft.facebookPageUrl ? "Complete" : "1 field missing") : "Missing information",
+    leadership:
+      (draft.representativeFirstName && draft.representativeLastName && draft.adviserFirstName && draft.adviserLastName) ||
+      (draft.representativeName && draft.adviserName)
+        ? "Complete"
+        : "Missing information",
+    contact:
+      (draft.addressStreet && (draft.addressBarangay || draft.barangay)) || draft.address
+        ? (draft.facebookPageUrl ? "Complete" : "1 field missing")
+        : "Missing information",
   }), [draft]);
 
   const save = async () => {
@@ -566,6 +578,48 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     const nextVerifiedAt = isAlreadyVerified
       ? (data.profile?.verifiedAt || draft.verifiedAt || new Date().toISOString())
       : "";
+
+    const repFirstName = draft.representativeFirstName?.trim() || "";
+    const repMiddleName = draft.representativeMiddleName?.trim() || "";
+    const repLastName = draft.representativeLastName?.trim() || "";
+    const repSuffix = draft.representativeSuffix?.trim() || "";
+
+    const advFirstName = draft.adviserFirstName?.trim() || "";
+    const advMiddleName = draft.adviserMiddleName?.trim() || "";
+    const advLastName = draft.adviserLastName?.trim() || "";
+    const advSuffix = draft.adviserSuffix?.trim() || "";
+
+    const addrUnitBuilding = draft.addressUnitBuilding?.trim() || "";
+    const addrStreet = draft.addressStreet?.trim() || "";
+    const addrSubdivision = draft.addressSubdivision?.trim() || "";
+    const addrBarangay = draft.addressBarangay?.trim() || draft.barangay?.trim() || "";
+    const addrCity = draft.addressCity?.trim() || "Pasig City";
+    const addrProvince = draft.addressProvince?.trim() || "Metro Manila";
+    const addrZipCode = draft.addressZipCode?.trim() || "";
+
+    const computedRepName = formatPersonName({
+      firstName: repFirstName,
+      middleName: repMiddleName,
+      lastName: repLastName,
+      suffix: repSuffix,
+    }) || draft.representativeName?.trim() || "";
+
+    const computedAdviserName = formatPersonName({
+      firstName: advFirstName,
+      middleName: advMiddleName,
+      lastName: advLastName,
+      suffix: advSuffix,
+    }) || draft.adviserName?.trim() || "";
+
+    const computedAddress = formatAddress({
+      unitBuilding: addrUnitBuilding,
+      street: addrStreet,
+      subdivision: addrSubdivision,
+      barangay: addrBarangay,
+      city: addrCity,
+      province: addrProvince,
+      zipCode: addrZipCode,
+    }) || draft.address?.trim() || "";
 
     const next: OrganizationProfile = {
       ...draft,
@@ -584,9 +638,24 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
       urnNormalized: isAlreadyVerified
         ? (data.profile?.urnNormalized?.trim() || draft.urnNormalized?.trim() || "")
         : draft.urnNormalized?.trim() || "",
-      adviserName: draft.adviserName.trim(),
-      representativeName: draft.representativeName.trim(),
-      address: draft.address.trim(),
+      representativeFirstName: repFirstName,
+      representativeMiddleName: repMiddleName,
+      representativeLastName: repLastName,
+      representativeSuffix: repSuffix,
+      adviserFirstName: advFirstName,
+      adviserMiddleName: advMiddleName,
+      adviserLastName: advLastName,
+      adviserSuffix: advSuffix,
+      addressUnitBuilding: addrUnitBuilding,
+      addressStreet: addrStreet,
+      addressSubdivision: addrSubdivision,
+      addressBarangay: addrBarangay,
+      addressCity: addrCity,
+      addressProvince: addrProvince,
+      addressZipCode: addrZipCode,
+      adviserName: computedAdviserName,
+      representativeName: computedRepName,
+      address: computedAddress,
       facebookPageUrl: draft.facebookPageUrl.trim(),
       internalNotes: draft.internalNotes.trim(),
       profileStatus: nextProfileStatus,
@@ -721,14 +790,26 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
               ) : null}
               {section.id === "leadership" ? (
                 <div className="pwa-profile-editor-grid">
-                  <EditorField label="Head of Organization"><Input value={draft.representativeName} onChange={(event) => setField("representativeName", event.target.value)} /></EditorField>
-                  <EditorField label="Adviser"><Input value={draft.adviserName} onChange={(event) => setField("adviserName", event.target.value)} /></EditorField>
+                  <EditorField label="Head First Name" required><Input value={draft.representativeFirstName || ""} onChange={(event) => setField("representativeFirstName", event.target.value)} placeholder="e.g. Juan" /></EditorField>
+                  <EditorField label="Head Middle Name (Optional)"><Input value={draft.representativeMiddleName || ""} onChange={(event) => setField("representativeMiddleName", event.target.value)} placeholder="e.g. Crisostomo" /></EditorField>
+                  <EditorField label="Head Last Name" required><Input value={draft.representativeLastName || ""} onChange={(event) => setField("representativeLastName", event.target.value)} placeholder="e.g. Ibarra" /></EditorField>
+                  <EditorField label="Head Suffix (Optional)"><Input value={draft.representativeSuffix || ""} onChange={(event) => setField("representativeSuffix", event.target.value)} placeholder="e.g. Jr., III" /></EditorField>
+                  <EditorField label="Adviser First Name" required><Input value={draft.adviserFirstName || ""} onChange={(event) => setField("adviserFirstName", event.target.value)} placeholder="e.g. Maria" /></EditorField>
+                  <EditorField label="Adviser Middle Name (Optional)"><Input value={draft.adviserMiddleName || ""} onChange={(event) => setField("adviserMiddleName", event.target.value)} placeholder="e.g. Clara" /></EditorField>
+                  <EditorField label="Adviser Last Name" required><Input value={draft.adviserLastName || ""} onChange={(event) => setField("adviserLastName", event.target.value)} placeholder="e.g. delos Santos" /></EditorField>
+                  <EditorField label="Adviser Suffix (Optional)"><Input value={draft.adviserSuffix || ""} onChange={(event) => setField("adviserSuffix", event.target.value)} placeholder="e.g. Jr., III" /></EditorField>
                 </div>
               ) : null}
               {section.id === "contact" ? (
                 <div className="pwa-profile-editor-grid">
-                  <EditorField label="Complete Address"><Textarea rows={4} value={draft.address} onChange={(event) => setField("address", event.target.value)} /></EditorField>
-                  <EditorField label="Facebook Page"><Input type="url" value={draft.facebookPageUrl} onChange={(event) => setField("facebookPageUrl", event.target.value)} placeholder="https://facebook.com/..." /></EditorField>
+                  <EditorField label="Unit / Room / Building / House / Lot"><Input value={draft.addressUnitBuilding || ""} onChange={(event) => setField("addressUnitBuilding", event.target.value)} placeholder="e.g. Room 201, Block 5 Lot 2" /></EditorField>
+                  <EditorField label="Street Address" required><Input value={draft.addressStreet || ""} onChange={(event) => setField("addressStreet", event.target.value)} placeholder="e.g. 101 Test Center Way" /></EditorField>
+                  <EditorField label="Subdivision / Village (Optional)"><Input value={draft.addressSubdivision || ""} onChange={(event) => setField("addressSubdivision", event.target.value)} placeholder="e.g. Kapitolyo Heights" /></EditorField>
+                  <EditorField label="Barangay" required><Input value={draft.addressBarangay || draft.barangay || ""} onChange={(event) => setField("addressBarangay", event.target.value)} placeholder="e.g. Kapitolyo" /></EditorField>
+                  <EditorField label="City / Municipality"><Input value={draft.addressCity || "Pasig City"} onChange={(event) => setField("addressCity", event.target.value)} /></EditorField>
+                  <EditorField label="Province"><Input value={draft.addressProvince || "Metro Manila"} onChange={(event) => setField("addressProvince", event.target.value)} /></EditorField>
+                  <EditorField label="ZIP Code"><Input value={draft.addressZipCode || ""} onChange={(event) => setField("addressZipCode", event.target.value)} placeholder="e.g. 1603" /></EditorField>
+                  <EditorField label="Facebook Page"><Input type="url" value={draft.facebookPageUrl || ""} onChange={(event) => setField("facebookPageUrl", event.target.value)} placeholder="https://facebook.com/..." /></EditorField>
                 </div>
               ) : null}
             </AccordionContent>
@@ -782,8 +863,8 @@ export function PwaProfilePublicPreview({ data }: { data: PortalData }) {
       </ProfileSection>
       <ProfileSection title="Public Organization Information">
         <dl className="pwa-profile-fields">
-          {profile?.directoryShowRepresentative ? <ProfileField label="Head of Organization" value={displayValue(profile.representativeName)} /> : null}
-          {profile?.directoryShowAdviser ? <ProfileField label="Adviser" value={displayValue(profile.adviserName)} /> : null}
+          {profile?.directoryShowRepresentative ? <ProfileField label="Head of Organization" value={displayValue(getRepresentativeDisplayName(profile))} /> : null}
+          {profile?.directoryShowAdviser ? <ProfileField label="Adviser" value={displayValue(getAdviserDisplayName(profile))} /> : null}
           <ProfileField label="Classification" value={classificationLabel(profile)} />
           <ProfileField label="Location" value={locationLabel(profile)} />
           <ProfileField label="Facebook Page" value={profile?.facebookPageUrl ? "Open Facebook Page" : "Not provided"} link={profile?.facebookPageUrl || undefined} />

@@ -5,7 +5,7 @@ export const ORGANIZATION_NAME_MAX_LENGTH_ERROR = "Organization name must not ex
 
 export const organizationEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const philippineContactNumberPattern = /^09\d{9}$/;
-export const personNamePattern = /^[a-zA-Z\s\-'.]*$/;
+export const personNamePattern = /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s\-'.]*$/;
 
 export const sanitizeContactNumber = (val: string): string => {
   return val.replace(/\D/g, "").slice(0, 11);
@@ -16,6 +16,18 @@ export const validateOrganizationName = (name: string): string | null => {
   if (!trimmed) return "Organization name is required.";
   if (trimmed.length > ORGANIZATION_NAME_MAX_LENGTH) return ORGANIZATION_NAME_MAX_LENGTH_ERROR;
   return null;
+};
+
+export const isValidPersonNamePart = (namePart?: string | null, required = true): boolean => {
+  const trimmed = namePart?.trim() ?? "";
+  if (!trimmed) return !required;
+  return personNamePattern.test(trimmed) && !/\d/.test(trimmed);
+};
+
+export const isValidSuffix = (suffix?: string | null): boolean => {
+  const trimmed = suffix?.trim() ?? "";
+  if (!trimmed) return true;
+  return /^[a-zA-Z\s.]{1,10}$/.test(trimmed) && !/\d/.test(trimmed);
 };
 
 export const isValidPersonName = (name: string): boolean => {
@@ -45,6 +57,34 @@ export const isValidFacebookUrl = (url: string): boolean => {
   }
 };
 
+export const isHeadOfOrganizationComplete = (profile?: Partial<OrganizationProfile> | null): boolean => {
+  if (!profile) return false;
+  const hasStructured = Boolean(
+    profile.representativeFirstName?.trim() && profile.representativeLastName?.trim()
+  );
+  const hasLegacy = Boolean(profile.representativeName?.trim());
+  return hasStructured || hasLegacy;
+};
+
+export const isAdviserComplete = (profile?: Partial<OrganizationProfile> | null): boolean => {
+  if (!profile) return false;
+  const hasStructured = Boolean(
+    profile.adviserFirstName?.trim() && profile.adviserLastName?.trim()
+  );
+  const hasLegacy = Boolean(profile.adviserName?.trim());
+  return hasStructured || hasLegacy;
+};
+
+export const isAddressComplete = (profile?: Partial<OrganizationProfile> | null): boolean => {
+  if (!profile) return false;
+  const hasStructured = Boolean(
+    profile.addressStreet?.trim() &&
+    (profile.addressBarangay?.trim() || profile.barangay?.trim())
+  );
+  const hasLegacy = Boolean(profile.address?.trim());
+  return hasStructured || hasLegacy;
+};
+
 export const getOrganizationProfileCompletionCount = (profile?: OrganizationProfile | null) =>
   [
     profile?.organizationName?.trim(),
@@ -56,9 +96,9 @@ export const getOrganizationProfileCompletionCount = (profile?: OrganizationProf
     profile?.majorClassification?.trim(),
     profile?.subClassification?.trim(),
     profile?.advocacies?.length ? "advocacies" : "",
-    profile?.adviserName?.trim(),
-    profile?.representativeName?.trim(),
-    profile?.address?.trim(),
+    isAdviserComplete(profile) ? "adviser" : "",
+    isHeadOfOrganizationComplete(profile) ? "representative" : "",
+    isAddressComplete(profile) ? "address" : "",
   ].filter(Boolean).length;
 
 export const getOrganizationProfileCompletionTarget = (profile?: OrganizationProfile | null) =>
@@ -91,13 +131,13 @@ export const getMissingEditableProfileRequirements = (profile?: Partial<Organiza
   if (!profile.advocacies?.length) {
     missing.push("Select at least one Center of Youth Participation");
   }
-  if (!profile.representativeName?.trim()) {
+  if (!isHeadOfOrganizationComplete(profile)) {
     missing.push("Add Official Head of Organization Name");
   }
-  if (!profile.adviserName?.trim()) {
+  if (!isAdviserComplete(profile)) {
     missing.push("Add Official Adviser Name");
   }
-  if (!profile.address?.trim()) {
+  if (!isAddressComplete(profile)) {
     missing.push("Add Complete Address");
   }
 
@@ -145,8 +185,23 @@ export const createBlankOrganizationProfile = (
     majorClassification: "",
     subClassification: "",
     advocacies: [],
+    representativeFirstName: "",
+    representativeMiddleName: "",
+    representativeLastName: "",
+    representativeSuffix: "",
+    adviserFirstName: "",
+    adviserMiddleName: "",
+    adviserLastName: "",
+    adviserSuffix: "",
     adviserName: "",
     representativeName: "",
+    addressUnitBuilding: "",
+    addressStreet: "",
+    addressSubdivision: "",
+    addressBarangay: defaults?.barangay ?? "",
+    addressCity: "Pasig City",
+    addressProvince: "Metro Manila",
+    addressZipCode: "",
     address: "",
     facebookPageUrl: "",
     profileStatus: "incomplete",
@@ -201,8 +256,23 @@ export const createOrganizationProfileDraft = (
     urnReviewStatus: isExisting ? profile.urnReviewStatus || "pending" : "not_applicable",
     majorClassification: normalizeText(profile.majorClassification) as OrganizationProfile["majorClassification"],
     subClassification: normalizeText(profile.subClassification) as OrganizationProfile["subClassification"],
+    representativeFirstName: normalizeText(profile.representativeFirstName),
+    representativeMiddleName: normalizeText(profile.representativeMiddleName),
+    representativeLastName: normalizeText(profile.representativeLastName),
+    representativeSuffix: normalizeText(profile.representativeSuffix),
+    adviserFirstName: normalizeText(profile.adviserFirstName),
+    adviserMiddleName: normalizeText(profile.adviserMiddleName),
+    adviserLastName: normalizeText(profile.adviserLastName),
+    adviserSuffix: normalizeText(profile.adviserSuffix),
     adviserName: normalizeText(profile.adviserName),
     representativeName: normalizeText(profile.representativeName),
+    addressUnitBuilding: normalizeText(profile.addressUnitBuilding),
+    addressStreet: normalizeText(profile.addressStreet),
+    addressSubdivision: normalizeText(profile.addressSubdivision),
+    addressBarangay: normalizeText(profile.addressBarangay) || normalizeText(profile.barangay) || blank.barangay,
+    addressCity: normalizeText(profile.addressCity) || "Pasig City",
+    addressProvince: normalizeText(profile.addressProvince) || "Metro Manila",
+    addressZipCode: normalizeText(profile.addressZipCode),
     address: normalizeText(profile.address),
     facebookPageUrl: normalizeText(profile.facebookPageUrl),
     verifiedAt: normalizeText(profile.verifiedAt),

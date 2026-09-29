@@ -388,6 +388,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     const s = status.toLowerCase();
     return (
       s === "approved" ||
+      s === "awaiting_release" ||
       s === "approved_for_ftf_green" ||
       s === "budget_released" ||
       s === "completed" ||

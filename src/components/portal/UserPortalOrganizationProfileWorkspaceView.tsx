@@ -37,7 +37,12 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PortalPublicProfilePreviewDialog } from "@/components/portal/PortalPublicProfilePreviewDialog";
+import {
+  formatAdvocacyLabel,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
+  getOrganizationAddressDisplay,
+} from "@/lib/lydo-connect-data";
 import { cn } from "@/lib/utils";
 
 export interface UserPortalOrganizationProfileWorkspaceViewProps {
@@ -167,12 +172,14 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span>{profile.district || "District I"} • {profile.barangay || "Pasig City"}</span>
                 </span>
-                {profile.representativeName && (
+                {getRepresentativeDisplayName(profile) && (
                   <>
                     <span className="text-muted-foreground/40">•</span>
                     <span className="inline-flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="truncate max-w-[180px] sm:max-w-[220px]">{profile.representativeName}</span>
+                      <span className="truncate max-w-[180px] sm:max-w-[220px]">
+                        {getRepresentativeDisplayName(profile)}
+                      </span>
                     </span>
                   </>
                 )}
@@ -419,56 +426,248 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
           </div>
 
           {/* Section 4: Leadership */}
-          <div className="space-y-3.5 sm:space-y-4 pt-3 border-t border-border/40">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" /> 4. Leadership & Head of Organization
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Head of Organization Name</label>
-                <Input
-                  value={profileDraft.representativeName || ""}
-                  onChange={(e) => onFieldChange("representativeName", e.target.value)}
-                  className="h-9 text-xs rounded-xl bg-background border-border"
-                  placeholder="Official Head of Organization Name"
-                />
+          <div className="space-y-4 pt-3 border-t border-border/40">
+            <div className="border-b border-border/60 pb-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" /> 4. Leadership & Head of Organization
+              </h3>
+              <p className="text-[11px] text-muted-foreground">Authorized youth leaders and adult advisers registered for the organization.</p>
+            </div>
+
+            {/* Head of Organization */}
+            <div className="space-y-2.5">
+              <div className="border-b border-border/40 pb-1">
+                <h4 className="text-xs font-semibold text-foreground">Head of Organization</h4>
+                <p className="text-[11px] text-muted-foreground">Authorized youth leader heading the organization.</p>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Adviser Name</label>
-                <Input
-                  value={profileDraft.adviserName || ""}
-                  onChange={(e) => onFieldChange("adviserName", e.target.value)}
-                  className="h-9 text-xs rounded-xl bg-background border-border"
-                  placeholder="Official Adviser Name"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. Juan"
+                    value={profileDraft.representativeFirstName || ""}
+                    onChange={(e) => onFieldChange("representativeFirstName", e.target.value)}
+                    autoComplete="given-name"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Middle Name
+                  </label>
+                  <Input
+                    placeholder="e.g. Crisostomo"
+                    value={profileDraft.representativeMiddleName || ""}
+                    onChange={(e) => onFieldChange("representativeMiddleName", e.target.value)}
+                    autoComplete="additional-name"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. Ibarra"
+                    value={profileDraft.representativeLastName || ""}
+                    onChange={(e) => onFieldChange("representativeLastName", e.target.value)}
+                    autoComplete="family-name"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Suffix
+                  </label>
+                  <Input
+                    placeholder="e.g. Jr., III"
+                    value={profileDraft.representativeSuffix || ""}
+                    onChange={(e) => onFieldChange("representativeSuffix", e.target.value)}
+                    autoComplete="honorific-suffix"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Official Adviser */}
+            <div className="space-y-2.5 pt-2">
+              <div className="border-b border-border/40 pb-1">
+                <h4 className="text-xs font-semibold text-foreground">Official Adviser</h4>
+                <p className="text-[11px] text-muted-foreground">Faculty, community leader, or designated adult adviser.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. Maria"
+                    value={profileDraft.adviserFirstName || ""}
+                    onChange={(e) => onFieldChange("adviserFirstName", e.target.value)}
+                    autoComplete="given-name"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Middle Name
+                  </label>
+                  <Input
+                    placeholder="e.g. Clara"
+                    value={profileDraft.adviserMiddleName || ""}
+                    onChange={(e) => onFieldChange("adviserMiddleName", e.target.value)}
+                    autoComplete="additional-name"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. delos Santos"
+                    value={profileDraft.adviserLastName || ""}
+                    onChange={(e) => onFieldChange("adviserLastName", e.target.value)}
+                    autoComplete="family-name"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Suffix
+                  </label>
+                  <Input
+                    placeholder="e.g. Jr., III"
+                    value={profileDraft.adviserSuffix || ""}
+                    onChange={(e) => onFieldChange("adviserSuffix", e.target.value)}
+                    autoComplete="honorific-suffix"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Section 5: Location & Socials */}
-          <div className="space-y-3.5 sm:space-y-4 pt-3 border-t border-border/40">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-              <Globe className="h-3.5 w-3.5" /> 5. Location & Facebook Page
-            </h3>
+          <div className="space-y-4 pt-3 border-t border-border/40">
+            <div className="border-b border-border/60 pb-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" /> 5. Location & Facebook Page
+              </h3>
+              <p className="text-[11px] text-muted-foreground">Physical office, headquarters, or community base in Pasig City.</p>
+            </div>
+
+            {/* Office / Community Address */}
             <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Full Address</label>
-                <Textarea
-                  value={profileDraft.address || ""}
-                  onChange={(e) => onFieldChange("address", e.target.value)}
-                  className="text-xs rounded-xl bg-background border-border min-h-[70px]"
-                  placeholder="Complete office or community address"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="space-y-1 md:col-span-3">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Unit / Room / Building / House / Block / Lot
+                  </label>
+                  <Input
+                    placeholder="e.g. Room 201, ABC Building / Block 5 Lot 2"
+                    value={profileDraft.addressUnitBuilding || ""}
+                    onChange={(e) => onFieldChange("addressUnitBuilding", e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                  />
+                </div>
+
+                <div className="space-y-1 sm:col-span-2 md:col-span-2">
+                  <label className="text-xs font-semibold text-foreground">
+                    Street Address <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. 101 Test Center Way"
+                    value={profileDraft.addressStreet || ""}
+                    onChange={(e) => onFieldChange("addressStreet", e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Subdivision / Village
+                  </label>
+                  <Input
+                    placeholder="e.g. Kapitolyo Village"
+                    value={profileDraft.addressSubdivision || ""}
+                    onChange={(e) => onFieldChange("addressSubdivision", e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
+                    Barangay <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={profileDraft.addressBarangay || profileDraft.barangay || ""}
+                    onChange={(e) => onFieldChange("addressBarangay", e.target.value)}
+                    placeholder="e.g. Kapitolyo"
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    City / Municipality
+                  </label>
+                  <Input
+                    value={profileDraft.addressCity || "Pasig City"}
+                    readOnly
+                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Province
+                  </label>
+                  <Input
+                    value={profileDraft.addressProvince || "Metro Manila"}
+                    readOnly
+                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-1 sm:col-span-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    ZIP Code
+                  </label>
+                  <Input
+                    placeholder="e.g. 1603"
+                    value={profileDraft.addressZipCode || ""}
+                    onChange={(e) => onFieldChange("addressZipCode", e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-background border-border"
+                    maxLength={10}
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Facebook Page URL</label>
-                <Input
-                  value={profileDraft.facebookPageUrl || ""}
-                  onChange={(e) => onFieldChange("facebookPageUrl", e.target.value)}
-                  className="h-9 text-xs rounded-xl bg-background border-border"
-                  placeholder="https://facebook.com/your-org-page"
-                />
-              </div>
+            </div>
+
+            {/* Facebook Page (Optional) */}
+            <div className="space-y-1.5 pt-2 border-t border-border/40">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Facebook Page or Profile URL (Optional)</span>
+              </label>
+              <Input
+                type="url"
+                placeholder="https://facebook.com/your-org-page"
+                value={profileDraft.facebookPageUrl || ""}
+                onChange={(e) => onFieldChange("facebookPageUrl", e.target.value)}
+                autoComplete="url"
+                className="h-9 text-xs rounded-xl bg-background border-border"
+              />
             </div>
           </div>
 
@@ -563,11 +762,11 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
-                      <p className="font-bold text-foreground text-sm truncate">{profile.representativeName || "Unassigned Head of Organization"}</p>
+                      <p className="font-bold text-foreground text-sm truncate">{getRepresentativeDisplayName(profile) || "Unassigned Head of Organization"}</p>
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
-                      <p className="font-bold text-foreground text-sm truncate">{profile.adviserName || "Unassigned Adviser"}</p>
+                      <p className="font-bold text-foreground text-sm truncate">{getAdviserDisplayName(profile) || "Unassigned Adviser"}</p>
                     </div>
                   </div>
                 </Card>
@@ -677,12 +876,15 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <p className="text-xs text-muted-foreground/80 mt-0.5">Selected areas of engagement and public community initiatives.</p>
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-2.5">
-                {(profile.advocacies || ["Education", "Environment", "Governance", "Health", "Social Inclusion"]).map((adv: string) => (
+                {(profile.advocacies && profile.advocacies.length > 0
+                  ? profile.advocacies
+                  : ["Education", "Environment", "Governance", "Health", "Social Inclusion"]
+                ).map((adv: string) => (
                   <span
                     key={adv}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full"
                   >
-                    <Award className="h-3.5 w-3.5 text-primary shrink-0" /> {adv}
+                    <Award className="h-3.5 w-3.5 text-primary shrink-0" /> {formatAdvocacyLabel(adv) || adv}
                   </span>
                 ))}
               </div>
@@ -699,11 +901,11 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <div className="space-y-3 text-xs">
                   <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                     <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
-                    <p className="font-bold text-foreground text-sm">{profile.representativeName || "Unassigned Head of Organization"}</p>
+                    <p className="font-bold text-foreground text-sm">{getRepresentativeDisplayName(profile) || "Unassigned Head of Organization"}</p>
                   </div>
                   <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                     <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
-                    <p className="font-bold text-foreground text-sm">{profile.adviserName || "Unassigned Adviser"}</p>
+                    <p className="font-bold text-foreground text-sm">{getAdviserDisplayName(profile) || "Unassigned Adviser"}</p>
                   </div>
                 </div>
               </Card>
@@ -715,7 +917,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <div className="space-y-3 text-xs">
                   <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                     <span className="text-xs font-semibold text-muted-foreground">Office Address</span>
-                    <p className="font-bold text-foreground text-sm leading-relaxed">{profile.address || "Address not provided"}</p>
+                    <p className="font-bold text-foreground text-sm leading-relaxed">{getOrganizationAddressDisplay(profile) || "Address not provided"}</p>
                   </div>
                   <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">

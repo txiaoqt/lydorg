@@ -18,6 +18,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
         'submitted',
         'under_review',
         'needs_revision',
+        'awaiting_release',
         'approved_for_ftf_green',
         'rejected_red',
         'hard_copy_submitted',
@@ -30,6 +31,7 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
         submitted: 'Pending Review',
         under_review: 'Under Review',
         needs_revision: 'Needs Revision',
+        awaiting_release: 'Awaiting Release',
         approved_for_ftf_green: 'Onsite Required',
         rejected_red: 'Rejected',
         hard_copy_submitted: 'Hardcopy Submitted',
@@ -51,21 +53,25 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       rerender(<StatusBadge status="under_review" />);
       expect(screen.getByText('Under Review')).toBeDefined();
 
-      // Step 3: approved_for_ftf_green -> User sees "Onsite Required"
-      rerender(<StatusBadge status="approved_for_ftf_green" />);
-      expect(screen.getByText('Onsite Required')).toBeDefined();
+      // Step 3: awaiting_release -> User sees "Awaiting Release"
+      rerender(<StatusBadge status="awaiting_release" />);
+      expect(screen.getByText('Awaiting Release')).toBeDefined();
 
-      // Step 4: hard_copy_submitted -> User sees "Hardcopy Submitted"
-      rerender(<StatusBadge status="hard_copy_submitted" />);
-      expect(screen.getByText('Hardcopy Submitted')).toBeDefined();
-
-      // Step 5: budget_released -> User sees "Budget Released"
+      // Step 4: budget_released -> User sees "Budget Released"
       rerender(<StatusBadge status="budget_released" />);
       expect(screen.getByText('Budget Released')).toBeDefined();
 
-      // Step 6: completed -> User sees "Completed"
+      // Step 5: completed -> User sees "Completed"
       rerender(<StatusBadge status="completed" />);
       expect(screen.getByText('Completed')).toBeDefined();
+
+      // Historical compatibility: approved_for_ftf_green -> User sees "Onsite Required"
+      rerender(<StatusBadge status="approved_for_ftf_green" />);
+      expect(screen.getByText('Onsite Required')).toBeDefined();
+
+      // Historical compatibility: hard_copy_submitted -> User sees "Hardcopy Submitted"
+      rerender(<StatusBadge status="hard_copy_submitted" />);
+      expect(screen.getByText('Hardcopy Submitted')).toBeDefined();
 
       // Revision branch: needs_revision -> User sees "Needs Revision"
       rerender(<StatusBadge status="needs_revision" />);
@@ -81,12 +87,8 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       let currentStatus: BudgetRequestStatus = 'submitted';
 
       // Admin Approves:
-      currentStatus = 'approved_for_ftf_green';
-      expect(statusLabelMap[currentStatus]).toBe('Onsite Required');
-
-      // Admin Marks Hardcopy:
-      currentStatus = 'hard_copy_submitted';
-      expect(statusLabelMap[currentStatus]).toBe('Hardcopy Submitted');
+      currentStatus = 'awaiting_release';
+      expect(statusLabelMap[currentStatus]).toBe('Awaiting Release');
 
       // Admin Releases Cash:
       currentStatus = 'budget_released';
@@ -95,13 +97,23 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       // Legacy read compatibility:
       currentStatus = 'completed';
       expect(statusLabelMap[currentStatus]).toBe('Completed');
+
+      // Historical status compatibility:
+      currentStatus = 'approved_for_ftf_green';
+      expect(statusLabelMap[currentStatus]).toBe('Onsite Required');
+      currentStatus = 'hard_copy_submitted';
+      expect(statusLabelMap[currentStatus]).toBe('Hardcopy Submitted');
     });
+
     it('renders admin StatusPill correctly across all budget lifecycle stages', () => {
       const { rerender } = render(<StatusPill status="submitted" />);
       expect(screen.getByText('Pending Review')).toBeDefined();
 
       rerender(<StatusPill status="under_review" />);
       expect(screen.getByText('Under Review')).toBeDefined();
+
+      rerender(<StatusPill status="awaiting_release" />);
+      expect(screen.getByText('Awaiting Release')).toBeDefined();
 
       rerender(<StatusPill status="approved_for_ftf_green" />);
       expect(screen.getByText('Onsite Required')).toBeDefined();
@@ -288,21 +300,21 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
     it('prevents invalid lifecycle action transitions', () => {
       const isBudgetActionAllowed = (status: BudgetRequestStatus, action: 'submitted_hardcopy' | 'cash_released' | 'complete') => {
         if (action === 'submitted_hardcopy') return status === 'approved_for_ftf_green';
-        if (action === 'cash_released') return status === 'hard_copy_submitted';
+        if (action === 'cash_released') return status === 'awaiting_release' || status === 'hard_copy_submitted';
         if (action === 'complete') return status === 'budget_released';
         return false;
       };
 
-      // submitted_hardcopy only valid from approved_for_ftf_green
-      expect(isBudgetActionAllowed('submitted', 'submitted_hardcopy')).toBe(false);
-      expect(isBudgetActionAllowed('approved_for_ftf_green', 'submitted_hardcopy')).toBe(true);
+      // cash_released is valid from awaiting_release
+      expect(isBudgetActionAllowed('submitted', 'cash_released')).toBe(false);
+      expect(isBudgetActionAllowed('awaiting_release', 'cash_released')).toBe(true);
 
-      // cash_released only valid from hard_copy_submitted
-      expect(isBudgetActionAllowed('approved_for_ftf_green', 'cash_released')).toBe(false);
+      // historical compatibility
+      expect(isBudgetActionAllowed('approved_for_ftf_green', 'submitted_hardcopy')).toBe(true);
       expect(isBudgetActionAllowed('hard_copy_submitted', 'cash_released')).toBe(true);
 
       // complete only valid from budget_released
-      expect(isBudgetActionAllowed('hard_copy_submitted', 'complete')).toBe(false);
+      expect(isBudgetActionAllowed('awaiting_release', 'complete')).toBe(false);
       expect(isBudgetActionAllowed('budget_released', 'complete')).toBe(true);
     });
 
@@ -337,9 +349,11 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
 
       const availableActions: string[] = [];
       if (status === 'submitted' || status === 'under_review') {
-        availableActions.push('approve', 'needs_revision', 'reject');
+        availableActions.push('approve', 'needs_revision');
       } else if (status === 'needs_revision') {
-        availableActions.push('approve', 'reject');
+        availableActions.push('approve');
+      } else if (status === 'awaiting_release') {
+        availableActions.push('cash_released');
       } else if (status === 'approved_for_ftf_green') {
         availableActions.push('submitted_hardcopy');
       } else if (status === 'hard_copy_submitted') {
@@ -402,20 +416,19 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
     });
 
     it('2. After Approve, old review actions disappear and next lifecycle action appears', () => {
-      // Budget transition from submitted to approved_for_ftf_green
+      // Budget transition from submitted to awaiting_release
       const budgetReview = getBudgetReviewDecisionActions('submitted');
       expect(budgetReview.hasDocumentReviewControls).toBe(true);
-      expect(budgetReview.availableActions).toEqual(['approve', 'needs_revision', 'reject']);
+      expect(budgetReview.availableActions).toEqual(['approve', 'needs_revision']);
 
-      const budgetApproved = getBudgetReviewDecisionActions('approved_for_ftf_green');
+      const budgetApproved = getBudgetReviewDecisionActions('awaiting_release');
       // Old review actions and document review controls MUST disappear
       expect(budgetApproved.isReviewStage).toBe(false);
       expect(budgetApproved.hasDocumentReviewControls).toBe(false);
       expect(budgetApproved.availableActions).not.toContain('approve');
       expect(budgetApproved.availableActions).not.toContain('needs_revision');
-      expect(budgetApproved.availableActions).not.toContain('reject');
-      // Next lifecycle action MUST appear
-      expect(budgetApproved.availableActions).toEqual(['submitted_hardcopy']);
+      // Next lifecycle action MUST appear (cash_released / Budget Released)
+      expect(budgetApproved.availableActions).toEqual(['cash_released']);
 
       // Liquidation transition from submitted to approved_for_ftf_green
       const liqReview = getLiquidationReviewDecisionActions('submitted');
@@ -430,25 +443,20 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
     });
 
     it('3. After each lifecycle action, the next action replaces the previous one in Budget Request', () => {
-      // Step 1: approved_for_ftf_green -> only submitted_hardcopy
-      const step1 = getBudgetReviewDecisionActions('approved_for_ftf_green');
-      expect(step1.availableActions).toEqual(['submitted_hardcopy']);
+      // Step 1: awaiting_release -> cash_released
+      const step1 = getBudgetReviewDecisionActions('awaiting_release');
+      expect(step1.availableActions).toEqual(['cash_released']);
 
-      // Step 2: hard_copy_submitted -> submitted_hardcopy disappears, cash_released appears
-      const step2 = getBudgetReviewDecisionActions('hard_copy_submitted');
-      expect(step2.availableActions).not.toContain('submitted_hardcopy');
-      expect(step2.availableActions).toEqual(['cash_released']);
+      // Step 2: budget_released -> terminal stage, cash_released disappears, no further actions
+      const step2 = getBudgetReviewDecisionActions('budget_released');
+      expect(step2.availableActions).not.toContain('cash_released');
+      expect(step2.availableActions).toHaveLength(0);
+      expect(step2.isTerminal).toBe(true);
 
-      // Step 3: budget_released -> terminal stage, cash_released disappears, no further actions
-      const step3 = getBudgetReviewDecisionActions('budget_released');
-      expect(step3.availableActions).not.toContain('cash_released');
+      // Step 3: completed (legacy compatibility) -> no further actions
+      const step3 = getBudgetReviewDecisionActions('completed');
       expect(step3.availableActions).toHaveLength(0);
       expect(step3.isTerminal).toBe(true);
-
-      // Step 4: completed (legacy compatibility) -> no further actions
-      const step4 = getBudgetReviewDecisionActions('completed');
-      expect(step4.availableActions).toHaveLength(0);
-      expect(step4.isTerminal).toBe(true);
     });
 
     it('4. After each lifecycle action, the next action replaces the previous one in Liquidation Report', () => {
@@ -479,10 +487,11 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
     it('6. User-side status reflects each persisted state in the single-panel flow', () => {
       const budgetProgression: { status: BudgetRequestStatus; userLabel: string }[] = [
         { status: 'submitted', userLabel: 'Pending Review' },
-        { status: 'approved_for_ftf_green', userLabel: 'Onsite Required' },
-        { status: 'hard_copy_submitted', userLabel: 'Hardcopy Submitted' },
+        { status: 'awaiting_release', userLabel: 'Awaiting Release' },
         { status: 'budget_released', userLabel: 'Budget Released' },
         { status: 'completed', userLabel: 'Completed' },
+        { status: 'approved_for_ftf_green', userLabel: 'Onsite Required' },
+        { status: 'hard_copy_submitted', userLabel: 'Hardcopy Submitted' },
       ];
 
       budgetProgression.forEach(({ status, userLabel }) => {
@@ -505,9 +514,10 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       // Budget guards
       const validBudgetTransitions: Record<BudgetRequestStatus, BudgetRequestStatus[]> = {
         draft: ['submitted'],
-        submitted: ['under_review', 'approved_for_ftf_green', 'needs_revision', 'rejected_red'],
-        under_review: ['approved_for_ftf_green', 'needs_revision', 'rejected_red'],
-        needs_revision: ['submitted', 'under_review', 'approved_for_ftf_green', 'rejected_red'],
+        submitted: ['under_review', 'awaiting_release', 'needs_revision', 'rejected_red'],
+        under_review: ['awaiting_release', 'needs_revision', 'rejected_red'],
+        needs_revision: ['submitted', 'under_review', 'awaiting_release', 'rejected_red'],
+        awaiting_release: ['budget_released'],
         approved_for_ftf_green: ['hard_copy_submitted'],
         hard_copy_submitted: ['budget_released'],
         budget_released: ['completed'],
@@ -515,10 +525,10 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
         rejected_red: [],
       };
 
+      expect(validBudgetTransitions['awaiting_release']).toContain('budget_released');
+      expect(validBudgetTransitions['awaiting_release']).not.toContain('hard_copy_submitted');
       expect(validBudgetTransitions['approved_for_ftf_green']).toContain('hard_copy_submitted');
-      expect(validBudgetTransitions['approved_for_ftf_green']).not.toContain('budget_released');
       expect(validBudgetTransitions['hard_copy_submitted']).toContain('budget_released');
-      expect(validBudgetTransitions['hard_copy_submitted']).not.toContain('completed');
       expect(validBudgetTransitions['budget_released']).toContain('completed');
 
       // Liquidation guards

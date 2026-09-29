@@ -14,9 +14,11 @@ import {
   fetchPublicOrganizationDirectory,
   fetchPublicOrganizationProfile,
 } from "@/lib/lydo-connect-supabase";
-import type {
-  PublicOrganizationActivity,
-  PublicOrganizationDirectoryItem,
+import {
+  type PublicOrganizationActivity,
+  type PublicOrganizationDirectoryItem,
+  getRepresentativeDisplayName,
+  getAdviserDisplayName,
 } from "@/lib/lydo-connect-data";
 import { PwaOrganizationAvatar } from "../PwaOrganizationAvatar";
 import { PWA_ROUTES, pwaOrganizationRoute } from "../pwaRoutes";
@@ -218,10 +220,10 @@ export function PwaOrganizationDirectoryProfile() {
             <div><h1>{organization.organizationName}</h1><p className="pwa-directory-verified"><CheckCircle2 aria-hidden="true" />Verified organization</p>{classificationParts(organization).map((part) => <p key={part}>{part}</p>)}<p><MapPin aria-hidden="true" />{location(organization)}</p></div>
           </div>
           <AdvocacyTags values={organization.advocacies} limit={4} />
-          {(organization.representativeName || organization.adviserName || organization.yorpRegisteredYear) ? <dl className="pwa-directory-public-meta">
+          {(getRepresentativeDisplayName(organization) || getAdviserDisplayName(organization) || organization.yorpRegisteredYear) ? <dl className="pwa-directory-public-meta">
             {organization.yorpRegisteredYear ? <div><dt>YORP Member Since</dt><dd>{organization.yorpRegisteredYear}</dd></div> : null}
-            {organization.representativeName ? <div><dt>Head of Organization</dt><dd>{organization.representativeName}</dd></div> : null}
-            {organization.adviserName ? <div><dt>Adviser</dt><dd>{organization.adviserName}</dd></div> : null}
+            {getRepresentativeDisplayName(organization) ? <div><dt>Head of Organization</dt><dd>{getRepresentativeDisplayName(organization)}</dd></div> : null}
+            {getAdviserDisplayName(organization) ? <div><dt>Adviser</dt><dd>{getAdviserDisplayName(organization)}</dd></div> : null}
           </dl> : null}
         </section>
         {organization.facebookPageUrl ? <section className="pwa-card pwa-directory-connect"><span><Facebook aria-hidden="true" /><strong>Connect</strong></span><a href={organization.facebookPageUrl} target="_blank" rel="noopener noreferrer">Visit Facebook Page <ExternalLink aria-hidden="true" /></a></section> : null}

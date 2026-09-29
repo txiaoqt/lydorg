@@ -43,6 +43,8 @@ import {
 } from "@/lib/pasig-districts";
 import {
   advocacyOptions,
+  formatAddress,
+  formatPersonName,
   formatSubClassificationLabel,
   majorClassificationOptions,
   subClassificationOptions,
@@ -55,6 +57,8 @@ import {
   isOrganizationProfileComplete,
   isValidFacebookUrl,
   isValidPersonName,
+  isValidPersonNamePart,
+  isValidSuffix,
   mapOrganizationProfileError,
   organizationEmailPattern,
   philippineContactNumberPattern,
@@ -83,6 +87,21 @@ export interface GoogleOnboardingDraftData {
   majorClassification?: string;
   subClassification?: string;
   advocacies?: Advocacy[];
+  representativeFirstName?: string;
+  representativeMiddleName?: string;
+  representativeLastName?: string;
+  representativeSuffix?: string;
+  adviserFirstName?: string;
+  adviserMiddleName?: string;
+  adviserLastName?: string;
+  adviserSuffix?: string;
+  addressUnitBuilding?: string;
+  addressStreet?: string;
+  addressSubdivision?: string;
+  addressBarangay?: string;
+  addressCity?: string;
+  addressProvince?: string;
+  addressZipCode?: string;
   representativeName?: string;
   adviserName?: string;
   address?: string;
@@ -166,6 +185,21 @@ export const saveGoogleOnboardingDraft = (
       majorClassification: profile.majorClassification || "",
       subClassification: profile.subClassification || "",
       advocacies: profile.advocacies || [],
+      representativeFirstName: profile.representativeFirstName || "",
+      representativeMiddleName: profile.representativeMiddleName || "",
+      representativeLastName: profile.representativeLastName || "",
+      representativeSuffix: profile.representativeSuffix || "",
+      adviserFirstName: profile.adviserFirstName || "",
+      adviserMiddleName: profile.adviserMiddleName || "",
+      adviserLastName: profile.adviserLastName || "",
+      adviserSuffix: profile.adviserSuffix || "",
+      addressUnitBuilding: profile.addressUnitBuilding || "",
+      addressStreet: profile.addressStreet || "",
+      addressSubdivision: profile.addressSubdivision || "",
+      addressBarangay: profile.addressBarangay || profile.barangay || "",
+      addressCity: profile.addressCity || "Pasig City",
+      addressProvince: profile.addressProvince || "Metro Manila",
+      addressZipCode: profile.addressZipCode || "",
       representativeName: profile.representativeName || "",
       adviserName: profile.adviserName || "",
       address: profile.address || "",
@@ -251,10 +285,59 @@ const GoogleOnboarding = () => {
         if (localDraft?.advocacies && localDraft.advocacies.length > 0) {
           draft.advocacies = localDraft.advocacies;
         }
+        const userGiven = user.givenName?.trim() || "";
+        const userFamily = user.familyName?.trim() || "";
+        if (localDraft?.representativeFirstName || localDraft?.representativeLastName) {
+          draft.representativeFirstName = localDraft.representativeFirstName || "";
+          draft.representativeMiddleName = localDraft.representativeMiddleName || "";
+          draft.representativeLastName = localDraft.representativeLastName || "";
+          draft.representativeSuffix = localDraft.representativeSuffix || "";
+        } else if (existing?.representativeFirstName || existing?.representativeLastName) {
+          draft.representativeFirstName = existing.representativeFirstName || "";
+          draft.representativeMiddleName = existing.representativeMiddleName || "";
+          draft.representativeLastName = existing.representativeLastName || "";
+          draft.representativeSuffix = existing.representativeSuffix || "";
+        } else if (userGiven && userFamily) {
+          draft.representativeFirstName = userGiven;
+          draft.representativeLastName = userFamily;
+        }
+
+        if (localDraft?.adviserFirstName || localDraft?.adviserLastName) {
+          draft.adviserFirstName = localDraft.adviserFirstName || "";
+          draft.adviserMiddleName = localDraft.adviserMiddleName || "";
+          draft.adviserLastName = localDraft.adviserLastName || "";
+          draft.adviserSuffix = localDraft.adviserSuffix || "";
+        } else if (existing?.adviserFirstName || existing?.adviserLastName) {
+          draft.adviserFirstName = existing.adviserFirstName || "";
+          draft.adviserMiddleName = existing.adviserMiddleName || "";
+          draft.adviserLastName = existing.adviserLastName || "";
+          draft.adviserSuffix = existing.adviserSuffix || "";
+        }
+
+        if (localDraft?.addressStreet) {
+          draft.addressUnitBuilding = localDraft.addressUnitBuilding || "";
+          draft.addressStreet = localDraft.addressStreet || "";
+          draft.addressSubdivision = localDraft.addressSubdivision || "";
+          draft.addressBarangay = localDraft.addressBarangay || localDraft.barangay || draft.barangay;
+          draft.addressCity = localDraft.addressCity || "Pasig City";
+          draft.addressProvince = localDraft.addressProvince || "Metro Manila";
+          draft.addressZipCode = localDraft.addressZipCode || "";
+        } else if (existing?.addressStreet) {
+          draft.addressUnitBuilding = existing.addressUnitBuilding || "";
+          draft.addressStreet = existing.addressStreet || "";
+          draft.addressSubdivision = existing.addressSubdivision || "";
+          draft.addressBarangay = existing.addressBarangay || existing.barangay || draft.barangay;
+          draft.addressCity = existing.addressCity || "Pasig City";
+          draft.addressProvince = existing.addressProvince || "Metro Manila";
+          draft.addressZipCode = existing.addressZipCode || "";
+        } else {
+          draft.addressBarangay = draft.barangay;
+          draft.addressCity = "Pasig City";
+          draft.addressProvince = "Metro Manila";
+        }
+
         if (localDraft?.representativeName) {
           draft.representativeName = localDraft.representativeName;
-        } else if (!draft.representativeName && user.displayName) {
-          draft.representativeName = user.displayName;
         }
         if (localDraft?.adviserName) {
           draft.adviserName = localDraft.adviserName;
@@ -287,8 +370,41 @@ const GoogleOnboarding = () => {
         if (localDraft?.majorClassification) draft.majorClassification = localDraft.majorClassification;
         if (localDraft?.subClassification) draft.subClassification = localDraft.subClassification;
         if (localDraft?.advocacies && localDraft.advocacies.length > 0) draft.advocacies = localDraft.advocacies;
+        
+        const fallbackGiven = user.givenName?.trim() || "";
+        const fallbackFamily = user.familyName?.trim() || "";
+        if (localDraft?.representativeFirstName || localDraft?.representativeLastName) {
+          draft.representativeFirstName = localDraft.representativeFirstName || "";
+          draft.representativeMiddleName = localDraft.representativeMiddleName || "";
+          draft.representativeLastName = localDraft.representativeLastName || "";
+          draft.representativeSuffix = localDraft.representativeSuffix || "";
+        } else if (fallbackGiven && fallbackFamily) {
+          draft.representativeFirstName = fallbackGiven;
+          draft.representativeLastName = fallbackFamily;
+        }
+
+        if (localDraft?.adviserFirstName || localDraft?.adviserLastName) {
+          draft.adviserFirstName = localDraft.adviserFirstName || "";
+          draft.adviserMiddleName = localDraft.adviserMiddleName || "";
+          draft.adviserLastName = localDraft.adviserLastName || "";
+          draft.adviserSuffix = localDraft.adviserSuffix || "";
+        }
+
+        if (localDraft?.addressStreet) {
+          draft.addressUnitBuilding = localDraft.addressUnitBuilding || "";
+          draft.addressStreet = localDraft.addressStreet || "";
+          draft.addressSubdivision = localDraft.addressSubdivision || "";
+          draft.addressBarangay = localDraft.addressBarangay || localDraft.barangay || draft.barangay;
+          draft.addressCity = localDraft.addressCity || "Pasig City";
+          draft.addressProvince = localDraft.addressProvince || "Metro Manila";
+          draft.addressZipCode = localDraft.addressZipCode || "";
+        } else {
+          draft.addressBarangay = draft.barangay;
+          draft.addressCity = "Pasig City";
+          draft.addressProvince = "Metro Manila";
+        }
+
         if (localDraft?.representativeName) draft.representativeName = localDraft.representativeName;
-        else if (user.displayName) draft.representativeName = user.displayName;
         if (localDraft?.adviserName) draft.adviserName = localDraft.adviserName;
         if (localDraft?.address) draft.address = localDraft.address;
         if (localDraft?.facebookPageUrl) draft.facebookPageUrl = localDraft.facebookPageUrl;
@@ -454,27 +570,61 @@ const GoogleOnboarding = () => {
       return;
     }
 
-    // 8. Validate Leadership
-    if (!profileDraft.representativeName?.trim()) {
-      setFormError("Official Head of Organization Name is required.");
+    // 8. Validate Leadership (Structured Head of Organization)
+    if (!profileDraft.representativeFirstName?.trim()) {
+      setFormError("Head of Organization First Name is required.");
       return;
     }
-    if (!isValidPersonName(profileDraft.representativeName)) {
-      setFormError("Head of organization name contains invalid characters. Numbers and symbols are not allowed.");
+    if (!isValidPersonNamePart(profileDraft.representativeFirstName, true)) {
+      setFormError("Head of Organization First Name contains invalid characters. Numbers and symbols are not allowed.");
       return;
     }
-    if (!profileDraft.adviserName?.trim()) {
-      setFormError("Official Adviser Name is required.");
+    if (profileDraft.representativeMiddleName?.trim() && !isValidPersonNamePart(profileDraft.representativeMiddleName, false)) {
+      setFormError("Head of Organization Middle Name contains invalid characters.");
       return;
     }
-    if (!isValidPersonName(profileDraft.adviserName)) {
-      setFormError("Adviser name contains invalid characters. Numbers and symbols are not allowed.");
+    if (!profileDraft.representativeLastName?.trim()) {
+      setFormError("Head of Organization Last Name is required.");
+      return;
+    }
+    if (!isValidPersonNamePart(profileDraft.representativeLastName, true)) {
+      setFormError("Head of Organization Last Name contains invalid characters. Numbers and symbols are not allowed.");
+      return;
+    }
+    if (profileDraft.representativeSuffix?.trim() && !isValidSuffix(profileDraft.representativeSuffix)) {
+      setFormError("Head of Organization Suffix contains invalid characters.");
       return;
     }
 
-    // 9. Validate Address
-    if (!profileDraft.address?.trim()) {
-      setFormError("Complete office or community address is required.");
+    // Validate Leadership (Structured Adviser)
+    if (!profileDraft.adviserFirstName?.trim()) {
+      setFormError("Official Adviser First Name is required.");
+      return;
+    }
+    if (!isValidPersonNamePart(profileDraft.adviserFirstName, true)) {
+      setFormError("Official Adviser First Name contains invalid characters. Numbers and symbols are not allowed.");
+      return;
+    }
+    if (profileDraft.adviserMiddleName?.trim() && !isValidPersonNamePart(profileDraft.adviserMiddleName, false)) {
+      setFormError("Official Adviser Middle Name contains invalid characters.");
+      return;
+    }
+    if (!profileDraft.adviserLastName?.trim()) {
+      setFormError("Official Adviser Last Name is required.");
+      return;
+    }
+    if (!isValidPersonNamePart(profileDraft.adviserLastName, true)) {
+      setFormError("Official Adviser Last Name contains invalid characters. Numbers and symbols are not allowed.");
+      return;
+    }
+    if (profileDraft.adviserSuffix?.trim() && !isValidSuffix(profileDraft.adviserSuffix)) {
+      setFormError("Official Adviser Suffix contains invalid characters.");
+      return;
+    }
+
+    // 9. Validate Structured Address
+    if (!profileDraft.addressStreet?.trim()) {
+      setFormError("Street Address is required for complete office or community address.");
       return;
     }
 
@@ -490,6 +640,45 @@ const GoogleOnboarding = () => {
       ? normalizeUrn(profileDraft.organizationIdentifierNumber || "")
       : "";
 
+    const repFirstName = profileDraft.representativeFirstName?.trim() || "";
+    const repMiddleName = profileDraft.representativeMiddleName?.trim() || "";
+    const repLastName = profileDraft.representativeLastName?.trim() || "";
+    const repSuffix = profileDraft.representativeSuffix?.trim() || "";
+    const computedRepName = formatPersonName({
+      firstName: repFirstName,
+      middleName: repMiddleName,
+      lastName: repLastName,
+      suffix: repSuffix,
+    });
+
+    const advFirstName = profileDraft.adviserFirstName?.trim() || "";
+    const advMiddleName = profileDraft.adviserMiddleName?.trim() || "";
+    const advLastName = profileDraft.adviserLastName?.trim() || "";
+    const advSuffix = profileDraft.adviserSuffix?.trim() || "";
+    const computedAdviserName = formatPersonName({
+      firstName: advFirstName,
+      middleName: advMiddleName,
+      lastName: advLastName,
+      suffix: advSuffix,
+    });
+
+    const addrUnit = profileDraft.addressUnitBuilding?.trim() || "";
+    const addrStreet = profileDraft.addressStreet?.trim() || "";
+    const addrSubdivision = profileDraft.addressSubdivision?.trim() || "";
+    const addrBarangay = profileDraft.addressBarangay?.trim() || profileDraft.barangay?.trim() || "";
+    const addrCity = profileDraft.addressCity?.trim() || "Pasig City";
+    const addrProvince = profileDraft.addressProvince?.trim() || "Metro Manila";
+    const addrZip = profileDraft.addressZipCode?.trim() || "";
+    const computedAddress = formatAddress({
+      unitBuilding: addrUnit,
+      street: addrStreet,
+      subdivision: addrSubdivision,
+      barangay: addrBarangay,
+      city: addrCity,
+      province: addrProvince,
+      zipCode: addrZip,
+    });
+
     const payloadToSave: OrganizationProfile = {
       ...profileDraft,
       userId: user.id,
@@ -497,7 +686,7 @@ const GoogleOnboarding = () => {
       organizationEmail: authenticatedEmail,
       contactNumber: sanitizedContact,
       district: profileDraft.district.trim(),
-      barangay: profileDraft.barangay.trim(),
+      barangay: addrBarangay || profileDraft.barangay.trim(),
       isExistingOrganization: isExisting,
       organizationIdentifierNumber: finalIdentifier,
       registrationType: isExisting ? "existing_urn" : "new_organization",
@@ -507,9 +696,24 @@ const GoogleOnboarding = () => {
       majorClassification: profileDraft.majorClassification,
       subClassification: profileDraft.subClassification,
       advocacies: [...profileDraft.advocacies],
-      adviserName: profileDraft.adviserName.trim(),
-      representativeName: profileDraft.representativeName.trim(),
-      address: profileDraft.address.trim(),
+      representativeFirstName: repFirstName,
+      representativeMiddleName: repMiddleName,
+      representativeLastName: repLastName,
+      representativeSuffix: repSuffix,
+      representativeName: computedRepName,
+      adviserFirstName: advFirstName,
+      adviserMiddleName: advMiddleName,
+      adviserLastName: advLastName,
+      adviserSuffix: advSuffix,
+      adviserName: computedAdviserName,
+      addressUnitBuilding: addrUnit,
+      addressStreet: addrStreet,
+      addressSubdivision: addrSubdivision,
+      addressBarangay: addrBarangay,
+      addressCity: addrCity,
+      addressProvince: addrProvince,
+      addressZipCode: addrZip,
+      address: computedAddress,
       facebookPageUrl: profileDraft.facebookPageUrl?.trim() || "",
       profileStatus: "pending_review",
       updatedAt: new Date().toISOString(),
@@ -1014,7 +1218,7 @@ const GoogleOnboarding = () => {
             </CardContent>
           </Card>
 
-          {/* Section 5: Leadership & Location */}
+          {/* Section 5: Leadership & Headquarters */}
           <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
             <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
@@ -1025,63 +1229,238 @@ const GoogleOnboarding = () => {
                 Authorized youth leaders and physical headquarters location in Pasig City.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="rep-name" className="text-xs font-semibold">
-                    Official Head of Organization Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="rep-name"
-                    placeholder="Full name of head of organization"
-                    value={profileDraft.representativeName || ""}
-                    onChange={(e) => handleFieldChange("representativeName", e.target.value)}
-                    autoComplete="name"
-                    className="h-10 text-sm"
-                    required
-                  />
-                  <span className="text-[10px] text-muted-foreground block">
-                    Authorized youth leader heading the organization.
-                  </span>
+            <CardContent className="p-5 sm:p-6 pt-0 space-y-6">
+              {/* Head of Organization */}
+              <div className="space-y-3">
+                <div className="border-b border-border/60 pb-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Head of Organization</h4>
+                  <p className="text-[11px] text-muted-foreground">Authorized youth leader heading the organization.</p>
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="adviser-name" className="text-xs font-semibold">
-                    Official Adviser Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="adviser-name"
-                    placeholder="Full name of organization adviser"
-                    value={profileDraft.adviserName || ""}
-                    onChange={(e) => handleFieldChange("adviserName", e.target.value)}
-                    autoComplete="name"
-                    className="h-10 text-sm"
-                    required
-                  />
-                  <span className="text-[10px] text-muted-foreground block">
-                    Faculty, community leader, or designated adult adviser.
-                  </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="rep-first-name" className="text-xs font-semibold">
+                      First Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="rep-first-name"
+                      placeholder="e.g. Juan"
+                      value={profileDraft.representativeFirstName || ""}
+                      onChange={(e) => handleFieldChange("representativeFirstName", e.target.value)}
+                      autoComplete="given-name"
+                      className="h-9 text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="rep-middle-name" className="text-xs font-semibold text-muted-foreground">
+                      Middle Name
+                    </Label>
+                    <Input
+                      id="rep-middle-name"
+                      placeholder="e.g. Crisostomo"
+                      value={profileDraft.representativeMiddleName || ""}
+                      onChange={(e) => handleFieldChange("representativeMiddleName", e.target.value)}
+                      autoComplete="additional-name"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="rep-last-name" className="text-xs font-semibold">
+                      Last Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="rep-last-name"
+                      placeholder="e.g. Ibarra"
+                      value={profileDraft.representativeLastName || ""}
+                      onChange={(e) => handleFieldChange("representativeLastName", e.target.value)}
+                      autoComplete="family-name"
+                      className="h-9 text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="rep-suffix" className="text-xs font-semibold text-muted-foreground">
+                      Suffix
+                    </Label>
+                    <Input
+                      id="rep-suffix"
+                      placeholder="e.g. Jr., III"
+                      value={profileDraft.representativeSuffix || ""}
+                      onChange={(e) => handleFieldChange("representativeSuffix", e.target.value)}
+                      autoComplete="honorific-suffix"
+                      className="h-9 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Complete Address */}
-              <div className="space-y-1.5 pt-1">
-                <Label htmlFor="org-address" className="text-xs font-semibold">
-                  Complete Office or Community Address <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="org-address"
-                  placeholder="Room/Unit, Street Address, Barangay, Pasig City"
-                  value={profileDraft.address || ""}
-                  onChange={(e) => handleFieldChange("address", e.target.value)}
-                  autoComplete="street-address"
-                  className="min-h-[80px] text-sm resize-y"
-                  required
-                />
+              {/* Official Adviser */}
+              <div className="space-y-3">
+                <div className="border-b border-border/60 pb-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Official Adviser</h4>
+                  <p className="text-[11px] text-muted-foreground">Faculty, community leader, or designated adult adviser.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="adviser-first-name" className="text-xs font-semibold">
+                      First Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="adviser-first-name"
+                      placeholder="e.g. Maria"
+                      value={profileDraft.adviserFirstName || ""}
+                      onChange={(e) => handleFieldChange("adviserFirstName", e.target.value)}
+                      autoComplete="given-name"
+                      className="h-9 text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="adviser-middle-name" className="text-xs font-semibold text-muted-foreground">
+                      Middle Name
+                    </Label>
+                    <Input
+                      id="adviser-middle-name"
+                      placeholder="e.g. Clara"
+                      value={profileDraft.adviserMiddleName || ""}
+                      onChange={(e) => handleFieldChange("adviserMiddleName", e.target.value)}
+                      autoComplete="additional-name"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="adviser-last-name" className="text-xs font-semibold">
+                      Last Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="adviser-last-name"
+                      placeholder="e.g. delos Santos"
+                      value={profileDraft.adviserLastName || ""}
+                      onChange={(e) => handleFieldChange("adviserLastName", e.target.value)}
+                      autoComplete="family-name"
+                      className="h-9 text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="adviser-suffix" className="text-xs font-semibold text-muted-foreground">
+                      Suffix
+                    </Label>
+                    <Input
+                      id="adviser-suffix"
+                      placeholder="e.g. Jr., III"
+                      value={profileDraft.adviserSuffix || ""}
+                      onChange={(e) => handleFieldChange("adviserSuffix", e.target.value)}
+                      autoComplete="honorific-suffix"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Office / Community Address */}
+              <div className="space-y-3">
+                <div className="border-b border-border/60 pb-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Office / Community Address</h4>
+                  <p className="text-[11px] text-muted-foreground">Physical office, headquarters, or community base in Pasig City.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="space-y-1 md:col-span-3">
+                    <Label htmlFor="address-unit" className="text-xs font-semibold text-muted-foreground">
+                      Unit / Room / Building / House / Block / Lot
+                    </Label>
+                    <Input
+                      id="address-unit"
+                      placeholder="e.g. Room 201, ABC Building / Block 5 Lot 2"
+                      value={profileDraft.addressUnitBuilding || ""}
+                      onChange={(e) => handleFieldChange("addressUnitBuilding", e.target.value)}
+                      className="h-9 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-2 md:col-span-2">
+                    <Label htmlFor="address-street" className="text-xs font-semibold">
+                      Street Address <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="address-street"
+                      placeholder="e.g. 101 Test Center Way"
+                      value={profileDraft.addressStreet || ""}
+                      onChange={(e) => handleFieldChange("addressStreet", e.target.value)}
+                      className="h-9 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="address-subdivision" className="text-xs font-semibold text-muted-foreground">
+                      Subdivision / Village
+                    </Label>
+                    <Input
+                      id="address-subdivision"
+                      placeholder="e.g. Kapitolyo Village"
+                      value={profileDraft.addressSubdivision || ""}
+                      onChange={(e) => handleFieldChange("addressSubdivision", e.target.value)}
+                      className="h-9 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="address-barangay" className="text-xs font-semibold">
+                      Barangay <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="address-barangay"
+                      value={profileDraft.addressBarangay || profileDraft.barangay || ""}
+                      onChange={(e) => handleFieldChange("addressBarangay", e.target.value)}
+                      placeholder="e.g. Kapitolyo"
+                      className="h-9 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="address-city" className="text-xs font-semibold text-muted-foreground">
+                      City / Municipality
+                    </Label>
+                    <Input
+                      id="address-city"
+                      value={profileDraft.addressCity || "Pasig City"}
+                      readOnly
+                      className="h-9 text-xs bg-muted/30"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="address-province" className="text-xs font-semibold text-muted-foreground">
+                      Province
+                    </Label>
+                    <Input
+                      id="address-province"
+                      value={profileDraft.addressProvince || "Metro Manila"}
+                      readOnly
+                      className="h-9 text-xs bg-muted/30"
+                    />
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label htmlFor="address-zip" className="text-xs font-semibold text-muted-foreground">
+                      ZIP Code
+                    </Label>
+                    <Input
+                      id="address-zip"
+                      placeholder="e.g. 1603"
+                      value={profileDraft.addressZipCode || ""}
+                      onChange={(e) => handleFieldChange("addressZipCode", e.target.value)}
+                      className="h-9 text-xs"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Facebook Page (Optional) */}
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-1.5 pt-2 border-t border-border/40">
                 <Label htmlFor="fb-page" className="text-xs font-semibold flex items-center gap-1.5">
                   <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>Facebook Page or Profile URL (Optional)</span>
@@ -1093,7 +1472,7 @@ const GoogleOnboarding = () => {
                   value={profileDraft.facebookPageUrl || ""}
                   onChange={(e) => handleFieldChange("facebookPageUrl", e.target.value)}
                   autoComplete="url"
-                  className="h-10 text-sm"
+                  className="h-9 text-xs"
                 />
               </div>
             </CardContent>
