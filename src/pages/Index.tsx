@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-image.webp";
-import overviewWorkshop from "@/assets/ytrace-community-workshop.png";
+import overviewImage from "@/assets/overview-fashion-collage.png";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -332,9 +332,9 @@ const Index = () => {
           {/* Left column — portal preview card */}
           <div className="flex w-full items-center justify-center rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-2 sm:p-3 lg:p-[10px] shadow-public-overview-card xl:h-[700px] xl:w-[620px] xl:shrink-0">
             <img
-              src={overviewWorkshop}
-              alt="Illustrative scene of youth leaders and facilitators reviewing program documents at a community workshop"
-              className="h-auto w-full max-w-[540px] rounded-lg sm:rounded-[12px] object-cover"
+              src={overviewImage}
+              alt="Fashion portrait collage"
+              className="h-auto w-full max-w-[520px] object-contain"
             />
           </div>
 
