@@ -28,13 +28,12 @@ const readSignature = async (file: File, length = 8) =>
 
 export const validateOrganizationDocumentFile = async (_documentTypeId: string, file: File) => {
   if (hasUnsafeFileName(file.name)) return "Use a shorter file name without slashes or control characters.";
+  const isPdf = file.type === "application/pdf" && /\.pdf$/i.test(file.name);
+  if (!isPdf) return "This document must be a PDF file with a .pdf extension.";
   if (!file.size) return "The selected file is empty.";
   if (file.size > DOCUMENT_UPLOAD_MAX_BYTES) {
     return `The file must not exceed ${formatDocumentFileSize(DOCUMENT_UPLOAD_MAX_BYTES)}.`;
   }
-
-  const isPdf = file.type === "application/pdf" && /\.pdf$/i.test(file.name);
-  if (!isPdf) return "This document must be a PDF file.";
 
   const signature = await readSignature(file);
   if (String.fromCharCode(...signature.slice(0, 5)) !== "%PDF-") {

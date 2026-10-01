@@ -39,7 +39,7 @@ export function BudgetExecutionPipeline({
 
   return (
     <div className={cn("min-w-0 space-y-3", className)}>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-start sm:gap-x-8 sm:gap-y-3">
         {states.map((state) => {
           const colors = BUDGET_MONITORING_COLORS[state];
           return (

@@ -34,6 +34,7 @@ export interface PublicBudgetOverviewProps {
   loading?: boolean;
   selectedFiscalYear?: number;
   onFiscalYearChange?: (fiscalYear: number) => void;
+  onAvailableFiscalYearsChange?: (fiscalYears: number[]) => void;
   availableFiscalYears?: number[];
   showFiscalYearSelector?: boolean;
   className?: string;
@@ -82,6 +83,7 @@ export default function PublicBudgetOverview({
   loading: propLoading,
   selectedFiscalYear: propSelectedFiscalYear,
   onFiscalYearChange: propOnFiscalYearChange,
+  onAvailableFiscalYearsChange: propOnAvailableFiscalYearsChange,
   availableFiscalYears: propAvailableFiscalYears,
   showFiscalYearSelector = true,
   className,
@@ -99,13 +101,17 @@ export default function PublicBudgetOverview({
   const activeFY = propSelectedFiscalYear ?? (isControlledData ? activeData?.fiscalYear : internalFY) ?? internalFY;
 
   // Derive available FYs from props, active data, or defaults
-  const resolvedAvailableFYs = (
+  const resolvedAvailableFYs = useMemo(() => (
     propAvailableFiscalYears && propAvailableFiscalYears.length > 0
       ? propAvailableFiscalYears
       : activeData?.availableFiscalYears && activeData.availableFiscalYears.length > 0
       ? activeData.availableFiscalYears
       : [currentYear]
-  ).slice().sort((a, b) => b - a);
+  ).slice().sort((a, b) => b - a), [propAvailableFiscalYears, activeData?.availableFiscalYears, currentYear]);
+
+  useEffect(() => {
+    propOnAvailableFiscalYearsChange?.(resolvedAvailableFYs);
+  }, [propOnAvailableFiscalYearsChange, resolvedAvailableFYs]);
 
   // Autonomous data loader when propData is not passed
   useEffect(() => {

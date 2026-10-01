@@ -48,6 +48,12 @@ export const formatActivityActionLabel = (
 
   const lower = action.toLowerCase();
 
+  // This event is written by an admin after reviewing a batch; it is not the
+  // organization's original document submission.
+  if (lower === "submitted batch document review") {
+    return "Documents Reviewed";
+  }
+
   // 1. Internal/technical system action exclusions/mappings
   if (
     lower === "admin_notification_dispatched" ||

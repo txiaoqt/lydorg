@@ -51,6 +51,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isRevisionExpired, isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
+import { DOCUMENT_UPLOAD_MAX_BYTES, validateOrganizationDocumentFile } from "@/user/pwa/documents/documentFileValidation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -382,6 +383,8 @@ type BatchDroppedDocumentFile = {
   id: string;
   file: File;
   mappedDocumentTypeId: string;
+  isValidating?: boolean;
+  validationError?: string;
 };
 
 type BatchUploadResultSummary = {
@@ -1485,15 +1488,54 @@ export default function UserPortal({ section }: { section: string }) {
     [currentProfile?.id, state.activityLogs],
   );
   const submissionLogs = useMemo(
-    () =>
-      state.activityLogs
+    () => {
+      const logs = state.activityLogs
         .filter(
           (log) =>
             log.organizationId === currentProfile?.id &&
             isDocumentSubmissionLog(log),
         )
-        .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
-    [currentProfile?.id, state.activityLogs],
+        .slice();
+      const submittedAt = submission?.submittedAt?.trim();
+      const hasValidSubmissionTimestamp = Boolean(
+        submittedAt && !Number.isNaN(new Date(submittedAt).getTime()),
+      );
+      const hasCanonicalSubmissionEvent = logs.some((log) => {
+        const action = log.action?.toLowerCase() || "";
+        const description = log.description?.toLowerCase() || "";
+        return (
+          log.relatedId === submission?.id &&
+          log.relatedType === "document_submission" &&
+          !action.includes("review") &&
+          !description.includes("review decision") &&
+          (action.includes("batch_submitted") ||
+            action.includes("submitted batch") ||
+            action.includes("batch document submission"))
+        );
+      });
+
+      if (
+        submission &&
+        submission.status !== "draft" &&
+        submittedAt &&
+        hasValidSubmissionTimestamp &&
+        !hasCanonicalSubmissionEvent
+      ) {
+        logs.push({
+          id: `document-submission-${submission.id}`,
+          actorUserId: submission.submittedBy || "",
+          organizationId: currentProfile?.id || submission.organizationId,
+          action: "batch_submitted",
+          relatedType: "document_submission",
+          relatedId: submission.id,
+          description: "Organization submitted registration documents for review.",
+          createdAt: submittedAt,
+        });
+      }
+
+      return logs.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+    },
+    [currentProfile?.id, state.activityLogs, submission],
   );
   const globalActivityLogEntries = useMemo(
     () =>
@@ -1804,6 +1846,8 @@ export default function UserPortal({ section }: { section: string }) {
     if (!isPdfFile(file)) {
       return "Please upload a PDF file for document submission.";
     }
+    if (!file.size) return "The selected PDF is empty.";
+    if (file.size > DOCUMENT_UPLOAD_MAX_BYTES) return "The file must not exceed 10 MB.";
 
     return null;
   };
@@ -1828,6 +1872,12 @@ export default function UserPortal({ section }: { section: string }) {
     const issues: string[] = [];
     const mappedDocumentTypeIds = new Set<string>();
 
+    batchDroppedFiles.forEach((entry) => {
+      if (entry.validationError) issues.push(`${entry.file.name}: ${entry.validationError}`);
+      else if (entry.isValidating) issues.push(`${entry.file.name}: File validation is still in progress.`);
+      else if (!entry.mappedDocumentTypeId) issues.push(`${entry.file.name}: Select a document type before continuing.`);
+    });
+
     batchSelectedItems.forEach((entry) => {
       const existingFile = documentFilesByTypeId.get(entry.documentType.id);
       if (isUnderReviewSubmissionFile(existingFile)) {
@@ -1846,12 +1896,6 @@ export default function UserPortal({ section }: { section: string }) {
       mappedDocumentTypeIds.add(entry.documentType.id);
     });
 
-    batchDroppedFiles
-      .filter((entry) => !entry.mappedDocumentTypeId)
-      .forEach((entry) => {
-        issues.push(`${entry.file.name}: Select a document type before continuing.`);
-      });
-
     return issues;
   };
 
@@ -1863,6 +1907,7 @@ export default function UserPortal({ section }: { section: string }) {
       return array.findIndex((item) => item.mappedDocumentTypeId === entry.mappedDocumentTypeId) !== index ? count + 1 : count;
     }, 0);
     const validReadyCount = batchDroppedFiles.filter((entry) => {
+      if (entry.validationError || entry.isValidating) return false;
       if (!entry.mappedDocumentTypeId) return false;
       const validationError = getDocumentUploadValidationError(entry.mappedDocumentTypeId, entry.file);
       const hasDuplicate = batchDroppedFiles.some(
@@ -1874,7 +1919,9 @@ export default function UserPortal({ section }: { section: string }) {
       rawCount,
       assignedCount,
       validReadyCount,
-      unassignedCount: rawCount - assignedCount,
+      unassignedCount: batchDroppedFiles.filter((entry) => !entry.validationError && !entry.isValidating && !entry.mappedDocumentTypeId).length,
+      invalidCount: batchDroppedFiles.filter((entry) => Boolean(entry.validationError)).length,
+      validatingCount: batchDroppedFiles.filter((entry) => Boolean(entry.isValidating)).length,
       duplicateTypeCount,
     };
   }, [batchDroppedFiles]);
@@ -1897,14 +1944,42 @@ export default function UserPortal({ section }: { section: string }) {
     const normalizedFiles = Array.from(files ?? []).filter(Boolean);
     if (!normalizedFiles.length) return;
 
-    setBatchDroppedFiles((current) => [
-      ...current,
-      ...normalizedFiles.map((file) => ({
+    const entries = normalizedFiles.map((file): BatchDroppedDocumentFile => {
+      const immediateError = !isPdfFile(file)
+        ? "Only PDF files with a .pdf extension can be uploaded."
+        : !file.size
+          ? "The selected PDF is empty."
+          : file.size > DOCUMENT_UPLOAD_MAX_BYTES
+            ? "The file must not exceed 10 MB."
+            : undefined;
+      return {
         id: createBatchUploadDraftId(),
         file,
-        mappedDocumentTypeId: suggestDocumentTypeIdForFile(file.name),
-      })),
-    ]);
+        mappedDocumentTypeId: "",
+        isValidating: !immediateError,
+        validationError: immediateError,
+      };
+    });
+
+    setBatchDroppedFiles((current) => [...current, ...entries]);
+
+    entries.filter((entry) => entry.isValidating).forEach((entry) => {
+      void validateOrganizationDocumentFile("", entry.file).then((error) => {
+        setBatchDroppedFiles((current) => current.map((item) => item.id !== entry.id ? item : {
+          ...item,
+          isValidating: false,
+          validationError: error || undefined,
+          mappedDocumentTypeId: error ? "" : suggestDocumentTypeIdForFile(item.file.name),
+        }));
+      }).catch(() => {
+        setBatchDroppedFiles((current) => current.map((item) => item.id !== entry.id ? item : {
+          ...item,
+          isValidating: false,
+          validationError: "The file could not be validated. Please choose a valid PDF and try again.",
+          mappedDocumentTypeId: "",
+        }));
+      });
+    });
   };
 
   const handleSubmitBatchUpload = async (submitMode: "draft" | "review") => {
@@ -2065,6 +2140,16 @@ export default function UserPortal({ section }: { section: string }) {
       toast({
         title: "Unsupported file type",
         description: validationError,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const contentError = await validateOrganizationDocumentFile(localDocumentType.id, file);
+    if (contentError) {
+      toast({
+        title: "Invalid document file",
+        description: contentError,
         variant: "destructive",
       });
       return;
@@ -4315,7 +4400,7 @@ export default function UserPortal({ section }: { section: string }) {
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                  accept=".pdf,application/pdf"
                   className="sr-only"
                   onChange={(event) => {
                     handleBatchDroppedFiles(event.target.files);
@@ -4351,9 +4436,9 @@ export default function UserPortal({ section }: { section: string }) {
                         (other) => other.id !== entry.id && other.mappedDocumentTypeId === entry.mappedDocumentTypeId,
                       ),
                     );
-                    const validationError = entry.mappedDocumentTypeId
+                    const validationError = entry.validationError ?? (entry.mappedDocumentTypeId
                       ? getDocumentUploadValidationError(entry.mappedDocumentTypeId, entry.file)
-                      : null;
+                      : null);
                     const isMapped = Boolean(entry.mappedDocumentTypeId);
                     const hasError = duplicateAssignment || Boolean(validationError);
                     const mappedTemplate = templateDocuments.find((t) => t.id === entry.mappedDocumentTypeId);
@@ -4386,6 +4471,10 @@ export default function UserPortal({ section }: { section: string }) {
                               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-full">
                                 <AlertCircle className="h-3 w-3" /> Error
                               </span>
+                            ) : entry.isValidating ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">
+                                <Loader2 className="h-3 w-3 animate-spin" /> Checking PDF
+                              </span>
                             ) : isMapped ? (
                               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                                 <CheckCircle2 className="h-3 w-3" /> Ready
@@ -4409,58 +4498,60 @@ export default function UserPortal({ section }: { section: string }) {
                           </div>
                         </div>
 
-                        {/* Document Type Mapping Selector */}
-                        <div className="space-y-1.5 pt-1 border-t border-border/40">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Assign Required Document Type
-                          </label>
-                          <Select
-                            value={entry.mappedDocumentTypeId || "__unassigned__"}
-                            onValueChange={(value) =>
-                              setBatchDroppedFiles((current) =>
-                                current.map((item) =>
-                                  item.id === entry.id
-                                    ? { ...item, mappedDocumentTypeId: value === "__unassigned__" ? "" : value }
-                                    : item,
-                                ),
-                              )
-                            }
-                          >
-                            <SelectTrigger className="h-9 w-full rounded-xl bg-background border-border text-xs font-medium">
-                              <SelectValue placeholder="Select document type" />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-[260px] rounded-xl">
-                              <SelectItem value="__unassigned__">Select document type</SelectItem>
-                              {templateDocuments.map((documentType) => {
-                                const existingFile = documentFilesByTypeId.get(documentType.id);
-                                const isApproved = isApprovedSubmissionFile(existingFile);
-                                const isUnderReview = isUnderReviewSubmissionFile(existingFile);
-                                const assignedToOther = batchDroppedFiles.some(
-                                  (other) =>
-                                    other.id !== entry.id &&
-                                    other.mappedDocumentTypeId &&
-                                    other.mappedDocumentTypeId === documentType.id,
-                                );
-                                const isDisabled = isApproved || isUnderReview || assignedToOther;
-                                return (
-                                  <SelectItem
-                                    key={documentType.id}
-                                    value={documentType.id}
-                                    disabled={isDisabled}
-                                  >
-                                    {isApproved
-                                      ? `${documentType.name} — Approved`
-                                      : isUnderReview
-                                      ? `${documentType.name} — Under Review`
-                                      : assignedToOther
-                                      ? `${documentType.name} — Assigned`
-                                      : documentType.name}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        {/* Invalid files cannot be assigned a required document type. */}
+                        {!validationError && !entry.isValidating ? (
+                          <div className="space-y-1.5 pt-1 border-t border-border/40">
+                            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Assign Required Document Type
+                            </label>
+                            <Select
+                              value={entry.mappedDocumentTypeId || "__unassigned__"}
+                              onValueChange={(value) =>
+                                setBatchDroppedFiles((current) =>
+                                  current.map((item) =>
+                                    item.id === entry.id
+                                      ? { ...item, mappedDocumentTypeId: value === "__unassigned__" ? "" : value }
+                                      : item,
+                                  ),
+                                )
+                              }
+                            >
+                              <SelectTrigger className="h-9 w-full rounded-xl bg-background border-border text-xs font-medium">
+                                <SelectValue placeholder="Select document type" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[260px] rounded-xl">
+                                <SelectItem value="__unassigned__">Select document type</SelectItem>
+                                {templateDocuments.map((documentType) => {
+                                  const existingFile = documentFilesByTypeId.get(documentType.id);
+                                  const isApproved = isApprovedSubmissionFile(existingFile);
+                                  const isUnderReview = isUnderReviewSubmissionFile(existingFile);
+                                  const assignedToOther = batchDroppedFiles.some(
+                                    (other) =>
+                                      other.id !== entry.id &&
+                                      other.mappedDocumentTypeId &&
+                                      other.mappedDocumentTypeId === documentType.id,
+                                  );
+                                  const isDisabled = isApproved || isUnderReview || assignedToOther;
+                                  return (
+                                    <SelectItem
+                                      key={documentType.id}
+                                      value={documentType.id}
+                                      disabled={isDisabled}
+                                    >
+                                      {isApproved
+                                        ? `${documentType.name} — Approved`
+                                        : isUnderReview
+                                        ? `${documentType.name} — Under Review`
+                                        : assignedToOther
+                                        ? `${documentType.name} — Assigned`
+                                        : documentType.name}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ) : null}
 
                         {/* Inline Error Alerts */}
                         {duplicateAssignment ? (
@@ -4470,7 +4561,7 @@ export default function UserPortal({ section }: { section: string }) {
                           </div>
                         ) : null}
                         {validationError ? (
-                          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive flex items-center gap-2">
+                          <div role="alert" aria-live="polite" className="rounded-xl border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive flex items-center gap-2">
                             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                             <span>{validationError}</span>
                           </div>
@@ -4500,9 +4591,11 @@ export default function UserPortal({ section }: { section: string }) {
               <p className="font-bold text-foreground">
                 {batchAssignmentCounts.validReadyCount} file{batchAssignmentCounts.validReadyCount === 1 ? "" : "s"} ready
               </p>
-              {batchAssignmentCounts.unassignedCount > 0 || batchAssignmentCounts.duplicateTypeCount > 0 ? (
-                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
-                  {batchAssignmentCounts.unassignedCount} file{batchAssignmentCounts.unassignedCount === 1 ? "" : "s"} need a document type
+              {batchAssignmentCounts.invalidCount > 0 || batchAssignmentCounts.validatingCount > 0 || batchAssignmentCounts.unassignedCount > 0 || batchAssignmentCounts.duplicateTypeCount > 0 ? (
+                <p className={cn("text-[11px] mt-0.5", batchAssignmentCounts.invalidCount > 0 ? "text-destructive" : "text-amber-600 dark:text-amber-400")}>
+                  {batchAssignmentCounts.invalidCount > 0 ? `${batchAssignmentCounts.invalidCount} invalid file${batchAssignmentCounts.invalidCount === 1 ? "" : "s"}` : null}
+                  {batchAssignmentCounts.validatingCount > 0 ? `${batchAssignmentCounts.invalidCount > 0 ? " · " : ""}Checking ${batchAssignmentCounts.validatingCount} PDF${batchAssignmentCounts.validatingCount === 1 ? "" : "s"}` : null}
+                  {batchAssignmentCounts.unassignedCount > 0 ? `${batchAssignmentCounts.invalidCount > 0 || batchAssignmentCounts.validatingCount > 0 ? " · " : ""}${batchAssignmentCounts.unassignedCount} need a document type` : null}
                   {batchAssignmentCounts.duplicateTypeCount > 0
                     ? ` · ${batchAssignmentCounts.duplicateTypeCount} duplicate assignment${batchAssignmentCounts.duplicateTypeCount === 1 ? "" : "s"}`
                     : ""}
@@ -4515,7 +4608,7 @@ export default function UserPortal({ section }: { section: string }) {
                 type="button"
                 variant="outline"
                 className="h-9 flex-1 sm:flex-initial rounded-xl border-border text-xs font-semibold hover:bg-accent"
-                disabled={!batchDroppedFiles.length}
+                disabled={!batchDroppedFiles.length || getBatchUploadIssues().length > 0}
                 onClick={() => void handleSubmitBatchUpload("draft")}
               >
                 Save as Draft

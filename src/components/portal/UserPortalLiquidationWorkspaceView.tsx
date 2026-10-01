@@ -14,7 +14,8 @@ import {
   X,
   Sparkles,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
@@ -357,7 +358,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
               <span className="text-muted-foreground/40">•</span>
-              <span className="text-xs text-muted-foreground font-medium">PCYDO Pasig City</span>
+              <span className="text-xs text-muted-foreground font-medium">PCYDO Y-TRACE</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
               Liquidation Reports
@@ -377,7 +378,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
                 <span className="text-muted-foreground/40">•</span>
-                <span className="text-xs text-muted-foreground font-medium">PCYDO Pasig City</span>
+                <span className="text-xs text-muted-foreground font-medium">PCYDO Y-TRACE</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                 Liquidation Reports
@@ -391,7 +392,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium shrink-0">
               <span className="font-bold text-foreground bg-muted px-2.5 py-1 rounded-lg border border-border/60">{totalReports} Reports</span>
               <span>•</span>
-              <span>Review ETA: 2–3 Days</span>
+              <span>Review Time: 2-3 Business days</span>
             </div>
           </div>
         </div>
@@ -897,6 +898,17 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                           )}
                         </div>
                       )}
+                      {selectedReport.status === "approved_for_ftf_green" && (
+                        <div role="status" className="rounded-xl border border-sky-200 bg-sky-50 p-3.5 text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100 sm:p-4">
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <Info aria-hidden="true" className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
+                            <span>Next step: Submit the signed hard copy</span>
+                          </div>
+                          <p className="mt-1 pl-6 text-xs leading-relaxed text-sky-900/90 dark:text-sky-100/90">
+                            Your report is approved. Please bring the signed hard copy to the PCYDO office. PCYDO will finalize your liquidation after receiving it.
+                          </p>
+                        </div>
+                      )}
                       {/* 1. Key Summary: Financial Overview */}
                       <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
                         <p className="text-xs font-bold text-foreground">Financial Overview</p>
@@ -1344,6 +1356,17 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                                 : `Resubmission deadline: ${revisionDeadlineFormatted} (${revisionTimeRemaining?.label})`}
                             </p>
                           )}
+                        </div>
+                      )}
+                      {selectedReport.status === "approved_for_ftf_green" && (
+                        <div role="status" className="rounded-xl border border-sky-200 bg-sky-50 p-3.5 text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100 sm:p-4">
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <Info aria-hidden="true" className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
+                            <span>Next step: Submit the signed hard copy</span>
+                          </div>
+                          <p className="mt-1 pl-6 text-xs leading-relaxed text-sky-900/90 dark:text-sky-100/90">
+                            Your report is approved. Please bring the signed hard copy to the PCYDO office. PCYDO will finalize your liquidation after receiving it.
+                          </p>
                         </div>
                       )}
                       {/* 1. Key Summary: Financial Overview */}

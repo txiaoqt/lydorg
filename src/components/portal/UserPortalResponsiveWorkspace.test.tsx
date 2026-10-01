@@ -330,7 +330,7 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
         organizationId: "org-1",
         activityId: "act-1",
         title: "City-Led Event Attended",
-        description: "Organized by PCYDO Pasig City",
+        description: "Organized by PCYDO",
         date: "2026-08-20T00:00:00Z",
         status: "verified",
       },
@@ -1723,7 +1723,7 @@ describe("UserPortalBudgetWorkspaceView Mobile Page Polish", () => {
 
       // 1. Page Header Verification
       expect(screen.getByText("Financial Workspace")).toBeInTheDocument();
-      expect(screen.getByText("PCYDO Pasig City")).toBeInTheDocument();
+      expect(screen.getByText("PCYDO Y-TRACE")).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Budget Requests" })).toBeInTheDocument();
       expect(
         screen.getByText("Submit financial grant proposals, track approval stages, and monitor released funds.")

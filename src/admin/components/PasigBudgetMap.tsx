@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GeoJSON, MapContainer, TileLayer, useMap } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "@/admin/admin-budget-monitoring.css";
 import type { Feature, GeoJsonObject, Layer, PathOptions } from "leaflet";
 import { AlertTriangle, Check, Eye, LoaderCircle, MapPin, RefreshCw } from "lucide-react";
 import {
@@ -12,7 +13,7 @@ import {
 } from "@/lib/pasig-districts";
 import type { OrganizationFundingRow } from "@/admin/components/OrganizationFundingTable";
 
-type AllocationRow = {
+export type PasigBudgetMapRow = {
   district: string;
   barangay: string;
   organizationId?: string;
@@ -208,14 +209,22 @@ export function PasigBudgetMap({
   selectedBarangay,
   fiscalPeriodLabel,
   onViewOrganization,
+  onSelectedBarangayChange,
+  loadingData = false,
+  showOrganizations = true,
+  mobileBrowseAsFilter = false,
 }: {
-  rows: AllocationRow[];
+  rows: PasigBudgetMapRow[];
   organizationRows: OrganizationFundingRow[];
   formatPesoAmount: (amount: number) => string;
   selectedDistrict: "all" | PasigDistrict;
   selectedBarangay: string;
   fiscalPeriodLabel: string;
-  onViewOrganization: (organizationId: string) => void;
+  onViewOrganization?: (organizationId: string) => void;
+  onSelectedBarangayChange?: (barangay: string) => void;
+  loadingData?: boolean;
+  showOrganizations?: boolean;
+  mobileBrowseAsFilter?: boolean;
 }) {
   const [boundaries, setBoundaries] = useState<BarangayCollection | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -271,7 +280,8 @@ export function PasigBudgetMap({
       entry.approvedAmount += row.approvedAmount;
       entry.releasedAmount += row.releasedAmount;
       entry.liquidatedAmount += row.liquidatedAmount;
-      if (row.releasedAmount > 0) entry.releasedBudgetCount += 1;
+      if (typeof row.releasedBudgetCount === "number") entry.releasedBudgetCount += row.releasedBudgetCount;
+      else if (row.releasedAmount > 0) entry.releasedBudgetCount += 1;
       const ids = organizationsByName.get(entry.name) ?? new Set<string>();
       if (row.organizationId) ids.add(row.organizationId);
       else entry.organizationCount += row.organizationCount ?? 0;
@@ -291,14 +301,25 @@ export function PasigBudgetMap({
     acc.approved += row.approvedAmount;
     acc.released += row.releasedAmount;
     acc.liquidated += row.liquidatedAmount;
+    acc.organizationCount += row.organizationCount ?? 0;
     acc.organizations.add(row.organizationId ?? `${row.district}::${row.barangay}`);
     return acc;
-  }, { approved: 0, released: 0, liquidated: 0, organizations: new Set<string>() }), [rows]);
+  }, { approved: 0, released: 0, liquidated: 0, organizationCount: 0, organizations: new Set<string>() }), [rows]);
+  const totalOrganizations = rows.some((row) => typeof row.organizationCount === "number")
+    ? totals.organizationCount
+    : totals.organizations.size;
   const selectedEntry = barangayData.find((entry) => entry.name === selectedName) ?? null;
   const selectedOrganizations = selectedEntry
     ? organizationRows.filter((organization) => normalizePasigBarangayName(organization.barangay) === normalizePasigBarangayName(selectedEntry.name) && organization.totalReleased > 0)
     : [];
   const selectedFeatureName = useCallback((feature: BarangayFeature) => readFeatureName(feature.properties), []);
+  const toggleBarangaySelection = useCallback((name: string) => {
+    setSelectedName((current) => {
+      const next = current === name ? "" : name;
+      onSelectedBarangayChange?.(next || "all");
+      return next;
+    });
+  }, [onSelectedBarangayChange]);
   const getStyle = useCallback((feature?: BarangayFeature): PathOptions => {
     const name = feature ? selectedFeatureName(feature) : "";
     const entry = barangayData.find((barangay) => barangay.name === name);
@@ -332,7 +353,11 @@ export function PasigBudgetMap({
     const name = selectedFeatureName(feature);
     layer.bindTooltip(name || "Unmatched barangay", { sticky: true, direction: "top", className: "pasig-map-tooltip" });
     layer.on({
-      click: () => setSelectedName((current) => current === name ? "" : name),
+      click: () => setSelectedName((current) => {
+        const next = current === name ? "" : name;
+        onSelectedBarangayChange?.(next || "all");
+        return next;
+      }),
       mouseover: (event) => {
         const target = event.target as L.Path;
         const style = getStyleRef.current(feature);
@@ -345,7 +370,7 @@ export function PasigBudgetMap({
         target.getElement()?.setAttribute("fill", `url(#${gradientId(name)})`);
       },
     });
-  }, [selectedFeatureName]);
+  }, [onSelectedBarangayChange, selectedFeatureName]);
 
   return (
     <section className="pasig-budget-map" aria-labelledby="pasig-budget-map-title">
@@ -366,32 +391,20 @@ export function PasigBudgetMap({
       </header>
 
       <div className="pasig-budget-map__summary" aria-live="polite">
-        <div><span>Approved budget</span><strong>{formatPesoAmount(totals.approved)}</strong></div>
-        <div><span>Released</span><strong>{formatPesoAmount(totals.released)}</strong></div>
-        <div><span>Liquidated</span><strong>{formatPesoAmount(totals.liquidated)}</strong></div>
-        <div><span>Organizations</span><strong>{totals.organizations.size}</strong></div>
+        <div><span>Approved budget</span><strong>{loadingData ? "—" : formatPesoAmount(totals.approved)}</strong></div>
+        <div><span>Released</span><strong>{loadingData ? "—" : formatPesoAmount(totals.released)}</strong></div>
+        <div><span>Liquidated</span><strong>{loadingData ? "—" : formatPesoAmount(totals.liquidated)}</strong></div>
+        <div><span>Organizations</span><strong>{loadingData ? "—" : totalOrganizations}</strong></div>
       </div>
 
       <div className="pasig-budget-map__content">
-        <aside className="pasig-budget-map__browse" aria-label="Browse by barangay">
+        <aside className={`pasig-budget-map__browse${mobileBrowseAsFilter ? " pasig-budget-map__browse--mobile-filter" : ""}`} aria-label="Browse by barangay">
           <h3>Browse by Barangay</h3>
           <ul className="pasig-budget-map__barangay-list">{barangayData.map((entry) => (
-            <li key={entry.name}><button type="button" aria-pressed={selectedName === entry.name} onClick={() => setSelectedName((current) => current === entry.name ? "" : entry.name)}><span>{entry.name}<small>{entry.district}</small></span><strong>{formatPesoAmount(entry.approvedAmount)}</strong>{selectedName === entry.name ? <Check size={14} aria-label="Selected" /> : null}</button></li>
+            <li key={entry.name}><button type="button" aria-pressed={selectedName === entry.name} onClick={() => toggleBarangaySelection(entry.name)}><span>{entry.name}<small>{entry.district}</small></span><strong>{loadingData ? "—" : formatPesoAmount(entry.approvedAmount)}</strong>{selectedName === entry.name ? <Check size={14} aria-label="Selected" /> : null}</button></li>
           ))}</ul>
         </aside>
         <div className="pasig-budget-map__canvas" aria-label="Interactive Pasig barangay budget map">
-          <button
-            type="button"
-            className="pasig-budget-map__transparency-toggle"
-            aria-pressed={transparentSelectedFill}
-            aria-label="Transparent fill for selected barangay"
-            title={selectedName ? "Toggle the selected barangay's fill transparency" : "Select a barangay first"}
-            disabled={!selectedName}
-            onClick={() => setTransparentSelectedFill((current) => !current)}
-          >
-            <Eye size={15} aria-hidden="true" />
-            Transparent fill
-          </button>
           {boundaries ? (
             <MapContainer center={[14.5764, 121.0851]} zoom={11} scrollWheelZoom className="pasig-budget-map__leaflet">
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -400,7 +413,7 @@ export function PasigBudgetMap({
                 data={boundaries as unknown as GeoJsonObject}
                 style={stableStyle}
                 onEachFeature={handleFeature}
-              />
+      />
               <StatusGradientPaint data={barangayData} version={version} />
               <SyncBarangayStyles getStyle={stableStyle} version={`${version}-${selectedDistrict}-${transparentSelectedFill}`} focusedBarangay={selectedName} />
               {cityOutline ? <GeoJSON data={cityOutline as unknown as GeoJsonObject} style={{ color: "#d32626", weight: 4, opacity: 1, fill: false, interactive: false }} /> : null}
@@ -412,9 +425,21 @@ export function PasigBudgetMap({
               {loadError ? <><p>{loadError}</p><button type="button" onClick={() => void loadBoundaries()}><RefreshCw size={14} /> Retry map</button></> : <p>Loading Pasig City polygons…</p>}
             </div>
           )}
-          <div className="pasig-budget-map__legend" aria-label="Budget status legend">
+          <div className="pasig-budget-map__legend" role="group" aria-label="Budget status legend and map controls">
             {statuses.map((status) => <span key={status.id}><i style={{ backgroundColor: status.color }} />{status.label}</span>)}
             <span className="pasig-budget-map__boundary-key"><i />Pasig boundary</span>
+            <button
+              type="button"
+              className="pasig-budget-map__transparency-toggle"
+              aria-pressed={transparentSelectedFill}
+              aria-label="Transparent fill for selected barangay"
+              title={selectedName ? "Toggle the selected barangay's fill transparency" : "Select a barangay first"}
+              disabled={!selectedName}
+              onClick={() => setTransparentSelectedFill((current) => !current)}
+            >
+              <Eye size={15} aria-hidden="true" />
+              Transparent fill
+            </button>
           </div>
         </div>
 
@@ -422,13 +447,13 @@ export function PasigBudgetMap({
           {selectedEntry ? (
             <>
               <div className="pasig-budget-map__details-heading"><span className="pasig-budget-map__pin"><MapPin size={17} /></span><div><h3>{selectedEntry.name}</h3><p>{selectedEntry.district}</p></div></div>
-              <p className="pasig-budget-map__selected-value">{formatPesoAmount(selectedEntry.approvedAmount)} <span>approved budget</span></p>
+              <p className="pasig-budget-map__selected-value">{loadingData ? "—" : formatPesoAmount(selectedEntry.approvedAmount)} <span>approved budget</span></p>
               <dl>
-                <div><dt>Approved</dt><dd>{formatPesoAmount(selectedEntry.approvedBalance)}</dd></div>
-                <div><dt>Released (not yet liquidated)</dt><dd>{formatPesoAmount(selectedEntry.releasedBalance)}</dd></div>
-                <div><dt>Liquidated</dt><dd>{formatPesoAmount(selectedEntry.liquidatedAmount)}</dd></div>
-                <div><dt>Organizations</dt><dd>{selectedEntry.organizationCount}</dd></div>
-                <div><dt>Released requests</dt><dd>{selectedEntry.releasedBudgetCount}</dd></div>
+                <div><dt>Approved</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.approvedBalance)}</dd></div>
+                <div><dt>Released (not yet liquidated)</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.releasedBalance)}</dd></div>
+                <div><dt>Liquidated</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.liquidatedAmount)}</dd></div>
+                <div><dt>Organizations</dt><dd>{loadingData ? "—" : selectedEntry.organizationCount}</dd></div>
+                <div><dt>Released requests</dt><dd>{loadingData ? "—" : selectedEntry.releasedBudgetCount}</dd></div>
               </dl>
             </>
           ) : (
@@ -437,11 +462,11 @@ export function PasigBudgetMap({
         </aside>
       </div>
 
-      {selectedEntry ? (
+      {showOrganizations && selectedEntry ? (
         <section className="pasig-budget-map__organizations" aria-label={`Organizations in ${selectedEntry.name}`}>
           <h3>Organizations in {selectedEntry.name}<span>{selectedOrganizations.length}</span></h3>
           {selectedOrganizations.length > 0 ? <ul>{selectedOrganizations.map((organization) => (
-            <li key={organization.organizationId}><button type="button" onClick={() => onViewOrganization(organization.organizationId)}><span>{organization.organizationName}<small>{organization.majorClassification}</small></span><strong>{formatPesoAmount(organization.totalReleased)} released<small>{formatPesoAmount(organization.totalLiquidated)} liquidated</small></strong></button></li>
+            <li key={organization.organizationId}><button type="button" onClick={() => onViewOrganization?.(organization.organizationId)}><span>{organization.organizationName}<small>{organization.majorClassification}</small></span><strong>{formatPesoAmount(organization.totalReleased)} released<small>{formatPesoAmount(organization.totalLiquidated)} liquidated</small></strong></button></li>
           ))}</ul> : <p>No organizations have matching budget requests for the current filters.</p>}
         </section>
       ) : null}

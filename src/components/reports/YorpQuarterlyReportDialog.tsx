@@ -97,6 +97,11 @@ export function YorpQuarterlyReportDialog({
     if (!reportData || generating) return;
     setGenerating(true);
     try {
+      // Let React paint the busy state before report generation starts doing work.
+      await new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())),
+      );
+
       if (reportType === "summary") {
         await exportYorpQuarterlySummary(reportData, format);
         toast({
@@ -161,7 +166,7 @@ export function YorpQuarterlyReportDialog({
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto font-segoe">
         <DialogHeader className="space-y-1 pb-1">
           <DialogTitle className="flex items-center gap-2 text-public-fs-title-base sm:text-public-fs-title-lg font-bold text-slate-900">
-            <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.8} />
+            <BarChart3 className="h-5 w-5 text-public-bg-brand" strokeWidth={1.8} />
             Section 35 YORP Quarterly Reports
           </DialogTitle>
           <DialogDescription className="text-public-fs-body-sm text-muted-foreground">
@@ -187,12 +192,12 @@ export function YorpQuarterlyReportDialog({
                 onClick={() => setReportType("summary")}
                 className={`flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
                   reportType === "summary"
-                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    ? "border-public-bg-brand bg-public-bg-brand/5 ring-1 ring-public-bg-brand"
                     : "border-slate-200 bg-admin-surface hover:bg-slate-50 text-slate-700"
                 }`}
               >
                 <span className="font-semibold text-slate-900 flex items-center gap-1.5">
-                  <FileText className="h-4 w-4 text-primary" />
+                  <FileText className="h-4 w-4 text-public-bg-brand" />
                   Quarterly Summary
                 </span>
                 <span className="text-public-fs-caption text-muted-foreground mt-0.5">
@@ -207,12 +212,12 @@ export function YorpQuarterlyReportDialog({
                 onClick={() => setReportType("disaggregated")}
                 className={`flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
                   reportType === "disaggregated"
-                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    ? "border-public-bg-brand bg-public-bg-brand/5 ring-1 ring-public-bg-brand"
                     : "border-slate-200 bg-admin-surface hover:bg-slate-50 text-slate-700"
                 }`}
               >
                 <span className="font-semibold text-slate-900 flex items-center gap-1.5">
-                  <Layers className="h-4 w-4 text-primary" />
+                  <Layers className="h-4 w-4 text-public-bg-brand" />
                   Disaggregated Report
                 </span>
                 <span className="text-public-fs-caption text-muted-foreground mt-0.5">
@@ -292,11 +297,11 @@ export function YorpQuarterlyReportDialog({
                 disabled={generating}
                 className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all ${
                   format === "pdf"
-                    ? "border-primary bg-primary/5 ring-1 ring-primary text-primary font-semibold"
+                    ? "border-public-bg-brand bg-public-bg-brand/5 ring-1 ring-public-bg-brand text-public-bg-brand font-semibold"
                     : "border-slate-200 bg-admin-surface text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <FileText className="h-4 w-4 shrink-0 text-public-bg-brand" />
                 <div className="text-left">
                   <div className="text-public-fs-body-sm font-semibold text-slate-900">Official PDF</div>
                   <div className="text-public-fs-caption font-normal text-muted-foreground">A4 Portrait with PCYDO Letterhead</div>
@@ -311,7 +316,7 @@ export function YorpQuarterlyReportDialog({
                 disabled={generating}
                 className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all ${
                   format === "xlsx"
-                    ? "border-primary bg-primary/5 ring-1 ring-primary text-primary font-semibold"
+                    ? "border-public-bg-brand bg-public-bg-brand/5 ring-1 ring-public-bg-brand text-public-bg-brand font-semibold"
                     : "border-slate-200 bg-admin-surface text-slate-700 hover:bg-slate-50"
                 }`}
               >
@@ -328,10 +333,10 @@ export function YorpQuarterlyReportDialog({
           <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3.5 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-public-fs-caption text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-primary" />
+                <Calendar className="h-3.5 w-3.5 text-public-bg-brand" />
                 Report Preview
                 {loadingPreview && (
-                  <Loader2 className="h-3 w-3 animate-spin text-primary ml-1" />
+                  <Loader2 className="h-3 w-3 animate-spin text-public-bg-brand ml-1" />
                 )}
               </span>
               <span className="text-public-fs-caption text-muted-foreground">
@@ -349,8 +354,8 @@ export function YorpQuarterlyReportDialog({
               </div>
             ) : loadingPreview && !reportData ? (
               <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground text-public-fs-body-sm">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span>Loading report preview...</span>
+                <Loader2 className="h-4 w-4 animate-spin text-public-bg-brand" />
+                <span role="status" aria-live="polite">Loading report preview…</span>
               </div>
             ) : reportData ? (
               <div
@@ -364,7 +369,7 @@ export function YorpQuarterlyReportDialog({
                     <div className="text-public-fs-caption uppercase font-bold text-slate-500 tracking-wider">
                       Metric A
                     </div>
-                    <div className="text-public-fs-title-lg font-bold text-primary mt-0.5">
+                    <div className="text-public-fs-title-lg font-bold text-public-bg-brand mt-0.5">
                       {reportData.metrics.registered_verified_at_quarter_end}
                     </div>
                     <div className="text-public-fs-caption text-muted-foreground mt-0.5 line-clamp-1">
@@ -459,12 +464,14 @@ export function YorpQuarterlyReportDialog({
             type="button"
             disabled={generating || loadingPreview || !reportData || Boolean(fetchError)}
             onClick={handleGenerate}
-            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px]"
+            aria-busy={generating}
+            style={{ color: "#fff" }}
+            className="gap-2 bg-public-bg-brand text-white hover:bg-public-bg-brand-hover min-w-[140px]"
           >
             {generating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating Report...
+                <span role="status" aria-live="polite">Generating {format.toUpperCase()} report…</span>
               </>
             ) : (
               <>

@@ -6,7 +6,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AdminSearchPalette } from "@/components/portal/AdminSearchPalette";
@@ -351,14 +350,14 @@ export const PortalShell = ({
                         align="end"
                         sideOffset={6}
                         collisionPadding={16}
-                        className="w-[calc(100vw-32px)] sm:w-80 max-w-[calc(100vw-32px)] sm:max-w-80 p-2 sm:p-2.5 rounded-2xl bg-card border border-border/80 shadow-xl flex flex-col max-h-[360px] sm:max-h-[420px] overflow-hidden"
+                        className="flex max-h-[min(72dvh,460px)] w-[calc(100vw-24px)] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg sm:w-[380px] sm:max-w-[380px]"
                       >
                         {/* Fixed Header */}
-                        <div className="flex items-center justify-between px-2 py-1 shrink-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-xs font-bold text-foreground tracking-tight">Notifications</p>
+                        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-3.5 py-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <p className="font-segoe text-sm font-semibold text-text-default">Notifications</p>
                             {unreadCount > 0 && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 leading-none">
+                              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-blue-200 bg-blue-50 px-1.5 font-segoe text-[11px] font-semibold leading-none text-blue-800">
                                 {unreadCount}
                               </span>
                             )}
@@ -370,19 +369,17 @@ export const PortalShell = ({
                                 e.stopPropagation();
                                 onMarkAllRead();
                               }}
-                              className="text-[11px] font-semibold text-primary hover:underline cursor-pointer transition-colors"
+                              className="shrink-0 rounded px-1.5 py-1 font-segoe text-xs font-semibold text-text-action transition-colors hover:bg-slate-100 hover:text-text-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                             >
                               Mark all read
                             </button>
                           )}
                         </div>
 
-                        <DropdownMenuSeparator className="my-1 bg-border/60 shrink-0" />
-
                         {/* Scrollable Notification List */}
-                        <div className="flex-1 overflow-y-auto min-h-0 space-y-0.5 pr-0.5">
+                        <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
                           {recentNotifications.length === 0 ? (
-                            <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                            <div className="px-3 py-8 text-center font-segoe text-xs text-slate-500">
                               No notifications yet.
                             </div>
                           ) : (
@@ -390,7 +387,7 @@ export const PortalShell = ({
                               <DropdownMenuItem
                                 key={n.id}
                                 asChild
-                                className="p-0 focus:bg-transparent cursor-pointer rounded-xl"
+                                className="cursor-pointer rounded-md p-0 focus:bg-transparent"
                               >
                                 <div
                                   onClick={() => {
@@ -401,36 +398,36 @@ export const PortalShell = ({
                                     onNavigate("notifications");
                                   }}
                                   className={cn(
-                                    "flex items-start gap-2 p-2 rounded-xl transition-colors cursor-pointer group w-full",
+                                    "group flex w-full cursor-pointer items-start gap-2.5 rounded-md px-2.5 py-2.5 transition-colors",
                                     n.isRead
-                                      ? "hover:bg-accent/40"
-                                      : "bg-primary/[0.04] hover:bg-primary/[0.08]"
+                                      ? "hover:bg-slate-50"
+                                      : "bg-blue-50/60 hover:bg-blue-50"
                                   )}
                                 >
                                   <span
                                     className={cn(
                                       "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                                      n.isRead ? "bg-transparent" : "bg-primary"
+                                      n.isRead ? "bg-transparent" : "bg-blue-700"
                                     )}
                                   />
                                   <div className="min-w-0 flex-1 space-y-0.5">
                                     <div className="flex items-baseline justify-between gap-1.5">
                                       <p
                                         className={cn(
-                                          "text-xs leading-tight truncate",
-                                          n.isRead ? "font-medium text-foreground/80" : "font-bold text-foreground"
+                                          "truncate font-segoe text-xs leading-tight",
+                                          n.isRead ? "font-medium text-slate-700" : "font-semibold text-text-default"
                                         )}
                                       >
                                         {n.title}
                                       </p>
-                                      <span className="shrink-0 text-[10px] text-muted-foreground font-medium">
+                                      <span className="shrink-0 font-segoe text-[10px] font-medium text-slate-500">
                                         {new Date(n.createdAt).toLocaleDateString("en-PH", {
                                           month: "short",
                                           day: "numeric",
                                         })}
                                       </span>
                                     </div>
-                                    <p className="line-clamp-1 text-[11px] text-muted-foreground leading-snug">
+                                    <p className="line-clamp-1 font-segoe text-[11px] leading-snug text-slate-600">
                                       {n.message}
                                     </p>
                                   </div>
@@ -440,15 +437,13 @@ export const PortalShell = ({
                           )}
                         </div>
 
-                        <DropdownMenuSeparator className="my-1 bg-border/60 shrink-0" />
-
                         {/* Fixed Footer Action */}
                         <DropdownMenuItem
                           onClick={() => {
                             setNotificationDropdownOpen(false);
                             onNavigate("notifications");
                           }}
-                          className="justify-center text-xs font-semibold text-primary cursor-pointer hover:bg-primary/10 rounded-xl py-1.5 shrink-0"
+                          className="shrink-0 justify-center rounded-none border-t border-slate-200 py-2.5 font-segoe text-xs font-semibold text-text-action hover:bg-slate-50 hover:text-text-default"
                         >
                           View All Notifications →
                         </DropdownMenuItem>

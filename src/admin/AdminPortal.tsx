@@ -59,6 +59,7 @@ import { DangerConfirmDialog } from "@/components/portal/DangerConfirmDialog";
 import { AdminPageHeader } from "@/components/portal/AdminPageHeader";
 import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
 import { ActivityLogsExportDialog } from "@/admin/components/ActivityLogsExportDialog";
+import { AdminExportDialog } from "@/admin/components/AdminExportDialog";
 import { DownloadDocumentsDialog } from "@/admin/components/DownloadDocumentsDialog";
 import { type DownloadableFile } from "@/lib/document-compression";
 import { useAuth } from "@/hooks/use-auth";
@@ -120,6 +121,7 @@ import {
   LiquidationReportsTable,
   LiquidationStatusLabel,
   matchesLiquidationStatusFilter,
+  STATUS_LABEL_CONFIG as LIQUIDATION_STATUS_LABEL_CONFIG,
   type LiquidationReportsStatusFilter,
 } from "@/admin/components/LiquidationReportsTable";
 import { formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
@@ -719,6 +721,12 @@ type RecentActivityEntry = {
   dotClassName: string;
 };
 
+const isAdminNotificationAuditEntry = (log: ActivityLog) => {
+  const action = log.action?.trim().toLowerCase() ?? "";
+  const description = log.description?.trim().toLowerCase() ?? "";
+  return action.includes("notification_dispatched") || description.startsWith("admin notification (");
+};
+
 export default function AdminPortal({ section }: { section: string }) {
   const { confirmAction, confirmationDialog } = useConfirmActionDialog();
   const navigate = useNavigate();
@@ -867,6 +875,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const registrationDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
   const registrationDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isRegistrationDecisionConfirmOpen, setIsRegistrationDecisionConfirmOpen] = useState(false);
+  const [registrationRejectAcknowledged, setRegistrationRejectAcknowledged] = useState(false);
   const [registrationReviewSubmitting, setRegistrationReviewSubmitting] = useState(false);
   const [selectedRenewalReviewFileIds, setSelectedRenewalReviewFileIds] = useState<string[]>([]);
   const [activeRenewalReviewFileId, setActiveRenewalReviewFileId] = useState<string | null>(null);
@@ -979,6 +988,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [liquidationReportsDistrictFilter, setLiquidationReportsDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [liquidationReportsBarangayFilter, setLiquidationReportsBarangayFilter] = useState("all");
   const [liquidationReportsClassificationFilter, setLiquidationReportsClassificationFilter] = useState("all");
+  const [liquidationExportDialogOpen, setLiquidationExportDialogOpen] = useState(false);
   const [budgetMonitoringSearch, setBudgetMonitoringSearch] = useState("");
   const [budgetMonitoringRiskFilter, setBudgetMonitoringRiskFilter] = useState("all");
   const [organizationFundingSearch, setOrganizationFundingSearch] = useState("");
@@ -1863,6 +1873,97 @@ export default function AdminPortal({ section }: { section: string }) {
     state.organizationProfiles,
     visibleLiquidationReports,
   ]);
+  const liquidationReportsExportRows = useMemo(
+    () => filteredVisibleLiquidationReports.map((report) => {
+      const organization = state.organizationProfiles.find((org) => org.id === report.organizationId);
+      const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId);
+      const isOverdue = report.status === "overdue" || isLiquidationOverdue(report.deadlineAt, report.status);
+      return {
+        liquidationReference: buildPublicRecordCode("LR", report, visibleLiquidationReports),
+        organization: organization?.organizationName ?? "Unknown organization",
+        activity: linkedBudget?.activityTitle ?? "Approved budget",
+        budgetRequestReference: linkedBudget
+          ? buildPublicRecordCode("BR", linkedBudget, state.budgetRequests)
+          : "",
+        district: organization?.district ?? "",
+        barangay: organization?.addressBarangay || organization?.barangay || "",
+        classification: organization?.majorClassification ?? "",
+        status: isOverdue
+          ? "Overdue"
+          : LIQUIDATION_STATUS_LABEL_CONFIG[report.status]?.label ?? report.status.replaceAll("_", " "),
+        requestedAmount: Number(linkedBudget?.requestedAmount ?? 0),
+        approvedAmount: Number(linkedBudget?.approvedAmount || linkedBudget?.requestedAmount || 0),
+        releasedAmount: Number(linkedBudget?.releasedAmount ?? 0),
+        deadline: formatShortDate(report.deadlineAt),
+        hardCopySubmittedAt: formatShortDate(report.hardCopySubmittedAt),
+        completedAt: formatShortDate(report.completedAt),
+        adminRemarks: report.remarks ?? "",
+      };
+    }),
+    [filteredVisibleLiquidationReports, state.organizationProfiles, state.budgetRequests, visibleLiquidationReports],
+  );
+  const liquidationReportsExportFilters = useMemo(() => {
+    const readableStatus = liquidationReportsStatusFilter === "all"
+      ? "All Status"
+      : liquidationReportsStatusFilter.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    return [
+      `Status: ${readableStatus}`,
+      ...(liquidationReportsSearch.trim() ? [`Search: "${liquidationReportsSearch.trim()}"`] : []),
+      ...(liquidationReportsDistrictFilter !== "all" ? [`District: ${liquidationReportsDistrictFilter}`] : []),
+      ...(liquidationReportsBarangayFilter !== "all" ? [`Barangay: ${liquidationReportsBarangayFilter}`] : []),
+      ...(liquidationReportsClassificationFilter !== "all" ? [`Classification: ${liquidationReportsClassificationFilter}`] : []),
+    ];
+  }, [
+    liquidationReportsStatusFilter,
+    liquidationReportsSearch,
+    liquidationReportsDistrictFilter,
+    liquidationReportsBarangayFilter,
+    liquidationReportsClassificationFilter,
+  ]);
+  const handleLiquidationReportsExport = async (exportFormat: ExportFormat, pageConfig?: PdfPageConfig) => {
+    if (!liquidationReportsExportRows.length) {
+      toast({ title: "No liquidation reports found", description: "Try changing the selected filters." });
+      return;
+    }
+    try {
+      await exportReport(
+        exportFormat,
+        {
+          config: {
+            title: "Liquidation Reports",
+            filenamePrefix: "liquidation-reports",
+            orientation: "landscape",
+            xlsxSheetName: "Liquidation Reports",
+            columns: [
+              { label: "Liquidation Reference", value: (row) => row.liquidationReference, pdfWidth: 65, xlsxWidth: 24 },
+              { label: "Organization", value: (row) => row.organization, pdfWidth: 80, xlsxWidth: 30, xlsxWrap: true },
+              { label: "Activity", value: (row) => row.activity, pdfWidth: 76, xlsxWidth: 28, xlsxWrap: true },
+              { label: "Budget Request", value: (row) => row.budgetRequestReference, pdfWidth: 58, xlsxWidth: 22 },
+              { label: "District", value: (row) => row.district, pdfWidth: 52, xlsxWidth: 16, excludeFromPdf: true },
+              { label: "Barangay", value: (row) => row.barangay, pdfWidth: 58, xlsxWidth: 20, excludeFromPdf: true },
+              { label: "Classification", value: (row) => row.classification, pdfWidth: 65, xlsxWidth: 24, excludeFromPdf: true },
+              { label: "Status", value: (row) => row.status, pdfWidth: 60, xlsxWidth: 22 },
+              { label: "Requested Amount", value: (row) => row.requestedAmount, xlsxType: "currency", pdfAlign: "right", pdfWidth: 55, xlsxWidth: 20 },
+              { label: "Approved Amount", value: (row) => row.approvedAmount, xlsxType: "currency", pdfAlign: "right", pdfWidth: 55, xlsxWidth: 20 },
+              { label: "Released Amount", value: (row) => row.releasedAmount, xlsxType: "currency", pdfAlign: "right", pdfWidth: 55, xlsxWidth: 20 },
+              { label: "Deadline", value: (row) => row.deadline, pdfWidth: 54, xlsxWidth: 18 },
+              { label: "Hardcopy Submitted", value: (row) => row.hardCopySubmittedAt, pdfWidth: 58, xlsxWidth: 22, excludeFromPdf: true },
+              { label: "Completed", value: (row) => row.completedAt, pdfWidth: 54, xlsxWidth: 18 },
+              { label: "Admin Remarks", value: (row) => row.adminRemarks, pdfWidth: 76, xlsxWidth: 36, xlsxWrap: true },
+            ],
+          },
+          rows: liquidationReportsExportRows,
+          metadataLines: [`Total Liquidation Reports: ${liquidationReportsExportRows.length}`],
+          filterSummaryLines: liquidationReportsExportFilters,
+        },
+        pageConfig,
+      );
+      toast({ title: "Export Ready", description: `The liquidation reports ${exportFormat.toUpperCase()} export has been downloaded.` });
+    } catch (error) {
+      console.error("Unable to export liquidation reports:", error);
+      toast({ title: "Export Failed", description: "Unable to export liquidation reports. Please try again.", variant: "destructive" });
+    }
+  };
   const filteredRegistrations = useMemo(() => {
     const query = registrationSearch.trim().toLowerCase();
     return state.organizationProfiles.filter((org) => {
@@ -7746,7 +7847,10 @@ export default function AdminPortal({ section }: { section: string }) {
                             <label className="font-segoe text-[13px] text-text-default">Decision</label>
                             <Select
                               value={registrationBulkDecision}
-                              onValueChange={(value) => setRegistrationBulkDecision(value as RegistrationReviewDecision)}
+                              onValueChange={(value) => {
+                                setRegistrationBulkDecision(value as RegistrationReviewDecision);
+                                setRegistrationRejectAcknowledged(false);
+                              }}
                               disabled={selectedBulkFiles.length === 0}
                             >
                               <SelectTrigger className="h-8 border-slate-300 text-[13px]">
@@ -7790,7 +7894,10 @@ export default function AdminPortal({ section }: { section: string }) {
                           <button
                             type="button"
                             disabled={isRegistrationDecisionConfirmDisabled}
-                            onClick={() => setIsRegistrationDecisionConfirmOpen(true)}
+                            onClick={() => {
+                              setRegistrationRejectAcknowledged(false);
+                              setIsRegistrationDecisionConfirmOpen(true);
+                            }}
                             className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                           >
                             Confirm
@@ -7802,11 +7909,16 @@ export default function AdminPortal({ section }: { section: string }) {
 
                   <DangerConfirmDialog
                     open={isRegistrationDecisionConfirmOpen}
-                    onOpenChange={setIsRegistrationDecisionConfirmOpen}
-                    icon={CheckCircle}
-                    variant="info"
-                    title="Confirm Review Decision"
-                    description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
+                    onOpenChange={(open) => {
+                      setIsRegistrationDecisionConfirmOpen(open);
+                      if (!open) setRegistrationRejectAcknowledged(false);
+                    }}
+                    icon={registrationBulkDecision === "reject" ? AlertTriangle : CheckCircle}
+                    variant={registrationBulkDecision === "reject" ? "danger" : "info"}
+                    title={registrationBulkDecision === "reject" ? "Confirm Account Suspension" : "Confirm Review Decision"}
+                    description={registrationBulkDecision === "reject"
+                      ? "You are about to reject a registration document. This will permanently suspend the organization account. Review the selected document and rejection remark carefully before continuing."
+                      : "Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."}
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
@@ -7836,10 +7948,24 @@ export default function AdminPortal({ section }: { section: string }) {
                         </div>
                       </div>
                     }
-                    warning="Once submitted, these decisions cannot be changed from this review."
+                    warning={registrationBulkDecision === "reject" ? (
+                      <div className="space-y-3">
+                        <p className="font-semibold">Critical: rejecting this registration document will permanently suspend the organization account.</p>
+                        <label className="flex items-start gap-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={registrationRejectAcknowledged}
+                            onChange={(event) => setRegistrationRejectAcknowledged(event.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+                          />
+                          <span>I understand that this rejection permanently suspends the organization account.</span>
+                        </label>
+                      </div>
+                    ) : "Once submitted, these decisions cannot be changed from this review."}
                     cancelLabel="Cancel"
-                    confirmLabel="Submit Review"
+                    confirmLabel={registrationBulkDecision === "reject" ? "Reject & Suspend Account" : "Submit Review"}
                     confirmIcon={Send}
+                    confirmDisabled={registrationBulkDecision === "reject" && !registrationRejectAcknowledged}
                     onConfirm={submitRegistrationReviewDecisions}
                   />
                 </div>
@@ -8963,6 +9089,9 @@ export default function AdminPortal({ section }: { section: string }) {
       case "budget-utilization": {
         if (selectedBudgetRequest) {
           const linkedLiquidation = getLatestLiquidationReportForBudgetRequest(selectedBudgetRequest.id);
+          const linkedLiquidationCode = linkedLiquidation
+            ? buildPublicRecordCode("LR", linkedLiquidation, visibleLiquidationReports)
+            : null;
           const proposedDate = new Date(selectedBudgetRequest.activityDate);
           const isProposedDateValid = !Number.isNaN(proposedDate.getTime());
 
@@ -8987,7 +9116,11 @@ export default function AdminPortal({ section }: { section: string }) {
           };
 
           const budgetActivityEntries = state.activityLogs
-            .filter((log) => log.relatedType === "budget_request" && log.relatedId === selectedBudgetRequest.id)
+            .filter((log) =>
+              log.relatedType === "budget_request" &&
+              log.relatedId === selectedBudgetRequest.id &&
+              !isAdminNotificationAuditEntry(log),
+            )
             .slice()
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .map((log) => {
@@ -9404,11 +9537,17 @@ export default function AdminPortal({ section }: { section: string }) {
                       ) : null}
                       <div className="flex items-center justify-between py-2">
                         <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Liquidation</span>
-                        {linkedLiquidation ? (
-                          <ReferenceCodeChip
-                            code={buildPublicRecordCode("LR", linkedLiquidation, visibleLiquidationReports)}
-                            className="w-[109px] rounded"
-                          />
+                        {linkedLiquidation && linkedLiquidationCode ? (
+                          <button
+                            type="button"
+                            onClick={() => openLiquidationDetails(linkedLiquidation)}
+                            aria-label={`Open linked liquidation report ${linkedLiquidationCode}`}
+                            title="Open linked liquidation report"
+                            className="inline-flex h-[22px] w-[109px] shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <span className="min-w-0 flex-1 truncate text-left">{linkedLiquidationCode}</span>
+                            <ArrowUpRight aria-hidden="true" className="h-2.5 w-2.5 shrink-0" strokeWidth={1.8} />
+                          </button>
                         ) : (
                           <span className="font-segoe text-[13px] font-semibold leading-none text-slate-400">Not yet submitted</span>
                         )}
@@ -9806,7 +9945,7 @@ export default function AdminPortal({ section }: { section: string }) {
                             <span className="font-semibold">Approve</span> — multiple files can be selected.
                           </p>
                           <p className="font-segoe text-xs leading-[140%] text-text-default">
-                            <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
+                            <span className="font-semibold">Request Revision</span> — one file at a time, remarks required.
                           </p>
                         </div>
                       ) : null}
@@ -10361,7 +10500,11 @@ export default function AdminPortal({ section }: { section: string }) {
           };
 
           const liquidationActivityEntries = state.activityLogs
-            .filter((log) => log.relatedType === "liquidation_report" && log.relatedId === selectedLiquidationReport.id)
+            .filter((log) =>
+              log.relatedType === "liquidation_report" &&
+              log.relatedId === selectedLiquidationReport.id &&
+              !isAdminNotificationAuditEntry(log),
+            )
             .slice()
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .map((log) => {
@@ -11255,7 +11398,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               <span className="font-semibold">Approve</span> — multiple files can be selected.
                             </p>
                             <p className="font-segoe text-xs leading-[140%] text-text-default">
-                              <span className="font-semibold">Needs Revision / Reject</span> — one file at a time, remarks required.
+                              <span className="font-semibold">Needs Revision</span> — one file at a time, remarks required.
                             </p>
                           </div>
                         ) : null}
@@ -11303,7 +11446,7 @@ export default function AdminPortal({ section }: { section: string }) {
                               type="button"
                               disabled={liquidationLifecycleSubmitting}
                               onClick={submitLiquidationLifecycleDecision}
-                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
                             >
                               {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                               Liquidated
@@ -11400,6 +11543,18 @@ export default function AdminPortal({ section }: { section: string }) {
               <AdminPageHeader
                 title="Liquidation Reports"
                 description="Review financial accountability documents for released funds."
+                action={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!liquidationReportsExportRows.length}
+                    onClick={() => setLiquidationExportDialogOpen(true)}
+                    className="h-10 gap-2 border-slate-300 bg-admin-surface px-4 text-text-default hover:bg-slate-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                }
               />
 
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -11438,6 +11593,16 @@ export default function AdminPortal({ section }: { section: string }) {
                   if (report) openLiquidationDetails(report);
                 }}
                 onOpenLinkedRequest={(requestId) => openBudgetRequestDetails(requestId)}
+              />
+
+              <AdminExportDialog
+                open={liquidationExportDialogOpen}
+                onOpenChange={setLiquidationExportDialogOpen}
+                title="Export Liquidation Reports"
+                description={`Export ${liquidationReportsExportRows.length} liquidation ${liquidationReportsExportRows.length === 1 ? "report" : "reports"} matching the current filters.`}
+                initialPaperSize="a4"
+                initialOrientation="landscape"
+                onExport={handleLiquidationReportsExport}
               />
             </div>
           );
@@ -12441,50 +12606,79 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       case "notifications":
         return (
-          <PortalSection
-            title="Notifications"
-            description="Recent activity and updates."
-            action={
-              <div className="flex items-center gap-2">
-                {unread > 0 && (
-                  <Button size="sm" variant="ghost" onClick={() => markAllNotificationsRead()}>
-                    Mark all as read
-                  </Button>
-                )}
-                <BadgePanel count={unread} />
+          <div className="space-y-4">
+            <AdminPageHeader
+              title="Notifications"
+              description="Review recent activity and updates across the admin portal."
+              action={
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {unread > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-md border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default hover:bg-slate-50"
+                      onClick={() => markAllNotificationsRead()}
+                    >
+                      <CheckCircle2 className="mr-1.5 h-4 w-4 text-text-action" />
+                      Mark all as read
+                    </Button>
+                  )}
+                  <BadgePanel count={unread} />
+                </div>
+              }
+            />
+
+            <section className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm" aria-label="Notification activity">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-50/70 px-4 py-3 sm:px-5">
+                <div>
+                  <h2 className="font-segoe text-sm font-semibold text-text-default">Recent activity</h2>
+                  <p className="mt-0.5 font-segoe text-xs text-slate-500">Your latest administrative updates.</p>
+                </div>
+                <span className="font-segoe text-xs text-slate-500">
+                  {adminNotifications.length} {adminNotifications.length === 1 ? "notification" : "notifications"}
+                </span>
               </div>
-            }
-          >
-            {adminNotifications.length ? (
-              <div className="space-y-2">
-                {adminNotifications.map((notification) => (
-                  <button
-                    key={notification.id}
-                    type="button"
-                    className={`w-full rounded-xl border p-4 text-left text-sm transition-colors hover:bg-muted/40 ${notification.isRead ? "border-border/50 bg-background" : "border-border/70 bg-background"}`}
-                    onClick={() => markNotificationRead(notification.id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.isRead ? "bg-muted-foreground/30" : "bg-primary"}`} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className={`leading-snug ${notification.isRead ? "font-normal text-muted-foreground" : "font-medium text-foreground"}`}>
+
+              {adminNotifications.length ? (
+                <div className="divide-y divide-slate-200">
+                  {adminNotifications.map((notification) => (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      className={`group flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 sm:px-5 ${notification.isRead ? "bg-admin-surface hover:bg-slate-50" : "bg-blue-50/40 hover:bg-blue-50/75"}`}
+                      onClick={() => markNotificationRead(notification.id)}
+                    >
+                      <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${notification.isRead ? "border-slate-200 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50 text-blue-700"}`}>
+                        <Bell className="h-4 w-4" strokeWidth={1.7} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                          <span className={`min-w-0 break-words font-segoe text-sm leading-5 ${notification.isRead ? "font-medium text-slate-700" : "font-semibold text-text-default"}`}>
                             {notification.title}
-                          </p>
-                          <span className="shrink-0 text-xs text-muted-foreground/60">
+                          </span>
+                          <span className="shrink-0 font-segoe text-xs tabular-nums text-slate-500">
                             {new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(notification.createdAt))}
                           </span>
-                        </div>
-                        <p className="mt-0.5 text-muted-foreground">{notification.message}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <PortalEmptyState title="No notifications" description="You're all caught up." />
-            )}
-          </PortalSection>
+                        </span>
+                        <span className={`mt-0.5 block break-words font-segoe text-sm leading-5 ${notification.isRead ? "text-slate-500" : "text-slate-600"}`}>
+                          {notification.message}
+                        </span>
+                      </span>
+                      {!notification.isRead && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-700" aria-label="Unread" />}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                  <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-500">
+                    <Bell className="h-5 w-5" strokeWidth={1.7} />
+                  </span>
+                  <p className="font-segoe text-sm font-semibold text-text-default">No notifications</p>
+                  <p className="mt-1 font-segoe text-sm text-slate-500">You&apos;re all caught up.</p>
+                </div>
+              )}
+            </section>
+          </div>
         );
       case "activity-logs": {
         const now = Date.now();
@@ -15995,8 +16189,8 @@ function SectionDivider() {
 
 function BadgePanel({ count }: { count: number }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/20 px-3 py-1 text-sm">
-      <Bell className="h-4 w-4" />
+    <div className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default">
+      <Bell className="h-4 w-4 text-text-action" />
       <span>{count} unread</span>
     </div>
   );

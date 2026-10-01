@@ -29,6 +29,11 @@ import {
   formatFullActivityTimestamp,
 } from "@/components/activity/RecentActivityPreview";
 import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
+import {
+  formatRevisionDeadline,
+  getRevisionTimeRemaining,
+  isSubmissionRevisionLocked,
+} from "@/lib/revision-deadline";
 
 import { FeatureGate } from "./FeatureGate";
 import { StatusBadge } from "./StatusBadge";
@@ -175,6 +180,23 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
   const approvedCount = docsList.filter((doc) => isApprovedStatus(getDocStatus(doc))).length;
   const underReviewCount = docsList.filter((doc) => isReviewStatus(getDocStatus(doc))).length;
   const needsRevisionCount = docsList.filter((doc) => isRevisionStatus(getDocStatus(doc))).length;
+  const revisionNotices = docsList.flatMap((doc) => {
+    const submission = getSubmissionForDoc(doc, doc?.databaseId);
+    if (getDocStatus(doc) !== "needs_revision" || !submission) return [];
+    const dueAt = submission.revisionDueAt as string | null | undefined;
+    const deadline = formatRevisionDeadline(dueAt);
+    const isUnlocked = Boolean(submission.revisionUnlockedAt);
+    const isLocked = isSubmissionRevisionLocked(submission);
+    return [{
+      id: submission.id || doc.id,
+      title: doc.title || doc.name || "Required document",
+      adminRemarks: submission.adminRemarks?.trim() || "",
+      deadline,
+      isUnlocked,
+      isLocked,
+      remaining: dueAt ? getRevisionTimeRemaining(dueAt, undefined, isUnlocked) : null,
+    }];
+  });
 
   const completionPercent =
     totalRequirements > 0 ? Math.round((approvedCount / totalRequirements) * 100) : 0;
@@ -245,7 +267,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-primary">Document Workspace</span>
                 <span className="text-muted-foreground/30">•</span>
-                <span className="text-xs text-muted-foreground">PCYDO Pasig City</span>
+                <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
                 Document Submissions
@@ -266,7 +288,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary">Document Workspace</span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">PCYDO Pasig City</span>
+              <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
             </div>
             <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
               Organization Requirements
@@ -279,7 +301,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
               <span className="font-semibold text-foreground">{totalRequirements} Requirements</span>
               <span>•</span>
-              <span>Review ETA: 2–3 Days</span>
+              <span>Review Time: 2-3 Business days</span>
             </div>
           </div>
 
@@ -394,6 +416,70 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
           <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${completionPercent}%` }} />
         </div>
       </Card>
+
+      {revisionNotices.length > 0 ? (
+        <section
+          aria-label="Document resubmission deadlines"
+          className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 space-y-4"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+            <div className="min-w-0 space-y-1">
+              <h2 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                Action required: revise your documents
+              </h2>
+              <p className="text-xs leading-relaxed text-amber-900/85 dark:text-amber-100/85">
+                Upload corrected files by each deadline. If the 5-day resubmission period ends first, the document will be locked and only a PCYDO administrator can reopen it.
+              </p>
+            </div>
+          </div>
+
+          <div className="divide-y divide-amber-700/15 dark:divide-amber-200/15">
+            {revisionNotices.map((notice) => (
+              <article key={notice.id} className="py-3 first:pt-0 last:pb-0 sm:ml-8 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-amber-950 dark:text-amber-100 break-words">
+                    {notice.title}
+                  </h3>
+                  {notice.remaining?.label ? (
+                    <span className={cn(
+                      "inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold",
+                      notice.isLocked
+                        ? "border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-200"
+                        : notice.isUnlocked
+                          ? "border-blue-500/30 bg-blue-500/10 text-blue-800 dark:text-blue-200"
+                          : "border-amber-600/25 bg-amber-500/15 text-amber-900 dark:text-amber-100",
+                    )}>
+                      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                      {notice.isLocked
+                        ? notice.remaining.isExpired ? "Revision period expired · Locked" : "Submission locked"
+                        : notice.remaining.label}
+                    </span>
+                  ) : null}
+                </div>
+
+                {notice.adminRemarks ? (
+                  <p className="text-xs text-amber-950/80 dark:text-amber-100/80 break-words">
+                    <span className="font-semibold">Admin feedback:</span> {notice.adminRemarks}
+                  </p>
+                ) : null}
+
+                <p className={cn(
+                  "text-xs leading-relaxed",
+                  notice.isLocked ? "text-rose-800 dark:text-rose-200" : "text-amber-900/85 dark:text-amber-100/85",
+                )}>
+                  {notice.deadline ? `Resubmission deadline: ${notice.deadline}. ` : "A 5-day resubmission period applies. "}
+                  {notice.isLocked
+                    ? "This document is locked. Contact a PCYDO administrator to request that it be reopened."
+                    : notice.isUnlocked
+                      ? "An administrator reopened this document. Submit the corrected file as soon as possible."
+                      : "Submit the corrected document before the deadline to avoid it being locked. Only a PCYDO administrator can reopen a locked document."}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Main Grid: 8-Column Left Workspace & 4-Column Right Sidebar */}
       <div className="grid grid-cols-12 gap-6 items-start">

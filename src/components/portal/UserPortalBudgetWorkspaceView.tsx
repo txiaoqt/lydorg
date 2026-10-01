@@ -510,7 +510,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-primary">Financial Workspace</span>
                 <span className="text-muted-foreground/30">•</span>
-                <span className="text-xs text-muted-foreground">PCYDO Pasig City</span>
+                <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                 Budget Requests
@@ -1000,7 +1000,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-primary">Financial Workspace</span>
                   <span className="text-muted-foreground/40">•</span>
-                  <span className="text-xs text-muted-foreground font-medium">PCYDO Pasig City</span>
+                  <span className="text-xs text-muted-foreground font-medium">PCYDO Y-TRACE</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                   Budget Requests
@@ -1522,7 +1522,13 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                             <td className="py-3.5 px-4">
                               <div className="space-y-0.5 text-xs">
                                 <p className="font-semibold text-foreground">
-                                  {isApproved ? "Budget Released" : isUnderReview ? "Awaiting Review" : "Updated"}
+                                  {isBudgetReleased(req.status)
+                                    ? "Budget Released"
+                                    : isApproved
+                                      ? "Awaiting Release"
+                                      : isUnderReview
+                                        ? "Awaiting Review"
+                                        : "Updated"}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground">
                                   {formatShortPortalDate(req.updatedAt || req.createdAt)}

@@ -191,7 +191,7 @@ const Navbar = () => {
               <Link
                 to="/signup"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-segoe text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
+                className="flex h-[42px] items-center justify-center rounded-xl bg-public-bg-brand font-segoe text-sm font-bold text-public-text-on-brand hover:bg-public-bg-brand-hover active:scale-[0.98] transition-all shadow-xs"
               >
                 Create an Account
               </Link>

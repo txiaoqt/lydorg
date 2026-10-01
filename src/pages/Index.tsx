@@ -352,7 +352,7 @@ const Index = () => {
                 What is Y-TRACE?
               </h2>
               <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-                Y-TRACE is the official online portal of PCYDO Pasig City for managing youth organization compliance, registrations, and activity processes — all in one place.
+                Y-TRACE is the official online portal of PCYDO for managing youth organization compliance, registrations, and activity processes — all in one place.
               </p>
             </div>
 
@@ -507,7 +507,7 @@ const Index = () => {
 
                         {/* Description */}
                         <p className="font-segoe font-normal leading-relaxed text-left text-[#64748B] text-sm line-clamp-2 break-words">
-                          {template.description || "Official template published by PCYDO Pasig City."}
+                          {template.description || "Official template published by PCYDO."}
                         </p>
 
                         {/* Buttons */}
@@ -585,7 +585,7 @@ const Index = () => {
 
                           {/* Description */}
                           <p className="font-segoe text-sm leading-relaxed text-slate-600 line-clamp-3">
-                            {template.description || "Official template published by PCYDO Pasig City."}
+                            {template.description || "Official template published by PCYDO."}
                           </p>
                         </div>
 
@@ -835,7 +835,7 @@ const Index = () => {
         templateFileName={previewTitle}
         previewCanInline={previewCanInline}
         previewEmptyMessage={previewEmptyMessage}
-        organizationName="PCYDO Pasig City"
+        organizationName="PCYDO"
         downloading={Boolean(downloadingTemplateId)}
         onDownloadFile={downloadTemplate}
         onOpenInNewTab={(url) => {

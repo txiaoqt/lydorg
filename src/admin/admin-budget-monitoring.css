@@ -560,6 +560,7 @@
 
 .pasig-budget-map__canvas {
   position: relative;
+  isolation: isolate;
   min-width: 0;
   height: 35rem;
   border-right: 1px solid var(--yt-border, #d5dfed);
@@ -570,10 +571,7 @@
 .pasig-budget-map__leaflet .leaflet-control-attribution { font-size: 9px; }
 .pasig-budget-map__leaflet .pasig-barangay-focused { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 3px #102d56); }
 .pasig-budget-map__transparency-toggle {
-  position: absolute;
-  z-index: 500;
-  top: 0.75rem;
-  right: 0.75rem;
+  position: static;
   display: inline-flex;
   min-height: 2.25rem;
   align-items: center;
@@ -689,6 +687,7 @@
 @media (max-width: 680px) {
   .pasig-budget-map__content { grid-template-columns: minmax(0, 1fr); }
   .pasig-budget-map__browse { order: 3; }
+  .pasig-budget-map__browse--mobile-filter { display: none; }
   .pasig-budget-map__details { order: 2; max-height: none; }
   .pasig-budget-map__canvas { order: 1; }
   .pasig-budget-map__browse .pasig-budget-map__barangay-list { grid-template-columns: minmax(0, 1fr); max-height: 15rem; }

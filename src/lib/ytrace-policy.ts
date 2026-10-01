@@ -36,10 +36,16 @@ export const bundledPolicy: DisplayPolicy = {
   updatedAt: YTRACE_POLICY_UPDATED_AT,
 };
 
+// Keep older published policy copy consistent in the UI without changing
+// saved policy records or official email addresses such as lydo@pasigcity.gov.ph.
+const normalizeTermsOfficeName = (content: string) =>
+  content.replace(/\bLYDO\b(?!@)/gi, "PCYDO");
+
 export const resolveDisplayPolicy = (policy: DatabasePolicy): DisplayPolicy => {
   if (policy && hasPublishablePolicyContent(policy.terms_content, policy.privacy_content)) {
     return {
       ...policy,
+      terms_content: normalizeTermsOfficeName(policy.terms_content),
       effectiveDate: policy.effective_date
         ? new Date(`${policy.effective_date}T00:00:00`).toLocaleDateString("en-US", {
             month: "long",
@@ -50,7 +56,10 @@ export const resolveDisplayPolicy = (policy: DatabasePolicy): DisplayPolicy => {
       isActive: true,
     };
   }
-  return bundledPolicy;
+  return {
+    ...bundledPolicy,
+    terms_content: normalizeTermsOfficeName(bundledPolicy.terms_content),
+  };
 };
 
 export { hasPublishablePolicyContent };

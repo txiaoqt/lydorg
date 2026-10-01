@@ -229,6 +229,11 @@ export function YorpRegistryExportDialog({
     if (isSubmitting || selectedCount === 0) return;
     setIsSubmitting(true);
     try {
+      // Paint the busy state before PDF/Excel/CSV generation starts.
+      await new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())),
+      );
+
       let finalKeys = selectedKeys;
       if (alwaysIncludeRequired) {
         const nextSet = new Set([...selectedKeys, ...YORP_REGISTRY_REQUIRED_COLUMN_KEYS]);
@@ -633,12 +638,13 @@ export function YorpRegistryExportDialog({
               type="button"
               disabled={isSubmitting || selectedCount === 0}
               onClick={() => void handleGenerate()}
+              aria-busy={isSubmitting}
               className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-segoe text-xs sm:text-sm font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Generating Export...</span>
+                  <span role="status" aria-live="polite">Generating {selectedFormat.toUpperCase()}…</span>
                 </>
               ) : (
                 <>

@@ -302,7 +302,7 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     expect(screen.queryByRole("button", { name: /New Budget Request/i })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Budget Requests" })).toBeInTheDocument();
     expect(screen.getByText("Financial Workspace")).toBeInTheDocument();
-    expect(screen.getByText("PCYDO Pasig City")).toBeInTheDocument();
+    expect(screen.getByText("PCYDO Y-TRACE")).toBeInTheDocument();
     expect(screen.getByText("Submit financial grant proposals, track approval stages, and monitor released funds.")).toBeInTheDocument();
   });
 
@@ -1042,4 +1042,3 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     expect(screen.getByText("Complete eligibility requirements first")).toBeInTheDocument();
   });
 });
-

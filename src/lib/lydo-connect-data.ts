@@ -1360,6 +1360,16 @@ export type PublicDistrictAllocation = {
   percentage: number;
 };
 
+export type PublicBudgetBarangayAllocation = {
+  barangay: string;
+  district: "District I" | "District II";
+  approvedAmount: number;
+  releasedAmount: number;
+  liquidatedAmount: number;
+  organizationCount?: number;
+  releasedBudgetCount?: number;
+};
+
 export type PublicBudgetSummary = {
   fiscalYear: number;
   isConfigured: boolean;

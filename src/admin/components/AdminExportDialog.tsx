@@ -148,7 +148,7 @@ export function AdminExportDialog({
     <Dialog open={open} onOpenChange={(nextOpen) => !isSubmitting && onOpenChange(nextOpen)}>
       <DialogContent
         hideCloseButton
-        className="flex w-[480px] sm:w-[480px] max-w-[calc(100vw-2rem)] h-auto max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto gap-4.5 rounded-lg border border-slate-300 bg-admin-surface p-6 shadow-xl"
+        className="flex w-[480px] sm:w-[480px] max-w-[calc(100vw-2rem)] h-auto max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto gap-5 rounded-lg border border-slate-300 bg-admin-surface p-6 shadow-xl"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 pb-3.5">
@@ -178,11 +178,11 @@ export function AdminExportDialog({
         </div>
 
         {/* Format Selection Cards */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           <label className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
             Export Format
           </label>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {options.map((option) => {
               const formatKey = option.format;
               const isSelected = selectedFormat === formatKey;

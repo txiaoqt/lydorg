@@ -221,7 +221,7 @@ const About = () => {
                 What is Y-TRACE?
               </h2>
               <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
-                Y-TRACE is the official online portal of PCYDO Pasig City for managing youth organization compliance, registrations, and activity processes — all in one place.
+                Y-TRACE is the official online portal of PCYDO for managing youth organization compliance, registrations, and activity processes — all in one place.
               </p>
             </div>
 
@@ -293,7 +293,7 @@ const About = () => {
                 The office behind the portal
               </h2>
               <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
-                PCYDO Pasig City is the government office mandated to coordinate, monitor, and support all youth-related programs and organizations across the city's barangays.
+                PCYDO is the government office mandated to coordinate, monitor, and support all youth-related programs and organizations across the city's barangays.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:gap-[12px] py-1 sm:py-[10px]">

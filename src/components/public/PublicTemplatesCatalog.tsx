@@ -190,7 +190,7 @@ export default function PublicTemplatesCatalog({
         templateFileName={previewTitle}
         previewCanInline={previewCanInline}
         previewEmptyMessage={previewEmptyMessage}
-        organizationName="PCYDO Pasig City"
+        organizationName="PCYDO"
         downloading={isDownloading}
         onDownloadFile={handleDownloadFile}
         onOpenInNewTab={(url) => {

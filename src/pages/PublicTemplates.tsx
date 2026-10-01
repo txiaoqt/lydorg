@@ -17,7 +17,7 @@ const PublicTemplates = () => {
               Forms &amp; Templates
             </h1>
             <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-              Browse and download official forms, compliance templates, and document references from PCYDO Pasig City.
+              Browse and download official forms, compliance templates, and document references from PCYDO.
             </p>
           </div>
 

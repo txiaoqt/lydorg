@@ -34,6 +34,7 @@ import type {
   AnnualBudgetAllocation,
   BudgetMonitoringSummary,
   PublicBudgetSummary,
+  PublicBudgetBarangayAllocation,
   YorpQuarterlyReport,
   NewsCategoryRecord,
   INITIAL_NEWS_CATEGORIES,
@@ -68,6 +69,7 @@ const LIQUIDATION_REPORT_FILES_BUCKET = "liquidation-report-files";
 const YPOP_FILES_BUCKET = "ypop-files";
 const NEWS_RELEASE_IMAGES_BUCKET = "news-release-images";
 const STORAGE_URI_PREFIX = "storage://";
+const ORGANIZATION_DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
 
 type RequiredDocumentTypeRow = {
   id: string;
@@ -610,11 +612,14 @@ const editableLiquidationStatuses = new Set<LiquidationReport["status"]>([
   "rejected_red",
 ]);
 
-const assertPdfUpload = async (file: File, label: string) => {
+const assertPdfUpload = async (file: File, label: string, maxBytes?: number) => {
   if (file.type !== "application/pdf" || !/\.pdf$/i.test(file.name)) {
     throw new Error(`${label} must be a PDF file.`);
   }
   if (!file.size) throw new Error(`${label} cannot be empty.`);
+  if (maxBytes && file.size > maxBytes) {
+    throw new Error(`${label} must not exceed ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+  }
 
   const signature = new Uint8Array(await file.slice(0, 5).arrayBuffer());
   if (String.fromCharCode(...signature) !== "%PDF-") {
@@ -2342,7 +2347,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   context?: OrganizationDocumentUploadContext;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
-  await assertPdfUpload(params.file, "Document submission");
+  await assertPdfUpload(params.file, "Document submission", ORGANIZATION_DOCUMENT_MAX_BYTES);
 
   const session =
     params.context?.session !== undefined
@@ -2489,7 +2494,7 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
   file: File;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
-  await assertPdfUpload(params.file, "Replacement document");
+  await assertPdfUpload(params.file, "Replacement document", ORGANIZATION_DOCUMENT_MAX_BYTES);
 
   const {
     data: { session },
@@ -6754,7 +6759,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
   file: File;
 }): Promise<SubmissionFile> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
-  await assertPdfUpload(params.file, "Renewal document");
+  await assertPdfUpload(params.file, "Renewal document", ORGANIZATION_DOCUMENT_MAX_BYTES);
 
   const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
   const safeFileName = sanitizeFileName(params.file.name);
@@ -6833,7 +6838,7 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
   file: File;
 }): Promise<SubmissionFile> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
-  await assertPdfUpload(params.file, "Replacement document");
+  await assertPdfUpload(params.file, "Replacement document", ORGANIZATION_DOCUMENT_MAX_BYTES);
 
   const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
   const safeFileName = sanitizeFileName(params.file.name);
@@ -7332,6 +7337,38 @@ export const getPublicBudgetSummaryFromSupabase = async (
     console.warn("Unexpected exception fetching public budget summary, returning safe fallback:", err);
     return getUnconfiguredPublicBudgetSummary(targetYear);
   }
+};
+
+export const getPublicBudgetBarangayAllocationsFromSupabase = async (
+  fiscalYear?: number,
+): Promise<PublicBudgetBarangayAllocation[]> => {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase.rpc("get_public_budget_barangay_allocations", {
+    _fiscal_year: fiscalYear ?? null,
+  });
+  if (error) throw error;
+
+  const response = (data ?? {}) as { allocations?: unknown };
+  const rows = Array.isArray(response) ? response : response.allocations;
+  if (!Array.isArray(rows)) return [];
+
+  return rows.flatMap((row: any) => {
+    const district = String(row?.district ?? "");
+    const barangay = String(row?.barangay ?? "").trim();
+    if (!barangay || (district !== "District I" && district !== "District II")) return [];
+    const organizationCount = row.organization_count ?? row.organizationCount;
+    const releasedBudgetCount = row.released_budget_count ?? row.releasedBudgetCount;
+    return [{
+      barangay,
+      district,
+      approvedAmount: normalizeNumeric(row.approved_amount ?? row.approvedAmount),
+      releasedAmount: normalizeNumeric(row.released_amount ?? row.releasedAmount),
+      liquidatedAmount: normalizeNumeric(row.liquidated_amount ?? row.liquidatedAmount),
+      ...(organizationCount === undefined || organizationCount === null ? {} : { organizationCount: normalizeNumeric(organizationCount) }),
+      ...(releasedBudgetCount === undefined || releasedBudgetCount === null ? {} : { releasedBudgetCount: normalizeNumeric(releasedBudgetCount) }),
+    }];
+  });
 };
 
 export interface AdminBudgetRequestsDeleteResult {
