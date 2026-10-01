@@ -4473,16 +4473,16 @@ export default function AdminPortal({ section }: { section: string }) {
       void dispatchOrgTransactionalEmailInSupabase({
         eventType:
           decision === "approve"
-            ? "renewal_approved"
+            ? "document_approved"
             : decision === "needs_revision"
-            ? "renewal_needs_revision"
-            : "renewal_rejected",
+            ? "document_needs_revision"
+            : "document_rejected",
         organizationId: selectedRenewalProfile.id,
         userId: selectedRenewalProfile.userId,
         referenceId: selectedRenewal.id,
         title:
           decision === "approve"
-            ? "Accreditation Renewal Document Approved"
+            ? "Renewal Document Approved"
             : decision === "needs_revision"
             ? "Renewal Document Revision Requested"
             : "Renewal Document Rejected",

@@ -1,16 +1,14 @@
 import Navbar from "@/components/Navbar";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import PublicTemplatesCatalog from "@/components/public/PublicTemplatesCatalog";
 
 const PublicTemplates = () => {
   return (
     <div className="public-templates-page min-h-screen bg-background">
-      <AnnouncementBar />
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
+      <section className="public-templates-hero-gradient px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
 
           {/* Title block */}

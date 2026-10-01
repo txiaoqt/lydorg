@@ -58,7 +58,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
 
         {/* Left column — sticky TOC for Desktop (visible on lg and up) */}
         <div className="hidden w-[274px] shrink-0 lg:block">
-          <div className="sticky top-[130px] flex flex-col gap-[28px] p-[10px]">
+          <div className="sticky top-[90px] flex flex-col gap-[28px] p-[10px]">
             <span className="font-segoe text-public-fs-subheading-sm font-semibold uppercase leading-[140%] tracking-[0.04em] text-public-text-brand">
               Table of Contents
             </span>

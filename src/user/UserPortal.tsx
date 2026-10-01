@@ -106,6 +106,7 @@ import { UserPortalNotificationsWorkspaceView } from "@/components/portal/UserPo
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
 import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
 import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
+import { getPasigDistrictForBarangay } from "@/lib/pasig-districts";
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { PortalAttachedDocumentDrawer } from "@/components/portal/PortalAttachedDocumentDrawer";
 import { OrganizationActivityHistoryModal } from "@/components/portal/OrganizationActivityHistoryModal";
@@ -2267,6 +2268,7 @@ export default function UserPortal({ section }: { section: string }) {
     const addrStreet = profileDraft.addressStreet?.trim() || "";
     const addrSubdivision = profileDraft.addressSubdivision?.trim() || "";
     const addrBarangay = profileDraft.addressBarangay?.trim() || profileDraft.barangay?.trim() || "";
+    const derivedDistrict = getPasigDistrictForBarangay(addrBarangay);
     const addrCity = profileDraft.addressCity?.trim() || "Pasig City";
     const addrProvince = profileDraft.addressProvince?.trim() || "Metro Manila";
     const addrZipCode = profileDraft.addressZipCode?.trim() || "";
@@ -2303,8 +2305,8 @@ export default function UserPortal({ section }: { section: string }) {
       additionalEmails: (profileDraft.additionalEmails ?? []).map((e) => e.trim()).filter(Boolean),
       contactNumber: profileDraft.contactNumber.trim(),
       additionalContactNumbers: (profileDraft.additionalContactNumbers ?? []).map((c) => c.trim()).filter(Boolean),
-      district: profileDraft.district.trim(),
-      barangay: profileDraft.barangay.trim(),
+      district: derivedDistrict,
+      barangay: addrBarangay,
       isExistingOrganization: profileDraft.isExistingOrganization,
       organizationIdentifierNumber: isAlreadyVerified
         ? (currentProfile?.organizationIdentifierNumber?.trim() || profileDraft.organizationIdentifierNumber?.trim() || currentProfile?.urn?.trim() || "")

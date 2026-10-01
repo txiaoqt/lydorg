@@ -64,7 +64,7 @@ const Navbar = () => {
   const portalLabel = role === "admin" ? "Admin Portal" : "Open Portal";
 
   return (
-    <nav className="fixed left-0 right-0 top-[32px] sm:top-[40px] z-50 bg-white shadow-public-nav border-b border-slate-100/80">
+    <nav className="fixed left-0 right-0 top-0 z-50 bg-white shadow-public-nav border-b border-slate-100/80">
       <div className="mx-auto flex h-14 sm:h-16 lg:h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-10 lg:px-20">
         <Link to="/" className="min-w-0 shrink-0 flex items-center">
           <img
@@ -75,7 +75,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop nav links — visible at lg and above */}
-        <div className="hidden h-[42px] items-center gap-[10px] bg-white px-[10px] lg:flex">
+        <div className="hidden h-[42px] items-center gap-[10px] bg-white px-[10px] xl:flex">
           {!isAuthenticated
             ? navItems.map((item) => (
                 <Link
@@ -94,7 +94,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop right actions — visible at lg and above */}
-        <div className="hidden h-[40px] items-center gap-[16px] lg:flex">
+        <div className="hidden h-[40px] items-center gap-[16px] xl:flex">
           {isAuthenticated ? (
             <>
               <Link
@@ -129,11 +129,11 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile hamburger button — visible below lg */}
+        {/* Compact navigation button — visible below xl to prevent cramped desktop links */}
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:text-primary hover:bg-slate-100 active:bg-slate-200/80 transition-colors lg:hidden touch-target"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:text-primary hover:bg-slate-100 active:bg-slate-200/80 transition-colors xl:hidden touch-target"
           aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
         >
           {mobileOpen ? <X className="h-6 w-6 text-slate-900" /> : <Menu className="h-6 w-6 text-slate-900" />}
@@ -143,7 +143,7 @@ const Navbar = () => {
       {/* Invisible mobile backdrop for outside-click dismiss — preserves normal page appearance */}
       {mobileOpen ? (
         <div
-          className="fixed inset-0 top-[calc(32px+3.5rem)] sm:top-[calc(40px+4rem)] z-40 bg-transparent lg:hidden"
+          className="fixed inset-0 top-14 sm:top-16 lg:top-20 z-40 bg-transparent xl:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -151,7 +151,7 @@ const Navbar = () => {
 
       {/* Content-driven compact modern mobile navigation panel with 100% solid opaque white background */}
       {mobileOpen ? (
-        <div className="fixed inset-x-0 top-[calc(32px+3.5rem)] sm:top-[calc(40px+4rem)] z-50 max-h-[calc(100dvh-32px-3.5rem-2rem)] overflow-y-auto rounded-b-2xl border-b border-x border-slate-200/90 bg-white px-4.5 pb-7 pt-3 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] lg:hidden safe-area-bottom">
+        <div className="fixed inset-x-0 top-14 sm:top-16 lg:top-20 z-50 max-h-[calc(100dvh-3.5rem-2rem)] sm:max-h-[calc(100dvh-4rem-2rem)] lg:max-h-[calc(100dvh-5rem-2rem)] overflow-y-auto rounded-b-2xl border-b border-x border-slate-200/90 bg-white px-4.5 pb-7 pt-3 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] xl:hidden safe-area-bottom">
           {/* Navigation Links */}
           <div className="flex flex-col gap-0.5">
             {navItems.map((item) => {

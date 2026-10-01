@@ -397,6 +397,10 @@ export const mapOrganizationProfileError = (
   const hint = String(errObj.hint || "");
   const combined = `${code} ${errMessage} ${details} ${hint}`;
 
+  if (/Headquarters Barangay changes must be made through the administrative location update process/i.test(combined)) {
+    return "The database is still blocking Barangay changes. Apply the latest organization profile location migration, then try again.";
+  }
+
   if (
     combined.includes("uq_organization_profiles_reference_id") ||
     combined.includes("organization_profiles_reference_id_key") ||

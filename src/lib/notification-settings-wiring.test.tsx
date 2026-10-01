@@ -12,6 +12,8 @@ import {
 } from "./admin-system-settings";
 import {
   dispatchOrgTransactionalEmailInSupabase,
+  updateBudgetRequestInSupabase,
+  updateLiquidationReportInSupabase,
   type OrgTransactionalEmailEventType,
 } from "./lydo-connect-supabase";
 import { supabase } from "./supabase";
@@ -399,6 +401,105 @@ describe("Status Change Notifications & Notification Settings Wiring Test Suite"
 
       expect(res.success).toBe(false);
       expect(res.reason).toBe("Brevo rate limit exceeded");
+    });
+  });
+
+  describe("Admin parent budget and liquidation status email wiring", () => {
+    const installAdminSession = () => {
+      window.localStorage.setItem("lydo_admin_session_v1", JSON.stringify({
+        id: "admin-1",
+        username: "admin",
+        email: "admin@example.com",
+        displayName: "Admin",
+        sessionToken: "valid-admin-session",
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      }));
+    };
+
+    beforeEach(() => {
+      installAdminSession();
+    });
+
+    it("dispatches the updated budget request status to the organization email function", async () => {
+      const budgetRow = {
+        id: "budget-1",
+        organization_id: "org-1",
+        submitted_by: "user-1",
+        activity_title: "Youth Leadership Workshop",
+        activity_description: "Workshop",
+        activity_date: "2026-09-15",
+        venue: "Pasig",
+        requested_amount: 25000,
+        approved_amount: 20000,
+        released_amount: 0,
+        release_date: null,
+        purpose_category: "Leadership",
+        fiscal_year: 2026,
+        status: "awaiting_release",
+        remarks: null,
+        admin_remarks: "Approved with adjustment",
+        go_signal_at: null,
+        hard_copy_submitted_at: null,
+        revision_history: [],
+        created_at: "2026-09-01T00:00:00.000Z",
+        updated_at: "2026-09-30T00:00:00.000Z",
+      };
+      vi.mocked(supabase!.rpc).mockResolvedValueOnce({ data: [budgetRow], error: null } as never);
+      vi.mocked(supabase!.functions.invoke).mockResolvedValueOnce({
+        data: { success: true, event: "budget_status_update", emailSent: true },
+        error: null,
+      } as never);
+
+      await updateBudgetRequestInSupabase("budget-1", { status: "awaiting_release" });
+
+      expect(supabase!.functions.invoke).toHaveBeenCalledWith("send-org-transactional-email", {
+        body: expect.objectContaining({
+          eventType: "budget_status_update",
+          organizationId: "org-1",
+          referenceId: "budget-1",
+          itemName: "Youth Leadership Workshop",
+          status: "awaiting_release",
+          statusLabel: "Approved — Awaiting Release",
+          remarks: "Approved with adjustment",
+        }),
+        headers: expect.any(Object),
+      });
+    });
+
+    it("dispatches the updated liquidation report status to the organization email function", async () => {
+      const liquidationRow = {
+        id: "liquidation-1",
+        budget_request_id: "budget-1",
+        organization_id: "org-1",
+        submitted_by: "user-1",
+        status: "completed_liquidated",
+        remarks: null,
+        go_signal_at: null,
+        deadline_at: "2026-10-30",
+        hard_copy_submitted_at: null,
+        completed_at: "2026-09-30T00:00:00.000Z",
+        revision_history: [],
+        created_at: "2026-09-01T00:00:00.000Z",
+        updated_at: "2026-09-30T00:00:00.000Z",
+      };
+      vi.mocked(supabase!.rpc).mockResolvedValueOnce({ data: [liquidationRow], error: null } as never);
+      vi.mocked(supabase!.functions.invoke).mockResolvedValueOnce({
+        data: { success: true, event: "liquidation_status_update", emailSent: true },
+        error: null,
+      } as never);
+
+      await updateLiquidationReportInSupabase("liquidation-1", { status: "completed_liquidated" });
+
+      expect(supabase!.functions.invoke).toHaveBeenCalledWith("send-org-transactional-email", {
+        body: expect.objectContaining({
+          eventType: "liquidation_status_update",
+          organizationId: "org-1",
+          referenceId: "liquidation-1",
+          status: "completed_liquidated",
+          statusLabel: "Liquidated",
+        }),
+        headers: expect.any(Object),
+      });
     });
   });
 

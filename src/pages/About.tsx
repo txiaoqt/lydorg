@@ -1,7 +1,6 @@
 import { ArrowRight, Award, Bell, BookOpen, CircleCheck, ClipboardList, FileText, FolderOpen, Globe, Heart, LayoutGrid, Lock, ScrollText, Send, ShieldCheck, Star, Target, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import aboutHero from "@/assets/about-hero.webp";
@@ -130,11 +129,10 @@ const About = () => {
 
   return (
     <div className="min-h-screen">
-      <AnnouncementBar />
       <Navbar />
 
       {/* Hero */}
-      <section className="about-hero-gradient flex min-h-0 sm:min-h-[758px] flex-col justify-center px-4 pt-[96px] pb-2 sm:px-6 sm:pt-[120px] sm:pb-0 lg:px-[64px]">
+      <section className="about-hero-gradient flex min-h-0 sm:min-h-[758px] flex-col justify-center px-4 pt-16 pb-2 sm:px-6 sm:pt-20 sm:pb-0 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col-reverse items-center gap-5 pt-2 pb-0 sm:gap-[40px] sm:py-[64px] xl:flex-row xl:items-center xl:justify-between xl:py-[160px]">
 
           {/* Left column */}

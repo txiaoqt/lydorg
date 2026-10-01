@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,10 +83,9 @@ export default function NewsReleaseRecord() {
   if (!newsRelease) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar />
-      <Navbar />
-        <main className="pt-16">
-          <div className="sticky top-16 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
+        <Navbar />
+        <main className="pt-14 sm:pt-16 lg:pt-20">
+          <div className="sticky top-14 sm:top-16 lg:top-20 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
               <div className="flex h-12 items-center">
                 <Button type="button" variant="ghost" size="sm" onClick={() => navigate(backPath)}>
@@ -115,9 +113,8 @@ export default function NewsReleaseRecord() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar />
       <Navbar />
-      <main className="pt-16">
+      <main className="pt-14 sm:pt-16 lg:pt-20">
 
         {/* Sticky sub-navbar */}
         <div className="sticky top-16 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">

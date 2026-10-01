@@ -59,6 +59,48 @@ export type OrgTransactionalEmailEventType = typeof CANONICAL_ORG_WORKFLOW_EVENT
 
 const VALID_EVENT_TYPES = new Set<string>(CANONICAL_ORG_WORKFLOW_EVENT_TYPES);
 
+type WorkflowNotificationSettingKey =
+  | "workflow.notify_org_on_approved"
+  | "workflow.notify_org_on_needs_revision"
+  | "workflow.notify_org_on_rejected";
+
+function getWorkflowNotificationSettingKey(
+  eventType: OrgTransactionalEmailEventType,
+  status?: string,
+): WorkflowNotificationSettingKey | null {
+  if (new Set<string>(["registration_approved", "renewal_approved", "document_approved", "ypop_approved"]).has(eventType)) {
+    return "workflow.notify_org_on_approved";
+  }
+  if (new Set<string>(["registration_needs_revision", "renewal_needs_revision", "document_needs_revision", "ypop_needs_revision"]).has(eventType)) {
+    return "workflow.notify_org_on_needs_revision";
+  }
+  if (new Set<string>(["registration_rejected", "renewal_rejected", "document_rejected", "ypop_rejected"]).has(eventType)) {
+    return "workflow.notify_org_on_rejected";
+  }
+
+  if (eventType === "budget_status_update" || eventType === "liquidation_status_update") {
+    const normalizedStatus = (status ?? "").trim().toLowerCase();
+    if (normalizedStatus === "needs_revision") return "workflow.notify_org_on_needs_revision";
+    if (["rejected", "rejected_red"].includes(normalizedStatus)) return "workflow.notify_org_on_rejected";
+    if ([
+      "approved",
+      "approved_green",
+      "verified",
+      "qualified",
+      "awaiting_release",
+      "approved_for_ftf_green",
+      "hard_copy_submitted",
+      "budget_released",
+      "completed",
+      "completed_liquidated",
+    ].includes(normalizedStatus)) {
+      return "workflow.notify_org_on_approved";
+    }
+  }
+
+  return null;
+}
+
 export interface OrgTransactionalEmailPayload {
   eventType: OrgTransactionalEmailEventType;
   organizationId: string;
@@ -650,6 +692,8 @@ Deno.serve(async (req: Request) => {
     // 2. FAIL-CLOSED SYSTEM SETTINGS CHECK (email.send_workflow_emails & email.reply_to_email)
     // ─────────────────────────────────────────────────────────────────────────────
     let sendWorkflowEmails: boolean | null = null;
+    let workflowNotificationEnabled: boolean | null = null;
+    const workflowNotificationSettingKey = getWorkflowNotificationSettingKey(eventType, payload.status);
     let configuredReplyTo: string | null = null;
     let supportEmail = "lydo@pasigcity.gov.ph";
     let systemName = "Y-TRACE";
@@ -664,6 +708,9 @@ Deno.serve(async (req: Request) => {
         .in("setting_key", [
           "email.send_workflow_emails",
           "email.reply_to_email",
+          "workflow.notify_org_on_approved",
+          "workflow.notify_org_on_needs_revision",
+          "workflow.notify_org_on_rejected",
           "general.support_email",
           "general.system_name",
           "general.office_name",
@@ -679,6 +726,8 @@ Deno.serve(async (req: Request) => {
           const v = row.value_json;
           if (k === "email.send_workflow_emails" && typeof v === "boolean") {
             sendWorkflowEmails = v;
+          } else if (k === workflowNotificationSettingKey && typeof v === "boolean") {
+            workflowNotificationEnabled = v;
           } else if (k === "email.reply_to_email" && typeof v === "string") {
             configuredReplyTo = v.trim();
           } else if (k === "general.support_email" && typeof v === "string" && v.trim()) {
@@ -707,6 +756,17 @@ Deno.serve(async (req: Request) => {
         event: eventType,
         emailSent: false,
         reason,
+        organizationId: payload.organizationId,
+      });
+    }
+
+    if (workflowNotificationSettingKey && workflowNotificationEnabled === false) {
+      console.log(`[send-org-transactional-email] Transactional email skipped (${workflowNotificationSettingKey} is false).`);
+      return jsonResponse({
+        success: true,
+        event: eventType,
+        emailSent: false,
+        reason: "workflow_notification_disabled",
         organizationId: payload.organizationId,
       });
     }

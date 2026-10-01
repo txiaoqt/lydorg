@@ -2,10 +2,9 @@ import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, C
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-image.webp";
-import overviewPreview from "@/assets/overview-preview.jpg";
+import overviewWorkshop from "@/assets/ytrace-community-workshop.png";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -198,11 +197,10 @@ const Index = () => {
 
   return (
     <div className="public-home-page min-h-screen bg-background">
-      <AnnouncementBar />
       <Navbar />
 
       {/* Hero */}
-      <section className="hero-section public-hero-gradient relative flex min-h-0 sm:min-h-[758px] flex-col justify-center overflow-x-clip pt-[116px] sm:pt-[108px] lg:pt-[120px] pb-4 sm:pb-0">
+      <section className="hero-section public-hero-gradient relative flex min-h-0 sm:min-h-[758px] flex-col justify-center overflow-x-clip pt-[84px] sm:pt-[68px] lg:pt-[80px] pb-4 sm:pb-0">
         <div className="container mx-auto relative z-10 w-full max-w-7xl px-3.5 xs:px-4 sm:px-6 lg:px-[64px] py-0 sm:py-10 lg:py-0">
           <div className="flex flex-col-reverse items-center gap-4 sm:gap-6 lg:flex-row lg:items-center lg:gap-[40px]">
             {/* Left column (Text & Actions) */}
@@ -334,8 +332,8 @@ const Index = () => {
           {/* Left column — portal preview card */}
           <div className="flex w-full items-center justify-center rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-2 sm:p-3 lg:p-[10px] shadow-public-overview-card xl:h-[700px] xl:w-[620px] xl:shrink-0">
             <img
-              src={overviewPreview}
-              alt="Y-TRACE portal preview"
+              src={overviewWorkshop}
+              alt="Illustrative scene of youth leaders and facilitators reviewing program documents at a community workshop"
               className="h-auto w-full max-w-[540px] rounded-lg sm:rounded-[12px] object-cover"
             />
           </div>

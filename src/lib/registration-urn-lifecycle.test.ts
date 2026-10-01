@@ -455,5 +455,12 @@ describe("Y-TRACE Registration & URN Lifecycle Verification", () => {
       expect(result).not.toContain("PostgresClient");
       expect(result).not.toContain("query");
     });
+
+    it("TEST 24: outdated headquarters location guard points admins to the required migration", () => {
+      const dbError = new Error("Headquarters Barangay changes must be made through the administrative location update process.");
+      const result = mapOrganizationProfileError(dbError);
+
+      expect(result).toBe("The database is still blocking Barangay changes. Apply the latest organization profile location migration, then try again.");
+    });
   });
 });

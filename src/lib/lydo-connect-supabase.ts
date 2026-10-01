@@ -3219,6 +3219,28 @@ export const updateBudgetRequestInSupabase = async (
     const updatedRow = Array.isArray(data) ? data[0] : null;
     if (!updatedRow) throw new Error("Failed to update the budget request: No data returned.");
 
+    if (patch.status !== undefined) {
+      const updatedBudget = mapBudgetRequest(updatedRow as BudgetRequestRow);
+      const statusLabels: Record<string, string> = {
+        submitted: "Submitted",
+        under_review: "Under Review",
+        needs_revision: "Needs Revision",
+        awaiting_release: "Approved — Awaiting Release",
+        rejected_red: "Rejected",
+        budget_released: "Budget Released",
+      };
+
+      void dispatchOrgTransactionalEmailInSupabase({
+        eventType: "budget_status_update",
+        organizationId: updatedBudget.organizationId,
+        referenceId: updatedBudget.id,
+        itemName: updatedBudget.activityTitle,
+        status: updatedBudget.status,
+        statusLabel: statusLabels[updatedBudget.status] ?? updatedBudget.status.replace(/_/g, " "),
+        remarks: updatedBudget.adminRemarks || undefined,
+      });
+    }
+
     // Best-effort secondary update for direct environments if supported
     if (patch.status === "needs_revision" && revisionDueAt) {
       try {
@@ -4201,7 +4223,34 @@ export const updateLiquidationReportInSupabase = async (
 
     const updatedRow = Array.isArray(data) ? data[0] : null;
     if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the liquidation report.");
-    return mapLiquidationReport(updatedRow as LiquidationReportRow);
+    const updatedReport = mapLiquidationReport(updatedRow as LiquidationReportRow);
+
+    if (patch.status !== undefined) {
+      const statusLabels: Record<string, string> = {
+        pending_activity_completion: "Awaiting Activity Completion",
+        not_started: "Not Started",
+        draft: "Draft",
+        submitted: "Submitted",
+        under_review: "Under Review",
+        needs_revision: "Needs Revision",
+        approved_for_ftf_green: "Approved — Hard Copy Submission Required",
+        rejected_red: "Rejected",
+        hard_copy_submitted: "Hard Copy Submitted",
+        completed_liquidated: "Liquidated",
+        overdue: "Overdue",
+      };
+
+      void dispatchOrgTransactionalEmailInSupabase({
+        eventType: "liquidation_status_update",
+        organizationId: updatedReport.organizationId,
+        referenceId: updatedReport.id,
+        status: updatedReport.status,
+        statusLabel: statusLabels[updatedReport.status] ?? updatedReport.status.replace(/_/g, " "),
+        remarks: updatedReport.remarks || undefined,
+      });
+    }
+
+    return updatedReport;
   }
 
   const { organizationProfile } = await getAuthenticatedOrganizationContext();

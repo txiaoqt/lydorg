@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Building2, ChevronRight, Globe } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 
 const siteMapSections = [
@@ -43,11 +42,10 @@ const siteMapSections = [
 const SiteMap = () => {
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar />
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
+      <section className="public-templates-hero-gradient px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-2 py-4 text-center sm:items-start sm:text-left sm:gap-[16px] sm:py-[48px] sm:min-h-[285px]">
           <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
             Site Map

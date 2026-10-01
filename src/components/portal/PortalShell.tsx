@@ -216,7 +216,7 @@ export const PortalShell = ({
   }, [mobileOpen]);
 
   return (
-    <div className="h-dvh overflow-hidden bg-background text-foreground">
+    <div className="admin-shell h-dvh overflow-hidden bg-background text-foreground">
       <div className="flex h-full">
         {/* Desktop sidebar — expanded (280px) or icon-only rail (94px) */}
         <aside

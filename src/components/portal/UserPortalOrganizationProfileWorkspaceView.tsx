@@ -43,7 +43,12 @@ import {
   getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import { cn } from "@/lib/utils";
-import { getPasigDistrictForBarangay } from "@/lib/pasig-districts";
+import {
+  getBarangayOptionsForDistrict,
+  getPasigDistrictForBarangay,
+  normalizePasigDistrict,
+  pasigDistrictOptions,
+} from "@/lib/pasig-districts";
 
 export interface UserPortalOrganizationProfileWorkspaceViewProps {
   profile: any;
@@ -107,6 +112,9 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
   const profileSubClass = formatSubClassificationLabel(profile.subClassification) || "N/A";
   const headquartersBarangay = currentProfile?.addressBarangay || currentProfile?.barangay || profile?.addressBarangay || profile?.barangay;
   const headquartersDistrict = getPasigDistrictForBarangay(headquartersBarangay) || currentProfile?.district || profile?.district;
+  const selectedProfileBarangay = profileDraft.addressBarangay || profileDraft.barangay || "";
+  const selectedProfileDistrict = getPasigDistrictForBarangay(selectedProfileBarangay) || normalizePasigDistrict(profileDraft.district);
+  const profileBarangayOptions = getBarangayOptionsForDistrict(selectedProfileDistrict || "all");
 
   // Calculate consistent URN display using authentic database value
   const profileUrn =
@@ -771,25 +779,43 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   <label className="text-xs font-semibold text-foreground">
                     Barangay <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    value={profileDraft.addressBarangay || profileDraft.barangay || ""}
-                    readOnly
-                    aria-readonly="true"
-                    placeholder="Barangay"
-                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
+                  <select
+                    value={selectedProfileBarangay}
+                    onChange={(event) => {
+                      const barangay = event.target.value;
+                      onFieldChange("addressBarangay", barangay);
+                      onFieldChange("barangay", barangay);
+                      onFieldChange("district", getPasigDistrictForBarangay(barangay));
+                    }}
+                    className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     required
-                  />
+                  >
+                    <option value="">Select barangay</option>
+                    {profileBarangayOptions.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
+                  </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">District</label>
-                  <Input
-                  value={getPasigDistrictForBarangay(profileDraft.addressBarangay || profileDraft.barangay) || profileDraft.district || ""}
-                    readOnly
-                    aria-readonly="true"
-                    placeholder="Derived from Barangay"
-                    className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
-                  />
+                  <label className="text-xs font-semibold text-foreground">
+                    District <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedProfileDistrict}
+                    onChange={(event) => {
+                      const district = event.target.value;
+                      onFieldChange("district", district);
+                      if (selectedProfileBarangay && getPasigDistrictForBarangay(selectedProfileBarangay) !== district) {
+                        onFieldChange("addressBarangay", "");
+                        onFieldChange("barangay", "");
+                      }
+                    }}
+                    className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    required
+                  >
+                    <option value="">Select district</option>
+                    {pasigDistrictOptions.map((district) => <option key={district} value={district}>{district}</option>)}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground">Choosing a different district clears the barangay so you can select a matching one.</p>
                 </div>
 
                 <div className="space-y-1">

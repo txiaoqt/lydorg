@@ -726,3 +726,115 @@
     grid-template-columns: minmax(5rem, 0.7fr) minmax(0, 1fr);
   }
 }
+
+/* The map uses Leaflet and custom CSS rather than the shared component tokens. */
+body.admin-theme-active.dark .pasig-budget-map {
+  color: var(--yt-text);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__period,
+body.admin-theme-active.dark .pasig-budget-map__map-state > svg,
+body.admin-theme-active.dark .pasig-budget-map__details-heading h3,
+body.admin-theme-active.dark .pasig-budget-map__empty-selection h3,
+body.admin-theme-active.dark .pasig-budget-map__barangay-list button[aria-pressed="true"],
+body.admin-theme-active.dark .pasig-budget-map__barangay-list button[aria-pressed="true"] > strong {
+  color: var(--yt-primary-hover);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__browse h3,
+body.admin-theme-active.dark .pasig-budget-map__details dd,
+body.admin-theme-active.dark .pasig-budget-map__organizations h3,
+body.admin-theme-active.dark .pasig-budget-map__organizations li > button > span,
+body.admin-theme-active.dark .pasig-budget-map__map-state strong,
+body.admin-theme-active.dark .pasig-budget-map__barangay-list button {
+  color: var(--yt-text);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__header p,
+body.admin-theme-active.dark .pasig-budget-map__details-heading p,
+body.admin-theme-active.dark .pasig-budget-map__selected-value span,
+body.admin-theme-active.dark .pasig-budget-map__details dt,
+body.admin-theme-active.dark .pasig-budget-map__organizations li > button small,
+body.admin-theme-active.dark .pasig-budget-map__organizations > p,
+body.admin-theme-active.dark .pasig-budget-map__empty-selection p,
+body.admin-theme-active.dark .pasig-budget-map__barangay-list small,
+body.admin-theme-active.dark .pasig-budget-map__map-state,
+body.admin-theme-active.dark .pasig-budget-map__source {
+  color: var(--yt-text-secondary);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__selected-value,
+body.admin-theme-active.dark .pasig-budget-map__organizations li > button > strong {
+  color: var(--yt-primary-hover);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__period:focus-visible,
+body.admin-theme-active.dark .pasig-budget-map__transparency-toggle:focus-visible,
+body.admin-theme-active.dark .pasig-budget-map__organizations button:focus-visible {
+  outline-color: var(--yt-focus);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__canvas,
+body.admin-theme-active.dark .pasig-budget-map__leaflet {
+  background: var(--yt-bg);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__transparency-toggle,
+body.admin-theme-active.dark .pasig-budget-map__legend,
+body.admin-theme-active.dark .pasig-budget-map__map-state button,
+body.admin-theme-active.dark .pasig-map-tooltip {
+  border-color: var(--yt-border-strong);
+  background: color-mix(in srgb, var(--yt-surface) 96%, transparent);
+  color: var(--yt-text);
+  box-shadow: var(--yt-shadow-md);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__transparency-toggle[aria-pressed="true"],
+body.admin-theme-active.dark .pasig-budget-map__pin,
+body.admin-theme-active.dark .pasig-budget-map__organizations h3 span,
+body.admin-theme-active.dark .pasig-budget-map__barangay-list button[aria-pressed="true"] {
+  border-color: var(--yt-border-strong);
+  background: var(--yt-primary-soft);
+  color: var(--yt-primary-hover);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__details dl,
+body.admin-theme-active.dark .pasig-budget-map__details dl > div,
+body.admin-theme-active.dark .pasig-budget-map__organizations ul,
+body.admin-theme-active.dark .pasig-budget-map__organizations li,
+body.admin-theme-active.dark .pasig-budget-map__barangay-list li {
+  border-color: var(--yt-border);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__leaflet .leaflet-tile {
+  filter: invert(0.88) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.72);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__leaflet .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--yt-surface) 88%, transparent);
+  color: var(--yt-text-secondary);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__leaflet .leaflet-control-attribution a {
+  color: var(--yt-primary-hover);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__leaflet .leaflet-control-zoom a {
+  border-color: var(--yt-border);
+  background: var(--yt-surface);
+  color: var(--yt-text);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__leaflet .leaflet-control-zoom a:hover {
+  background: var(--yt-surface-hover);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__leaflet .pasig-barangay-focused {
+  filter: drop-shadow(0 0 2px #f8fafc) drop-shadow(0 0 3px #020617);
+}
+
+body.admin-theme-active.dark .pasig-budget-map__unmapped {
+  border-color: var(--yt-warning-border);
+  background: var(--yt-warning-bg);
+  color: var(--yt-warning-text);
+}

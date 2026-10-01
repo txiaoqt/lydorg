@@ -148,9 +148,9 @@
   min-width: 0;
 }
 
-.admin-organization-delete-dialog__warning-title {
-  margin: 0;
-  color: #991b1b;
+  .admin-organization-delete-dialog__warning-title {
+    margin: 0;
+  color: var(--yt-danger-text, #991b1b);
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.35;
@@ -159,7 +159,7 @@
 
 .admin-organization-delete-dialog__warning-description {
   margin: 0;
-  color: #b91c1c;
+  color: var(--yt-danger-text, #b91c1c);
   font-size: 0.75rem;
   font-weight: 400;
   line-height: 1.4;
@@ -168,12 +168,21 @@
 
 .admin-organization-delete-dialog__error {
   padding: 0.75rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--yt-danger-border, #fecaca);
   border-radius: 0.65rem;
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--yt-danger-bg, #fef2f2);
+  color: var(--yt-danger-text, #991b1b);
   font-size: 0.75rem;
   line-height: 1.45;
+}
+
+body.admin-theme-active.dark .desktop-yorp-avatar {
+  border-color: var(--yt-border-strong);
+  background: var(--yt-primary-soft);
+}
+
+body.admin-theme-active.dark .desktop-yorp-facebook:hover {
+  background: var(--yt-primary-soft);
 }
 
 @media (min-width: 1024px) {

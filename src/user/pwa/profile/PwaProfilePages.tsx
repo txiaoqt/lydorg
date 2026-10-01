@@ -34,7 +34,12 @@ import {
   resubmitOrganizationUrnInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { DUPLICATE_URN_ERROR_MESSAGE } from "@/lib/urn-validation";
-import { getAllPasigBarangayOptions, getPasigDistrictForBarangay } from "@/lib/pasig-districts";
+import {
+  getBarangayOptionsForDistrict,
+  getPasigDistrictForBarangay,
+  normalizePasigDistrict,
+  pasigDistrictOptions,
+} from "@/lib/pasig-districts";
 import {
   organizationEmailPattern,
   philippineContactNumberPattern,
@@ -539,8 +544,6 @@ function EditorField({ label, children, required }: { label: string; children: R
 }
 
 export function PwaProfileEdit({ data }: { data: PortalData }) {
-  const canChooseHeadquartersLocation = !data.profile;
-  const barangayOptions = useMemo(() => getAllPasigBarangayOptions(), []);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const openImageDialog = () => {
     if (data.profilePercent < 100) {
@@ -553,6 +556,9 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
   const [draft, setDraft] = useState<OrganizationProfile>(() => data.profile
     ? { ...data.profile, advocacies: [...data.profile.advocacies] }
     : createBlankPwaOrganizationProfile(data));
+  const selectedBarangay = draft.addressBarangay || draft.barangay || "";
+  const selectedDistrict = getPasigDistrictForBarangay(selectedBarangay) || normalizePasigDistrict(draft.district);
+  const barangayOptions = useMemo(() => getBarangayOptionsForDistrict(selectedDistrict || "all"), [selectedDistrict]);
   const [openSection, setOpenSection] = useState("basic");
   const [saving, setSaving] = useState(false);
 
@@ -879,23 +885,38 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   <EditorField label="Unit / Room / Building / House / Lot"><Input value={draft.addressUnitBuilding || ""} onChange={(event) => setField("addressUnitBuilding", event.target.value)} placeholder="e.g. Room 201, Block 5 Lot 2" /></EditorField>
                   <EditorField label="Street Address" required><Input value={draft.addressStreet || ""} onChange={(event) => setField("addressStreet", event.target.value)} placeholder="e.g. 101 Test Center Way" /></EditorField>
                   <EditorField label="Subdivision / Village (Optional)"><Input value={draft.addressSubdivision || ""} onChange={(event) => setField("addressSubdivision", event.target.value)} placeholder="e.g. Kapitolyo Heights" /></EditorField>
-                  <EditorField label={canChooseHeadquartersLocation ? "Barangay" : "Barangay (administrative changes only)"} required>
-                    {canChooseHeadquartersLocation ? (
-                      <select
-                        value={draft.addressBarangay || draft.barangay || ""}
-                        onChange={(event) => {
-                          const barangay = event.target.value;
-                          setField("addressBarangay", barangay);
-                          setField("barangay", barangay);
-                          setField("district", getPasigDistrictForBarangay(barangay));
-                        }}
-                      >
-                        <option value="">Select headquarters Barangay</option>
-                        {barangayOptions.map((barangay) => <option key={barangay.id} value={barangay.name}>{barangay.name}</option>)}
-                      </select>
-                    ) : <Input value={draft.addressBarangay || draft.barangay || ""} readOnly aria-readonly="true" />}
+                  <EditorField label="Barangay" required>
+                    <select
+                      value={selectedBarangay}
+                      onChange={(event) => {
+                        const barangay = event.target.value;
+                        setField("addressBarangay", barangay);
+                        setField("barangay", barangay);
+                        setField("district", getPasigDistrictForBarangay(barangay));
+                      }}
+                      required
+                    >
+                      <option value="">Select Barangay</option>
+                      {barangayOptions.map((barangay) => <option key={barangay.id} value={barangay.name}>{barangay.name}</option>)}
+                    </select>
                   </EditorField>
-                  <EditorField label="District (derived)" required><Input value={getPasigDistrictForBarangay(draft.addressBarangay || draft.barangay) || ""} readOnly aria-readonly="true" /></EditorField>
+                  <EditorField label="District" required>
+                    <select
+                      value={selectedDistrict}
+                      onChange={(event) => {
+                        const district = event.target.value;
+                        setField("district", district);
+                        if (selectedBarangay && getPasigDistrictForBarangay(selectedBarangay) !== district) {
+                          setField("addressBarangay", "");
+                          setField("barangay", "");
+                        }
+                      }}
+                      required
+                    >
+                      <option value="">Select District</option>
+                      {pasigDistrictOptions.map((district) => <option key={district} value={district}>{district}</option>)}
+                    </select>
+                  </EditorField>
                   <EditorField label="City / Municipality"><Input value={draft.addressCity || "Pasig City"} onChange={(event) => setField("addressCity", event.target.value)} /></EditorField>
                   <EditorField label="Province"><Input value={draft.addressProvince || "Metro Manila"} onChange={(event) => setField("addressProvince", event.target.value)} /></EditorField>
                   <EditorField label="ZIP Code"><Input value={draft.addressZipCode || ""} onChange={(event) => setField("addressZipCode", event.target.value)} placeholder="e.g. 1603" /></EditorField>

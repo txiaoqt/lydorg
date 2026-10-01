@@ -72,15 +72,21 @@ export function AdminThemeProvider({ children }: { children: ReactNode }) {
     if (resolvedTheme === "dark") {
       root.classList.add("dark");
       body.classList.add("dark");
+      body.classList.add("admin-theme-active");
+      root.style.colorScheme = "dark";
     } else {
       root.classList.remove("dark");
       body.classList.remove("dark");
+      body.classList.remove("admin-theme-active");
+      root.style.colorScheme = "light";
     }
 
     // Cleanup when this AdminThemeProvider unmounts (e.g. navigating to public pages)
     return () => {
       root.classList.remove("dark");
       body.classList.remove("dark");
+      body.classList.remove("admin-theme-active");
+      root.style.removeProperty("color-scheme");
     };
   }, [resolvedTheme]);
 

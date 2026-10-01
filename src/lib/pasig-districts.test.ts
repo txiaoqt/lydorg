@@ -6,6 +6,7 @@ import {
   isBarangayInDistrict,
   getAllPasigBarangayOptions,
   getPasigDistrictForBarangay,
+  normalizePasigDistrict,
 } from "./pasig-districts";
 
 describe("pasig-districts Canonical Location Helpers", () => {
@@ -137,6 +138,16 @@ describe("pasig-districts Canonical Location Helpers", () => {
     it("returns no district for unrecognized locations", () => {
       expect(getPasigDistrictForBarangay("Malanday")).toBe("");
       expect(getPasigDistrictForBarangay("")).toBe("");
+    });
+  });
+
+  describe("normalizePasigDistrict", () => {
+    it("accepts the district labels already used by existing profile records", () => {
+      expect(normalizePasigDistrict("District I")).toBe("District I");
+      expect(normalizePasigDistrict("District 1")).toBe("District I");
+      expect(normalizePasigDistrict("District II")).toBe("District II");
+      expect(normalizePasigDistrict("District 2")).toBe("District II");
+      expect(normalizePasigDistrict("unknown")).toBe("");
     });
   });
 });

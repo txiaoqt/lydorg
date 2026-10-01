@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { LegalPolicyView } from "@/components/LegalPolicyView";
 import Navbar from "@/components/Navbar";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import { supabase } from "@/lib/supabase";
 import { resolveDisplayPolicy } from "@/lib/ytrace-policy";
 
@@ -43,11 +42,10 @@ const LegalPolicy = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar />
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-4 pt-[96px] sm:px-6 sm:pt-[120px] lg:px-[64px]">
+      <section className="public-templates-hero-gradient px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col justify-center gap-2 py-4 sm:gap-[16px] sm:py-[48px] sm:min-h-[285px]">
           <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
             Legal Policies
