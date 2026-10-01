@@ -194,10 +194,10 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     label: "Office Acronym",
     description: "Short office abbreviation shown on badges, tags, and document headers.",
     dataType: "string",
-    defaultValue: "PCYDO / LYDO",
+    defaultValue: "PCYDO",
     isEditable: false,
     badge: "System",
-    helperText: "e.g. PCYDO / LYDO",
+    helperText: "e.g. PCYDO",
   },
   {
     key: "general.support_email",

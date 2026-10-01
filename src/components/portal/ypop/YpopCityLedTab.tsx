@@ -218,7 +218,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                     <p className="text-xs max-w-sm mx-auto">
                       {searchQuery || categoryFilter !== "all"
                         ? "Try adjusting your search query or category filter."
-                        : "No city activities have been scheduled by the LYDO Admin for this semester."}
+                        : "No city activities have been scheduled by the PCYDO Admin for this semester."}
                     </p>
                     {(searchQuery || categoryFilter !== "all") && (
                       <Button

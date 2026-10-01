@@ -760,7 +760,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     // Global "Validation Remarks" banner must NOT be rendered
     expect(screen.queryByText("Validation Remarks")).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/This validation submission was evaluated and closed by the LYDO Admin./i)
+      screen.queryByText(/This validation submission was evaluated and closed by the PCYDO Admin./i)
     ).not.toBeInTheDocument();
     // Underlying entry remark data remains intact in entry record
     expect(notQualifiedProps.ypopEntries[0].adminRemarks).toBe(

@@ -443,7 +443,7 @@ describe("YPOP Draft File Isolation, File Deletion Sync, and Validation Remarks 
     // Global "Validation Remarks" banner must NOT be rendered in workspace
     expect(screen.queryByText("Validation Remarks")).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/This validation submission was evaluated and closed by the LYDO Admin./i)
+      screen.queryByText(/This validation submission was evaluated and closed by the PCYDO Admin./i)
     ).not.toBeInTheDocument();
     // Underlying remark data is preserved
     expect(entry.adminRemarks).toBe("Evaluation concluded: mandatory criteria not met.");

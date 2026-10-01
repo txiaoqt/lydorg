@@ -698,7 +698,7 @@ Deno.serve(async (req: Request) => {
     let supportEmail = "lydo@pasigcity.gov.ph";
     let systemName = "Y-TRACE";
     let officeName = "Pasig City Youth Development Office";
-    let officeAcronym = "PCYDO / LYDO";
+    let officeAcronym = "PCYDO";
     let userPortalUrl = "https://ytrace.app";
 
     try {

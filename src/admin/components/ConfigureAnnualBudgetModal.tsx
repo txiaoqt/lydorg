@@ -162,7 +162,7 @@ export const ConfigureAnnualBudgetModal = ({
             <textarea
               id="statutory-notes"
               rows={3}
-              placeholder="e.g. City Ordinance No. 2026-XX, Approved LYDO Youth Development Fund Appropriation..."
+              placeholder="e.g. City Ordinance No. 2026-XX, Approved PCYDO Youth Development Fund Appropriation..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface p-3 font-segoe text-xs text-text-default outline-none transition-colors focus:border-public-bg-brand placeholder:text-slate-400"

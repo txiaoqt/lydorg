@@ -357,7 +357,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
               <span className="text-muted-foreground/40">•</span>
-              <span className="text-xs text-muted-foreground font-medium">LYDO Pasig City</span>
+              <span className="text-xs text-muted-foreground font-medium">PCYDO Pasig City</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
               Liquidation Reports
@@ -377,7 +377,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-primary">Liquidation Workspace</span>
                 <span className="text-muted-foreground/40">•</span>
-                <span className="text-xs text-muted-foreground font-medium">LYDO Pasig City</span>
+                <span className="text-xs text-muted-foreground font-medium">PCYDO Pasig City</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                 Liquidation Reports

@@ -241,7 +241,7 @@ export const BudgetMonitoringOverview = ({
                   FY {selectedFiscalYear} Budget Allocation Not Configured
                 </h3>
                 <p className="font-segoe text-xs text-amber-800">
-                  Budget Monitoring cannot calculate remaining headroom until the annual LYDO allocation is configured.
+                  Budget Monitoring cannot calculate remaining headroom until the annual PCYDO allocation is configured.
                   Execution metrics below reflect active workflow requests for FY {selectedFiscalYear}.
                 </p>
               </div>

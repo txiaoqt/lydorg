@@ -37,7 +37,7 @@ const groups = [
     links: [
       { label: "Organization Directory", detail: "Discover verified youth organizations", path: PWA_ROUTES.organizations, icon: UsersRound },
       { label: "Templates", detail: "View and download official files", path: PWA_ROUTES.templates, icon: FileText },
-      { label: "News Releases", detail: "Official LYDO updates", path: PWA_ROUTES.news, icon: Megaphone },
+      { label: "News Releases", detail: "Official PCYDO updates", path: PWA_ROUTES.news, icon: Megaphone },
     ],
   },
   {
@@ -45,7 +45,7 @@ const groups = [
     links: [
       { label: "Inquiries", detail: "Send and review inquiries", path: PWA_ROUTES.inquiries, icon: HelpCircle },
       { label: "FAQs", detail: "Answers about using Y-TRACE", path: PWA_ROUTES.faqs, icon: BookOpen },
-      { label: "Contact LYDO / PCYDO", detail: "Office and support contact details", path: PWA_ROUTES.contact, icon: Phone },
+      { label: "Contact PCYDO", detail: "Office and support contact details", path: PWA_ROUTES.contact, icon: Phone },
     ],
   },
   {

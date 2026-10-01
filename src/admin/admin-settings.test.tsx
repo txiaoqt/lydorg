@@ -88,7 +88,7 @@ describe("Admin System Settings - Definitions and Defaults", () => {
   it("has valid defaults for general settings", () => {
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.system_name"]).toBe("Y-TRACE");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_name"]).toBe("Pasig City Youth Development Office");
-    expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_acronym"]).toBe("PCYDO / LYDO");
+    expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_acronym"]).toBe("PCYDO");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.office_address"]).toBe("3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.user_portal_url"]).toBe("https://ytrace.app");
     expect(DEFAULT_SYSTEM_SETTINGS_VALUES["general.admin_portal_url"]).toBe("https://y-trace-admin.vercel.app");
@@ -159,7 +159,7 @@ describe("Admin System Settings - Runtime Helpers", () => {
   it("reads effective system settings and individual keys", () => {
     const settings = getEffectiveSystemSettings();
     expect(settings["general.system_name"]).toBe("Y-TRACE");
-    expect(getEffectiveSystemSetting("general.office_acronym")).toBe("PCYDO / LYDO");
+    expect(getEffectiveSystemSetting("general.office_acronym")).toBe("PCYDO");
   });
 
   it("evaluates shouldLogActivityType correctly", () => {

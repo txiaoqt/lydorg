@@ -718,10 +718,10 @@ const SignUp = () => {
                           About Unique Registration Number (URN)
                         </div>
                         <p className="leading-relaxed text-muted-foreground">
-                          Enter the URN exactly as it appears in your existing LYDO / PCYDO registration record.
+                          Enter the URN exactly as it appears in your existing PCYDO registration record.
                         </p>
                         <p className="leading-relaxed text-muted-foreground">
-                          LYDO / PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
+                          PCYDO will verify this number against its official registration record so you will not need to submit the six initial registration documents once the URN is confirmed.
                         </p>
                       </PopoverContent>
                     </Popover>

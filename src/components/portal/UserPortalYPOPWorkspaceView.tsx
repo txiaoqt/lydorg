@@ -202,7 +202,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-primary">YPOP Workspace</span>
                 <span className="text-muted-foreground/30">•</span>
-                <span className="text-xs text-muted-foreground">{currentProfile?.organizationName || "LYDO Pasig City"}</span>
+                <span className="text-xs text-muted-foreground">{currentProfile?.organizationName || "PCYDO Pasig City"}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                 Youth Participation Organization Passport (YPOP)

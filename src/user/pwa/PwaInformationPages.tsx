@@ -7,7 +7,7 @@ import { usePublicContactInfo } from "@/lib/admin-system-settings";
 import { PwaAboutSettings } from "./settings/PwaSettingsPages";
 
 const faqs = [
-  ["What is Y-TRACE?", "Y-TRACE is Pasig City’s youth organization compliance portal for registration, required documents, YPOP participation, budget requests, liquidation reporting, templates, and LYDO/PCYDO updates."],
+  ["What is Y-TRACE?", "Y-TRACE is Pasig City’s youth organization compliance portal for registration, required documents, YPOP participation, budget requests, liquidation reporting, templates, and PCYDO updates."],
   ["What should I complete first?", "Complete your Organization Profile and follow the verification and document requirements shown on the Dashboard. Each later workflow remains locked until its real eligibility requirements are met."],
   ["How does document review work?", "Upload each required document from the Documents screen. The app shows whether a file is missing, under admin review, approved, or needs revision."],
   ["When can I create a budget request?", "A new activity budget request becomes available only after your organization qualifies in the active YPOP period."],
@@ -29,7 +29,7 @@ export function PwaAboutPage() {
         <h2>Built for clearer compliance</h2>
         <p>
           Y-TRACE is the official compliance portal for youth organizations registered under
-          Pasig City LYDO / PCYDO.
+          Pasig City PCYDO.
         </p>
         <p>
           It replaces scattered paper submissions and manual follow-ups with one online workflow
@@ -49,7 +49,7 @@ export function PwaAboutPage() {
         <article>
           <span className="pwa-menu-icon"><Shield aria-hidden="true" /></span>
           <div>
-            <h3>LYDO / PCYDO Staff</h3>
+            <h3>PCYDO Staff</h3>
             <p>Review, approve, and monitor organization records through the separate Admin Portal.</p>
           </div>
         </article>
@@ -84,7 +84,7 @@ export function PwaContactPage() {
     <div className="pwa-stack">
       <section className="pwa-card pwa-settings-detail-card">
         <span className="pwa-settings-hero-icon"><MapPin aria-hidden="true" /></span>
-        <div><h2>LYDO / PCYDO Office</h2><p>{address}</p></div>
+        <div><h2>PCYDO Office</h2><p>{address}</p></div>
       </section>
       <section className="pwa-card pwa-contact-list">
         <div><span className="pwa-menu-icon"><Info /></span><span><small>Officer in charge</small><strong>{contact.officer}</strong></span></div>

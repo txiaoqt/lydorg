@@ -79,7 +79,7 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
         <div className="mt-6 rounded-xl border bg-muted/30 p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Submitted Unique Registration Number (URN)</p>
           <div className="mt-2 flex items-center gap-2"><strong className="break-all text-xl">{profile.urn || "No URN was submitted"}</strong><Button size="icon" variant="ghost" aria-label="Copy URN" onClick={() => void navigator.clipboard.writeText(profile.urn)}><Copy className="h-4 w-4" /></Button></div>
-          <p className="mt-3 text-sm text-muted-foreground">Verify this number against the official LYDO / PCYDO registration record outside Y-TRACE.</p>
+          <p className="mt-3 text-sm text-muted-foreground">Verify this number against the official PCYDO registration record outside Y-TRACE.</p>
         </div>
         {profile.urnAdminRemarks ? <div className="mt-4 rounded-lg border p-3 text-sm"><strong>Latest remarks</strong><p>{profile.urnAdminRemarks}</p></div> : null}
         {profile.profileStatus === "suspended_inactive" ? (
@@ -101,10 +101,10 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{decision === "verified" ? "Confirm URN verification" : decision === "needs_correction" ? "Request URN correction" : "Reject URN verification"}</DialogTitle>
-            <DialogDescription>{decision === "verified" ? "Confirm that the submitted URN matches the official LYDO / PCYDO registration record for this organization." : "Explain the decision clearly to the organization."}</DialogDescription>
+            <DialogDescription>{decision === "verified" ? "Confirm that the submitted URN matches the official PCYDO registration record for this organization." : "Explain the decision clearly to the organization."}</DialogDescription>
           </DialogHeader>
           <dl className="rounded-lg bg-muted p-3 text-sm"><dt className="text-muted-foreground">Organization</dt><dd className="font-medium">{profile.organizationName}</dd><dt className="mt-2 text-muted-foreground">Submitted URN</dt><dd className="font-medium">{profile.urn}</dd></dl>
-          {decision === "verified" ? <div className="flex items-start gap-3"><Checkbox id="confirm-urn" checked={confirmed} onCheckedChange={(v) => setConfirmed(Boolean(v))} /><Label htmlFor="confirm-urn">I confirm that I checked this URN against the official LYDO / PCYDO record.</Label></div> : <div className="space-y-2"><Label htmlFor="urn-remarks">Admin feedback *</Label><Textarea id="urn-remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Explain why the URN could not be confirmed and what the organization should check." /></div>}
+          {decision === "verified" ? <div className="flex items-start gap-3"><Checkbox id="confirm-urn" checked={confirmed} onCheckedChange={(v) => setConfirmed(Boolean(v))} /><Label htmlFor="confirm-urn">I confirm that I checked this URN against the official PCYDO record.</Label></div> : <div className="space-y-2"><Label htmlFor="urn-remarks">Admin feedback *</Label><Textarea id="urn-remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Explain why the URN could not be confirmed and what the organization should check." /></div>}
           <DialogFooter><Button variant="outline" onClick={() => setDecision(null)} disabled={saving}>Cancel</Button><Button variant={decision === "rejected" ? "destructive" : "default"} disabled={saving || (decision === "verified" ? !confirmed : !remarks.trim())} onClick={() => void submit()}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{decision === "verified" ? "Verify Organization" : decision === "needs_correction" ? "Send Correction Request" : "Reject URN"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>

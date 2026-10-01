@@ -120,7 +120,7 @@ export function PwaLiquidationDetail({ data }: { data: PortalData }) {
           <div><dt>Updated</dt><dd>{dateLabel(report.updatedAt)}</dd></div>
         </dl>
         {report.remarks ? <div className="pwa-admin-note"><strong>Admin remarks</strong><p>{report.remarks}</p></div> : null}
-        {report.status === "approved_for_ftf_green" ? <div className="pwa-onsite-note"><strong>Submit onsite</strong><p>Bring the required hard copy to the LYDO office.</p></div> : null}
+        {report.status === "approved_for_ftf_green" ? <div className="pwa-onsite-note"><strong>Submit onsite</strong><p>Bring the required hard copy to the PCYDO office.</p></div> : null}
       </section>
       {files.length ? <section className="pwa-card pwa-file-list"><h3>Attachments</h3>{files.map((file) => <button type="button" key={file.id} onClick={() => void openFile(file.fileUrl)}><FileText /><span><strong>{file.fileName}</strong><small>{Math.max(1, Math.round(file.fileSize / 1024))} KB</small></span><Eye /></button>)}</section> : null}
       {(submittableStatuses.has(report.status) || files.length) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaLiquidationManageRoute(report.id))}><UploadCloud /> Manage Report</button> : null}

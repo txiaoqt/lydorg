@@ -838,7 +838,7 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
       status: "verified" as const,
       joinedAt: "2026-08-20T00:00:00Z",
       proofSubmittedAt: "2026-08-20T01:00:00Z",
-      adminRemarks: "Participation verified by LYDO.",
+      adminRemarks: "Participation verified by PCYDO.",
     };
 
     const proofRejectedPart = {

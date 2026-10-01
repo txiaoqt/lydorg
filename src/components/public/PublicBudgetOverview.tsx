@@ -62,7 +62,7 @@ export function formatCompactPeso(value?: number | null): string {
 }
 
 function formatLastUpdated(dateStr?: string | null): string {
-  if (!dateStr) return "Official LYDO Records";
+  if (!dateStr) return "Official PCYDO Records";
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
@@ -211,7 +211,7 @@ export default function PublicBudgetOverview({
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-public-text-brand mb-1">
             <span>Pasig City Youth Development</span>
             <span className="text-slate-300">•</span>
-            <span>Official LYDO Records</span>
+            <span>Official PCYDO Records</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-segoe">
             Budget Transparency
@@ -277,7 +277,7 @@ export default function PublicBudgetOverview({
         <div className="rounded-xl border border-slate-200 bg-white p-12 text-center flex flex-col items-center justify-center gap-3">
           <RefreshCw className="h-7 w-7 text-primary animate-spin" />
           <p className="text-sm font-medium text-slate-600 font-segoe">
-            Retrieving official LYDO financial records for FY {activeFY}...
+            Retrieving official PCYDO financial records for FY {activeFY}...
           </p>
         </div>
       )}

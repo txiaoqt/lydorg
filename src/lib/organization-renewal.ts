@@ -377,7 +377,7 @@ export type UserFacingRenewalState = {
  * - 7. RENEWAL UNDER REVIEW — read-only pending review
  * - 8. RENEWAL NEEDS REVISION — correction action available
  * - 9. RENEWAL RESUBMITTED — read-only pending review
- * - 10. RENEWAL REJECTED — terminal; contact LYDO
+ * - 10. RENEWAL REJECTED — terminal; contact PCYDO
  * - 11. RENEWAL APPROVED — new term active
  */
 export const resolveUserRenewalState = ({
@@ -479,7 +479,7 @@ export const resolveUserRenewalState = ({
       canStartRenewal: false,
       canContinueRenewal: false,
       canResubmitRenewal: false,
-      renewalBlockedReason: "Renewal application was not approved. The organization must contact the LYDO office directly for guidance.",
+      renewalBlockedReason: "Renewal application was not approved. The organization must contact the PCYDO office directly for guidance.",
       daysRemaining,
       daysSinceExpiry,
       expiresAt,

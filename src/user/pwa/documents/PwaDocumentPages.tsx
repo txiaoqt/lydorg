@@ -115,8 +115,8 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
               : status === "needs_correction"
                 ? "The submitted URN could not be confirmed. Review the admin feedback and update the number."
                 : status === "rejected"
-                  ? "LYDO / PCYDO could not confirm the submitted registration record."
-                  : "LYDO / PCYDO is checking your registration against its official record. No document upload is required."}
+                  ? "PCYDO could not confirm the submitted registration record."
+                  : "PCYDO is checking your registration against its official record. No document upload is required."}
           </p>
           {data.profile!.urnAdminRemarks ? <div className="mt-3 rounded-lg bg-muted p-3 text-sm"><strong>Admin feedback</strong><p>{data.profile!.urnAdminRemarks}</p></div> : null}
           {(status === "needs_correction" || status === "rejected") ? (
@@ -380,7 +380,7 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
               </p>
             ) : isExpired ? (
               <p className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400">
-                The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.
+                The 5-day revision period has expired. Please coordinate with the PCYDO Admin if you need the submission unlocked.
               </p>
             ) : revisionDeadlineText ? (
               <p className="mt-2 text-xs font-semibold">
@@ -408,7 +408,7 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
               if (isExpired) {
                 toast({
                   title: "Revision Locked",
-                  description: "The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked.",
+                  description: "The 5-day revision period has expired. Please coordinate with the PCYDO Admin if you need the submission unlocked.",
                   variant: "destructive",
                 });
                 return;

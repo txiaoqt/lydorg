@@ -638,7 +638,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       toast({
         title: submitForReview ? (isNeedsRevision ? "Revision resubmitted" : "PPA submitted for evaluation") : "Draft saved",
         description: submitForReview
-          ? "Your organization PPA is now under evaluation by LYDO Admin."
+          ? "Your organization PPA is now under evaluation by PCYDO Admin."
           : "Draft saved successfully.",
       });
     } catch (error) {
@@ -711,7 +711,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               Awaiting Admin Validation
             </p>
             <p className="text-blue-600/90 dark:text-blue-400/90 leading-snug sm:leading-relaxed break-words">
-              PPA activity and supporting documents have been submitted and are under review by the LYDO Admin team.
+              PPA activity and supporting documents have been submitted and are under review by the PCYDO Admin team.
             </p>
           </div>
         </div>
@@ -725,7 +725,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               PPA Activity Approved
             </p>
             <p className="text-emerald-600/90 dark:text-emerald-400/90 leading-snug sm:leading-relaxed break-words">
-              This project has been validated by LYDO Admin and unlocked bonus points toward your organization&apos;s YPOP incentive.
+              This project has been validated by PCYDO Admin and unlocked bonus points toward your organization&apos;s YPOP incentive.
             </p>
           </div>
         </div>
@@ -1554,7 +1554,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               Submit Organization-Led PPA?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              You are about to submit this activity for LYDO review. Once submitted, the record will enter the review process.
+              You are about to submit this activity for PCYDO review. Once submitted, the record will enter the review process.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">

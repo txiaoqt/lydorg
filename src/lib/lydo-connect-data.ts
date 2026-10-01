@@ -2354,7 +2354,7 @@ export const seedState: LydoSeedState = {
       activityTitle: "Youth Skills Training Workshop",
       activityDescription: "A two-day skills training covering digital literacy, communication, and basic entrepreneurship for youth aged 15–24.",
       activityDate: "2026-08-05T00:00:00.000Z",
-      venue: "LYDO Training Hall",
+      venue: "PCYDO Training Hall",
       requestedAmount: 18000,
       approvedAmount: 0,
       releasedAmount: 0,
@@ -2446,7 +2446,7 @@ export const seedState: LydoSeedState = {
   newsReleases: [
     {
       id: "news-demo-001",
-      title: "LYDO Launches 2026 Youth Organization Registration Drive",
+      title: "PCYDO Launches 2026 Youth Organization Registration Drive",
       description: "The Local Youth Development Office officially opens the 2026 registration season for all youth organizations in Pasig City. Organizations are encouraged to submit their documents early.",
       facebookPostUrl: "https://facebook.com/lydo",
       previewImageUrl: "",
@@ -2459,7 +2459,7 @@ export const seedState: LydoSeedState = {
     {
       id: "news-demo-002",
       title: "Youth Leadership Summit 2026 — Applications Now Open",
-      description: "The LYDO Youth Leadership Summit will be held on April 25, 2026 at Pasig City Hall. All registered youth organization representatives are invited to apply for the limited slots.",
+      description: "The PCYDO Youth Leadership Summit will be held on April 25, 2026 at Pasig City Hall. All registered youth organization representatives are invited to apply for the limited slots.",
       facebookPostUrl: "https://facebook.com/lydo",
       previewImageUrl: "",
       datePosted: "2026-03-10",
@@ -2471,7 +2471,7 @@ export const seedState: LydoSeedState = {
     {
       id: "news-demo-003",
       title: "2026 Kabataan Awards — Nomination Period Now Open",
-      description: "LYDO is accepting nominations for the 2026 Kabataan Awards recognizing outstanding youth leaders in Pasig City. Deadline for submissions is June 30, 2026.",
+      description: "PCYDO is accepting nominations for the 2026 Kabataan Awards recognizing outstanding youth leaders in Pasig City. Deadline for submissions is June 30, 2026.",
       facebookPostUrl: "https://facebook.com/lydo",
       previewImageUrl: "",
       datePosted: "2026-06-01",
@@ -2496,8 +2496,8 @@ export const seedState: LydoSeedState = {
     },
     {
       id: "transp-demo-002",
-      title: "2026 LYDO Annual Investment Plan",
-      description: "The approved Annual Investment Plan for LYDO covering youth programs, capacity building, and community engagement activities for 2026.",
+      title: "2026 PCYDO Annual Investment Plan",
+      description: "The approved Annual Investment Plan for PCYDO covering youth programs, capacity building, and community engagement activities for 2026.",
       category: "Planning",
       attachmentUrl: "",
       visibilityStatus: "published",
@@ -2737,14 +2737,14 @@ export const seedState: LydoSeedState = {
       pointsRequired: 70,
       totalPoints: 100,
       status: "qualified" as YPOPStatus,
-      adminRemarks: "Good participation record across all LYDO activities this semester.",
-      submissionNote: "We have participated in 6 out of 8 LYDO activities this semester and ran 6 org-led projects.",
+      adminRemarks: "Good participation record across all PCYDO activities this semester.",
+      submissionNote: "We have participated in 6 out of 8 PCYDO activities this semester and ran 6 org-led projects.",
       validationDeadline: "2025-12-05T00:00:00.000Z",
       submittedAt: "2025-11-28T09:00:00.000Z",
       validatedAt: "2025-12-10T10:00:00.000Z",
       revisionHistory: [
         { action: "submitted", adminRemarks: "", changedAt: "2025-11-28T09:00:00.000Z" },
-        { action: "qualified", adminRemarks: "Good participation record across all LYDO activities this semester.", changedAt: "2025-12-10T10:00:00.000Z" },
+        { action: "qualified", adminRemarks: "Good participation record across all PCYDO activities this semester.", changedAt: "2025-12-10T10:00:00.000Z" },
       ],
       orgLedProjectCount: 6,
       cityLedAttendance: [

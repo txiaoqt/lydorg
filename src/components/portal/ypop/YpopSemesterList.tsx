@@ -249,7 +249,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                     </p>
                     <p className="text-xs">
                       {sortedPeriods.length === 0
-                        ? "The Pasig City LYDO administrator has not set up any validation periods."
+                        ? "The Pasig City PCYDO administrator has not set up any validation periods."
                         : "Try adjusting your search term or status filter."}
                     </p>
                   </td>

@@ -3419,7 +3419,7 @@ export default function UserPortal({ section }: { section: string }) {
           dashboardTasks.push({
             key: "urn-review",
             title: currentProfile!.urnReviewStatus === "verified" ? "Registration verified through URN" : currentProfile!.urnReviewStatus === "needs_correction" ? "URN needs correction" : currentProfile!.urnReviewStatus === "rejected" ? "Review URN decision" : "URN verification is pending",
-            description: currentProfile!.urnAdminRemarks || "LYDO / PCYDO is checking your Unique Registration Number against its official registration record.",
+            description: currentProfile!.urnAdminRemarks || "PCYDO is checking your Unique Registration Number against its official registration record.",
             ctaLabel: currentProfile!.urnReviewStatus === "needs_correction" ? "Update URN" : "View Registration Status",
             onClick: () => navigate(currentProfile!.urnReviewStatus === "needs_correction" ? userRouteMap["organization-profile"] : userRouteMap["document-submission"]),
             icon: BadgeCheck,
@@ -3542,7 +3542,7 @@ export default function UserPortal({ section }: { section: string }) {
             key: "budget-release-wait",
             title: "Awaiting Fund Release",
             description:
-              "Your budget request has been approved. The LYDO admin will notify you once funds are released.",
+              "Your budget request has been approved. The PCYDO admin will notify you once funds are released.",
             ctaLabel: "Open Budget",
             onClick: () => navigate(userRouteMap["budget-request"]),
             icon: ClipboardList,
@@ -3564,7 +3564,7 @@ export default function UserPortal({ section }: { section: string }) {
             key: `liquidation-review-${underReviewLiquidation.report.id}`,
             title: "Wait for liquidation review",
             description:
-              "Your liquidation report is under review by the LYDO administrator. Check back for approval or remarks.",
+              "Your liquidation report is under review by the PCYDO administrator. Check back for approval or remarks.",
             ctaLabel: "View Liquidation",
             onClick: () => navigate(userRouteMap["liquidation-reporting"]),
             icon: ClipboardList,
@@ -3694,7 +3694,7 @@ export default function UserPortal({ section }: { section: string }) {
           dashboardTasks.unshift({
             key: "renewal-rejected",
             title: "Renewal application not approved",
-            description: (userRenewalState.adminRemarks ? `${userRenewalState.adminRemarks} — ` : "") + "Renewal application was not approved. Please contact the LYDO office directly for guidance.",
+            description: (userRenewalState.adminRemarks ? `${userRenewalState.adminRemarks} — ` : "") + "Renewal application was not approved. Please contact the PCYDO office directly for guidance.",
             ctaLabel: undefined,
             onClick: undefined,
             icon: AlertCircle,
@@ -3708,7 +3708,7 @@ export default function UserPortal({ section }: { section: string }) {
           dashboardTasks.unshift({
             key: "renewal-pending",
             title: userRenewalState.statusLabel,
-            description: userRenewalState.renewalBlockedReason || "Your renewal application is under review by the LYDO administrator.",
+            description: userRenewalState.renewalBlockedReason || "Your renewal application is under review by the PCYDO administrator.",
             ctaLabel: "View Renewal Status",
             onClick: handleContinueRenewal,
             icon: ClipboardList,
@@ -3803,7 +3803,7 @@ export default function UserPortal({ section }: { section: string }) {
           const urnStatus = currentProfile!.urnReviewStatus;
           return (
             <div className="w-full">
-              <PortalSection title="URN Verification" description="Track the manual review of your existing LYDO / PCYDO registration.">
+              <PortalSection title="URN Verification" description="Track the manual review of your existing PCYDO registration.">
                 <Card>
                   <CardContent className="space-y-4 p-5 sm:p-6">
                     <div><p className="text-sm text-muted-foreground">Submitted Unique Registration Number (URN)</p><p className="break-all text-xl font-semibold">{currentProfile!.urn}</p></div>
@@ -4702,7 +4702,7 @@ export default function UserPortal({ section }: { section: string }) {
           <DialogHeader>
             <DialogTitle>Document Submitted</DialogTitle>
             <DialogDescription>
-              The documents have been submitted to the LYDO. This will be subjected for approval.
+              The documents have been submitted to the PCYDO. This will be subjected for approval.
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">

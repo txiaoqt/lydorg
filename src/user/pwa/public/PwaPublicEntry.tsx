@@ -108,7 +108,7 @@ function PwaWelcomePage() {
     {
       icon: BellRing,
       title: "Receive official updates",
-      detail: "Access notifications, templates, and LYDO news.",
+      detail: "Access notifications, templates, and PCYDO news.",
     },
   ];
 
@@ -145,7 +145,7 @@ function PwaWelcomePage() {
         <nav aria-label="PWA support links">
           <button type="button" onClick={() => navigate(pwaPublicRoute("faqs"))}>FAQs</button>
           <span aria-hidden="true">&middot;</span>
-          <button type="button" onClick={() => navigate(pwaPublicRoute("contact"))}>Contact LYDO / PCYDO</button>
+          <button type="button" onClick={() => navigate(pwaPublicRoute("contact"))}>Contact PCYDO</button>
         </nav>
         <nav aria-label="PWA legal links">
           <button type="button" onClick={() => navigate(pwaPublicRoute("privacy"))}>Privacy Policy</button>
@@ -161,7 +161,7 @@ function PwaPublicHelpPage() {
   const navigate = useNavigate();
   const links = [
     { label: "Frequently Asked Questions", path: pwaPublicRoute("faqs"), icon: BookOpen },
-    { label: "Contact LYDO / PCYDO", path: pwaPublicRoute("contact"), icon: Mail },
+    { label: "Contact PCYDO", path: pwaPublicRoute("contact"), icon: Mail },
     { label: "Privacy Policy", path: pwaPublicRoute("privacy"), icon: ShieldCheck },
     { label: "Terms of Service", path: pwaPublicRoute("terms"), icon: ScrollText },
   ];

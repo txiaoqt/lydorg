@@ -152,7 +152,7 @@ export function PwaOrganizationDirectory() {
     <div className="pwa-stack pwa-directory-page">
       <section className="pwa-directory-heading">
         <h2>Discover verified youth organizations</h2>
-        <p>Registered with Pasig City LYDO / PCYDO.</p>
+        <p>Registered with Pasig City PCYDO.</p>
       </section>
       <label className="pwa-directory-search"><Search aria-hidden="true" /><Input value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(8); }} placeholder="Search organizations..." aria-label="Search organizations" /></label>
       <section className="pwa-directory-filter-row">
@@ -229,7 +229,7 @@ export function PwaOrganizationDirectoryProfile() {
         {organization.facebookPageUrl ? <section className="pwa-card pwa-directory-connect"><span><Facebook aria-hidden="true" /><strong>Connect</strong></span><a href={organization.facebookPageUrl} target="_blank" rel="noopener noreferrer">Visit Facebook Page <ExternalLink aria-hidden="true" /></a></section> : null}
         <section className="pwa-card pwa-directory-activity-section">
           <div className="pwa-directory-section-heading"><h2><ShieldCheck aria-hidden="true" />Verified Activities</h2><span>{activities.length}</span></div>
-          {activities.length ? <div className="pwa-directory-activities">{activities.slice(0, showAllActivities ? activities.length : 3).map((activity) => <article key={`${activity.kind}-${activity.id}`}><span className="pwa-directory-activity-icon"><CheckCircle2 aria-hidden="true" /></span><div><strong>{titleCase(activity.name)}</strong><span>{activity.kind === "city_led" ? "City-led activity" : "Organization-led activity"}</span><time><CalendarDays aria-hidden="true" />{dateLabel(activity.date)}</time>{activity.venue ? <p>{activity.venue}</p> : null}</div></article>)}</div> : <div className="pwa-directory-activity-empty"><p>No verified activities to display yet.</p><small>Activities appear here after they have been confirmed by LYDO / PCYDO.</small></div>}
+          {activities.length ? <div className="pwa-directory-activities">{activities.slice(0, showAllActivities ? activities.length : 3).map((activity) => <article key={`${activity.kind}-${activity.id}`}><span className="pwa-directory-activity-icon"><CheckCircle2 aria-hidden="true" /></span><div><strong>{titleCase(activity.name)}</strong><span>{activity.kind === "city_led" ? "City-led activity" : "Organization-led activity"}</span><time><CalendarDays aria-hidden="true" />{dateLabel(activity.date)}</time>{activity.venue ? <p>{activity.venue}</p> : null}</div></article>)}</div> : <div className="pwa-directory-activity-empty"><p>No verified activities to display yet.</p><small>Activities appear here after they have been confirmed by PCYDO.</small></div>}
           {activities.length > 3 ? <button type="button" className="pwa-profile-section-link" onClick={() => setShowAllActivities((shown) => !shown)}>{showAllActivities ? "Show fewer activities" : "View all activities"} <ChevronRight aria-hidden="true" /></button> : null}
         </section>
       </> : null}

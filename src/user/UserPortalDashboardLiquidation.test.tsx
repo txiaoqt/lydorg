@@ -113,7 +113,7 @@ export function getDashboardTasksForFinancials({
       key: "budget-release-wait",
       title: "Awaiting Fund Release",
       description:
-        "Your budget request has been approved. The LYDO admin will notify you once funds are released.",
+        "Your budget request has been approved. The PCYDO admin will notify you once funds are released.",
       ctaLabel: "Open Budget",
       onClick: () => mockNavigate("/budget-request"),
       tone: "bg-primary/10 text-primary",
@@ -153,7 +153,7 @@ export function getDashboardTasksForFinancials({
       key: `liquidation-review-${underReviewLiquidation.report.id}`,
       title: "Wait for liquidation review",
       description:
-        "Your liquidation report is under review by the LYDO administrator. Check back for approval or remarks.",
+        "Your liquidation report is under review by the PCYDO administrator. Check back for approval or remarks.",
       ctaLabel: "View Liquidation",
       onClick: () => mockNavigate("/liquidation-reporting"),
       tone: "bg-sky-500/10 text-sky-600",

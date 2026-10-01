@@ -144,7 +144,7 @@ export function getPwaPageTitle(pathname: string) {
   if (pathname.startsWith(PWA_ROUTES.settings)) return "Settings";
   if (pathname.startsWith(PWA_ROUTES.about)) return "About Y-TRACE";
   if (pathname.startsWith(PWA_ROUTES.faqs)) return "FAQs";
-  if (pathname.startsWith(PWA_ROUTES.contact)) return "Contact LYDO / PCYDO";
+  if (pathname.startsWith(PWA_ROUTES.contact)) return "Contact PCYDO";
   if (pathname.startsWith(PWA_ROUTES.privacy)) return "Privacy Policy";
   if (pathname.startsWith(PWA_ROUTES.terms)) return "Terms of Service";
   return "More";

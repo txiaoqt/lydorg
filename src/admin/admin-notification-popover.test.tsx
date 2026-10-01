@@ -32,7 +32,7 @@ describe("Admin Notification Bell Popover Behavior (PortalShell)", () => {
 
   const defaultAdminProps = {
     title: "Admin Portal",
-    subtitle: "LYDO / PCYDO Admin",
+    subtitle: "PCYDO Admin",
     groups: [
       {
         id: "core",

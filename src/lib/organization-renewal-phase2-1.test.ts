@@ -272,12 +272,12 @@ describe("Phase 2.1: Hardening, Security, Concurrency & Regression Suite", () =>
       const startOrGetDraft = (targetCycle: number) => {
         if (rejectedRenewal.cycleNumber === targetCycle && rejectedRenewal.status === "rejected") {
           throw new Error(
-            `Renewal application for Cycle ${targetCycle} was rejected. Organization must contact LYDO directly.`,
+            `Renewal application for Cycle ${targetCycle} was rejected. Organization must contact PCYDO directly.`,
           );
         }
       };
 
-      expect(() => startOrGetDraft(currentTermNumber + 1)).toThrow("Organization must contact LYDO directly.");
+      expect(() => startOrGetDraft(currentTermNumber + 1)).toThrow("Organization must contact PCYDO directly.");
     });
   });
 

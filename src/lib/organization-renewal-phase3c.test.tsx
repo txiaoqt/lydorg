@@ -738,7 +738,7 @@ describe("Phase 3C: User Renewal Document Workspace & Packet Implementation Test
       );
 
       expect(await screen.findByText("Renewal Application Submitted")).toBeInTheDocument();
-      expect(screen.getByText(/Your renewal packet is currently in review by the LYDO administrator/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your renewal packet is currently in review by the PCYDO administrator/i)).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Upload Document/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Submit Renewal Application/i })).not.toBeInTheDocument();
     });
@@ -1373,7 +1373,7 @@ describe("Phase 3C: User Renewal Document Workspace & Packet Implementation Test
         </MemoryRouter>,
       );
 
-      expect(await screen.findByText(/This renewal decision is final. Please contact the LYDO office directly/i)).toBeInTheDocument();
+      expect(await screen.findByText(/This renewal decision is final. Please contact the PCYDO office directly/i)).toBeInTheDocument();
       expect(screen.getByText(/Final board decision not to grant renewal/i)).toBeInTheDocument();
     });
   });

@@ -587,7 +587,7 @@ describe("UserPortalShell Notification Dropdown Responsive Behavior", () => {
     {
       id: "notif-2",
       title: "Document Verified",
-      message: "Your constitution and bylaws have been marked compliant by LYDO admins.",
+      message: "Your constitution and bylaws have been marked compliant by PCYDO admins.",
       isRead: true,
       createdAt: "2026-08-05T14:30:00Z",
     },
@@ -658,7 +658,7 @@ describe("UserPortalShell Mobile Sidebar Navigation (Notifications Removed & Pre
     {
       id: "notif-2",
       title: "Document Verified",
-      message: "Your constitution and bylaws have been marked compliant by LYDO admins.",
+      message: "Your constitution and bylaws have been marked compliant by PCYDO admins.",
       isRead: true,
       createdAt: "2026-08-05T14:30:00Z",
     },
@@ -1723,7 +1723,7 @@ describe("UserPortalBudgetWorkspaceView Mobile Page Polish", () => {
 
       // 1. Page Header Verification
       expect(screen.getByText("Financial Workspace")).toBeInTheDocument();
-      expect(screen.getByText("LYDO Pasig City")).toBeInTheDocument();
+      expect(screen.getByText("PCYDO Pasig City")).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Budget Requests" })).toBeInTheDocument();
       expect(
         screen.getByText("Submit financial grant proposals, track approval stages, and monitor released funds.")

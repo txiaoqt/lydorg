@@ -319,7 +319,7 @@ describe("Phase 3A & Phase 3B User Portal Renewal State Integration Tests", () =
     expect(state.canResubmitRenewal).toBe(false);
     expect(state.actionLabel).toBeNull();
     expect(state.statusLabel).toBe("Renewal Application Not Approved");
-    expect(state.renewalBlockedReason).toContain("contact the LYDO office directly");
+    expect(state.renewalBlockedReason).toContain("contact the PCYDO office directly");
   });
 
   // 13. approved -> new active term state

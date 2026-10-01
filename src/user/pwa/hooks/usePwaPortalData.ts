@@ -188,7 +188,7 @@ export function usePwaPortalData() {
       const urnStatus = profile!.urnReviewStatus;
       briefing = {
         title: urnStatus === "verified" ? "Registration verified through URN." : urnStatus === "needs_correction" ? "Your URN needs correction." : urnStatus === "rejected" ? "URN verification was unsuccessful." : "Your URN is under review.",
-        description: urnStatus === "verified" ? "Your existing LYDO / PCYDO registration record was confirmed." : urnStatus === "needs_correction" ? (profile!.urnAdminRemarks || "Review the admin feedback and update the submitted number.") : urnStatus === "rejected" ? (profile!.urnAdminRemarks || "Contact LYDO / PCYDO if you need help with this decision.") : "LYDO / PCYDO is checking your registration record. You do not need to upload the six new-organization requirements.",
+        description: urnStatus === "verified" ? "Your existing PCYDO registration record was confirmed." : urnStatus === "needs_correction" ? (profile!.urnAdminRemarks || "Review the admin feedback and update the submitted number.") : urnStatus === "rejected" ? (profile!.urnAdminRemarks || "Contact PCYDO if you need help with this decision.") : "PCYDO is checking your registration record. You do not need to upload the six new-organization requirements.",
         tone: urnStatus === "verified" ? "success" : urnStatus === "rejected" ? "danger" : urnStatus === "needs_correction" ? "warning" : "info",
         action: { label: urnStatus === "needs_correction" || urnStatus === "rejected" ? "Update URN" : "View URN Status", path: urnStatus === "needs_correction" || urnStatus === "rejected" ? PWA_ROUTES.profileEdit : PWA_ROUTES.documents },
       };
@@ -199,7 +199,7 @@ export function usePwaPortalData() {
     } else if (revisionDocuments.length) {
       briefing = { title: `${revisionDocuments.length === 1 ? "One document needs" : `${revisionDocuments.length} documents need`} revision.`, description: "Review the latest admin remarks and upload the corrected file.", tone: "warning", action: { label: "Review Required Changes", path: PWA_ROUTES.documents } };
     } else if (profile?.profileStatus === "pending_review") {
-      briefing = { title: "Your registration is awaiting verification.", description: "LYDO / PCYDO is reviewing your organization profile. You can monitor the current status while you wait.", tone: "info", action: { label: "View Verification Status", path: PWA_ROUTES.profile } };
+      briefing = { title: "Your registration is awaiting verification.", description: "PCYDO is reviewing your organization profile. You can monitor the current status while you wait.", tone: "info", action: { label: "View Verification Status", path: PWA_ROUTES.profile } };
     } else if (!budgetEligibility.eligible) {
       briefing = { title: "Complete YPOP validation first.", description: "Your organization must qualify in the active YPOP period before creating an activity budget request.", tone: "info", action: { label: "Open YPOP Incentive", path: PWA_ROUTES.ypop } };
     } else if (!budgetRequests.length) {

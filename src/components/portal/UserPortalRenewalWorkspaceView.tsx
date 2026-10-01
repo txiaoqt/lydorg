@@ -382,7 +382,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
       const res = await userSubmitRenewalInSupabase(activeRenewal.id);
       toast({
         title: "Renewal Application Submitted",
-        description: "Your 6 renewal documents are now under administrative review by LYDO.",
+        description: "Your 6 renewal documents are now under administrative review by PCYDO.",
       });
       setConfirmSubmitOpen(false);
 
@@ -701,7 +701,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                   {isRenewalAdminUnlockedState
                     ? `Original deadline: ${formatRevisionDeadline(activeRenewal.revisionDueAt)}. This submission has been unlocked by an administrator. You may now upload corrected files and resubmit.`
                     : isRenewalRevisionLocked
-                    ? "The 5-day revision period has expired. Please coordinate with the LYDO Admin if you need the submission unlocked."
+                    ? "The 5-day revision period has expired. Please coordinate with the PCYDO Admin if you need the submission unlocked."
                     : `Resubmission deadline: ${formatRevisionDeadline(activeRenewal.revisionDueAt)}. Please replace all flagged documents and submit before the 5-day window expires.`}
                 </p>
               </div>
@@ -730,7 +730,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                 </p>
                 {activeRenewal?.status === "rejected" && (
                   <p className="text-xs font-semibold mt-2 text-rose-700 dark:text-rose-300">
-                    This renewal decision is final. Please contact the LYDO office directly to discuss next steps.
+                    This renewal decision is final. Please contact the PCYDO office directly to discuss next steps.
                   </p>
                 )}
                 {activeRenewal?.status === "needs_revision" && (
@@ -755,7 +755,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                       : "Renewal Application Submitted"}
                 </h4>
                 <p className="leading-relaxed">
-                  Your renewal packet is currently in review by the LYDO administrator. While under review, documents are locked from modifications. You can preview your submitted files anytime.
+                  Your renewal packet is currently in review by the PCYDO administrator. While under review, documents are locked from modifications. You can preview your submitted files anytime.
                 </p>
                 {activeRenewal.submittedAt && (
                   <p className="text-xs text-muted-foreground pt-0.5">
@@ -799,7 +799,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                 {activeRenewal?.status ? activeRenewal.status.replace("_", " ") : "Draft Not Started"}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Approved by LYDO: {approvedFilesCount} of {totalMandatoryCount}
+                Approved by PCYDO: {approvedFilesCount} of {totalMandatoryCount}
               </p>
             </div>
 
@@ -1164,7 +1164,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                     You are about to submit all 6 required documents for <strong>Cycle {cycleNumber}</strong>.
                   </span>
                   <span className="block">
-                    Once submitted, your renewal packet will enter official administrative review by LYDO. Documents cannot be casually edited without an official revision request from the LYDO office.
+                    Once submitted, your renewal packet will enter official administrative review by PCYDO. Documents cannot be casually edited without an official revision request from the PCYDO office.
                   </span>
                 </AlertDialogDescription>
               </AlertDialogHeader>

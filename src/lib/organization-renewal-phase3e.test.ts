@@ -47,7 +47,7 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
     isExistingOrganization: true,
     organizationIdentifierNumber: "PYC-2024-P3E",
     registrationType: "existing_urn",
-    urn: "LYDO-PASIG-2024-001",
+    urn: "PCYDO-PASIG-2024-001",
     urnNormalized: "lydopasig2024001",
     urnReviewStatus: "verified",
     urnAdminRemarks: "",
@@ -72,7 +72,7 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
     accreditationStartDate: "2024-05-10",
     accreditationEndDate: "2027-05-10",
     accreditationTermNumber: 1,
-    accreditationCertificateUrn: "LYDO-PASIG-2024-001",
+    accreditationCertificateUrn: "PCYDO-PASIG-2024-001",
     accreditationExpiresAt: "2027-05-10T00:00:00Z",
     ...overrides,
   });
@@ -508,14 +508,14 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
         termNumber: 2,
         startDate: "2027-05-10",
         endDate: "2030-05-10",
-        certificateUrn: "LYDO-PASIG-2027-0042",
+        certificateUrn: "PCYDO-PASIG-2027-0042",
       };
 
       const spy = vi.spyOn(lydoSupabase, "adminApproveRenewalInSupabase").mockResolvedValue(mockApprovalResult);
 
       const res = await lydoSupabase.adminApproveRenewalInSupabase({
         renewalId: "ren-p3e-001",
-        certificateUrn: "LYDO-PASIG-2027-0042",
+        certificateUrn: "PCYDO-PASIG-2027-0042",
         adminRemarks: "All 6 documents verified and approved.",
       });
 
@@ -523,7 +523,7 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
       expect(res.termNumber).toBe(2);
       expect(res.startDate).toBe("2027-05-10");
       expect(res.endDate).toBe("2030-05-10");
-      expect(res.certificateUrn).toBe("LYDO-PASIG-2027-0042");
+      expect(res.certificateUrn).toBe("PCYDO-PASIG-2027-0042");
       spy.mockRestore();
     });
 
@@ -535,7 +535,7 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
       await expect(
         lydoSupabase.adminApproveRenewalInSupabase({
           renewalId: "ren-p3e-001",
-          certificateUrn: "LYDO-PASIG-2027-0042",
+          certificateUrn: "PCYDO-PASIG-2027-0042",
         }),
       ).rejects.toThrow("ATOMIC_TRANSACTION_FAILED");
 
@@ -584,7 +584,7 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
         startDate: "2024-05-10",
         endDate: "2027-05-10",
         persistedStatus: "superseded",
-        certificateUrn: "LYDO-PASIG-2024-001",
+        certificateUrn: "PCYDO-PASIG-2024-001",
         sourceRenewalId: null,
         revocationReason: null,
         revokedAt: null,

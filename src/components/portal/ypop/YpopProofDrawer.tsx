@@ -763,7 +763,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               Awaiting Admin Validation
             </p>
             <p className="text-blue-600/90 dark:text-blue-400/90 leading-snug sm:leading-relaxed break-words">
-              Proof documents have been submitted and are under review by the LYDO Admin team.
+              Proof documents have been submitted and are under review by the PCYDO Admin team.
             </p>
           </div>
         </div>
@@ -1149,7 +1149,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               Submit Proof of Attendance?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              You are about to submit your attendance proof for LYDO review. Once submitted, the record will enter the verification process.
+              You are about to submit your attendance proof for PCYDO review. Once submitted, the record will enter the verification process.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">

@@ -15199,7 +15199,7 @@ export default function AdminPortal({ section }: { section: string }) {
     <>
       <PortalShell
         title="Admin Portal"
-        subtitle="LYDO / PCYDO Admin"
+        subtitle="PCYDO Admin"
         groups={sidebarGroups}
         activeId={section}
         onNavigate={handleAdminSectionNavigate}

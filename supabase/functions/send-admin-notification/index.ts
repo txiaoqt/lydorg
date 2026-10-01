@@ -511,12 +511,12 @@ async function fetchAdminNotificationSettings(
 ): Promise<ResolvedAdminSettings> {
   // Safe default branding fallbacks
   let supportEmail = "";
-  let senderName = "Pasig City LYDO";
+  let senderName = "Pasig City PCYDO";
   let replyToEmail = "";
   let adminPortalUrl = "https://y-trace-admin.vercel.app";
   let systemName = "Y-TRACE";
   let officeName = "Pasig City Youth Development Office";
-  let officeAcronym = "PCYDO / LYDO";
+  let officeAcronym = "PCYDO";
 
   // Fail-closed defaults: if settings table cannot be queried, do not send automated emails
   let sendWorkflowEmails = false;

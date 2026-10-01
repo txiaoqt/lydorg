@@ -237,7 +237,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold tracking-wide uppercase text-primary">Notification Center</span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">LYDO Y-TRACE</span>
+              <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
             </div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">

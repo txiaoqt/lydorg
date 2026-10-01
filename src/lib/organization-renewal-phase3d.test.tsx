@@ -655,8 +655,8 @@ describe("Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests", () 
   describe("6. APPLICATION-LEVEL ADMIN DECISIONS (Tests 41-48)", () => {
     it("41. Approve Renewal button calls adminApproveRenewalInSupabase RPC", async () => {
       const spy = vi.spyOn(lydoSupabase, "adminApproveRenewalInSupabase").mockResolvedValue({ success: true });
-      await lydoSupabase.adminApproveRenewalInSupabase("ren-001", "LYDO-PASIG-2026-0001", "Approved officially");
-      expect(spy).toHaveBeenCalledWith("ren-001", "LYDO-PASIG-2026-0001", "Approved officially");
+      await lydoSupabase.adminApproveRenewalInSupabase("ren-001", "PCYDO-PASIG-2026-0001", "Approved officially");
+      expect(spy).toHaveBeenCalledWith("ren-001", "PCYDO-PASIG-2026-0001", "Approved officially");
       spy.mockRestore();
     });
 
@@ -666,14 +666,14 @@ describe("Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests", () 
         organizationId: "org-001",
         cycleNumber: 2,
         status: "approved",
-        certificateUrn: "LYDO-PASIG-2026-0001",
+        certificateUrn: "PCYDO-PASIG-2026-0001",
         submittedAt: "2026-09-01T10:00:00Z",
         reviewedAt: "2026-09-07T10:00:00Z",
         createdAt: "2026-09-01T10:00:00Z",
         updatedAt: "2026-09-07T10:00:00Z",
       };
       expect(renewal.status).toBe("approved");
-      expect(renewal.certificateUrn).toBe("LYDO-PASIG-2026-0001");
+      expect(renewal.certificateUrn).toBe("PCYDO-PASIG-2026-0001");
     });
 
     it("43. Request Revision button calls adminRequestRenewalRevisionInSupabase RPC", async () => {

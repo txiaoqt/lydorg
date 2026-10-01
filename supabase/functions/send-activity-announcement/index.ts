@@ -63,7 +63,7 @@ async function fetchAdminSettings(supabaseAdmin: SupabaseAdminClient) {
       .from("admin_system_settings")
       .select("setting_key, value_json");
 
-    let senderName = "Pasig City LYDO";
+    let senderName = "Pasig City PCYDO";
     let replyToEmail = "support@lydo.pasig.gov.ph";
     let sendWorkflowEmails = true;
     let emailYpopEnabled = true;
@@ -112,7 +112,7 @@ async function fetchAdminSettings(supabaseAdmin: SupabaseAdminClient) {
     };
   } catch {
     return {
-      senderName: "Pasig City LYDO",
+      senderName: "Pasig City PCYDO",
       replyToEmail: "support@lydo.pasig.gov.ph",
       sendWorkflowEmails: true,
       emailYpopEnabled: true,

@@ -245,7 +245,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-primary">Document Workspace</span>
                 <span className="text-muted-foreground/30">•</span>
-                <span className="text-xs text-muted-foreground">LYDO Pasig City</span>
+                <span className="text-xs text-muted-foreground">PCYDO Pasig City</span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
                 Document Submissions
@@ -266,7 +266,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary">Document Workspace</span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">LYDO Pasig City</span>
+              <span className="text-xs text-muted-foreground">PCYDO Pasig City</span>
             </div>
             <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
               Organization Requirements
