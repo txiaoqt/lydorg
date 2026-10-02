@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.admin-seed-yorp-sample-dataset]
 verify_jwt = false
+
+[functions.delete-ypop-submissions]
+verify_jwt = false

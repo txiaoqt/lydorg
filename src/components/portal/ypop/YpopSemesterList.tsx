@@ -136,7 +136,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
           <span className="text-xs text-muted-foreground">Validation Periods</span>
         </div>
         <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-foreground leading-tight sm:leading-snug">
-          Select a YPOP Semester Period
+          YPOP Semester Period
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
           Select an active or historical validation semester below to view City-Led activities, submit attendance proof, log organization-initiated PPAs, and track your qualification progress.

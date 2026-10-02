@@ -718,7 +718,7 @@ export const userNavigationGroups: PortalNavGroup[] = [
     id: "compliance-workflow",
     label: "Compliance",
     items: [
-      { id: "document-submission", label: "Document Submissions", icon: FileText },
+      { id: "document-submission", label: "Registration Requirements", icon: FileText },
       { id: "liquidation-reporting", label: "Liquidation Reports", icon: CalendarDays },
     ],
   },
@@ -751,6 +751,7 @@ export const userRouteMap: Record<string, string> = {
   "organization-profile": "/organization-profile",
   "document-submission": "/document-submission",
   "organization-renewal": "/organization-renewal",
+  renewals: "/renewals",
   "budget-request": "/budget-request",
   "liquidation-reporting": "/liquidation-reporting",
   "news-releases": "/portal-news-releases",
@@ -848,6 +849,7 @@ export type OrganizationRenewalRecord = {
   organizationId: string;
   cycleNumber: number;
   currentAccreditationId: string;
+  certificateUrn?: string | null;
   status: RenewalApplicationStatus;
   submittedAt: string | null;
   reviewedBy: string | null;
@@ -2022,6 +2024,16 @@ export type TemplateRecord = RequiredDocumentType & {
   templateCategories: string[];
 };
 
+export type YpopSubmissionDeletionReceipt = {
+  operationId: string;
+  organizationId: string;
+  semester: string;
+  entryIds: string[];
+  participationIds: string[];
+  orgActivityIds: string[];
+  deletedAt: string;
+};
+
 export type LydoSeedState = {
   organizationProfiles: OrganizationProfile[];
   documentSubmissions: DocumentSubmission[];
@@ -2045,6 +2057,7 @@ export type LydoSeedState = {
   ypopOrgActivityFiles: YPOPOrgActivityFile[];
   ypopCityActivities: YPOPCityActivity[];
   ypopPeriods: YPOPPeriod[];
+  ypopDeletionReceipts?: YpopSubmissionDeletionReceipt[];
   customTemplateCategories?: string[];
   newsCategories?: NewsCategoryRecord[];
 };

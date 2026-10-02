@@ -13,6 +13,7 @@ export type UserPortalSection =
   | "organization-profile"
   | "document-submission"
   | "organization-renewal"
+  | "renewals"
   | "budget-request"
   | "liquidation-reporting"
   | "news-releases"

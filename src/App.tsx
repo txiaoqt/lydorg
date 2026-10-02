@@ -359,6 +359,7 @@ const App = () => (
                       <Route path="/organization-profile" element={<RequireUser><UserPortalEntry section="organization-profile" /></RequireUser>} />
                       <Route path="/document-submission" element={<RequireUser><UserPortalEntry section="document-submission" /></RequireUser>} />
                       <Route path="/organization-renewal" element={<RequireUser><UserPortalEntry section="organization-renewal" /></RequireUser>} />
+                      <Route path="/renewals" element={<RequireUser><UserPortalEntry section="renewals" /></RequireUser>} />
                       <Route path="/validation-review" element={<Navigate to="/document-submission" replace />} />
                       <Route path="/budget-request" element={<RequireUser><UserPortalEntry section="budget-request" /></RequireUser>} />
                       <Route path="/liquidation-reporting" element={<RequireUser><UserPortalEntry section="liquidation-reporting" /></RequireUser>} />

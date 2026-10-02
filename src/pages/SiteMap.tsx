@@ -29,7 +29,7 @@ const siteMapSections = [
       { label: "Dashboard", href: "/dashboard" },
       { label: "Organization Profile", href: "/organization-profile" },
       { label: "YPOP Incentive", href: "/ypop" },
-      { label: "Document Submission", href: "/document-submission" },
+      { label: "Registration Requirements", href: "/document-submission" },
       { label: "Budget Requests", href: "/budget-request" },
       { label: "Liquidation Reports", href: "/liquidation-reporting" },
       { label: "News Releases", href: "/portal-news-releases" },

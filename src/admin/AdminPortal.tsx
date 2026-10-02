@@ -56,6 +56,7 @@ import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { PortalEmptyState, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { DangerConfirmDialog } from "@/components/portal/DangerConfirmDialog";
+import { deleteAdminYpopSubmissions } from "@/lib/ypop-submission-deletion";
 import { AdminPageHeader } from "@/components/portal/AdminPageHeader";
 import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
 import { ActivityLogsExportDialog } from "@/admin/components/ActivityLogsExportDialog";
@@ -1206,6 +1207,18 @@ export default function AdminPortal({ section }: { section: string }) {
   const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | "pending_evaluation" | "qualified" | "not_qualified">("all");
   const [ypopSubmissionSearch, setYpopSubmissionSearch] = useState("");
   const [ypopSubmissionClassificationFilter, setYpopSubmissionClassificationFilter] = useState("all");
+  const [selectedYpopOrganizationIds, setSelectedYpopOrganizationIds] = useState<Set<string>>(new Set());
+  const [ypopDeletionTarget, setYpopDeletionTarget] = useState<{
+    periodId: string; semesterLabel: string; rows: YpopSubmissionRow[];
+  } | null>(null);
+  const [isDeletingYpopSubmissions, setIsDeletingYpopSubmissions] = useState(false);
+  const ypopDeletionOperationRef = useRef<string | null>(null);
+  const ypopDeletionBusyRef = useRef(false);
+  useEffect(() => {
+    setSelectedYpopOrganizationIds(new Set());
+    setYpopDeletionTarget(null);
+    ypopDeletionOperationRef.current = null;
+  }, [selectedYpopPeriodId, ypopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter]);
   const [newActivityForm, setNewActivityForm] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [editingDraftTempId, setEditingDraftTempId] = useState<string | null>(null);
@@ -3491,6 +3504,7 @@ export default function AdminPortal({ section }: { section: string }) {
   // This also recovers packets approved before automatic finalization was in
   // place, and keeps URN issuance tied to the same all-approved condition.
   useEffect(() => {
+    if (renewalReviewSubmitting) return;
     if (!selectedRenewal || !["submitted", "under_review", "resubmitted"].includes(selectedRenewal.status)) return;
 
     const requiredTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
@@ -3523,7 +3537,7 @@ export default function AdminPortal({ section }: { section: string }) {
         });
       }
     })();
-  }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments]);
+  }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments, renewalReviewSubmitting]);
 
   const refreshAdminSnapshot = async () => {
     const remoteSnapshot = (await loadAdminPortalSnapshotState()) ?? (await loadAdminPortalSupabaseState());
@@ -3545,6 +3559,43 @@ export default function AdminPortal({ section }: { section: string }) {
       return remoteSnapshot;
     } finally {
       setIsRefreshingYpop(false);
+    }
+  };
+
+  const handleConfirmYpopSubmissionDelete = async () => {
+    if (!ypopDeletionTarget || !ypopDeletionOperationRef.current || ypopDeletionBusyRef.current) return;
+    ypopDeletionBusyRef.current = true;
+    setIsDeletingYpopSubmissions(true);
+    try {
+      const result = await deleteAdminYpopSubmissions({
+        periodId: ypopDeletionTarget.periodId,
+        organizationIds: ypopDeletionTarget.rows.map((row) => row.organizationId),
+        operationId: ypopDeletionOperationRef.current,
+      });
+      // Apply the committed deletion immediately, including local attendance
+      // caches. A failed refresh must not be reported as a failed deletion.
+      mergeRemoteState({ ypopDeletionReceipts: result.receipts });
+      setSelectedYpopOrganizationIds(new Set());
+      setSelectedYpopId(null);
+      ypopDeletionOperationRef.current = null;
+      setYpopDeletionTarget(null);
+      toast({
+        title: result.deletedCount ? "YPOP submissions deleted" : "Submissions already removed",
+        description: result.storageWarning || `${result.deletedCount} ${result.deletedCount === 1 ? "submission was" : "submissions were"} removed. Organizations can submit again while the semester is open.`,
+        ...(result.storageWarning ? { variant: "destructive" as const } : {}),
+      });
+      try {
+        await refreshAdminYpop();
+      } catch (error) {
+        console.warn("YPOP deletion succeeded; refresh failed", error);
+        toast({ title: "Submissions deleted", description: "The latest list could not be loaded. Refresh this page to update the totals." });
+      }
+    } catch (error) {
+      toast({ title: "Unable to delete submissions", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+      // Keep the operation ID when retrying a request whose response was lost.
+    } finally {
+      ypopDeletionBusyRef.current = false;
+      setIsDeletingYpopSubmissions(false);
     }
   };
 
@@ -4512,7 +4563,7 @@ export default function AdminPortal({ section }: { section: string }) {
   };
 
   const submitRenewalReviewDecisions = async () => {
-    if (!selectedRenewal || !selectedRenewalProfile) return;
+    if (!selectedRenewal || !selectedRenewalProfile || renewalReviewSubmitting) return;
 
     const decision = renewalBulkDecision;
     const targetFiles = effectiveRenewalFiles.filter(
@@ -4576,14 +4627,34 @@ export default function AdminPortal({ section }: { section: string }) {
         );
       }
 
-      await refreshAdminState();
       let renewalVerifiedUrn: string | null = null;
       let renewalVerificationError: string | null = null;
+      // The review RPC returns the saved files; show those immediately. A fresh
+      // packet below still checks every required file before issuing the URN.
+      const savedReviewFiles = result.results
+        .filter((item) => item.success && item.file)
+        .map((item) => item.file!);
+      // Audit each saved decision concurrently with the packet/URN checks.
+      const auditWrites = Promise.allSettled(successfulFiles.map((file) => appendAuditLog(
+        decision === "approve"
+          ? "Approved renewal document"
+          : decision === "needs_revision"
+            ? "Renewal document revision requested"
+            : "Rejected renewal document",
+        "document_submission_file",
+        file.id,
+        `${decision === "approve" ? "Approved" : decision === "needs_revision" ? "Requested revisions for" : "Rejected"} ${file.fileName} from the renewal detail review.`,
+        selectedRenewalProfile.id,
+      )));
+      setLocalRenewalFiles((current) => {
+        const merged = new Map(effectiveRenewalFiles.map((file) => [file.id, file]));
+        for (const file of current) merged.set(file.id, file);
+        for (const file of savedReviewFiles) merged.set(file.id, file);
+        return Array.from(merged.values());
+      });
       try {
         const packet = await fetchRenewalPacketInSupabase(selectedRenewal.id);
-      if (packet?.files) {
-          setLocalRenewalFiles(packet.files);
-
+        if (packet?.files) {
           const requiredRenewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
           const allRequiredFilesApproved =
             requiredRenewalTemplates.length > 0 &&
@@ -4601,42 +4672,44 @@ export default function AdminPortal({ section }: { section: string }) {
             try {
               const approval = await adminApproveRenewalInSupabase({ renewalId: selectedRenewal.id });
               renewalVerifiedUrn = approval.certificateUrn;
-              await refreshAdminState();
+              // Use the authoritative approval response so displaying the URN
+              // does not wait on a second full portal reload.
+              setAdminRenewals((current) => current.map((renewal) =>
+                renewal.id === approval.renewalId
+                  ? { ...renewal, status: "approved", certificateUrn: approval.certificateUrn }
+                  : renewal,
+              ));
             } catch (error) {
               renewalVerificationError =
                 error instanceof Error ? error.message : "The renewal could not be verified automatically.";
             }
           }
+          setLocalRenewalFiles(packet.files);
         }
-      } catch {
-        // Safe to ignore secondary refresh error
+      } catch (error) {
+        // The decisions already committed; a read failure must not report them as failed.
+        console.warn("Could not refresh the reviewed renewal packet:", error);
       }
 
-      for (const file of successfulFiles) {
-        if (decision === "approve") {
-          await appendAuditLog(
-            "Approved renewal document",
-            "document_submission_file",
-            file.id,
-            `Approved ${file.fileName} from the renewal detail review.`,
-            selectedRenewalProfile.id,
-          );
-        } else if (decision === "needs_revision") {
-          await appendAuditLog(
-            "Renewal document revision requested",
-            "document_submission_file",
-            file.id,
-            `Requested revisions for ${file.fileName} from the renewal detail review.`,
-            selectedRenewalProfile.id,
-          );
-        } else {
-          await appendAuditLog(
-            "Rejected renewal document",
-            "document_submission_file",
-            file.id,
-            `Rejected ${file.fileName} from the renewal detail review.`,
-            selectedRenewalProfile.id,
-          );
+      // Match registration's lighter snapshot refresh, after the audit writes
+      // so recent activity includes this review. Renewal lists load in parallel.
+      const refreshResults = await Promise.allSettled([
+        auditWrites.then(async (results) => {
+          for (const auditResult of results) {
+            if (auditResult.status === "rejected") {
+              console.warn("Could not record renewal review activity:", auditResult.reason);
+            }
+          }
+          await refreshAdminSnapshot();
+        }),
+        fetchAllOrganizationRenewalsInSupabase().then(setAdminRenewals),
+        ...(renewalVerifiedUrn
+          ? [fetchAllOrganizationAccreditationsInSupabase().then(setAdminAccreditations)]
+          : []),
+      ]);
+      for (const refreshResult of refreshResults) {
+        if (refreshResult.status === "rejected") {
+          console.warn("Could not refresh renewal review activity:", refreshResult.reason);
         }
       }
 
@@ -8172,6 +8245,17 @@ export default function AdminPortal({ section }: { section: string }) {
         if (selectedRenewalRecord && selectedOrg) {
           const isRenewalDocumentsComplete =
             renewalTemplates.length > 0 && submittedDocumentCount >= renewalTemplates.length;
+          const renewalIssuedAccreditation = adminAccreditations.find(
+            (accreditation) =>
+              accreditation.organizationId === selectedOrg.id &&
+              accreditation.termNumber === selectedRenewalRecord.cycleNumber,
+          );
+          const renewalCertificateUrn =
+            selectedRenewalRecord.certificateUrn || renewalIssuedAccreditation?.certificateUrn || null;
+          const isRenewalVerified =
+            selectedRenewalRecord.status === "approved" && Boolean(renewalCertificateUrn);
+          const renewalVerifiedAt =
+            selectedRenewalRecord.reviewedAt || renewalIssuedAccreditation?.approvedAt || null;
           const renewalCreatedDate = new Date(selectedRenewalRecord.submittedAt || selectedRenewalRecord.createdAt);
           const isRenewalCreatedDateValid = !Number.isNaN(renewalCreatedDate.getTime());
 
@@ -8377,34 +8461,6 @@ export default function AdminPortal({ section }: { section: string }) {
                     {submittedDocumentCount}/{renewalTemplates.length} Documents Submitted
                   </span>
                   <RenewalStatusPill status={selectedRenewalRecord.status} />
-
-                  {/* Application-level decision buttons */}
-                  {selectedRenewalRecord.status !== "approved" && selectedRenewalRecord.status !== "rejected" ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRenewalDecisionRemarksDraft("");
-                          setIsRenewalRevisionDialogOpen(true);
-                        }}
-                        className="flex h-9 items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 font-segoe text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-100"
-                      >
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        Request Revision
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRenewalDecisionRemarksDraft("");
-                          setIsRenewalRejectDialogOpen(true);
-                        }}
-                        className="flex h-9 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-3 font-segoe text-xs font-semibold text-red-800 transition-colors hover:bg-red-100"
-                      >
-                        <XCircle className="h-3.5 w-3.5" />
-                        Reject
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               </div>
 
@@ -8757,6 +8813,35 @@ export default function AdminPortal({ section }: { section: string }) {
                     </div>
                   </div>
 
+                  {isRenewalVerified ? (
+                    <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                      <p className="border-b border-slate-300 pb-4 font-segoe text-lg font-semibold leading-none text-text-default">
+                        Review Decision
+                      </p>
+                      <div className="mt-4 flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
+                        <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
+                        <div>
+                          <p className="font-segoe text-sm font-semibold text-positive-secondary">Renewal Verified</p>
+                          <p className="mt-0.5 font-segoe text-xs text-text-default">
+                            All required renewal documents have been approved. This organization’s accreditation has been renewed.
+                          </p>
+                        </div>
+                        {renewalCertificateUrn ? (
+                          <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
+                            <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                            <span className="font-cascadia text-base font-bold text-positive-secondary">
+                              {renewalCertificateUrn}
+                            </span>
+                          </div>
+                        ) : null}
+                        {renewalVerifiedAt ? (
+                          <p className="font-segoe text-[11px] text-slate-500">
+                            Verified on {formatVerifiedDateLabel(renewalVerifiedAt)}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : (
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                       <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
@@ -8862,6 +8947,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       </button>
                     </div>
                   </div>
+                  )}
 
                   <DangerConfirmDialog
                     open={isRenewalDecisionConfirmOpen}
@@ -14295,6 +14381,7 @@ export default function AdminPortal({ section }: { section: string }) {
               </div>
 
               <YpopSubmissionsTable
+                key={period.id}
                 rows={filteredSubmissionRows}
                 searchValue={ypopSubmissionSearch}
                 onSearchChange={setYpopSubmissionSearch}
@@ -14303,6 +14390,18 @@ export default function AdminPortal({ section }: { section: string }) {
                 statusFilter={ypopSubmissionFilter}
                 onStatusFilterChange={setYpopSubmissionFilter}
                 onValidate={handleValidateSubmission}
+                selectedOrganizationIds={selectedYpopOrganizationIds}
+                onSelectedOrganizationIdsChange={(ids) => {
+                  setSelectedYpopOrganizationIds(ids);
+                  ypopDeletionOperationRef.current = null;
+                }}
+                isDeleting={isDeletingYpopSubmissions}
+                onDeleteSelected={() => {
+                  const rows = submissionRows.filter((row) => selectedYpopOrganizationIds.has(row.organizationId));
+                  if (!rows.length) { setSelectedYpopOrganizationIds(new Set()); return; }
+                  ypopDeletionOperationRef.current ??= crypto.randomUUID();
+                  setYpopDeletionTarget({ periodId: period.id, semesterLabel: period.semesterLabel, rows });
+                }}
               />
             </div>
           );
@@ -15170,6 +15269,8 @@ export default function AdminPortal({ section }: { section: string }) {
         );
     }
   }, [
+    selectedYpopOrganizationIds,
+    isDeletingYpopSubmissions,
     activityLogFilter,
     activityDateFilter,
     activityExportDialogOpen,
@@ -15375,6 +15476,22 @@ export default function AdminPortal({ section }: { section: string }) {
         {activeContent}
       </PortalShell>
       {confirmationDialog}
+      <DangerConfirmDialog
+        open={Boolean(ypopDeletionTarget)}
+        onOpenChange={(open) => { if (!open && !ypopDeletionBusyRef.current) setYpopDeletionTarget(null); }}
+        icon={Trash2}
+        title={`Delete ${ypopDeletionTarget?.rows.length ?? 0} YPOP ${(ypopDeletionTarget?.rows.length ?? 0) === 1 ? "Submission" : "Submissions"}?`}
+        description={<>This removes the selected organizations' attendance proofs, PPA files, and validation results for <strong>{ypopDeletionTarget?.semesterLabel}</strong>. They can submit again while the semester is open.</>}
+        content={
+          <ul className="max-h-48 space-y-2 overflow-y-auto font-segoe text-sm text-text-default">
+            {ypopDeletionTarget?.rows.map((row) => <li key={row.organizationId}>{row.organizationName}</li>)}
+          </ul>
+        }
+        warning="The deleted submissions and files cannot be restored."
+        confirmLabel={isDeletingYpopSubmissions ? "Deleting..." : "Delete submissions"}
+        confirmDisabled={isDeletingYpopSubmissions || !ypopDeletionTarget?.rows.length}
+        onConfirm={handleConfirmYpopSubmissionDelete}
+      />
       <Dialog open={recentActivityDialogOpen} onOpenChange={setRecentActivityDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>

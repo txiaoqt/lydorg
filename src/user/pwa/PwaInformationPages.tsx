@@ -9,7 +9,7 @@ import { PwaAboutSettings } from "./settings/PwaSettingsPages";
 const faqs = [
   ["What is Y-TRACE?", "Y-TRACE is Pasig City’s youth organization compliance portal for registration, required documents, YPOP participation, budget requests, liquidation reporting, templates, and PCYDO updates."],
   ["What should I complete first?", "Complete your Organization Profile and follow the verification and document requirements shown on the Dashboard. Each later workflow remains locked until its real eligibility requirements are met."],
-  ["How does document review work?", "Upload each required document from the Documents screen. The app shows whether a file is missing, under admin review, approved, or needs revision."],
+  ["How does document review work?", "Upload each required document from Registration Requirements. The app shows whether a file is missing, under admin review, approved, or needs revision."],
   ["When can I create a budget request?", "A new activity budget request becomes available only after your organization qualifies in the active YPOP period."],
   ["When does liquidation become available?", "Liquidation becomes available once an eligible budget request is approved and released."],
   ["Where can I see admin updates?", "Use the notification bell for record updates and the Recent Activity section for organization activity history."],

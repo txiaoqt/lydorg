@@ -206,7 +206,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
   it("1. Multiple admin-configured semesters render separately in the semester list", () => {
     render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
 
-    expect(screen.getByText("Select a YPOP Semester Period")).toBeInTheDocument();
+    expect(screen.getByText("YPOP Semester Period")).toBeInTheDocument();
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 Second Semester")).toBeInTheDocument();
   });
@@ -371,7 +371,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     const backBtn = screen.getByRole("button", { name: /All Semesters/i });
     fireEvent.click(backBtn);
 
-    expect(screen.getByText("Select a YPOP Semester Period")).toBeInTheDocument();
+    expect(screen.getByText("YPOP Semester Period")).toBeInTheDocument();
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 Second Semester")).toBeInTheDocument();
   });
@@ -816,5 +816,4 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(viewRemarksBtn.className).not.toContain("bg-amber-500/10");
   });
 });
-
 

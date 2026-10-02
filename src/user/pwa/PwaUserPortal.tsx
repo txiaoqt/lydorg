@@ -52,7 +52,7 @@ function PwaDocumentAccessGuard({ data, children }: {
         <span className="pwa-record-icon"><FileText aria-hidden="true" /></span>
         <div>
           <h2>Complete your profile first</h2>
-          <p>Finish and save all required organization information before accessing document submission.</p>
+          <p>Finish and save all required organization information before accessing Registration Requirements.</p>
           <div className="pwa-profile-progress" role="progressbar" aria-label="Profile completeness" aria-valuemin={0} aria-valuemax={100} aria-valuenow={data.profilePercent}>
             <span style={{ width: `${data.profilePercent}%` }} />
           </div>

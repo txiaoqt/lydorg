@@ -735,7 +735,7 @@ describe("UserPortalShell Mobile Sidebar Navigation (Notifications Removed & Pre
 
       // COMPLIANCE
       expect(sheetWithin.getByText("Compliance")).toBeInTheDocument();
-      expect(sheetWithin.getByRole("button", { name: /Document Submissions/i })).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Registration Requirements/i })).toBeInTheDocument();
       expect(sheetWithin.getByRole("button", { name: /Liquidation Reports/i })).toBeInTheDocument();
 
       // GRANTS & INCENTIVES

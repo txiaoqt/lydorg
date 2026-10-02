@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -30,6 +30,10 @@ type YpopSubmissionsTableProps = {
   statusFilter: YpopSubmissionStatusFilter;
   onStatusFilterChange: (value: YpopSubmissionStatusFilter) => void;
   onValidate: (row: YpopSubmissionRow) => void;
+  selectedOrganizationIds?: Set<string>;
+  onSelectedOrganizationIdsChange?: (ids: Set<string>) => void;
+  onDeleteSelected?: () => void;
+  isDeleting?: boolean;
 };
 
 const STATUS_TABS: { value: YpopSubmissionStatusFilter; label: string }[] = [
@@ -100,12 +104,33 @@ export const YpopSubmissionsTable = ({
   statusFilter,
   onStatusFilterChange,
   onValidate,
+  selectedOrganizationIds = new Set<string>(),
+  onSelectedOrganizationIdsChange,
+  onDeleteSelected,
+  isDeleting = false,
 }: YpopSubmissionsTableProps) => {
   const [page, setPage] = useState(0);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
   const pageItems = useMemo(() => rows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE), [rows, clampedPage]);
+  const selectionEnabled = Boolean(onSelectedOrganizationIdsChange && onDeleteSelected);
+  const selectedOnPage = pageItems.filter((row) => selectedOrganizationIds.has(row.organizationId)).length;
+  const allPageSelected = pageItems.length > 0 && selectedOnPage === pageItems.length;
+  const toggleSelection = (organizationIds: string[], checked: boolean) => {
+    const next = new Set(selectedOrganizationIds);
+    organizationIds.forEach((id) => checked ? next.add(id) : next.delete(id));
+    onSelectedOrganizationIdsChange?.(next);
+  };
+
+  useEffect(() => {
+    if (!selectionEnabled || isDeleting || !selectedOrganizationIds.size) return;
+    const clearOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onSelectedOrganizationIdsChange?.(new Set());
+    };
+    document.addEventListener("keydown", clearOnEscape);
+    return () => document.removeEventListener("keydown", clearOnEscape);
+  }, [selectionEnabled, isDeleting, selectedOrganizationIds, onSelectedOrganizationIdsChange]);
 
   const changePage = (next: number) => {
     setPage(Math.max(0, Math.min(next, totalPages - 1)));
@@ -192,6 +217,35 @@ export const YpopSubmissionsTable = ({
         </div>
       </div>
 
+      {selectionEnabled && selectedOrganizationIds.size > 0 && (
+        <div role="region" aria-label="Selection actions" className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-300 bg-slate-50 px-4 py-2.5">
+          <span aria-live="polite" className="font-segoe text-sm font-semibold text-text-default">
+            {selectedOrganizationIds.size} {selectedOrganizationIds.size === 1 ? "submission" : "submissions"} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <button type="button" disabled={isDeleting} onClick={() => onSelectedOrganizationIdsChange?.(new Set())}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-3 font-segoe text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-50">
+              <X className="h-4 w-4" aria-hidden="true" /> Clear selection
+            </button>
+            <button type="button" disabled={isDeleting} onClick={onDeleteSelected}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-md border border-red-200 bg-red-50 px-3 font-segoe text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
+              {isDeleting ? "Deleting..." : "Delete selected"}
+            </button>
+          </div>
+        </div>
+      )}
+      {selectionEnabled && pageItems.length > 0 && (
+        <label className="flex min-h-11 w-fit cursor-pointer items-center gap-3 px-4 font-segoe text-xs text-slate-600">
+          <input type="checkbox" checked={allPageSelected} disabled={isDeleting}
+            ref={(element) => { if (element) element.indeterminate = selectedOnPage > 0 && !allPageSelected; }}
+            onChange={(event) => toggleSelection(pageItems.map((row) => row.organizationId), event.target.checked)}
+            aria-label="Select all submissions on this page"
+            className="h-4 w-4 cursor-pointer rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand" />
+          Select all on this page
+        </label>
+      )}
+
       {/* Rows */}
       {pageItems.length === 0 ? (
         <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
@@ -202,9 +256,15 @@ export const YpopSubmissionsTable = ({
         pageItems.map((row) => (
           <div
             key={row.id}
-            className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
+            className={cn("flex flex-wrap items-center justify-between gap-3 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50", selectedOrganizationIds.has(row.organizationId) && "bg-blue-50")}
           >
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              {selectionEnabled && (
+                <input type="checkbox" checked={selectedOrganizationIds.has(row.organizationId)} disabled={isDeleting}
+                  onChange={(event) => toggleSelection([row.organizationId], event.target.checked)}
+                  aria-label={`Select ${row.organizationName}`}
+                  className="mr-1 h-4 w-4 shrink-0 cursor-pointer rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand" />
+              )}
               <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">{row.organizationName}</p>
               <ReferenceCodeChip code={row.referenceId || "—"} className="w-[120px] rounded" />
             </div>
@@ -214,7 +274,8 @@ export const YpopSubmissionsTable = ({
               <button
                 type="button"
                 onClick={() => onValidate(row)}
-                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                disabled={isDeleting}
+                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
               >
                 Validate
                 <ArrowRight className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />

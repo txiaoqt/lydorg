@@ -117,7 +117,7 @@ export function getPwaParentRoute(pathname: string) {
 export function getPwaPageTitle(pathname: string) {
   if (pathname === PWA_ROUTES.home) return "Dashboard";
   if (pathname.startsWith(PWA_ROUTES.documentsManage)) return "Manage Documents";
-  if (pathname.startsWith(PWA_ROUTES.documents)) return "Documents";
+  if (pathname.startsWith(PWA_ROUTES.documents)) return "Registration Requirements";
   if (pathname === PWA_ROUTES.budgetNew) return "New Budget Request";
   if (pathname.startsWith(PWA_ROUTES.budgets)) return "Budget Requests";
   if (pathname.includes("/manage") && pathname.startsWith(PWA_ROUTES.liquidations)) return "Manage Liquidation";

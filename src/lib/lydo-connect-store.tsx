@@ -39,6 +39,7 @@ import {
 } from "./lydo-connect-data";
 import { loadAdminPortalSupabaseState, loadLydoConnectSupabaseState } from "./lydo-connect-supabase";
 import { supabase, supabaseAuthStorageKey } from "./supabase";
+import { pruneDeletedYpopSubmissions } from "./ypop-submission-deletion";
 
 export type AccountIdentity =
   | { type: "admin"; id: string; token: string }
@@ -150,6 +151,7 @@ export const clearAccountScopedState = (base: LydoConnectState): LydoConnectStat
   activityLogs: [],
   inquiries: [],
   ypopEntries: [],
+  ypopDeletionReceipts: [],
   ypopFiles: [],
   ypopEventParticipations: [],
   ypopEventFiles: [],
@@ -397,6 +399,7 @@ export const readState = (identity?: AccountIdentity): LydoConnectState => {
         })),
       templates: normalizeTemplates(parsed.templates ?? baseState.templates),
       ypopEntries: ((parsed.ypopEntries ?? []) as YPOPEntry[]).filter((e) => !legacySeedIds.has(e.id)),
+      ypopDeletionReceipts: parsed.ypopDeletionReceipts ?? [],
       ypopFiles: ((parsed.ypopFiles ?? []) as YPOPFile[]).filter((f) => !legacySeedIds.has(f.id)),
       ypopEventParticipations: ((parsed.ypopEventParticipations ?? []) as YPOPEventParticipation[]).filter(
         (p) => !legacySeedIds.has(p.id),
@@ -908,7 +911,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             validEntryIds,
           );
 
-          return {
+          return pruneDeletedYpopSubmissions({
             ...current,
             ...snapshot,
             templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
@@ -940,7 +943,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
               nextOrgActivities,
               isAdmin,
             ),
-          };
+          }, [...(current.ypopDeletionReceipts ?? []), ...(snapshot.ypopDeletionReceipts ?? [])]);
         });
       } catch (error) {
         console.error("Failed to sync Y-TRACE state from Supabase:", error);
@@ -1232,7 +1235,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             }
           }
 
-          return {
+          return pruneDeletedYpopSubmissions({
             ...current,
             ...snapshot,
             templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
@@ -1252,7 +1255,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             newsCategories: Array.isArray(snapshot.newsCategories) && snapshot.newsCategories.length > 0
               ? snapshot.newsCategories
               : (current.newsCategories ?? INITIAL_NEWS_CATEGORIES),
-          };
+          }, [...(current.ypopDeletionReceipts ?? []), ...(snapshot.ypopDeletionReceipts ?? [])]);
         });
       },
       addCustomTemplateCategory: (category) => {

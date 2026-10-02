@@ -32,13 +32,13 @@ const faqs: { question: string; answer: string; category: FaqCategory }[] = [
   {
     question: "What do I need to complete first before submitting documents?",
     answer:
-      "You need to fill out and save your Organization Profile first. The profile must be reviewed and verified by an admin before you can proceed to document submission and budget requests.",
+      "You need to fill out and save your Organization Profile first. The profile must be reviewed and verified by an admin before you can proceed to Registration Requirements and budget requests.",
     category: "getting-started",
   },
   {
-    question: "How does document submission work?",
+    question: "How do I submit my registration requirements?",
     answer:
-      "Go to Document Submission and upload the required file for each published document slot. Once a file is attached, it becomes available for admin review, and you will be notified if any document needs revision or has been approved.",
+      "Go to Registration Requirements and upload the required file for each published document slot. Once a file is attached, it becomes available for admin review, and you will be notified if any document needs revision or has been approved.",
     category: "documents",
   },
   {

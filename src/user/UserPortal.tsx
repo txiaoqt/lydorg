@@ -35,6 +35,7 @@ import {
   MoreHorizontal,
   PenSquare,
   Plus,
+  RefreshCw,
   Receipt,
   Search,
   SlidersHorizontal,
@@ -792,6 +793,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [loadingRenewals, setLoadingRenewals] = useState(false);
   const [renewalLoadError, setRenewalLoadError] = useState(false);
   const [startingRenewal, setStartingRenewal] = useState(false);
+  const [selectedRenewalHistoryId, setSelectedRenewalHistoryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentProfile?.id) {
@@ -900,6 +902,29 @@ export default function UserPortal({ section }: { section: string }) {
       .filter((renewal) => renewal.status === "approved")
       .sort((left, right) => right.cycleNumber - left.cycleNumber)[0] ?? null;
   }, [organizationRenewals, renewalLoadError, userRenewalState.activeRenewal, userRenewalState.canStartRenewal]);
+
+  const approvedRenewals = useMemo(
+    () => organizationRenewals
+      .filter((renewal) => renewal.status === "approved")
+      .sort((left, right) => right.cycleNumber - left.cycleNumber),
+    [organizationRenewals],
+  );
+
+  const renewalActivityLogs = useMemo(
+    () => state.activityLogs.filter(
+      (log) => log.organizationId === currentProfile?.id && log.relatedType === "renewal",
+    ),
+    [currentProfile?.id, state.activityLogs],
+  );
+
+  const portalNavigationGroups = useMemo(() => {
+    if (approvedRenewals.length === 0) return userNavigationGroups;
+    return userNavigationGroups.map((group) => group.id === "compliance-workflow"
+      ? { ...group, items: group.items.some((item) => item.id === "renewals")
+        ? group.items
+        : [...group.items.slice(0, 1), { id: "renewals", label: "Renewal Requirements", icon: RefreshCw }, ...group.items.slice(1)] }
+      : group);
+  }, [approvedRenewals.length]);
 
   const handleContinueRenewal = () => {
     navigate(userRouteMap["organization-renewal"]);
@@ -1780,7 +1805,6 @@ export default function UserPortal({ section }: { section: string }) {
 
   const openAttachedDocumentEditor = async (file: SubmissionFile, documentTypeName: string) => {
     setAttachedDocumentEditor({ file, documentTypeName });
-    setAttachedDocumentEditorOpen(true);
     setAttachedDocumentReplacementFile(null);
     setAttachedDocumentMarkedForRemoval(false);
     setAttachedDocumentPreviewUrl("");
@@ -1790,6 +1814,7 @@ export default function UserPortal({ section }: { section: string }) {
 
     if (!file.fileUrl.trim() || file.fileUrl.startsWith("#")) {
       setAttachedDocumentPreviewEmptyMessage("No uploaded file is available.");
+      setAttachedDocumentEditorOpen(true);
       return;
     }
 
@@ -1808,6 +1833,10 @@ export default function UserPortal({ section }: { section: string }) {
       setAttachedDocumentPreviewEmptyMessage(
         error instanceof Error ? error.message : "The uploaded file preview could not be opened right now.",
       );
+    } finally {
+      // Let the card's loading button stay visible while preparing the preview,
+      // then show the drawer with either the resolved file or the error message.
+      setAttachedDocumentEditorOpen(true);
     }
   };
 
@@ -3559,7 +3588,7 @@ export default function UserPortal({ section }: { section: string }) {
             key: "documents-start",
             title: "Submit your required documents",
             description: "Upload the required compliance files so the admin can begin reviewing your organization.",
-            ctaLabel: "Open Documents",
+            ctaLabel: "View Requirements",
             onClick: () => navigate(userRouteMap["document-submission"]),
             icon: FileText,
             tone: "bg-sky-500/10 text-sky-600",
@@ -4000,6 +4029,20 @@ export default function UserPortal({ section }: { section: string }) {
             userRouteMap={userRouteMap}
             openPreview={openPreview}
             openFile={openFile}
+            renewalActivityLogs={renewalActivityLogs}
+            onRenewalRecentActivityModal={(logs) => {
+              const cycle = userRenewalState.activeRenewal?.cycleNumber ?? latestApprovedRenewal?.cycleNumber;
+              setDocumentRecentActivityModal({
+                title: "Renewal Activity History",
+                description: cycle ? `Review updates for Cycle ${cycle}.` : "Review your renewal updates.",
+                activities: logs.map((log) => ({
+                  id: log.id,
+                  message: log.description || log.action,
+                  timestamp: log.createdAt,
+                  timestampLabel: formatFullActivityTimestamp(log.createdAt),
+                })),
+              });
+            }}
             onRenewalUpdated={(updatedRenewal) => {
               setOrganizationRenewals((prev) => {
                 const existingIndex = prev.findIndex((r) => r.id === updatedRenewal.id);
@@ -4011,6 +4054,53 @@ export default function UserPortal({ section }: { section: string }) {
                 return [updatedRenewal, ...prev];
               });
             }}
+          />
+        );
+      }
+      case "renewals": {
+        if (approvedRenewals.length === 0) {
+          return (
+            <Card>
+              <CardContent className="p-6 text-sm text-muted-foreground">
+                {loadingRenewals
+                  ? "Loading approved renewal cycles…"
+                  : renewalLoadError
+                    ? "Approved renewal cycles could not be loaded. Please try again."
+                    : "Approved renewal documents will appear here after your renewal is verified."}
+              </CardContent>
+            </Card>
+          );
+        }
+        const selectedRenewal = approvedRenewals.find((renewal) => renewal.id === selectedRenewalHistoryId)
+          ?? approvedRenewals.find((renewal) => renewal.cycleNumber === 2)
+          ?? approvedRenewals[0]
+          ?? null;
+        return (
+          <UserPortalRenewalWorkspaceView
+            key="approved-renewals-history"
+            currentProfile={currentProfile}
+            userRenewalState={userRenewalState}
+            activeRenewal={selectedRenewal}
+            approvedRenewals={approvedRenewals}
+            onActiveRenewalChange={(renewal) => setSelectedRenewalHistoryId(renewal.id)}
+            renewalActivityLogs={renewalActivityLogs}
+            onRenewalRecentActivityModal={(logs) => {
+              setDocumentRecentActivityModal({
+                title: "Renewal Activity History",
+                description: `Review updates for Cycle ${selectedRenewal?.cycleNumber ?? ""}.`,
+                activities: logs.map((log) => ({
+                  id: log.id,
+                  message: log.description || log.action,
+                  timestamp: log.createdAt,
+                  timestampLabel: formatFullActivityTimestamp(log.createdAt),
+                })),
+              });
+            }}
+            readOnly
+            navigate={navigate}
+            userRouteMap={userRouteMap}
+            openPreview={openPreview}
+            openFile={openFile}
           />
         );
       }
@@ -4353,7 +4443,7 @@ export default function UserPortal({ section }: { section: string }) {
         notifications={userNotifications}
         onMarkAllRead={() => void handleMarkAllNotificationsRead()}
         onMarkRead={(id) => markNotificationRead(id)}
-        groups={userNavigationGroups}
+        groups={portalNavigationGroups}
         activeId={section}
         onNavigate={(id) => navigate(userRouteMap[id] ?? userRouteMap.dashboard)}
         onSignOut={() => void signOut()}

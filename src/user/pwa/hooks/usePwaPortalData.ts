@@ -193,7 +193,7 @@ export function usePwaPortalData() {
         action: { label: urnStatus === "needs_correction" || urnStatus === "rejected" ? "Update URN" : "View URN Status", path: urnStatus === "needs_correction" || urnStatus === "rejected" ? PWA_ROUTES.profileEdit : PWA_ROUTES.documents },
       };
     } else if (!profileComplete) {
-      briefing = { title: "Your organization profile is incomplete.", description: "Complete the required organization details before accessing document submission.", tone: "warning", action: { label: "Complete Profile", path: PWA_ROUTES.profileEdit } };
+      briefing = { title: "Your organization profile is incomplete.", description: "Complete the required organization details before accessing Registration Requirements.", tone: "warning", action: { label: "Complete Profile", path: PWA_ROUTES.profileEdit } };
     } else if (missingDocuments) {
       briefing = { title: `${missingDocuments} required document${missingDocuments === 1 ? " is" : "s are"} still missing.`, description: "Upload the remaining required files for admin review.", tone: "warning", action: { label: "Continue Documents", path: PWA_ROUTES.documentsManage } };
     } else if (revisionDocuments.length) {
@@ -221,7 +221,7 @@ export function usePwaPortalData() {
     }
 
     const actions: Array<{ title: string; detail: string; path: string; kind: string }> = [];
-    if (!urnRegistration && profileComplete && missingDocuments) actions.push({ title: "Continue Document Submission", detail: `${missingDocuments} required file${missingDocuments === 1 ? "" : "s"} remaining.`, path: PWA_ROUTES.documentsManage, kind: "documents" });
+    if (!urnRegistration && profileComplete && missingDocuments) actions.push({ title: "Complete Registration Requirements", detail: `${missingDocuments} required file${missingDocuments === 1 ? "" : "s"} remaining.`, path: PWA_ROUTES.documentsManage, kind: "documents" });
     if (!urnRegistration && profileComplete && revisionDocuments.length) actions.push({ title: "Review Required Changes", detail: "Correct the documents flagged by the admin.", path: PWA_ROUTES.documents, kind: "documents" });
     if (urnRegistration) actions.push({ title: urnReviewLabels[profile!.urnReviewStatus], detail: profile!.urnReviewStatus === "needs_correction" ? "Review feedback and submit the corrected URN." : "Open your registration verification record.", path: profile!.urnReviewStatus === "needs_correction" ? PWA_ROUTES.profileEdit : PWA_ROUTES.documents, kind: "profile" });
     if (profileComplete && profile?.profileStatus === "pending_review") actions.push({ title: "View Verification Status", detail: "Your organization profile is awaiting admin verification.", path: PWA_ROUTES.profile, kind: "profile" });

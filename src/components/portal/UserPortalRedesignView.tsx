@@ -623,7 +623,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-                Documents
+                Registration Requirements
               </span>
               <span
                 className={cn(

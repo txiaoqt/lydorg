@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   FileText,
   CheckCircle2,
@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import {
   formatActivityActionLabel,
   formatDocumentActivityLabel,
@@ -55,10 +56,10 @@ export interface UserPortalDocumentWorkspaceViewProps {
   downloadAllTemplates?: () => void;
   openBatchUploadWorkspace?: () => void;
   openBulkUploadModal?: () => void;
-  openPreview?: (fileUrl: string, fileName: string) => void;
-  previewDocument?: (doc: any) => void;
-  openFile?: (url: string, name: string) => void;
-  openAttachedDocumentEditor?: (file: any, title?: string) => void;
+  openPreview?: (fileUrl: string, fileName: string) => void | Promise<void>;
+  previewDocument?: (doc: any) => void | Promise<void>;
+  openFile?: (url: string, name: string) => void | Promise<void>;
+  openAttachedDocumentEditor?: (file: any, title?: string) => void | Promise<void>;
   openDocumentRecentActivityModal?: () => void;
   navigate: (path: string) => void;
   userRouteMap: Record<string, string>;
@@ -98,6 +99,26 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "review" | "revision">("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "name" | "updated">("newest");
   const [endorsementModalOpen, setEndorsementModalOpen] = useState(false);
+  const [openingPreviewKey, setOpeningPreviewKey] = useState<string | null>(null);
+  const previewOpeningRef = useRef(false);
+
+  const handleOpenDocument = async (key: string, open: () => void | Promise<void>) => {
+    if (previewOpeningRef.current) return;
+    previewOpeningRef.current = true;
+    setOpeningPreviewKey(key);
+    try {
+      await open();
+    } catch (error) {
+      toast({
+        title: "Unable to open document",
+        description: error instanceof Error ? error.message : "The document preview could not be opened right now.",
+        variant: "destructive",
+      });
+    } finally {
+      previewOpeningRef.current = false;
+      setOpeningPreviewKey(null);
+    }
+  };
 
   // Safe Fallback Requirement List
   const docsList = templateDocuments || documentRequirements || [];
@@ -248,7 +269,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
     <FeatureGate
       canAccess={isDocumentEligible}
       title="Complete your profile first"
-      description="Finish and save all required organization information before accessing document submission."
+      description="Finish and save all required organization information before accessing Registration Requirements."
       requirements={
         registrationPrerequisites?.requirements || [
           {
@@ -270,7 +291,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                 <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
-                Document Submissions
+                Registration Requirements
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground font-medium pt-0.5">
                 Complete your organization profile before starting the registration requirements.
@@ -291,7 +312,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
             </div>
             <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
-              Organization Requirements
+              Registration Requirements
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-medium pt-0.5">
               Complete all required compliance documents for organization verification.
@@ -596,6 +617,8 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               const isRejected = status === "rejected" || status === "rejected_red";
               const hasFile = Boolean(submission && (submission.fileUrl || submission.url || submission.storagePath || submission.filePath || submission.id));
               const docTitle = doc.title || doc.name || "Requirement";
+              const templateOpening = openingPreviewKey === `template:${doc.id}`;
+              const attachmentOpening = openingPreviewKey === `attached:${doc.id}`;
               const fileTypeLabel = getDocumentPrimaryFileTypeLabel ? getDocumentPrimaryFileTypeLabel(doc) : "PDF";
 
               // Template file info for View Template button
@@ -746,32 +769,44 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                         type="button"
                         variant="outline"
                         size="sm"
+                        disabled={Boolean(openingPreviewKey)}
+                        aria-busy={templateOpening}
                         onClick={() => {
-                          if (openPreview) {
-                            void openPreview(templateFileUrl, templateCleanTitle);
-                          } else if (previewDocument) {
-                            void previewDocument(templateFileUrl || doc);
-                          } else if (openFile && templateFileUrl) {
-                            void openFile(templateFileUrl, templateDownloadName);
-                          }
+                          void handleOpenDocument(`template:${doc.id}`, () => {
+                            if (openPreview) {
+                              return openPreview(templateFileUrl, templateCleanTitle);
+                            } else if (previewDocument) {
+                              return previewDocument(templateFileUrl || doc);
+                            } else if (openFile && templateFileUrl) {
+                              return openFile(templateFileUrl, templateDownloadName);
+                            }
+                          });
                         }}
-                        className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center"
+                        className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center transition-colors"
                       >
-                        <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                        <span>View Template</span>
+                        {templateOpening ? (
+                          <Loader2 aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin motion-reduce:animate-none" />
+                        ) : (
+                          <Eye aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                        )}
+                        <span>{templateOpening ? "Opening…" : "View Template"}</span>
                       </Button>
 
                       {/* 2. View Attached / Upload Document Button */}
                       <Button
                         type="button"
                         size="sm"
+                        disabled={Boolean(openingPreviewKey)}
+                        aria-busy={attachmentOpening}
                         onClick={() => {
                           if (submission) {
-                            if (openAttachedDocumentEditor) {
-                              void openAttachedDocumentEditor(submission, docTitle);
-                            } else if (openFile && (submission.fileUrl || submission.url)) {
-                              void openFile(submission.fileUrl || submission.url, submission.fileName || docTitle);
-                            }
+                            void handleOpenDocument(`attached:${doc.id}`, () => {
+                              if (openAttachedDocumentEditor) {
+                                return openAttachedDocumentEditor(submission, docTitle);
+                              } else if (openFile && (submission.fileUrl || submission.url)) {
+                                return openFile(submission.fileUrl || submission.url, submission.fileName || docTitle);
+                              }
+                            });
                           } else {
                             if (openBatchUploadWorkspace) {
                               openBatchUploadWorkspace();
@@ -780,9 +815,12 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                             }
                           }
                         }}
-                        className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer justify-center shadow-2xs"
+                        className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 cursor-pointer justify-center shadow-2xs transition-colors"
                       >
-                        <span>{hasFile ? "View Attached →" : "Upload Document →"}</span>
+                        {attachmentOpening && (
+                          <Loader2 aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin motion-reduce:animate-none" />
+                        )}
+                        <span>{attachmentOpening ? "Opening…" : hasFile ? "View Attached →" : "Upload Document →"}</span>
                       </Button>
                     </div>
                   </div>

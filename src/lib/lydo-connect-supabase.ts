@@ -62,6 +62,7 @@ import { supabase, supabaseUrl } from "./supabase";
 import { getPasigDistrictForBarangay } from "./pasig-districts";
 import { isCanonicalPurposeCategory } from "./budget-category-colors";
 import { isRenewalRequirementTemplate } from "./user-workflow-eligibility";
+import { fetchYpopDeletionReceipts } from "./ypop-submission-deletion";
 
 const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
 const TEMPLATE_FILES_BUCKET = "template-files";
@@ -183,6 +184,7 @@ type OrganizationRenewalRow = {
   organization_id: string;
   cycle_number: number;
   current_accreditation_id: string;
+  certificate_urn?: string | null;
   status:
     | "draft"
     | "submitted"
@@ -1340,13 +1342,14 @@ export const loadLydoConnectSupabaseState = async (userIdOverride?: string): Pro
     ...sharedState,
   };
 
-  const [latestSubmission, budgetRows, liquidationRows, ypopPeriodRows, ypopActivityRows, activityLogRows] = await Promise.all([
+  const [latestSubmission, budgetRows, liquidationRows, ypopPeriodRows, ypopActivityRows, activityLogRows, ypopDeletionReceipts] = await Promise.all([
     fetchLatestSubmission(organizationProfile.id),
     fetchBudgetRequests(organizationProfile.id),
     fetchLiquidationReports(organizationProfile.id),
     supabase!.from("ypop_periods").select("*").order("created_at", { ascending: false }).then((r) => r.data ?? []),
     supabase!.from("ypop_city_activities").select("*").order("created_at", { ascending: true }).then((r) => r.data ?? []),
     fetchActivityLogs(organizationProfile.id),
+    fetchYpopDeletionReceipts(organizationProfile.id),
   ]);
 
   remoteState.budgetRequests = budgetRows.map(mapBudgetRequest);
@@ -1354,6 +1357,7 @@ export const loadLydoConnectSupabaseState = async (userIdOverride?: string): Pro
   remoteState.ypopPeriods = (ypopPeriodRows as YpopPeriodRow[]).map(mapYpopPeriod);
   remoteState.ypopCityActivities = (ypopActivityRows as YpopCityActivityRow[]).map(mapYpopCityActivity);
   remoteState.activityLogs = activityLogRows.map(mapActivityLog);
+  remoteState.ypopDeletionReceipts = ypopDeletionReceipts;
 
   const budgetRequestIds = budgetRows.map((row) => row.id);
   const liquidationReportIds = liquidationRows.map((row) => row.id);
@@ -1574,6 +1578,7 @@ export const loadOrganizationYpopState = async (
     ypopEventFileRows,
     ypopOrgActivityRows,
     ypopOrgActivityFileRows,
+    ypopDeletionReceipts,
   ] = await Promise.all([
     supabase!.from("ypop_periods").select("*").order("created_at", { ascending: false }).then((r) => r.data ?? []),
     supabase!.from("ypop_city_activities").select("*").order("created_at", { ascending: true }).then((r) => r.data ?? []),
@@ -1583,6 +1588,7 @@ export const loadOrganizationYpopState = async (
     supabase!.from("ypop_event_files").select("*").eq("organization_id", orgId).then((r) => r.data ?? []),
     supabase!.from("ypop_org_activities").select("*").eq("organization_id", orgId).order("created_at", { ascending: false }).then((r) => r.data ?? []),
     supabase!.from("ypop_org_activity_files").select("*").eq("organization_id", orgId).order("uploaded_at", { ascending: false }).then((r) => r.data ?? []),
+    fetchYpopDeletionReceipts(orgId),
   ]);
 
   return {
@@ -1595,6 +1601,7 @@ export const loadOrganizationYpopState = async (
     ypopEventFiles: (ypopEventFileRows as YpopEventFileRow[]).map(mapYpopEventFile),
     ypopOrgActivities: (ypopOrgActivityRows as YpopOrgActivityRow[]).map(mapYpopOrgActivity),
     ypopOrgActivityFiles: (ypopOrgActivityFileRows as YpopOrgActivityFileRow[]).map(mapYpopOrgActivityFile),
+    ypopDeletionReceipts,
   };
 };
 
@@ -6432,6 +6439,7 @@ export const mapOrganizationRenewal = (
   organizationId: row.organization_id,
   cycleNumber: row.cycle_number,
   currentAccreditationId: row.current_accreditation_id,
+  certificateUrn: row.certificate_urn ?? null,
   status: row.status,
   submittedAt: row.submitted_at ?? null,
   reviewedBy: row.reviewed_by ?? null,
@@ -6641,10 +6649,43 @@ export const userSubmitRenewalInSupabase = async (
 };
 
 /**
+ * User RPC: Submit selected draft files for an already submitted renewal cycle.
+ */
+export const userSubmitAdditionalRenewalDocumentsInSupabase = async (
+  renewalId: string,
+  fileIds: string[],
+): Promise<{ success: boolean; renewalId: string; submittedCount: number; submittedAt: string }> => {
+  if (!supabase) throw new Error("Supabase client is not configured.");
+  if (!fileIds.length) throw new Error("Select at least one renewal document to submit.");
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  assertOrganizationNotSuspended(organizationProfile, "Renewal document submission");
+  const { data, error } = await supabase.rpc("user_submit_additional_renewal_documents", {
+    p_renewal_id: renewalId,
+    p_file_ids: fileIds,
+  });
+
+  if (error) throw new Error(error.message);
+  const payload = data as { success: boolean; renewal_id: string; submitted_count: number; submitted_at: string };
+  void dispatchAdminNotificationInSupabase({
+    eventType: "renewal_submitted",
+    referenceId: renewalId,
+    subject: "Additional Renewal Documents Submitted",
+  });
+
+  return {
+    success: payload.success,
+    renewalId: payload.renewal_id,
+    submittedCount: payload.submitted_count,
+    submittedAt: payload.submitted_at,
+  };
+};
+
+/**
  * User RPC: Resubmit renewal application after addressing revision remarks.
  */
 export const userResubmitRenewalInSupabase = async (
   renewalId: string,
+  submissionId?: string,
 ): Promise<{ success: boolean; renewalId: string; resubmittedAt: string }> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
   const { data, error } = await supabase.rpc("user_resubmit_renewal", {
@@ -6654,11 +6695,14 @@ export const userResubmitRenewalInSupabase = async (
   if (error) throw new Error(error.message);
   const payload = data as { success: boolean; renewal_id: string; resubmitted_at: string };
 
-  void dispatchAdminNotificationInSupabase({
-    eventType: "revision_resubmission",
-    referenceId: renewalId,
-    subject: "Accreditation Renewal Resubmitted",
-  });
+  const notificationSubmissionId = submissionId?.trim();
+  if (notificationSubmissionId) {
+    void dispatchAdminNotificationInSupabase({
+      eventType: "revision_resubmission",
+      referenceId: notificationSubmissionId,
+      subject: "Accreditation Renewal Resubmitted",
+    });
+  }
 
   return {
     success: payload.success,
@@ -6677,21 +6721,28 @@ export const userReplaceDocumentSubmissionFileInSupabase = async (params: {
   newFileType: string;
   newFileSize?: number;
   submitForReview?: boolean;
+  notifyAdmin?: boolean;
 }): Promise<SubmissionFile> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
-  const { data, error } = await supabase.rpc("user_replace_document_submission_file", {
+  const submitForReview = params.submitForReview ?? true;
+  const rpcParams = {
     _file_id: params.fileId,
     _new_file_url: params.newFileUrl,
     _new_file_name: params.newFileName,
     _new_file_type: params.newFileType,
     _new_file_size: params.newFileSize ?? null,
-    _submit_for_review: params.submitForReview ?? true,
+    // Older deployed databases only expose the five-argument RPC. Omitting
+    // this defaulted argument preserves the normal submit-for-review path.
+    ...(!submitForReview ? { _submit_for_review: false } : {}),
+  };
+  const { data, error } = await supabase.rpc("user_replace_document_submission_file", {
+    ...rpcParams,
   });
 
   if (error || !data) throw new Error(error?.message ?? "Failed to replace document file.");
   const mapped = mapDocumentFile((Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow)!;
 
-  if (params.submitForReview ?? true) {
+  if (submitForReview && params.notifyAdmin !== false) {
     void dispatchAdminNotificationInSupabase({
       eventType: "revision_resubmission",
       referenceId: params.fileId,
@@ -6950,6 +7001,8 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
     newFileType: params.file.type || "application/pdf",
     newFileSize: params.file.size,
     submitForReview: params.submitForReview ?? true,
+    // Wait until the full renewal resubmission is complete before alerting admins.
+    notifyAdmin: false,
   });
 };
 
