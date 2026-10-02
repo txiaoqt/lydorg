@@ -755,6 +755,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const [adminAccreditations, setAdminAccreditations] = useState<OrganizationAccreditationRecord[]>([]);
   const [renewalRequiredDocuments, setRenewalRequiredDocuments] = useState<TemplateRecord[]>([]);
   const [localRenewalFiles, setLocalRenewalFiles] = useState<SubmissionFile[]>([]);
+  const renewalVerificationAttemptsRef = useRef(new Set<string>());
   const [renewalPacketLoading, setRenewalPacketLoading] = useState(false);
   const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
   const [templateModalMode, setTemplateModalMode] = useState<"create" | "edit" | "delete" | null>(null);
@@ -891,7 +892,6 @@ export default function AdminPortal({ section }: { section: string }) {
   const renewalDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
   const [isRenewalDecisionConfirmOpen, setIsRenewalDecisionConfirmOpen] = useState(false);
   const [renewalReviewSubmitting, setRenewalReviewSubmitting] = useState(false);
-  const [isRenewalApproveDialogOpen, setIsRenewalApproveDialogOpen] = useState(false);
   const [isRenewalRevisionDialogOpen, setIsRenewalRevisionDialogOpen] = useState(false);
   const [isRenewalRejectDialogOpen, setIsRenewalRejectDialogOpen] = useState(false);
   const [renewalDecisionRemarksDraft, setRenewalDecisionRemarksDraft] = useState("");
@@ -1323,6 +1323,9 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [selectedRenewalSubmission, state.documentSubmissionFiles, localRenewalFiles]);
 
   const adminRenewalsQueue = useMemo<AdminRenewalQueueEntry[]>(() => {
+    const requiredRenewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+    const validRenewalTypeIds = new Set(requiredRenewalTemplates.flatMap((template) => [template.id, template.databaseId]));
+
     return adminRenewals.map((renewal) => {
       const org = state.organizationProfiles.find((o) => o.id === renewal.organizationId);
       const accreditation = renewal.currentAccreditationId
@@ -1335,9 +1338,19 @@ export default function AdminPortal({ section }: { section: string }) {
 
       const files = renewalSubmission
         ? state.documentSubmissionFiles.filter(
-          (f) => f.submissionId === renewalSubmission.id && f.adminStatus !== "draft",
+          (f) =>
+            f.submissionId === renewalSubmission.id &&
+            validRenewalTypeIds.has(f.documentTypeId) &&
+            f.adminStatus !== "draft",
         )
         : [];
+      const submittedRequiredCount = requiredRenewalTemplates.filter((template) =>
+        files.some(
+          (file) =>
+            file.documentTypeId === template.id ||
+            (template.databaseId && file.documentTypeId === template.databaseId),
+        ),
+      ).length;
 
       return {
         renewalId: renewal.id,
@@ -1350,8 +1363,8 @@ export default function AdminPortal({ section }: { section: string }) {
         majorClassification: org?.majorClassification ?? "—",
         currentAccreditationExpiry: accreditation?.validUntil ?? null,
         documentCount: {
-          submitted: files.length,
-          required: 6,
+          submitted: submittedRequiredCount,
+          required: requiredRenewalTemplates.length,
         },
         submittedDate: renewal.submittedAt ?? renewal.createdAt,
         renewalStatus: renewal.status,
@@ -1360,7 +1373,7 @@ export default function AdminPortal({ section }: { section: string }) {
         adminRemarks: renewal.adminRemarks ?? null,
       };
     });
-  }, [adminRenewals, adminAccreditations, state.organizationProfiles, state.documentSubmissions, state.documentSubmissionFiles]);
+  }, [adminRenewals, adminAccreditations, renewalRequiredDocuments, templateDocuments, state.organizationProfiles, state.documentSubmissions, state.documentSubmissionFiles]);
   const newsReleases = useMemo(
     () =>
       [...state.newsReleases].sort((left, right) => {
@@ -2013,7 +2026,7 @@ export default function AdminPortal({ section }: { section: string }) {
           : renewalStatusFilter === "approved"
             ? entry.renewalStatus === "approved"
             : renewalStatusFilter === "pending_review"
-              ? entry.renewalStatus === "under_review" || entry.renewalStatus === "resubmitted" || entry.renewalStatus === "submitted"
+              ? entry.renewalStatus !== "approved"
               : true;
       const matchesDistrict = renewalDistrictFilter === "all" || entry.district === renewalDistrictFilter;
       const matchesBarangay = renewalBarangayFilter === "all" || entry.barangay === renewalBarangayFilter;
@@ -2659,11 +2672,7 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [state.ypopEventParticipations, state.ypopOrgActivities]);
 
   const pendingRenewalsCount = useMemo(
-    () =>
-      adminRenewals.filter(
-        (renewal) =>
-          renewal.status === "submitted" || renewal.status === "resubmitted" || renewal.status === "under_review",
-      ).length,
+    () => adminRenewals.filter((renewal) => renewal.status !== "approved").length,
     [adminRenewals],
   );
 
@@ -3024,7 +3033,13 @@ export default function AdminPortal({ section }: { section: string }) {
   useEffect(() => {
     const templates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
     const firstReviewableFile = templates
-      .map((documentType) => effectiveRenewalFiles.find((file) => file.documentTypeId === documentType.id))
+      .map((documentType) =>
+        effectiveRenewalFiles.find(
+          (file) =>
+            file.documentTypeId === documentType.id ||
+            (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+        ),
+      )
       .find((file): file is NonNullable<typeof file> => Boolean(file)) ?? null;
 
     setActiveRenewalReviewFileId((current) => {
@@ -3043,7 +3058,6 @@ export default function AdminPortal({ section }: { section: string }) {
     setIsRenewalActivityPopoverOpen(false);
     setIsRenewalDecisionHelpOpen(false);
     setIsRenewalDecisionConfirmOpen(false);
-    setIsRenewalApproveDialogOpen(false);
     setIsRenewalRevisionDialogOpen(false);
     setIsRenewalRejectDialogOpen(false);
     setRenewalDecisionRemarksDraft("");
@@ -3472,6 +3486,44 @@ export default function AdminPortal({ section }: { section: string }) {
     }
     return remoteSnapshot;
   };
+
+  // Reconcile renewal packets that already have every required file approved.
+  // This also recovers packets approved before automatic finalization was in
+  // place, and keeps URN issuance tied to the same all-approved condition.
+  useEffect(() => {
+    if (!selectedRenewal || !["submitted", "under_review", "resubmitted"].includes(selectedRenewal.status)) return;
+
+    const requiredTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+    const allRequiredFilesApproved = requiredTemplates.length > 0 && requiredTemplates.every((documentType) => {
+      const file = effectiveRenewalFiles.find(
+        (entry) =>
+          entry.documentTypeId === documentType.id ||
+          (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+      );
+      return file?.adminStatus === "approved_green";
+    });
+    if (!allRequiredFilesApproved || renewalVerificationAttemptsRef.current.has(selectedRenewal.id)) return;
+
+    const renewalId = selectedRenewal.id;
+    renewalVerificationAttemptsRef.current.add(renewalId);
+    void (async () => {
+      try {
+        const approval = await adminApproveRenewalInSupabase({ renewalId });
+        await refreshAdminState();
+        toast({
+          title: "Renewal verified",
+          description: `All required documents are approved. New URN: ${approval.certificateUrn}.`,
+        });
+      } catch (error) {
+        console.error("Failed to finalize fully approved renewal:", error);
+        toast({
+          title: "Documents approved; verification failed",
+          description: error instanceof Error ? error.message : "The renewal could not be verified automatically.",
+          variant: "destructive",
+        });
+      }
+    })();
+  }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments]);
 
   const refreshAdminSnapshot = async () => {
     const remoteSnapshot = (await loadAdminPortalSnapshotState()) ?? (await loadAdminPortalSupabaseState());
@@ -4248,6 +4300,7 @@ export default function AdminPortal({ section }: { section: string }) {
         }
       })();
     } else {
+      if (selectedRenewalId) renewalVerificationAttemptsRef.current.delete(selectedRenewalId);
       setLocalRenewalFiles([]);
       setActiveRenewalReviewFileId(null);
       setSelectedRenewalReviewFileIds([]);
@@ -4524,10 +4577,36 @@ export default function AdminPortal({ section }: { section: string }) {
       }
 
       await refreshAdminState();
+      let renewalVerifiedUrn: string | null = null;
+      let renewalVerificationError: string | null = null;
       try {
         const packet = await fetchRenewalPacketInSupabase(selectedRenewal.id);
-        if (packet?.files) {
+      if (packet?.files) {
           setLocalRenewalFiles(packet.files);
+
+          const requiredRenewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+          const allRequiredFilesApproved =
+            requiredRenewalTemplates.length > 0 &&
+            requiredRenewalTemplates.every((documentType) => {
+              const file = packet.files.find(
+                (entry) =>
+                  entry.documentTypeId === documentType.id ||
+                  (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+              );
+              return file?.adminStatus === "approved_green";
+            });
+
+          if (decision === "approve" && selectedRenewal.status !== "approved" && allRequiredFilesApproved) {
+            renewalVerificationAttemptsRef.current.add(selectedRenewal.id);
+            try {
+              const approval = await adminApproveRenewalInSupabase({ renewalId: selectedRenewal.id });
+              renewalVerifiedUrn = approval.certificateUrn;
+              await refreshAdminState();
+            } catch (error) {
+              renewalVerificationError =
+                error instanceof Error ? error.message : "The renewal could not be verified automatically.";
+            }
+          }
         }
       } catch {
         // Safe to ignore secondary refresh error
@@ -4608,6 +4687,17 @@ export default function AdminPortal({ section }: { section: string }) {
           description: `${result.successCount} saved; ${result.failureCount} failed.`,
           variant: "destructive",
         });
+      } else if (renewalVerifiedUrn) {
+        toast({
+          title: "Renewal verified",
+          description: `All required documents are approved. New URN: ${renewalVerifiedUrn}.`,
+        });
+      } else if (renewalVerificationError) {
+        toast({
+          title: "Documents approved; verification failed",
+          description: renewalVerificationError,
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Review Completed",
@@ -4624,46 +4714,6 @@ export default function AdminPortal({ section }: { section: string }) {
     } finally {
       setRenewalReviewSubmitting(false);
       setIsRenewalDecisionConfirmOpen(false);
-    }
-  };
-
-  const handleApproveRenewalConfirm = async () => {
-    if (!selectedRenewal || !selectedRenewalProfile) return;
-    setRenewalDecisionSubmitting(true);
-    try {
-      const approvalResult = await adminApproveRenewalInSupabase({
-        renewalId: selectedRenewal.id,
-        adminRemarks: renewalDecisionRemarksDraft.trim() || undefined,
-      });
-
-      const assignedUrn = approvalResult.certificateUrn;
-
-      notifyOrganizationUser({
-        userId: selectedRenewalProfile.userId,
-        organizationId: selectedRenewalProfile.id,
-        title: "Renewal Approved",
-        message: `Your organization renewal for ${selectedRenewalProfile.organizationName} has been approved! New official URN: ${assignedUrn}`,
-        type: "renewal_status_update",
-        relatedType: "renewal",
-        relatedId: selectedRenewal.id,
-      });
-
-      toast({
-        title: "Renewal Approved",
-        description: `Renewal for ${selectedRenewalProfile.organizationName} has been approved with new official URN ${assignedUrn}.`,
-      });
-
-      setIsRenewalApproveDialogOpen(false);
-      await refreshAdminState();
-    } catch (error) {
-      console.error("Failed to approve renewal:", error);
-      toast({
-        title: "Approval Failed",
-        description: error instanceof Error ? error.message : "Unable to approve renewal.",
-        variant: "destructive",
-      });
-    } finally {
-      setRenewalDecisionSubmitting(false);
     }
   };
 
@@ -8057,14 +8107,22 @@ export default function AdminPortal({ section }: { section: string }) {
         const selectedOrg = selectedRenewalProfile;
         const selectedSubmission = selectedRenewalSubmission;
         const renewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
-        const validRenewalTypeIds = new Set(renewalTemplates.map((item) => item.id));
+        const validRenewalTypeIds = new Set(renewalTemplates.flatMap((item) => [item.id, item.databaseId]));
         const selectedFiles = effectiveRenewalFiles.filter(
           (file) => validRenewalTypeIds.has(file.documentTypeId) && file.adminStatus !== "draft",
         );
-        const approvedDocumentCount = selectedFiles.filter((file) => file.adminStatus === "approved_green").length;
-        const allRequiredDocumentsApproved =
-          selectedFiles.length === renewalTemplates.length && approvedDocumentCount === renewalTemplates.length;
-        const submittedDocumentCount = selectedFiles.length;
+        const getRenewalFileForRequirement = (documentType: TemplateRecord) =>
+          selectedFiles.find(
+            (file) =>
+              file.documentTypeId === documentType.id ||
+              (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+          );
+        const submittedDocumentCount = renewalTemplates.filter((documentType) =>
+          Boolean(getRenewalFileForRequirement(documentType)),
+        ).length;
+        const approvedDocumentCount = renewalTemplates.filter(
+          (documentType) => getRenewalFileForRequirement(documentType)?.adminStatus === "approved_green",
+        ).length;
         const reviewedDocumentCount = selectedFiles.filter(
           (file) => file.adminStatus !== "submitted" && file.adminStatus !== "under_admin_review",
         ).length;
@@ -8075,7 +8133,7 @@ export default function AdminPortal({ section }: { section: string }) {
         ).length;
         const orderedSubmittedFiles = renewalTemplates
           .map((documentType) => {
-            const file = selectedFiles.find((entry) => entry.documentTypeId === documentType.id);
+            const file = getRenewalFileForRequirement(documentType);
             if (!file) return null;
             return { documentType, file };
           })
@@ -8143,7 +8201,9 @@ export default function AdminPortal({ section }: { section: string }) {
               const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
               const relatedFile = effectiveRenewalFiles.find((file) => file.id === log.relatedId);
               const docName = relatedFile
-                ? renewalTemplates.find((doc) => doc.id === relatedFile.documentTypeId)?.name ?? relatedFile.fileName
+                ? renewalTemplates.find(
+                  (doc) => doc.id === relatedFile.documentTypeId || doc.databaseId === relatedFile.documentTypeId,
+                )?.name ?? relatedFile.fileName
                 : log.relatedType === "organization_renewal"
                   ? "renewal application"
                   : "a document";
@@ -8343,17 +8403,6 @@ export default function AdminPortal({ section }: { section: string }) {
                         <XCircle className="h-3.5 w-3.5" />
                         Reject
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRenewalDecisionRemarksDraft("");
-                          setIsRenewalApproveDialogOpen(true);
-                        }}
-                        className="flex h-9 items-center gap-1.5 rounded-md bg-public-bg-brand px-3.5 font-segoe text-xs font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Approve Renewal
-                      </button>
                     </div>
                   ) : null}
                 </div>
@@ -8478,7 +8527,7 @@ export default function AdminPortal({ section }: { section: string }) {
               {reviewSummaryCard}
 
               {/* 2-column Main review workspace */}
-              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_376px]">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_376px]">
                 {/* Left Column: Document Viewer */}
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 p-4">
@@ -8857,75 +8906,6 @@ export default function AdminPortal({ section }: { section: string }) {
                     onConfirm={submitRenewalReviewDecisions}
                   />
 
-                  {/* Modal: Approve Renewal */}
-                  <Dialog open={isRenewalApproveDialogOpen} onOpenChange={setIsRenewalApproveDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="font-segoe text-lg font-semibold text-text-default">
-                          Approve Organization Renewal
-                        </DialogTitle>
-                        <DialogDescription className="font-segoe text-sm text-slate-500">
-                          Approve this accreditation renewal application for{" "}
-                          <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-2">
-                        {/* URN Information Box */}
-                        <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-medium text-slate-500">Current URN</span>
-                            <span className="font-cascadia font-semibold text-text-default">
-                              {selectedOrg.urn || selectedOrg.organizationIdentifierNumber || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/80">
-                            <span className="font-medium text-slate-500">New Term URN</span>
-                            <span className="inline-flex items-center gap-1.5 font-segoe font-medium text-public-text-brand text-xs">
-                              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                              Generated automatically upon approval
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="font-segoe text-xs font-semibold text-text-default">
-                            Admin Remarks (Optional)
-                          </label>
-                          <Textarea
-                            value={renewalDecisionRemarksDraft}
-                            onChange={(e) => setRenewalDecisionRemarksDraft(e.target.value)}
-                            placeholder="Add approval notes or instructions for the organization..."
-                            rows={3}
-                            className="text-sm"
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter className="gap-2 sm:gap-0">
-                        <button
-                          type="button"
-                          disabled={renewalDecisionSubmitting}
-                          onClick={() => setIsRenewalApproveDialogOpen(false)}
-                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={renewalDecisionSubmitting}
-                          onClick={handleApproveRenewalConfirm}
-                          className="inline-flex items-center gap-1.5 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-bg-brand-hover disabled:opacity-50"
-                        >
-                          {renewalDecisionSubmitting ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
-                          )}
-                          Approve Renewal
-                        </button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
                   {/* Modal: Request Renewal Revision */}
                   <Dialog open={isRenewalRevisionDialogOpen} onOpenChange={setIsRenewalRevisionDialogOpen}>
                     <DialogContent className="sm:max-w-md">
@@ -9034,12 +9014,7 @@ export default function AdminPortal({ section }: { section: string }) {
         }
 
         const verifiedRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus === "approved").length;
-        const pendingReviewRenewalsCount = adminRenewalsQueue.filter(
-          (r) => r.renewalStatus === "under_review" || r.renewalStatus === "resubmitted" || r.renewalStatus === "submitted",
-        ).length;
-        const needsRevisionRenewalsCount = adminRenewalsQueue.filter(
-          (r) => r.renewalStatus === "needs_revision",
-        ).length;
+        const pendingReviewRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus !== "approved").length;
 
         return (
           <div className="flex flex-col gap-4">
@@ -9048,24 +9023,18 @@ export default function AdminPortal({ section }: { section: string }) {
               description="Review incoming organization renewal applications and accreditation renewals."
             />
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <StatsCard
                 title="VERIFIED"
                 value={verifiedRenewalsCount}
                 icon={CheckCircle2}
-                description="Approved renewal applications."
+                description="Renewals with all required documents approved and a new URN issued."
               />
               <StatsCard
                 title="PENDING REVIEW"
                 value={pendingReviewRenewalsCount}
                 icon={Clock}
-                description="Renewals currently being evaluated."
-              />
-              <StatsCard
-                title="NEEDS REVISION"
-                value={needsRevisionRenewalsCount}
-                icon={AlertCircle}
-                description="Renewals requiring corrections."
+                description="Renewals awaiting review of their required documents."
               />
             </div>
 

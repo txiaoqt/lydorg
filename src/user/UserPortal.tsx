@@ -246,6 +246,7 @@ import {
   markNotificationReadInSupabase,
   markAllNotificationsReadInSupabase,
   fetchOrganizationRenewalsInSupabase,
+  subscribeToOrganizationRenewalChangesInSupabase,
   userStartOrGetRenewalDraftInSupabase,
 } from "@/lib/lydo-connect-supabase";
 
@@ -801,26 +802,44 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     let cancelled = false;
+    let refreshInProgress = false;
     setLoadingRenewals(true);
     setRenewalLoadError(false);
 
-    fetchOrganizationRenewalsInSupabase(currentProfile.id)
-      .then((data) => {
+    const refreshRenewals = async () => {
+      if (cancelled || refreshInProgress) return;
+      refreshInProgress = true;
+      try {
+        const data = await fetchOrganizationRenewalsInSupabase(currentProfile.id);
         if (!cancelled) {
           setOrganizationRenewals(data);
-          setLoadingRenewals(false);
+          setRenewalLoadError(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           console.error("Failed to load organization renewals:", err);
           setRenewalLoadError(true);
-          setLoadingRenewals(false);
         }
-      });
+      } finally {
+        refreshInProgress = false;
+        if (!cancelled) setLoadingRenewals(false);
+      }
+    };
+
+    void refreshRenewals();
+    const unsubscribe = subscribeToOrganizationRenewalChangesInSupabase(currentProfile.id, () => {
+      void refreshRenewals();
+    });
+    const refreshInterval = window.setInterval(() => void refreshRenewals(), 15000);
+    window.addEventListener("focus", refreshRenewals);
+    document.addEventListener("visibilitychange", refreshRenewals);
 
     return () => {
       cancelled = true;
+      unsubscribe();
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", refreshRenewals);
+      document.removeEventListener("visibilitychange", refreshRenewals);
     };
   }, [currentProfile?.id]);
 
@@ -871,6 +890,16 @@ export default function UserPortal({ section }: { section: string }) {
       hasError: renewalLoadError,
     });
   }, [currentProfile, organizationRenewals, renewalLoadError]);
+
+  // Keep the completed packet visible after approval. Approved renewals are
+  // intentionally not considered active by the workflow resolver, but their
+  // submitted files remain the user's current accreditation record.
+  const latestApprovedRenewal = useMemo(() => {
+    if (renewalLoadError || userRenewalState.activeRenewal || userRenewalState.canStartRenewal) return null;
+    return [...organizationRenewals]
+      .filter((renewal) => renewal.status === "approved")
+      .sort((left, right) => right.cycleNumber - left.cycleNumber)[0] ?? null;
+  }, [organizationRenewals, renewalLoadError, userRenewalState.activeRenewal, userRenewalState.canStartRenewal]);
 
   const handleContinueRenewal = () => {
     navigate(userRouteMap["organization-renewal"]);
@@ -1130,7 +1159,13 @@ export default function UserPortal({ section }: { section: string }) {
     isExistingOrganization: user?.profileHints?.isExistingOrganization ?? false,
     organizationIdentifierNumber: user?.profileHints?.organizationIdentifierNumber ?? "",
   });
-  const submission = state.documentSubmissions.find((s) => s.organizationId === (currentProfile?.id ?? "___")) ?? null;
+  // The registration workspace must never bind to the organization's separate renewal packet.
+  const submission = state.documentSubmissions.find(
+    (s) =>
+      s.organizationId === (currentProfile?.id ?? "___") &&
+      s.submissionScope !== "renewal" &&
+      !s.renewalId,
+  ) ?? null;
   const isDocumentSubmissionApproved = isApprovedDocumentSubmission(submission);
   const userNotifications = useMemo(
     () => state.notifications.filter((notification) => notification.userId === user?.id),
@@ -1489,11 +1524,20 @@ export default function UserPortal({ section }: { section: string }) {
   );
   const submissionLogs = useMemo(
     () => {
+      const registrationRelatedIds = new Set(
+        [
+          submission?.id,
+          ...state.documentSubmissionFiles
+            .filter((file) => file.submissionId === submission?.id)
+            .map((file) => file.id),
+        ].filter((id): id is string => Boolean(id)),
+      );
       const logs = state.activityLogs
         .filter(
           (log) =>
             log.organizationId === currentProfile?.id &&
-            isDocumentSubmissionLog(log),
+            isDocumentSubmissionLog(log) &&
+            registrationRelatedIds.has(log.relatedId || ""),
         )
         .slice();
       const submittedAt = submission?.submittedAt?.trim();
@@ -1535,7 +1579,7 @@ export default function UserPortal({ section }: { section: string }) {
 
       return logs.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
     },
-    [currentProfile?.id, state.activityLogs, submission],
+    [currentProfile?.id, state.activityLogs, state.documentSubmissionFiles, submission],
   );
   const globalActivityLogEntries = useMemo(
     () =>
@@ -3951,11 +3995,9 @@ export default function UserPortal({ section }: { section: string }) {
           <UserPortalRenewalWorkspaceView
             currentProfile={currentProfile}
             userRenewalState={userRenewalState}
-            activeRenewal={userRenewalState.activeRenewal}
+            activeRenewal={userRenewalState.activeRenewal ?? latestApprovedRenewal}
             navigate={navigate}
             userRouteMap={userRouteMap}
-            onStartRenewal={handleStartRenewal}
-            startingRenewal={startingRenewal}
             openPreview={openPreview}
             openFile={openFile}
             onRenewalUpdated={(updatedRenewal) => {

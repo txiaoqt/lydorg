@@ -18,7 +18,10 @@ export type WorkflowRequirement = {
   met: boolean;
 };
 
-export function isRegistrationRequirementTemplate(template: TemplateRecord): boolean {
+export function isDocumentSubmissionRequirementTemplate(
+  template: TemplateRecord,
+  workflowScope: "registration" | "renewal",
+): boolean {
   const isActive = (template.templateActive ?? true) && template.isActive !== false;
   if (!isActive) return false;
   if (template.templateScope !== "document_submission") return false;
@@ -37,7 +40,15 @@ export function isRegistrationRequirementTemplate(template: TemplateRecord): boo
   if (!categories.includes("yorp")) return false;
 
   const scope = template.scope;
-  return !scope || scope === "registration" || scope === "both";
+  return !scope || scope === workflowScope || scope === "both";
+}
+
+export function isRegistrationRequirementTemplate(template: TemplateRecord): boolean {
+  return isDocumentSubmissionRequirementTemplate(template, "registration");
+}
+
+export function isRenewalRequirementTemplate(template: TemplateRecord): boolean {
+  return isDocumentSubmissionRequirementTemplate(template, "renewal");
 }
 
 export const isMatchingFileForTemplate = (
@@ -148,10 +159,24 @@ export function resolveYpopWorkflowEligibility({
     requiredTemplates,
     documentFiles,
   });
+  // Renewal approval issues/renews the official URN and verifies the profile,
+  // while its files live in the renewal packet rather than the original
+  // registration submission. Treat that completed verification as satisfying
+  // YPOP's document prerequisite too.
+  const verifiedAccreditation = Boolean(
+    !registration.isSuspended &&
+      profile?.profileStatus === "verified" &&
+      profile.urnReviewStatus === "verified" &&
+      profile.urn?.trim(),
+  );
   const requirements: WorkflowRequirement[] = [
     { id: "profile", label: "Complete organization profile", met: registration.profileComplete },
     { id: "registration", label: "Organization verification", met: registration.registrationVerified },
-    { id: "documents", label: registration.urnRegistration ? "URN verification" : "Required documents", met: registration.documentsSatisfied },
+    {
+      id: "documents",
+      label: registration.urnRegistration ? "URN verification" : "Required documents",
+      met: registration.documentsSatisfied || verifiedAccreditation,
+    },
   ];
   return {
     ...registration,

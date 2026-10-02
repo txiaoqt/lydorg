@@ -677,8 +677,9 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
     sortOrder: 6,
     isRequired: true,
     isActive: true,
+    scope: "registration",
     templateScope: "document_submission",
-    templateCategories: ["yorp", "data_form"],
+    templateCategories: ["data_form"],
   },
 ];
 
@@ -1199,6 +1200,7 @@ export type SubmissionFile = {
   id: string;
   submissionId: string;
   documentTypeId: string;
+  documentTypeName?: string;
   fileName: string;
   fileUrl: string;
   fileType: string;

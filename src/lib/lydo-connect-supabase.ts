@@ -61,6 +61,7 @@ import { calculateRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocke
 import { supabase, supabaseUrl } from "./supabase";
 import { getPasigDistrictForBarangay } from "./pasig-districts";
 import { isCanonicalPurposeCategory } from "./budget-category-colors";
+import { isRenewalRequirementTemplate } from "./user-workflow-eligibility";
 
 const ORGANIZATION_DOCUMENTS_BUCKET = "organization-documents";
 const TEMPLATE_FILES_BUCKET = "template-files";
@@ -781,6 +782,7 @@ export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile 
     id: row.id,
     submissionId: row.submission_id,
     documentTypeId: canonicalDocumentTypeId,
+    documentTypeName: documentName || undefined,
     fileName: row.file_name,
     fileUrl: row.file_url,
     fileType: row.file_type,
@@ -1145,6 +1147,8 @@ const fetchLatestSubmission = async (organizationId: string) => {
     .from("document_submissions")
     .select("*")
     .eq("organization_id", organizationId)
+    .eq("submission_scope", "registration")
+    .is("renewal_id", null)
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -6522,16 +6526,15 @@ export const fetchYorpQuarterlyReportInSupabase = async (
  */
 export const fetchAllOrganizationRenewalsInSupabase = async (): Promise<OrganizationRenewalRecord[]> => {
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("organization_renewals")
-    .select("*")
-    .order("submitted_at", { ascending: false, nullsFirst: false });
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase.rpc("admin_get_organization_renewals", {
+    _session_token: adminSession.sessionToken,
+  });
 
   if (error) {
-    console.warn("fetchAllOrganizationRenewalsInSupabase error:", error.message);
-    return [];
+    throw new Error(error.message || "Failed to load organization renewals.");
   }
-  return (data ?? []).map((row) => mapOrganizationRenewal(row as OrganizationRenewalRow));
+  return ((data as OrganizationRenewalRow[] | null) ?? []).map(mapOrganizationRenewal);
 };
 
 /**
@@ -6549,6 +6552,30 @@ export const fetchOrganizationRenewalsInSupabase = async (
 
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => mapOrganizationRenewal(row as OrganizationRenewalRow));
+};
+
+export const subscribeToOrganizationRenewalChangesInSupabase = (
+  organizationId: string,
+  onChange: () => void,
+): (() => void) => {
+  if (!supabase) return () => undefined;
+  const channel = supabase
+    .channel(`organization-renewals-${organizationId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "organization_renewals",
+        filter: `organization_id=eq.${organizationId}`,
+      },
+      onChange,
+    )
+    .subscribe();
+
+  return () => {
+    void supabase?.removeChannel(channel);
+  };
 };
 
 /**
@@ -6649,6 +6676,7 @@ export const userReplaceDocumentSubmissionFileInSupabase = async (params: {
   newFileName: string;
   newFileType: string;
   newFileSize?: number;
+  submitForReview?: boolean;
 }): Promise<SubmissionFile> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
   const { data, error } = await supabase.rpc("user_replace_document_submission_file", {
@@ -6657,16 +6685,19 @@ export const userReplaceDocumentSubmissionFileInSupabase = async (params: {
     _new_file_name: params.newFileName,
     _new_file_type: params.newFileType,
     _new_file_size: params.newFileSize ?? null,
+    _submit_for_review: params.submitForReview ?? true,
   });
 
   if (error || !data) throw new Error(error?.message ?? "Failed to replace document file.");
   const mapped = mapDocumentFile((Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow)!;
 
-  void dispatchAdminNotificationInSupabase({
-    eventType: "revision_resubmission",
-    referenceId: params.fileId,
-    subject: `Corrected Document: ${params.newFileName}`,
-  });
+  if (params.submitForReview ?? true) {
+    void dispatchAdminNotificationInSupabase({
+      eventType: "revision_resubmission",
+      referenceId: params.fileId,
+      subject: `Corrected Document: ${params.newFileName}`,
+    });
+  }
 
   return mapped;
 };
@@ -6707,11 +6738,52 @@ export const fetchRenewalPacketInSupabase = async (
 };
 
 /**
+ * Keeps an open renewal workspace in sync with review decisions made by an admin.
+ * Returns a cleanup function so the channel is removed when the workspace closes.
+ */
+export const subscribeToRenewalPacketChangesInSupabase = (
+  renewalId: string,
+  submissionId: string | null | undefined,
+  onChange: () => void,
+): (() => void) => {
+  if (!supabase) return () => undefined;
+
+  let channel = supabase.channel(`renewal-packet-${renewalId}-${submissionId ?? "pending"}`);
+  if (submissionId) {
+    channel = channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "document_submission_files",
+        filter: `submission_id=eq.${submissionId}`,
+      },
+      onChange,
+    );
+  }
+  channel
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "document_submissions",
+        filter: `renewal_id=eq.${renewalId}`,
+      },
+      onChange,
+    )
+    .subscribe();
+
+  return () => {
+    void supabase?.removeChannel(channel);
+  };
+};
+
+/**
  * Loads the mandatory required document types configured for renewal packets.
  */
 export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<TemplateRecord[]> => {
   const fallbackTemplates = requiredDocumentTypes
-    .filter((t) => (t.scope === "renewal" || t.scope === "both" || !t.scope) && (t.templateScope === "document_submission" || !t.templateScope))
     .map((t) => ({
       ...t,
       databaseId: t.id,
@@ -6722,8 +6794,9 @@ export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<Tem
       templateFileType: "application/pdf",
       templateUploadedAt: new Date().toISOString(),
       templateFileSize: null,
-      templateCategories: ["yorp"],
-    }));
+      templateCategories: t.templateCategories?.length ? t.templateCategories : [deriveTemplateCategory(t.name)],
+    }))
+    .filter(isRenewalRequirementTemplate);
 
   if (!supabase) return fallbackTemplates;
 
@@ -6737,11 +6810,15 @@ export const fetchRenewalRequiredDocumentTypesInSupabase = async (): Promise<Tem
     if (templatesError) throw new Error(templatesError.message);
 
     const list = ((templateRows as RequiredDocumentTypeRow[] | null) ?? [])
-      .filter((row: any) => (!row.scope || row.scope === "renewal" || row.scope === "both") && (row.template_scope === "document_submission" || !row.template_scope))
       .map(mapTemplate)
-      .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
+      .filter((template): template is TemplateRecord => Boolean(template))
+      .filter(isRenewalRequirementTemplate)
+      .filter((template) => !legacyRemovedTemplateNames.has(template.name));
 
-    return list.length >= 6 ? list : fallbackTemplates;
+    // Use the active renewal-scoped template configuration as the checklist. Do
+    // not fill gaps from a local hardcoded list: the submit and approval RPCs
+    // validate the configured scope in this same table.
+    return list;
   } catch (err) {
     console.warn("fetchRenewalRequiredDocumentTypesInSupabase falling back to default:", err);
     return fallbackTemplates;
@@ -6756,12 +6833,17 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
   renewalId: string;
   submissionId: string;
   documentTypeId: string;
+  documentTypeName?: string;
   file: File;
 }): Promise<SubmissionFile> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
   await assertPdfUpload(params.file, "Renewal document", ORGANIZATION_DOCUMENT_MAX_BYTES);
 
-  const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
+  const documentTypeName = params.documentTypeName ?? requiredDocumentTypes.find((type) => type.id === params.documentTypeId)?.name;
+  const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId, documentTypeName);
+  if (!UUID_PATTERN.test(resolvedTypeId)) {
+    throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
+  }
   const safeFileName = sanitizeFileName(params.file.name);
   const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${safeFileName}`;
 
@@ -6835,12 +6917,18 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
   renewalId: string;
   fileId: string;
   documentTypeId: string;
+  documentTypeName?: string;
+  submitForReview?: boolean;
   file: File;
 }): Promise<SubmissionFile> => {
   if (!supabase) throw new Error("Supabase client is not configured.");
   await assertPdfUpload(params.file, "Replacement document", ORGANIZATION_DOCUMENT_MAX_BYTES);
 
-  const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
+  const documentTypeName = params.documentTypeName ?? requiredDocumentTypes.find((type) => type.id === params.documentTypeId)?.name;
+  const resolvedTypeId = await resolveTemplateDatabaseId(params.documentTypeId, documentTypeName);
+  if (!UUID_PATTERN.test(resolvedTypeId)) {
+    throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
+  }
   const safeFileName = sanitizeFileName(params.file.name);
   const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${safeFileName}`;
 
@@ -6861,6 +6949,7 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
     newFileName: params.file.name,
     newFileType: params.file.type || "application/pdf",
     newFileSize: params.file.size,
+    submitForReview: params.submitForReview ?? true,
   });
 };
 
@@ -7754,6 +7843,17 @@ export const adminGetOrCreateRenewalTestAccountInSupabase = async (): Promise<Re
   });
 
   if (error) throw new Error(error.message);
+
+  // Give the dedicated Renewal Test Organization a complete registration
+  // packet for the Registrations queue. This seed is separate from renewal
+  // applications and only fills requirements that have no uploaded file.
+  const { error: seedError } = await supabase.rpc("admin_seed_renewal_test_registration_documents", {
+    p_session_token: adminSession.sessionToken,
+  });
+  if (seedError) {
+    console.warn("Could not seed renewal test registration files:", seedError.message);
+  }
+
   return data as RenewalTestAccountDetails;
 };
 
