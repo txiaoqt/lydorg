@@ -43,7 +43,6 @@ import {
   type BulkOrganizationDeletionResult,
 } from "@/lib/admin-organization-deletion";
 import { getEffectiveSystemSetting } from "@/lib/admin-system-settings";
-import { loadAdminPortalSupabaseState } from "@/lib/lydo-connect-supabase";
 import {
   mapOrganizationProfileToYorpExportRow,
   buildYorpRegistryExportConfig,
@@ -78,7 +77,6 @@ const getYorpStatus = (expiryDate: Date, now: Date): YorpStatus => {
 export function YorpRegistryPage() {
   const {
     state,
-    mergeRemoteState,
     removeOrganizationAccountFromCache,
   } = useLydoConnect();
   const orgs = state.organizationProfiles;
@@ -262,12 +260,6 @@ export function YorpRegistryPage() {
         description: `Account and associated records for ${deleteTarget.organizationName} have been removed.`,
       });
 
-      try {
-        const snapshot = await loadAdminPortalSupabaseState();
-        if (snapshot) mergeRemoteState(snapshot);
-      } catch (refreshError) {
-        console.error("Failed to refresh admin state after organization deletion:", refreshError);
-      }
     } catch (error) {
       setDeleteError(
         error instanceof Error
@@ -304,12 +296,6 @@ export function YorpRegistryPage() {
       });
     }
 
-    try {
-      const snapshot = await loadAdminPortalSupabaseState();
-      if (snapshot) mergeRemoteState(snapshot);
-    } catch (refreshError) {
-      console.error("Failed to refresh admin state after bulk organization deletion:", refreshError);
-    }
   };
 
   const handleExport = async (

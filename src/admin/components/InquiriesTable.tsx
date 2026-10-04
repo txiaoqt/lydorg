@@ -19,6 +19,7 @@ type InquiriesTableProps = {
   onMarkReviewed?: (inquiry: InquiryRecord) => void | Promise<void>;
   onMarkResponded?: (inquiry: InquiryRecord) => void | Promise<void>;
   onDeleteInquiry?: (inquiry: InquiryRecord) => void;
+  serverPagination?: { totalCount: number; onPageChange: (page: number) => void };
 };
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
@@ -144,21 +145,24 @@ export const InquiriesTable = ({
   onMarkReviewed,
   onMarkResponded,
   onDeleteInquiry,
+  serverPagination,
 }: InquiriesTableProps) => {
   const [page, setPage] = useState(0);
   const [replyDialogInquiry, setReplyDialogInquiry] = useState<InquiryRecord | null>(null);
 
   const markReviewedHandler = onMarkReviewed ?? onMarkResponded;
 
-  const totalPages = Math.max(1, Math.ceil(inquiries.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil((serverPagination?.totalCount ?? inquiries.length) / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
   const pageItems = useMemo(
-    () => inquiries.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
-    [inquiries, clampedPage],
+    () => serverPagination ? inquiries : inquiries.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
+    [inquiries, clampedPage, serverPagination],
   );
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const safePage = Math.max(0, Math.min(next, totalPages - 1));
+    setPage(safePage);
+    serverPagination?.onPageChange(safePage);
   };
 
   return (
@@ -172,6 +176,7 @@ export const InquiriesTable = ({
             onChange={(event) => {
               onSearchChange(event.target.value);
               setPage(0);
+              serverPagination?.onPageChange(0);
             }}
             placeholder="Search inquiries..."
             className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
@@ -188,6 +193,7 @@ export const InquiriesTable = ({
                 onClick={() => {
                   onStatusFilterChange(tab.value);
                   setPage(0);
+                  serverPagination?.onPageChange(0);
                 }}
                 className={cn(
                   "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
@@ -285,7 +291,7 @@ export const InquiriesTable = ({
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-          <span className="text-text-default">{inquiries.length}</span> submissions
+          <span className="text-text-default">{serverPagination?.totalCount ?? inquiries.length}</span> submissions
         </p>
         <div className="flex items-center gap-2">
           <button

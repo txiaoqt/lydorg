@@ -47,6 +47,7 @@ type RegistrationsTableProps = {
   selectedOrgIds?: Set<string>;
   onSelectedOrgIdsChange?: (selectedIds: Set<string>) => void;
   isSuperAdmin?: boolean;
+  serverPagination?: { totalCount: number; onPageChange: (page: number) => void };
 };
 
 const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
@@ -135,6 +136,7 @@ export const RegistrationsTable = ({
   selectedOrgIds,
   onSelectedOrgIdsChange,
   isSuperAdmin,
+  serverPagination,
 }: RegistrationsTableProps) => {
   const [page, setPage] = useState(0);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
@@ -172,16 +174,17 @@ export const RegistrationsTable = ({
   const handleDistrictFilterChange = (nextDistrict: "all" | PasigDistrict) => {
     onDistrictFilterChange(nextDistrict);
     setPage(0);
+    serverPagination?.onPageChange(0);
     if (!isBarangayInDistrict(barangayFilter, nextDistrict)) {
       onBarangayFilterChange("all");
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(registrations.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil((serverPagination?.totalCount ?? registrations.length) / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
   const pageItems = useMemo(
-    () => registrations.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
-    [registrations, clampedPage],
+    () => serverPagination ? registrations : registrations.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
+    [registrations, clampedPage, serverPagination],
   );
 
   const visibleRowIds = useMemo(() => pageItems.map((org) => org.id), [pageItems]);
@@ -219,7 +222,9 @@ export const RegistrationsTable = ({
   };
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const safePage = Math.max(0, Math.min(next, totalPages - 1));
+    setPage(safePage);
+    serverPagination?.onPageChange(safePage);
   };
 
   return (
@@ -233,9 +238,10 @@ export const RegistrationsTable = ({
               <button
                 key={tab.value}
                 type="button"
-                onClick={() => {
-                  onStatusFilterChange(tab.value);
-                  setPage(0);
+              onClick={() => {
+                onStatusFilterChange(tab.value);
+                setPage(0);
+                serverPagination?.onPageChange(0);
                 }}
                 className={cn(
                   "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
@@ -260,6 +266,7 @@ export const RegistrationsTable = ({
             onChange={(event) => {
               onSearchChange(event.target.value);
               setPage(0);
+              serverPagination?.onPageChange(0);
             }}
             placeholder="Search by registration ID or organization..."
             className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
@@ -322,6 +329,7 @@ export const RegistrationsTable = ({
               onClick={() => {
                 onBarangayFilterChange("all");
                 setPage(0);
+                serverPagination?.onPageChange(0);
               }}
               className={cn(
                 "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -336,6 +344,7 @@ export const RegistrationsTable = ({
                 onClick={() => {
                   onBarangayFilterChange(barangay.name);
                   setPage(0);
+                  serverPagination?.onPageChange(0);
                 }}
                 className={cn(
                   "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -366,6 +375,7 @@ export const RegistrationsTable = ({
               onClick={() => {
                 onClassificationFilterChange("all");
                 setPage(0);
+                serverPagination?.onPageChange(0);
               }}
               className={cn(
                 "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -380,6 +390,7 @@ export const RegistrationsTable = ({
                 onClick={() => {
                   onClassificationFilterChange(classification);
                   setPage(0);
+                  serverPagination?.onPageChange(0);
                 }}
                 className={cn(
                   "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -518,7 +529,7 @@ export const RegistrationsTable = ({
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-          <span className="text-text-default">{registrations.length}</span> submissions
+          <span className="text-text-default">{serverPagination?.totalCount ?? registrations.length}</span> submissions
           {selectedIds.size > 0 && (
             <span className="ml-2 font-medium text-public-text-brand">
               ({selectedIds.size} selected)

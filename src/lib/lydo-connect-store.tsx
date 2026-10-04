@@ -324,6 +324,17 @@ export const readState = (identity?: AccountIdentity): LydoConnectState => {
   }
 
   const storageKey = getStorageKeyForIdentity(targetIdentity);
+  if (targetIdentity.type === "admin" && supabase) {
+    // Admin data must not be persisted wholesale in browser storage. It is
+    // loaded from the session-validated admin data layer instead. When the app
+    // is running offline without Supabase, retain the local demo workflow.
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      // ignore storage removal errors
+    }
+    return clearAccountScopedState(baseState);
+  }
   const raw = window.localStorage.getItem(storageKey);
   if (!raw) {
     if (targetIdentity.type === "admin") {
@@ -806,6 +817,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     if (typeof window === "undefined") return;
     try {
       const currentIdentity = activeIdentityRef.current;
+      if (currentIdentity.type === "admin" && supabase) {
+        window.localStorage.removeItem(getStorageKeyForIdentity(currentIdentity));
+        lastStoredStateRef.current = "";
+        return;
+      }
       const targetKey = getStorageKeyForIdentity(currentIdentity);
       const toPersist = currentIdentity.type === "anonymous" ? clearAccountScopedState(state) : state;
       const serialized = JSON.stringify(toPersist);
@@ -838,9 +854,13 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         const isAdmin = requestIdentity.type === "admin";
         let snapshot: Partial<LydoSeedState> | null = null;
         if (isAdmin) {
-          snapshot = await loadAdminPortalSupabaseState();
+          const adminPath = typeof window !== "undefined" ? window.location.pathname.replace(/\/$/, "") : "";
+          const pageUsesScopedAdminQueries = ["/admin", "/admin/registrations", "/admin/inquiries", "/admin/activity-logs", "/admin/notifications"].includes(adminPath);
+          // These routes load aggregate or paginated data from their own scoped
+          // queries. Avoid downloading the all-feature snapshot for them.
+          snapshot = pageUsesScopedAdminQueries ? null : await loadAdminPortalSupabaseState();
         }
-        if (!snapshot) {
+        if (!snapshot && requestIdentity.type !== "admin") {
           snapshot = await loadLydoConnectSupabaseState(
             requestIdentity.type === "user" ? requestIdentity.id : undefined,
           );
@@ -962,6 +982,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
 
     void syncState();
     const syncInterval = window.setInterval(async () => {
+      if (activeIdentityRef.current.type === "admin") return;
       if (typeof document !== "undefined" && document.visibilityState !== "visible") {
         return;
       }
@@ -1064,6 +1085,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     };
 
     const handleWindowFocus = async () => {
+      if (activeIdentityRef.current.type === "admin") return;
       const now = Date.now();
       if (now - lastSyncTimeRef.current < EVENT_COOLDOWN_MS) {
         return;
@@ -1076,6 +1098,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     };
 
     const handleVisibilityChange = async () => {
+      if (activeIdentityRef.current.type === "admin") return;
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         const now = Date.now();
         if (now - lastSyncTimeRef.current < EVENT_COOLDOWN_MS) {
@@ -1090,6 +1113,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     };
 
     const handleStorageChange = async (e: StorageEvent) => {
+      if (activeIdentityRef.current.type === "admin") return;
       const currentKey = getStorageKeyForIdentity(activeIdentityRef.current);
       if (e.key === currentKey && e.newValue) {
         if (typeof document !== "undefined" && document.visibilityState !== "visible") {

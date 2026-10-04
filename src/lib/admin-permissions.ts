@@ -137,11 +137,43 @@ export const ADMIN_NAV_PERMISSION_MAP: Record<string, string> = {
   settings: "system_settings_view",
 };
 
-export const hasAdminNavPermission = (permissionCodes: string[] | undefined, navItemId: string): boolean => {
+export const hasAdminNavPermission = (
+  permissionCodes: string[] | undefined,
+  navItemId: string,
+  roleCode?: string,
+): boolean => {
+  if (roleCode === "super_admin") return true;
   const requiredCode = ADMIN_NAV_PERMISSION_MAP[navItemId];
   if (!requiredCode) return true;
   return (permissionCodes ?? []).includes(requiredCode);
 };
+
+export type AdminDashboardWidget =
+  | "registrations"
+  | "ypop"
+  | "budgetRequests"
+  | "liquidations"
+  | "inquiries"
+  | "budgetMonitoring"
+  | "recentActivity";
+
+const ADMIN_DASHBOARD_WIDGET_NAV_ITEMS: Record<AdminDashboardWidget, string[]> = {
+  registrations: ["registrations"],
+  ypop: ["ypop-validation"],
+  budgetRequests: ["budget-utilization"],
+  liquidations: ["liquidation-monitoring"],
+  inquiries: ["inquiries"],
+  budgetMonitoring: ["budget-monitoring"],
+  recentActivity: ["activity-logs"],
+};
+
+export const hasAdminDashboardWidgetPermission = (
+  permissionCodes: string[] | undefined,
+  widget: AdminDashboardWidget,
+  roleCode?: string,
+): boolean => ADMIN_DASHBOARD_WIDGET_NAV_ITEMS[widget].some(
+  (navItemId) => hasAdminNavPermission(permissionCodes, navItemId, roleCode),
+);
 
 export const hasAdminPermission = (permissionCodes: string[] | undefined, permissionCode: string): boolean => {
   return (permissionCodes ?? []).includes(permissionCode);

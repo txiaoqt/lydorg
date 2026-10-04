@@ -1,9 +1,11 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import "./admin-inquiries.css";
 import "./admin-ypop-validation-review.css";
 import "./admin-budget-monitoring.css";
 import "./pages/yorp-registry.css";
 import { useLocation, useNavigate } from "react-router-dom";
+import { QueryClientContext, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createQueryClient } from "@/lib/query-client";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
 import {
   preflightRegistrationDeletion,
@@ -130,7 +132,7 @@ import { type PasigDistrict } from "@/lib/pasig-districts";
 import { AdministratorFormDialog } from "@/admin/components/AdministratorFormDialog";
 import { RolesPermissionsPanel } from "@/admin/components/RolesPermissionsPanel";
 import { AdminSettingsPage } from "@/admin/components/AdminSettingsPage";
-import { ADMIN_NAV_PERMISSION_MAP, hasAdminNavPermission } from "@/lib/admin-permissions";
+import { ADMIN_NAV_PERMISSION_MAP, hasAdminDashboardWidgetPermission, hasAdminNavPermission } from "@/lib/admin-permissions";
 import { getEffectiveSystemSetting, shouldLogActivityType, shouldNotifyOrganization, formatSystemCurrency, type AuditCategory } from "@/lib/admin-system-settings";
 import { NewsReleaseFormDialog, CalendarCaption } from "@/admin/components/NewsReleaseFormDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -160,7 +162,6 @@ import {
 import { exportReport, formatCurrencyPdf, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
 import {
   activityLogExportConfig,
-  getFriendlyAuditAction,
   getFriendlyAuditCategory,
   mapAuditLogToExportRow,
 } from "@/lib/activity-log-export";
@@ -179,9 +180,7 @@ import {
   updateTemplateCategoryInSupabase,
   permanentlyDeleteTemplateRecordInSupabase,
   loadAdminPortalSupabaseState,
-  loadAdminPortalSnapshotState,
   loadAdminYpopState,
-  loadLydoConnectSupabaseState,
   resolveSupabaseFileUrl,
   submitDocumentReviewBatchToSupabase,
   updateDocumentSubmissionFileReviewInSupabase,
@@ -224,6 +223,12 @@ import {
   adminRequestRenewalRevisionInSupabase,
   adminRejectRenewalInSupabase,
   dispatchOrgTransactionalEmailInSupabase,
+  fetchAdminPortalListPage,
+  fetchAdminDashboardSummary,
+  fetchAdminRegistrationDetail,
+  fetchAdminRecentNotifications,
+  fetchAllAdminActivityLogs,
+  type AdminPortalRegistrationListRow,
   type OrgTransactionalEmailEventType,
 } from "@/lib/lydo-connect-supabase";
 import { validateUrn } from "@/lib/urn-registration";
@@ -729,18 +734,35 @@ const isAdminNotificationAuditEntry = (log: ActivityLog) => {
 };
 
 export default function AdminPortal({ section }: { section: string }) {
-  const { confirmAction, confirmationDialog } = useConfirmActionDialog();
-  const navigate = useNavigate();
+  const parentQueryClient = useContext(QueryClientContext);
+  const [isolatedQueryClient] = useState(createQueryClient);
   const { signOut, user } = useAuth();
-  const isSuperAdmin = user?.roleCode === "super_admin" || readAdminSession()?.roleCode === "super_admin";
-
   const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
   if (requireVerifiedEmail && user && user.isEmailVerified === false) {
     return <UnverifiedAdminAccessScreen email={user.email} onSignOut={signOut} />;
   }
 
+  return (
+    <QueryClientProvider client={parentQueryClient ?? isolatedQueryClient}>
+      <AdminPortalContent section={section} />
+    </QueryClientProvider>
+  );
+}
+
+function AdminPortalContent({ section }: { section: string }) {
+  const queryClient = useQueryClient();
+  const { confirmAction, confirmationDialog } = useConfirmActionDialog();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
+  const currentAdminRoleCode = user?.roleCode ?? readAdminSession()?.roleCode;
+  const isSuperAdmin = currentAdminRoleCode === "super_admin";
+
   const { state, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
     useLydoConnect();
+  const mergeRemoteStateRef = useRef(mergeRemoteState);
+  useEffect(() => {
+    mergeRemoteStateRef.current = mergeRemoteState;
+  }, [mergeRemoteState]);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
   const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<Set<string>>(new Set());
   const [registrationDeleteTarget, setRegistrationDeleteTarget] = useState<OrganizationProfile | null>(null);
@@ -981,6 +1003,7 @@ export default function AdminPortal({ section }: { section: string }) {
       window.history.replaceState({}, "", url.toString());
     }
   }, [budgetRequestsSemesterFilter, section]);
+
   const [selectedBudgetRequestIds, setSelectedBudgetRequestIds] = useState<Set<string>>(new Set());
   const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
   const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
@@ -1001,6 +1024,8 @@ export default function AdminPortal({ section }: { section: string }) {
   const [registrationDistrictFilter, setRegistrationDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [registrationBarangayFilter, setRegistrationBarangayFilter] = useState("all");
   const [registrationClassificationFilter, setRegistrationClassificationFilter] = useState("all");
+  const [adminListPage, setAdminListPage] = useState(0);
+  const [adminListRefreshKey, setAdminListRefreshKey] = useState(0);
   const [renewalSearch, setRenewalSearch] = useState("");
   const [renewalStatusFilter, setRenewalStatusFilter] = useState<RenewalStatusFilter>("all");
   const [renewalDistrictFilter, setRenewalDistrictFilter] = useState<"all" | PasigDistrict>("all");
@@ -1039,6 +1064,110 @@ export default function AdminPortal({ section }: { section: string }) {
   const [isYpopDecisionHelpOpen, setIsYpopDecisionHelpOpen] = useState(false);
   const ypopDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
   const ypopDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+
+  // Large admin queues are queried from PostgreSQL in bounded, filter-aware
+  // pages. Keep search debounced and cache each feature/page/filter tuple.
+  const adminListResource = section === "registrations"
+    ? "registrations"
+    : section === "inquiries"
+      ? "inquiries"
+      : section === "activity-logs"
+        ? "activity_logs"
+        : null;
+  const adminListSearch = adminListResource === "registrations"
+    ? registrationSearch
+    : adminListResource === "inquiries"
+      ? inquirySearch
+      : activitySearch;
+  const [debouncedAdminListSearch, setDebouncedAdminListSearch] = useState(adminListSearch);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedAdminListSearch(adminListSearch), 350);
+    return () => window.clearTimeout(timeout);
+  }, [adminListSearch]);
+  useEffect(() => {
+    setAdminListPage(0);
+  }, [
+    section,
+    registrationSearch,
+    registrationStatusFilter,
+    registrationDistrictFilter,
+    registrationBarangayFilter,
+    registrationClassificationFilter,
+    inquirySearch,
+    inquiryStatusFilter,
+    activitySearch,
+    activityLogFilter,
+    activityDateFilter,
+  ]);
+  const adminListQuery = useQuery({
+    queryKey: [
+      "admin",
+      adminListResource,
+      adminListPage,
+      debouncedAdminListSearch,
+      registrationStatusFilter,
+      registrationDistrictFilter,
+      registrationBarangayFilter,
+      registrationClassificationFilter,
+      inquiryStatusFilter,
+      activityLogFilter,
+      activityDateFilter,
+    ],
+    queryFn: () => fetchAdminPortalListPage({
+      resource: adminListResource!,
+      page: adminListPage,
+      pageSize: 10,
+      search: debouncedAdminListSearch,
+      status: adminListResource === "registrations"
+        ? registrationStatusFilter
+        : adminListResource === "inquiries"
+          ? inquiryStatusFilter
+          : activityLogFilter,
+      district: adminListResource === "registrations" ? registrationDistrictFilter : "all",
+      barangay: adminListResource === "registrations" ? registrationBarangayFilter : "all",
+      classification: adminListResource === "registrations" ? registrationClassificationFilter : "all",
+      dateRange: adminListResource === "activity_logs" ? activityDateFilter : "all",
+    }),
+    enabled: Boolean(supabase && adminListResource) && adminListSearch === debouncedAdminListSearch,
+  });
+  const adminListResult = adminListQuery.data ?? null;
+  const adminListLoading = adminListQuery.isFetching;
+  const adminListError = adminListQuery.error instanceof Error ? adminListQuery.error.message : "";
+  const adminNotificationsQuery = useQuery({
+    queryKey: ["admin", "notifications", "recent"],
+    queryFn: fetchAdminRecentNotifications,
+    enabled: Boolean(supabase && readAdminSession()?.sessionToken),
+  });
+  useEffect(() => {
+    if (!adminListResource || adminListRefreshKey === 0) return;
+    void queryClient.invalidateQueries({ queryKey: ["admin", adminListResource] });
+  }, [adminListRefreshKey, adminListResource, queryClient]);
+  const registrationDetailQuery = useQuery({
+    queryKey: ["admin", "registration", selectedRegistrationId],
+    queryFn: () => fetchAdminRegistrationDetail(selectedRegistrationId!),
+    enabled: Boolean(supabase && section === "registrations" && selectedRegistrationId),
+  });
+  useEffect(() => {
+    if (registrationDetailQuery.data) {
+      mergeRemoteStateRef.current(registrationDetailQuery.data);
+    }
+  }, [registrationDetailQuery.data]);
+  const refreshScopedAdminQueries = async () => {
+    if (section === "overview") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      return;
+    }
+    if (section === "notifications") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
+      return;
+    }
+    if (adminListResource) {
+      await queryClient.invalidateQueries({ queryKey: ["admin", adminListResource] });
+    }
+    if (section === "registrations" && selectedRegistrationId) {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "registration", selectedRegistrationId] });
+    }
+  };
 
   useEffect(() => {
     setEntryReviewTab("city_led");
@@ -1237,10 +1366,20 @@ export default function AdminPortal({ section }: { section: string }) {
   const profile = state.organizationProfiles[0] ?? null;
   const currentAdminSession = readAdminSession();
   const currentAdminId = currentAdminSession?.id || user?.id || adminId;
-  const adminNotifications = state.notifications.filter(
+  const adminNotifications = adminNotificationsQuery.data?.notifications ?? state.notifications.filter(
     (item) => item.userId === currentAdminId || item.userId === adminId || item.userId === "admin",
   );
-  const unread = adminNotifications.filter((item) => !item.isRead).length;
+  const unread = adminNotificationsQuery.data?.unreadCount ?? adminNotifications.filter((item) => !item.isRead).length;
+  const markAdminNotificationRead = (notificationId: string) => {
+    void Promise.resolve(markNotificationRead(notificationId)).finally(() => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
+    });
+  };
+  const markAllAdminNotificationsRead = () => {
+    void Promise.resolve(markAllNotificationsRead()).finally(() => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
+    });
+  };
   const activeTemplates = useMemo(
     () =>
       [...state.templates]
@@ -1270,8 +1409,13 @@ export default function AdminPortal({ section }: { section: string }) {
     [activeTemplates],
   );
   const selectedRegistrationProfile = useMemo(
-    () => state.organizationProfiles.find((profile) => profile.id === selectedRegistrationId) ?? null,
-    [selectedRegistrationId, state.organizationProfiles],
+    () =>
+      state.organizationProfiles.find((profile) => profile.id === selectedRegistrationId) ??
+      adminListResult?.rows.find(
+        (row): row is AdminPortalRegistrationListRow => "profile" in row && row.profile.id === selectedRegistrationId,
+      )?.profile ??
+      null,
+    [selectedRegistrationId, state.organizationProfiles, adminListResult],
   );
   const selectedRegistrationSubmission = useMemo(
     () =>
@@ -1429,10 +1573,6 @@ export default function AdminPortal({ section }: { section: string }) {
     () => state.organizationProfiles.find((org) => org.id === selectedBudgetRequest?.organizationId) ?? null,
     [selectedBudgetRequest?.organizationId, state.organizationProfiles],
   );
-  useEffect(() => {
-    if (selectedBudgetRequest) {
-    }
-  }, [selectedBudgetRequest?.id, selectedBudgetRequest?.status]);
   const selectedLiquidationReport = useMemo(
     () =>
       state.liquidationReports.find((item) => item.id === selectedLiquidationReportId) ??
@@ -1623,6 +1763,13 @@ export default function AdminPortal({ section }: { section: string }) {
       })[0] ?? null;
   const [annualAllocations, setAnnualAllocations] = useState<AnnualBudgetAllocation[]>([]);
   const selectedFiscalYear = budgetMonitoringFilters.fiscalPeriod.fiscalYear;
+  const dashboardQuery = useQuery({
+    // Dashboard responses are permission-scoped; don't reuse one role's cached
+    // response after switching administrators in the same app session.
+    queryKey: ["admin", "dashboard", user?.id, currentAdminRoleCode, [...(user?.permissionCodes ?? [])].sort().join(","), selectedFiscalYear],
+    queryFn: () => fetchAdminDashboardSummary(selectedFiscalYear),
+    enabled: Boolean(supabase && section === "overview"),
+  });
   const [isConfigureAnnualBudgetModalOpen, setIsConfigureAnnualBudgetModalOpen] = useState<boolean>(false);
 
   const loadAnnualBudgetAllocations = useCallback(async () => {
@@ -1635,8 +1782,9 @@ export default function AdminPortal({ section }: { section: string }) {
   }, []);
 
   useEffect(() => {
+    if (!["budget-utilization", "budget-monitoring", "liquidation-monitoring"].includes(section)) return;
     void loadAnnualBudgetAllocations();
-  }, [loadAnnualBudgetAllocations]);
+  }, [loadAnnualBudgetAllocations, section]);
 
   const getBudgetRequestFiscalYear = useCallback((r: BudgetRequest): number => {
     if (typeof r.fiscalYear === "number" && r.fiscalYear >= 2000 && r.fiscalYear <= 2100) {
@@ -1990,40 +2138,6 @@ export default function AdminPortal({ section }: { section: string }) {
       toast({ title: "Export Failed", description: "Unable to export liquidation reports. Please try again.", variant: "destructive" });
     }
   };
-  const filteredRegistrations = useMemo(() => {
-    const query = registrationSearch.trim().toLowerCase();
-    return state.organizationProfiles.filter((org) => {
-      const matchesSearch =
-        !query ||
-        [org.organizationName, org.organizationEmail, org.referenceId ?? "", org.barangay ?? "", org.district ?? ""]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      const matchesStatus =
-        registrationStatusFilter === "all"
-          ? true
-          : registrationStatusFilter === "verified"
-            ? org.profileStatus === "verified"
-            : registrationStatusFilter === "pending_review"
-              ? org.profileStatus === "pending_review" || org.profileStatus === "incomplete"
-              : registrationStatusFilter === "suspended_inactive"
-                ? org.profileStatus === "suspended_inactive"
-                : true;
-      const matchesDistrict = registrationDistrictFilter === "all" || org.district === registrationDistrictFilter;
-      const matchesBarangay = registrationBarangayFilter === "all" || org.barangay === registrationBarangayFilter;
-      const matchesClassification =
-        registrationClassificationFilter === "all" || org.majorClassification === registrationClassificationFilter;
-      return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
-    });
-  }, [
-    registrationBarangayFilter,
-    registrationClassificationFilter,
-    registrationDistrictFilter,
-    registrationSearch,
-    registrationStatusFilter,
-    state.organizationProfiles,
-  ]);
-
   const filteredRenewals = useMemo(() => {
     const query = renewalSearch.trim().toLowerCase();
     return adminRenewalsQueue.filter((entry) => {
@@ -2107,33 +2221,6 @@ export default function AdminPortal({ section }: { section: string }) {
     () => newsCategoriesList.map((c) => c.name),
     [newsCategoriesList],
   );
-  const filteredInquiries = useMemo(() => {
-    const query = inquirySearch.trim().toLowerCase();
-    return [...state.inquiries]
-      .filter((inquiry) => {
-        const referenceCode = getInquiryReferenceCode(inquiry, state.inquiries);
-        const matchesSearch =
-          !query ||
-          [
-            referenceCode,
-            inquiry.id,
-            (inquiry as any).inquiryCode,
-            inquiry.submitterName,
-            inquiry.organizationName,
-            inquiry.email,
-            inquiry.subject,
-            inquiry.description,
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase()
-            .includes(query);
-        const normalizedInquiryStatus = normalizeInquiryStatus(inquiry.status);
-        const matchesStatus = inquiryStatusFilter === "all" || normalizedInquiryStatus === inquiryStatusFilter;
-        return matchesSearch && matchesStatus;
-      })
-      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-  }, [inquirySearch, inquiryStatusFilter, state.inquiries]);
   const openInquiryDetails = (inquiry: InquiryRecord) => {
     const normalizedStatus = normalizeInquiryStatus(inquiry.status);
     setSelectedInquiry({ ...inquiry, status: normalizedStatus });
@@ -2156,8 +2243,8 @@ export default function AdminPortal({ section }: { section: string }) {
     const approved = fyBudgetRequests.filter(r => APPROVED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0);
     const released = fyBudgetRequests.filter(r => RELEASED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
     const liquidated = fyBudgetRequests.filter(r => latestLiquidationByRequestId.get(r.id)?.status === "completed_liquidated").reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
-    return { approved, released, liquidated };
-  }, [fyBudgetRequests, latestLiquidationByRequestId]);
+    return dashboardQuery.data?.budgetTotals ?? { approved, released, liquidated };
+  }, [fyBudgetRequests, latestLiquidationByRequestId, dashboardQuery.data]);
   const filteredBudgetMonitoringRequests = useMemo(
     () => filterBudgetRequests(adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId),
     [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId],
@@ -2656,25 +2743,31 @@ export default function AdminPortal({ section }: { section: string }) {
     }
     return ids;
   }, [templateDocuments]);
-  const overviewStats = useMemo(
-    () => ({
-      organizations: state.organizationProfiles.length,
-      pendingProfiles: state.organizationProfiles.filter((item) => item.profileStatus === "pending_review" || item.profileStatus === "incomplete").length,
-      pendingDocuments: state.documentSubmissions.filter((item) => item.status === "submitted" || item.status === "under_admin_review").length,
-      revisions: state.documentSubmissions.filter((item) => item.status === "needs_revision").length,
-      approvedDocs: state.documentSubmissions.filter((item) => item.status === "approved_green").length,
-      pendingBudget: state.budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length,
-      approvedBudget: state.budgetRequests.filter((item) => item.status === "awaiting_release" || item.status === "approved_for_ftf_green" || item.status === "hard_copy_submitted").length,
-      releasedBudget: state.budgetRequests.filter((item) => item.status === "budget_released").length,
-      pendingLiquidation: state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length,
-      overdueLiquidation: state.liquidationReports.filter((item) => item.status === "overdue").length,
-      pendingInquiries: state.inquiries.filter((item) => item.status === "pending_review").length,
-      nonCompliant: state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length,
-    }),
-    [state],
-  );
+  const overviewStats = useMemo(() => {
+    const summary = dashboardQuery.data?.summary;
+    return {
+      organizations: summary?.organizationsTotal ?? (!supabase ? state.organizationProfiles.length : 0),
+      pendingProfiles: summary?.pendingProfiles ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "pending_review" || item.profileStatus === "incomplete").length : 0),
+      pendingDocuments: summary?.pendingDocuments ?? (!supabase ? state.documentSubmissions.filter((item) => item.status === "submitted" || item.status === "under_admin_review").length : 0),
+      revisions: summary?.revisions ?? (!supabase ? state.documentSubmissions.filter((item) => item.status === "needs_revision").length : 0),
+      approvedDocs: summary?.approvedDocs ?? (!supabase ? state.documentSubmissions.filter((item) => item.status === "approved_green").length : 0),
+      pendingBudget: summary?.pendingBudget ?? (!supabase ? state.budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length : 0),
+      approvedBudget: summary?.approvedBudget ?? (!supabase ? state.budgetRequests.filter((item) => item.status === "awaiting_release" || item.status === "approved_for_ftf_green" || item.status === "hard_copy_submitted").length : 0),
+      releasedBudget: summary?.releasedBudget ?? (!supabase ? state.budgetRequests.filter((item) => item.status === "budget_released").length : 0),
+      pendingLiquidation: summary?.pendingLiquidation ?? (!supabase ? state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length : 0),
+      overdueLiquidation: summary?.overdueLiquidation ?? (!supabase ? state.liquidationReports.filter((item) => item.status === "overdue").length : 0),
+      pendingInquiries: summary?.pendingInquiries ?? (!supabase ? state.inquiries.filter((item) => item.status === "pending_review").length : 0),
+      nonCompliant: summary?.nonCompliant ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length : 0),
+      ypopEntriesTotal: summary?.ypopEntriesTotal ?? (!supabase ? state.ypopEntries.length : 0),
+      budgetRequestsTotal: summary?.budgetRequestsTotal ?? (!supabase ? state.budgetRequests.filter((item) => item.status !== "draft").length : 0),
+      liquidationsTotal: summary?.liquidationsTotal ?? (!supabase ? state.liquidationReports.length : 0),
+      inquiriesTotal: summary?.inquiriesTotal ?? (!supabase ? state.inquiries.length : 0),
+    };
+  }, [dashboardQuery.data, state]);
 
   const pendingYpop = useMemo(() => {
+    if (dashboardQuery.data) return dashboardQuery.data.summary.pendingYpop ?? 0;
+    if (supabase) return 0;
     const pendingCityLed = (state.ypopEventParticipations ?? []).filter(
       (p) => p.status === "pending_evaluation" || p.status === "pending_verification",
     ).length;
@@ -2682,11 +2775,11 @@ export default function AdminPortal({ section }: { section: string }) {
       (a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review",
     ).length;
     return pendingCityLed + pendingOrgLed;
-  }, [state.ypopEventParticipations, state.ypopOrgActivities]);
+  }, [state.ypopEventParticipations, state.ypopOrgActivities, dashboardQuery.data]);
 
   const pendingRenewalsCount = useMemo(
-    () => adminRenewals.filter((renewal) => renewal.status !== "approved").length,
-    [adminRenewals],
+    () => dashboardQuery.data?.summary.pendingRenewals ?? (!supabase ? adminRenewals.filter((renewal) => renewal.status !== "approved").length : 0),
+    [adminRenewals, dashboardQuery.data],
   );
 
   const sidebarGroups = useMemo<PortalNavGroup[]>(() => {
@@ -2762,7 +2855,7 @@ export default function AdminPortal({ section }: { section: string }) {
     return allGroups
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => hasAdminNavPermission(user?.permissionCodes, item.id)),
+        items: group.items.filter((item) => hasAdminNavPermission(user?.permissionCodes, item.id, currentAdminRoleCode)),
       }))
       .filter((group) => group.items.length > 0);
   }, [overviewStats, pendingRenewalsCount, pendingYpop, user]);
@@ -3477,25 +3570,31 @@ export default function AdminPortal({ section }: { section: string }) {
   ]);
 
 
-  const mergeRemoteStateRef = useRef(mergeRemoteState);
-  useEffect(() => {
-    mergeRemoteStateRef.current = mergeRemoteState;
-  }, [mergeRemoteState]);
-
   const refreshAdminState = async () => {
-    const remoteSnapshot = (await loadAdminPortalSupabaseState()) ?? (await loadLydoConnectSupabaseState());
+    if (["overview", "registrations", "inquiries", "activity-logs", "notifications"].includes(section)) {
+      await refreshScopedAdminQueries();
+      return null;
+    }
+    if (section === "ypop-validation") {
+      const ypopState = await loadAdminYpopState();
+      if (ypopState) mergeRemoteStateRef.current(ypopState);
+      return ypopState;
+    }
+    const remoteSnapshot = await loadAdminPortalSupabaseState();
     if (remoteSnapshot) {
       mergeRemoteStateRef.current(remoteSnapshot);
     }
-    try {
-      const [renewals, accreditations] = await Promise.all([
-        fetchAllOrganizationRenewalsInSupabase(),
-        fetchAllOrganizationAccreditationsInSupabase(),
-      ]);
-      setAdminRenewals(renewals);
-      setAdminAccreditations(accreditations);
-    } catch (err) {
-      console.error("Failed to load renewals or accreditations in refreshAdminState:", err);
+    if (section === "renewals") {
+      try {
+        const [renewals, accreditations] = await Promise.all([
+          fetchAllOrganizationRenewalsInSupabase(),
+          fetchAllOrganizationAccreditationsInSupabase(),
+        ]);
+        setAdminRenewals(renewals);
+        setAdminAccreditations(accreditations);
+      } catch (err) {
+        console.error("Failed to load renewals or accreditations in refreshAdminState:", err);
+      }
     }
     return remoteSnapshot;
   };
@@ -3540,7 +3639,16 @@ export default function AdminPortal({ section }: { section: string }) {
   }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments, renewalReviewSubmitting]);
 
   const refreshAdminSnapshot = async () => {
-    const remoteSnapshot = (await loadAdminPortalSnapshotState()) ?? (await loadAdminPortalSupabaseState());
+    if (["overview", "registrations", "inquiries", "activity-logs", "notifications"].includes(section)) {
+      await refreshScopedAdminQueries();
+      return null;
+    }
+    if (section === "ypop-validation") {
+      const ypopState = await loadAdminYpopState();
+      if (ypopState) mergeRemoteStateRef.current(ypopState);
+      return ypopState;
+    }
+    const remoteSnapshot = await loadAdminPortalSupabaseState();
     if (remoteSnapshot) {
       mergeRemoteStateRef.current(remoteSnapshot);
     }
@@ -3552,7 +3660,7 @@ export default function AdminPortal({ section }: { section: string }) {
   const refreshAdminYpop = async () => {
     setIsRefreshingYpop(true);
     try {
-      const remoteSnapshot = (await loadAdminYpopState()) ?? (await loadAdminPortalSupabaseState());
+      const remoteSnapshot = await loadAdminYpopState();
       if (remoteSnapshot) {
         mergeRemoteStateRef.current(remoteSnapshot);
       }
@@ -4059,6 +4167,7 @@ export default function AdminPortal({ section }: { section: string }) {
       });
 
       updateInquiry(savedInquiry.id, savedInquiry);
+      setAdminListRefreshKey((current) => current + 1);
       setSelectedInquiry(savedInquiry);
       setInquiryStatusDraft(savedInquiry.status);
       setInquiryAdminRemarksDraft(savedInquiry.adminRemarks);
@@ -4139,6 +4248,7 @@ export default function AdminPortal({ section }: { section: string }) {
       });
 
       updateInquiry(savedInquiry.id, savedInquiry);
+      setAdminListRefreshKey((current) => current + 1);
       if (selectedInquiry?.id === savedInquiry.id) {
         setSelectedInquiry(savedInquiry);
         setInquiryStatusDraft(savedInquiry.status);
@@ -4177,6 +4287,7 @@ export default function AdminPortal({ section }: { section: string }) {
       const refCode = getInquiryReferenceCode(inquiry, state.inquiries);
       await deleteInquiryInSupabase(targetId);
       removeInquiry(targetId);
+      setAdminListRefreshKey((current) => current + 1);
 
       if (selectedInquiry?.id === targetId) {
         setSelectedInquiry(null);
@@ -4314,8 +4425,7 @@ export default function AdminPortal({ section }: { section: string }) {
       }
 
       try {
-        const snapshot = await loadAdminPortalSupabaseState();
-        if (snapshot) mergeRemoteState(snapshot);
+        await refreshScopedAdminQueries();
       } catch (refreshError) {
         console.error("Failed to refresh admin state after registration deletion:", refreshError);
       }
@@ -4440,6 +4550,7 @@ export default function AdminPortal({ section }: { section: string }) {
       }
 
       const freshSnapshot = await refreshAdminSnapshot();
+      setAdminListRefreshKey((current) => current + 1);
 
       for (const file of successfulFiles) {
         if (decision === "approve") {
@@ -6970,7 +7081,7 @@ export default function AdminPortal({ section }: { section: string }) {
 
   const activeContent = useMemo(() => {
     const requiredPermission = ADMIN_NAV_PERMISSION_MAP[section];
-    const hasSectionAccess = !requiredPermission || (user?.permissionCodes ?? []).includes(requiredPermission);
+    const hasSectionAccess = !requiredPermission || hasAdminNavPermission(user?.permissionCodes, section, currentAdminRoleCode);
     if (!hasSectionAccess) {
       return (
         <PortalEmptyState
@@ -6984,6 +7095,21 @@ export default function AdminPortal({ section }: { section: string }) {
     }
     switch (section) {
       case "overview": {
+        const canViewDashboardWidget = (widget: "registrations" | "ypop" | "budgetRequests" | "liquidations" | "inquiries" | "budgetMonitoring" | "recentActivity") =>
+          hasAdminDashboardWidgetPermission(user?.permissionCodes, widget, currentAdminRoleCode);
+        const attentionWidgetByKind = {
+          registration: "registrations",
+          budget: "budgetRequests",
+          liquidation: "liquidations",
+          inquiry: "inquiries",
+        } as const;
+        const attentionPermissionByHref = new Map<string, string>([
+          [routeMap.registrations, "registrations"],
+          [routeMap["ypop-validation"], "ypop-validation"],
+          [routeMap["budget-utilization"], "budget-utilization"],
+          [routeMap["liquidation-monitoring"], "liquidation-monitoring"],
+          [routeMap.inquiries, "inquiries"],
+        ]);
         const formatActionName = (action: string) =>
           action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -7060,75 +7186,120 @@ export default function AdminPortal({ section }: { section: string }) {
               timestamp: inquiry.createdAt,
               href: routeMap.inquiries,
             })),
-        ]
+        ].filter((item) => hasAdminNavPermission(
+          user?.permissionCodes,
+          attentionPermissionByHref.get(item.href) ?? "",
+          currentAdminRoleCode,
+        ))
           .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
           .slice(0, 5);
-        const dashboardRecentActivities = state.activityLogs.map((log) => ({
-          id: log.id,
-          message: formatActionName(log.action),
-          note: log.description,
-          timestamp: log.createdAt,
-          timestampLabel: formatDateTimeLabel(log.createdAt),
-        }));
+        const dashboardAttentionItems = dashboardQuery.data
+          ? dashboardQuery.data.needsAttention.filter((item) => {
+              const widget = attentionWidgetByKind[item.kind as keyof typeof attentionWidgetByKind];
+              return Boolean(widget && canViewDashboardWidget(widget));
+            }).map((item): NeedsAttentionItem => {
+              const iconByKind: Record<string, LucideIcon> = {
+                registration: UserPlus,
+                budget: Wallet,
+                liquidation: Clipboard,
+                inquiry: Inbox,
+              };
+              const routeByKind: Record<string, string> = {
+                registration: routeMap.registrations,
+                budget: routeMap["budget-utilization"],
+                liquidation: routeMap["liquidation-monitoring"],
+                inquiry: routeMap.inquiries,
+              };
+              return {
+                id: item.id,
+                icon: iconByKind[item.kind] ?? Inbox,
+                orgName: item.organizationName,
+                actionText: item.actionText,
+                verb: item.verb,
+                timestamp: item.timestamp,
+                href: routeByKind[item.kind] ?? routeMap.overview,
+              };
+            })
+          : needsAttentionItems;
+        const dashboardRecentActivities = dashboardQuery.data
+          ? dashboardQuery.data.recentActivity.map((item) => ({
+              id: item.id,
+              message: formatActionName(item.action),
+              note: item.description,
+              timestamp: item.createdAt,
+              timestampLabel: formatDateTimeLabel(item.createdAt),
+            }))
+          : state.activityLogs.map((log) => ({
+              id: log.id,
+              message: formatActionName(log.action),
+              note: log.description,
+              timestamp: log.createdAt,
+              timestampLabel: formatDateTimeLabel(log.createdAt),
+            }));
 
         return (
           <div className="admin-dashboard-page space-y-3 lg:space-y-5">
             <AdminPageHeader title="Overview" description="Monitor workflows, pending items, and recent activity." />
             {/* Stat cards */}
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
-              <StatsCard
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
+              {canViewDashboardWidget("registrations") ? <StatsCard
                 title="YORP REGISTRATIONS"
-                value={state.organizationProfiles.length}
+                value={overviewStats.organizations}
                 icon={UserPlus}
                 trend="up"
                 trendLabel={`${overviewStats.pendingProfiles} awaiting review`}
                 description="YORP accreditation submissions"
                 onClick={() => navigate(routeMap.registrations)}
-              />
-              <StatsCard
+              /> : null}
+              {canViewDashboardWidget("ypop") ? <StatsCard
                 title="YPOP VALIDATIONS"
-                value={state.ypopEntries.length}
+                value={overviewStats.ypopEntriesTotal}
                 icon={Award}
                 trend="up"
                 trendLabel={`${pendingYpop} awaiting review`}
                 description="YPOP eligibility evaluations"
                 onClick={() => navigate(routeMap["ypop-validation"])}
-              />
-              <StatsCard
+              /> : null}
+              {canViewDashboardWidget("budgetRequests") ? <StatsCard
                 title="BUDGET REQUESTS"
-                value={adminBudgetRequests.length}
+                value={overviewStats.budgetRequestsTotal}
                 icon={Wallet}
                 trend="up"
                 trendLabel={`${overviewStats.pendingBudget} awaiting review`}
                 description="Funding requests for approved projects"
                 onClick={() => navigate(routeMap["budget-utilization"])}
-              />
-              <StatsCard
+              /> : null}
+              {canViewDashboardWidget("liquidations") ? <StatsCard
                 title="LIQUIDATIONS"
-                value={state.liquidationReports.length}
+                value={overviewStats.liquidationsTotal}
                 icon={Clipboard}
                 trend="up"
                 trendLabel={`${overviewStats.overdueLiquidation + overviewStats.pendingLiquidation} awaiting review`}
                 description="Financial accountability reports"
                 onClick={() => navigate(routeMap["liquidation-monitoring"])}
-              />
-              <StatsCard
+              /> : null}
+              {canViewDashboardWidget("inquiries") ? <StatsCard
                 title="INQUIRIES"
-                value={state.inquiries.length}
+                value={overviewStats.inquiriesTotal}
                 icon={Inbox}
                 trend="up"
                 trendLabel={`${overviewStats.pendingInquiries} awaiting review`}
                 description="Questions from organization users"
                 onClick={() => navigate(routeMap.inquiries)}
-              />
+              /> : null}
             </div>
 
             {/* Needs Attention */}
-            <NeedsAttentionList items={needsAttentionItems} onNavigate={navigate} />
+            {dashboardQuery.isError ? (
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+                {dashboardQuery.error instanceof Error ? dashboardQuery.error.message : "Dashboard metrics could not be loaded."}
+              </p>
+            ) : null}
+            <NeedsAttentionList items={dashboardAttentionItems} onNavigate={navigate} />
 
             {/* Budget Monitoring + Recent Activity Log */}
             <div className="flex flex-col gap-2.5 lg:flex-row">
-              <BudgetMonitoringSummaryCard
+              {canViewDashboardWidget("budgetMonitoring") ? <BudgetMonitoringSummaryCard
                 fiscalYearLabel={
                   annualAllocationFiscalYear ? `FY ${annualAllocationFiscalYear}-${annualAllocationFiscalYear + 1}` : "FY —"
                 }
@@ -7136,9 +7307,9 @@ export default function AdminPortal({ section }: { section: string }) {
                 totalApproved={dashboardBudgetTotals.approved}
                 totalReleased={dashboardBudgetTotals.released}
                 totalLiquidated={dashboardBudgetTotals.liquidated}
-                onManageRequests={() => navigate(routeMap["budget-utilization"])}
-              />
-              <RecentActivityLogCard
+                onManageRequests={() => navigate(routeMap["budget-monitoring"])}
+              /> : null}
+              {canViewDashboardWidget("recentActivity") ? <RecentActivityLogCard
                 items={dashboardRecentActivities.slice(0, 4).map<RecentActivityLogItem>((activity) => ({
                   id: activity.id,
                   activity: activity.message,
@@ -7148,16 +7319,18 @@ export default function AdminPortal({ section }: { section: string }) {
                 actorName={user?.displayName ?? "Administrator"}
                 actorRole="Administrator"
                 onViewFullLog={() => navigate(routeMap["activity-logs"])}
-              />
+              /> : null}
             </div>
           </div>
         );
       }
       case "inquiries": {
-        const totalInquiries = state.inquiries.length;
-        const openInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "pending_review").length;
-        const reviewedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "reviewed").length;
-        const closedInquiries = state.inquiries.filter((inquiry) => normalizeInquiryStatus(inquiry.status) === "closed").length;
+        const inquirySummary = adminListResult?.summary ?? {};
+        const pageInquiries = adminListResult?.rows.filter((row): row is InquiryRecord => "subject" in row) ?? (!supabase ? state.inquiries : []);
+        const totalInquiries = inquirySummary.total ?? (!supabase ? state.inquiries.length : 0);
+        const openInquiries = inquirySummary.pendingReview ?? (!supabase ? state.inquiries.filter((item) => item.status === "pending_review").length : 0);
+        const reviewedInquiries = inquirySummary.reviewed ?? (!supabase ? state.inquiries.filter((item) => ["reviewed", "responded", "in_review"].includes(item.status)).length : 0);
+        const closedInquiries = inquirySummary.closed ?? (!supabase ? state.inquiries.filter((item) => ["closed", "resolved"].includes(item.status)).length : 0);
 
         return (
           <div className="admin-inquiries-page space-y-3 lg:space-y-5">
@@ -7191,8 +7364,8 @@ export default function AdminPortal({ section }: { section: string }) {
             </div>
 
             <InquiriesTable
-              inquiries={filteredInquiries}
-              getReferenceCode={(inquiry) => getInquiryReferenceCode(inquiry, state.inquiries)}
+              inquiries={pageInquiries}
+              getReferenceCode={(inquiry) => getInquiryReferenceCode(inquiry, pageInquiries)}
               searchValue={inquirySearch}
               onSearchChange={setInquirySearch}
               statusFilter={inquiryStatusFilter}
@@ -7200,7 +7373,13 @@ export default function AdminPortal({ section }: { section: string }) {
               onSelectInquiry={openInquiryDetails}
               onMarkReviewed={handleMarkInquiryReviewed}
               onDeleteInquiry={handleInitiateDeleteInquiry}
+              serverPagination={supabase ? {
+                totalCount: adminListResult?.totalCount ?? 0,
+                onPageChange: setAdminListPage,
+              } : undefined}
             />
+            {adminListLoading ? <p className="px-1 text-sm text-slate-500" role="status">Loading inquiry page…</p> : null}
+            {adminListError ? <p className="px-1 text-sm text-red-600" role="alert">{adminListError}</p> : null}
           </div>
         );
       }
@@ -8097,8 +8276,21 @@ export default function AdminPortal({ section }: { section: string }) {
           );
         }
 
+        const registrationRows = adminListResult?.rows.filter(
+          (row): row is AdminPortalRegistrationListRow => "profile" in row,
+        ) ?? (!supabase ? state.organizationProfiles.map((profile) => ({
+          profile,
+          submittedDocumentCount: state.documentSubmissionFiles.filter((file) =>
+            state.documentSubmissions.some((submission) =>
+              submission.id === file.submissionId && submission.organizationId === profile.id &&
+              (!submission.submissionScope || submission.submissionScope === "registration") && !submission.renewalId,
+            ) && file.adminStatus !== "draft" && Boolean(file.documentTypeId),
+          ).length,
+        })) : []);
+        const visibleRegistrationProfiles = registrationRows.map((row) => row.profile);
         const documentCountsByOrgId: Record<string, { submitted: number; required: number }> = {};
-        for (const org of state.organizationProfiles) {
+        for (const org of section === "registrations" ? visibleRegistrationProfiles : state.organizationProfiles) {
+          const serverRow = registrationRows.find((row) => row.profile.id === org.id);
           const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
           const submittedCount = orgSubmission
             ? state.documentSubmissionFiles.filter(
@@ -8108,19 +8300,16 @@ export default function AdminPortal({ section }: { section: string }) {
                 file.adminStatus !== "draft",
             ).length
             : 0;
-          documentCountsByOrgId[org.id] = { submitted: submittedCount, required: templateDocuments.length };
+          documentCountsByOrgId[org.id] = {
+            submitted: serverRow?.submittedDocumentCount ?? submittedCount,
+            required: templateDocuments.length,
+          };
         }
 
-        const verifiedCount = state.organizationProfiles.filter((org) => org.profileStatus === "verified").length;
-        const pendingReviewCount = state.organizationProfiles.filter(
-          (org) => org.profileStatus === "pending_review" || org.profileStatus === "incomplete",
-        ).length;
-        const profilesNeedingRevisionCount = state.organizationProfiles.filter(
-          (org) => org.profileStatus === "needs_update",
-        ).length;
-        const suspendedCount = state.organizationProfiles.filter(
-          (org) => org.profileStatus === "suspended_inactive",
-        ).length;
+        const verifiedCount = adminListResult?.summary.verified ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "verified").length : 0);
+        const pendingReviewCount = adminListResult?.summary.pendingReview ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "pending_review" || item.profileStatus === "incomplete").length : 0);
+        const profilesNeedingRevisionCount = adminListResult?.summary.needsRevision ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "needs_update").length : 0);
+        const suspendedCount = adminListResult?.summary.suspended ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length : 0);
 
         return (
           <div className="flex flex-col gap-4">
@@ -8154,7 +8343,7 @@ export default function AdminPortal({ section }: { section: string }) {
             </div>
 
             <RegistrationsTable
-              registrations={filteredRegistrations}
+              registrations={visibleRegistrationProfiles}
               documentCountsByOrgId={documentCountsByOrgId}
               searchValue={registrationSearch}
               onSearchChange={setRegistrationSearch}
@@ -8171,7 +8360,13 @@ export default function AdminPortal({ section }: { section: string }) {
               selectedOrgIds={selectedRegistrationIds}
               onSelectedOrgIdsChange={setSelectedRegistrationIds}
               isSuperAdmin={isSuperAdmin}
+              serverPagination={supabase ? {
+                totalCount: adminListResult?.totalCount ?? 0,
+                onPageChange: setAdminListPage,
+              } : undefined}
             />
+            {adminListLoading ? <p className="px-1 text-sm text-slate-500" role="status">Loading registration page…</p> : null}
+            {adminListError ? <p className="px-1 text-sm text-red-600" role="alert">{adminListError}</p> : null}
           </div>
         );
       }
@@ -12672,7 +12867,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       size="sm"
                       variant="outline"
                       className="h-9 rounded-md border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default hover:bg-slate-50"
-                      onClick={() => markAllNotificationsRead()}
+                      onClick={markAllAdminNotificationsRead}
                     >
                       <CheckCircle2 className="mr-1.5 h-4 w-4 text-text-action" />
                       Mark all as read
@@ -12701,7 +12896,7 @@ export default function AdminPortal({ section }: { section: string }) {
                       key={notification.id}
                       type="button"
                       className={`group flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 sm:px-5 ${notification.isRead ? "bg-admin-surface hover:bg-slate-50" : "bg-blue-50/40 hover:bg-blue-50/75"}`}
-                      onClick={() => markNotificationRead(notification.id)}
+                      onClick={() => markAdminNotificationRead(notification.id)}
                     >
                       <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${notification.isRead ? "border-slate-200 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50 text-blue-700"}`}>
                         <Bell className="h-4 w-4" strokeWidth={1.7} />
@@ -12736,44 +12931,24 @@ export default function AdminPortal({ section }: { section: string }) {
           </div>
         );
       case "activity-logs": {
-        const now = Date.now();
-        const dateFilterDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
-        const activitySearchTerm = activitySearch.trim().toLowerCase();
-        const filteredLogs = state.activityLogs
-          .filter((l) => activityLogFilter === "all" || l.relatedType === activityLogFilter)
-          .filter((l) => {
-            if (activityDateFilter === "all") return true;
-            const days = dateFilterDays[activityDateFilter] ?? 0;
-            return new Date(l.createdAt).getTime() >= now - days * 24 * 60 * 60 * 1000;
-          })
-          .filter((l) => {
-            if (!activitySearchTerm) return true;
-            const admin = l.actorUserId ? adminAccountsById[l.actorUserId] : undefined;
-            const actorText = admin ? `${admin.displayName} ${admin.email}` : l.actorUserId ? "Administrator" : "System";
-            const haystack = [
-              getFriendlyAuditAction(l.action),
-              getFriendlyAuditCategory(l.relatedType),
-              l.description,
-              actorText,
-            ]
-              .join(" ")
-              .toLowerCase();
-            return haystack.includes(activitySearchTerm);
-          });
         const handleActivityExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
-          if (!filteredLogs.length) {
-            toast({
-              title: "No activity records found",
-              description: "Try changing the selected category or time range.",
-            });
-            return;
-          }
-
           setActivityExporting(format);
           try {
-            const rows = filteredLogs.map((log) => {
+            const exportLogs = await fetchAllAdminActivityLogs({
+              search: activitySearch,
+              category: activityLogFilter,
+              dateRange: activityDateFilter,
+            });
+            if (!exportLogs.length) {
+              toast({
+                title: "No activity records found",
+                description: "Try changing the selected category or time range.",
+              });
+              return;
+            }
+            const rows = exportLogs.map((log) => {
               const organizationName =
-                state.organizationProfiles.find((organization) => organization.id === log.organizationId)?.organizationName ?? "";
+                log.organizationName ?? state.organizationProfiles.find((organization) => organization.id === log.organizationId)?.organizationName ?? "";
               return mapAuditLogToExportRow(log, {
                 actor: log.actorUserId ? "Administrator" : "System",
                 organization: organizationName,
@@ -12821,7 +12996,7 @@ export default function AdminPortal({ section }: { section: string }) {
               action={
                 <button
                   type="button"
-                  disabled={!filteredLogs.length || activityExporting !== null}
+                  disabled={!adminListResult?.totalCount || activityExporting !== null}
                   onClick={() => setActivityExportDialogOpen(true)}
                   className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                 >
@@ -12831,7 +13006,7 @@ export default function AdminPortal({ section }: { section: string }) {
               }
             />
             <ActivityLogsTable
-              logs={filteredLogs}
+              logs={adminListResult?.rows.filter((row): row is ActivityLog => "action" in row) ?? []}
               searchValue={activitySearch}
               onSearchChange={setActivitySearch}
               categoryFilter={activityLogFilter}
@@ -12839,7 +13014,13 @@ export default function AdminPortal({ section }: { section: string }) {
               dateFilter={activityDateFilter}
               onDateFilterChange={setActivityDateFilter}
               adminAccountsById={adminAccountsById}
+              serverPagination={{
+                totalCount: adminListResult?.totalCount ?? 0,
+                onPageChange: setAdminListPage,
+              }}
             />
+            {adminListLoading ? <p className="px-1 text-sm text-slate-500" role="status">Loading activity log page…</p> : null}
+            {adminListError ? <p className="px-1 text-sm text-red-600" role="alert">{adminListError}</p> : null}
             <ActivityLogsExportDialog
               open={activityExportDialogOpen}
               onOpenChange={setActivityExportDialogOpen}
@@ -15328,6 +15509,9 @@ export default function AdminPortal({ section }: { section: string }) {
     state.transparencyPosts,
     inquirySearch,
     inquiryStatusFilter,
+    adminListError,
+    adminListLoading,
+    adminListResult,
     activeTemplates,
     otherTemplates,
     selectedTemplate,
@@ -15471,7 +15655,7 @@ export default function AdminPortal({ section }: { section: string }) {
         userProfile={{ name: user?.displayName ?? "Administrator", role: "Administrator", email: user?.email ?? "" }}
         notifications={adminNotifications}
         onMarkAllRead={() => markAllNotificationsRead()}
-        onMarkRead={(id) => markNotificationRead(id)}
+        onMarkRead={markAdminNotificationRead}
       >
         {activeContent}
       </PortalShell>

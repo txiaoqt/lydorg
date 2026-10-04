@@ -407,6 +407,7 @@ type ActivityLogRow = {
   related_id: string;
   description: string;
   created_at: string;
+  organization_name?: string | null;
   metadata?: Record<string, unknown> | null;
 };
 
@@ -658,7 +659,7 @@ const formatDateOnly = (value: string | null | undefined) => {
   return date.toISOString().slice(0, 10);
 };
 
-const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfile => {
+export const mapOrganizationProfile = (row: OrganizationProfileRow): OrganizationProfile => {
   const addressBarangay = row.address_barangay?.trim() || row.barangay || "";
   const barangay = addressBarangay || row.barangay;
   const district = getPasigDistrictForBarangay(barangay) || row.district;
@@ -840,7 +841,7 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   seedSourceRecordNumber: row.seed_source_record_number ?? null,
 });
 
-const mapDocumentSubmission = (row: DocumentSubmissionRow): DocumentSubmission => ({
+export const mapDocumentSubmission = (row: DocumentSubmissionRow): DocumentSubmission => ({
   id: row.id,
   organizationId: row.organization_id,
   submittedBy: row.submitted_by,
@@ -969,7 +970,7 @@ const mapNotification = (row: NotificationRow): NotificationRecord => ({
   createdAt: row.created_at,
 });
 
-const mapActivityLog = (row: ActivityLogRow): ActivityLog => ({
+export const mapActivityLog = (row: ActivityLogRow): ActivityLog => ({
   id: row.id,
   actorUserId: row.actor_user_id ?? "",
   organizationId: row.organization_id ?? "",
@@ -978,10 +979,11 @@ const mapActivityLog = (row: ActivityLogRow): ActivityLog => ({
   relatedId: row.related_id,
   description: row.description,
   createdAt: row.created_at,
+  organizationName: row.organization_name ?? undefined,
   metadata: (row.metadata as Record<string, unknown>) ?? {},
 });
 
-const mapInquiry = (row: InquiryRow): InquiryRecord => ({
+export const mapInquiry = (row: InquiryRow): InquiryRecord => ({
   id: row.id,
   organizationId: row.organization_id,
   submittedBy: row.submitted_by,
@@ -1657,6 +1659,265 @@ export const loadOrganizationNotificationsState = async (
   };
 };
 
+export type AdminPortalListResource = "registrations" | "inquiries" | "activity_logs";
+export type AdminPortalListPage<T> = {
+  rows: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  summary: Record<string, number>;
+};
+export type AdminPortalRegistrationListRow = {
+  profile: OrganizationProfile;
+  submittedDocumentCount: number;
+};
+export type AdminPortalListFilters = {
+  resource: AdminPortalListResource;
+  page: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+  district?: string;
+  barangay?: string;
+  classification?: string;
+  dateRange?: string;
+  sort?: "newest" | "oldest";
+};
+
+export type AdminDashboardSummary = {
+  summary: Record<string, number>;
+  budgetTotals: { approved: number; released: number; liquidated: number };
+  needsAttention: Array<{
+    id: string;
+    kind: "registration" | "budget" | "liquidation" | "inquiry" | string;
+    organizationName: string;
+    actionText: string;
+    verb: "Submitted" | "Received";
+    timestamp: string;
+  }>;
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    description: string;
+    createdAt: string;
+  }>;
+};
+
+export type AdminRecentNotifications = {
+  unreadCount: number;
+  notifications: NotificationRecord[];
+};
+
+/** Fetch aggregate dashboard metrics and bounded recent activity. */
+export const fetchAdminDashboardSummary = async (fiscalYear?: number): Promise<AdminDashboardSummary> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("admin_get_dashboard_summary", {
+    _session_token: adminSession.sessionToken,
+    _fiscal_year: fiscalYear ?? null,
+  });
+  if (error) throw new Error(error.message || "Unable to load the admin dashboard.");
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("The admin dashboard response was invalid.");
+  }
+
+  const response = data as Partial<AdminDashboardSummary>;
+  const summary = Object.fromEntries(
+    Object.entries(response.summary ?? {}).map(([key, value]) => [key, Number(value)]),
+  );
+  const budgetTotals = response.budgetTotals ?? { approved: 0, released: 0, liquidated: 0 };
+  return {
+    summary,
+    budgetTotals: {
+      approved: Number(budgetTotals.approved ?? 0),
+      released: Number(budgetTotals.released ?? 0),
+      liquidated: Number(budgetTotals.liquidated ?? 0),
+    },
+    needsAttention: Array.isArray(response.needsAttention) ? response.needsAttention : [],
+    recentActivity: Array.isArray(response.recentActivity) ? response.recentActivity : [],
+  };
+};
+
+export const fetchAdminRecentNotifications = async (): Promise<AdminRecentNotifications> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) throw new Error("Please sign in with the seeded admin account first.");
+  const { data, error } = await supabase.rpc("admin_get_recent_notifications", {
+    _session_token: adminSession.sessionToken,
+    _limit: 25,
+  });
+  if (error) throw new Error(error.message || "Unable to load admin notifications.");
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("The admin notification response was invalid.");
+  }
+  const response = data as { unreadCount?: number; notifications?: NotificationRow[] };
+  return {
+    unreadCount: Number(response.unreadCount ?? 0),
+    notifications: (response.notifications ?? []).map(mapNotification),
+  };
+};
+
+/** Load the private registration review payload only after a row is opened. */
+export const fetchAdminRegistrationDetail = async (organizationId: string): Promise<Partial<LydoSeedState>> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("admin_get_registration_detail", {
+    _session_token: adminSession.sessionToken,
+    _organization_id: organizationId,
+  });
+  if (error) throw new Error(error.message || "Unable to load registration details.");
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("The registration detail response was invalid.");
+  }
+  const response = data as {
+    profile?: OrganizationProfileRow | null;
+    submission?: DocumentSubmissionRow | null;
+    files?: DocumentSubmissionFileRow[];
+    activity?: ActivityLogRow[];
+    templates?: RequiredDocumentTypeRow[];
+  };
+  if (!response.profile?.id || !response.profile.user_id) {
+    throw new Error("The registration detail response did not contain its profile.");
+  }
+
+  return {
+    organizationProfiles: [mapOrganizationProfile(response.profile)],
+    documentSubmissions: response.submission ? [mapDocumentSubmission(response.submission)] : [],
+    documentSubmissionFiles: (response.files ?? []).flatMap((row) => {
+      const file = mapDocumentFile(row);
+      return file ? [file] : [];
+    }),
+    activityLogs: (response.activity ?? []).map(mapActivityLog),
+    templates: (response.templates ?? [])
+      .map(mapTemplate)
+      .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name)),
+  };
+};
+
+/** Fetch one server-filtered and server-paginated admin list page. */
+export const fetchAdminPortalListPage = async (
+  filters: AdminPortalListFilters,
+): Promise<AdminPortalListPage<AdminPortalRegistrationListRow | InquiryRecord | ActivityLog>> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = readAdminSession();
+  if (!adminSession?.sessionToken) throw new Error("Please sign in with the seeded admin account first.");
+
+  const { data, error } = await supabase.rpc("admin_get_portal_list_page", {
+    _session_token: adminSession.sessionToken,
+    _resource: filters.resource,
+    _page: filters.page,
+    _page_size: filters.pageSize ?? 10,
+    _search: filters.search?.trim() || null,
+    _status: filters.status ?? "all",
+    _district: filters.district ?? "all",
+    _barangay: filters.barangay ?? "all",
+    _classification: filters.classification ?? "all",
+    _date_range: filters.dateRange ?? "all",
+    _sort: filters.sort ?? "newest",
+  });
+  if (error) throw new Error(error.message || "Unable to load the admin list.");
+  if (!data || typeof data !== "object" || Array.isArray(data) || !Array.isArray((data as { rows?: unknown }).rows)) {
+    throw new Error("The admin list response was invalid.");
+  }
+
+  const response = data as {
+    rows?: Array<Record<string, unknown>>;
+    totalCount?: number;
+    page?: number;
+    pageSize?: number;
+    summary?: Record<string, number>;
+  };
+  const rawRows = Array.isArray(response.rows) ? response.rows : [];
+  const rows = filters.resource === "registrations"
+    ? rawRows.flatMap((row) => {
+        const summary = row.profile as Partial<OrganizationProfileRow> | null;
+        if (!summary?.id || !summary.created_at || !summary.updated_at || !summary.organization_name || !summary.user_id) {
+          return [];
+        }
+        const profile: OrganizationProfileRow = {
+          id: summary.id,
+          reference_id: summary.reference_id ?? null,
+          user_id: summary.user_id,
+          organization_name: summary.organization_name,
+          organization_email: summary.organization_email ?? "",
+          contact_number: "",
+          district: summary.district ?? "",
+          barangay: summary.barangay ?? "",
+          is_existing_organization: summary.is_existing_organization ?? false,
+          organization_identifier_number: summary.organization_identifier_number ?? null,
+          registration_type: summary.registration_type ?? null,
+          urn: summary.urn ?? null,
+          major_classification: summary.major_classification ?? null,
+          sub_classification: null,
+          advocacies: [],
+          adviser_name: "",
+          representative_name: "",
+          address: "",
+          facebook_page_url: "",
+          profile_status: summary.profile_status ?? "pending_review",
+          verified_at: null,
+          internal_notes: null,
+          yorp_registered_year: null,
+          yorp_renewed_year: null,
+          created_at: summary.created_at,
+          updated_at: summary.updated_at,
+        };
+        return [{
+          profile: mapOrganizationProfile(profile),
+          submittedDocumentCount: Number(row.submitted_document_count ?? 0),
+        }];
+      })
+    : filters.resource === "inquiries"
+      ? rawRows.map((row) => mapInquiry(row as unknown as InquiryRow))
+      : rawRows.map((row) => mapActivityLog(row as unknown as ActivityLogRow));
+
+  return {
+    rows,
+    totalCount: Number(response.totalCount ?? 0),
+    page: Number(response.page ?? filters.page),
+    pageSize: Number(response.pageSize ?? filters.pageSize ?? 10),
+    summary: Object.fromEntries(
+      Object.entries(response.summary ?? {}).map(([key, value]) => [key, Number(value)]),
+    ),
+  };
+};
+
+/** Retrieve matching activity pages only for an explicit export action. */
+export const fetchAllAdminActivityLogs = async (filters: {
+  search?: string;
+  category?: string;
+  dateRange?: string;
+}): Promise<ActivityLog[]> => {
+  const pageSize = 50;
+  const firstPage = await fetchAdminPortalListPage({
+    resource: "activity_logs",
+    page: 0,
+    pageSize,
+    search: filters.search,
+    status: filters.category,
+    dateRange: filters.dateRange,
+  });
+  const firstRows = firstPage.rows.filter((row): row is ActivityLog => "action" in row);
+  const totalPages = Math.ceil(firstPage.totalCount / pageSize);
+  const rows = [...firstRows];
+  for (let page = 1; page < totalPages; page += 1) {
+    const nextPage = await fetchAdminPortalListPage({
+      resource: "activity_logs",
+      page,
+      pageSize,
+      search: filters.search,
+      status: filters.category,
+      dateRange: filters.dateRange,
+    });
+    rows.push(...nextPage.rows.filter((row): row is ActivityLog => "action" in row));
+  }
+  return rows;
+};
+
 export const loadAdminPortalSnapshotState = async (): Promise<Partial<LydoSeedState> | null> => {
   if (!supabase) return null;
 
@@ -1784,297 +2045,29 @@ export const markAllNotificationsReadInSupabase = async () => {
 };
 
 export const loadAdminPortalSupabaseState = async (): Promise<Partial<LydoSeedState> | null> => {
-  if (!supabase) return null;
+  const remoteState = await loadAdminPortalSnapshotState();
+  if (!remoteState) return null;
 
-  const adminSession = readAdminSession();
-  if (!adminSession?.sessionToken) return null;
-
-  const inquiriesPromise = supabase
-    .rpc("get_admin_inquiries", { _session_token: adminSession.sessionToken })
-    .then(({ data, error }) => {
-      if (error) {
-        console.warn("Admin inquiries RPC failed; falling back to snapshot data.", error.message);
-        return [] as InquiryRow[];
-      }
-      return (data as InquiryRow[] | null) ?? [];
-    })
-    .catch((error: unknown) => {
-      console.warn("Admin inquiries RPC unavailable; falling back to snapshot data.", error);
-      return [] as InquiryRow[];
-    });
-
-  // get_admin_portal_snapshot does not currently return ypop_periods /
-  // ypop_city_activities / ypop_entries, so these are fetched here via their
-  // own session-token-validated RPCs rather than relying on that snapshot —
-  // otherwise every periodic snapshot sync would wipe out periods/
-  // activities/entries the admin just created. These RPCs are security
-  // definer and validate the admin session before returning anything, so
-  // they bypass RLS safely without needing any public-read policy on the
-  // underlying tables (see add_admin_ypop_read_rpcs.sql).
-  const ypopPeriodsPromise = (async (): Promise<YpopPeriodRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_periods", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_periods RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopPeriodRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_periods RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const ypopCityActivitiesPromise = (async (): Promise<YpopCityActivityRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_city_activities", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_city_activities RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopCityActivityRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_city_activities RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const ypopEntriesPromise = (async (): Promise<YpopEntryRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_entries", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_entries RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopEntryRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_entries RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const ypopEventParticipationsPromise = (async (): Promise<YpopEventParticipationRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_event_participations", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_event_participations RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopEventParticipationRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_event_participations RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const ypopEventFilesPromise = (async (): Promise<YpopEventFileRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_event_files", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_event_files RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopEventFileRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_event_files RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const ypopOrgActivitiesPromise = (async (): Promise<YpopOrgActivityRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_org_activities", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_org_activities RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopOrgActivityRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_org_activities RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const ypopOrgActivityFilesPromise = (async (): Promise<YpopOrgActivityFileRow[] | null> => {
-    try {
-      const { data, error } = await supabase.rpc("admin_get_ypop_org_activity_files", {
-        _session_token: adminSession.sessionToken,
-      });
-      if (error) {
-        console.warn("admin_get_ypop_org_activity_files RPC failed; falling back to snapshot data.", error.message);
-        return null;
-      }
-      return (data ?? []) as YpopOrgActivityFileRow[];
-    } catch (error) {
-      console.warn("admin_get_ypop_org_activity_files RPC unavailable; falling back to snapshot data.", error);
-      return null;
-    }
-  })();
-
-  const adminTemplatesPromise = (async (): Promise<TemplateRecord[] | null> => {
-    try {
-      const { data, error } = await supabase!
-        .from("required_document_types")
-        .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,scope,template_scope,template_category,template_file_size,updated_at")
-        .order("sort_order", { ascending: true });
-      if (error || !data) return null;
-      return (data as RequiredDocumentTypeRow[])
-        .map(mapTemplate)
-        .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name));
-    } catch (err) {
-      console.warn("admin templates query unavailable; falling back to snapshot data.", err);
-      return null;
-    }
-  })();
-
-  const adminNewsCategoriesPromise = (async (): Promise<NewsCategoryRecord[] | null> => {
-    try {
-      return await fetchNewsCategories();
-    } catch (err) {
-      console.warn("admin news categories query unavailable; falling back to snapshot data.", err);
-      return null;
-    }
-  })();
-
-  const { data, error } = await supabase.rpc("get_admin_portal_snapshot", {
-    _session_token: adminSession.sessionToken,
-  });
-
-  let remoteState: Partial<LydoSeedState> = {};
-  if (error) {
-    if (error.message?.includes("Admin account is not authorized")) {
-      return null;
-    }
-    console.warn("Admin portal snapshot RPC failed; loading inquiries only.", error.message);
-  } else if (data && typeof data === "object") {
-    const snapshot = data as AdminPortalSnapshot;
-    remoteState = {
-      organizationProfiles: (snapshot.organization_profiles ?? []).map(mapOrganizationProfile),
-      documentSubmissions: (snapshot.document_submissions ?? []).map(mapDocumentSubmission),
-      documentSubmissionFiles: (snapshot.document_submission_files ?? [])
-        .map(mapDocumentFile)
-        .filter((file): file is SubmissionFile => Boolean(file)),
-      budgetRequests: (snapshot.budget_requests ?? []).map(mapBudgetRequest),
-      budgetRequestFiles: (snapshot.budget_request_files ?? []).map(mapBudgetRequestFile),
-      liquidationReports: (snapshot.liquidation_reports ?? []).map(mapLiquidationReport),
-      liquidationReportFiles: (snapshot.liquidation_report_files ?? []).map(mapLiquidationReportFile),
-      newsReleases: (snapshot.news_releases ?? []).map(mapNewsRelease),
-      newsCategories: (snapshot.news_categories ?? []).map(mapNewsCategory),
-      transparencyPosts: (snapshot.transparency_posts ?? []).map(mapTransparencyPost),
-      complianceRemarks: (snapshot.compliance_remarks ?? []).map(mapComplianceRemark),
-      notifications: (snapshot.notifications ?? []).map(mapNotification),
-      activityLogs: (snapshot.activity_logs ?? []).map(mapActivityLog),
-      templates: (snapshot.templates ?? [])
-        .map(mapTemplate)
-        .filter((template): template is TemplateRecord => Boolean(template) && !legacyRemovedTemplateNames.has(template.name)),
-      ypopPeriods: (snapshot.ypop_periods ?? []).map(mapYpopPeriod),
-      ypopCityActivities: (snapshot.ypop_city_activities ?? []).map(mapYpopCityActivity),
-      ypopEntries: (snapshot.ypop_entries ?? []).map(mapYpopEntry),
-      ypopFiles: (snapshot.ypop_files ?? []).map(mapYpopFile),
-      ypopEventParticipations: (snapshot.ypop_event_participations ?? []).map(mapYpopEventParticipation),
-      ypopEventFiles: (snapshot.ypop_event_files ?? []).map(mapYpopEventFile),
-      ypopOrgActivities: (snapshot.ypop_org_activities ?? []).map(mapYpopOrgActivity),
-      ypopOrgActivityFiles: (snapshot.ypop_org_activity_files ?? []).map(mapYpopOrgActivityFile),
-      inquiries: (snapshot.inquiries ?? []).map(mapInquiry),
-    };
-  }
-
-  const [
-    inquiryRows,
-    ypopPeriodRows,
-    ypopCityActivityRows,
-    ypopEntryRows,
-    ypopEventParticipationRows,
-    ypopEventFileRows,
-    ypopOrgActivityRows,
-    ypopOrgActivityFileRows,
-    adminTemplateRows,
-    adminNewsCategories,
-  ] = await Promise.all([
-    inquiriesPromise,
-    ypopPeriodsPromise,
-    ypopCityActivitiesPromise,
-    ypopEntriesPromise,
-    ypopEventParticipationsPromise,
-    ypopEventFilesPromise,
-    ypopOrgActivitiesPromise,
-    ypopOrgActivityFilesPromise,
-    adminTemplatesPromise,
-    adminNewsCategoriesPromise,
-  ]);
-  if (adminTemplateRows !== null) {
-    remoteState.templates = adminTemplateRows;
-  }
-  if (adminNewsCategories !== null && (adminNewsCategories.length > 0 || !remoteState.newsCategories?.length)) {
-    remoteState.newsCategories = adminNewsCategories;
-  }
-  if (inquiryRows.length > 0 || !remoteState.inquiries?.length) {
-    remoteState.inquiries = inquiryRows.map(mapInquiry);
-  }
-  if (ypopPeriodRows) {
-    remoteState.ypopPeriods = ypopPeriodRows.map(mapYpopPeriod);
-  }
-  if (ypopCityActivityRows) {
-    remoteState.ypopCityActivities = ypopCityActivityRows.map(mapYpopCityActivity);
-  }
-  if (ypopEntryRows) {
-    remoteState.ypopEntries = ypopEntryRows.map(mapYpopEntry);
-  }
-  if (ypopEventParticipationRows) {
-    remoteState.ypopEventParticipations = ypopEventParticipationRows
-      .filter((r) => r.status && r.status !== "draft")
-      .map(mapYpopEventParticipation);
-  }
-  if (ypopEventFileRows) {
-    remoteState.ypopEventFiles = ypopEventFileRows.map(mapYpopEventFile);
-  }
-  if (ypopOrgActivityRows) {
-    remoteState.ypopOrgActivities = ypopOrgActivityRows
-      .filter((r) => r.status && r.status !== "draft")
-      .map(mapYpopOrgActivity);
-  }
-  if (ypopOrgActivityFileRows) {
-    remoteState.ypopOrgActivityFiles = ypopOrgActivityFileRows.map(mapYpopOrgActivityFile);
-  }
-
-  // DATA BOUNDARY: Scope ypopEventFiles and ypopOrgActivityFiles so Admin ONLY receives files belonging to
-  // reviewable/submitted participations and activities.
-  // Files belonging to a 'draft' participation or activity MUST NOT be exposed to Admin.
-  const participations = remoteState.ypopEventParticipations ?? [];
-  const reviewableParticipationIds = new Set(
-    participations.filter((p) => p.status && p.status !== "draft").map((p) => p.id),
+  // Match the old supplemental YPOP reads: drafts and their private files are
+  // not part of the admin review surface.
+  remoteState.ypopEventParticipations = (remoteState.ypopEventParticipations ?? []).filter(
+    (participation) => participation.status && participation.status !== "draft",
   );
-  if (remoteState.ypopEventFiles) {
-    remoteState.ypopEventFiles = remoteState.ypopEventFiles.filter((file) =>
-      reviewableParticipationIds.has(file.participationId),
-    );
-  }
-
-  const orgActivities = remoteState.ypopOrgActivities ?? [];
-  const reviewableOrgActivityIds = new Set(
-    orgActivities.filter((a) => a.status && a.status !== "draft").map((a) => a.id),
+  const reviewableParticipationIds = new Set(remoteState.ypopEventParticipations.map((row) => row.id));
+  remoteState.ypopEventFiles = (remoteState.ypopEventFiles ?? []).filter((file) =>
+    reviewableParticipationIds.has(file.participationId),
   );
-  if (remoteState.ypopOrgActivityFiles) {
-    remoteState.ypopOrgActivityFiles = remoteState.ypopOrgActivityFiles.filter((file) =>
-      reviewableOrgActivityIds.has(file.orgActivityId),
-    );
-  }
+
+  remoteState.ypopOrgActivities = (remoteState.ypopOrgActivities ?? []).filter(
+    (activity) => activity.status && activity.status !== "draft",
+  );
+  const reviewableOrgActivityIds = new Set(remoteState.ypopOrgActivities.map((row) => row.id));
+  remoteState.ypopOrgActivityFiles = (remoteState.ypopOrgActivityFiles ?? []).filter((file) =>
+    reviewableOrgActivityIds.has(file.orgActivityId),
+  );
 
   return remoteState;
 };
-
 export const upsertOrganizationProfileInSupabase = async (profile: OrganizationProfile) => {
   if (!supabase) throw new Error("Supabase is not configured.");
 

@@ -85,6 +85,21 @@ const mockClosedInquiry: InquiryRecord = {
   updatedAt: "2026-09-16T11:00:00.000Z",
 };
 
+vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/lydo-connect-supabase")>();
+  return {
+    ...actual,
+    fetchAdminPortalListPage: vi.fn().mockImplementation(async (filters: { resource: string; page: number; pageSize?: number }) => ({
+      rows: filters.resource === "inquiries" ? [mockPendingInquiry, mockReviewedInquiry, mockClosedInquiry] : [],
+      totalCount: filters.resource === "inquiries" ? 3 : 0,
+      page: filters.page,
+      pageSize: filters.pageSize ?? 10,
+      summary: { total: 3, pendingReview: 1, reviewed: 1, closed: 1 },
+    })),
+    fetchAdminRecentNotifications: vi.fn().mockResolvedValue({ notifications: [], unreadCount: 0 }),
+  };
+});
+
 describe("Admin Inquiries Workflow — Option A: Gmail Compose Workflow", { timeout: 30000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();

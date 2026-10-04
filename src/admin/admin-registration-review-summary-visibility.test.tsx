@@ -213,6 +213,27 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
     getAdminUnitsInSupabase: vi.fn().mockResolvedValue([]),
     fetchAllOrganizationRenewalsInSupabase: vi.fn().mockResolvedValue([]),
     fetchAllOrganizationAccreditationsInSupabase: vi.fn().mockResolvedValue([]),
+    fetchAdminPortalListPage: vi.fn().mockImplementation(async (filters: { resource: string; page: number; pageSize?: number }) => ({
+      rows: filters.resource === "registrations"
+        ? [verifiedOrg, pendingOrg, needsUpdateOrg, suspendedOrg].map((profile) => ({ profile, submittedDocumentCount: 1 }))
+        : [],
+      totalCount: filters.resource === "registrations" ? 4 : 0,
+      page: filters.page,
+      pageSize: filters.pageSize ?? 10,
+      summary: { total: 4, verified: 1, pendingReview: 1, needsRevision: 1, suspended: 1 },
+    })),
+    fetchAdminRegistrationDetail: vi.fn().mockImplementation(async (organizationId: string) => {
+      const profile = [verifiedOrg, pendingOrg, needsUpdateOrg, suspendedOrg].find((item) => item.id === organizationId);
+      const submission = [mockSubmissionVerified, mockSubmissionPending, mockSubmissionNeedsUpdate, mockSubmissionSuspended]
+        .find((item) => item.organizationId === organizationId);
+      return {
+        organizationProfiles: profile ? [profile] : [],
+        documentSubmissions: submission ? [submission] : [],
+        documentSubmissionFiles: mockFiles.filter((item) => item.submissionId === submission?.id),
+        templates: [mockTemplate],
+        activityLogs: [],
+      };
+    }),
     loadAdminPortalSupabaseState: vi.fn().mockImplementation(() =>
       Promise.resolve({
         templates: [mockTemplate],

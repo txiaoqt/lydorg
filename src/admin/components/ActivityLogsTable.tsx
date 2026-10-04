@@ -23,6 +23,7 @@ type ActivityLogsTableProps = {
   dateFilter: ActivityDateFilter;
   onDateFilterChange: (value: ActivityDateFilter) => void;
   adminAccountsById: Record<string, { displayName: string; email: string; roleLabel: string | null }>;
+  serverPagination?: { totalCount: number; onPageChange: (page: number) => void };
 };
 
 const CATEGORY_TABS: { value: ActivityCategoryFilter; label: string }[] = [
@@ -58,18 +59,21 @@ export const ActivityLogsTable = ({
   dateFilter,
   onDateFilterChange,
   adminAccountsById,
+  serverPagination,
 }: ActivityLogsTableProps) => {
   const [page, setPage] = useState(0);
 
-  const totalPages = Math.max(1, Math.ceil(logs.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil((serverPagination?.totalCount ?? logs.length) / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages - 1);
   const pageItems = useMemo(
-    () => logs.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
-    [logs, clampedPage],
+    () => serverPagination ? logs : logs.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
+    [logs, clampedPage, serverPagination],
   );
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const safePage = Math.max(0, Math.min(next, totalPages - 1));
+    setPage(safePage);
+    serverPagination?.onPageChange(safePage);
   };
 
   const activeDateLabel = DATE_FILTER_OPTIONS.find((option) => option.value === dateFilter)?.label ?? "All time";
@@ -87,6 +91,7 @@ export const ActivityLogsTable = ({
               onClick={() => {
                 onCategoryFilterChange(tab.value);
                 setPage(0);
+                serverPagination?.onPageChange(0);
               }}
               className={cn(
                 "inline-flex items-center justify-center whitespace-nowrap rounded-full px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
@@ -111,6 +116,7 @@ export const ActivityLogsTable = ({
               onChange={(event) => {
                 onSearchChange(event.target.value);
                 setPage(0);
+                serverPagination?.onPageChange(0);
               }}
               placeholder="Search activity logs..."
               className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
@@ -134,6 +140,7 @@ export const ActivityLogsTable = ({
                   onClick={() => {
                     onDateFilterChange(option.value);
                     setPage(0);
+                    serverPagination?.onPageChange(0);
                   }}
                   className={cn(
                     "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -222,7 +229,7 @@ export const ActivityLogsTable = ({
         <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
           <p className="font-segoe text-[13px] text-text-neutral-tertiary">
             Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-            <span className="text-text-default">{logs.length}</span> records
+            <span className="text-text-default">{serverPagination?.totalCount ?? logs.length}</span> records
           </p>
           <div className="flex items-center gap-2">
             <button

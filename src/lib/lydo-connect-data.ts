@@ -1521,6 +1521,7 @@ export type ActivityLog = {
   relatedId: string;
   description: string;
   createdAt: string;
+  organizationName?: string;
   metadata?: Record<string, unknown>;
 };
 

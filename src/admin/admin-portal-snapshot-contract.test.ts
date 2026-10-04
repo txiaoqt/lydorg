@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   mapDocumentFile,
   loadAdminPortalSupabaseState,
+  fetchAdminPortalListPage,
+  fetchAdminDashboardSummary,
+  fetchAdminRecentNotifications,
 } from "@/lib/lydo-connect-supabase";
 import { supabase } from "@/lib/supabase";
 
@@ -55,6 +58,7 @@ describe("Admin Portal Snapshot Contract & OCR Removal Regression Tests", () => 
         id: "file-uuid-001",
         submissionId: "sub-uuid-001",
         documentTypeId: "tpl-uuid-001",
+        documentTypeName: "Constitution and By-Laws",
         fileName: "constitution.pdf",
         fileUrl: "https://storage.ytrace.gov/docs/constitution.pdf",
         fileType: "application/pdf",
@@ -123,7 +127,7 @@ describe("Admin Portal Snapshot Contract & OCR Removal Regression Tests", () => 
       expect(supabase!.rpc).not.toHaveBeenCalledWith("get_admin_portal_snapshot", expect.anything());
     });
 
-    it("calls get_admin_portal_snapshot with valid session token and hydrates all snapshot sections", async () => {
+    it("loads snapshot sections once without duplicate inquiry, YPOP, template, or category requests", async () => {
       // Seed a valid admin session
       window.localStorage.setItem(
         "lydo_admin_session_v1",
@@ -216,22 +220,14 @@ describe("Admin Portal Snapshot Contract & OCR Removal Regression Tests", () => 
         return Promise.resolve({ data: [], error: null });
       });
 
-      // Mock from() for supplementary admin templates query
-      (supabase!.from as ReturnType<typeof vi.fn>).mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({
-            data: mockSnapshotData.templates,
-            error: null,
-          }),
-        }),
-      });
-
       const result = await loadAdminPortalSupabaseState();
 
       expect(result).not.toBeNull();
       expect(supabase!.rpc).toHaveBeenCalledWith("get_admin_portal_snapshot", {
         _session_token: "valid_admin_token_xyz",
       });
+      expect(supabase!.rpc).toHaveBeenCalledTimes(1);
+      expect(supabase!.from).not.toHaveBeenCalled();
 
       // Verify sections are hydrated
       expect(result!.organizationProfiles).toHaveLength(1);
@@ -245,6 +241,206 @@ describe("Admin Portal Snapshot Contract & OCR Removal Regression Tests", () => 
       const archivedTpl = result!.templates!.find((t) => t.id === "tpl-archived-1");
       expect(activeTpl?.isActive).toBe(true);
       expect(archivedTpl?.isActive).toBe(false);
+    });
+
+    it("loads registrations through one filtered, bounded admin RPC page", async () => {
+      window.localStorage.setItem(
+        "lydo_admin_session_v1",
+        JSON.stringify({
+          id: "admin-1",
+          username: "lydoadmin",
+          email: "admin@ytrace.gov",
+          displayName: "Admin User",
+          sessionToken: "valid_admin_token_xyz",
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        }),
+      );
+      (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: {
+          rows: [{
+            profile: {
+              id: "org-1",
+              reference_id: "YORP-001",
+              user_id: "user-1",
+              organization_name: "Youth Leaders Association",
+              organization_email: "youth@example.gov",
+              district: "District I",
+              barangay: "San Antonio",
+              is_existing_organization: false,
+              organization_identifier_number: null,
+              registration_type: "new_organization",
+              urn: null,
+              major_classification: "community_based",
+              profile_status: "pending_review",
+              created_at: "2026-10-01T00:00:00.000Z",
+              updated_at: "2026-10-02T00:00:00.000Z",
+            },
+            submitted_document_count: 3,
+          }],
+          totalCount: 1,
+          page: 2,
+          pageSize: 10,
+        },
+        error: null,
+      });
+
+      const result = await fetchAdminPortalListPage({
+        resource: "registrations",
+        page: 2,
+        pageSize: 10,
+        search: "Youth Leaders",
+        status: "pending_review",
+        district: "District I",
+        barangay: "San Antonio",
+        classification: "community_based",
+      });
+
+      expect(supabase!.rpc).toHaveBeenCalledTimes(1);
+      expect(supabase!.rpc).toHaveBeenCalledWith("admin_get_portal_list_page", {
+        _session_token: "valid_admin_token_xyz",
+        _resource: "registrations",
+        _page: 2,
+        _page_size: 10,
+        _search: "Youth Leaders",
+        _status: "pending_review",
+        _district: "District I",
+        _barangay: "San Antonio",
+        _classification: "community_based",
+        _date_range: "all",
+        _sort: "newest",
+      });
+      expect(supabase!.from).not.toHaveBeenCalled();
+      expect(result.totalCount).toBe(1);
+      expect(result.page).toBe(2);
+      expect("profile" in result.rows[0]).toBe(true);
+      if ("profile" in result.rows[0]) {
+        expect(result.rows[0].profile.organizationName).toBe("Youth Leaders Association");
+        expect(result.rows[0].profile.contactNumber).toBe("");
+        expect(result.rows[0].submittedDocumentCount).toBe(3);
+      }
+    });
+
+    it("loads only aggregate dashboard metrics and bounded recent records", async () => {
+      window.localStorage.setItem(
+        "lydo_admin_session_v1",
+        JSON.stringify({
+          id: "admin-1",
+          username: "lydoadmin",
+          email: "admin@ytrace.gov",
+          displayName: "Admin User",
+          sessionToken: "valid_admin_token_xyz",
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        }),
+      );
+      (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: {
+          summary: { organizationsTotal: "84", pendingProfiles: "3", pendingYpop: "2" },
+          budgetTotals: { approved: "1500", released: "1200", liquidated: "500" },
+          needsAttention: [{
+            id: "registration-org-1",
+            kind: "registration",
+            organizationName: "Youth Leaders Association",
+            actionText: "Review registration",
+            verb: "Submitted",
+            timestamp: "2026-10-02T00:00:00.000Z",
+          }],
+          recentActivity: [{
+            id: "log-1",
+            action: "Approved document submission",
+            description: "Approved constitution",
+            createdAt: "2026-10-02T00:00:00.000Z",
+          }],
+        },
+        error: null,
+      });
+
+      const result = await fetchAdminDashboardSummary(2026);
+
+      expect(supabase!.rpc).toHaveBeenCalledTimes(1);
+      expect(supabase!.rpc).toHaveBeenCalledWith("admin_get_dashboard_summary", {
+        _session_token: "valid_admin_token_xyz",
+        _fiscal_year: 2026,
+      });
+      expect(result.summary.organizationsTotal).toBe(84);
+      expect(result.budgetTotals).toEqual({ approved: 1500, released: 1200, liquidated: 500 });
+      expect(result.needsAttention).toHaveLength(1);
+      expect(result.recentActivity).toHaveLength(1);
+      expect(supabase!.from).not.toHaveBeenCalled();
+    });
+
+    it("accepts a permission-scoped dashboard response for a limited administrator", async () => {
+      window.localStorage.setItem(
+        "lydo_admin_session_v1",
+        JSON.stringify({
+          id: "limited-admin-1",
+          username: "limitedadmin",
+          email: "limited-admin@ytrace.gov",
+          displayName: "Limited Admin",
+          sessionToken: "valid_limited_admin_token",
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          roleCode: "admin",
+          permissionCodes: ["registrations_management", "yorp_registry_view", "news_releases_management"],
+        }),
+      );
+      (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: {
+          summary: { organizationsTotal: "84", pendingProfiles: "3" },
+          budgetTotals: null,
+          needsAttention: [],
+          recentActivity: [],
+        },
+        error: null,
+      });
+
+      const result = await fetchAdminDashboardSummary(2026);
+
+      expect(result.summary).toEqual({ organizationsTotal: 84, pendingProfiles: 3 });
+      expect(result.summary).not.toHaveProperty("budgetRequestsTotal");
+      expect(result.budgetTotals).toEqual({ approved: 0, released: 0, liquidated: 0 });
+      expect(result.needsAttention).toEqual([]);
+      expect(result.recentActivity).toEqual([]);
+    });
+
+    it("loads a bounded notification window and unread aggregate", async () => {
+      window.localStorage.setItem(
+        "lydo_admin_session_v1",
+        JSON.stringify({
+          id: "admin-1",
+          username: "lydoadmin",
+          email: "admin@ytrace.gov",
+          displayName: "Admin User",
+          sessionToken: "valid_admin_token_xyz",
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        }),
+      );
+      (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: {
+          unreadCount: "2",
+          notifications: [{
+            id: "notification-1",
+            user_id: "admin-1",
+            organization_id: null,
+            title: "Review completed",
+            message: "A registration was approved.",
+            type: "system",
+            related_type: "registration",
+            related_id: "org-1",
+            is_read: false,
+            created_at: "2026-10-02T00:00:00.000Z",
+          }],
+        },
+        error: null,
+      });
+
+      const result = await fetchAdminRecentNotifications();
+
+      expect(supabase!.rpc).toHaveBeenCalledWith("admin_get_recent_notifications", {
+        _session_token: "valid_admin_token_xyz",
+        _limit: 25,
+      });
+      expect(result.unreadCount).toBe(2);
+      expect(result.notifications).toHaveLength(1);
+      expect(result.notifications[0].title).toBe("Review completed");
     });
   });
 
@@ -282,8 +478,9 @@ describe("Admin Portal Snapshot Contract & OCR Removal Regression Tests", () => 
 
       const result = await loadAdminPortalSupabaseState();
 
+      expect(result).toBeNull();
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Admin portal snapshot RPC failed; loading inquiries only."),
+        expect.stringContaining("get_admin_portal_snapshot RPC failed:"),
         "column dsf.ocr_text does not exist",
       );
 
