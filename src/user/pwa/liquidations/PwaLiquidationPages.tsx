@@ -34,9 +34,50 @@ const submittableStatuses = new Set<LiquidationStatus>(["pending_activity_comple
 const replacementStatuses = new Set<LiquidationStatus>(["needs_revision", "rejected_red"]);
 type ReportWithBudget = LiquidationReport & { relatedBudget?: Pick<BudgetRequest, "id" | "activityTitle" | "purposeCategory" | "venue" | "releasedAmount" | "approvedAmount"> | null };
 
-export function PwaLiquidationList({ data }: { data: PortalData }) {
+export function PwaLiquidationEligibilityNotice({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
   const releasedBudget = data.liquidationWorkflowEligibility.releasedBudget;
+  if (data.liquidationWorkflowEligibility.eligible) return null;
+  const requirements = data.liquidationWorkflowEligibility.requirements;
+  return (
+    <section className="pwa-eligibility-notice">
+      <ReceiptText aria-hidden="true" />
+      <div>
+        <h2>No liquidation report is available yet</h2>
+        <p>Liquidation becomes available after an eligible budget is approved and released.</p>
+        <ul className="pwa-requirement-list">
+          {requirements.map((item) => (
+            <li key={item.id} className={item.met ? "is-complete" : ""}>
+              {item.met ? <Check /> : <Circle />}
+              <span>{item.label}</span>
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          onClick={() => {
+            if (data.profile?.profileStatus !== "verified") go(PWA_ROUTES.profile);
+            else if (!data.budgetEligibility.eligible) go(PWA_ROUTES.ypop);
+            else if (releasedBudget) go(pwaBudgetDetailRoute(releasedBudget.id));
+            else go(PWA_ROUTES.budgets);
+          }}
+        >
+          {data.profile?.profileStatus !== "verified"
+            ? "View Registration Status"
+            : !data.budgetEligibility.eligible
+              ? "Open YPOP Incentive"
+              : releasedBudget
+                ? "View Released Budget"
+                : "View Budget Requests"}
+          <ChevronRight aria-hidden="true" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+export function PwaLiquidationList({ data }: { data: PortalData }) {
+  const { go } = usePwaNavigation();
   const [page, setPage] = useState(1);
   const organizationId = data.profile?.id ?? "";
   const pageQuery = useQuery({
@@ -50,6 +91,7 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
   useEffect(() => setPage(1), [organizationId]);
   return (
     <div className="pwa-stack pwa-liquidation-list-page">
+      <PwaLiquidationEligibilityNotice data={data} />
       <section className="pwa-compact-card-list">
         {reports.map((report) => {
           const budget = data.budgetRequests.find((item) => item.id === report.budgetRequestId) ?? (report as ReportWithBudget).relatedBudget;
@@ -72,35 +114,9 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
           );
         })}
         {!totalCount ? (
-          <section className="pwa-card pwa-contextual-empty">
-            <span className="pwa-settings-hero-icon"><ReceiptText aria-hidden="true" /></span>
-            <div>
-              <h2>No liquidation report is available yet</h2>
-              <p>Liquidation becomes available after an eligible budget is approved and released.</p>
-            </div>
-            <ul className="pwa-requirement-list">
-              {data.liquidationWorkflowEligibility.requirements.map((item) => <li key={item.id} className={item.met ? "is-complete" : ""}>{item.met ? <Check /> : <Circle />}<span>{item.label}</span></li>)}
-            </ul>
-            <button
-              type="button"
-              className="pwa-secondary-button"
-              onClick={() => {
-                if (data.profile?.profileStatus !== "verified") go(PWA_ROUTES.profile);
-                else if (!data.budgetEligibility.eligible) go(PWA_ROUTES.ypop);
-                else if (releasedBudget) go(pwaBudgetDetailRoute(releasedBudget.id));
-                else go(PWA_ROUTES.budgets);
-              }}
-            >
-              {data.profile?.profileStatus !== "verified"
-                ? "View Registration Status"
-                : !data.budgetEligibility.eligible
-                  ? "Open YPOP Incentive"
-                  : releasedBudget
-                    ? "View Released Budget"
-                    : "View Budget Requests"}
-              <ChevronRight aria-hidden="true" />
-            </button>
-          </section>
+          <div className="pwa-card pwa-empty-copy">
+            No liquidation reports have been created yet.
+          </div>
         ) : null}
       </section>
       <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />

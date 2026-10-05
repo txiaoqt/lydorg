@@ -136,10 +136,14 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
   }));
   const total = data.requiredTemplates.length;
   const submissionLocked = Boolean(data.submission && !["draft", "needs_revision"].includes(data.submission.status));
+
   const allApproved = total > 0 && data.approvedDocuments === total;
   const canManageDocuments = !submissionLocked && data.requiredTemplates.some((template) => {
     const file = byType.get(template.id);
-    return !file || initialUploadStatuses.has(file.adminStatus);
+    return !file || initialUploadStatuses.has(file.adminStatus)
+      || (correctionStatuses.has(file.adminStatus)
+        && !isSubmissionRevisionLocked(file)
+        && !isSubmissionRevisionLocked(data.submission));
   });
   const helper = data.underReviewDocuments
     ? `${data.underReviewDocuments} under admin review`
@@ -609,6 +613,13 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
   })), [data.documentFiles, data.requiredTemplates]);
   const assignedTypes = new Set(pending.map((item) => item.documentTypeId).filter(Boolean));
   const submissionLocked = Boolean(data.submission && !["draft", "needs_revision"].includes(data.submission.status));
+  const canCorrectFile = (file: SubmissionFile) => correctionStatuses.has(file.adminStatus)
+    && !isSubmissionRevisionLocked(file)
+    && !isSubmissionRevisionLocked(data.submission);
+  const hasSelectedCorrections = pending.some((item) => {
+    const existing = fileByType.get(item.documentTypeId);
+    return Boolean(existing && correctionStatuses.has(existing.adminStatus));
+  });
 
   const appendFiles = (files: File[]) => {
     setPending((current) => [
@@ -650,7 +661,17 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
         return;
       }
       if (existing && correctionStatuses.has(existing.adminStatus)) {
-        toast({ title: "Use the document details page", description: "Reviewed documents must be corrected one at a time.", variant: "destructive" });
+        if (!canCorrectFile(existing)) {
+          toast({ title: "Revision locked", description: "The revision period has expired. Ask PCYDO to unlock this document before replacing it.", variant: "destructive" });
+          return;
+        }
+        if (mode === "draft") {
+          toast({ title: "Submit the corrected document", description: "Use Submit Selected Files to replace the reviewed file and send the correction for review.", variant: "destructive" });
+          return;
+        }
+      }
+      if (existing && !initialUploadStatuses.has(existing.adminStatus) && !correctionStatuses.has(existing.adminStatus)) {
+        toast({ title: "Document locked", description: "This document is awaiting admin review. You can replace it only if the admin requests a revision.", variant: "destructive" });
         return;
       }
       const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId);
@@ -665,25 +686,57 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
     setConfirmation(null);
     setSaving(true);
     try {
-      const result = await submitOrganizationDocumentsBatchToSupabase({
-        submitMode: mode,
-        documents: pending.map((item) => {
-          const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
-          return {
-            documentTypeId: template.databaseId || template.id,
-            documentTypeName: template.name,
-            file: item.file,
-            validationStatus: "correct",
-            adminRemarks: mode === "draft" ? "Saved as draft." : "Awaiting admin review.",
-          };
-        }),
+      const successfulPendingIds = new Set<string>();
+      const failures: string[] = [];
+      const newUploads = pending.filter((item) => {
+        const existing = fileByType.get(item.documentTypeId);
+        return !existing || !correctionStatuses.has(existing.adminStatus);
       });
+      if (newUploads.length) {
+        try {
+          const result = await submitOrganizationDocumentsBatchToSupabase({
+            submitMode: mode,
+            documents: newUploads.map((item) => {
+              const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
+              return {
+                documentTypeId: template.databaseId || template.id,
+                documentTypeName: template.name,
+                file: item.file,
+                validationStatus: "correct",
+                adminRemarks: mode === "draft" ? "Saved as draft." : "Awaiting admin review.",
+              };
+            }),
+          });
+          result.results.forEach((entry, index) => {
+            if (entry.success) successfulPendingIds.add(newUploads[index].id);
+            else failures.push(entry.error || "The document could not be uploaded.");
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "The document could not be uploaded.";
+          newUploads.forEach(() => failures.push(message));
+        }
+      }
+      for (const item of pending.filter((entry) => !newUploads.includes(entry))) {
+        const existing = fileByType.get(item.documentTypeId)!;
+        const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
+        try {
+          await replaceOrganizationDocumentFileInSupabase({
+            fileId: existing.id,
+            documentTypeId: template.databaseId || template.id,
+            expectedUpdatedAt: existing.updatedAt,
+            file: item.file,
+          });
+          successfulPendingIds.add(item.id);
+        } catch (error) {
+          failures.push(error instanceof Error ? error.message : "The corrected document could not be submitted.");
+        }
+      }
       await data.refreshDocuments();
-      if (result.failureCount) {
-        toast({ title: `${result.successCount} uploaded, ${result.failureCount} failed`, description: result.results.find((item) => !item.success)?.error || "Review the failed files.", variant: "destructive" });
+      setPending((current) => current.filter((item) => !successfulPendingIds.has(item.id)));
+      if (failures.length) {
+        toast({ title: `${successfulPendingIds.size} uploaded, ${failures.length} failed`, description: failures[0], variant: "destructive" });
       } else {
-        toast({ title: mode === "draft" ? "Drafts saved" : "Documents submitted", description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} uploaded successfully.` });
-        setPending([]);
+        toast({ title: mode === "draft" ? "Drafts saved" : "Documents submitted", description: `${successfulPendingIds.size} document${successfulPendingIds.size === 1 ? "" : "s"} uploaded successfully.` });
       }
     } catch (error) {
       toast({ title: "Upload failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
@@ -693,7 +746,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
   };
 
   const removeExisting = async (file: SubmissionFile) => {
-    if (submissionLocked || approvedStatuses.has(file.adminStatus)) return;
+    if (submissionLocked || !initialUploadStatuses.has(file.adminStatus)) return;
     try {
       await removeOrganizationDocumentFromSupabase(file.id);
       await data.refreshDocuments();
@@ -770,7 +823,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
                   <option value="">Select a document type</option>
                   {data.requiredTemplates.map((template) => {
                     const existing = fileByType.get(template.id);
-                    const locked = submissionLocked || Boolean(existing && (approvedStatuses.has(existing.adminStatus) || correctionStatuses.has(existing.adminStatus)));
+                    const locked = submissionLocked || Boolean(existing && !initialUploadStatuses.has(existing.adminStatus) && !canCorrectFile(existing));
                     return <option key={template.id} value={template.id} disabled={locked || (assignedTypes.has(template.id) && item.documentTypeId !== template.id)}>{template.name}{locked ? " (Locked)" : ""}</option>;
                   })}
                 </select>
@@ -791,7 +844,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
               <div className="pwa-manage-actions">
                 {template.templateFileUrl ? <button type="button" aria-label={`Download ${template.name} template`} onClick={() => void downloadReference(template.templateFileUrl, template.templateFileName || `${template.name}.pdf`)}><Download /></button> : null}
                 {file?.fileUrl ? <button type="button" aria-label={`View ${template.name}`} onClick={() => requestPwaDocumentPreview(file.fileUrl, file.fileName)}><Eye /></button> : null}
-                {file && !submissionLocked && !approvedStatuses.has(file.adminStatus) && !correctionStatuses.has(file.adminStatus) ? <button type="button" aria-label={`Remove ${template.name}`} onClick={() => void removeExisting(file)}><Trash2 /></button> : null}
+                {file && !submissionLocked && initialUploadStatuses.has(file.adminStatus) ? <button type="button" aria-label={`Remove ${template.name}`} onClick={() => void removeExisting(file)}><Trash2 /></button> : null}
               </div>
             </article>
           );
@@ -799,9 +852,10 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
       </section>
 
       <div className="pwa-sticky-actions">
-        <button type="button" className="pwa-secondary-button" disabled={saving || !pending.length} onClick={() => void submit("draft")}>{saving ? <Loader2 className="pwa-spin" /> : null} Save as Draft</button>
+        <button type="button" className="pwa-secondary-button" disabled={saving || !pending.length || hasSelectedCorrections} onClick={() => void submit("draft")}>{saving ? <Loader2 className="pwa-spin" /> : null} Save as Draft</button>
         <button type="button" className="pwa-primary-button" disabled={saving || !pending.length} onClick={() => void submit("review")}>{saving ? <Loader2 className="pwa-spin" /> : null} Submit Selected Files</button>
       </div>
+      {hasSelectedCorrections ? <p className="pwa-muted-copy">Submit Selected Files replaces the documents needing revision and sends them back for review.</p> : null}
       <Dialog open={confirmation !== null} onOpenChange={(open) => { if (!open) setConfirmation(null); }}>
         <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
           <DialogHeader><DialogTitle>{confirmation === "draft" ? "Save selected files as drafts?" : "Submit selected files for review?"}</DialogTitle><DialogDescription>{confirmation === "draft" ? "These files will be saved without sending them for admin review." : "PCYDO will review the selected registration documents. Check each assignment before submitting."}</DialogDescription></DialogHeader>

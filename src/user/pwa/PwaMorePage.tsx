@@ -1,6 +1,6 @@
 import {
   BookOpen, ChevronRight, FileText, HelpCircle, Info, LogOut, Medal, Megaphone,
-  Phone, ScrollText, Settings, ShieldCheck, UserRound, UsersRound,
+  Phone, ScrollText, Settings, ShieldCheck, UserRound,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -37,8 +37,7 @@ const groups = [
   {
     label: "Resources",
     links: [
-      { label: "Organization Directory", detail: "Discover verified youth organizations", path: PWA_ROUTES.organizations, icon: UsersRound },
-      { label: "Templates", detail: "View and download official files", path: PWA_ROUTES.templates, icon: FileText },
+      { label: "Templates", detail: "View and download official files", path: PWA_ROUTES.templates, icon: FileText },
       { label: "News Releases", detail: "Official PCYDO updates", path: PWA_ROUTES.news, icon: Megaphone },
     ],
   },

@@ -344,4 +344,49 @@ describe("ResetPassword Component & Recovery Flow Suite", () => {
       expect(screen.getByLabelText(/^New password$/i)).toBeInTheDocument();
     });
   });
+
+  it("Test 13: Applies PWA auth classes, theme attributes, full height, and PWA navigation when pwa=1", () => {
+    vi.spyOn(authHook, "useAuth").mockReturnValue(createMockAuth());
+
+    const { container } = render(
+      <MemoryRouter initialEntries={["/reset-password?pwa=1"]}>
+        <ResetPassword />
+      </MemoryRouter>,
+    );
+
+    const rootDiv = container.firstElementChild as HTMLElement;
+    expect(rootDiv).toHaveClass("ytrace-pwa-app");
+    expect(rootDiv).toHaveClass("pwa-public-auth-page");
+    expect(rootDiv).toHaveClass("min-h-[100dvh]");
+    expect(rootDiv).toHaveAttribute("data-pwa-theme");
+
+    // Brand logo links to PWA entry route (/app-start)
+    const logoLink = container.querySelector("a[href='/app-start']");
+    expect(logoLink).toBeInTheDocument();
+
+    // Bottom back link says "← Back to welcome"
+    expect(screen.getByRole("button", { name: /← Back to welcome/i })).toBeInTheDocument();
+  });
+
+  it("Test 14: Non-PWA flow maintains full viewport height and default navigation", () => {
+    vi.spyOn(authHook, "useAuth").mockReturnValue(createMockAuth());
+
+    const { container } = render(
+      <MemoryRouter initialEntries={["/reset-password?pwa=0"]}>
+        <ResetPassword />
+      </MemoryRouter>,
+    );
+
+    const rootDiv = container.firstElementChild as HTMLElement;
+    expect(rootDiv).not.toHaveClass("pwa-public-auth-page");
+    expect(rootDiv).toHaveClass("min-h-screen");
+    expect(rootDiv).toHaveClass("min-h-[100dvh]");
+
+    // Brand logo links to website home (/)
+    const logoLink = container.querySelector("a[href='/']");
+    expect(logoLink).toBeInTheDocument();
+
+    // Bottom back link says "← Back to home"
+    expect(screen.getByRole("button", { name: /← Back to home/i })).toBeInTheDocument();
+  });
 });

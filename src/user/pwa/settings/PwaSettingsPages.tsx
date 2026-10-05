@@ -374,7 +374,7 @@ export function PwaAccountSettings({ data }: { data: PortalData }) {
     setSending(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.user.email, {
-        redirectTo: getPasswordResetUrl(),
+        redirectTo: getPasswordResetUrl({ pwaFlow: true }),
       });
       if (error) throw error;
       toast({ title: "Password reset sent", description: `Check ${data.user.email} for the secure reset link.` });

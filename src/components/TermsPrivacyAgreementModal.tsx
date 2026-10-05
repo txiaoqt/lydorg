@@ -113,6 +113,7 @@ export const TermsPrivacyAgreementModal = ({
                   checked={acceptedPrivacy}
                   onCheckedChange={(checked) => setAcceptedPrivacy(Boolean(checked))}
                   disabled={saving}
+                  className={isPwa ? "shrink-0 !h-4 !w-4 !min-h-[1rem] !max-h-[1rem]" : undefined}
                 />
                 <Label htmlFor="privacy-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
                   I have read and acknowledge the Privacy Policy. <span className="text-destructive" aria-hidden="true">*</span>
@@ -124,6 +125,7 @@ export const TermsPrivacyAgreementModal = ({
                   checked={acceptedTerms}
                   onCheckedChange={(checked) => setAcceptedTerms(Boolean(checked))}
                   disabled={saving}
+                  className={isPwa ? "shrink-0 !h-4 !w-4 !min-h-[1rem] !max-h-[1rem]" : undefined}
                 />
                 <Label htmlFor="terms-agreement" className="cursor-pointer text-sm leading-6 text-foreground">
                   I have read and agree to the Terms of Service. <span className="text-destructive" aria-hidden="true">*</span>

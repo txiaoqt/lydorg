@@ -37,28 +37,28 @@ export const getAuthCallbackUrl = (options?: { pwaFlow?: boolean }) => {
   return withPwaAuthMarker(AUTH_CALLBACK_PATH, Boolean(options?.pwaFlow));
 };
 
-export const getPasswordResetUrl = () => {
+export const getPasswordResetUrl = (options?: { pwaFlow?: boolean }) => {
   const explicitResetUrl = cleanUrl(import.meta.env.VITE_PASSWORD_RESET_URL);
-  if (explicitResetUrl) return explicitResetUrl;
+  if (explicitResetUrl) return withPwaAuthMarker(explicitResetUrl, Boolean(options?.pwaFlow));
 
   const explicitRedirectUrl = cleanUrl(import.meta.env.VITE_AUTH_REDIRECT_URL);
   if (explicitRedirectUrl) {
     try {
       const origin = new URL(explicitRedirectUrl).origin;
-      return joinUrl(origin, PASSWORD_RESET_PATH);
+      return withPwaAuthMarker(joinUrl(origin, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
     } catch {
       // Fall through if parsing fails
     }
   }
 
   const configuredSiteUrl = cleanUrl(import.meta.env.VITE_SITE_URL);
-  if (configuredSiteUrl) return joinUrl(configuredSiteUrl, PASSWORD_RESET_PATH);
+  if (configuredSiteUrl) return withPwaAuthMarker(joinUrl(configuredSiteUrl, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
 
   if (typeof window !== "undefined" && window.location.origin) {
-    return joinUrl(window.location.origin, PASSWORD_RESET_PATH);
+    return withPwaAuthMarker(joinUrl(window.location.origin, PASSWORD_RESET_PATH), Boolean(options?.pwaFlow));
   }
 
-  return PASSWORD_RESET_PATH;
+  return withPwaAuthMarker(PASSWORD_RESET_PATH, Boolean(options?.pwaFlow));
 };
 
 export const CANONICAL_ADMIN_APP_URL = "https://y-trace-admin.vercel.app";

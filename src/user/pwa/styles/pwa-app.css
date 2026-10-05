@@ -46,14 +46,17 @@ body.ytrace-pwa-active,
   body.ytrace-pwa-active [role="alertdialog"] label { font-size: var(--pwa-type-label); line-height: 1.45; }
   body.ytrace-pwa-active [role="dialog"] small,
   body.ytrace-pwa-active [role="alertdialog"] small { font-size: var(--pwa-type-meta); line-height: 1.45; }
-  body.ytrace-pwa-active [role="dialog"] input,
+  body.ytrace-pwa-active [role="dialog"] input:not([type="checkbox"]):not([type="radio"]),
   body.ytrace-pwa-active [role="dialog"] textarea,
   body.ytrace-pwa-active [role="dialog"] select,
-  body.ytrace-pwa-active [role="alertdialog"] input,
+  body.ytrace-pwa-active [role="alertdialog"] input:not([type="checkbox"]):not([type="radio"]),
   body.ytrace-pwa-active [role="alertdialog"] textarea,
   body.ytrace-pwa-active [role="alertdialog"] select { min-height: 2.75rem; font-size: var(--pwa-type-input); }
-  body.ytrace-pwa-active [role="dialog"] button:not([data-radix-collection-item]),
-  body.ytrace-pwa-active [role="alertdialog"] button { min-height: 2.75rem; font-size: var(--pwa-type-label); }
+  body.ytrace-pwa-active [role="dialog"] button:not([data-radix-collection-item]):not([role="checkbox"]):not([role="switch"]):not([role="radio"]),
+  body.ytrace-pwa-active [role="alertdialog"] button:not([role="checkbox"]):not([role="switch"]):not([role="radio"]) { min-height: 2.75rem; font-size: var(--pwa-type-label); }
+  body.ytrace-pwa-active [role="dialog"] [role="checkbox"],
+  body.ytrace-pwa-active [role="alertdialog"] [role="checkbox"],
+  body.ytrace-pwa-active [role="checkbox"] { min-height: unset; }
   body.ytrace-pwa-active [role="menu"],
   body.ytrace-pwa-active [role="listbox"] { width: min(calc(100vw - 1rem),28rem); max-height: min(70dvh,32rem); overflow-y: auto; font-size: var(--pwa-type-label); }
   body.ytrace-pwa-active .pwa-document-preview {
@@ -305,7 +308,7 @@ body.ytrace-pwa-active,
 .pwa-reupload-header h2 { color: #0f172a; font-size: var(--pwa-type-section); line-height: 1.3; }
 .pwa-reupload-header p { margin-top: 0.25rem; font-size: var(--pwa-type-label); line-height: 1.45; }
 .pwa-reupload-content { display: grid; min-width: 0; gap: 0.8rem; }
-.pwa-reupload-feedback { display: grid; min-width: 0; grid-template-columns: 1.25rem minmax(0,1fr); gap: 0.6rem; padding: 0.7rem 0.75rem; border-left: 3px solid #f59e0b; border-radius: 0.65rem; background: #fffbeb; color: #334155; }
+.pwa-reupload-feedback { display: grid; min-width: 0; grid-template-columns: 1.25rem minmax(0,1fr); gap: 0.6rem; padding: 0.7rem 0.75rem; border-radius: 0.65rem; background: #fffbeb; color: #334155; }
 .pwa-reupload-feedback > svg { width: 1rem; height: 1rem; margin-top: 0.1rem; color: #b45309; }
 .pwa-reupload-feedback span, .pwa-reupload-feedback strong { display: block; }
 .pwa-reupload-feedback span { color: #92400e; font-size: var(--pwa-type-label); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -1177,6 +1180,8 @@ html.ytrace-pwa-reduce-motion .ytrace-pwa-app *, html.ytrace-pwa-reduce-motion .
 .ytrace-pwa-app .pwa-public-help-links button > svg { width: 1rem; color: var(--pwa-muted); }
 .ytrace-pwa-app.pwa-public-auth-page { min-height: 100dvh; padding-top: max(2rem,env(safe-area-inset-top)); padding-bottom: max(2rem,env(safe-area-inset-bottom)); background: var(--pwa-theme-background) !important; }
 .ytrace-pwa-app.pwa-public-auth-page .bg-primary { background-color: var(--pwa-accent) !important; }
+.ytrace-pwa-app.pwa-public-auth-page .bg-primary:hover:not(:disabled) { opacity: 0.92; }
+.ytrace-pwa-app.pwa-public-auth-page .bg-primary:active:not(:disabled) { opacity: 0.85; }
 .ytrace-pwa-app.pwa-public-auth-page .bg-primary\/15 { background-color: color-mix(in srgb, var(--pwa-accent) 15%, transparent) !important; }
 .ytrace-pwa-app.pwa-public-auth-page .text-primary { color: var(--pwa-accent) !important; }
 .ytrace-pwa-app.pwa-public-auth-page .border-primary { border-color: var(--pwa-accent) !important; }
@@ -1245,6 +1250,7 @@ html.ytrace-pwa-reduce-motion .ytrace-pwa-app *, html.ytrace-pwa-reduce-motion .
   .ytrace-pwa-app .pwa-budget-list-page .pwa-compact-card-list,
   .ytrace-pwa-app .pwa-liquidation-list-page .pwa-compact-card-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .ytrace-pwa-app .pwa-budget-list-page > .pwa-eligibility-notice,
+  .ytrace-pwa-app .pwa-liquidation-list-page > .pwa-eligibility-notice,
   .ytrace-pwa-app .pwa-budget-list-page > .pwa-filter-chips,
   .ytrace-pwa-app .pwa-budget-list-page > .pwa-primary-button,
   .ytrace-pwa-app .pwa-liquidation-list-page > .pwa-primary-button { width: 100%; }

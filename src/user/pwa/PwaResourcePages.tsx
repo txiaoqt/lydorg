@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { createInquiryInSupabase, loadOrganizationActivityPage, loadOrganizationInquiryPage, loadOrganizationNotificationPage } from "@/lib/lydo-connect-supabase";
+import { createInquiryInSupabase, loadOrganizationActivityPage, loadOrganizationInquiryPage, loadOrganizationNotificationPage, subscribeToOrganizationStatusChangesInSupabase } from "@/lib/lydo-connect-supabase";
 import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
 import { organizationEmailPattern } from "@/lib/organization-profile-domain";
@@ -140,6 +140,14 @@ export function PwaInquiries({ data }: { data: PortalData }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const organizationId = data.profile?.id ?? "";
+  useEffect(() => {
+    if (!organizationId) return;
+    return subscribeToOrganizationStatusChangesInSupabase({
+      organizationId,
+      feature: "inquiries",
+      onChange: () => undefined,
+    });
+  }, [organizationId]);
   const pageQuery = useQuery({ queryKey: ["user", organizationId, "inquiry-page-pwa", page, 25], queryFn: () => loadOrganizationInquiryPage(organizationId, { page, pageSize: 25 }), enabled: Boolean(organizationId), placeholderData: (previous) => previous });
   const inquiries = pageQuery.data?.rows ?? data.inquiries;
   const totalCount = pageQuery.data?.totalCount ?? data.inquiries.length;

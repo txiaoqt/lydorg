@@ -227,8 +227,11 @@ import {
   dispatchOrgTransactionalEmailInSupabase,
   fetchAdminPortalListPage,
   fetchAdminDashboardSummary,
+  fetchAdminSidebarCounts,
+  subscribeToAdminSidebarChanges,
   fetchAdminRegistrationDetail,
   fetchAdminRecentNotifications,
+  markAdminNotificationsReadInSupabase,
   fetchAllAdminActivityLogs,
   fetchAdminReviewResourcePage,
   fetchAdminBudgetRequestDetail,
@@ -556,7 +559,7 @@ const renderRegistrationDetailCard = (params: {
 );
 
 const budgetReleaseStatuses = new Set<string>(["budget_released", "completed"]);
-const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["submitted", "under_review", "needs_revision"]);
+const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["submitted", "under_review"]);
 const liquidationApprovableStatuses = new Set<LiquidationReport["status"]>(["submitted", "under_review", "needs_revision"]);
 const liquidationLockedStatuses = new Set<LiquidationReport["status"]>(["completed_liquidated"]);
 
@@ -1233,7 +1236,7 @@ function AdminPortalContent({ section }: { section: string }) {
     enabled: Boolean(supabase && section === "liquidation-monitoring") && debouncedLiquidationReviewSearch === liquidationReportsSearch.trim(),
     placeholderData: (previous) => previous,
   });
-  const adminLiquidationReviewRows = (adminLiquidationReviewQuery.data?.rows ?? []).filter((row): row is AdminLiquidationReviewRow => "report" in row);
+  const adminLiquidationReviewRows = (adminLiquidationReviewQuery.data?.rows ?? []).filter((row): row is AdminLiquidationReviewRow => "report" in row && row.report.status !== "draft");
   const adminBudgetRequestDetailQuery = useQuery({
     queryKey: ["admin", "budget-detail", selectedBudgetRequestId],
     queryFn: () => fetchAdminBudgetRequestDetail(selectedBudgetRequestId!),
@@ -1280,6 +1283,7 @@ function AdminPortalContent({ section }: { section: string }) {
     }
   }, [registrationDetailQuery.data]);
   const refreshScopedAdminQueries = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] });
     if (section === "overview") {
       await queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
       return;
@@ -1538,15 +1542,44 @@ function AdminPortalContent({ section }: { section: string }) {
     (item) => item.userId === currentAdminId || item.userId === adminId || item.userId === "admin",
   );
   const unread = adminNotificationsQuery.data?.unreadCount ?? adminNotifications.filter((item) => !item.isRead).length;
-  const markAdminNotificationRead = (notificationId: string) => {
-    void Promise.resolve(markNotificationRead(notificationId)).finally(() => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
-    });
+  const [isMarkingAllNotificationsRead, setIsMarkingAllNotificationsRead] = useState(false);
+  const persistAdminNotificationRead = async (notificationId?: string) => {
+    if (supabase) await markAdminNotificationsReadInSupabase(notificationId);
+    await queryClient.cancelQueries({ queryKey: ["admin", "notifications"] });
+    if (notificationId) markNotificationRead(notificationId);
+    else markAllNotificationsRead();
+    queryClient.setQueriesData<import("@/lib/lydo-connect-supabase").AdminRecentNotifications>(
+      { queryKey: ["admin", "notifications"] },
+      (previous) => {
+        if (!previous) return previous;
+        const wasUnread = previous.notifications.some((item) => item.id === notificationId && !item.isRead);
+        return {
+          unreadCount: notificationId ? Math.max(0, previous.unreadCount - (wasUnread ? 1 : 0)) : 0,
+          notifications: previous.notifications.map((item) =>
+            !notificationId || item.id === notificationId ? { ...item, isRead: true } : item,
+          ),
+        };
+      },
+    );
+    await queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
   };
-  const markAllAdminNotificationsRead = () => {
-    void Promise.resolve(markAllNotificationsRead()).finally(() => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
-    });
+  const markAdminNotificationRead = async (notificationId: string) => {
+    try {
+      await persistAdminNotificationRead(notificationId);
+    } catch (error) {
+      toast({ title: "Could not mark notification as read", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    }
+  };
+  const markAllAdminNotificationsRead = async () => {
+    if (isMarkingAllNotificationsRead) return;
+    setIsMarkingAllNotificationsRead(true);
+    try {
+      await persistAdminNotificationRead();
+    } catch (error) {
+      toast({ title: "Could not mark notifications as read", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally {
+      setIsMarkingAllNotificationsRead(false);
+    }
   };
   const activeTemplates = useMemo(
     () =>
@@ -1802,12 +1835,12 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [selectedLiquidationReport?.id, selectedLiquidationReport?.status]);
   const selectedLiquidationReportFiles = useMemo(
     () =>
-      selectedLiquidationReport
+      selectedLiquidationReport && !adminLiquidationDetailQuery.isError && !["draft", "not_started", "pending_activity_completion"].includes(selectedLiquidationReport.status)
         ? [...state.liquidationReportFiles]
           .filter((file) => file.liquidationReportId === selectedLiquidationReport.id)
           .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
         : [],
-    [selectedLiquidationReport, state.liquidationReportFiles],
+    [selectedLiquidationReport, adminLiquidationDetailQuery.isError, state.liquidationReportFiles],
   );
   const selectedLiquidationReportFile = useMemo(
     () => selectedLiquidationReportFiles.find((file) => file.id === selectedLiquidationFileId) ?? selectedLiquidationReportFiles[0] ?? null,
@@ -1999,6 +2032,28 @@ function AdminPortalContent({ section }: { section: string }) {
     queryFn: () => fetchAdminDashboardSummary(selectedFiscalYear),
     enabled: Boolean(supabase && section === "overview"),
   });
+  const sidebarCountsQuery = useQuery({
+    // Independent of the current page and fiscal-year filters.
+    queryKey: ["admin", "sidebar-counts", user?.id, currentAdminRoleCode, [...(user?.permissionCodes ?? [])].sort().join(",")],
+    queryFn: fetchAdminSidebarCounts,
+    enabled: Boolean(supabase && user?.id && readAdminSession()?.sessionToken),
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: "always",
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
+  useEffect(() => {
+    if (!supabase || !user?.id || !readAdminSession()?.sessionToken) return;
+    return subscribeToAdminSidebarChanges(() => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] }),
+      ]).catch((error) => {
+        if (import.meta.env.DEV) console.debug("Admin sidebar refresh failed.", error);
+      });
+    });
+  }, [user?.id, currentAdminRoleCode]);
+  const sidebarCounts = sidebarCountsQuery.data ?? dashboardQuery.data?.summary;
   const [isConfigureAnnualBudgetModalOpen, setIsConfigureAnnualBudgetModalOpen] = useState<boolean>(false);
 
   const loadAnnualBudgetAllocations = useCallback(async () => {
@@ -2963,7 +3018,7 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [dashboardQuery.data, state]);
 
   const pendingYpop = useMemo(() => {
-    if (dashboardQuery.data) return dashboardQuery.data.summary.pendingYpop ?? 0;
+    if (sidebarCounts) return sidebarCounts.pendingYpop ?? 0;
     if (supabase) return 0;
     const pendingCityLed = (state.ypopEventParticipations ?? []).filter(
       (p) => p.status === "pending_evaluation" || p.status === "pending_verification",
@@ -2972,11 +3027,11 @@ function AdminPortalContent({ section }: { section: string }) {
       (a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review",
     ).length;
     return pendingCityLed + pendingOrgLed;
-  }, [state.ypopEventParticipations, state.ypopOrgActivities, dashboardQuery.data]);
+  }, [state.ypopEventParticipations, state.ypopOrgActivities, sidebarCounts]);
 
   const pendingRenewalsCount = useMemo(
-    () => dashboardQuery.data?.summary.pendingRenewals ?? (!supabase ? adminRenewals.filter((renewal) => renewal.status !== "approved").length : 0),
-    [adminRenewals, dashboardQuery.data],
+    () => sidebarCounts?.pendingRenewals ?? (!supabase ? adminRenewals.filter((renewal) => renewal.status !== "approved").length : 0),
+    [adminRenewals, sidebarCounts],
   );
 
   const sidebarGroups = useMemo<PortalNavGroup[]>(() => {
@@ -2996,7 +3051,7 @@ function AdminPortalContent({ section }: { section: string }) {
           withOverrides("registrations", {
             label: "Registrations",
             icon: UserPlus,
-            count: overviewStats.pendingProfiles || undefined,
+            count: (sidebarCounts?.pendingProfiles ?? overviewStats.pendingProfiles) || undefined,
           }),
           withOverrides("renewals", {
             label: "Renewals",
@@ -3015,10 +3070,10 @@ function AdminPortalContent({ section }: { section: string }) {
         id: "budget-management",
         label: "Budget Management",
         items: compact([
-          withOverrides("budget-utilization", { count: overviewStats.pendingBudget || undefined }),
+          withOverrides("budget-utilization", { count: (sidebarCounts?.pendingBudget ?? overviewStats.pendingBudget) || undefined }),
           withOverrides("liquidation-monitoring", {
             icon: Clipboard,
-            count: overviewStats.overdueLiquidation + overviewStats.pendingLiquidation || undefined,
+            count: ((sidebarCounts?.overdueLiquidation ?? overviewStats.overdueLiquidation) + (sidebarCounts?.pendingLiquidation ?? overviewStats.pendingLiquidation)) || undefined,
           }),
           withOverrides("budget-monitoring", { label: "Budget Monitoring", icon: TrendingUp }),
         ]),
@@ -3035,7 +3090,7 @@ function AdminPortalContent({ section }: { section: string }) {
         id: "communication",
         label: "Communication",
         items: compact([
-          withOverrides("inquiries", { icon: Inbox, count: overviewStats.pendingInquiries || undefined }),
+          withOverrides("inquiries", { icon: Inbox, count: (sidebarCounts?.pendingInquiries ?? overviewStats.pendingInquiries) || undefined }),
         ]),
       },
       {
@@ -3056,7 +3111,7 @@ function AdminPortalContent({ section }: { section: string }) {
         items: group.items.filter((item) => hasAdminNavPermission(user?.permissionCodes, item.id, currentAdminRoleCode)),
       }))
       .filter((group) => group.items.length > 0);
-  }, [overviewStats, pendingRenewalsCount, pendingYpop, user]);
+  }, [overviewStats, sidebarCounts, pendingRenewalsCount, pendingYpop, user, currentAdminRoleCode]);
 
   const totalLiquidated = useMemo(
     () =>
@@ -3852,6 +3907,7 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [activeAdminChangeResources, requestAdminVersionSnapshot]);
 
   const refreshAdminState = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] });
     if (section === "budget-monitoring") {
       await monitoringQuery.refetch();
       return null;
@@ -3938,6 +3994,7 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, renewalReviewSubmitting]);
 
   const refreshAdminPageData = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] });
     if (section === "budget-monitoring") {
       await monitoringQuery.refetch();
       return null;
@@ -5693,14 +5750,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
         if (pendingAdminConfirmation.action === "approve") {
           const reqFiles = state.budgetRequestFiles.filter((f) => f.budgetRequestId === pendingAdminConfirmation.budgetRequestId);
-          if (
-            budgetStatus === "needs_revision" &&
-            isAwaitingResubmission({
-              status: budgetStatus,
-              revisionRequestedAt: selectedBudget?.revisionRequestedAt,
-              files: reqFiles,
-            })
-          ) {
+          if (budgetStatus === "needs_revision" || reqFiles.some((file) => file.adminStatus === "needs_revision")) {
             toast({
               title: "Awaiting Resubmission",
               description: "The organization must submit a revised budget request file before it can be approved.",
@@ -7228,14 +7278,7 @@ function AdminPortalContent({ section }: { section: string }) {
       if (action === "approve") {
         const existingReq = state.budgetRequests.find((b) => b.id === request.id);
         const reqFiles = state.budgetRequestFiles.filter((f) => f.budgetRequestId === request.id);
-        if (
-          existingReq?.status === "needs_revision" &&
-          isAwaitingResubmission({
-            status: existingReq.status,
-            revisionRequestedAt: existingReq.revisionRequestedAt,
-            files: reqFiles,
-          })
-        ) {
+        if (existingReq?.status === "needs_revision" || reqFiles.some((file) => file.adminStatus === "needs_revision")) {
           toast({
             title: "Awaiting Resubmission",
             description: "The organization must submit a revised budget request file before it can be approved.",
@@ -9727,13 +9770,7 @@ function AdminPortalContent({ section }: { section: string }) {
               !Number.isNaN(parsedApprovedAmount) &&
               parsedApprovedAmount > 0);
           const hasUnrevisedSelectedBudgetFiles = selectedBudgetReviewFiles.some(
-            (file) =>
-              (file.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision") &&
-              isAwaitingResubmission({
-                adminStatus: file.adminStatus,
-                revisionRequestedAt: selectedBudgetRequest?.revisionRequestedAt,
-                uploadedAt: file.uploadedAt,
-              }),
+            (file) => file.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision",
           );
           const isBudgetDecisionConfirmDisabled =
             selectedBudgetReviewFiles.length === 0 ||
@@ -9772,11 +9809,15 @@ function AdminPortalContent({ section }: { section: string }) {
                 updateBudgetRequestFile(saved.id, saved);
               } catch (fileErr) {
                 console.error("Failed to update budget request file status:", fileErr);
-                updateBudgetRequestFile(file.id, {
-                  ...file,
-                  adminStatus: targetFileStatus,
-                  adminRemarks: remark,
+                setBudgetReviewSubmitting(false);
+                setIsBudgetDecisionConfirmOpen(false);
+                toast({
+                  title: "Review not saved",
+                  description: fileErr instanceof Error ? fileErr.message : "The document review failed. The budget request has not been approved.",
+                  variant: "destructive",
                 });
+                await refreshAdminPageData();
+                return;
               }
             }
 
@@ -9830,8 +9871,8 @@ function AdminPortalContent({ section }: { section: string }) {
               };
 
               try {
-                await updateBudgetRequestInSupabase(selectedBudgetRequest.id, parentPatch);
-                updateBudgetRequest(selectedBudgetRequest.id, parentPatch);
+                const savedRequest = await updateBudgetRequestInSupabase(selectedBudgetRequest.id, parentPatch);
+                updateBudgetRequest(selectedBudgetRequest.id, savedRequest);
                 await refreshAdminPageData();
 
                 if (targetParentStatus === "awaiting_release") {
@@ -13213,9 +13254,10 @@ function AdminPortalContent({ section }: { section: string }) {
                       variant="outline"
                       className="h-9 rounded-md border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default hover:bg-slate-50"
                       onClick={markAllAdminNotificationsRead}
+                      disabled={isMarkingAllNotificationsRead}
                     >
                       <CheckCircle2 className="mr-1.5 h-4 w-4 text-text-action" />
-                      Mark all as read
+                      {isMarkingAllNotificationsRead ? "Marking as read…" : "Mark all as read"}
                     </Button>
                   )}
                   <BadgePanel count={unread} />
@@ -15788,6 +15830,9 @@ function AdminPortalContent({ section }: { section: string }) {
     mergeRemoteState,
     markNotificationRead,
     markAllNotificationsRead,
+    isMarkingAllNotificationsRead,
+    markAdminNotificationRead,
+    markAllAdminNotificationsRead,
     navigate,
     openFile,
     openPreview,
@@ -15964,7 +16009,9 @@ function AdminPortalContent({ section }: { section: string }) {
         onSignOut={() => setSignOutConfirmOpen(true)}
         userProfile={{ name: user?.displayName ?? "Administrator", role: "Administrator", email: user?.email ?? "" }}
         notifications={adminNotifications}
-        onMarkAllRead={() => markAllNotificationsRead()}
+        notificationUnreadCount={unread}
+        onMarkAllRead={markAllAdminNotificationsRead}
+        isMarkingAllRead={isMarkingAllNotificationsRead}
         onMarkRead={markAdminNotificationRead}
       >
         {activeContent}

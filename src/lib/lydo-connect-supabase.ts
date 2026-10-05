@@ -1277,6 +1277,8 @@ export const invalidateOrganizationPortalHistoryCaches = async (
     invalidations.push(
       queryClient.invalidateQueries({ queryKey: ["user", organizationId, "inquiry-page"] }).then(() => undefined),
       queryClient.invalidateQueries({ queryKey: ["user", organizationId, "inquiry-page-pwa"] }).then(() => undefined),
+      queryClient.invalidateQueries({ queryKey: ["user", organizationId, "inquiry-page-modal"] }).then(() => undefined),
+      queryClient.invalidateQueries({ queryKey: ["user", organizationId, "inquiry-page-dashboard"] }).then(() => undefined),
     );
   }
   if (organizationId && resources.includes("activity")) {
@@ -2787,10 +2789,12 @@ export const fetchAdminLiquidationReportDetail = async (reportId: string): Promi
   if (error) throw new Error(error.message || "Unable to load liquidation details.");
   const payload = data as { report?: LiquidationReportRow; budget_request?: BudgetRequestRow; files?: LiquidationReportFileRow[] } | null;
   if (!payload?.report) throw new Error("Liquidation detail response was invalid.");
+  if (payload.report.status === "draft") throw new Error("This liquidation report has not been submitted for review.");
   return {
     liquidationReports: [mapLiquidationReport(payload.report)],
     ...(payload.budget_request ? { budgetRequests: [mapBudgetRequest(payload.budget_request)] } : {}),
-    liquidationReportFiles: (payload.files ?? []).map(mapLiquidationReportFile),
+    liquidationReportFiles: ["not_started", "pending_activity_completion"].includes(payload.report.status)
+      ? [] : (payload.files ?? []).map(mapLiquidationReportFile),
   };
 };
 
@@ -2871,6 +2875,32 @@ export const fetchAdminYpopEntryReviewDetail = async (entryId: string): Promise<
   };
 };
 
+/** Load only the YPOP activity rows needed by an organization in the YORP Registry drawer. */
+export const fetchAdminYorpRegistryYpopDetail = async (
+  organizationId: string,
+  semesterKey: string,
+): Promise<Partial<LydoSeedState>> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const session = readAdminSession();
+  if (!session?.sessionToken) throw new Error("Admin session is unavailable.");
+  const { data, error } = await supabase.rpc("admin_get_yorp_registry_ypop_detail", {
+    _session_token: session.sessionToken,
+    _organization_id: organizationId,
+    _semester_key: semesterKey,
+  });
+  if (error) throw new Error(error.message || "Unable to load the organization's YPOP activities.");
+  const payload = (data ?? {}) as {
+    city_activities?: YpopCityActivityRow[];
+    event_participations?: YpopEventParticipationRow[];
+    org_activities?: YpopOrgActivityRow[];
+  };
+  return {
+    ypopCityActivities: (payload.city_activities ?? []).map(mapYpopCityActivity),
+    ypopEventParticipations: (payload.event_participations ?? []).map(mapYpopEventParticipation),
+    ypopOrgActivities: (payload.org_activities ?? []).map(mapYpopOrgActivity),
+  };
+};
+
 export const fetchAdminYpopReviewFiles = async (lane: "city_led" | "org_led", parentId: string): Promise<YPOPEventFile[] | YPOPOrgActivityFile[]> => {
   if (!supabase) throw new Error("Supabase is not configured.");
   const session = readAdminSession();
@@ -2883,7 +2913,7 @@ export const fetchAdminYpopReviewFiles = async (lane: "city_led" | "org_led", pa
     : (rows as YpopOrgActivityFileRow[]).map(mapYpopOrgActivityFile);
 };
 
-export type OrganizationStatusRealtimeFeature = "registration" | "renewals" | "budgets" | "liquidations" | "ypop_city_led" | "ypop_org_led";
+export type OrganizationStatusRealtimeFeature = "registration" | "renewals" | "budgets" | "liquidations" | "inquiries" | "ypop_city_led" | "ypop_org_led";
 export const subscribeToOrganizationStatusChangesInSupabase = (params: {
   organizationId: string;
   feature: OrganizationStatusRealtimeFeature;
@@ -2919,7 +2949,9 @@ export const subscribeToOrganizationStatusChangesInSupabase = (params: {
   };
   const handleParentChange = () => handleRelevantChange("parent");
   const dispatchRelevantChange = async (kind: "parent" | "file") => {
-    if (feature === "budgets") {
+    if (feature === "inquiries") {
+      if (kind === "parent") await invalidateOrganizationPortalHistoryCaches(organizationId, undefined, ["inquiries"]);
+    } else if (feature === "budgets") {
       const refreshes: Promise<unknown>[] = [];
       if (kind === "parent") {
         refreshes.push(
@@ -3031,6 +3063,8 @@ export const subscribeToOrganizationStatusChangesInSupabase = (params: {
   } else if (feature === "liquidations") {
     add("liquidation_reports", `organization_id=eq.${organizationId}`, handleParentChange);
     if (detailId) add("liquidation_report_files", `liquidation_report_id=eq.${detailId}`, () => handleRelevantChange("file"));
+  } else if (feature === "inquiries") {
+    add("inquiries", `organization_id=eq.${organizationId}`, handleParentChange);
   } else if (feature === "ypop_city_led") {
     if (semesterKey) {
       add("ypop_periods", `semester_key=eq.${semesterKey}`, handleParentChange);
@@ -3130,6 +3164,38 @@ export type AdminRecentNotifications = {
   notifications: NotificationRecord[];
 };
 
+/** Small, permission-scoped counts for the persistent admin sidebar. */
+export const fetchAdminSidebarCounts = async (): Promise<Record<string, number>> => {
+  const session = getAuthenticatedAdminSession();
+  const { data, error } = await supabase!.rpc("admin_get_sidebar_counts", { _session_token: session.sessionToken });
+  if (error) throw new Error(error.message || "Unable to load sidebar counts.");
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid sidebar counts response.");
+  return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, Number(value)]));
+};
+
+/** Broadcast contains only an empty invalidation signal, never records or counts.
+ * Actual counts are fetched through the authenticated admin RPC. */
+export const subscribeToAdminSidebarChanges = (onChange: () => void): (() => void) => {
+  if (!supabase) return () => undefined;
+  let timer: number | null = null;
+  let disposed = false;
+  const scheduleRefresh = () => {
+    if (disposed || timer !== null) return;
+    timer = window.setTimeout(() => {
+      timer = null;
+      if (!disposed) onChange();
+    }, 150);
+  };
+  const channel = supabase.channel("admin-sidebar-refresh", { config: { private: false } })
+    .on("broadcast", { event: "counts-changed" }, scheduleRefresh)
+    .subscribe((status) => { if (status === "SUBSCRIBED") scheduleRefresh(); });
+  return () => {
+    disposed = true;
+    if (timer !== null) window.clearTimeout(timer);
+    void supabase!.removeChannel(channel);
+  };
+};
+
 /** Fetch aggregate dashboard metrics and bounded recent activity. */
 export const fetchAdminDashboardSummary = async (fiscalYear?: number): Promise<AdminDashboardSummary> => {
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -3160,6 +3226,17 @@ export const fetchAdminDashboardSummary = async (fiscalYear?: number): Promise<A
     needsAttention: Array.isArray(response.needsAttention) ? response.needsAttention : [],
     recentActivity: Array.isArray(response.recentActivity) ? response.recentActivity : [],
   };
+};
+
+/** Persist read status for the current admin's notifications, or one owned notification. */
+export const markAdminNotificationsReadInSupabase = async (notificationId?: string): Promise<void> => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const adminSession = getAuthenticatedAdminSession();
+  const { error } = await supabase.rpc("admin_mark_notifications_read", {
+    _session_token: adminSession.sessionToken,
+    _notification_id: notificationId ?? null,
+  });
+  if (error) throw new Error(error.message || "Unable to mark notifications as read.");
 };
 
 export const fetchAdminRecentNotifications = async (): Promise<AdminRecentNotifications> => {
@@ -3843,6 +3920,7 @@ export interface OrganizationDocumentUploadContext {
   organizationProfile?: OrganizationProfileRow | null;
   documentTypeRow?: RequiredDocumentTypeRow;
   submission?: DocumentSubmissionRow;
+  revisionSubmitMode?: "draft" | "review";
 }
 
 export const submitOrganizationDocumentToSupabase = async (params: {
@@ -3904,7 +3982,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
 
   const { data: existingRows, error: existingRowsError } = await supabase!
     .from("document_submission_files")
-    .select("id,file_url,admin_status")
+    .select("id,file_url,admin_status,updated_at")
     .eq("submission_id", submission.id)
     .eq("document_type_id", documentTypeRow.id);
 
@@ -3921,6 +3999,23 @@ export const submitOrganizationDocumentToSupabase = async (params: {
     }
     if (["approved", "approved_green"].includes(fileStatus)) {
       throw new Error("This approved document is locked from modification.");
+    }
+    if (fileStatus === "needs_revision") {
+      if ((params.context?.revisionSubmitMode ?? params.submitMode ?? "review") === "draft") {
+        throw new Error("Submit the corrected document for review to replace a file needing revision. The reviewed file cannot be overwritten as a draft.");
+      }
+      const correctedRow = await replaceOrganizationDocumentFileInSupabase({
+        fileId: existingTargetFile.id,
+        documentTypeId: documentTypeRow.id,
+        expectedUpdatedAt: existingTargetFile.updated_at,
+        file: params.file,
+      });
+      const correctedFile = mapDocumentFile({
+        ...correctedRow,
+        required_document_types: { id: documentTypeRow.id, name: documentTypeRow.name },
+      } as DocumentSubmissionFileRow);
+      if (!correctedFile) throw new Error("The corrected document could not be mapped to the portal.");
+      return { submissionId: submission.id, file: correctedFile };
     }
   }
 
@@ -3976,15 +4071,25 @@ export const submitOrganizationDocumentToSupabase = async (params: {
 
   const firstSubmittedAt = submission.submitted_at ?? (submitMode === "review" ? submittedAt : null);
 
-  await supabase
+  const { data: currentFiles, error: currentFilesError } = await supabase
+    .from("document_submission_files")
+    .select("admin_status")
+    .eq("submission_id", submission.id);
+  if (currentFilesError) throw new Error(currentFilesError.message);
+  const overallStatus = deriveDocumentSubmissionStatus(
+    (currentFiles ?? []).map((entry) => entry.admin_status), submitMode,
+  );
+
+  const { error: submissionUpdateError } = await supabase
     .from("document_submissions")
     .update({
-      status: submitMode === "draft" ? "draft" : "under_admin_review",
+      status: overallStatus,
       user_confirmed: submitMode === "review",
       submitted_at: firstSubmittedAt,
       updated_at: submittedAt,
     })
     .eq("id", submission.id);
+  if (submissionUpdateError) throw new Error(submissionUpdateError.message);
 
   const mappedFile = mapDocumentFile(data as DocumentSubmissionFileRow);
   if (!mappedFile) throw new Error("The uploaded document could not be mapped to the portal.");
@@ -4032,7 +4137,7 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
   if (submission.status === "rejected_red" || (existingFile as any).admin_status === "rejected_red") {
     throw new Error("This rejected document cannot be replaced. The organization account is permanently suspended.");
   }
-  if (submission.status !== "needs_revision") {
+  if (existingFile.admin_status !== "needs_revision") {
     throw new Error("A document can only be replaced after the admin requests a revision.");
   }
 
@@ -4128,9 +4233,18 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
 
   const firstSubmittedAt = submission.submitted_at || submittedAt;
 
+  const { data: currentFiles, error: currentFilesError } = await supabase!
+    .from("document_submission_files")
+    .select("admin_status")
+    .eq("submission_id", submissionId);
+  if (currentFilesError) throw new Error(currentFilesError.message);
+  const overallStatus = deriveDocumentSubmissionStatus(
+    (currentFiles ?? []).map((entry) => entry.admin_status),
+  );
+
   const { error: updateError } = await supabase!
     .from("document_submissions")
-    .update({ status: "under_admin_review", user_confirmed: true, submitted_at: firstSubmittedAt, updated_at: submittedAt })
+    .update({ status: overallStatus, user_confirmed: true, submitted_at: firstSubmittedAt, updated_at: submittedAt })
     .eq("id", submissionId);
   if (updateError) throw new Error(updateError.message);
 
@@ -4265,6 +4379,7 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
             organizationProfile,
             documentTypeRow: item.documentTypeRow,
             submission,
+            revisionSubmitMode: submitMode,
           },
         });
 
@@ -4292,9 +4407,9 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
 
   if (submitMode === "review") {
     const successfulUploadedFileIds = results
-      .filter((result) => result.success && result.file?.id)
+      .filter((result) => result.success && result.file?.adminStatus === "draft")
       .map((result) => result.file!.id);
-    const submissionIds = [...new Set(results.filter((result) => result.success && result.submissionId).map((result) => result.submissionId!))];
+    const submissionIds = [...new Set(results.filter((result) => result.success && result.file?.adminStatus === "draft" && result.submissionId).map((result) => result.submissionId!))];
     
     await Promise.all(
       submissionIds.map(async (submissionId) => {
@@ -4307,7 +4422,7 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
         } catch (error) {
           const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
           results.forEach((result) => {
-            if (result.submissionId === submissionId && result.success) {
+            if (result.submissionId === submissionId && result.success && result.file?.adminStatus === "draft") {
               result.success = false;
               result.error = message;
             }
@@ -4396,6 +4511,9 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
   }
   if (!["draft", "needs_revision"].includes(submission.status as string)) {
     throw new Error("Documents cannot be removed while the submission is under admin review.");
+  }
+  if (existingRow.admin_status !== "draft") {
+    throw new Error("Only draft documents can be removed. Submitted documents are locked; documents needing revision must use the replacement flow.");
   }
 
   const submissionId = existingRow.submission_id as string;
@@ -4974,6 +5092,7 @@ export const createInquiryInSupabase = async (params: {
 
   if (error || !data) throw new Error(error?.message ?? "Failed to submit the inquiry.");
   const createdInquiry = mapInquiry(data as InquiryRow);
+  await invalidateOrganizationPortalHistoryCaches(organizationProfile.id, undefined, ["inquiries"]);
 
   void dispatchAdminNotificationInSupabase({
     eventType: "new_inquiry",
@@ -4988,7 +5107,26 @@ export const createInquiryInSupabase = async (params: {
 };
 
 const replaceBudgetRequestFileInSupabase = async (budgetRequestId: string, file: File) => {
-  await getAuthenticatedOrganizationContext();
+  const { organizationProfile } = await getAuthenticatedOrganizationContext();
+  const { data: request, error: requestError } = await supabase!
+    .from("budget_requests")
+    .select("id,status,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at")
+    .eq("id", budgetRequestId)
+    .eq("organization_id", organizationProfile.id)
+    .single();
+  if (requestError || !request) throw new Error(requestError?.message ?? "Budget request not found.");
+  if (["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(request.status)) {
+    throw new Error("Approved budget requests can no longer be modified.");
+  }
+  if (isSubmissionRevisionLocked({
+    status: request.status,
+    revisionDueAt: request.revision_due_at,
+    revisionLocked: request.revision_locked,
+    revisionLockedAt: request.revision_locked_at,
+    revisionUnlockedAt: request.revision_unlocked_at,
+  })) {
+    throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
+  }
   const { data: existingRows, error: existingError } = await supabase!
     .from("budget_request_files")
     .select(BUDGET_REQUEST_FILE_COLUMNS)
@@ -5013,10 +5151,11 @@ const replaceBudgetRequestFileInSupabase = async (budgetRequestId: string, file:
   if (error || !data) throw new Error(error?.message ?? "Failed to save the budget request file.");
 
   if (existingFiles.length) {
-    await supabase!.from("budget_request_files").delete().in(
+    const { error: deleteError } = await supabase!.from("budget_request_files").delete().in(
       "id",
       existingFiles.map((entry) => entry.id),
     );
+    if (deleteError) throw new Error(deleteError.message || "Unable to remove the previous budget proposal.");
     await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
   }
 

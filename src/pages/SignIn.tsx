@@ -447,7 +447,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-semibold text-foreground/90">Password</Label>
                 <Link
-                  to={getPasswordResetUrl()}
+                  to={getPasswordResetUrl({ pwaFlow })}
                   className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:underline"
                 >
                   Forgot password?

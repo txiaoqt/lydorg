@@ -947,6 +947,19 @@ export default function UserPortal({ section }: { section: string }) {
     });
   }, [section, currentProfile?.id, user?.id, ypopRegistrationProfileRefetch]);
 
+  useEffect(() => {
+    if (!supabase || !currentProfile?.id || !user?.id) return;
+    return subscribeToOrganizationStatusChangesInSupabase({
+      organizationId: currentProfile.id,
+      feature: "inquiries",
+      onChange: () => undefined,
+      onStatus: (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization inquiry Realtime channel subscribed.");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization inquiry Realtime channel:", status, error ?? "");
+      },
+    });
+  }, [currentProfile?.id, user?.id]);
+
   const [budgetPrerequisitesLoad, setBudgetPrerequisitesLoad] = useState<{ organizationId: string; error: boolean } | null>(null);
   const isSharedResourceSection = section === "templates" || section === "news-releases";
   const sharedResourceQuery = useQuery({
@@ -1442,12 +1455,17 @@ export default function UserPortal({ section }: { section: string }) {
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
     [currentProfile?.id, state.budgetRequests],
   );
+  const dashboardInquiriesQuery = useQuery({
+    queryKey: ["user", currentProfile?.id ?? "", "inquiry-page-dashboard"],
+    queryFn: () => loadOrganizationInquiryPage(currentProfile!.id, { page: 1, pageSize: 25 }),
+    enabled: Boolean(supabase && currentProfile?.id && section === "dashboard"),
+  });
   const inquiryHistory = useMemo(
     () =>
-      state.inquiries
+      [...(dashboardInquiriesQuery.data?.rows ?? state.inquiries)]
         .filter((inquiry) => inquiry.organizationId === currentProfile?.id)
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
-    [currentProfile?.id, state.inquiries],
+    [currentProfile?.id, dashboardInquiriesQuery.data?.rows, state.inquiries],
   );
   const inquiryCounts = useMemo(() => {
     let open = 0;
@@ -2965,7 +2983,7 @@ export default function UserPortal({ section }: { section: string }) {
       releasedAmount: Number(budgetForm.releasedAmount || 0),
       releaseDate: budgetForm.releaseDate,
       purposeCategory: budgetForm.purposeCategory.trim(),
-      status,
+      status: existingBudgetRequest?.status === "needs_revision" && status === "draft" ? "needs_revision" : status,
       remarks: "",
       goSignalAt: budgetForm.goSignalAt,
       hardCopySubmittedAt: budgetForm.hardCopySubmittedAt,
@@ -3071,10 +3089,12 @@ export default function UserPortal({ section }: { section: string }) {
       const file = budgetFileDraft;
 
       if (isExisting) {
-        await updateBudgetRequestInSupabase(nextBudgetRequest.id, nextBudgetRequest);
+        // The resubmission guard must see the persisted replacement PDF.
+        // If upload fails, leave the request in its current review state.
         if (file) {
           await uploadBudgetRequestFileToSupabase(nextBudgetRequest.id, file);
         }
+        await updateBudgetRequestInSupabase(nextBudgetRequest.id, nextBudgetRequest);
       } else {
         await createBudgetRequestInSupabase({
           budgetRequest: nextBudgetRequest,

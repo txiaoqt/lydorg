@@ -41,4 +41,10 @@ describe("PWA UI Form Control Consistency", () => {
     // Standardized inputs, textareas, and selects maintain 16px to prevent mobile viewport auto-zoom
     expect(cssContent).toContain("font-size: var(--pwa-type-input);");
   });
+
+  it("prevents checkboxes, switches, and radio controls from being stretched by dialog min-height rules in PWA", () => {
+    expect(cssContent).toContain("body.ytrace-pwa-active [role=\"dialog\"] button:not([data-radix-collection-item]):not([role=\"checkbox\"]):not([role=\"switch\"]):not([role=\"radio\"])");
+    expect(cssContent).toContain("body.ytrace-pwa-active [role=\"checkbox\"]");
+    expect(cssContent).toContain("min-height: unset;");
+  });
 });

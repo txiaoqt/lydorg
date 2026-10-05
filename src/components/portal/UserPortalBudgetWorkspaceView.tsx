@@ -1712,12 +1712,12 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                             "rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 shadow-2xs",
                             isExpired
                               ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
-                              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+                              : selectedRequest.status === "needs_revision" ? "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200" : "bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
                           )}
                         >
                           <div className="flex items-center gap-1.5 font-bold">
-                            <AlertCircle className={cn("h-4 w-4 shrink-0", isExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
-                            <span>{isExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
+                            <AlertCircle className={cn("h-4 w-4 shrink-0", isExpired ? "text-rose-600 dark:text-rose-400" : selectedRequest.status === "needs_revision" ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400")} />
+                            <span>{isExpired ? "Revision Deadline Expired (Locked)" : selectedRequest.status === "needs_revision" ? "Admin Revision Feedback" : "Admin Remarks"}</span>
                           </div>
                           <p className="text-xs leading-relaxed pl-5 font-normal italic">
                             "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
@@ -2045,12 +2045,12 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                             "rounded-xl border p-3.5 sm:p-4 text-xs space-y-2 shadow-2xs",
                             isExpired
                               ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200"
-                              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+                              : selectedRequest.status === "needs_revision" ? "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200" : "bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
                           )}
                         >
                           <div className="flex items-center gap-1.5 font-bold">
-                            <AlertCircle className={cn("h-4 w-4 shrink-0", isExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
-                            <span>{isExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
+                            <AlertCircle className={cn("h-4 w-4 shrink-0", isExpired ? "text-rose-600 dark:text-rose-400" : selectedRequest.status === "needs_revision" ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400")} />
+                            <span>{isExpired ? "Revision Deadline Expired (Locked)" : selectedRequest.status === "needs_revision" ? "Admin Revision Feedback" : "Admin Remarks"}</span>
                           </div>
                           <p className="text-xs leading-relaxed pl-5 font-normal italic">
                             "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"

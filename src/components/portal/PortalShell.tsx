@@ -31,7 +31,9 @@ type PortalShellProps = {
   children: React.ReactNode;
   userProfile?: { name: string; role: string; email?: string };
   notifications?: NotificationItem[];
+  notificationUnreadCount?: number;
   onMarkAllRead?: () => void;
+  isMarkingAllRead?: boolean;
   onMarkRead?: (id: string) => void;
 };
 
@@ -177,7 +179,9 @@ export const PortalShell = ({
   children,
   userProfile,
   notifications,
+  notificationUnreadCount,
   onMarkAllRead,
+  isMarkingAllRead = false,
   onMarkRead,
 }: PortalShellProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -185,7 +189,7 @@ export const PortalShell = ({
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
 
   const searchablePages = useMemo<PortalNavItem[]>(() => groups.flatMap((group) => group.items), [groups]);
-  const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
+  const unreadCount = notificationUnreadCount ?? notifications?.filter((n) => !n.isRead).length ?? 0;
   const recentNotifications = useMemo(
     () => [...(notifications ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8),
     [notifications]
@@ -365,13 +369,14 @@ export const PortalShell = ({
                           {unreadCount > 0 && onMarkAllRead && (
                             <button
                               type="button"
+                              disabled={isMarkingAllRead}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onMarkAllRead();
                               }}
                               className="shrink-0 rounded px-1.5 py-1 font-segoe text-xs font-semibold text-text-action transition-colors hover:bg-slate-100 hover:text-text-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                             >
-                              Mark all read
+                              {isMarkingAllRead ? "Marking as read…" : "Mark all read"}
                             </button>
                           )}
                         </div>

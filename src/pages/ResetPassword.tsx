@@ -23,7 +23,15 @@ import {
 } from "@/lib/password-recovery";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
-import { endPwaAuthFlow } from "@/user/pwa/pwaAuthFlow";
+import {
+  beginPwaAuthFlow,
+  endPwaAuthFlow,
+  isPwaAuthFlow,
+  PWA_ENTRY_ROUTE,
+  pwaAuthRoute,
+} from "@/user/pwa/pwaAuthFlow";
+import { readPwaPreferences } from "@/user/pwa/hooks/usePwaPreferences";
+import { getPwaThemeStyle } from "@/user/pwa/pwaAccentThemes";
 import { GENERIC_RESET_MESSAGE, isValidEmailFormat } from "@/lib/email-validation";
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -97,6 +105,15 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const pwaFlow = isPwaAuthFlow(location.search);
+  const pwaTheme = readPwaPreferences().accentTheme;
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("pwa") === "1") {
+      beginPwaAuthFlow();
+    }
+  }, [location.search]);
+
   const currentHref = useMemo(() => {
     if (typeof window === "undefined") return "/reset-password";
     const origin = window.location.origin || "https://y-trace.local";
@@ -133,7 +150,6 @@ const ResetPassword = () => {
   }, [resendCooldown]);
 
   useEffect(() => {
-    endPwaAuthFlow();
     if (!supabase) {
       if (recovery.hasRecoveryCredentials) {
         setInlineError("Password recovery is unavailable because Supabase is not configured.");
@@ -245,7 +261,7 @@ const ResetPassword = () => {
 
     setIsLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-      redirectTo: getPasswordResetUrl(),
+      redirectTo: getPasswordResetUrl({ pwaFlow }),
     });
     setIsLoading(false);
 
@@ -322,12 +338,19 @@ const ResetPassword = () => {
     if (isPasswordRecoverySession) {
       await signOut();
     }
+    if (!pwaFlow && destination === "/") {
+      endPwaAuthFlow();
+    }
     navigate(destination, { replace: true });
   };
 
   const requestAnotherLink = () => {
     clearPasswordRecoveryState();
-    window.history.replaceState({}, document.title, "/reset-password");
+    window.history.replaceState(
+      {},
+      document.title,
+      pwaFlow ? pwaAuthRoute("/reset-password") : "/reset-password",
+    );
     setInlineError("");
     setEmail("");
     setTouchedEmail(false);
@@ -353,7 +376,11 @@ const ResetPassword = () => {
   }, [password, confirmPassword]);
 
   return (
-    <div className="relative flex min-h-0 sm:min-h-screen flex-col items-center justify-start sm:justify-center overflow-hidden bg-background px-4 pt-5 pb-6 sm:py-12 text-foreground">
+    <div
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen min-h-[100dvh] w-full flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:py-12 text-foreground`}
+      data-pwa-theme={pwaFlow ? pwaTheme : undefined}
+      style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
+    >
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
@@ -364,7 +391,7 @@ const ResetPassword = () => {
         {/* Brand Logo — centered above card */}
         <div className="flex justify-center">
           <Link
-            to="/"
+            to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
             className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
           >
             <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
@@ -538,7 +565,10 @@ const ResetPassword = () => {
                   Your new password is ready. Sign in again to continue.
                 </p>
               </div>
-              <Button className="w-full h-11 rounded-xl font-bold text-sm" onClick={() => cancelRecovery("/signin")}>
+              <Button
+                className="w-full h-11 rounded-xl font-bold text-sm"
+                onClick={() => cancelRecovery(pwaFlow ? pwaAuthRoute("/signin") : "/signin")}
+              >
                 Continue to Sign In
               </Button>
             </div>
@@ -557,7 +587,7 @@ const ResetPassword = () => {
               Remember your password?{" "}
               <button
                 type="button"
-                onClick={() => cancelRecovery("/signin")}
+                onClick={() => cancelRecovery(pwaFlow ? pwaAuthRoute("/signin") : "/signin")}
                 className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors focus-visible:outline-none focus-visible:underline cursor-pointer"
               >
                 Sign in
@@ -566,10 +596,10 @@ const ResetPassword = () => {
             <p>
               <button
                 type="button"
-                onClick={() => cancelRecovery("/")}
+                onClick={() => cancelRecovery(pwaFlow ? PWA_ENTRY_ROUTE : "/")}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline cursor-pointer"
               >
-                ← Back to home
+                ← Back to {pwaFlow ? "welcome" : "home"}
               </button>
             </p>
           </div>

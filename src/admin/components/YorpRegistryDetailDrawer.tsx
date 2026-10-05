@@ -40,7 +40,7 @@ import {
   getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
-import { resolveSupabaseFileUrl, fetchAdminYorpRegistrationDocuments } from "@/lib/lydo-connect-supabase";
+import { resolveSupabaseFileUrl, fetchAdminYorpRegistrationDocuments, fetchAdminYorpRegistryYpopDetail } from "@/lib/lydo-connect-supabase";
 import { ReferenceCodeChip } from "@/admin/components/InquiriesTable";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import type { YorpRegistryEntry } from "@/admin/components/YorpRegistryTable";
@@ -336,6 +336,25 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
   }, [isYpopBreakdownOpen]);
 
   const org = entry?.org;
+  const openPeriod = useMemo(
+    () => [...(state.ypopPeriods ?? [])]
+      .filter((period) => period.status === "open")
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null,
+    [state.ypopPeriods],
+  );
+  const openPeriodEntry = useMemo(
+    () => org && openPeriod
+      ? state.ypopEntries.find((item) => item.organizationId === org.id && item.semester === openPeriod.semesterKey) ?? null
+      : null,
+    [org, openPeriod, state.ypopEntries],
+  );
+  const ypopDetailQuery = useQuery({
+    queryKey: ["admin", "yorp-registry-ypop-detail", user?.id, org?.id, openPeriod?.semesterKey],
+    queryFn: () => fetchAdminYorpRegistryYpopDetail(org!.id, openPeriod!.semesterKey),
+    enabled: Boolean(supabase && org && activeTab === "ypop" && openPeriod),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+  });
   const documentsQuery = useQuery({
     queryKey: ["admin", "yorp-registration-documents", user?.id, user?.roleCode,
       [...(user?.permissionCodes ?? [])].sort().join(","), org?.id],
@@ -451,22 +470,17 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
   const ypopData = useMemo(() => {
     if (!org) return null;
 
-    const openPeriod = [...(state.ypopPeriods ?? [])]
-      .filter((period) => period.status === "open")
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
     if (!openPeriod) return null;
 
-    const ypopEntry =
-      state.ypopEntries.find(
-        (item) => item.organizationId === org.id && item.semester === openPeriod.semesterKey,
-      ) ?? null;
+    const detailState = ypopDetailQuery.data;
+    const ypopEntry = openPeriodEntry;
 
-    const semesterActivities = state.ypopCityActivities.filter(
+    const semesterActivities = (detailState?.ypopCityActivities ?? state.ypopCityActivities).filter(
       (activity) => activity.semesterKey === openPeriod.semesterKey,
     );
     const semesterActivityIds = new Set(semesterActivities.map((activity) => activity.id));
 
-    const orgParticipations = state.ypopEventParticipations
+    const orgParticipations = (detailState?.ypopEventParticipations ?? state.ypopEventParticipations)
       .filter((item) => item.organizationId === org.id && semesterActivityIds.has(item.activityId))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
@@ -476,7 +490,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
     }));
 
     const orgActivities = ypopEntry
-      ? state.ypopOrgActivities
+      ? (detailState?.ypopOrgActivities ?? state.ypopOrgActivities)
           .filter((activity) => activity.ypopEntryId === ypopEntry.id && activity.status === "approved")
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       : [];
@@ -533,8 +547,9 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
     };
   }, [
     org,
-    state.ypopPeriods,
-    state.ypopEntries,
+    openPeriod,
+    openPeriodEntry,
+    ypopDetailQuery.data,
     state.ypopEventParticipations,
     state.ypopOrgActivities,
     state.ypopCityActivities,
@@ -973,7 +988,22 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                           </button>
                         }
                       >
-                        {ypopData.joinedActivities.length ? (
+                        {supabase && ypopDetailQuery.isPending ? (
+                          <p className="py-4 text-center font-segoe text-xs text-slate-500" role="status">
+                            Loading joined activities…
+                          </p>
+                        ) : supabase && ypopDetailQuery.isError ? (
+                          <div className="flex flex-col items-center gap-2 py-4 text-center">
+                            <p className="font-segoe text-xs text-slate-500">Could not load joined activities.</p>
+                            <button
+                              type="button"
+                              onClick={() => void ypopDetailQuery.refetch()}
+                              className="font-segoe text-xs font-semibold text-public-bg-brand hover:underline"
+                            >
+                              Try again
+                            </button>
+                          </div>
+                        ) : ypopData.joinedActivities.length ? (
                           <div className="flex flex-col">
                             {ypopData.joinedActivities.map(({ participation, category, points }) => (
                               <div

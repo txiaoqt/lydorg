@@ -22,6 +22,7 @@ const USER_PWA_ROUTES = [
   "/signin",
   "/signup",
   "/auth/callback",
+  "/reset-password",
   "/app",
 ];
 
