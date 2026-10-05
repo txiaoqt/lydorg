@@ -469,10 +469,16 @@ function ProfileDetails({ data }: { data: PortalData }) {
 }
 
 function CityLedActivityList({ data }: { data: PortalData }) {
-  const verifiedActivities = data.cityLedParticipations.filter((item) => item.status === "verified");
-  return verifiedActivities.slice(0, 3).length ? (
+  const recentActivities = data.cityLedParticipations.slice(0, 3);
+  if (!recentActivities.length && data.sectionLoading) {
+    return <p className="pwa-profile-empty">Loading joined activities...</p>;
+  }
+  if (!recentActivities.length && data.sectionError) {
+    return <button type="button" className="pwa-profile-section-link" onClick={() => void data.retrySection()}>Unable to load activities. Retry</button>;
+  }
+  return recentActivities.length ? (
     <div className="pwa-profile-activity-list">
-      {verifiedActivities.slice(0, 3).map((item) => (
+      {recentActivities.map((item) => (
         <article key={item.id}>
           <div>
             <strong>{item.activityName}</strong>

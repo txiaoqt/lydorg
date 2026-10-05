@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
   loadOrganizationPortalSectionState,
+  loadOrganizationProfileActivityState,
   loadOrganizationDocumentSubmissionState,
   loadOrganizationBudgetSubmissionState,
   loadOrganizationLiquidationSubmissionState,
@@ -104,6 +105,16 @@ export function usePwaPortalData() {
       if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug(`Organization ${activeSection} status channel subscribed.`);
       else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn(`Organization ${activeSection} status channel:`, status, error ?? "");
     };
+    if (activeSection === "organization-profile") {
+      return subscribeToOrganizationStatusChangesInSupabase({
+        organizationId, feature: "ypop_city_led",
+        onChange: () => {
+          void loadOrganizationProfileActivityState(organizationId)
+            .then((snapshot) => mergeRemoteStateRef.current(snapshot))
+            .catch((error) => { if (import.meta.env.DEV) console.warn("Could not refresh profile activities.", error); });
+        }, onStatus,
+      });
+    }
     if (activeSection === "document-submission") {
       return subscribeToOrganizationStatusChangesInSupabase({
         organizationId, feature: "registration", submissionId: registrationSubmissionId,
