@@ -18,3 +18,7 @@ verify_jwt = false
 
 [functions.delete-ypop-submissions]
 verify_jwt = false
+
+[functions.admin-backup-control]
+# Custom admin session and role authorization are enforced inside the function.
+verify_jwt = false

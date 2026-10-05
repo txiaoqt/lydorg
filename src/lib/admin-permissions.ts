@@ -110,6 +110,16 @@ export const ADMIN_PERMISSION_GROUPS: AdminPermissionGroup[] = [
         label: "System Settings Management",
         description: "Modify system-wide administrative settings and configuration.",
       },
+      {
+        code: "backup_recovery_view",
+        label: "Backup & Recovery View",
+        description: "View system backup workflow status and history.",
+      },
+      {
+        code: "backup_recovery_manage",
+        label: "Backup & Recovery Management",
+        description: "Request a verified database and uploaded-file backup.",
+      },
     ],
   },
 ];
@@ -135,6 +145,7 @@ export const ADMIN_NAV_PERMISSION_MAP: Record<string, string> = {
   administrators: "administrators_management",
   "activity-logs": "activity_logs_view",
   settings: "system_settings_view",
+  "backup-recovery": "backup_recovery_view",
 };
 
 export const hasAdminNavPermission = (

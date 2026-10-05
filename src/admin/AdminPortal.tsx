@@ -7,6 +7,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { QueryClientContext, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query-client";
 import { YorpRegistryPage } from "./pages/YorpRegistry";
+import { BackupRecoveryPage } from "./components/BackupRecoveryPage";
+import { DatabaseBackup } from "lucide-react";
 import {
   preflightRegistrationDeletion,
   permanentlyDeleteRegistrationAccount,
@@ -421,6 +423,7 @@ const routeMap: Record<string, string> = {
   "yorp-registry": "/admin/yorp-registry",
   administrators: "/admin/administrators",
   settings: "/admin/settings",
+  "backup-recovery": "/admin/backup-recovery",
 };
 
 const adminId = "admin-demo";
@@ -3042,6 +3045,7 @@ function AdminPortalContent({ section }: { section: string }) {
           { id: "administrators", label: "Administrators", icon: Shield },
           { id: "activity-logs", label: "Activity Logs", icon: Activity },
           { id: "settings", label: "Settings", icon: Settings },
+          { id: "backup-recovery", label: "Backup & Recovery", icon: DatabaseBackup },
         ],
       },
     ];
@@ -15728,6 +15732,8 @@ function AdminPortalContent({ section }: { section: string }) {
       }
       case "yorp-registry":
         return <YorpRegistryPage />;
+      case "backup-recovery":
+        return <BackupRecoveryPage />;
       case "settings":
         return (
           <AdminSettingsPage

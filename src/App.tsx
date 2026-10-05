@@ -297,6 +297,7 @@ const App = () => (
                       <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
                       <Route path="/admin/administrators" element={<RequireAdmin><AdminPortal section="administrators" /></RequireAdmin>} />
                       <Route path="/admin/settings" element={<RequireAdmin><AdminPortal section="settings" /></RequireAdmin>} />
+                      <Route path="/admin/backup-recovery" element={<RequireAdmin><AdminPortal section="backup-recovery" /></RequireAdmin>} />
                       <Route path="/" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                       <Route path="*" element={<Navigate to={ADMIN_SIGNIN_PATH} replace />} />
                     </>
@@ -326,6 +327,7 @@ const App = () => (
                           <Route path="/admin/yorp-registry" element={<RequireAdmin><AdminPortal section="yorp-registry" /></RequireAdmin>} />
                           <Route path="/admin/administrators" element={<RequireAdmin><AdminPortal section="administrators" /></RequireAdmin>} />
                           <Route path="/admin/settings" element={<RequireAdmin><AdminPortal section="settings" /></RequireAdmin>} />
+                          <Route path="/admin/backup-recovery" element={<RequireAdmin><AdminPortal section="backup-recovery" /></RequireAdmin>} />
                         </>
                       ) : (
                         <Route path="/admin/*" element={<Navigate to="/" replace />} />

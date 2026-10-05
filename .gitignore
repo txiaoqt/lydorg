@@ -30,3 +30,12 @@ test-results/
 *.tsbuildinfo
 .codex/
 
+# Local agent tooling, generated reports/fixtures, Python cache, and Supabase CLI state
+/.agent/
+/.agents/
+/.gemini/
+/backup/
+/scratch/
+/scripts/__pycache__/
+/supabase/.temp/
+
