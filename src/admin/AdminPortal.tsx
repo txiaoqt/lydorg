@@ -3735,7 +3735,9 @@ function AdminPortalContent({ section }: { section: string }) {
     if (section === "liquidation-monitoring") return ["liquidations"];
     if (section === "ypop-validation" && ypopAdminView === "periods") return ["ypop_city_led", "ypop_org_led"];
     if (section === "ypop-validation" && ypopAdminView === "entry-review") {
-      return [entryReviewTab === "org_led" ? "ypop_org_led" : "ypop_city_led"];
+      // The entry review summary combines both lanes, so keep its scoped
+      // refresh signal active for City-led and Organization-led changes.
+      return ["ypop_city_led", "ypop_org_led"];
     }
     if (section === "ypop-validation" && ypopAdminView === "period-detail") return ["ypop_city_led", "ypop_org_led"];
     return [];
@@ -13445,7 +13447,11 @@ function AdminPortalContent({ section }: { section: string }) {
             eventFilesByParticipationId.set(file.participationId, existing);
           });
           const orgActivityFilesByActivityId = new Map<string, YPOPOrgActivityFile[]>();
-          state.ypopOrgActivityFiles.forEach((file) => {
+          const reviewOrgActivityFiles = new Map<string, YPOPOrgActivityFile>();
+          [...state.ypopOrgActivityFiles, ...(reviewState?.ypopOrgActivityFiles ?? [])].forEach((file) => {
+            reviewOrgActivityFiles.set(file.id, file);
+          });
+          reviewOrgActivityFiles.forEach((file) => {
             const existing = orgActivityFilesByActivityId.get(file.orgActivityId) ?? [];
             existing.push(file);
             orgActivityFilesByActivityId.set(file.orgActivityId, existing);

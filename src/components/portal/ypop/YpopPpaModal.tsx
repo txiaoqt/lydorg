@@ -186,6 +186,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   );
 
   const [pendingDeletedFileIds, setPendingDeletedFileIds] = useState<string[]>([]);
+  const fileLoadGenerationRef = useRef(0);
 
   const prevOpenRef = useRef(false);
   const prevActivityIdRef = useRef<string | null>(null);
@@ -194,25 +195,27 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     setLoadedOrgActivityFiles(null);
     if (!open || !loadFilesOnOpen || !currentActivity?.id || !organizationId) return;
     let active = true;
+    const generation = fileLoadGenerationRef.current;
     void loadOrganizationYpopOrgActivityFiles(organizationId, currentActivity.id)
-      .then((files) => { if (active) setLoadedOrgActivityFiles(files); })
+      .then((files) => { if (active && generation === fileLoadGenerationRef.current) setLoadedOrgActivityFiles(files); })
       .catch((error) => { if (active) console.error("Unable to load YPOP PPA files:", error); });
     return () => { active = false; };
   }, [open, loadFilesOnOpen, organizationId, currentActivity?.id]);
 
   useEffect(() => {
     if (!open || !loadFilesOnOpen || !currentActivity?.id || !organizationId) return;
-    let active = true;
+    const active = true;
     const refreshOpenPpaFiles = () => {
+      const generation = fileLoadGenerationRef.current;
       void loadOrganizationYpopOrgActivityFiles(organizationId, currentActivity.id)
-        .then((files) => { if (active) setLoadedOrgActivityFiles(files); })
+        .then((files) => { if (active && generation === fileLoadGenerationRef.current) setLoadedOrgActivityFiles(files); })
         .catch((error) => { if (active && import.meta.env.DEV) console.warn("Could not refresh opened YPOP PPA files.", error); });
     };
     return subscribeToOrganizationYpopFileChangesInSupabase(
       organizationId, "org_led", currentActivity.id, refreshOpenPpaFiles,
       (status, error) => {
         if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization YPOP PPA-file channel subscribed.");
-        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization YPOP PPA-file channel:", status, error ?? "");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT"].includes(status)) console.warn("Organization YPOP PPA-file channel:", status, error ?? "");
       },
     );
   }, [open, loadFilesOnOpen, organizationId, currentActivity?.id]);
@@ -405,6 +408,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     try {
       await deleteYpopOrgActivityFileFromSupabase(file.id, file.fileUrl);
       onFileDeleted(file.id);
+      fileLoadGenerationRef.current += 1;
       setLoadedOrgActivityFiles((files) => files?.filter((saved) => saved.id !== file.id) ?? null);
       if (selectedFileId === file.id) {
         const remaining = currentSavedFiles.filter((f) => f.id !== file.id);
@@ -632,6 +636,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
             if (fileObj) {
               await deleteYpopOrgActivityFileFromSupabase(fileId, fileObj.fileUrl);
               onFileDeleted(fileId);
+              fileLoadGenerationRef.current += 1;
               setLoadedOrgActivityFiles((files) => files?.filter((saved) => saved.id !== fileId) ?? null);
             }
           }
@@ -649,6 +654,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
             localBlobUrlsRef.current.set(savedFile.id, blobUrl);
             localRawFilesRef.current.set(savedFile.id, file);
             onFileCreated(savedFile);
+            fileLoadGenerationRef.current += 1;
             setLoadedOrgActivityFiles((files) => [...(files ?? orgActivityFiles), savedFile]);
             setSelectedFileId(savedFile.id);
           }

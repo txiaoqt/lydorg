@@ -50,6 +50,7 @@ export interface YpopOrgLedTabProps {
   orgActivities: YPOPOrgActivity[];
   orgActivityFiles: YPOPOrgActivityFile[];
   serverPaginated?: boolean;
+  dataRefreshKey?: number;
   totalCount?: number;
   approvedCountOverride?: number;
   organizationId: string;
@@ -68,6 +69,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
   orgActivities,
   orgActivityFiles,
   serverPaginated = false,
+  dataRefreshKey = 0,
   totalCount: initialTotalCount,
   approvedCountOverride,
   organizationId,
@@ -100,6 +102,9 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         if (!active) return;
         setServerRows(result.rows);
         setServerTotalCount(result.totalCount);
+        setEditingActivity((current) => current
+          ? result.rows.find((row) => row.id === current.id) ?? current
+          : current);
         if (!result.rows.length && page > 1 && result.totalPages < page) setPage(Math.max(1, result.totalPages));
       })
       .catch((error) => {
@@ -107,7 +112,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
       })
       .finally(() => { if (active) setServerLoading(false); });
     return () => { active = false; };
-  }, [serverPaginated, entry?.id, organizationId, page, searchQuery, refreshVersion]);
+  }, [serverPaginated, entry?.id, organizationId, page, searchQuery, refreshVersion, dataRefreshKey]);
 
   // Use configured period orgLedTiers if available, or fallback (Internal calculation preserved per Requirement #2 & #9)
   const tiers = period.orgLedTiers?.length ? period.orgLedTiers : DEFAULT_ORG_LED_TIERS;

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
   deriveTemplateCategory,
@@ -7,7 +8,7 @@ import {
 } from "@/lib/lydo-connect-data";
 import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import { loadOrganizationRequiredDocumentTypesState, resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
 
 export type PublicTemplatesCatalogProps = {
@@ -21,6 +22,13 @@ export default function PublicTemplatesCatalog({
   compactHeader = false,
 }: PublicTemplatesCatalogProps) {
   const { state } = useLydoConnect();
+  const publicTemplatesQuery = useQuery({
+    queryKey: ["public", "templates", "catalog"],
+    queryFn: async () => (await loadOrganizationRequiredDocumentTypesState())?.templates ?? [],
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -32,7 +40,7 @@ export default function PublicTemplatesCatalog({
 
   // Map state.templates using the authoritative User Portal mapping logic
   const allPublicTemplates = useMemo(() => {
-    const activeTemplates = (state.templates || []).filter(
+    const activeTemplates = (publicTemplatesQuery.data ?? state.templates ?? []).filter(
       (template) => (template.templateActive ?? true) && template.isActive !== false,
     );
 
@@ -83,7 +91,7 @@ export default function PublicTemplatesCatalog({
         templateScope: t.templateScope,
       };
     });
-  }, [state.templates]);
+  }, [publicTemplatesQuery.data, state.templates]);
 
   const openPreview = async (fileUrl: string | undefined, fileName: string) => {
     if (!fileUrl || !fileUrl.trim() || fileUrl.startsWith("#")) {

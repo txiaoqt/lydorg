@@ -144,6 +144,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
 
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingDeletedFileIds, setPendingDeletedFileIds] = useState<string[]>([]);
+  const fileLoadGenerationRef = useRef(0);
 
   const prevOpenRef = useRef(false);
   const prevActivityIdRef = useRef<string | null>(null);
@@ -153,25 +154,27 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     setLoadedEventFiles(null);
     if (!open || !loadFilesOnOpen || !currentParticipation?.id || !organizationId) return;
     let active = true;
+    const generation = fileLoadGenerationRef.current;
     void loadOrganizationYpopEventFiles(organizationId, currentParticipation.id)
-      .then((files) => { if (active) setLoadedEventFiles(files); })
+      .then((files) => { if (active && generation === fileLoadGenerationRef.current) setLoadedEventFiles(files); })
       .catch((error) => { if (active) console.error("Unable to load YPOP event proof files:", error); });
     return () => { active = false; };
   }, [open, loadFilesOnOpen, organizationId, currentParticipation?.id]);
 
   useEffect(() => {
     if (!open || !loadFilesOnOpen || !currentParticipation?.id || !organizationId) return;
-    let active = true;
+    const active = true;
     const refreshOpenProofFiles = () => {
+      const generation = fileLoadGenerationRef.current;
       void loadOrganizationYpopEventFiles(organizationId, currentParticipation.id)
-        .then((files) => { if (active) setLoadedEventFiles(files); })
+        .then((files) => { if (active && generation === fileLoadGenerationRef.current) setLoadedEventFiles(files); })
         .catch((error) => { if (active && import.meta.env.DEV) console.warn("Could not refresh opened YPOP proof files.", error); });
     };
     return subscribeToOrganizationYpopFileChangesInSupabase(
       organizationId, "city_led", currentParticipation.id, refreshOpenProofFiles,
       (status, error) => {
         if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization YPOP proof-file channel subscribed.");
-        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization YPOP proof-file channel:", status, error ?? "");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT"].includes(status)) console.warn("Organization YPOP proof-file channel:", status, error ?? "");
       },
     );
   }, [open, loadFilesOnOpen, organizationId, currentParticipation?.id]);
@@ -403,6 +406,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       setSelectedFileId(remaining[0]?.id ?? null);
     }
     onFileDeleted(file.id);
+    fileLoadGenerationRef.current += 1;
     setLoadedEventFiles((savedFiles) => savedFiles?.filter((saved) => saved.id !== file.id) ?? null);
 
     try {
@@ -492,6 +496,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
             if (fileObj) {
               await deleteYpopEventFileFromSupabase(fileId, fileObj.fileUrl);
               onFileDeleted(fileId);
+              fileLoadGenerationRef.current += 1;
               setLoadedEventFiles((savedFiles) => savedFiles?.filter((saved) => saved.id !== fileId) ?? null);
             }
           })
@@ -515,6 +520,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           localBlobUrlsRef.current.set(saved.id, blobUrl);
           localRawFilesRef.current.set(saved.id, file);
           onFileCreated(saved);
+          fileLoadGenerationRef.current += 1;
           setLoadedEventFiles((savedFiles) => [...(savedFiles ?? eventFiles), saved]);
           setSelectedFileId(saved.id);
         });
@@ -600,6 +606,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
             if (fileObj) {
               await deleteYpopEventFileFromSupabase(fileId, fileObj.fileUrl);
               onFileDeleted(fileId);
+              fileLoadGenerationRef.current += 1;
               setLoadedEventFiles((savedFiles) => savedFiles?.filter((saved) => saved.id !== fileId) ?? null);
             }
           })
@@ -623,6 +630,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           localBlobUrlsRef.current.set(saved.id, blobUrl);
           localRawFilesRef.current.set(saved.id, file);
           onFileCreated(saved);
+          fileLoadGenerationRef.current += 1;
           setLoadedEventFiles((savedFiles) => [...(savedFiles ?? eventFiles), saved]);
           setSelectedFileId(saved.id);
         });

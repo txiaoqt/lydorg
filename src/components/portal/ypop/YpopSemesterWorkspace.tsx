@@ -60,6 +60,7 @@ export interface YpopSemesterWorkspaceProps {
   orgActivityFiles: YPOPOrgActivityFile[];
   orgActivitySummary?: { totalCount: number; approvedCount: number; unreviewedCount: number; needsRevisionCount: number };
   serverPaginatedOrgActivities?: boolean;
+  dataRefreshKey?: number;
   loadFilesOnOpen?: boolean;
   profile: OrganizationProfile | null;
   organizationId: string;
@@ -93,6 +94,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
   orgActivityFiles,
   orgActivitySummary,
   serverPaginatedOrgActivities = false,
+  dataRefreshKey = 0,
   loadFilesOnOpen = false,
   profile,
   organizationId,
@@ -416,6 +418,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
           orgActivities={orgActivities}
         orgActivityFiles={orgActivityFiles}
         serverPaginated={serverPaginatedOrgActivities}
+        dataRefreshKey={dataRefreshKey}
         totalCount={orgActivitySummary?.totalCount}
         approvedCountOverride={orgActivitySummary?.approvedCount}
           organizationId={organizationId}

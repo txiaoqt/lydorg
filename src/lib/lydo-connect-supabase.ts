@@ -2082,6 +2082,22 @@ export const loadOrganizationYpopOrgActivityFiles = async (organizationId: strin
   });
 };
 
+const addYpopFileToCachedList = async <T extends { id: string }>(queryKey: readonly unknown[], file: T): Promise<void> => {
+  await queryClient.cancelQueries({ queryKey, exact: true });
+  const files = queryClient.getQueryData<T[]>(queryKey);
+  if (!files) return;
+  queryClient.setQueryData<T[]>(queryKey, (files) => {
+    const current = files ?? [];
+    return current.some((item) => item.id === file.id) ? current : [...current, file];
+  });
+};
+
+const removeYpopFileFromCachedList = async <T extends { id: string }>(queryKey: readonly unknown[], fileId: string): Promise<void> => {
+  await queryClient.cancelQueries({ queryKey, exact: true });
+  if (!queryClient.getQueryData<T[]>(queryKey)) return;
+  queryClient.setQueryData<T[]>(queryKey, (files) => files?.filter((file) => file.id !== fileId) ?? []);
+};
+
 export const loadOrganizationYpopEntryFiles = async (organizationId: string, entryId: string): Promise<YPOPFile[]> => {
   if (!supabase || !organizationId || !entryId) return [];
   return queryClient.fetchQuery({
@@ -2159,7 +2175,9 @@ export const loadOrganizationRequiredDocumentTypesState = async (): Promise<Part
   if (!supabase) return null;
   return queryClient.fetchQuery({
     queryKey: ["public", "templates"],
-    staleTime: 5 * 60_000,
+    // Public templates are edited by admins and must become visible to users
+    // promptly without requiring a full portal reload.
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase!.from("required_document_types")
         .select("id,name,description,template_url,template_description,sort_order,is_required,is_active,scope,template_scope,template_category,template_file_size,updated_at")
@@ -2838,6 +2856,7 @@ export const fetchAdminYpopEntryReviewDetail = async (entryId: string): Promise<
     event_participations?: YpopEventParticipationRow[];
     event_files?: YpopEventFileRow[];
     org_activities?: YpopOrgActivityRow[];
+    org_activity_files?: YpopOrgActivityFileRow[];
   };
   if (!payload.entry?.id) throw new Error("YPOP review detail response was invalid.");
   return {
@@ -2848,6 +2867,7 @@ export const fetchAdminYpopEntryReviewDetail = async (entryId: string): Promise<
     ypopEventParticipations: (payload.event_participations ?? []).map(mapYpopEventParticipation),
     ypopEventFiles: (payload.event_files ?? []).map(mapYpopEventFile),
     ypopOrgActivities: (payload.org_activities ?? []).map(mapYpopOrgActivity),
+    ypopOrgActivityFiles: (payload.org_activity_files ?? []).map(mapYpopOrgActivityFile),
   };
 };
 
@@ -2898,7 +2918,7 @@ export const subscribeToOrganizationStatusChangesInSupabase = (params: {
     }, 60);
   };
   const handleParentChange = () => handleRelevantChange("parent");
-  const dispatchRelevantChange = (kind: "parent" | "file") => {
+  const dispatchRelevantChange = async (kind: "parent" | "file") => {
     if (feature === "budgets") {
       const refreshes: Promise<unknown>[] = [];
       if (kind === "parent") {
@@ -2947,15 +2967,33 @@ export const subscribeToOrganizationStatusChangesInSupabase = (params: {
       );
       if (refreshes.length) void Promise.all(refreshes);
     } else if (feature === "ypop_city_led" || feature === "ypop_org_led") {
+      const cancellations: Array<{ queryKey: readonly unknown[]; exact?: boolean }> = [];
+      const refreshes: Array<{ queryKey: readonly unknown[]; exact?: boolean }> = [];
       if (kind === "parent" && semesterKey) {
-        void queryClient.invalidateQueries({ queryKey: ["user", organizationId, "ypop", "semester", semesterKey] });
-      } else if (kind === "parent" && feature === "ypop_city_led") {
-        void queryClient.invalidateQueries({ queryKey: ["user", organizationId, "ypop", "entries-by-semesters"] });
+        const key = ["user", organizationId, "ypop", "semester", semesterKey] as const;
+        cancellations.push({ queryKey: key, exact: true });
+        refreshes.push({ queryKey: key, exact: true });
+      }
+      if (kind === "parent") {
+        refreshes.push({ queryKey: ["user", organizationId, "ypop", "entries-by-semesters"] });
+        if (feature === "ypop_org_led" && entryId) {
+          // The PPA table is server-paginated and has its own cache separate
+          // from the semester summary and activity drawer.
+          cancellations.push({ queryKey: ["user", organizationId, "ypop", "ppa-page", entryId] });
+          refreshes.push({ queryKey: ["user", organizationId, "ypop", "ppa-page", entryId] });
+          refreshes.push({ queryKey: ["user", organizationId, "ypop", "ppa", entryId] });
+        }
       }
       if (detailId) {
         const fileKey = feature === "ypop_city_led" ? "event-files" : "org-activity-files";
-        void queryClient.invalidateQueries({ queryKey: ["user", organizationId, "ypop", fileKey, detailId] });
+        const key = ["user", organizationId, "ypop", fileKey, detailId] as const;
+        cancellations.push({ queryKey: key, exact: true });
+        refreshes.push({ queryKey: key, exact: true });
       }
+      await Promise.all(cancellations.map((filters) => queryClient.cancelQueries(filters)));
+      await Promise.all(refreshes.map((filters) => queryClient.invalidateQueries(filters)));
+      if (kind === "parent") onChange();
+      return;
     }
     if (kind === "parent") onChange();
   };
@@ -3054,10 +3092,16 @@ export const subscribeToOrganizationYpopFileChangesInSupabase = (
   const isCity = lane === "city_led";
   const table = isCity ? "ypop_event_files" : "ypop_org_activity_files";
   const parentColumn = isCity ? "participation_id" : "org_activity_id";
+  const fileQueryKey = ["user", organizationId, "ypop", isCity ? "event-files" : "org-activity-files", parentId] as const;
+  const refreshFiles = async () => {
+    await queryClient.cancelQueries({ queryKey: fileQueryKey, exact: true });
+    await queryClient.invalidateQueries({ queryKey: fileQueryKey, exact: true });
+    onChange();
+  };
   const channel = supabase.channel(`organization-ypop-${lane}-files-${organizationId}-${parentId}`);
   channel
-    .on("postgres_changes", { event: "INSERT", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, onChange)
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, onChange)
+    .on("postgres_changes", { event: "INSERT", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, () => { void refreshFiles(); })
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, () => { void refreshFiles(); })
     .subscribe((status, error) => onStatus?.(status, error));
   return () => { void supabase?.removeChannel(channel); };
 };
@@ -6423,6 +6467,9 @@ export const uploadYpopEventFileToSupabase = async (params: {
 
   if (error) throw new Error(error.message);
   const mapped = mapYpopEventFile(data as YpopEventFileRow);
+  await addYpopFileToCachedList<YPOPEventFile>(
+    ["user", params.organizationId, "ypop", "event-files", params.participationId], mapped,
+  );
 
   void dispatchAdminNotificationInSupabase({
     eventType: "ypop_submission",
@@ -6437,6 +6484,9 @@ export const uploadYpopEventFileToSupabase = async (params: {
 
 export const deleteYpopEventFileFromSupabase = async (fileId: string, fileUrl?: string): Promise<void> => {
   if (!supabase) throw new Error("Supabase is not configured.");
+  const { data: file, error: fileError } = await supabase.from("ypop_event_files")
+    .select("participation_id,organization_id").eq("id", fileId).maybeSingle();
+  if (fileError) throw new Error(fileError.message);
 
   if (fileUrl) {
     await removeStorageObjects([fileUrl]).catch((err) => {
@@ -6445,6 +6495,9 @@ export const deleteYpopEventFileFromSupabase = async (fileId: string, fileUrl?: 
   }
   const { error } = await supabase.from("ypop_event_files").delete().eq("id", fileId);
   if (error) throw new Error(error.message);
+  if (file) await removeYpopFileFromCachedList<YPOPEventFile>(
+    ["user", file.organization_id, "ypop", "event-files", file.participation_id], fileId,
+  );
 };
 
 export const createYpopOrgActivityInSupabase = async (
@@ -6797,7 +6850,11 @@ export const uploadYpopOrgActivityFileToSupabase = async (params: {
     .single();
 
   if (error) throw new Error(error.message);
-  return mapYpopOrgActivityFile(data as YpopOrgActivityFileRow);
+  const mapped = mapYpopOrgActivityFile(data as YpopOrgActivityFileRow);
+  await addYpopFileToCachedList<YPOPOrgActivityFile>(
+    ["user", params.organizationId, "ypop", "org-activity-files", params.orgActivityId], mapped,
+  );
+  return mapped;
 };
 
 export const deleteYpopOrgActivityFileFromSupabase = async (fileId: string, fileUrl: string): Promise<void> => {
@@ -6805,7 +6862,7 @@ export const deleteYpopOrgActivityFileFromSupabase = async (fileId: string, file
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: file, error: fileError } = await supabase
     .from("ypop_org_activity_files")
-    .select("id,org_activity_id")
+    .select("id,org_activity_id,organization_id")
     .eq("id", fileId)
     .eq("organization_id", organizationProfile.id)
     .maybeSingle();
@@ -6842,6 +6899,9 @@ export const deleteYpopOrgActivityFileFromSupabase = async (fileId: string, file
   await removeStorageObjects([fileUrl]);
   const { error } = await supabase.from("ypop_org_activity_files").delete().eq("id", fileId);
   if (error) throw new Error(error.message);
+  await removeYpopFileFromCachedList<YPOPOrgActivityFile>(
+    ["user", organizationProfile.id, "ypop", "org-activity-files", file.org_activity_id], fileId,
+  );
 };
 
 // ─── YPOP Admin mutations (SECURITY DEFINER RPCs) ────────────

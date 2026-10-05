@@ -225,18 +225,23 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
     return () => { active = false; };
   }, [loadRemoteData, organizationId, selectedSemesterKey, workspaceRefreshVersion]);
 
-  const selectedActivityIds = React.useMemo(() => workspaceData?.cityActivities.map((activity) => activity.id) ?? [], [workspaceData?.cityActivities]);
+  // A workspace refetch creates a new activities array even when its IDs did
+  // not change. Keep the Realtime subscription stable across those refreshes.
+  const selectedActivityIdsKey = (workspaceData?.cityActivities ?? [])
+    .map((activity) => activity.id)
+    .sort()
+    .join(",");
   React.useEffect(() => {
     if (!loadRemoteData || !organizationId || !selectedSemesterKey) return;
     const onStatus = (status: string, error?: Error | null) => {
       if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization YPOP status channel subscribed.");
-      else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization YPOP status channel:", status, error ?? "");
+      else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT"].includes(status)) console.warn("Organization YPOP status channel:", status, error ?? "");
     };
     const refresh = () => setWorkspaceRefreshVersion((version) => version + 1);
     const cleanups = [
       subscribeToOrganizationStatusChangesInSupabase({
         organizationId, feature: "ypop_city_led", semesterKey: selectedSemesterKey,
-        activityIds: selectedActivityIds, detailId: null, onChange: refresh, onStatus,
+        activityIds: selectedActivityIdsKey ? selectedActivityIdsKey.split(",") : [], detailId: null, onChange: refresh, onStatus,
       }),
       subscribeToOrganizationStatusChangesInSupabase({
         organizationId, feature: "ypop_org_led", semesterKey: selectedSemesterKey,
@@ -244,7 +249,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
       }),
     ];
     return () => cleanups.forEach((cleanup) => cleanup());
-  }, [loadRemoteData, organizationId, selectedSemesterKey, selectedActivityIds, workspaceData?.entry?.id]);
+  }, [loadRemoteData, organizationId, selectedSemesterKey, selectedActivityIdsKey, workspaceData?.entry?.id]);
 
   const refreshWorkspaceData = async () => {
     await invalidateOrganizationYpopQueries(organizationId, selectedSemesterKey ?? undefined, workspaceData?.entry?.id);
@@ -258,6 +263,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
         (e) => e.organizationId === organizationId && e.semester === selectedPeriod.semesterKey
       ) ?? null
       : null;
+  const hasCurrentWorkspaceData = workspaceData?.period?.semesterKey === selectedSemesterKey;
 
   return (
     <FeatureGate
@@ -289,11 +295,17 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
     >
       <div className="bg-background text-foreground transition-colors duration-200 font-sans max-w-[1440px] mx-auto pt-2 sm:pt-0 pb-4">
         {selectedPeriod ? (
-          loadRemoteData && workspaceLoading && (!workspaceData || workspaceData.period?.semesterKey !== selectedSemesterKey) ? (
+          loadRemoteData && workspaceLoading && !hasCurrentWorkspaceData ? (
             <div className="rounded-2xl border border-border/60 bg-card p-8 text-center text-sm text-muted-foreground">Loading semester data…</div>
-          ) : loadRemoteData && workspaceError ? (
+          ) : loadRemoteData && workspaceError && !hasCurrentWorkspaceData ? (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">Unable to load this semester: {workspaceError}</div>
           ) : loadRemoteData && !workspaceData ? null : (
+          <>
+          {loadRemoteData && workspaceError ? (
+            <div role="status" className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+              We couldn’t refresh the latest YPOP data. Your current workspace remains open.
+            </div>
+          ) : null}
           <YpopSemesterWorkspace
             period={loadRemoteData ? workspaceData?.period ?? selectedPeriod : selectedPeriod}
             allPeriods={periods}
@@ -307,6 +319,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
             orgActivityFiles={loadRemoteData ? [] : orgActivityFiles}
             orgActivitySummary={loadRemoteData ? workspaceData?.orgActivitySummary : undefined}
             serverPaginatedOrgActivities={loadRemoteData}
+            dataRefreshKey={workspaceRefreshVersion}
             loadFilesOnOpen={loadRemoteData}
             profile={currentProfile}
             organizationId={organizationId}
@@ -375,6 +388,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
               deleteYPOPOrgActivityFile(fileId);
             }}
           />
+          </>
           )
         ) : (
           <YpopSemesterList
