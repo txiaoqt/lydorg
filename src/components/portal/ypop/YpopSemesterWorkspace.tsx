@@ -388,7 +388,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
                 : "bg-muted text-muted-foreground"
             )}
           >
-            {semesterOrgActivities.length}
+            {orgActivitySummary?.totalCount ?? semesterOrgActivities.length}
           </span>
         </button>
       </div>
