@@ -5,7 +5,7 @@ import { validateSecrets, redact, runQuiet } from './common.mjs';
 import { backupDatabase } from './backup-database.mjs';
 import { backupStorage, storageApi } from './backup-storage.mjs';
 import { generateManifest } from './generate-manifest.mjs';
-import { uploadR2 } from './upload-r2.mjs';
+import { preflightR2, uploadR2 } from './upload-r2.mjs';
 
 export function backupIdentity(env, now = new Date()) {
   if (!/^\d+$/.test(env.GITHUB_RUN_ID || '') || !/^\d+$/.test(env.GITHUB_RUN_ATTEMPT || '') ||
@@ -42,6 +42,8 @@ export async function runBackup(env = process.env) {
     await runQuiet('sh', ['-c', 'cd "$1" && sha256sum --check --strict SHA256SUMS', 'checksum-check', root]);
     console.log(`Integrity verified; Auth coverage: ${manifest.databaseCoverage.authCoverage}`);
     if (manifest.databaseCoverage.authCoverage === 'not-included') console.log('WARNING: Auth users/identities are not included; see manifest limitations');
+    await preflightR2({ ...identity, env });
+    console.log('R2 preflight verified endpoint and destination bucket list access');
     const archive = path.join(temporary, `ytrace-backup-${identity.backupId}.tar.gz`);
     // Stable order, ownership and timestamps; gzip -n excludes filename/time headers.
     await runQuiet('sh', ['-c', 'set -eu; tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf "$2" -C "$1" .; gzip -n "$2"',

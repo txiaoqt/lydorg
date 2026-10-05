@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { safeRelativePath, localPath, sha256File, validateSecrets, redact, runQuiet } from './common.mjs';
-import { backupStorage, enumerateObjects, discoverBuckets, storageApi } from './backup-storage.mjs';
+import { backupStorage, enumerateObjects, discoverBuckets, storageApi, storageAuthHeaders, StorageApiError } from './backup-storage.mjs';
 import { generateManifest, rejectCredentials } from './generate-manifest.mjs';
 import { BASE_DATABASE_ARTIFACTS, inspectDatabase, backupDatabase } from './backup-database.mjs';
 import { backupIdentity } from './run-backup.mjs';
-import { uploadR2 } from './upload-r2.mjs';
+import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error } from './upload-r2.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const entry = (name, bytes = 'abc') => ({ name, id: `id-${name}`, updated_at: '2026-10-05T00:00:00Z',
@@ -56,7 +56,7 @@ test('storage preserves binary bytes, empty buckets/files, metadata and matching
 });
 
 test('enumeration/API failure, unsupported bucket and repeating pagination fail closed', async () => {
-  await assert.rejects(discoverBuckets({ buckets: async () => [{ id: 'vectors', type: 'VECTOR' }] }), /Unsupported/);
+  await assert.rejects(discoverBuckets({ buckets: async () => [{ id: 'vectors', type: 'VECTOR' }] }), /Storage enumeration failed/);
   await assert.rejects(discoverBuckets({ buckets: async () => [{ id: 'a' }] }, 1), /pagination/);
   await assert.rejects(enumerateObjects({ list: async () => { throw new Error('secret diagnostic'); } }, 'a'), /enumeration failed: a/);
   await assert.rejects(enumerateObjects({ list: async () => [entry('../escape')] }, 'a'), /Unsafe/);
@@ -97,6 +97,43 @@ test('authenticated download URL encodes original segments and never uses a publ
   assert.equal(request.options.headers['Accept-Encoding'], 'identity');
   assert.equal(request.options.redirect, 'error');
   await assert.rejects(storageApi('https://example.invalid', 'mock', async () => new Response('secret detail', { status: 403 })).buckets(100, 0), /HTTP 403/);
+});
+
+test('Storage sb_secret API keys use apikey only; legacy service_role JWTs retain Bearer compatibility', async () => {
+  const apiKey = 'sb_secret_mock-only-value';
+  const newHeaders = storageAuthHeaders(apiKey);
+  assert.equal(newHeaders.apikey, apiKey);
+  assert.equal(newHeaders.Authorization, undefined);
+  const legacy = 'eyJmock.header.signature';
+  assert.equal(storageAuthHeaders(legacy).apikey, legacy);
+  assert.equal(storageAuthHeaders(legacy).Authorization, `Bearer ${legacy}`);
+  let actualHeaders;
+  await storageApi('https://example.invalid', legacy, async (_url, options) => {
+    actualHeaders = options.headers; return Response.json([]);
+  }).buckets(100, 0);
+  assert.equal(actualHeaders.apikey, legacy);
+  assert.equal(actualHeaders.Authorization, `Bearer ${legacy}`);
+});
+
+test('Storage distinguishes authorization failures and rejects a suspicious empty bucket inventory', async t => {
+  const root = await fixture(t), secret = 'sb_secret_mock-never-in-error';
+  const denied = storageApi('https://example.invalid', secret, async (_url, options) => {
+    assert.equal(options.headers.apikey, secret);
+    assert.equal(options.headers.Authorization, undefined);
+    return new Response('private gateway detail', { status: 403 });
+  });
+  await assert.rejects(denied.buckets(100, 0), error => error.message === 'Storage authorization failed (HTTP 403)' && !error.message.includes(secret));
+  await assert.rejects(backupStorage({ root, api: { buckets: async () => [] } }),
+    error => error instanceof StorageApiError && error.message === 'Storage API returned zero buckets; refusing an empty inventory');
+  await assert.rejects(readFile(localPath(root, 'storage-inventory.json')));
+  await assert.rejects(discoverBuckets({ buckets: async () => { throw new Error(secret); } }),
+    error => error.message === 'Storage enumeration failed: bucket discovery' && !error.message.includes(secret));
+  await assert.rejects(discoverBuckets({ buckets: async () => { throw new StorageApiError('Storage authorization failed (HTTP 401)'); } }),
+    error => error.message === 'Storage authorization failed (HTTP 401)');
+  await assert.rejects(enumerateObjects({ list: async () => { throw new StorageApiError('Storage authorization failed (HTTP 401)'); } }, 'private-bucket'),
+    error => error.message === 'Storage authorization failed: private-bucket/');
+  await assert.rejects(enumerateObjects({ list: async () => { throw new Error(secret); } }, 'private-bucket'),
+    error => error.message === 'Storage enumeration failed: private-bucket/' && !error.message.includes(secret));
 });
 
 test('checksum is calculated from bytes without buffering a full file', async t => {
@@ -241,6 +278,55 @@ test('R2 verifies destination absence, HEAD metadata/size and downloaded archive
   assert.equal(result.readBackVerified, true);
   assert.match(result.key, /^manual\/2026\/10\/05\/2026-10-05T041500Z-123-1\//);
   assert.equal(calls.length, 6);
+});
+
+test('R2 error diagnostics classify known failures without exposing stderr', async t => {
+  const cases = [
+    ['An error occurred (AccessDenied) while requesting this bucket', 'access_denied'],
+    ['InvalidAccessKeyId: supplied key is invalid', 'invalid_access_key'],
+    ['SignatureDoesNotMatch: request signature mismatch', 'signature_mismatch'],
+    ['NoSuchBucket: requested bucket does not exist', 'bucket_not_found'],
+    ['Could not connect to the endpoint URL', 'endpoint_unreachable'],
+    ['unexpected output with secret marker', 'unknown_r2_error'],
+  ];
+  for (const [stderr, expected] of cases) assert.equal(classifyR2Diagnostic(stderr), expected);
+
+  const root = await fixture(t), archive = localPath(root, 'archive.tar.gz');
+  await writeFile(archive, 'mock archive');
+  const secret = 'mock-r2-secret-never-in-error';
+  await assert.rejects(uploadR2({ archive, ...identity, env: secrets,
+    execute: async () => { const error = new Error(`raw output containing ${secret}`); throw error; },
+    getErrorCode: () => 'access_denied' }),
+  error => error.message === 'R2 destination check failed: access_denied' && !error.message.includes(secret));
+  assert.equal(classifyR2Error(new Error('contains AccessDenied secret'), () => 'unknown_r2_error'), 'unknown_r2_error');
+});
+
+test('R2 preflight lists the configured destination before packaging and safely fails closed', async () => {
+  const calls = [];
+  const result = await preflightR2({ ...identity, env: secrets, execute: async (command, args, env, capture) => {
+    calls.push({ command, args, env, capture }); return JSON.stringify({ KeyCount: 0, Contents: [] });
+  } });
+  assert.equal(result.bucketListVerified, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].command, 'aws');
+  assert.ok(calls[0].args.includes('list-objects-v2'));
+  assert.ok(calls[0].args.includes(secrets.R2_BUCKET_NAME));
+  assert.equal(calls[0].env.AWS_ACCESS_KEY_ID, secrets.R2_ACCESS_KEY_ID);
+  assert.equal(calls[0].env.AWS_SECRET_ACCESS_KEY, secrets.R2_SECRET_ACCESS_KEY);
+  assert.equal(calls[0].capture, true);
+  await assert.rejects(preflightR2({ ...identity, env: secrets,
+    execute: async () => { throw new Error('private AWS response'); }, getErrorCode: () => 'bucket_not_found' }),
+  error => error.message === 'R2 preflight failed: bucket_not_found' && !error.message.includes(secrets.R2_SECRET_ACCESS_KEY));
+});
+
+test('runQuiet captures only a safe R2 classification and withholds raw AWS stderr', async () => {
+  const secret = 'mock-signature-secret-never-logged';
+  await assert.rejects(runQuiet(process.execPath, ['-e', `process.stderr.write("AccessDenied ${secret}"); process.exit(1)`], process.env, false, classifyR2Diagnostic), error => {
+    assert.equal(classifyR2Error(error), 'access_denied');
+    assert.doesNotMatch(error.message, new RegExp(secret));
+    assert.match(error.message, /tool output withheld/);
+    return true;
+  });
 });
 
 test('R2 existing prefix, upload failure, wrong size and corrupt read-back are failures', async t => {

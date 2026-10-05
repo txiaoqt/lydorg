@@ -6,6 +6,24 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { localPath, safeRelativePath } from './common.mjs';
 
+export class StorageApiError extends Error {
+  constructor(category, detail = '') {
+    super(detail ? `${category}: ${detail}` : category);
+    this.category = category;
+  }
+}
+
+// New sb_* Supabase API keys are not JWTs: send them only in apikey.
+// Older service_role JWTs retain the legacy Bearer header for migration compatibility.
+export function storageAuthHeaders(key) {
+  const isNewApiKey = key.startsWith('sb_secret_') || key.startsWith('sb_publishable_');
+  return {
+    apikey: key,
+    ...(isNewApiKey ? {} : { Authorization: `Bearer ${key}` }),
+    'Accept-Encoding': 'identity',
+  };
+}
+
 export function storageApi(url, key, fetchImpl = fetch) {
   const origin = new URL(url).origin;
   async function request(route, body) {
@@ -13,16 +31,17 @@ export function storageApi(url, key, fetchImpl = fetch) {
     try {
       response = await fetchImpl(`${origin}/storage/v1/${route}`, {
         method: body ? 'POST' : 'GET', redirect: 'error', signal: AbortSignal.timeout(120_000),
-        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Accept-Encoding': 'identity', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        headers: { ...storageAuthHeaders(key), ...(body ? { 'Content-Type': 'application/json' } : {}) },
         ...(body ? { body: JSON.stringify(body) } : {}),
       });
-    } catch { throw new Error('Storage request failed (network/timeout)'); }
-    if (!response.ok) throw new Error(`Storage request failed (HTTP ${response.status})`);
+    } catch { throw new StorageApiError('Storage API network/timeout failure'); }
+    if (response.status === 401 || response.status === 403) throw new StorageApiError(`Storage authorization failed (HTTP ${response.status})`);
+    if (!response.ok) throw new StorageApiError(`Storage request failed (HTTP ${response.status})`);
     return response;
   }
   async function json(route, body) {
     try { return await (await request(route, body)).json(); }
-    catch (error) { if (error instanceof SyntaxError) throw new Error('Storage returned invalid JSON'); throw error; }
+    catch (error) { if (error instanceof SyntaxError) throw new StorageApiError('Storage returned invalid JSON'); throw error; }
   }
   return {
     buckets: (limit, offset) => json(`bucket?limit=${limit}&offset=${offset}&sortColumn=id&sortOrder=asc`),
@@ -36,13 +55,18 @@ export function storageApi(url, key, fetchImpl = fetch) {
 export async function discoverBuckets(api, pageSize = 100) {
   const buckets = [], seen = new Set();
   for (let offset = 0; ; offset += pageSize) {
-    const page = await api.buckets(pageSize, offset);
-    if (!Array.isArray(page) || page.length > pageSize) throw new Error('Invalid bucket enumeration response');
+    let page;
+    try { page = await api.buckets(pageSize, offset); }
+    catch (error) {
+      if (error instanceof StorageApiError && error.category.startsWith('Storage authorization failed')) throw error;
+      throw new StorageApiError('Storage enumeration failed', 'bucket discovery');
+    }
+    if (!Array.isArray(page) || page.length > pageSize) throw new StorageApiError('Storage enumeration failed', 'invalid bucket response');
     for (const bucket of page) {
       safeRelativePath(bucket.id);
       if (bucket.id.includes('/') || seen.has(bucket.id)) throw new Error('Duplicate/unsafe bucket or bucket pagination did not advance');
       // Non-file buckets cannot be silently called a successful binary backup.
-      if (bucket.type && bucket.type !== 'STANDARD') throw new Error(`Unsupported Storage bucket type: ${bucket.id}`);
+      if (bucket.type && bucket.type !== 'STANDARD') throw new StorageApiError('Storage enumeration failed', `unsupported bucket type: ${bucket.id}`);
       seen.add(bucket.id);
       buckets.push({ id: bucket.id, name: bucket.name, public: bucket.public,
         fileSizeLimit: bucket.file_size_limit ?? null, allowedMimeTypes: bucket.allowed_mime_types ?? null,
@@ -63,8 +87,13 @@ export async function enumerateObjects(api, bucket, pageSize = 100) {
     for (let offset = 0; ; offset += pageSize) {
       let page;
       try { page = await api.list(bucket, prefix, pageSize, offset); }
-      catch { throw new Error(`Storage enumeration failed: ${bucket}/${prefix}`); }
-      if (!Array.isArray(page) || page.length > pageSize) throw new Error(`Invalid object enumeration: ${bucket}/${prefix}`);
+      catch (error) {
+        if (error instanceof StorageApiError && error.category.startsWith('Storage authorization failed')) {
+          throw new StorageApiError('Storage authorization failed', `${bucket}/${prefix}`);
+        }
+        throw new StorageApiError('Storage enumeration failed', `${bucket}/${prefix}`);
+      }
+      if (!Array.isArray(page) || page.length > pageSize) throw new StorageApiError('Storage enumeration failed', `invalid object response: ${bucket}/${prefix}`);
       for (const entry of page) {
         safeRelativePath(entry.name);
         if (entry.name.includes('/') || seen.has(entry.name)) throw new Error(`Duplicate/unsafe entry or pagination did not advance: ${bucket}/${prefix}`);
@@ -93,6 +122,7 @@ export async function inventory(api, pageSize = 100) {
 export async function backupStorage({ root, api, pageSize = 100 }) {
   const startedAtUtc = new Date().toISOString();
   const before = await inventory(api, pageSize);
+  if (before.buckets.length === 0) throw new StorageApiError('Storage API returned zero buckets; refusing an empty inventory');
   await mkdir(localPath(root, 'storage'), { recursive: true });
   for (const bucket of before.buckets) await mkdir(localPath(root, `storage/${bucket.id}`), { recursive: true });
   const objects = [];

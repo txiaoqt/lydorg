@@ -90,16 +90,36 @@ export async function regularFiles(root, prefix = '') {
 }
 
 // Tool output may contain a credential-bearing URL. Never forward it to CI logs.
-export function runQuiet(command, args, env = process.env, capture = false) {
+const toolDiagnostics = new WeakMap();
+
+// Only a short classification survives the child process; raw stderr is never attached to errors.
+export function privateToolErrorCode(error) { return toolDiagnostics.get(error) ?? ''; }
+
+export function runQuiet(command, args, env = process.env, capture = false, classifyStderr = null) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { env, shell: false, stdio: ['ignore', capture ? 'pipe' : 'ignore', 'ignore'] });
+    const captureStderr = typeof classifyStderr === 'function';
+    const child = spawn(command, args, { env, shell: false, stdio: ['ignore', capture ? 'pipe' : 'ignore', captureStderr ? 'pipe' : 'ignore'] });
     let output = '';
+    let diagnostic = '';
     child.stdout?.on('data', chunk => {
       output += chunk;
       if (output.length > 1024 * 1024) child.kill();
     });
+    child.stderr?.on('data', chunk => {
+      if (captureStderr && diagnostic.length < 8192) diagnostic += chunk.toString().slice(0, 8192 - diagnostic.length);
+    });
     child.on('error', () => reject(new Error(`Unable to start ${path.basename(command)}`)));
-    child.on('close', code => code === 0 ? resolve(output) : reject(new Error(`${path.basename(command)} failed (exit ${code}); tool output withheld to protect credentials`)));
+    child.on('close', code => {
+      if (code === 0) return resolve(output);
+      const error = new Error(`${path.basename(command)} failed (exit ${code}); tool output withheld to protect credentials`);
+      if (captureStderr) {
+        try {
+          const code = classifyStderr(diagnostic);
+          if (typeof code === 'string' && /^[a-z_]{1,48}$/.test(code)) toolDiagnostics.set(error, code);
+        } catch { /* Preserve the redacted tool failure if classification itself fails. */ }
+      }
+      reject(error);
+    });
   });
 }
 
