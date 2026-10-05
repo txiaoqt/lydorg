@@ -13,7 +13,7 @@ export default function PwaInitialLoadingScreen() {
       role="status"
       aria-live="polite"
     >
-      <BrandLogo showText={false} />
+      <BrandLogo showText={false} markOnly />
       <p>Loading Y-TRACE...</p>
     </div>
   );

@@ -128,6 +128,13 @@ export const UserPortalShell = ({
     }
   }, [isDarkMode]);
 
+  // Public pages stay light after leaving the portal. Keep the saved preference
+  // so returning to the portal (or reloading it) restores the selected mode.
+  useEffect(() => () => {
+    document.documentElement.classList.remove("dark");
+    document.body.classList.remove("dark");
+  }, []);
+
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => !prev);
   };

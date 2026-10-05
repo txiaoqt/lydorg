@@ -5,6 +5,7 @@ type BrandLogoProps = {
   showText?: boolean;
   subtitle?: string;
   textClassName?: string;
+  markOnly?: boolean;
 };
 
 export default function BrandLogo({
@@ -12,13 +13,14 @@ export default function BrandLogo({
   showText = true,
   subtitle,
   textClassName,
+  markOnly = false,
 }: BrandLogoProps) {
   return (
     <div className={cn("flex items-center gap-[10px]", showText ? "h-[49px] w-[129px] px-[10px] py-0" : "h-auto w-auto", className)}>
       <img
-        src="/FullNavbar.svg"
+        src={markOnly ? "/y-trace-logo-blue.png?v=12" : "/FullNavbar.svg"}
         alt="Y-TRACE logo"
-        className="h-full w-auto object-contain"
+        className={markOnly ? "h-10 w-10 shrink-0 object-contain" : "h-full w-auto object-contain"}
       />
       {showText ? (
         <div className={cn("min-w-0", textClassName)}>

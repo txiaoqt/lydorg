@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Calendar, MapPin, RefreshCw } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, MapPin, RefreshCw } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { PasigBudgetMap, type PasigBudgetMapRow } from "@/admin/components/PasigBudgetMap";
 import type { PublicBudgetBarangayAllocation } from "@/lib/lydo-connect-data";
 import { getPublicBudgetBarangayAllocationsFromSupabase } from "@/lib/lydo-connect-supabase";
@@ -59,13 +61,36 @@ export default function PublicBudgetTransparencyMap({
   return (
     <section aria-label={`Public budget map for FY ${fiscalYear}`} className="space-y-3">
       <div className="public-budget-map__filters flex justify-end gap-2">
-        <label className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-segoe text-sm font-semibold text-slate-800 focus-within:ring-2 focus-within:ring-blue-600">
-          <Calendar className="h-4 w-4 text-slate-500" />
-          <span className="sr-only">Select fiscal year</span>
-          <select aria-label="Select fiscal year" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))} className="min-w-0 max-w-[130px] bg-transparent outline-none">
-            {availableFiscalYears.map((year) => <option key={year} value={year}>FY {year}</option>)}
-          </select>
-        </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Select Fiscal Year. Currently FY ${fiscalYear}`}
+              className="flex h-11 min-w-[130px] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-segoe text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <span className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.75} aria-hidden="true" />
+                <span>FY {fiscalYear}</span>
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-[1000] w-44 rounded-lg border-slate-200 bg-white p-1 shadow-lg">
+            {availableFiscalYears.map((year) => (
+              <DropdownMenuItem
+                key={year}
+                onSelect={() => onFiscalYearChange(year)}
+                className={cn(
+                  "flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm font-medium",
+                  year === fiscalYear ? "bg-primary/10 font-bold text-primary" : "text-slate-700 hover:bg-slate-100",
+                )}
+              >
+                <span>FY {year}</span>
+                {year === fiscalYear && <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <label className="public-budget-map__barangay-filter inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-segoe text-sm font-semibold text-slate-800 focus-within:ring-2 focus-within:ring-blue-600">
           <MapPin className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
           <span className="sr-only">Filter by barangay</span>

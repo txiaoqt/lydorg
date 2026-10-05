@@ -925,19 +925,19 @@ export default function UserPortal({ section }: { section: string }) {
   }, [section, currentProfile?.id, user?.id, userRegistrationSubmission?.id]);
 
   const ypopRegistrationProfileQuery = useQuery({
-    queryKey: ["user", user?.id, currentProfile?.id, "ypop-registration-profile"],
+    queryKey: ["user", user?.id, "ypop-registration-profile"],
     queryFn: () => fetchOrganizationProfileInSupabase(user!.id),
-    enabled: Boolean(supabase && section === "ypop" && user?.id && currentProfile?.id),
+    enabled: Boolean(supabase && section === "ypop" && user?.id),
     staleTime: 0,
     refetchOnWindowFocus: false,
   });
   const ypopRegistrationProfileRefetch = ypopRegistrationProfileQuery.refetch;
   useEffect(() => {
     const refreshedProfile = ypopRegistrationProfileQuery.data;
-    if (section === "ypop" && refreshedProfile?.id === currentProfile?.id) {
+    if (section === "ypop" && refreshedProfile?.id && refreshedProfile.userId === user?.id) {
       mergeRemoteStateRef.current({ organizationProfiles: [refreshedProfile] });
     }
-  }, [section, currentProfile?.id, ypopRegistrationProfileQuery.data]);
+  }, [section, user?.id, ypopRegistrationProfileQuery.data]);
   useEffect(() => {
     if (!supabase || section !== "ypop" || !currentProfile?.id || !user?.id) return;
     return subscribeToOrganizationStatusChangesInSupabase({
@@ -948,8 +948,22 @@ export default function UserPortal({ section }: { section: string }) {
   }, [section, currentProfile?.id, user?.id, ypopRegistrationProfileRefetch]);
 
   const [budgetPrerequisitesLoad, setBudgetPrerequisitesLoad] = useState<{ organizationId: string; error: boolean } | null>(null);
+  const isSharedResourceSection = section === "templates" || section === "news-releases";
+  const sharedResourceQuery = useQuery({
+    queryKey: ["user", user?.id, "shared-resources", section],
+    queryFn: () => loadOrganizationPortalSectionState(section, user!.id, ""),
+    enabled: Boolean(supabase && user?.id && isSharedResourceSection),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
   useEffect(() => {
-    if (!currentProfile?.id || !user?.id) return;
+    if (isSharedResourceSection && sharedResourceQuery.data) {
+      mergeRemoteStateRef.current(sharedResourceQuery.data);
+    }
+  }, [isSharedResourceSection, sharedResourceQuery.data]);
+
+  useEffect(() => {
+    if (section === "templates" || section === "news-releases" || !currentProfile?.id || !user?.id) return;
     let cancelled = false;
     setBudgetPrerequisitesLoad(null);
     void loadOrganizationPortalSectionState(section, user.id, currentProfile.id)
@@ -1571,7 +1585,7 @@ export default function UserPortal({ section }: { section: string }) {
     ypopEligibility: budgetEligibility,
   });
   const ypopWorkflowEligibility = resolveYpopWorkflowEligibility({
-    profile: section === "ypop" && ypopRegistrationProfileQuery.data?.id === currentProfile?.id
+    profile: section === "ypop" && ypopRegistrationProfileQuery.data?.id && ypopRegistrationProfileQuery.data.userId === user?.id
       ? ypopRegistrationProfileQuery.data : currentProfile,
     requiredTemplates: templateDocuments,
     documentFiles: docFiles,
@@ -3673,6 +3687,20 @@ export default function UserPortal({ section }: { section: string }) {
   const isProfileResolving = Boolean(user?.id && !currentProfile && !isInitialSyncDone);
 
   const activeContent = useMemo(() => {
+    if (supabase && isSharedResourceSection) {
+      const resourceName = section === "templates" ? "templates" : "news releases";
+      if (sharedResourceQuery.isLoading) {
+        return <p className="p-4 text-sm text-muted-foreground" role="status">Loading {resourceName}…</p>;
+      }
+      if (sharedResourceQuery.isError) {
+        return (
+          <div className="space-y-3 p-4">
+            <p className="text-sm text-destructive" role="alert">Unable to load {resourceName}. Please try again.</p>
+            <Button variant="outline" onClick={() => { void sharedResourceQuery.refetch(); }}>Retry</Button>
+          </div>
+        );
+      }
+    }
     if (isProfileResolving) {
       if (section === "dashboard") {
         return <UserPortalDashboardSkeleton />;
@@ -4376,7 +4404,7 @@ export default function UserPortal({ section }: { section: string }) {
           />
         );
       case "ypop":
-        if (supabase && ypopRegistrationProfileQuery.isPending) {
+        if (supabase && ypopRegistrationProfileQuery.isLoading) {
           return <p className="p-4 text-sm text-muted-foreground" role="status">Checking organization verification…</p>;
         }
         if (supabase && ypopRegistrationProfileQuery.isError) {
@@ -4519,7 +4547,11 @@ export default function UserPortal({ section }: { section: string }) {
     savingProfile,
     section,
     budgetPrerequisitesLoad,
-    ypopRegistrationProfileQuery.isPending,
+    isSharedResourceSection,
+    sharedResourceQuery.isLoading,
+    sharedResourceQuery.isError,
+    sharedResourceQuery.refetch,
+    ypopRegistrationProfileQuery.isLoading,
     ypopRegistrationProfileQuery.isError,
     ypopRegistrationProfileQuery.data,
     ypopRegistrationProfileQuery.refetch,

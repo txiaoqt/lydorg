@@ -2462,7 +2462,11 @@ export const loadOrganizationPortalSectionState = async (
   userId: string,
   organizationId: string,
 ): Promise<Partial<LydoSeedState> | null> => {
-  if (!supabase || !userId || !organizationId) return null;
+  if (!supabase || !userId) return null;
+  // Shared resources do not depend on an organization profile being loaded.
+  if (section === "templates") return loadOrganizationRequiredDocumentTypesState();
+  if (section === "news-releases") return loadOrganizationNewsState();
+  if (!organizationId) return null;
   const normalizedSection = section === "inquiries" ? "organization-profile" : section;
   const staleTime = 0;
   return queryClient.fetchQuery({
@@ -2480,8 +2484,6 @@ export const loadOrganizationPortalSectionState = async (
           ]);
           return { ...(documents ?? {}), ...(templates ?? {}), ...(activity ?? {}) };
         }
-        case "templates":
-          return loadOrganizationRequiredDocumentTypesState();
         case "budget-request": {
           const [budgets, eligibility, documents, templates, profile] = await Promise.all([
             loadOrganizationBudgetSubmissionState(userId, organizationId),
@@ -2509,8 +2511,6 @@ export const loadOrganizationPortalSectionState = async (
           return loadOrganizationYpopState(userId, organizationId);
         case "notifications":
           return loadOrganizationNotificationsState(userId);
-        case "news-releases":
-          return loadOrganizationNewsState();
         case "public-transparency":
           return loadOrganizationTransparencyState();
         case "compliance-status":

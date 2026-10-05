@@ -1,4 +1,4 @@
-const CACHE_NAME = "y-trace-v11";
+const CACHE_NAME = "y-trace-v12";
 const APP_SHELL = [
   "/",
   "/app-start",
@@ -10,10 +10,12 @@ const APP_SHELL = [
   "/index.html",
   "/manifest.webmanifest",
   "/manifest-admin.webmanifest",
-  "/favicon.ico",
-  "/apple-touch-icon.png",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/favicon.ico?v=12",
+  "/apple-touch-icon.png?v=12",
+  "/icons/icon-192.png?v=12",
+  "/icons/icon-512.png?v=12",
+  "/icons/icon-maskable-512.png?v=12",
+  "/y-trace-logo-blue.png?v=12"
 ];
 
 self.addEventListener("install", (event) => {

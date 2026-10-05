@@ -27,7 +27,7 @@ export function PwaBottomNavigation() {
   return (
     <nav className="pwa-bottom-nav" aria-label="Primary app navigation">
       <button type="button" className="pwa-nav-brand" aria-label="Open Y-TRACE Home" onClick={() => go(PWA_ROUTES.home)}>
-        <BrandLogo showText={false} />
+        <BrandLogo showText={false} markOnly />
         <span>Y-TRACE</span>
       </button>
       <div className="pwa-bottom-nav-inner">

@@ -238,22 +238,25 @@ const ScrollToTopOnRouteChange = () => {
 
 const SurfaceThemeClass = () => {
   const { pathname } = useLocation();
+  const isAdminPath = pathname.startsWith("/admin");
+  const shouldUsePublicTheme = !IS_ADMIN_SURFACE && !isAdminPath;
 
   useEffect(() => {
-    const isAdminPath = pathname.startsWith("/admin");
-    const shouldUsePublicTheme = !IS_ADMIN_SURFACE && !isAdminPath;
     document.body.classList.toggle("public-shell", shouldUsePublicTheme);
-
-    // If on a public route, clean up any lingering admin dark class so public portal is always pristine
-    if (shouldUsePublicTheme) {
-      document.documentElement.classList.remove("dark");
-      document.body.classList.remove("dark");
-    }
 
     return () => {
       document.body.classList.remove("public-shell");
     };
-  }, [pathname]);
+  }, [shouldUsePublicTheme]);
+
+  // Clear the previous surface's theme only when entering the public/user surface.
+  // The user portal owns dark mode while navigating between its pages.
+  useEffect(() => {
+    if (shouldUsePublicTheme) {
+      document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark");
+    }
+  }, [shouldUsePublicTheme]);
 
   return null;
 };

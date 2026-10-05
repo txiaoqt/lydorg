@@ -407,9 +407,10 @@ export const readState = (identity?: AccountIdentity): LydoConnectState => {
       ...parsed,
       organizationProfiles: targetIdentity.type === "admin"
         ? (Array.isArray(parsed.organizationProfiles) && parsed.organizationProfiles.length > 0
-            ? parsed.organizationProfiles.map(normalizeOrganizationProfile)
+            ? parsed.organizationProfiles.filter(isOrganizationProfile).map(normalizeOrganizationProfile)
             : seedState.organizationProfiles.map(normalizeOrganizationProfile))
         : ((parsed.organizationProfiles ?? []) as OrganizationProfile[])
+            .filter(isOrganizationProfile)
             .filter((item) => !legacySeedIds.has(item.id))
             .filter((item) => item.userId === targetIdentity.id)
             .map(normalizeOrganizationProfile),
@@ -770,6 +771,11 @@ const syncLiquidationReportForBudget = (
   return [syncedReport, ...liquidations];
 };
 
+const isOrganizationProfile = (profile: unknown): profile is OrganizationProfile =>
+  Boolean(profile && typeof profile === "object" &&
+    "id" in profile && typeof profile.id === "string" && profile.id &&
+    "userId" in profile && typeof profile.userId === "string" && profile.userId);
+
 const normalizeOrganizationProfile = (profile: OrganizationProfile): OrganizationProfile => ({
   ...profile,
   district: profile.district ?? "",
@@ -886,11 +892,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       try {
         const snapshot = await pending;
         if (!active || !snapshot || !isSameIdentity(requestIdentity, activeIdentityRef.current)) return;
-        const profile = snapshot.organizationProfiles?.find((item) => item.userId === requestIdentity.id);
+        const profile = snapshot.organizationProfiles?.find((item) => isOrganizationProfile(item) && item.userId === requestIdentity.id);
         if (profile) {
           setState((current) => ({
             ...current,
-            organizationProfiles: [profile, ...current.organizationProfiles.filter((item) => item.userId !== requestIdentity.id)],
+            organizationProfiles: [profile, ...current.organizationProfiles.filter((item) => isOrganizationProfile(item) && item.userId !== requestIdentity.id)],
           }));
         }
       } catch (error) {
@@ -971,7 +977,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     const currentId = activeIdentityRef.current;
     if (currentId.type === "anonymous") return true;
     if (currentId.type === "user") {
-      const hasProfile = state.organizationProfiles.some((p) => p.userId === currentId.id);
+      const hasProfile = state.organizationProfiles.some((p) => isOrganizationProfile(p) && p.userId === currentId.id);
       if (hasProfile) return true;
       return syncedIdentityKeyRef.current === getAccountIdentityKey(currentId);
     }
@@ -988,6 +994,14 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
       isInitialSyncDone: isInitialSyncDoneComputed,
       resetAccountState,
       mergeRemoteState: (snapshot) => {
+        // Missing profiles are normal before signup onboarding completes. Never
+        // let an empty/malformed response become an undefined array entry.
+        if (snapshot.organizationProfiles) {
+          snapshot = {
+            ...snapshot,
+            organizationProfiles: snapshot.organizationProfiles.filter(isOrganizationProfile),
+          };
+        }
         const isAdmin = Boolean(readAdminSession());
         const currentIdentity = activeIdentityRef.current;
 
@@ -1156,6 +1170,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         })),
       upsertOrganizationProfile: (profile) =>
         setState((current) => {
+          if (!isOrganizationProfile(profile)) return current;
           const existingIndex = current.organizationProfiles.findIndex(
             (item) => item.id === profile.id || item.userId === profile.userId,
           );
