@@ -1,4 +1,4 @@
-import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Send, Shield, Users } from "lucide-react";
+import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Send, Shield } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -56,18 +56,16 @@ const overviewCards = [
 ];
 
 const quickLinks = [
-  { icon: FileText, title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.", href: "/public-templates" },
-  { icon: Banknote, title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.", href: "/budget-transparency" },
-  { icon: Globe, title: "News Releases", description: "Stay updated with the latest official announcements and events from PCYDO.", href: "/news-releases" },
   { icon: Info, title: "About", description: "Learn about PCYDO and its mandate for Pasig City youth organizations.", href: "/about" },
+  { icon: Banknote, title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.", href: "/budget-transparency" },
+  { icon: FileText, title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.", href: "/public-templates" },
+  { icon: Globe, title: "News Releases", description: "Stay updated with the latest official announcements and events from PCYDO.", href: "/news-releases" },
   { icon: HelpCircle, title: "FAQs", description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
   { icon: MapPin, title: "Contacts", description: "Get in touch with the PCYDO office, find office hours, and visit us.", href: "/contacts" },
 ];
 
 const Index = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [orgCount, setOrgCount] = useState<number | null>(null);
-  const [activityCount, setActivityCount] = useState<number | null>(null);
   const [openingTemplateId, setOpeningTemplateId] = useState<string | null>(null);
   const [downloadingTemplateId, setDownloadingTemplateId] = useState<string | null>(null);
   const [latestReleases, setLatestReleases] = useState<LatestNewsRelease[] | null>(null);
@@ -173,18 +171,6 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (!supabase) return;
-    void supabase
-      .rpc("get_public_stats")
-      .then(({ data }) => {
-        const row = Array.isArray(data) ? data[0] : null;
-        if (!row) return;
-        setOrgCount(Number(row.verified_org_count));
-        setActivityCount(Number(row.activity_count));
-      });
-  }, []);
-
-  useEffect(() => {
     if (!hash) return;
     const targetId = hash.replace("#", "");
     const target = document.getElementById(targetId);
@@ -246,39 +232,14 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right column — hero image with floating stat cards */}
+            {/* Right column — hero image */}
             <div className="animate-float relative min-w-0 flex-1 bg-transparent w-full max-w-[382px] sm:max-w-[500px] lg:max-w-none">
-              {/* Floating card — top right */}
-              <div className="absolute -right-4 -top-6 z-10 hidden h-[48px] w-auto min-w-[152px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card sm:flex">
-                <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-public-bg-brand-subtle p-[6px]">
-                  <Users className="h-4 w-4 text-public-text-brand" />
-                </div>
-                <div>
-                  <p className="whitespace-nowrap font-segoe text-public-fs-scale-01 font-normal leading-[140%] text-public-text-secondary">Registered Orgs</p>
-                  <p className="font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
-                    {orgCount != null ? String(orgCount).padStart(2, "0") : "—"}
-                  </p>
-                </div>
-              </div>
-
               <img
                 src={heroImage}
                 alt="Youth organization members at a PCYDO event"
                 className="block h-auto w-full rounded-2xl sm:rounded-[8px] border border-white/70 sm:border-public-bg-brand-subtle shadow-md sm:shadow-public-card object-cover"
               />
 
-              {/* Floating card — bottom left */}
-              <div className="absolute -bottom-6 -left-10 z-10 hidden h-[48px] w-auto min-w-[132px] items-center gap-[12px] rounded-[8px] bg-white px-[10px] py-[6px] shadow-public-card sm:flex">
-                <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-public-bg-brand-subtle p-[6px]">
-                  <ClipboardList className="h-4 w-4 text-public-text-brand" />
-                </div>
-                <div>
-                  <p className="whitespace-nowrap font-segoe text-public-fs-scale-01 font-normal leading-[140%] text-public-text-secondary">Activities</p>
-                  <p className="font-segoe text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
-                    {activityCount != null ? String(activityCount).padStart(2, "0") : "—"}
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -329,14 +290,12 @@ const Index = () => {
       <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-5 sm:gap-6 lg:gap-[24px] xl:flex-row xl:items-center">
 
-          {/* Left column — portal preview card */}
-          <div className="flex w-full items-center justify-center rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-2 sm:p-3 lg:p-[10px] shadow-public-overview-card xl:h-[700px] xl:w-[620px] xl:shrink-0">
-            <img
-              src={overviewWorkshop}
-              alt="Illustrative scene of youth leaders and facilitators reviewing program documents at a community workshop"
-              className="h-auto w-full max-w-[540px] rounded-lg sm:rounded-[12px] object-cover"
-            />
-          </div>
+          {/* Left column — overview image */}
+          <img
+            src={overviewWorkshop}
+            alt="Youth organization representatives completing documents with PCYDO staff"
+            className="block h-auto w-full max-w-[540px] rounded-lg sm:rounded-[12px] object-cover xl:shrink-0"
+          />
 
           {/* Right column */}
           <div className="flex w-full flex-col gap-4 sm:gap-6 lg:gap-[24px] xl:px-[24px]">
