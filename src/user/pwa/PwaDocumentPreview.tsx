@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FileText } from "lucide-react";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { PWA_DOCUMENT_PREVIEW_EVENT, type PwaDocumentPreviewRequest } from "@/lib/pwa-document-preview";
@@ -46,6 +45,7 @@ export function PwaDocumentPreviewHost() {
       updatedAt="Not recorded"
       previewEmptyMessage={loading ? "Loading secure file preview…" : error || "The preview is not available."}
       className="pwa-document-preview"
+      presentation="pwa"
     />
   );
 }

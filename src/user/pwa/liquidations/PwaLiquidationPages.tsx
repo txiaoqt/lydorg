@@ -1,6 +1,6 @@
 import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check, ChevronRight, Circle, Eye, FileText, Loader2, ReceiptText, Trash2, UploadCloud,
 } from "lucide-react";
@@ -17,6 +17,7 @@ import {
   loadOrganizationLiquidationReportPage,
   updateLiquidationReportInSupabase,
 } from "@/lib/lydo-connect-supabase";
+import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PwaBackButton } from "../PwaBackButton";
 import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
@@ -47,8 +48,6 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
   const reports = pageQuery.data?.rows ?? data.liquidationReports;
   const totalCount = pageQuery.data?.totalCount ?? data.liquidationReports.length;
   useEffect(() => setPage(1), [organizationId]);
-  const managementTarget =
-    reports.find((item) => submittableStatuses.has(item.status)) ?? reports[0];
   return (
     <div className="pwa-stack pwa-liquidation-list-page">
       <section className="pwa-compact-card-list">
@@ -105,9 +104,6 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
         ) : null}
       </section>
       <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />
-      {managementTarget ? (
-        <button type="button" className="pwa-primary-button" onClick={() => go(pwaLiquidationManageRoute(managementTarget.id))}><UploadCloud /> Upload or Manage Liquidation</button>
-      ) : null}
     </div>
   );
 }
@@ -134,8 +130,6 @@ export function PwaLiquidationDetail({ data }: { data: PortalData }) {
   if (!report) return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.liquidations} label="Liquidation" /><section className="pwa-card pwa-empty-copy">Liquidation report not found.</section></div>;
   const overdue = Boolean(report.deadlineAt) && new Date(report.deadlineAt).getTime() < Date.now() && report.status !== "completed_liquidated";
 
-  const openFile = (reference: string, title: string) => requestPwaDocumentPreview(reference, title);
-
   return (
     <div className="pwa-stack">
       <PwaBackButton fallback={PWA_ROUTES.liquidations} label="Liquidation" />
@@ -151,8 +145,14 @@ export function PwaLiquidationDetail({ data }: { data: PortalData }) {
         </dl>
         {report.remarks ? <div className="pwa-admin-note"><strong>Admin remarks</strong><p>{report.remarks}</p></div> : null}
       </section>
-      {files.length ? <section className="pwa-card pwa-file-list"><h3>Attachments</h3>{files.map((file) => <button type="button" key={file.id} onClick={() => openFile(file.fileUrl, file.fileName)}><FileText /><span><strong>{file.fileName}</strong><small>{Math.max(1, Math.round(file.fileSize / 1024))} KB</small></span><Eye /></button>)}</section> : null}
-      {(submittableStatuses.has(report.status) || files.length) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaLiquidationManageRoute(report.id))}><UploadCloud /> Manage Report</button> : null}
+      {files.length ? <section className="pwa-card pwa-liquidation-attachment-editor">
+        <h3>Attachments</h3>
+        {files.map((file) => <div key={file.id} className="pwa-stack">
+          <div className="pwa-selected-liquidation-file"><FileText aria-hidden="true" /><span><strong>{file.fileName}</strong><small>{Math.max(1, Math.round(file.fileSize / 1024))} KB</small></span></div>
+          <PortalDocumentViewer previewUrl={file.fileUrl} previewTitle={file.fileName} previewCanInline className="pwa-liquidation-selected-preview" />
+        </div>)}
+      </section> : null}
+      {report.status !== "completed_liquidated" && (submittableStatuses.has(report.status) || files.length > 0) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaLiquidationManageRoute(report.id))}><UploadCloud /> Manage Report</button> : null}
       {report.revisionHistory?.length ? <section className="pwa-card pwa-timeline"><h3>Status history</h3>{[...report.revisionHistory].reverse().map((item, index) => <article key={`${item.changedAt}-${index}`}><span /><div><strong>{item.action.replaceAll("_", " ")}</strong><p>{item.adminRemarks || "Status updated."}</p><time>{dateLabel(item.changedAt)}</time></div></article>)}</section> : null}
     </div>
   );
@@ -161,6 +161,9 @@ export function PwaLiquidationDetail({ data }: { data: PortalData }) {
 export function PwaLiquidationManager({ data }: { data: PortalData }) {
   const { reportId = "" } = useParams();
   const { go } = usePwaNavigation();
+  const queryClient = useQueryClient();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const busy = useRef(false);
   const organizationId = data.profile?.id ?? "";
   const detailQuery = useQuery({ queryKey: ["user", organizationId, "liquidation-detail-pwa", reportId], queryFn: () => loadOrganizationLiquidationReportById(organizationId, reportId), enabled: Boolean(organizationId && reportId) });
   const filesQuery = useQuery({ queryKey: ["user", organizationId, "liquidation-files-pwa", reportId], queryFn: () => loadOrganizationLiquidationReportFiles(organizationId, reportId), enabled: Boolean(organizationId && reportId) });
@@ -170,71 +173,81 @@ export function PwaLiquidationManager({ data }: { data: PortalData }) {
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
+  useEffect(() => { setFile(null); setConfirmSubmit(false); }, [reportId]);
   if (detailQuery.isLoading || filesQuery.isLoading) return <p role="status" className="pwa-card">Loading liquidation report…</p>;
   if (detailQuery.isError || filesQuery.isError) return <section className="pwa-card"><p role="alert">Liquidation report could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
   if (!report) return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.liquidations} label="Liquidation" /><section className="pwa-card pwa-empty-copy">Liquidation report not found.</section></div>;
   const editable = submittableStatuses.has(report.status) && !isSubmissionRevisionLocked(report);
   const refresh = async () => { await data.refreshLiquidations(); await Promise.all([detailQuery.refetch(), filesQuery.refetch()]); };
 
-  const upload = async () => {
-    if (!file || !editable || saving) return;
-    if (files.length && !replacementStatuses.has(report.status)) {
-      toast({ title: "Only one file allowed", description: "Remove the current file before uploading another.", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    try {
-      await createLiquidationReportFileInSupabase({ liquidationReportId: report.id, file });
-      if (files.length && replacementStatuses.has(report.status)) {
-        for (const existing of files) await deleteLiquidationReportFileInSupabase(existing.id, existing.fileUrl);
-      }
-      await refresh();
-      setFile(null);
-      toast({ title: files.length ? "Liquidation file replaced" : "Liquidation file uploaded" });
-    } catch (error) {
-      await refresh().catch(() => undefined);
-      toast({ title: "Upload failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const remove = async (fileId: string, fileUrl: string) => {
-    if (!editable || saving) return;
+    if (!editable || saving || busy.current) return;
+    busy.current = true;
     setSaving(true);
     try {
       await deleteLiquidationReportFileInSupabase(fileId, fileUrl);
+      queryClient.setQueryData(["user", organizationId, "liquidation-files-pwa", reportId], files.filter((item) => item.id !== fileId));
       await refresh();
       toast({ title: "Liquidation file removed" });
     } catch (error) {
       toast({ title: "Remove failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     } finally {
+      busy.current = false;
       setSaving(false);
     }
   };
 
-  const submit = async (confirmed = false) => {
-    if (!editable || saving) return;
-    const currentFiles = files;
-    if (currentFiles.length !== 1) {
-      toast({ title: "One attachment required", description: "Keep one corrected liquidation PDF before submitting. If a replacement was interrupted, remove the older file first.", variant: "destructive" });
+  const clearSelectedFile = () => {
+    setFile(null);
+    if (fileInput.current) fileInput.current.value = "";
+  };
+
+  const save = async (action: "draft" | "submitted", confirmed = false) => {
+    if (!editable || saving || busy.current) return;
+    if (!file && files.length !== 1) {
+      toast({ title: "One attachment required", description: "Choose one liquidation PDF before saving or submitting.", variant: "destructive" });
       return;
     }
-    if (replacementStatuses.has(report.status) && !hasGenuineResubmission({ ...report, files: currentFiles })) {
-      toast({ title: "Corrected file required", description: "Replace the reviewed liquidation PDF before resubmitting.", variant: "destructive" });
+    if (action === "submitted" && !file && replacementStatuses.has(report.status) && !hasGenuineResubmission({ ...report, files })) {
+      toast({ title: "Corrected file required", description: "Choose a corrected liquidation PDF before resubmitting.", variant: "destructive" });
       return;
     }
-    if (!confirmed) { setConfirmSubmit(true); return; }
+    if (action === "submitted" && !confirmed) { setConfirmSubmit(true); return; }
     setConfirmSubmit(false);
+    busy.current = true;
     setSaving(true);
+    const filesKey = ["user", organizationId, "liquidation-files-pwa", reportId];
+    let currentFiles = files;
     try {
-      await updateLiquidationReportInSupabase(report.id, { status: "submitted" });
-      await refresh();
-      toast({ title: "Liquidation submitted", description: "The admin can now review your report." });
-      go(pwaLiquidationDetailRoute(report.id), { replace: true });
+      if (file) {
+        // Save the replacement first, so a failed upload retains the saved attachment.
+        const uploaded = await createLiquidationReportFileInSupabase({ liquidationReportId: report.id, file });
+        currentFiles = [...files, uploaded];
+        queryClient.setQueryData(filesKey, currentFiles);
+        clearSelectedFile();
+        for (const existing of files) {
+          await deleteLiquidationReportFileInSupabase(existing.id, existing.fileUrl);
+          currentFiles = currentFiles.filter((item) => item.id !== existing.id);
+          queryClient.setQueryData(filesKey, currentFiles);
+        }
+      }
+      if (currentFiles.length !== 1) throw new Error("Keep one liquidation PDF before submitting. Remove any older attachment and try again.");
+      if (action === "submitted" && replacementStatuses.has(report.status) && !hasGenuineResubmission({ ...report, files: currentFiles })) {
+        throw new Error("Choose a corrected liquidation PDF before resubmitting.");
+      }
+      // Keep revision deadlines and activity completion status when saving an attachment.
+      if (action === "submitted" || report.status === "not_started" || report.status === "draft") {
+        const updated = await updateLiquidationReportInSupabase(report.id, { status: action });
+        queryClient.setQueryData(["user", organizationId, "liquidation-detail-pwa", reportId], updated);
+      }
+      await refresh().catch(() => undefined);
+      toast({ title: action === "draft" ? "Liquidation draft saved" : "Liquidation submitted", description: action === "draft" ? "Your PDF is saved. Submit for review when it is ready." : "The admin can now review your report." });
+      if (action === "submitted") go(pwaLiquidationDetailRoute(report.id), { replace: true });
     } catch (error) {
-      toast({ title: "Submit failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+      await refresh().catch(() => undefined);
+      toast({ title: action === "draft" ? "Draft could not be saved" : "Report could not be submitted", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     } finally {
+      busy.current = false;
       setSaving(false);
     }
   };
@@ -243,21 +256,36 @@ export function PwaLiquidationManager({ data }: { data: PortalData }) {
     <div className="pwa-stack">
       <PwaBackButton fallback={pwaLiquidationDetailRoute(report.id)} label="Report Details" />
       <section className="pwa-card pwa-workspace-intro"><h2>{budget?.activityTitle || "Liquidation report"}</h2><StatusBadge status={report.status} /><p>{nextStep(report.status)}</p></section>
-      <section className="pwa-card pwa-file-list">
-        <h3>Current attachment</h3>
-        {files.map((item) => <article key={item.id}><FileText /><span><strong>{item.fileName}</strong><small>{Math.max(1, Math.round(item.fileSize / 1024))} KB</small></span>{editable ? <button type="button" disabled={saving} aria-label="Remove file" onClick={() => void remove(item.id, item.fileUrl)}><Trash2 /></button> : null}</article>)}
-        {!files.length ? <p className="pwa-empty-copy">No liquidation file uploaded.</p> : null}
-      </section>
+      {files.length ? <section className="pwa-card pwa-file-list">
+        <h3>Saved attachment</h3>
+        {files.map((item) => <article key={item.id}><FileText /><span><strong>{item.fileName}</strong><small>{Math.max(1, Math.round(item.fileSize / 1024))} KB</small><button type="button" className="pwa-saved-file-preview" onClick={() => requestPwaDocumentPreview(item.fileUrl, item.fileName)}><Eye aria-hidden="true" /> View PDF</button></span>{editable ? <button type="button" disabled={saving} aria-label={`Remove saved file ${item.fileName}`} onClick={() => void remove(item.id, item.fileUrl)}><Trash2 /></button> : null}</article>)}
+      </section> : null}
       {report.revisionDueAt ? <p className="pwa-card">Revision deadline: {dateLabel(report.revisionDueAt)}. {isSubmissionRevisionLocked(report) ? "This revision is locked. Contact PCYDO for assistance." : "Submit the corrected PDF before this deadline."}</p> : null}
-      {editable ? (
-        <section className="pwa-card pwa-native-form">
-          <h2>{files.length && replacementStatuses.has(report.status) ? "Replace file" : "Upload file"}</h2>
-          <label className="pwa-file-control"><input type="file" accept=".pdf,application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><span>{file?.name || "Choose PDF file"}</span></label>
-          <button type="button" className="pwa-secondary-button" disabled={!file || saving} onClick={() => void upload()}>{saving ? <Loader2 className="pwa-spin" /> : <UploadCloud />} Upload File</button>
+      {editable ? <>
+        <section className="pwa-card pwa-liquidation-attachment-editor">
+          <h2>{files.length ? "Choose a replacement PDF" : "Liquidation PDF"}</h2>
+          <p className="pwa-form-helper">Preview your PDF, then save a draft or submit it for review.</p>
+          {!file ? <label className="pwa-file-control"><input ref={fileInput} type="file" disabled={saving} aria-label="Choose PDF file" accept=".pdf,application/pdf" onChange={(event) => {
+            const selected = event.target.files?.[0];
+            if (!selected) return;
+            if (selected.type !== "application/pdf" || !/\.pdf$/i.test(selected.name) || !selected.size) {
+              event.target.value = "";
+              toast({ title: "Choose a PDF", description: "Select a non-empty PDF file for your liquidation report.", variant: "destructive" });
+              return;
+            }
+            setFile(selected);
+          }} /><FileText aria-hidden="true" /><span>Choose PDF file</span></label> : <>
+            <div className="pwa-selected-liquidation-file"><FileText aria-hidden="true" /><span><strong>{file.name}</strong><small>{Math.max(1, Math.round(file.size / 1024))} KB · Not saved yet</small></span><button type="button" disabled={saving} aria-label="Remove selected PDF" onClick={clearSelectedFile}><Trash2 aria-hidden="true" /></button></div>
+            <PortalDocumentViewer previewFile={file} previewTitle={file.name} previewCanInline className="pwa-liquidation-selected-preview" />
+          </>}
+          {file && files.length ? <p className="pwa-form-helper">This PDF will replace the saved attachment when you save or submit.</p> : null}
         </section>
-      ) : null}
-      {editable ? <button type="button" className="pwa-primary-button" disabled={saving} onClick={() => void submit()}>{saving ? <Loader2 className="pwa-spin" /> : <ReceiptText />} Submit for Review</button> : null}
-      <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}><DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md"><DialogHeader><DialogTitle>Submit this liquidation report?</DialogTitle><DialogDescription>PCYDO will review your attached liquidation PDF. Check the file before submitting; editing is locked during review.</DialogDescription></DialogHeader><p className="text-sm break-all">{files[0]?.fileName}</p><DialogFooter><button className="pwa-secondary-button" onClick={() => setConfirmSubmit(false)}>Cancel</button><button className="pwa-primary-button" disabled={saving} onClick={() => void submit(true)}>Submit for Review</button></DialogFooter></DialogContent></Dialog>
+        <div className="pwa-sticky-actions pwa-liquidation-save-actions">
+          <button type="button" className="pwa-secondary-button" disabled={saving || (!file && files.length !== 1)} onClick={() => void save("draft")}>{saving ? <Loader2 className="pwa-spin" /> : null} Save Draft</button>
+          <button type="button" className="pwa-primary-button" disabled={saving || (!file && files.length !== 1)} onClick={() => void save("submitted")}>{saving ? <Loader2 className="pwa-spin" /> : <ReceiptText />} Submit for Review</button>
+        </div>
+      </> : null}
+      <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}><DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md"><DialogHeader><DialogTitle>Submit this liquidation report?</DialogTitle><DialogDescription>PCYDO will review your attached liquidation PDF. Check the file before submitting; editing is locked during review.</DialogDescription></DialogHeader><p className="text-sm break-all">{file?.name || files[0]?.fileName}</p><DialogFooter><button className="pwa-secondary-button" onClick={() => setConfirmSubmit(false)}>Cancel</button><button className="pwa-primary-button" disabled={saving} onClick={() => void save("submitted", true)}>Submit for Review</button></DialogFooter></DialogContent></Dialog>
     </div>
   );
 }

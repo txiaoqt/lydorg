@@ -1044,11 +1044,11 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
         <label>Venue *<Input value={form.venue} disabled={!editable} onChange={(event) => setForm((current) => ({ ...current, venue: event.target.value }))} /></label>
         <div className="pwa-stack" style={{ gap: "8px" }}>
           <strong>Attendance *</strong>
-          <small className="text-muted-foreground" style={{ fontSize: "11px" }}>Girls and boys counts must equal the total number of attendees.</small>
+          <small className="text-muted-foreground pwa-attendance-help">Girls and boys counts must equal the total number of attendees.</small>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-            <label style={{ fontSize: "11px" }}>Total *<Input type="number" min="0" value={form.totalAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, totalAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
-            <label style={{ fontSize: "11px" }}>Girls *<Input type="number" min="0" value={form.girlsAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, girlsAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
-            <label style={{ fontSize: "11px" }}>Boys *<Input type="number" min="0" value={form.boysAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, boysAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
+            <label className="pwa-attendance-label">Total *<Input type="number" min="0" value={form.totalAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, totalAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
+            <label className="pwa-attendance-label">Girls *<Input type="number" min="0" value={form.girlsAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, girlsAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
+            <label className="pwa-attendance-label">Boys *<Input type="number" min="0" value={form.boysAttendees} disabled={!editable} onChange={(e) => setForm((c) => ({ ...c, boysAttendees: e.target.value.replace(/[^0-9]/g, "") }))} /></label>
           </div>
         </div>
         <div className="pwa-ppa-upload-field">

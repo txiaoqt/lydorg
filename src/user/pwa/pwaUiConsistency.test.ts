@@ -22,4 +22,23 @@ describe("PWA UI Form Control Consistency", () => {
   it("prevents focus outline clipping on profile editor sections", () => {
     expect(cssContent).toContain("overflow: visible;");
   });
+
+  it("enforces mobile-first PWA typography scale (22 / 17 / 15 / 14 / 12) with 16px form controls", () => {
+    // 22px — page titles
+    expect(cssContent).toContain("--pwa-type-title: 1.375rem;");
+    // 17px — section headings
+    expect(cssContent).toContain("--pwa-type-section: 1.0625rem;");
+    // 15px — body text
+    expect(cssContent).toContain("--pwa-type-body: .9375rem;");
+    // 16px — inputs/selects/textareas
+    expect(cssContent).toContain("--pwa-type-input: 1rem;");
+    // 14px — buttons, labels, nav items
+    expect(cssContent).toContain("--pwa-type-label: .875rem;");
+    // 12px / 13px — helper text, timestamps, metadata
+    expect(cssContent).toContain("--pwa-type-meta: .75rem;");
+    expect(cssContent).toContain("--pwa-type-meta-md: .8125rem;");
+
+    // Standardized inputs, textareas, and selects maintain 16px to prevent mobile viewport auto-zoom
+    expect(cssContent).toContain("font-size: var(--pwa-type-input);");
+  });
 });

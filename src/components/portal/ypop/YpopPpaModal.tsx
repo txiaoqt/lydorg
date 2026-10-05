@@ -1453,10 +1453,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogContent
             hideCloseButton={true}
-            className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+            className="ypop-mobile-dialog ypop-ppa-dialog w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
           >
             {/* PINNED HEADER */}
-            <div className="p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
+            <div className="ypop-modal-header p-3.5 sm:p-4 border-b border-border/70 bg-card shrink-0 flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2.5 w-full">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   {headerCategoryAndStatus}
@@ -1466,7 +1466,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                   <button
                     type="button"
                     aria-label="Close modal"
-                    className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="ypop-modal-top-close h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <X className="h-4 w-4" />
                     <span className="sr-only">Close</span>
@@ -1483,7 +1483,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     ? (activityName || "Organization-Led Activity Details")
                     : (currentActivity ? "Edit Organization-Led Activity (PPA)" : "Log Organization-led Activities")}
                 </DialogTitle>
-                <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
+                <DialogDescription className="ypop-modal-description text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="font-semibold text-foreground/80">Organization-Led Activity Details</span>
                   <span>•</span>
                   <span>Record activities initiated and conducted by the organization.</span>
@@ -1492,12 +1492,12 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
             </div>
 
             {/* SCROLLABLE BODY */}
-            <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+            <div className="ypop-modal-body flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
               {bodyContent}
             </div>
 
             {/* PINNED FOOTER */}
-            <div className="p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
+            <div className="ypop-modal-footer p-3 sm:px-6 sm:py-3.5 border-t border-border/70 bg-card shrink-0">
               {isReadOnly ? (
                 <div className="flex items-center justify-between gap-2">
                   {canDelete ? (
@@ -1523,7 +1523,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     onClick={() => onOpenChange(false)}
                     className="h-9 px-6 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                   >
-                    Close Drawer
+                    Close
                   </Button>
                 </div>
               ) : (
@@ -1544,13 +1544,13 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <div className="ypop-modal-form-actions flex items-center gap-2 w-full sm:w-auto justify-end">
                     <Button
                       type="button"
                       variant="outline"
                       disabled={saving || uploading || deleting}
                       onClick={() => onOpenChange(false)}
-                      className="w-full sm:w-auto h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
+                      className="ypop-modal-cancel w-full sm:w-auto h-9 px-5 rounded-xl text-xs sm:text-sm font-semibold border border-border bg-background hover:bg-accent hover:text-accent-foreground text-foreground shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 justify-center"
                     >
                       Cancel
                     </Button>
@@ -1561,7 +1561,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                         variant="outline"
                         disabled={saving || uploading || deleting}
                         onClick={() => void handleSaveDraftClick()}
-                        className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
+                        className="ypop-modal-save w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-xl cursor-pointer border-border/80 hover:bg-muted text-foreground transition-colors active:scale-[0.98]"
                       >
                         {savingAction === "draft" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                         <span>Save as Draft</span>
@@ -1571,7 +1571,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       type="button"
                       disabled={saving || uploading || deleting}
                       onClick={handleSubmitReviewClick}
-                      className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                      className="ypop-modal-submit w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-9.5 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                     >
                       {savingAction === "submit" ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

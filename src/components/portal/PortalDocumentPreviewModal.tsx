@@ -500,6 +500,7 @@ export interface PortalDocumentPreviewModalProps {
   footerStatusText?: string;
   footerActions?: React.ReactNode;
   className?: string;
+  presentation?: "default" | "pwa";
 }
 
 export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProps> = ({
@@ -521,8 +522,10 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
   footerStatusText,
   footerActions,
   className,
+  presentation = "default",
 }) => {
   const [downloading, setDownloading] = useState(false);
+  const isPwa = presentation === "pwa";
 
   const handleDownload = async () => {
     if (previewFile) {
@@ -676,7 +679,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
         </div>
 
         {/* MOBILE HEADER BAR (block lg:hidden) - POLISHED & BALANCED */}
-        <div className="block lg:hidden px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-border/70 bg-card flex flex-col gap-2.5 shrink-0">
+        <div className="document-preview-mobile-header block lg:hidden px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-border/70 bg-card flex flex-col gap-2.5 shrink-0">
           {/* Top Row: Icon + Main Info (Title, Status, Metadata) + Protected Close Button */}
           <div className="flex items-start justify-between gap-2.5 w-full">
             {/* Left: Icon & Main Content */}
@@ -701,7 +704,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
                 ) : null}
 
                 {/* 3. File Metadata */}
-                <div className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-0.5">
+                {isPwa ? <div className="document-preview-mobile-meta text-xs text-muted-foreground">{previewTitle.split(".").pop()?.toUpperCase() || "Document"}{fileSize ? ` - ${fileSize}` : ""}</div> : <div className="text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-0.5">
                   <span>PDF</span>
                   <span>•</span>
                   <span className="truncate max-w-[180px] sm:max-w-[320px] text-foreground/90 font-medium">
@@ -717,7 +720,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
                       <span className="truncate max-w-[140px]">{organizationName}</span>
                     </>
                   )}
-                </div>
+                </div>}
               </div>
             </div>
 
@@ -726,7 +729,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer self-start -mt-0.5"
+                className="document-preview-mobile-close h-8.5 w-8.5 rounded-full border border-border/70 hover:border-border bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 cursor-pointer self-start -mt-0.5"
                 aria-label="Close dialog"
               >
                 <X className="h-4 w-4" />
@@ -740,7 +743,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
               {headerActions}
             </div>
           ) : previewUrl || previewFile || previewData ? (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 shrink-0 w-full pt-1.5 pb-0.5">
+            <div className="document-preview-mobile-actions grid grid-cols-2 gap-2.5 sm:gap-3 shrink-0 w-full pt-1.5 pb-0.5">
               <Button
                 type="button"
                 variant="outline"
@@ -749,7 +752,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
                 className="h-10 px-2.5 sm:px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] justify-center truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <ExternalLink className="h-4 w-4 text-primary shrink-0" />
-                <span className="truncate">Open in New Tab</span>
+                <span className="truncate">{isPwa ? "Open in browser" : "Open in New Tab"}</span>
               </Button>
 
               <Button
@@ -767,7 +770,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
                 ) : (
                   <>
                     <Download className="h-4 w-4 shrink-0" />
-                    <span className="truncate">Download File</span>
+                    <span className="truncate">{isPwa ? "Download" : "Download File"}</span>
                   </>
                 )}
               </Button>
@@ -784,11 +787,11 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
           previewCanInline={previewCanInline}
           previewEmptyMessage={previewEmptyMessage}
           onDownloadFile={onDownloadFile}
-          className="flex-1 overflow-y-auto bg-slate-100/80 dark:bg-slate-950/40 p-2 sm:p-3 border-0 rounded-none"
+          className="document-preview-scroll-area flex-1 min-h-0 overflow-y-auto bg-slate-100/80 dark:bg-slate-950/40 p-2 sm:p-3 border-0 rounded-none"
         />
 
         {/* SIMPLIFIED FOOTER */}
-        <div className="h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
+        <div className="document-preview-footer h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
           <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
             {footerStatusText || "Y-TRACE Document Compliance"}
           </p>

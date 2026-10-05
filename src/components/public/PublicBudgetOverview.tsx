@@ -126,10 +126,10 @@ export default function PublicBudgetOverview({
         if (isMounted) {
           setInternalData(summary);
         }
-      } catch (err: any) {
+      } catch (err) {
         if (isMounted) {
           console.error("Failed to load public budget summary:", err);
-          setFetchError(err?.message || "Unable to load public budget summary.");
+          setFetchError(err instanceof Error ? err.message : "Unable to load public budget summary.");
         }
       } finally {
         if (isMounted) {
@@ -209,12 +209,12 @@ export default function PublicBudgetOverview({
   return (
     <section
       aria-label="Public Youth Budget Overview"
-      className={cn("w-full max-w-7xl mx-auto space-y-6 sm:space-y-8", className)}
+      className={cn("public-budget-overview w-full max-w-7xl mx-auto space-y-6 sm:space-y-8", className)}
     >
       {/* 1. Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6">
+      <div className="public-budget-overview-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6">
         <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-public-text-brand mb-1">
+          <div className="public-budget-record-context flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-public-text-brand mb-1">
             <span>Pasig City Youth Development</span>
             <span className="text-slate-300">•</span>
             <span>Official PCYDO Records</span>
@@ -227,7 +227,7 @@ export default function PublicBudgetOverview({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+        <div className="public-budget-controls flex flex-wrap items-center gap-3 self-start md:self-auto">
           {/* Interactive FY Selector */}
           {showFiscalYearSelector && (
             <div className="flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function PublicBudgetOverview({
           )}
 
           {/* Freshness Badge */}
-          <div className="flex h-11 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-3.5 text-xs text-slate-600">
+          <div className="public-budget-freshness flex h-11 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-3.5 text-xs text-slate-600">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
             <span className="font-segoe">Last updated: {lastUpdatedText}</span>
           </div>
@@ -344,7 +344,7 @@ export default function PublicBudgetOverview({
           )}
 
           {/* 2. Budget Execution Pipeline — Single Visual Source of Truth */}
-          <div className="rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5">
+          <div className="public-budget-pipeline rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-segoe">
@@ -358,7 +358,7 @@ export default function PublicBudgetOverview({
             </div>
 
               {/* Canonical financial summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <div className="public-budget-stages grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
               {/* Stage 1: FY Budget Allocation */}
               <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-colors hover:border-slate-300">
                 <div className="flex items-center justify-between gap-2">
@@ -447,13 +447,14 @@ export default function PublicBudgetOverview({
                 remainingHeadroom={remainingHeadroom}
                 totalAllocation={isConfigured ? annualBudget : null}
                 formatAmount={formatPesoAmount}
+                className="public-budget-execution-track"
               />
             </div>
           </div>
 
           {/* 4. Purpose Categories: Where the Youth Budget Goes */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-4">
+          <div className="public-budget-distribution grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="public-budget-purpose lg:col-span-2 rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-slate-100 pb-3">
                 <div>
                   <h2 className="text-base font-bold text-slate-900 font-segoe">
@@ -477,13 +478,13 @@ export default function PublicBudgetOverview({
                   role="region"
                   aria-label={`Purpose allocations for FY ${activeFY}`}
                   tabIndex={0}
-                  className="max-h-[240px] space-y-3.5 overflow-y-auto overscroll-contain pt-1 pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
+                  className="public-budget-purpose-list max-h-[240px] space-y-3.5 overflow-y-auto overscroll-contain pt-1 pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
                 >
                   {purposeCategories.map((item) => {
                     const color = getCategoryColor(item.category);
                     return (
                       <div key={item.category} className="space-y-1.5">
-                        <div className="flex items-start justify-between gap-3 text-xs font-semibold">
+                        <div className="public-budget-purpose-label flex items-start justify-between gap-3 text-xs font-semibold">
                           <span className="flex min-w-0 flex-1 items-start gap-2 text-slate-800 font-segoe">
                             <span
                               className="mt-0.5 h-2.5 w-2.5 rounded-full shrink-0"

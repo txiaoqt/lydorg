@@ -6,9 +6,11 @@ import {
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
+import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   removeOrganizationDocumentFromSupabase,
@@ -159,6 +161,13 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
         </div>
       </section>
 
+      {allApproved ? (
+        <section className="pwa-card pwa-completion-message">
+          <strong>All required documents are approved.</strong>
+          <p>Approved documents are locked and cannot be replaced unless the admin explicitly reopens one for revision.</p>
+        </section>
+      ) : null}
+
       <section className="pwa-document-list" aria-label="Required documents">
         {data.requiredTemplates.map((template) => {
           const file = byType.get(template.id);
@@ -189,12 +198,6 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
           <UploadCloud aria-hidden="true" /> Upload or Manage Documents
         </button>
       ) : null}
-      {allApproved ? (
-        <section className="pwa-card pwa-completion-message">
-          <strong>All required documents are approved.</strong>
-          <p>Approved documents are locked and cannot be replaced unless the admin explicitly reopens one for revision.</p>
-        </section>
-      ) : null}
     </div>
   );
 }
@@ -210,6 +213,7 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
   const replacementHelpId = useId();
   const replacementErrorId = useId();
   const [replaceOpen, setReplaceOpen] = useState(false);
+  const [previewTab, setPreviewTab] = useState<"attached" | "template">("attached");
   const [replacementFile, setReplacementFile] = useState<File | null>(null);
   const [replacementError, setReplacementError] = useState("");
   const [replacementStatus, setReplacementStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
@@ -220,8 +224,6 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
   if (!template) {
     return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.documents} /><section className="pwa-card pwa-empty-copy">Document requirement not found.</section></div>;
   }
-
-  const openReference = (reference: string, title: string) => requestPwaDocumentPreview(reference, title);
 
   const requiresCorrection = Boolean(file && correctionStatuses.has(file.adminStatus));
   const isUnlocked = requiresCorrection && isRevisionAdminUnlocked(file);
@@ -235,6 +237,13 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
       data.submission?.status === "approved_green" ||
       (data.submission?.status as string | undefined) === "approved",
   });
+  const hasAttachedPreview = Boolean(fileAccess.canViewAttachedFile && file);
+  const hasTemplatePreview = Boolean(template.templateFileUrl);
+  const activePreviewTab = hasAttachedPreview
+    ? previewTab
+    : hasTemplatePreview
+      ? "template"
+      : "attached";
   const previousRemark = latestRevision?.adminRemarks || (
     file?.adminRemarks && !/^awaiting admin review\.?$/i.test(file.adminRemarks.trim())
       ? file.adminRemarks
@@ -351,10 +360,13 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
 
   return (
     <div className="pwa-stack">
-      <PwaBackButton fallback={PWA_ROUTES.documents} label="Documents" />
+      <div className="pwa-document-detail-nav">
+        <PwaBackButton fallback={PWA_ROUTES.documents} label="Documents" />
+        <StatusBadge status={file?.adminStatus ?? "not_started"} label={file ? undefined : "Missing"} />
+      </div>
       <section className="pwa-card pwa-detail-hero">
         <span className="pwa-record-icon"><FileText aria-hidden="true" /></span>
-        <div><h2>{template.name}</h2><StatusBadge status={file?.adminStatus ?? "not_started"} label={file ? undefined : "Missing"} /></div>
+        <h2>{template.name}</h2>
       </section>
       {requiresCorrection ? (
         <section className={`pwa-card pwa-revision-notice ${isUnlocked ? "is-unlocked" : file?.adminStatus === "rejected_red" || isExpired ? "is-rejected" : ""}`}>
@@ -395,6 +407,39 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
         {file?.reviewedAt ? <div><Eye /><span><small>Reviewed</small><strong>{formatDocumentDateTime(file.reviewedAt)}</strong></span></div> : null}
         {previousRemark ? <div><Eye /><span><small>{latestRevision ? "Previous review remark" : "Admin remark"}</small><strong>{previousRemark}</strong></span></div> : null}
       </section>
+      {hasAttachedPreview || hasTemplatePreview ? (
+        <section className="pwa-card pwa-document-preview-tabs" aria-label="Document preview">
+          <Tabs
+            value={activePreviewTab}
+            onValueChange={(value) => setPreviewTab(value as "attached" | "template")}
+          >
+            <TabsList className="pwa-document-preview-tab-list" aria-label="Choose a document to preview">
+              {hasAttachedPreview ? <TabsTrigger className="pwa-document-preview-tab" value="attached">View Attached File</TabsTrigger> : null}
+              {hasTemplatePreview ? <TabsTrigger className="pwa-document-preview-tab" value="template">View Template</TabsTrigger> : null}
+            </TabsList>
+            {hasAttachedPreview && file ? (
+              <TabsContent className="pwa-document-preview-tab-content" value="attached">
+                <PortalDocumentViewer
+                  previewUrl={file.fileUrl}
+                  previewTitle={file.fileName}
+                  previewCanInline
+                  className="pwa-document-inline-preview"
+                />
+              </TabsContent>
+            ) : null}
+            {hasTemplatePreview ? (
+              <TabsContent className="pwa-document-preview-tab-content" value="template">
+                <PortalDocumentViewer
+                  previewUrl={template.templateFileUrl}
+                  previewTitle={template.templateFileName || template.name}
+                  previewCanInline
+                  className="pwa-document-inline-preview"
+                />
+              </TabsContent>
+            ) : null}
+          </Tabs>
+        </section>
+      ) : null}
       <div className="pwa-button-stack">
         {requiresCorrection ? (
           <button
@@ -417,8 +462,6 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
             <UploadCloud /> {isExpired ? "Revision Locked" : "Re-upload File"}
           </button>
         ) : null}
-        {fileAccess.canViewAttachedFile && file ? <button type="button" className="pwa-secondary-button" onClick={() => openReference(file.fileUrl, file.fileName)}><Eye /> View Attached File</button> : null}
-        {template.templateFileUrl ? <button type="button" className="pwa-secondary-button" onClick={() => openReference(template.templateFileUrl, template.templateFileName || template.name)}><Download /> View Template</button> : null}
         {!file || initialUploadStatuses.has(file.adminStatus) ? <button type="button" className="pwa-primary-button" onClick={() => go(PWA_ROUTES.documentsManage)}><UploadCloud /> Upload in Document Manager</button> : null}
       </div>
       <p className="sr-only" aria-live="polite" aria-atomic="true">{replacementAnnouncement}</p>

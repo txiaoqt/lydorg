@@ -22,9 +22,6 @@ const PublicBudgetTransparency = () => {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           {/* Title block */}
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-              Civic Fiscal Openness
-            </span>
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Budget Transparency
             </h1>

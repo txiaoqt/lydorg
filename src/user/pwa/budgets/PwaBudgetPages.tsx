@@ -2,7 +2,7 @@ import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowSt
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Check, ChevronRight, Circle, Eye, FileText, Loader2, Pencil, Plus, WalletCards,
+  Check, ChevronRight, Circle, FileText, Loader2, Pencil, Plus, Upload, WalletCards,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
@@ -18,7 +18,7 @@ import {
   uploadBudgetRequestFileToSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { PwaBackButton } from "../PwaBackButton";
-import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
+import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRoutes";
@@ -131,11 +131,6 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
   if (detailQuery.isError || filesQuery.isError) return <section className="pwa-card"><p role="alert">Budget request could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
   if (!request) return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card pwa-empty-copy">Budget request not found.</section></div>;
 
-  const openFile = () => {
-    if (!file) return;
-    requestPwaDocumentPreview(file.fileUrl, file.fileName || "Budget request attachment.pdf");
-  };
-
   return (
     <div className="pwa-stack">
       <PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" />
@@ -154,10 +149,12 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
         <div className="pwa-detail-section"><h3>Purpose Description</h3><p>{request.activityDescription}</p></div>
         {request.adminRemarks ? <div className="pwa-admin-note"><strong>Admin remarks</strong><p>{request.adminRemarks}</p></div> : null}
       </section>
-      <div className="pwa-button-stack">
-        {file ? <button type="button" className="pwa-secondary-button" onClick={() => void openFile()}><Eye /> View Attached PDF</button> : null}
-        {canEditBudget(request) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaBudgetEditRoute(request.id))}><Pencil /> {request.status === "draft" ? "Edit Draft" : "Revise Request"}</button> : null}
-      </div>
+      {file ? <section className="pwa-card pwa-liquidation-attachment-editor">
+        <h3>Attached budget PDF</h3>
+        <div className="pwa-selected-liquidation-file"><FileText aria-hidden="true" /><span><strong>{file.fileName || "Budget request attachment.pdf"}</strong></span></div>
+        <PortalDocumentViewer previewUrl={file.fileUrl} previewTitle={file.fileName || "Budget request attachment.pdf"} previewCanInline className="pwa-liquidation-selected-preview" />
+      </section> : null}
+      {canEditBudget(request) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaBudgetEditRoute(request.id))}><Pencil /> {request.status === "draft" ? "Edit Draft" : "Revise Request"}</button> : null}
       {request.revisionHistory?.length ? (
         <section className="pwa-card pwa-timeline"><h3>Activity</h3>{[...request.revisionHistory].reverse().map((item, index) => <article key={`${item.changedAt}-${index}`}><span /><div><strong>{item.action.replaceAll("_", " ")}</strong><p>{item.adminRemarks || "Status updated."}</p><time>{dateLabel(item.changedAt)}</time></div></article>)}</section>
       ) : null}
@@ -297,18 +294,22 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
   };
 
   return (
-    <form className="pwa-stack pwa-native-form" onSubmit={(event) => void save("submitted", event)}>
+    <form className="pwa-stack pwa-native-form pwa-budget-editor" onSubmit={(event) => void save("submitted", event)}>
       <PwaBackButton fallback={existing ? pwaBudgetDetailRoute(existing.id) : PWA_ROUTES.budgets} label={existing ? "Budget Details" : "Budget Requests"} />
-      <section className="pwa-card">
-        <h2>Activity information</h2>
-        <label>Activity title <input value={draft.activityTitle} onChange={(event) => update("activityTitle", event.target.value)} required /></label>
-        <label>Purpose Description <textarea rows={4} placeholder="Briefly describe the purpose, objectives, expected outcomes, and target participants..." value={draft.activityDescription} onChange={(event) => update("activityDescription", event.target.value)} required /></label>
+      <header className="pwa-budget-editor-heading">
+        <h1>{existing ? "Edit budget request" : "New budget request"}</h1>
+        <p>Add your activity details and attach the detailed budget PDF. All fields are required.</p>
+      </header>
+      <section className="pwa-budget-editor-section" aria-labelledby="budget-activity-heading">
+        <h2 id="budget-activity-heading">Activity information</h2>
+        <label>Activity title <input placeholder="Name of your activity" value={draft.activityTitle} onChange={(event) => update("activityTitle", event.target.value)} required /></label>
+        <label>Purpose Description <textarea rows={3} placeholder="Purpose, objectives, expected outcomes, and target participants" value={draft.activityDescription} onChange={(event) => update("activityDescription", event.target.value)} required /></label>
         <label>Proposed date <input type="date" value={draft.activityDate} onChange={(event) => update("activityDate", event.target.value)} required /></label>
-        <label>Venue <input value={draft.venue} onChange={(event) => update("venue", event.target.value)} required /></label>
+        <label>Venue <input placeholder="Where will the activity take place?" value={draft.venue} onChange={(event) => update("venue", event.target.value)} required /></label>
       </section>
-      <section className="pwa-card">
-        <h2>Budget details</h2>
-        <label>Requested amount (Max: ₱100,000) <span className="pwa-prefix-input"><span>PHP</span><input type="number" min="0.01" max="100000" step="any" inputMode="decimal" value={draft.requestedAmount} onFocus={(e) => { if (e.target.value === "0") e.target.select(); }} onClick={(e) => { if ((e.target as HTMLInputElement).value === "0") (e.target as HTMLInputElement).select(); }} onChange={(event) => { let val = event.target.value; if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) { val = val.replace(/^0+/, ""); if (val === "" || val.startsWith(".")) { val = "0" + val; } } update("requestedAmount", val); }} required /></span></label>
+      <section className="pwa-budget-editor-section" aria-labelledby="budget-amount-heading">
+        <h2 id="budget-amount-heading">Budget details</h2>
+        <label>Requested amount <span className="pwa-prefix-input"><span aria-hidden="true">₱</span><input aria-describedby="budget-amount-help" type="number" min="0.01" max="100000" step="any" inputMode="decimal" value={draft.requestedAmount} onFocus={(e) => { if (e.target.value === "0") e.target.select(); }} onClick={(e) => { if ((e.target as HTMLInputElement).value === "0") (e.target as HTMLInputElement).select(); }} onChange={(event) => { let val = event.target.value; if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) { val = val.replace(/^0+/, ""); if (val === "" || val.startsWith(".")) { val = "0" + val; } } update("requestedAmount", val); }} required /></span><small id="budget-amount-help">Maximum request: ₱100,000</small></label>
         <label>
           Purpose & Category
           {orgAdvocacies.length > 0 ? (
@@ -335,11 +336,11 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
           )}
         </label>
       </section>
-      <section className="pwa-card">
-        <h2>Detailed budget PDF</h2>
+      <section className="pwa-budget-editor-section" aria-labelledby="budget-file-heading">
+        <h2 id="budget-file-heading">Detailed budget PDF</h2>
         {existing?.revisionDueAt ? <p className="pwa-form-helper">Revision deadline: {dateLabel(existing.revisionDueAt)}</p> : null}
         {existingFile ? <p className="pwa-form-helper"><FileText /> Current: {existingFile.fileName}</p> : null}
-        <label className="pwa-file-control"><input type="file" accept=".pdf,application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><span>{file?.name || (existingFile ? "Replace attached PDF" : "Choose PDF file")}</span></label>
+        <label className="pwa-budget-upload"><input type="file" aria-label={existingFile ? "Replace detailed budget PDF" : "Attach detailed budget PDF"} accept=".pdf,application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><FileText aria-hidden="true" /><span><strong>{file?.name || (existingFile ? "Replace attached PDF" : "Attach budget PDF")}</strong><small>{file ? "Selected · Tap to choose another file" : "Choose a PDF from your device"}</small></span><Upload aria-hidden="true" /></label>
       </section>
       <div className="pwa-sticky-actions">
         <button type="button" className="pwa-secondary-button" disabled={saving} onClick={(event) => void save("draft", event)}>{saving ? <Loader2 className="pwa-spin" /> : null} Save Draft</button>
