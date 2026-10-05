@@ -45,6 +45,7 @@ type BudgetRequestsTableProps = {
   onSelectedRequestIdsChange?: (selectedIds: Set<string>) => void;
   onDeleteSelected?: () => void;
   isDeleting?: boolean;
+  serverPage?: { page: number; totalCount: number; onPageChange: (page: number) => void };
 };
 
 const STATUS_TABS: { value: BudgetRequestsStatusFilter; label: string }[] = [
@@ -55,7 +56,7 @@ const STATUS_TABS: { value: BudgetRequestsStatusFilter; label: string }[] = [
   { value: "budget_released", label: "Released" },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const formatBudgetCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
 
@@ -205,18 +206,20 @@ export const BudgetRequestsTable = ({
   onSelectedRequestIdsChange,
   onDeleteSelected,
   isDeleting = false,
+  serverPage,
 }: BudgetRequestsTableProps) => {
   const [page, setPage] = useState(0);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
   const selectedIds = selectedRequestIds ?? internalSelectedIds;
   const setSelectedIds = onSelectedRequestIdsChange ?? setInternalSelectedIds;
+  const pageIndex = serverPage?.page ?? page;
 
   // Clear selection whenever filters or pagination change
   useEffect(() => {
     if (selectedIds.size > 0) {
       setSelectedIds(new Set());
     }
-  }, [searchValue, statusFilter, districtFilter, barangayFilter, classificationFilter, page]);
+  }, [searchValue, statusFilter, districtFilter, barangayFilter, classificationFilter, pageIndex]);
 
   // Keyboard accessibility: Escape to clear selection
   useEffect(() => {
@@ -242,11 +245,11 @@ export const BudgetRequestsTable = ({
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(requests.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, totalPages - 1);
+  const totalPages = Math.max(1, Math.ceil((serverPage?.totalCount ?? requests.length) / PAGE_SIZE));
+  const clampedPage = Math.min(pageIndex, totalPages - 1);
   const pageItems = useMemo(
-    () => requests.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
-    [requests, clampedPage],
+    () => serverPage ? requests : requests.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
+    [requests, clampedPage, serverPage],
   );
 
   const visibleRowIds = useMemo(() => pageItems.map((r) => r.id), [pageItems]);
@@ -284,7 +287,9 @@ export const BudgetRequestsTable = ({
   };
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const value = Math.max(0, Math.min(next, totalPages - 1));
+    if (serverPage) serverPage.onPageChange(value);
+    else setPage(value);
   };
 
   return (
@@ -604,7 +609,7 @@ export const BudgetRequestsTable = ({
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-          <span className="text-text-default">{requests.length}</span> submissions
+          <span className="text-text-default">{serverPage?.totalCount ?? requests.length}</span> submissions
         </p>
         <div className="flex items-center gap-2">
           <button

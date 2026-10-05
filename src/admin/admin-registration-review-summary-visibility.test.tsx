@@ -6,6 +6,7 @@ import AdminPortal from "./AdminPortal";
 import { LydoConnectProvider } from "@/lib/lydo-connect-store";
 import type { OrganizationProfile, SubmissionFile, DocumentSubmission, TemplateRecord } from "@/lib/lydo-connect-data";
 import { writeAdminSession } from "@/lib/admin-auth";
+import { queryClient } from "@/lib/query-client";
 
 // Mock useAuth
 vi.mock("@/hooks/use-auth", () => ({
@@ -234,7 +235,7 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
         activityLogs: [],
       };
     }),
-    loadAdminPortalSupabaseState: vi.fn().mockImplementation(() =>
+    loadAdminPortalSectionState: vi.fn().mockImplementation(() =>
       Promise.resolve({
         templates: [mockTemplate],
         organizationProfiles: [verifiedOrg, pendingOrg, needsUpdateOrg, suspendedOrg],
@@ -271,6 +272,7 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
 
 describe("Registration Review Detail Review Summary Visibility", () => {
   beforeEach(() => {
+    queryClient.clear();
     writeAdminSession({
       id: "admin-1",
       username: "admin",
@@ -330,7 +332,9 @@ describe("Registration Review Detail Review Summary Visibility", () => {
     expect(screen.getByText("Pasig Youth Council Verified")).toBeInTheDocument();
     expect(screen.getByText("Verified")).toBeInTheDocument();
     expect(screen.getByText("URN: URN-2026-0001")).toBeInTheDocument();
-    expect(screen.getByText(/1\/1 Documents Submitted/i)).toBeInTheDocument();
+    // Registration details (including document counts) load only after the
+    // review is opened, so wait for the scoped detail query to settle.
+    expect(await screen.findByText(/1\/1 Documents Submitted/i)).toBeInTheDocument();
 
     // The entire Review Summary card MUST NOT be rendered
     expect(screen.queryByText("Review Summary")).not.toBeInTheDocument();

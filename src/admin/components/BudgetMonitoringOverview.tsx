@@ -468,6 +468,7 @@ export const BudgetMonitoringOverview = ({
                   <ResponsiveContainer width="100%" height={donutLabelLayout.chartHeight}>
                     <PieChart>
                       <Pie
+                        isAnimationActive={false}
                         data={donutData}
                         dataKey="value"
                         nameKey="name"

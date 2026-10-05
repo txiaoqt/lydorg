@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import {
   Award,
@@ -37,7 +40,7 @@ import {
   getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import { resolveSupabaseFileUrl, fetchAdminYorpRegistrationDocuments } from "@/lib/lydo-connect-supabase";
 import { ReferenceCodeChip } from "@/admin/components/InquiriesTable";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import type { YorpRegistryEntry } from "@/admin/components/YorpRegistryTable";
@@ -276,6 +279,7 @@ const EmptyTab = ({ label, description = "Coming soon." }: { label: string; desc
 export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDetailDrawerProps) => {
   const navigate = useNavigate();
   const { state } = useLydoConnect();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [now, setNow] = useState(() => Date.now());
   const [isYpopBreakdownOpen, setIsYpopBreakdownOpen] = useState(false);
@@ -332,6 +336,14 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
   }, [isYpopBreakdownOpen]);
 
   const org = entry?.org;
+  const documentsQuery = useQuery({
+    queryKey: ["admin", "yorp-registration-documents", user?.id, user?.roleCode,
+      [...(user?.permissionCodes ?? [])].sort().join(","), org?.id],
+    queryFn: ({ signal }) => fetchAdminYorpRegistrationDocuments(org!.id, signal),
+    enabled: Boolean(supabase && org && activeTab === "documents"),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+  });
 
   const registrationSubmission = useMemo(() => {
     if (!org) return null;
@@ -346,6 +358,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
   }, [org, state.documentSubmissions]);
 
   const submittedFiles = useMemo(() => {
+    if (supabase) return documentsQuery.data ?? [];
     if (!registrationSubmission) return [];
     return state.documentSubmissionFiles
       .filter(
@@ -359,7 +372,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
         const orderB = state.templates.find((t) => t.id === b.documentTypeId || t.databaseId === b.documentTypeId)?.sortOrder ?? 999;
         return orderA - orderB;
       });
-  }, [registrationSubmission, state.documentSubmissionFiles, state.templates]);
+  }, [documentsQuery.data, registrationSubmission, state.documentSubmissionFiles, state.templates]);
 
   const handlePreviewFile = async (file: SubmissionFile, documentTitle: string) => {
     if (!org || !file.fileUrl || resolvingFileId) return;
@@ -1033,7 +1046,15 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                 {activeTab === "documents" ? (
                   <div className="flex flex-col gap-4">
                     <SectionCard title="Registration Documents" icon={FileText}>
-                      {submittedFiles.length > 0 ? (
+                      {supabase && documentsQuery.isPending ? (
+                        <p role="status" className="py-8 text-center font-segoe text-sm text-slate-500">Loading registration documents…</p>
+                      ) : supabase && documentsQuery.isError ? (
+                        <div role="alert" className="py-8 text-center">
+                          <p className="font-segoe text-sm text-text-default">Unable to load registration documents.</p>
+                          <p className="mt-2 font-segoe text-xs text-slate-500">{documentsQuery.error.message}</p>
+                          <button type="button" onClick={() => void documentsQuery.refetch()} className="mt-3 rounded-md border border-slate-300 px-3 py-2 font-segoe text-xs font-semibold text-text-default">Retry</button>
+                        </div>
+                      ) : submittedFiles.length > 0 ? (
                         <div className="flex flex-col gap-3">
                           <p className="font-segoe text-xs text-slate-500">
                             {submittedFiles.length} {submittedFiles.length === 1 ? "document" : "documents"} submitted with this registration.
@@ -1043,7 +1064,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                               const template = state.templates.find(
                                 (t) => t.id === file.documentTypeId || t.databaseId === file.documentTypeId,
                               );
-                              const documentTitle = template?.name ?? formatDocumentTypeLabel(file.documentTypeId);
+                              const documentTitle = file.documentTypeName || template?.name || formatDocumentTypeLabel(file.documentTypeId);
                               const formattedSize = formatFileBytes(file.fileSize);
                               const fileDate = file.uploadedAt || file.createdAt ? new Date(file.uploadedAt || file.createdAt) : null;
                               const isValidDate = fileDate && !Number.isNaN(fileDate.getTime());

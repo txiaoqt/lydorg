@@ -85,7 +85,7 @@ type TemplateFormDialogProps = {
   onCancel: () => void;
   onSave: () => void;
   categoryOptions?: string[];
-  onAddCategory?: (category: string) => void;
+  onAddCategory?: (category: string) => void | Promise<void>;
   onDeleteCategory?: (category: string) => void;
 };
 
@@ -114,6 +114,7 @@ export const TemplateFormDialog = ({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
 
   const displayFileName = file?.name || existingFileName || "";
   const displayFileSize = file ? file.size : existingFileSize ?? null;
@@ -150,11 +151,29 @@ export const TemplateFormDialog = ({
       return;
     }
 
-    onAddCategory?.(normalized);
-    onCategoryChange(normalized);
-    setIsAddingCategory(false);
-    setNewCategoryName("");
-    setNewCategoryError(null);
+    const finishAdding = () => {
+      onCategoryChange(normalized);
+      setIsAddingCategory(false);
+      setNewCategoryName("");
+      setNewCategoryError(null);
+    };
+
+    try {
+      const result = onAddCategory?.(normalized);
+      if (result && typeof (result as Promise<void>).then === "function") {
+        setIsSavingCategory(true);
+        void Promise.resolve(result)
+          .then(finishAdding)
+          .catch((error: unknown) => {
+            setNewCategoryError(error instanceof Error ? error.message : "The category could not be saved.");
+          })
+          .finally(() => setIsSavingCategory(false));
+        return;
+      }
+      finishAdding();
+    } catch (error) {
+      setNewCategoryError(error instanceof Error ? error.message : "The category could not be saved.");
+    }
   };
 
   return (
@@ -218,11 +237,13 @@ export const TemplateFormDialog = ({
                   <button
                     type="button"
                     onClick={() => {
+                      if (isSavingCategory) return;
                       setIsAddingCategory(false);
                       setNewCategoryName("");
                       setNewCategoryError(null);
                     }}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                    disabled={isSavingCategory}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Cancel adding category"
                   >
                     <X className="h-4 w-4" />
@@ -248,9 +269,10 @@ export const TemplateFormDialog = ({
                   <button
                     type="button"
                     onClick={handleConfirmAddCategory}
-                    className="inline-flex h-8 items-center justify-center rounded-md bg-public-bg-brand px-3 text-xs font-semibold text-white transition-colors hover:bg-bg-brand-hover cursor-pointer"
+                    disabled={isSavingCategory}
+                    className="inline-flex h-8 items-center justify-center rounded-md bg-public-bg-brand px-3 text-xs font-semibold text-white transition-colors hover:bg-bg-brand-hover cursor-pointer disabled:cursor-wait disabled:opacity-60"
                   >
-                    Add
+                    {isSavingCategory ? "Saving…" : "Add"}
                   </button>
                 </div>
                 {newCategoryError ? (

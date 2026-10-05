@@ -100,6 +100,8 @@ export const buildPublicRecordCode = <T extends { id: string; createdAt: string 
   records: T[],
 ) => {
   if (!record) return `${prefix}-PENDING`;
+  const persistedCode = (record as T & { publicRecordCode?: string }).publicRecordCode;
+  if (persistedCode) return persistedCode;
   const dateSegment = getReferenceDateSegment(record.createdAt);
   const sameDayRecords = [...records]
     .filter((item) => getReferenceDateSegment(item.createdAt) === dateSegment)
@@ -310,7 +312,6 @@ export type YPOPCityActivity = {
   id: string;
   semesterKey: string;
   name: string;
-  description?: string;
   date: string;
   startDate: string;
   endDate: string;
@@ -484,6 +485,7 @@ export interface DeriveYpopQualificationStatusParams {
   entry?: Pick<YPOPEntry, "status" | "pointsRequired"> | null;
   participations?: Array<Pick<YPOPEventParticipation, "status">>;
   orgActivities?: Array<Pick<YPOPOrgActivity, "status">>;
+  submittedCount?: number;
   unreviewedCount?: number;
   needsRevisionCount?: number;
 }
@@ -515,9 +517,10 @@ export function deriveYpopQualificationStatus(
       : ((params.participations ?? []).filter((p) => p.status === "needs_revision").length +
          (params.orgActivities ?? []).filter((a) => a.status === "needs_revision").length);
 
-  const submittedCount =
-    (params.participations ?? []).filter((p) => p.status && p.status !== "draft").length +
-    (params.orgActivities ?? []).length;
+  const submittedCount = typeof params.submittedCount === "number"
+    ? params.submittedCount
+    : (params.participations ?? []).filter((p) => p.status && p.status !== "draft").length +
+      (params.orgActivities ?? []).length;
 
   if (score >= threshold) {
     return "qualified";
@@ -1304,6 +1307,7 @@ export type BudgetRequest = {
   ypopEntryId?: string;
   isSeededSampleData?: boolean;
   seedBatch?: string | null;
+  publicRecordCode?: string;
 };
 
 export type AnnualBudgetAllocation = {
@@ -1432,6 +1436,7 @@ export type LiquidationReport = {
   revisionHistory?: Array<{ action: string; adminRemarks: string; changedAt: string; revisionDueAt?: string | null }>;
   isSeededSampleData?: boolean;
   seedBatch?: string | null;
+  publicRecordCode?: string;
 };
 
 export type PublicBudgetSource = {
@@ -2047,6 +2052,10 @@ export type LydoSeedState = {
   transparencyPosts: TransparencyPost[];
   complianceRemarks: ComplianceRemark[];
   notifications: NotificationRecord[];
+  /** Exact unread total for the authenticated user; the notification list itself is bounded. */
+  unreadNotificationCount?: number;
+  /** Exact server-computed organization dashboard metrics; never persisted locally. */
+  organizationDashboardSummary?: OrganizationPortalDashboardSummary | null;
   activityLogs: ActivityLog[];
   inquiries: InquiryRecord[];
   templates: TemplateRecord[];
@@ -2061,6 +2070,54 @@ export type LydoSeedState = {
   ypopDeletionReceipts?: YpopSubmissionDeletionReceipt[];
   customTemplateCategories?: string[];
   newsCategories?: NewsCategoryRecord[];
+};
+
+export type OrganizationPortalDashboardSummary = {
+  budgets: {
+    totalCount: number;
+    releasedCount: number;
+    underReviewCount: number;
+    revisionCount: number;
+    draftCount: number;
+    awaitingReleaseCount: number;
+    releasedAmount: number;
+    statusCounts: Record<string, number>;
+  };
+  liquidations: {
+    totalCount: number;
+    completedCount: number;
+    underReviewCount: number;
+    revisionCount: number;
+    overdueCount: number;
+    pendingUploadCount: number;
+    pendingActionCount: number;
+    nextDeadline: string | null;
+    statusCounts: Record<string, number>;
+  };
+  latestBudget: { id: string; activityTitle: string; status: string; adminRemarks: string | null; createdAt: string } | null;
+  latestBudgetRevision: { id: string; activityTitle: string; status: string; adminRemarks: string | null; createdAt: string } | null;
+  latestAwaitingReleaseBudget: { id: string; activityTitle: string; status: string; adminRemarks: string | null; createdAt: string } | null;
+  latestPendingBudget: { id: string; activityTitle: string; status: string; adminRemarks: string | null; createdAt: string } | null;
+  latestAttentionLiquidation: { id: string; budgetRequestId: string; activityTitle: string; status: string; remarks: string | null; deadlineAt: string | null; createdAt: string } | null;
+  latestUnsubmittedLiquidation: { id: string; budgetRequestId: string; activityTitle: string; status: string } | null;
+  latestUnderReviewLiquidation: { id: string; budgetRequestId: string; activityTitle: string; status: string; remarks: string | null; deadlineAt: string | null; createdAt: string } | null;
+};
+
+export type OrganizationPortalPage<T> = {
+  rows: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type OrganizationPortalPageOptions = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  statuses?: string[];
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
 };
 
 const nowIso = new Date().toISOString();

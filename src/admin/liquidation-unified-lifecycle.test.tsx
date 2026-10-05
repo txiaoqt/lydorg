@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/re
 import { MemoryRouter } from "react-router-dom";
 import AdminPortal from "./AdminPortal";
 import { LydoConnectProvider } from "@/lib/lydo-connect-store";
+import { queryClient } from "@/lib/query-client";
 import { statusLabelMap, isLiquidationOverdue } from "@/lib/lydo-connect-data";
 import {
   STATUS_LABEL_CONFIG,
@@ -17,6 +18,14 @@ import type {
   LiquidationReportFile,
   OrganizationProfile,
 } from "@/types";
+
+vi.mock("@/lib/supabase", () => ({
+  supabase: {
+    rpc: vi.fn().mockResolvedValue({ data: { unreadCount: 0, notifications: [] }, error: null }),
+    auth: { onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }), getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }) },
+  },
+  isSupabaseConfigured: () => true,
+}));
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
@@ -74,7 +83,31 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
     getAdminUnitsInSupabase: vi.fn().mockResolvedValue([]),
     fetchAllOrganizationRenewalsInSupabase: vi.fn().mockResolvedValue([]),
     fetchAllOrganizationAccreditationsInSupabase: vi.fn().mockResolvedValue([]),
-    loadAdminPortalSupabaseState: vi.fn().mockImplementation(() =>
+    fetchAdminPortalChangeVersions: vi.fn().mockResolvedValue({
+      registration: 0, renewals: 0, budgets: 0, liquidations: 0, ypop_city_led: 0, ypop_org_led: 0,
+    }),
+    fetchAdminReviewResourcePage: vi.fn().mockImplementation(({ resource }: { resource: "budgets" | "liquidations" }) => Promise.resolve({
+      rows: resource === "budgets"
+        ? currentBudgetRequests.map((request) => ({ request, organization: mockOrg }))
+        : currentLiquidationReports.map((report) => ({
+          report,
+          budgetRequest: currentBudgetRequests.find((request) => request.id === report.budgetRequestId)
+            ?? { id: report.budgetRequestId, organizationId: report.organizationId, activityTitle: "Activity" },
+          organization: mockOrg,
+        })),
+      totalCount: resource === "budgets" ? currentBudgetRequests.length : currentLiquidationReports.length,
+      page: 0, pageSize: 10, summary: {},
+    })),
+    fetchAdminBudgetRequestDetail: vi.fn().mockImplementation((id: string) => Promise.resolve({
+      budgetRequests: currentBudgetRequests.filter((request) => request.id === id),
+      budgetRequestFiles: currentBudgetFiles.filter((file) => file.budgetRequestId === id),
+    })),
+    fetchAdminLiquidationReportDetail: vi.fn().mockImplementation((id: string) => Promise.resolve({
+      liquidationReports: currentLiquidationReports.filter((report) => report.id === id),
+      liquidationReportFiles: currentLiquidationFiles.filter((file) => file.liquidationReportId === id),
+      budgetRequests: currentBudgetRequests.filter((request) => currentLiquidationReports.some((report) => report.id === id && report.budgetRequestId === request.id)),
+    })),
+    loadAdminPortalSectionState: vi.fn().mockImplementation(() =>
       Promise.resolve({
         budgetRequests: currentBudgetRequests,
         budgetRequestFiles: currentBudgetFiles,
@@ -151,6 +184,7 @@ window.HTMLElement.prototype.scrollIntoView =
 describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 30000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient.clear();
     writeAdminSession({
       id: "admin-1",
       username: "admin_test",
@@ -191,6 +225,8 @@ describe("Liquidation Report Unified Lifecycle & Automatic Overdue", { timeout: 
     await waitFor(() => {
       expect(screen.getByText("Back to Reports")).toBeDefined();
     });
+    const selectedFileName = currentLiquidationFiles[0]?.fileName;
+    if (selectedFileName) await screen.findAllByText(selectedFileName);
 
     return result;
   };

@@ -52,6 +52,8 @@ import {
   deleteYpopOrgActivityFileFromSupabase,
   deleteYpopOrgActivityFromSupabase,
   resolveSupabaseFileUrl,
+  loadOrganizationYpopOrgActivityFiles,
+  subscribeToOrganizationYpopFileChangesInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import {
   formatRevisionDeadline,
@@ -93,6 +95,7 @@ export interface YpopPpaModalProps {
   entry: YPOPEntry;
   activity: YPOPOrgActivity | null;
   orgActivityFiles: YPOPOrgActivityFile[];
+  loadFilesOnOpen?: boolean;
   organizationId: string;
   userId: string;
   onActivitySaved: (activity: YPOPOrgActivity) => void;
@@ -107,6 +110,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   entry,
   activity,
   orgActivityFiles,
+  loadFilesOnOpen = false,
   organizationId,
   userId,
   onActivitySaved,
@@ -115,6 +119,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   onFileDeleted,
 }) => {
   const [currentActivity, setCurrentActivity] = useState<YPOPOrgActivity | null>(activity);
+  const [loadedOrgActivityFiles, setLoadedOrgActivityFiles] = useState<YPOPOrgActivityFile[] | null>(null);
   const [activityName, setActivityName] = useState("");
   const [activityDate, setActivityDate] = useState("");
   const [venue, setVenue] = useState("");
@@ -186,6 +191,33 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const prevActivityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    setLoadedOrgActivityFiles(null);
+    if (!open || !loadFilesOnOpen || !currentActivity?.id || !organizationId) return;
+    let active = true;
+    void loadOrganizationYpopOrgActivityFiles(organizationId, currentActivity.id)
+      .then((files) => { if (active) setLoadedOrgActivityFiles(files); })
+      .catch((error) => { if (active) console.error("Unable to load YPOP PPA files:", error); });
+    return () => { active = false; };
+  }, [open, loadFilesOnOpen, organizationId, currentActivity?.id]);
+
+  useEffect(() => {
+    if (!open || !loadFilesOnOpen || !currentActivity?.id || !organizationId) return;
+    let active = true;
+    const refreshOpenPpaFiles = () => {
+      void loadOrganizationYpopOrgActivityFiles(organizationId, currentActivity.id)
+        .then((files) => { if (active) setLoadedOrgActivityFiles(files); })
+        .catch((error) => { if (active && import.meta.env.DEV) console.warn("Could not refresh opened YPOP PPA files.", error); });
+    };
+    return subscribeToOrganizationYpopFileChangesInSupabase(
+      organizationId, "org_led", currentActivity.id, refreshOpenPpaFiles,
+      (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization YPOP PPA-file channel subscribed.");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization YPOP PPA-file channel:", status, error ?? "");
+      },
+    );
+  }, [open, loadFilesOnOpen, organizationId, currentActivity?.id]);
+
+  useEffect(() => {
     const isOpening = open && !prevOpenRef.current;
     const isDifferentActivity = (activity?.id ?? null) !== prevActivityIdRef.current;
 
@@ -239,8 +271,9 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   }, [activity, open]);
 
   // Saved files for this activity from the store (excluding any marked for deletion during revision)
+  const activeOrgActivityFiles = loadedOrgActivityFiles ?? orgActivityFiles;
   const currentSavedFiles = currentActivity
-    ? orgActivityFiles.filter(
+    ? activeOrgActivityFiles.filter(
         (f) => f.orgActivityId === currentActivity.id && !pendingDeletedFileIds.includes(f.id)
       )
     : [];
@@ -372,6 +405,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     try {
       await deleteYpopOrgActivityFileFromSupabase(file.id, file.fileUrl);
       onFileDeleted(file.id);
+      setLoadedOrgActivityFiles((files) => files?.filter((saved) => saved.id !== file.id) ?? null);
       if (selectedFileId === file.id) {
         const remaining = currentSavedFiles.filter((f) => f.id !== file.id);
         setSelectedFileId(remaining[0]?.id ?? null);
@@ -594,10 +628,11 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       if (submitForReview || targetActivity.status === "draft") {
         if (pendingDeletedFileIds.length > 0) {
           for (const fileId of pendingDeletedFileIds) {
-            const fileObj = orgActivityFiles.find((f) => f.id === fileId);
+            const fileObj = activeOrgActivityFiles.find((f) => f.id === fileId);
             if (fileObj) {
               await deleteYpopOrgActivityFileFromSupabase(fileId, fileObj.fileUrl);
               onFileDeleted(fileId);
+              setLoadedOrgActivityFiles((files) => files?.filter((saved) => saved.id !== fileId) ?? null);
             }
           }
           setPendingDeletedFileIds([]);
@@ -614,6 +649,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
             localBlobUrlsRef.current.set(savedFile.id, blobUrl);
             localRawFilesRef.current.set(savedFile.id, file);
             onFileCreated(savedFile);
+            setLoadedOrgActivityFiles((files) => [...(files ?? orgActivityFiles), savedFile]);
             setSelectedFileId(savedFile.id);
           }
           setPendingFiles([]);

@@ -53,6 +53,7 @@ type LiquidationReportsTableProps = {
   onClassificationFilterChange: (value: string) => void;
   onReview: (reportId: string) => void;
   onOpenLinkedRequest: (requestId: string) => void;
+  serverPage?: { page: number; totalCount: number; onPageChange: (page: number) => void };
 };
 
 const STATUS_TABS: { value: LiquidationReportsStatusFilter; label: string }[] = [
@@ -173,7 +174,7 @@ export const LiquidationStatusLabel = ({
   );
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 function formatShortDate(value?: string | null) {
   if (!value) return "Pending";
@@ -200,8 +201,10 @@ export const LiquidationReportsTable = ({
   onClassificationFilterChange,
   onReview,
   onOpenLinkedRequest,
+  serverPage,
 }: LiquidationReportsTableProps) => {
   const [page, setPage] = useState(0);
+  const pageIndex = serverPage?.page ?? page;
 
   const barangayOptions = useMemo(
     () => getBarangayOptionsForDistrict(districtFilter),
@@ -216,15 +219,17 @@ export const LiquidationReportsTable = ({
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, totalPages - 1);
+  const totalPages = Math.max(1, Math.ceil((serverPage?.totalCount ?? reports.length) / PAGE_SIZE));
+  const clampedPage = Math.min(pageIndex, totalPages - 1);
   const pageItems = useMemo(
-    () => reports.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
-    [reports, clampedPage],
+    () => serverPage ? reports : reports.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
+    [reports, clampedPage, serverPage],
   );
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const value = Math.max(0, Math.min(next, totalPages - 1));
+    if (serverPage) serverPage.onPageChange(value);
+    else setPage(value);
   };
 
   return (
@@ -489,7 +494,7 @@ export const LiquidationReportsTable = ({
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-          <span className="text-text-default">{reports.length}</span> submissions
+          <span className="text-text-default">{serverPage?.totalCount ?? reports.length}</span> submissions
         </p>
         <div className="flex items-center gap-2">
           <button

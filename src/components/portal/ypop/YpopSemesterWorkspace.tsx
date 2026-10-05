@@ -58,6 +58,9 @@ export interface YpopSemesterWorkspaceProps {
   eventFiles: YPOPEventFile[];
   orgActivities: YPOPOrgActivity[];
   orgActivityFiles: YPOPOrgActivityFile[];
+  orgActivitySummary?: { totalCount: number; approvedCount: number; unreviewedCount: number; needsRevisionCount: number };
+  serverPaginatedOrgActivities?: boolean;
+  loadFilesOnOpen?: boolean;
   profile: OrganizationProfile | null;
   organizationId: string;
   userId: string;
@@ -88,6 +91,9 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
   eventFiles,
   orgActivities,
   orgActivityFiles,
+  orgActivitySummary,
+  serverPaginatedOrgActivities = false,
+  loadFilesOnOpen = false,
   profile,
   organizationId,
   userId,
@@ -122,7 +128,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
     : [];
 
   const approvedPpaCount = entry
-    ? getApprovedYpopOrgActivityCount(
+    ? orgActivitySummary?.approvedCount ?? getApprovedYpopOrgActivityCount(
         semesterOrgActivities,
         entry.id,
         entry.orgLedProjectCount ?? 0
@@ -151,6 +157,9 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
     entry,
     participations: semesterParticipations,
     orgActivities: semesterOrgActivities,
+    submittedCount: semesterParticipations.filter((item) => item.status !== "draft").length + (orgActivitySummary?.totalCount ?? semesterOrgActivities.length),
+    unreviewedCount: semesterParticipations.filter((item) => item.status === "pending_evaluation" || item.status === "pending_verification").length + (orgActivitySummary?.unreviewedCount ?? 0),
+    needsRevisionCount: semesterParticipations.filter((item) => item.status === "needs_revision").length + (orgActivitySummary?.needsRevisionCount ?? 0),
   });
   const isQualified = overallQualificationStatus === "qualified";
   const isNotQualified = overallQualificationStatus === "not_qualified";
@@ -384,12 +393,13 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
 
       {/* Active Tab Content */}
       {activeTab === "city-led" ? (
-        <YpopCityLedTab
+      <YpopCityLedTab
           period={period}
           activities={semesterActivities}
           initialActivityId={initialActivityId}
           participations={semesterParticipations}
-          eventFiles={eventFiles}
+        eventFiles={eventFiles}
+        loadFilesOnOpen={loadFilesOnOpen}
           organizationId={organizationId}
           isPeriodOpen={isPeriodOpen}
           canEditParticipation={canEditParticipation}
@@ -399,12 +409,15 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
           onFileDeleted={onEventFileDeleted}
         />
       ) : (
-        <YpopOrgLedTab
+      <YpopOrgLedTab
           onEnsureEntry={handleEnsureEntry}
           period={period}
           entry={entry}
           orgActivities={orgActivities}
-          orgActivityFiles={orgActivityFiles}
+        orgActivityFiles={orgActivityFiles}
+        serverPaginated={serverPaginatedOrgActivities}
+        totalCount={orgActivitySummary?.totalCount}
+        approvedCountOverride={orgActivitySummary?.approvedCount}
           organizationId={organizationId}
           userId={userId}
           formatShortPortalDate={formatShortPortalDate}

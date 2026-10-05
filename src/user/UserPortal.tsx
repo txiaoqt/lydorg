@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import JSZip from "jszip";
 import {
   AlertCircle,
@@ -105,8 +107,14 @@ import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortal
 import { UserPortalNewsWorkspaceView } from "@/components/portal/UserPortalNewsWorkspaceView";
 import { UserPortalRenewalWorkspaceView } from "@/components/portal/UserPortalRenewalWorkspaceView";
 import { UserPortalNotificationsWorkspaceView } from "@/components/portal/UserPortalNotificationsWorkspaceView";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
-import { computeBudgetWorkflowMetrics, computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
+import {
+  computeBudgetWorkflowMetrics,
+  computeBudgetWorkflowMetricsFromStatusCounts,
+  computeLiquidationWorkflowMetrics,
+  computeLiquidationWorkflowMetricsFromStatusCounts,
+} from "@/lib/workflow-metrics";
 import { UserPortalOrganizationProfileWorkspaceView } from "@/components/portal/UserPortalOrganizationProfileWorkspaceView";
 import { getPasigDistrictForBarangay } from "@/lib/pasig-districts";
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
@@ -208,10 +216,13 @@ import {
   getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import {
-  loadLydoConnectSupabaseState,
+  loadOrganizationPortalSectionState,
+  loadOrganizationActivityPage,
   loadOrganizationDocumentSubmissionState,
   loadOrganizationBudgetSubmissionState,
+  loadOrganizationBudgetRequestFiles,
   loadOrganizationLiquidationSubmissionState,
+  loadOrganizationLiquidationReportFiles,
   loadOrganizationYpopState,
   loadOrganizationInquiriesState,
   loadOrganizationNotificationsState,
@@ -247,7 +258,9 @@ import {
   markNotificationReadInSupabase,
   markAllNotificationsReadInSupabase,
   fetchOrganizationRenewalsInSupabase,
-  subscribeToOrganizationRenewalChangesInSupabase,
+  fetchOrganizationProfileInSupabase,
+  loadOrganizationInquiryPage,
+  subscribeToOrganizationStatusChangesInSupabase,
   userStartOrGetRenewalDraftInSupabase,
 } from "@/lib/lydo-connect-supabase";
 
@@ -655,6 +668,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [profilePreviewOpen, setProfilePreviewOpen] = useState(false);
   const [showProfileEditSection, setShowProfileEditSection] = useState(false);
   const [profileActivityModalOpen, setProfileActivityModalOpen] = useState(false);
+  const [profileActivityPage, setProfileActivityPage] = useState(1);
   const [profileEditorOpenSections, setProfileEditorOpenSections] = useState<string[]>([
     "basic-information",
     "location-classification",
@@ -742,6 +756,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
   const [inquiryListModalOpen, setInquiryListModalOpen] = useState(false);
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | "open" | "responded" | "closed">("all");
+  const [inquiryHistoryPage, setInquiryHistoryPage] = useState(1);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
@@ -794,12 +809,22 @@ export default function UserPortal({ section }: { section: string }) {
   const [renewalLoadError, setRenewalLoadError] = useState(false);
   const [startingRenewal, setStartingRenewal] = useState(false);
   const [selectedRenewalHistoryId, setSelectedRenewalHistoryId] = useState<string | null>(null);
+  const [renewalRealtimeVersion, setRenewalRealtimeVersion] = useState(0);
+  const mergeRemoteStateRef = useRef(mergeRemoteState);
+  useEffect(() => {
+    mergeRemoteStateRef.current = mergeRemoteState;
+  }, [mergeRemoteState]);
 
   useEffect(() => {
     if (!currentProfile?.id) {
       setOrganizationRenewals([]);
       setLoadingRenewals(false);
       setRenewalLoadError(false);
+      return;
+    }
+
+    if (section !== "dashboard" && section !== "organization-renewal" && section !== "renewals") {
+      setLoadingRenewals(false);
       return;
     }
 
@@ -829,48 +854,119 @@ export default function UserPortal({ section }: { section: string }) {
     };
 
     void refreshRenewals();
-    const unsubscribe = subscribeToOrganizationRenewalChangesInSupabase(currentProfile.id, () => {
-      void refreshRenewals();
+    const refreshOrganizationProfile = async () => {
+      if (!user?.id || cancelled) return;
+      try {
+        const profile = await fetchOrganizationProfileInSupabase(user.id);
+        if (!cancelled && profile?.id === currentProfile.id) {
+          mergeRemoteStateRef.current({ organizationProfiles: [profile] });
+        }
+      } catch (error) {
+        if (!cancelled && import.meta.env.DEV) console.warn("Could not refresh renewal accreditation details.", error);
+      }
+    };
+
+    const unsubscribe = subscribeToOrganizationStatusChangesInSupabase({
+      organizationId: currentProfile.id,
+      feature: "renewals",
+      onChange: () => {
+        void refreshRenewals();
+        setRenewalRealtimeVersion((version) => version + 1);
+      },
+      onOrganizationProfileChange: () => void refreshOrganizationProfile(),
+      onStatus: (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") {
+          console.debug("Organization renewal Realtime channel subscribed.");
+        } else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) {
+          console.warn("Organization renewal Realtime channel failed:", error ?? status);
+        }
+      },
     });
-    const refreshInterval = window.setInterval(() => void refreshRenewals(), 15000);
-    window.addEventListener("focus", refreshRenewals);
-    document.addEventListener("visibilitychange", refreshRenewals);
 
     return () => {
       cancelled = true;
       unsubscribe();
-      window.clearInterval(refreshInterval);
-      window.removeEventListener("focus", refreshRenewals);
-      document.removeEventListener("visibilitychange", refreshRenewals);
     };
-  }, [currentProfile?.id]);
-
-  const mergeRemoteStateRef = useRef(mergeRemoteState);
-  useEffect(() => {
-    mergeRemoteStateRef.current = mergeRemoteState;
-  }, [mergeRemoteState]);
+  }, [currentProfile?.id, section, user?.id]);
 
   useEffect(() => {
-    if (section === "budget-request") {
-      void loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id).then((remoteSnapshot) => {
-        if (remoteSnapshot) {
-          mergeRemoteStateRef.current(remoteSnapshot);
-        }
-      });
-    } else if (section === "ypop") {
-      void loadOrganizationYpopState(undefined, currentProfile?.id).then((remoteSnapshot) => {
-        if (remoteSnapshot) {
-          mergeRemoteStateRef.current(remoteSnapshot);
-        }
-      });
-    } else if (section === "notifications") {
-      void loadOrganizationNotificationsState().then((remoteSnapshot) => {
-        if (remoteSnapshot) {
-          mergeRemoteStateRef.current(remoteSnapshot);
-        }
-      });
+    if (!["document-submission", "budget-request"].includes(section) || !currentProfile?.id || !user?.id) return;
+    let cancelled = false;
+    let refreshInProgress = false;
+    const refreshDocuments = async () => {
+      if (cancelled || refreshInProgress) return;
+      refreshInProgress = true;
+      try {
+        const [result, refreshedProfile] = await Promise.all([
+          loadOrganizationDocumentSubmissionState(user.id, currentProfile.id),
+          fetchOrganizationProfileInSupabase(user.id),
+        ]);
+        if (!cancelled) mergeRemoteStateRef.current({
+          ...(result ?? {}),
+          ...(refreshedProfile?.id === currentProfile.id ? { organizationProfiles: [refreshedProfile] } : {}),
+        });
+      } catch (error) {
+        if (!cancelled && import.meta.env.DEV) console.warn("Could not refresh registration documents from Realtime.", error);
+      } finally {
+        refreshInProgress = false;
+      }
+    };
+    const unsubscribe = subscribeToOrganizationStatusChangesInSupabase({
+      organizationId: currentProfile.id,
+      feature: "registration",
+      submissionId: userRegistrationSubmission?.id ?? null,
+      onChange: () => void refreshDocuments(),
+      onStatus: (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization registration status channel subscribed.");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization registration status channel:", status, error ?? "");
+      },
+    });
+    return () => { cancelled = true; unsubscribe(); };
+  }, [section, currentProfile?.id, user?.id, userRegistrationSubmission?.id]);
+
+  const ypopRegistrationProfileQuery = useQuery({
+    queryKey: ["user", user?.id, currentProfile?.id, "ypop-registration-profile"],
+    queryFn: () => fetchOrganizationProfileInSupabase(user!.id),
+    enabled: Boolean(supabase && section === "ypop" && user?.id && currentProfile?.id),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
+  const ypopRegistrationProfileRefetch = ypopRegistrationProfileQuery.refetch;
+  useEffect(() => {
+    const refreshedProfile = ypopRegistrationProfileQuery.data;
+    if (section === "ypop" && refreshedProfile?.id === currentProfile?.id) {
+      mergeRemoteStateRef.current({ organizationProfiles: [refreshedProfile] });
     }
-  }, [section, currentProfile?.id]);
+  }, [section, currentProfile?.id, ypopRegistrationProfileQuery.data]);
+  useEffect(() => {
+    if (!supabase || section !== "ypop" || !currentProfile?.id || !user?.id) return;
+    return subscribeToOrganizationStatusChangesInSupabase({
+      organizationId: currentProfile.id,
+      feature: "registration",
+      onChange: () => { void ypopRegistrationProfileRefetch(); },
+    });
+  }, [section, currentProfile?.id, user?.id, ypopRegistrationProfileRefetch]);
+
+  const [budgetPrerequisitesLoad, setBudgetPrerequisitesLoad] = useState<{ organizationId: string; error: boolean } | null>(null);
+  useEffect(() => {
+    if (!currentProfile?.id || !user?.id) return;
+    let cancelled = false;
+    setBudgetPrerequisitesLoad(null);
+    void loadOrganizationPortalSectionState(section, user.id, currentProfile.id)
+      .then((remoteSnapshot) => {
+        if (!cancelled && remoteSnapshot) {
+          mergeRemoteStateRef.current(remoteSnapshot);
+          if (section === "budget-request") setBudgetPrerequisitesLoad({ organizationId: currentProfile.id, error: false });
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error(`Failed to load ${section} portal data:`, error);
+          if (section === "budget-request") setBudgetPrerequisitesLoad({ organizationId: currentProfile.id, error: true });
+        }
+      });
+    return () => { cancelled = true; };
+  }, [currentProfile?.id, section, user?.id]);
 
   useEffect(() => {
     const inquiryId = searchParams.get("inquiryId");
@@ -1369,6 +1465,20 @@ export default function UserPortal({ section }: { section: string }) {
     }
     return inquiryHistory;
   }, [inquiryHistory, inquiryStatusFilter]);
+  const inquiryStatusesByFilter = {
+    all: [],
+    open: ["pending_review", "pending", "open", "submitted"],
+    responded: ["reviewed", "responded", "in_review"],
+    closed: ["closed", "resolved"],
+  } as const;
+  const inquiryHistoryPageQuery = useQuery({
+    queryKey: ["user", currentProfile?.id ?? "", "inquiry-page-modal", inquiryHistoryPage, inquiryStatusesByFilter[inquiryStatusFilter]],
+    queryFn: () => loadOrganizationInquiryPage(currentProfile!.id, { page: inquiryHistoryPage, pageSize: 20, statuses: [...inquiryStatusesByFilter[inquiryStatusFilter]] }),
+    enabled: Boolean(inquiryListModalOpen && currentProfile?.id),
+    placeholderData: (previous) => previous,
+  });
+  const modalInquiryRows = inquiryHistoryPageQuery.data?.rows ?? filteredInquiries;
+  const modalInquiryTotalCount = inquiryHistoryPageQuery.data?.totalCount ?? filteredInquiries.length;
   const ypopEventParticipations = useMemo(
     () =>
       state.ypopEventParticipations
@@ -1461,7 +1571,8 @@ export default function UserPortal({ section }: { section: string }) {
     ypopEligibility: budgetEligibility,
   });
   const ypopWorkflowEligibility = resolveYpopWorkflowEligibility({
-    profile: currentProfile,
+    profile: section === "ypop" && ypopRegistrationProfileQuery.data?.id === currentProfile?.id
+      ? ypopRegistrationProfileQuery.data : currentProfile,
     requiredTemplates: templateDocuments,
     documentFiles: docFiles,
   });
@@ -1617,6 +1728,14 @@ export default function UserPortal({ section }: { section: string }) {
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
     [currentProfile?.id, state.activityLogs],
   );
+  const activityHistoryPageQuery = useQuery({
+    queryKey: ["user", currentProfile?.id ?? "", "activity-page-modal", profileActivityPage],
+    queryFn: () => loadOrganizationActivityPage(currentProfile!.id, { page: profileActivityPage, pageSize: 20 }),
+    enabled: Boolean(profileActivityModalOpen && currentProfile?.id),
+    placeholderData: (previous) => previous,
+  });
+  const activityHistoryRows = activityHistoryPageQuery.data?.rows ?? globalActivityLogEntries;
+  const activityHistoryTotalCount = activityHistoryPageQuery.data?.totalCount ?? globalActivityLogEntries.length;
   const profileRecentYpopEvents = ypopEventParticipations.slice(0, 4);
   const focusProfileTabSection = (
     tab:
@@ -2694,6 +2813,7 @@ export default function UserPortal({ section }: { section: string }) {
       upsertOrganizationProfile(savedProfile);
       setProfileDraft(savedProfile);
       setIsProfileDraftDirty(false);
+      setShowProfileEditSection(false);
       notifyAdmin({
         title: isAlreadyVerified
           ? "Organization profile updated"
@@ -3021,8 +3141,20 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
-    const files = budgetRequestFilesByBudgetId.get(budgetRequestId);
-    const filesList = Array.isArray(files) ? files : files ? [files] : [];
+    let filesList: Awaited<ReturnType<typeof loadOrganizationBudgetRequestFiles>>;
+    try {
+      filesList = await loadOrganizationBudgetRequestFiles(
+        existing.organizationId || currentProfile?.id || profile.id,
+        budgetRequestId,
+      );
+    } catch (error) {
+      toast({
+        title: "Unable to verify proposal file",
+        description: error instanceof Error ? error.message : "Please try again before submitting your revised request.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!filesList.length) {
       toast({
         title: "Attach required document",
@@ -3259,8 +3391,6 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     const stagedFile = liquidationFileDraftByReportId[report.id];
-    const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
-
     if (stagedFile) {
       const uploadError = await validatePdfUpload(stagedFile);
       if (uploadError) {
@@ -3276,6 +3406,10 @@ export default function UserPortal({ section }: { section: string }) {
     setSavingLiquidationDraftId(report.id);
     try {
       if (stagedFile) {
+        const existingFiles = await loadOrganizationLiquidationReportFiles(
+          currentProfile?.id || profile.id,
+          report.id,
+        );
         if (existingFiles.length > 0) {
           await Promise.all(
             existingFiles.map((existingFile) =>
@@ -3332,8 +3466,22 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     const stagedFile = liquidationFileDraftByReportId[report.id];
-    const existingFiles = liquidationFilesByReportId.get(report.id) ?? [];
     const isNeedsRevision = report.status === "needs_revision" || report.status === "rejected_red";
+
+    let existingFiles: LiquidationReportFile[];
+    try {
+      existingFiles = await loadOrganizationLiquidationReportFiles(
+        currentProfile?.id || profile.id,
+        report.id,
+      );
+    } catch (error) {
+      toast({
+        title: "Unable to verify liquidation file",
+        description: error instanceof Error ? error.message : "Please try again before submitting the report.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!stagedFile && existingFiles.length === 0) {
       toast({
@@ -3544,11 +3692,16 @@ export default function UserPortal({ section }: { section: string }) {
         const dashboardDocumentHelper = templateDocuments.length > 0
           ? `${approvedDashboardDocuments} of ${templateDocuments.length} approved`
           : "No requirements";
-        const budgetMetrics = computeBudgetWorkflowMetrics(budgetRequests);
+        const dashboardSummary = state.organizationDashboardSummary;
+        const budgetMetrics = dashboardSummary
+          ? computeBudgetWorkflowMetricsFromStatusCounts(dashboardSummary.budgets.statusCounts, dashboardSummary.budgets.totalCount)
+          : computeBudgetWorkflowMetrics(budgetRequests);
         const budgetPercent = budgetMetrics.completionPercent;
         const budgetOverviewLabel = budgetMetrics.overviewLabel;
 
-        const liquidationMetrics = computeLiquidationWorkflowMetrics(liquidationReports);
+        const liquidationMetrics = dashboardSummary
+          ? computeLiquidationWorkflowMetricsFromStatusCounts(dashboardSummary.liquidations.statusCounts, dashboardSummary.liquidations.totalCount)
+          : computeLiquidationWorkflowMetrics(liquidationReports);
         const liquidationPercent = liquidationMetrics.completionPercent;
         const liquidationOverviewLabel = liquidationMetrics.overviewLabel;
         const dashboardTasks: Array<{
@@ -3615,9 +3768,7 @@ export default function UserPortal({ section }: { section: string }) {
           });
         }
 
-        const releasedBudgets = budgetRequests.filter(
-          (b) => b.status === "budget_released",
-        );
+        const releasedBudgets = budgetRequests.filter((b) => b.status === "budget_released");
         const revisionBudgets = budgetRequests.filter((b) => b.status === "needs_revision");
         const awaitingReleaseBudgets = budgetRequests.filter((b) =>
           ["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted"].includes(String(b.status)),
@@ -3641,8 +3792,20 @@ export default function UserPortal({ section }: { section: string }) {
               report.status === "overdue" ||
               report.status === "rejected_red"),
         );
+        const summarizedAttention = dashboardSummary?.latestAttentionLiquidation;
+        const latestLiquidationNeedsRevision = summarizedAttention &&
+          ["needs_revision", "overdue", "rejected_red"].includes(summarizedAttention.status)
+          ? summarizedAttention
+          : liquidationNeedingRevision?.report;
 
-        const unsubmittedLiquidation = releasedBudgetsWithLiquidation.find(
+        const summarizedUnsubmittedReport = summarizedAttention && ["not_started", "draft"].includes(summarizedAttention.status)
+          ? summarizedAttention
+          : null;
+        const unsubmittedLiquidation = dashboardSummary?.latestUnsubmittedLiquidation
+          ? { budget: dashboardSummary.latestUnsubmittedLiquidation, report: null }
+          : summarizedUnsubmittedReport
+            ? { budget: { id: summarizedUnsubmittedReport.budgetRequestId, activityTitle: summarizedUnsubmittedReport.activityTitle }, report: summarizedUnsubmittedReport }
+            : releasedBudgetsWithLiquidation.find(
           ({ report }) =>
             !report ||
             report.status === "not_started" ||
@@ -3650,7 +3813,9 @@ export default function UserPortal({ section }: { section: string }) {
             report.status === "pending_activity_completion",
         );
 
-        const underReviewLiquidation = releasedBudgetsWithLiquidation.find(
+        const underReviewLiquidation = dashboardSummary?.latestUnderReviewLiquidation
+          ? { budget: { id: dashboardSummary.latestUnderReviewLiquidation.budgetRequestId }, report: dashboardSummary.latestUnderReviewLiquidation }
+          : releasedBudgetsWithLiquidation.find(
           ({ report }) =>
             report &&
             (report.status === "submitted" ||
@@ -3659,20 +3824,20 @@ export default function UserPortal({ section }: { section: string }) {
               report.status === "approved_for_ftf_green"),
         );
 
-        if (liquidationNeedingRevision?.report) {
+        if (latestLiquidationNeedsRevision) {
           dashboardTasks.push({
-            key: `liquidation-revision-${liquidationNeedingRevision.report.id}`,
+            key: `liquidation-revision-${latestLiquidationNeedsRevision.id}`,
             title: "Revise your liquidation report",
             description:
-              liquidationNeedingRevision.report.remarks?.trim() ||
+              latestLiquidationNeedsRevision.remarks?.trim() ||
               "The admin requested corrections to your liquidation report. Review remarks and resubmit.",
             ctaLabel: "Open Liquidation",
             onClick: () => navigate(userRouteMap["liquidation-reporting"]),
             icon: AlertTriangle,
             tone: "bg-orange-500/10 text-orange-600",
           });
-        } else if (revisionBudgets.length > 0) {
-          const b = revisionBudgets[0];
+        } else if ((dashboardSummary?.budgets.revisionCount ?? revisionBudgets.length) > 0) {
+          const b = dashboardSummary?.latestBudgetRevision ?? revisionBudgets[0];
           dashboardTasks.push({
             key: `budget-revision-${b.id}`,
             title: "Revise your budget request",
@@ -3695,7 +3860,7 @@ export default function UserPortal({ section }: { section: string }) {
             icon: CalendarDays,
             tone: "bg-primary-soft text-primary",
           });
-        } else if (awaitingReleaseBudgets.length > 0) {
+        } else if ((dashboardSummary?.budgets.awaitingReleaseCount ?? awaitingReleaseBudgets.length) > 0) {
           dashboardTasks.push({
             key: "budget-release-wait",
             title: "Awaiting Fund Release",
@@ -3706,7 +3871,7 @@ export default function UserPortal({ section }: { section: string }) {
             icon: ClipboardList,
             tone: "bg-primary/10 text-primary",
           });
-        } else if (pendingBudgets.length > 0) {
+        } else if (dashboardSummary?.latestPendingBudget || pendingBudgets.length > 0) {
           dashboardTasks.push({
             key: "budget-review",
             title: "Track your budget request",
@@ -4025,6 +4190,7 @@ export default function UserPortal({ section }: { section: string }) {
             currentProfile={currentProfile}
             userRenewalState={userRenewalState}
             activeRenewal={userRenewalState.activeRenewal ?? latestApprovedRenewal}
+            renewalSyncVersion={renewalRealtimeVersion}
             navigate={navigate}
             userRouteMap={userRouteMap}
             openPreview={openPreview}
@@ -4081,6 +4247,7 @@ export default function UserPortal({ section }: { section: string }) {
             currentProfile={currentProfile}
             userRenewalState={userRenewalState}
             activeRenewal={selectedRenewal}
+            renewalSyncVersion={renewalRealtimeVersion}
             approvedRenewals={approvedRenewals}
             onActiveRenewalChange={(renewal) => setSelectedRenewalHistoryId(renewal.id)}
             renewalActivityLogs={renewalActivityLogs}
@@ -4105,8 +4272,16 @@ export default function UserPortal({ section }: { section: string }) {
         );
       }
       case "budget-request":
+        if (supabase && budgetPrerequisitesLoad?.organizationId !== currentProfile?.id) {
+          return <p className="p-4 text-sm text-muted-foreground" role="status">Checking budget eligibility…</p>;
+        }
+        if (supabase && budgetPrerequisitesLoad?.error) {
+          return <p className="p-4 text-sm text-destructive" role="alert">Unable to load budget eligibility. Please reopen Budget Requests to retry.</p>;
+        }
         return (
           <UserPortalBudgetWorkspaceView
+            organizationId={currentProfile?.id ?? ""}
+            organizationDashboardSummary={state.organizationDashboardSummary}
             budgetWorkflowEligibility={budgetWorkflowEligibility}
             budgetRequests={budgetRequests}
             budgetFilesByRequestId={budgetRequestFilesByBudgetId}
@@ -4160,6 +4335,8 @@ export default function UserPortal({ section }: { section: string }) {
       case "liquidation-reporting":
         return (
           <UserPortalLiquidationWorkspaceView
+            organizationId={currentProfile?.id ?? ""}
+            organizationDashboardSummary={state.organizationDashboardSummary}
             liquidationWorkflowEligibility={liquidationWorkflowEligibility}
             budgetWorkflowEligibility={budgetWorkflowEligibility}
             liquidationReports={liquidationReports}
@@ -4199,8 +4376,20 @@ export default function UserPortal({ section }: { section: string }) {
           />
         );
       case "ypop":
+        if (supabase && ypopRegistrationProfileQuery.isPending) {
+          return <p className="p-4 text-sm text-muted-foreground" role="status">Checking organization verification…</p>;
+        }
+        if (supabase && ypopRegistrationProfileQuery.isError) {
+          return (
+            <div className="space-y-3 p-4">
+              <p className="text-sm text-destructive" role="alert">Unable to check organization verification.</p>
+              <Button variant="outline" onClick={() => { void ypopRegistrationProfileQuery.refetch(); }}>Retry</Button>
+            </div>
+          );
+        }
         return (
           <UserPortalYPOPWorkspaceView
+            loadRemoteData
             ypopWorkflowEligibility={ypopWorkflowEligibility}
             currentProfile={currentProfile}
             ypopPeriods={state.ypopPeriods}
@@ -4261,6 +4450,8 @@ export default function UserPortal({ section }: { section: string }) {
         return (
           <UserPortalNotificationsWorkspaceView
             notifications={userNotifications}
+            userId={user?.id ?? ""}
+            unreadNotificationCount={state.unreadNotificationCount ?? unreadNotifications.length}
             onMarkRead={handleMarkNotificationRead}
             onMarkAllRead={() => void handleMarkAllNotificationsRead()}
             navigate={navigate}
@@ -4327,6 +4518,11 @@ export default function UserPortal({ section }: { section: string }) {
     savingBudgetRequest,
     savingProfile,
     section,
+    budgetPrerequisitesLoad,
+    ypopRegistrationProfileQuery.isPending,
+    ypopRegistrationProfileQuery.isError,
+    ypopRegistrationProfileQuery.data,
+    ypopRegistrationProfileQuery.refetch,
     state.newsReleases,
     state.notifications,
     state.inquiries,
@@ -5131,15 +5327,24 @@ export default function UserPortal({ section }: { section: string }) {
 
       <OrganizationActivityHistoryModal
         open={profileActivityModalOpen}
-        onOpenChange={setProfileActivityModalOpen}
+        onOpenChange={(open) => {
+          setProfileActivityModalOpen(open);
+          if (open) setProfileActivityPage(1);
+        }}
         description="Complete timeline of document uploads, approvals, budget requests, liquidation updates, and inquiries for your organization."
-        activities={globalActivityLogEntries.map((log) => ({
+        activities={activityHistoryRows.map((log) => ({
           id: log.id,
           message: formatActivityActionLabel(log.action || log.description, log.metadata as Record<string, unknown>),
           note: (log as any).adminRemarks?.trim() || undefined,
           timestamp: log.createdAt,
           timestampLabel: formatDateTimeLabel(log.createdAt),
         }))}
+        totalCount={activityHistoryTotalCount}
+        page={activityHistoryPageQuery.data?.page ?? profileActivityPage}
+        pageSize={activityHistoryPageQuery.data?.pageSize ?? 20}
+        totalPages={activityHistoryPageQuery.data?.totalPages ?? 1}
+        loading={activityHistoryPageQuery.isFetching}
+        onPageChange={setProfileActivityPage}
         emptyDescription="Organization activities and admin review actions will appear here."
       />
       <Dialog
@@ -5376,16 +5581,16 @@ export default function UserPortal({ section }: { section: string }) {
           <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/60 overflow-x-auto [scrollbar-width:none] shrink-0">
             {(
               [
-                { key: "all", label: "All", count: inquiryCounts.all },
-                { key: "open", label: "Open", count: inquiryCounts.open },
-                { key: "responded", label: "Responded", count: inquiryCounts.responded },
-                { key: "closed", label: "Closed", count: inquiryCounts.closed },
+                { key: "all", label: "All" },
+                { key: "open", label: "Open" },
+                { key: "responded", label: "Responded" },
+                { key: "closed", label: "Closed" },
               ] as const
             ).map((opt) => (
               <button
                 key={opt.key}
                 type="button"
-                onClick={() => setInquiryStatusFilter(opt.key)}
+                onClick={() => { setInquiryHistoryPage(1); setInquiryStatusFilter(opt.key); }}
                 className={cn(
                   "flex-1 min-w-[70px] rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer text-center active:scale-[0.98]",
                   inquiryStatusFilter === opt.key
@@ -5393,19 +5598,19 @@ export default function UserPortal({ section }: { section: string }) {
                     : "text-muted-foreground hover:text-foreground hover:bg-card/40",
                 )}
               >
-                {opt.label} ({opt.count})
+                {opt.label}
               </button>
             ))}
           </div>
 
           {/* Inquiries List or Empty State in Stable Content Viewport */}
           <div className="flex-1 min-h-0 flex flex-col">
-            {filteredInquiries.length > 0 ? (
+            {modalInquiryRows.length > 0 ? (
               <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
-                {filteredInquiries.map((inquiry) => (
+                {modalInquiryRows.map((inquiry) => (
                   <DashboardInquiryItem
                     key={inquiry.id}
-                    code={getInquiryReferenceCode(inquiry, state.inquiries)}
+                  code={getInquiryReferenceCode(inquiry, modalInquiryRows)}
                     title={inquiry.subject || "General Inquiry"}
                     timestamp={formatDateTimeLabel(inquiry.createdAt)}
                     status={<PortalStatusBadge status={inquiry.status} />}
@@ -5445,6 +5650,14 @@ export default function UserPortal({ section }: { section: string }) {
                 )}
               </div>
             )}
+            <OrganizationHistoryPagination
+              page={inquiryHistoryPage}
+              totalPages={inquiryHistoryPageQuery.data?.totalPages ?? 1}
+              totalCount={modalInquiryTotalCount}
+              pageSize={20}
+              loading={inquiryHistoryPageQuery.isFetching}
+              onPageChange={setInquiryHistoryPage}
+            />
           </div>
         </DialogContent>
       </Dialog>

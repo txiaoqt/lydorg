@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatActivityActionLabel } from "@/components/activity/RecentActivityPreview";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 
 export type ActivityTimelineItem = {
   id: string;
@@ -22,6 +23,12 @@ export interface OrganizationActivityHistoryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activities: ActivityTimelineItem[];
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  loading?: boolean;
+  onPageChange?: (page: number) => void;
   description?: string;
   emptyDescription?: string;
   onViewFullAuditTimeline?: () => void;
@@ -141,6 +148,12 @@ export const OrganizationActivityHistoryModal: React.FC<OrganizationActivityHist
   open,
   onOpenChange,
   activities = [],
+  totalCount = activities.length,
+  page = 1,
+  pageSize = 20,
+  totalPages = 1,
+  loading = false,
+  onPageChange,
   description,
   emptyDescription = "Profile changes and admin review actions will appear here.",
 }) => {
@@ -185,7 +198,7 @@ export const OrganizationActivityHistoryModal: React.FC<OrganizationActivityHist
               Organization Activity History
             </DialogTitle>
             <span className="text-[10px] font-mono font-medium text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-full border border-border/60 shrink-0">
-              {activities.length} {activities.length === 1 ? "event" : "events"}
+              {totalCount} {totalCount === 1 ? "event" : "events"}
             </span>
           </div>
 
@@ -196,7 +209,7 @@ export const OrganizationActivityHistoryModal: React.FC<OrganizationActivityHist
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80 mt-1.5 pt-1.5 border-t border-border/40">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span className="truncate">
-              {activities.length} recorded event{activities.length === 1 ? "" : "s"} · Official Y-TRACE Record
+              {totalCount} recorded event{totalCount === 1 ? "" : "s"} · Official Y-TRACE Record
             </span>
           </div>
         </DialogHeader>
@@ -287,6 +300,18 @@ export const OrganizationActivityHistoryModal: React.FC<OrganizationActivityHist
             </div>
           )}
         </div>
+        {onPageChange ? (
+          <div className="border-t border-border/60 px-5 pb-4 sm:px-6 shrink-0">
+            <OrganizationHistoryPagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={totalCount}
+              totalPages={totalPages}
+              loading={loading}
+              onPageChange={onPageChange}
+            />
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

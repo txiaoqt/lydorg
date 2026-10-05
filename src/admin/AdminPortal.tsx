@@ -88,6 +88,7 @@ import { CityActivityAnnouncementDialog } from "@/admin/components/CityActivityA
 import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
 import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
+import { AdminRenewalDocumentPreview, preserveOrSelectFirstRenewalReviewFile } from "@/admin/components/AdminRenewalDocumentPreview";
 import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
 import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
 import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
@@ -119,7 +120,7 @@ import {
   RELEASED_BUDGET_STATUSES,
 } from "@/lib/budget-monitoring-filters";
 import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
-import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase } from "@/lib/lydo-connect-supabase";
+import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase, fetchRegistrationRequiredDocumentTypesInSupabase, fetchRenewalRequiredDocumentTypesInSupabase } from "@/lib/lydo-connect-supabase";
 import {
   LiquidationReportsTable,
   LiquidationStatusLabel,
@@ -171,6 +172,8 @@ import {
   createNewsReleaseInSupabase,
   createTransparencyPostInSupabase,
   createTemplateRecordInSupabase,
+  createAdminTemplateCategoryInSupabase,
+  deleteAdminTemplateCategoryInSupabase,
   deleteNewsReleaseInSupabase,
   deleteNewsReleasePreviewImageFromSupabase,
   deleteTransparencyPostInSupabase,
@@ -179,8 +182,8 @@ import {
   reactivateTemplateRecordInSupabase,
   updateTemplateCategoryInSupabase,
   permanentlyDeleteTemplateRecordInSupabase,
-  loadAdminPortalSupabaseState,
-  loadAdminYpopState,
+  loadAdminPortalSectionState,
+  loadAdminBudgetMonitoringPeriod,
   resolveSupabaseFileUrl,
   submitDocumentReviewBatchToSupabase,
   updateDocumentSubmissionFileReviewInSupabase,
@@ -216,9 +219,6 @@ import {
   resendAdminInviteInSupabase,
   updateRolePermissionsInSupabase,
   DuplicateUsernameError,
-  fetchAllOrganizationRenewalsInSupabase,
-  fetchAllOrganizationAccreditationsInSupabase,
-  fetchRenewalPacketInSupabase,
   adminApproveRenewalInSupabase,
   adminRequestRenewalRevisionInSupabase,
   adminRejectRenewalInSupabase,
@@ -228,11 +228,28 @@ import {
   fetchAdminRegistrationDetail,
   fetchAdminRecentNotifications,
   fetchAllAdminActivityLogs,
+  fetchAdminReviewResourcePage,
+  fetchAdminBudgetRequestDetail,
+  fetchAdminLiquidationReportDetail,
+  fetchAdminPortalChangeVersions,
+  getChangedAdminPortalResources,
+  fetchAdminRenewalQueuePage,
+  fetchAdminRenewalReviewContext,
+  fetchAdminYpopValidationPeriods,
+  fetchAdminYpopPeriodCityActivities,
+  fetchAdminYpopPeriodSubmissionPage,
+  fetchAdminYpopEntryReviewDetail,
+  fetchAdminYpopReviewFiles,
+  type AdminBudgetReviewRow,
+  type AdminLiquidationReviewRow,
+  type AdminPortalChangeResource,
+  type AdminPortalChangeVersions,
+  type AdminYpopSubmissionRow,
   type AdminPortalRegistrationListRow,
   type OrgTransactionalEmailEventType,
 } from "@/lib/lydo-connect-supabase";
 import { validateUrn } from "@/lib/urn-registration";
-import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile } from "@/lib/lydo-connect-data";
+import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile, OrganizationProfile, LiquidationReport } from "@/lib/lydo-connect-data";
 
 const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
   <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
@@ -757,7 +774,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const currentAdminRoleCode = user?.roleCode ?? readAdminSession()?.roleCode;
   const isSuperAdmin = currentAdminRoleCode === "super_admin";
 
-  const { state, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
+  const { state: sharedState, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
     useLydoConnect();
   const mergeRemoteStateRef = useRef(mergeRemoteState);
   useEffect(() => {
@@ -776,10 +793,8 @@ function AdminPortalContent({ section }: { section: string }) {
 
   const [adminRenewals, setAdminRenewals] = useState<OrganizationRenewalRecord[]>([]);
   const [adminAccreditations, setAdminAccreditations] = useState<OrganizationAccreditationRecord[]>([]);
-  const [renewalRequiredDocuments, setRenewalRequiredDocuments] = useState<TemplateRecord[]>([]);
-  const [localRenewalFiles, setLocalRenewalFiles] = useState<SubmissionFile[]>([]);
+
   const renewalVerificationAttemptsRef = useRef(new Set<string>());
-  const [renewalPacketLoading, setRenewalPacketLoading] = useState(false);
   const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
   const [templateModalMode, setTemplateModalMode] = useState<"create" | "edit" | "delete" | null>(null);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
@@ -978,8 +993,36 @@ function AdminPortalContent({ section }: { section: string }) {
   const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(() =>
     createDefaultBudgetMonitoringFilters(Number(getEffectiveSystemSetting("budget.default_fiscal_year") || new Date().getFullYear())),
   );
+  const monitoringPermissionKey = [...(user?.permissionCodes ?? [])].sort().join(",");
+  const monitoringQueryKey = useMemo(() => ["admin", "budget-monitoring-period", user?.id, currentAdminRoleCode,
+    monitoringPermissionKey, section === "budget-monitoring" ? budgetMonitoringFilters.fiscalPeriod : "inactive"],
+    [user?.id, currentAdminRoleCode, monitoringPermissionKey, section, budgetMonitoringFilters.fiscalPeriod]);
+  const monitoringQuery = useQuery({
+    queryKey: monitoringQueryKey,
+    queryFn: ({ signal }) => loadAdminBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod, signal),
+    enabled: Boolean(supabase && user && section === "budget-monitoring"),
+    staleTime: 30_000,
+    gcTime: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  useEffect(() => {
+    if (section !== "budget-monitoring") return;
+    return () => { void queryClient.cancelQueries({ queryKey: monitoringQueryKey, exact: true }); };
+  }, [section, monitoringQueryKey, queryClient]);
+  // Reporting rows stay in this page cache; they never hydrate shared collections.
+  const state = useMemo(() => section === "budget-monitoring" && supabase ? {
+    ...sharedState,
+    organizationProfiles: monitoringQuery.data?.organizationProfiles ?? [],
+    budgetRequests: monitoringQuery.data?.budgetRequests ?? [],
+    liquidationReports: monitoringQuery.data?.liquidationReports ?? [],
+    budgetRequestFiles: [],
+    liquidationReportFiles: [],
+  } : sharedState, [section, sharedState, monitoringQuery.data]);
+
   const [budgetInsightsExpanded, setBudgetInsightsExpanded] = useState(false);
   const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
+  const [budgetReviewPage, setBudgetReviewPage] = useState(0);
+  const [debouncedBudgetReviewSearch, setDebouncedBudgetReviewSearch] = useState("");
   const [budgetRequestsSemesterFilter, setBudgetRequestsSemesterFilter] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const param = new URLSearchParams(window.location.search).get("semester");
@@ -1008,6 +1051,8 @@ function AdminPortalContent({ section }: { section: string }) {
   const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
   const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
   const [liquidationReportsSearch, setLiquidationReportsSearch] = useState("");
+  const [liquidationReviewPage, setLiquidationReviewPage] = useState(0);
+  const [debouncedLiquidationReviewSearch, setDebouncedLiquidationReviewSearch] = useState("");
   const [liquidationReportsStatusFilter, setLiquidationReportsStatusFilter] = useState<LiquidationReportsStatusFilter>("all");
   const [liquidationReportsDistrictFilter, setLiquidationReportsDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [liquidationReportsBarangayFilter, setLiquidationReportsBarangayFilter] = useState("all");
@@ -1027,6 +1072,8 @@ function AdminPortalContent({ section }: { section: string }) {
   const [adminListPage, setAdminListPage] = useState(0);
   const [adminListRefreshKey, setAdminListRefreshKey] = useState(0);
   const [renewalSearch, setRenewalSearch] = useState("");
+  const [debouncedRenewalSearch, setDebouncedRenewalSearch] = useState("");
+  const [renewalReviewPage, setRenewalReviewPage] = useState(0);
   const [renewalStatusFilter, setRenewalStatusFilter] = useState<RenewalStatusFilter>("all");
   const [renewalDistrictFilter, setRenewalDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [renewalBarangayFilter, setRenewalBarangayFilter] = useState("all");
@@ -1058,6 +1105,19 @@ function AdminPortalContent({ section }: { section: string }) {
   const [entryReviewConfirmOpen, setEntryReviewConfirmOpen] = useState(false);
   const [entryReviewSubmitting, setEntryReviewSubmitting] = useState(false);
   const [ypopActivityVisibleCount, setYpopActivityVisibleCount] = useState(4);
+  const adminPortalChangeVersionsRef = useRef<AdminPortalChangeVersions | null>(null);
+  const adminVersionMutationEpochRef = useRef(0);
+  const adminVersionRequestRef = useRef<Promise<AdminPortalChangeVersions> | null>(null);
+  const requestAdminVersionSnapshot = useCallback(() => {
+    if (adminVersionRequestRef.current) return adminVersionRequestRef.current;
+    const request = fetchAdminPortalChangeVersions();
+    adminVersionRequestRef.current = request;
+    void request.then(
+      () => { if (adminVersionRequestRef.current === request) adminVersionRequestRef.current = null; },
+      () => { if (adminVersionRequestRef.current === request) adminVersionRequestRef.current = null; },
+    );
+    return request;
+  }, []);
   const [isYpopActivityPopoverOpen, setIsYpopActivityPopoverOpen] = useState(false);
   const ypopActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
   const ypopActivityPanelRef = useRef<HTMLDivElement | null>(null);
@@ -1133,11 +1193,75 @@ function AdminPortalContent({ section }: { section: string }) {
   const adminListResult = adminListQuery.data ?? null;
   const adminListLoading = adminListQuery.isFetching;
   const adminListError = adminListQuery.error instanceof Error ? adminListQuery.error.message : "";
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedBudgetReviewSearch(budgetRequestsSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [budgetRequestsSearch]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedLiquidationReviewSearch(liquidationReportsSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [liquidationReportsSearch]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedRenewalSearch(renewalSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [renewalSearch]);
+  useEffect(() => setRenewalReviewPage(0), [renewalSearch, renewalStatusFilter, renewalDistrictFilter, renewalBarangayFilter, renewalClassificationFilter]);
+  useEffect(() => setBudgetReviewPage(0), [budgetRequestsSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter]);
+  useEffect(() => setLiquidationReviewPage(0), [liquidationReportsSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter]);
+  const adminBudgetReviewQuery = useQuery({
+    queryKey: ["admin", "review", "budgets", budgetReviewPage, debouncedBudgetReviewSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter],
+    queryFn: () => fetchAdminReviewResourcePage({
+      resource: "budgets", page: budgetReviewPage, pageSize: 20, search: debouncedBudgetReviewSearch,
+      status: budgetRequestsStatusFilter, semester: budgetRequestsSemesterFilter,
+      district: budgetRequestsDistrictFilter, barangay: budgetRequestsBarangayFilter,
+      classification: budgetRequestsClassificationFilter,
+    }),
+    enabled: Boolean(supabase && section === "budget-utilization") && debouncedBudgetReviewSearch === budgetRequestsSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminBudgetReviewRows = (adminBudgetReviewQuery.data?.rows ?? []).filter((row): row is AdminBudgetReviewRow => "request" in row);
+  const adminLiquidationReviewQuery = useQuery({
+    queryKey: ["admin", "review", "liquidations", liquidationReviewPage, debouncedLiquidationReviewSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter],
+    queryFn: () => fetchAdminReviewResourcePage({
+      resource: "liquidations", page: liquidationReviewPage, pageSize: 20, search: debouncedLiquidationReviewSearch,
+      status: liquidationReportsStatusFilter, district: liquidationReportsDistrictFilter,
+      barangay: liquidationReportsBarangayFilter, classification: liquidationReportsClassificationFilter,
+    }),
+    enabled: Boolean(supabase && section === "liquidation-monitoring") && debouncedLiquidationReviewSearch === liquidationReportsSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminLiquidationReviewRows = (adminLiquidationReviewQuery.data?.rows ?? []).filter((row): row is AdminLiquidationReviewRow => "report" in row);
+  const adminBudgetRequestDetailQuery = useQuery({
+    queryKey: ["admin", "budget-detail", selectedBudgetRequestId],
+    queryFn: () => fetchAdminBudgetRequestDetail(selectedBudgetRequestId!),
+    enabled: Boolean(supabase && section === "budget-utilization" && selectedBudgetRequestId),
+  });
+  const adminLiquidationDetailQuery = useQuery({
+    queryKey: ["admin", "liquidation-detail", selectedLiquidationReportId],
+    queryFn: () => fetchAdminLiquidationReportDetail(selectedLiquidationReportId!),
+    enabled: Boolean(supabase && section === "liquidation-monitoring" && selectedLiquidationReportId),
+  });
+  useEffect(() => {
+    if (adminBudgetRequestDetailQuery.data) mergeRemoteStateRef.current(adminBudgetRequestDetailQuery.data);
+  }, [adminBudgetRequestDetailQuery.data]);
+  useEffect(() => {
+    if (adminLiquidationDetailQuery.data) mergeRemoteStateRef.current(adminLiquidationDetailQuery.data);
+  }, [adminLiquidationDetailQuery.data]);
   const adminNotificationsQuery = useQuery({
     queryKey: ["admin", "notifications", "recent"],
     queryFn: fetchAdminRecentNotifications,
     enabled: Boolean(supabase && readAdminSession()?.sessionToken),
   });
+  const adminYpopPeriodsQuery = useQuery({
+    queryKey: ["admin", "ypop", "periods"],
+    queryFn: fetchAdminYpopValidationPeriods,
+    enabled: Boolean(supabase && section === "ypop-validation"),
+  });
+  useEffect(() => {
+    if (adminYpopPeriodsQuery.data) {
+      mergeRemoteStateRef.current({ ypopPeriods: adminYpopPeriodsQuery.data.map(({ period }) => period) });
+    }
+  }, [adminYpopPeriodsQuery.data]);
   useEffect(() => {
     if (!adminListResource || adminListRefreshKey === 0) return;
     void queryClient.invalidateQueries({ queryKey: ["admin", adminListResource] });
@@ -1330,11 +1454,18 @@ function AdminPortalContent({ section }: { section: string }) {
   const [ypopPeriodStatusFilter, setYpopPeriodStatusFilter] = useState<YpopPeriodStatusFilter>("all");
   const [createPeriodForm, setCreatePeriodForm] = useState<{ semesterLabel: string; validationDeadline: string; status: YPOPPeriodStatus }>({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
   const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
+  const adminYpopPeriodCityActivitiesQuery = useQuery({
+    queryKey: ["admin", "ypop", "period-city-activities", editingPeriodId],
+    queryFn: () => fetchAdminYpopPeriodCityActivities(editingPeriodId!),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "create-period" && editingPeriodId),
+  });
   const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory }>>([]);
   const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [createPeriodOrgLedTiers, setCreatePeriodOrgLedTiers] = useState<YPOPOrgLedTier[]>(DEFAULT_ORG_LED_TIERS);
   const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | "pending_evaluation" | "qualified" | "not_qualified">("all");
   const [ypopSubmissionSearch, setYpopSubmissionSearch] = useState("");
+  const [debouncedYpopSubmissionSearch, setDebouncedYpopSubmissionSearch] = useState("");
+  const [ypopSubmissionPage, setYpopSubmissionPage] = useState(0);
   const [ypopSubmissionClassificationFilter, setYpopSubmissionClassificationFilter] = useState("all");
   const [selectedYpopOrganizationIds, setSelectedYpopOrganizationIds] = useState<Set<string>>(new Set());
   const [ypopDeletionTarget, setYpopDeletionTarget] = useState<{
@@ -1344,10 +1475,44 @@ function AdminPortalContent({ section }: { section: string }) {
   const ypopDeletionOperationRef = useRef<string | null>(null);
   const ypopDeletionBusyRef = useRef(false);
   useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedYpopSubmissionSearch(ypopSubmissionSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [ypopSubmissionSearch]);
+  useEffect(() => setYpopSubmissionPage(0), [selectedYpopPeriodId, ypopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter]);
+  useEffect(() => {
     setSelectedYpopOrganizationIds(new Set());
     setYpopDeletionTarget(null);
     ypopDeletionOperationRef.current = null;
-  }, [selectedYpopPeriodId, ypopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter]);
+  }, [selectedYpopPeriodId, ypopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter, ypopSubmissionPage]);
+  const adminYpopSubmissionsQuery = useQuery({
+    queryKey: ["admin", "ypop", "period-submissions", selectedYpopPeriodId, ypopSubmissionPage, debouncedYpopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter],
+    queryFn: () => fetchAdminYpopPeriodSubmissionPage({
+      periodId: selectedYpopPeriodId!, page: ypopSubmissionPage, pageSize: 20,
+      search: debouncedYpopSubmissionSearch, classification: ypopSubmissionClassificationFilter, status: ypopSubmissionFilter,
+    }),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "period-detail" && selectedYpopPeriodId)
+      && debouncedYpopSubmissionSearch === ypopSubmissionSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminYpopEntryReviewQuery = useQuery({
+    queryKey: ["admin", "ypop", "entry-review", selectedYpopId],
+    queryFn: () => fetchAdminYpopEntryReviewDetail(selectedYpopId!),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "entry-review" && selectedYpopId && !selectedYpopId.startsWith("virtual-")),
+  });
+  const adminYpopReviewFilesQuery = useQuery({
+    queryKey: ["admin", "ypop", "review-files", entryReviewTab, activeEntryReviewGroupId],
+    queryFn: () => fetchAdminYpopReviewFiles(entryReviewTab, activeEntryReviewGroupId!),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "entry-review" && activeEntryReviewGroupId),
+  });
+  useEffect(() => {
+    if (adminYpopEntryReviewQuery.data) mergeRemoteStateRef.current(adminYpopEntryReviewQuery.data);
+  }, [adminYpopEntryReviewQuery.data]);
+  useEffect(() => {
+    const files = adminYpopReviewFilesQuery.data;
+    if (!files || !activeEntryReviewGroupId) return;
+    if (entryReviewTab === "city_led") mergeRemoteStateRef.current({ ypopEventFiles: files as YPOPEventFile[] });
+    else mergeRemoteStateRef.current({ ypopOrgActivityFiles: files as YPOPOrgActivityFile[] });
+  }, [adminYpopReviewFilesQuery.data, activeEntryReviewGroupId, entryReviewTab]);
   const [newActivityForm, setNewActivityForm] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [editingDraftTempId, setEditingDraftTempId] = useState<string | null>(null);
@@ -1404,6 +1569,59 @@ function AdminPortalContent({ section }: { section: string }) {
       }),
     [activeTemplates],
   );
+  const registrationRequirementTypesQuery = useQuery({
+    queryKey: ["admin", "registration-required-document-types"],
+    queryFn: fetchRegistrationRequiredDocumentTypesInSupabase,
+    enabled: Boolean(supabase && section === "registrations"),
+    staleTime: 30 * 1000,
+  });
+  const invalidateRegistrationRequirementTypes = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "registration-required-document-types"] });
+  };
+  const adminRenewalRequiredTypesQuery = useQuery({
+    queryKey: ["admin", "renewal-required-document-types"],
+    queryFn: () => fetchRenewalRequiredDocumentTypesInSupabase({ requireServerChecklist: true }),
+    enabled: Boolean(supabase && section === "renewals"),
+    staleTime: 5 * 60 * 1000,
+  });
+  // One checklist for queue counts, packet rendering, and approval validation.
+  // In Supabase mode, await the configured requirements rather than seeded local IDs.
+  const renewalRequiredDocuments = useMemo(
+    () => supabase ? (adminRenewalRequiredTypesQuery.data ?? []) : templateDocuments,
+    [adminRenewalRequiredTypesQuery.data, templateDocuments],
+  );
+  const renewalQueueRequiredTypeIds = useMemo(() =>
+    [...new Set(renewalRequiredDocuments
+      .map((template) => template.databaseId)
+      .filter((id): id is string => Boolean(id)))],
+  [renewalRequiredDocuments]);
+  const adminRenewalQueueQuery = useQuery({
+    queryKey: ["admin", "renewal-queue", renewalReviewPage, debouncedRenewalSearch, renewalStatusFilter,
+      renewalDistrictFilter, renewalBarangayFilter, renewalClassificationFilter, renewalQueueRequiredTypeIds],
+    queryFn: () => fetchAdminRenewalQueuePage({
+      page: renewalReviewPage, pageSize: 20, search: debouncedRenewalSearch,
+      status: renewalStatusFilter, district: renewalDistrictFilter,
+      barangay: renewalBarangayFilter, classification: renewalClassificationFilter,
+      requiredDocumentTypeIds: renewalQueueRequiredTypeIds,
+    }),
+    enabled: Boolean(supabase && section === "renewals") && adminRenewalRequiredTypesQuery.isSuccess &&
+      debouncedRenewalSearch === renewalSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminRenewalReviewContextQuery = useQuery({
+    queryKey: ["admin", "renewal-context", selectedRenewalId],
+    queryFn: () => fetchAdminRenewalReviewContext(selectedRenewalId!),
+    enabled: Boolean(supabase && section === "renewals" && selectedRenewalId),
+  });
+  useEffect(() => {
+    if (!adminRenewalQueueQuery.data?.rows) return;
+    const rows = adminRenewalQueueQuery.data.rows;
+    setAdminRenewals(rows.map(({ renewal }) => renewal));
+    setAdminAccreditations(rows.flatMap(({ accreditation }) => accreditation ? [accreditation] : []));
+  }, [adminRenewalQueueQuery.data]);
+  useEffect(() => {
+    if (adminRenewalReviewContextQuery.data) mergeRemoteStateRef.current(adminRenewalReviewContextQuery.data);
+  }, [adminRenewalReviewContextQuery.data]);
   const otherTemplates = useMemo(
     () => activeTemplates.filter((template) => template.templateScope === "other"),
     [activeTemplates],
@@ -1439,98 +1657,88 @@ function AdminPortalContent({ section }: { section: string }) {
     [selectedRegistrationSubmission, state.documentSubmissionFiles],
   );
   const selectedRenewal = useMemo(
-    () => adminRenewals.find((renewal) => renewal.id === selectedRenewalId) ?? null,
-    [adminRenewals, selectedRenewalId],
+    () => adminRenewals.find((renewal) => renewal.id === selectedRenewalId) ??
+      adminRenewalQueueQuery.data?.rows.find(({ renewal }) => renewal.id === selectedRenewalId)?.renewal ?? null,
+    [adminRenewals, selectedRenewalId, adminRenewalQueueQuery.data],
   );
   const selectedRenewalProfile = useMemo(
     () =>
       selectedRenewal
-        ? state.organizationProfiles.find((profile) => profile.id === selectedRenewal.organizationId) ?? null
+        ? state.organizationProfiles.find((profile) => profile.id === selectedRenewal.organizationId) ??
+          adminRenewalQueueQuery.data?.rows.find(({ renewal }) => renewal.id === selectedRenewal.id)?.organization ?? null
         : null,
-    [selectedRenewal, state.organizationProfiles],
+    [selectedRenewal, state.organizationProfiles, adminRenewalQueueQuery.data],
   );
   const selectedRenewalAccreditation = useMemo(
     () =>
       selectedRenewal
-        ? adminAccreditations.find((accreditation) => accreditation.id === selectedRenewal.accreditationId) ?? null
+        ? adminAccreditations.find((accreditation) => accreditation.id === selectedRenewal.currentAccreditationId) ??
+          adminRenewalQueueQuery.data?.rows.find(({ renewal }) => renewal.id === selectedRenewal.id)?.accreditation ?? null
         : null,
-    [selectedRenewal, adminAccreditations],
+    [selectedRenewal, adminAccreditations, adminRenewalQueueQuery.data],
   );
   const selectedRenewalSubmission = useMemo(
-    () =>
-      selectedRenewal
-        ? state.documentSubmissions.find(
-          (submission) =>
-            submission.renewalId === selectedRenewal.id ||
-            (submission.organizationId === selectedRenewal.organizationId && submission.submissionScope === "renewal"),
-        ) ?? null
-        : null,
-    [selectedRenewal, state.documentSubmissions],
+    () => {
+      if (!selectedRenewal) return null;
+      if (adminRenewalReviewContextQuery.isSuccess) {
+        return adminRenewalReviewContextQuery.data?.documentSubmissions?.[0] ?? null;
+      }
+      return state.documentSubmissions.find((submission) => submission.renewalId === selectedRenewal.id) ?? null;
+    },
+    [selectedRenewal, adminRenewalReviewContextQuery.data, adminRenewalReviewContextQuery.isSuccess, state.documentSubmissions],
   );
   const effectiveRenewalFiles = useMemo<SubmissionFile[]>(() => {
-    if (!selectedRenewalSubmission && !localRenewalFiles.length) return [];
+    if (!selectedRenewalSubmission) return [];
     const submissionId = selectedRenewalSubmission?.id;
+    // The selected packet is authoritative, including removals/replacements.
+    // Never overlay an earlier admin decision on a freshly resubmitted file.
+    if (supabase && adminRenewalReviewContextQuery.isSuccess) {
+      return (adminRenewalReviewContextQuery.data?.documentSubmissionFiles ?? [])
+        .filter((file) => file.submissionId === submissionId);
+    }
     const fromState = submissionId
       ? state.documentSubmissionFiles.filter((file) => file.submissionId === submissionId)
       : [];
-    const merged = new Map<string, SubmissionFile>();
-    for (const file of fromState) merged.set(file.id, file);
-    for (const file of localRenewalFiles) merged.set(file.id, file);
-    return Array.from(merged.values());
-  }, [selectedRenewalSubmission, state.documentSubmissionFiles, localRenewalFiles]);
+    return fromState;
+  }, [selectedRenewalSubmission, state.documentSubmissionFiles, adminRenewalReviewContextQuery.data, adminRenewalReviewContextQuery.isSuccess]);
+
+  const orderedRenewalPreviewFiles = useMemo(() => {
+    const documentTypes = renewalRequiredDocuments;
+    const ordered = documentTypes
+      .map((documentType) =>
+        effectiveRenewalFiles.find(
+          (file) =>
+            file.documentTypeId === documentType.id ||
+            (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+        ),
+      )
+      .filter((file): file is SubmissionFile => Boolean(file));
+    const includedIds = new Set(ordered.map((file) => file.id));
+    return [...ordered, ...effectiveRenewalFiles.filter((file) => !includedIds.has(file.id))];
+  }, [effectiveRenewalFiles, renewalRequiredDocuments]);
 
   const adminRenewalsQueue = useMemo<AdminRenewalQueueEntry[]>(() => {
-    const requiredRenewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
-    const validRenewalTypeIds = new Set(requiredRenewalTemplates.flatMap((template) => [template.id, template.databaseId]));
-
-    return adminRenewals.map((renewal) => {
-      const org = state.organizationProfiles.find((o) => o.id === renewal.organizationId);
-      const accreditation = renewal.currentAccreditationId
-        ? adminAccreditations.find((a) => a.id === renewal.currentAccreditationId)
-        : adminAccreditations.find((a) => a.organizationId === renewal.organizationId);
-
-      const renewalSubmission = state.documentSubmissions.find(
-        (s) => s.renewalId === renewal.id || (s.organizationId === renewal.organizationId && s.submissionScope === "renewal"),
-      );
-
-      const files = renewalSubmission
-        ? state.documentSubmissionFiles.filter(
-          (f) =>
-            f.submissionId === renewalSubmission.id &&
-            validRenewalTypeIds.has(f.documentTypeId) &&
-            f.adminStatus !== "draft",
-        )
-        : [];
-      const submittedRequiredCount = requiredRenewalTemplates.filter((template) =>
-        files.some(
-          (file) =>
-            file.documentTypeId === template.id ||
-            (template.databaseId && file.documentTypeId === template.databaseId),
-        ),
-      ).length;
-
-      return {
-        renewalId: renewal.id,
-        organizationId: renewal.organizationId,
-        cycleNumber: renewal.cycleNumber,
-        organizationName: org?.organizationName ?? "Unknown Organization",
-        referenceIdentifier: org?.referenceId || org?.urn || "—",
-        district: org?.district ?? "—",
-        barangay: org?.barangay ?? "—",
-        majorClassification: org?.majorClassification ?? "—",
-        currentAccreditationExpiry: accreditation?.validUntil ?? null,
-        documentCount: {
-          submitted: submittedRequiredCount,
-          required: requiredRenewalTemplates.length,
-        },
-        submittedDate: renewal.submittedAt ?? renewal.createdAt,
-        renewalStatus: renewal.status,
-        linkedDocumentSubmissionId: renewal.linkedDocumentSubmissionId ?? renewalSubmission?.id ?? null,
-        currentAccreditationId: renewal.currentAccreditationId ?? accreditation?.id ?? null,
-        adminRemarks: renewal.adminRemarks ?? null,
-      };
-    });
-  }, [adminRenewals, adminAccreditations, renewalRequiredDocuments, templateDocuments, state.organizationProfiles, state.documentSubmissions, state.documentSubmissionFiles]);
+    const requiredCount = renewalRequiredDocuments.length;
+    return (adminRenewalQueueQuery.data?.rows ?? []).map(({ renewal, organization, accreditation, submittedDocumentCount, linkedDocumentSubmissionId }) => ({
+      renewalId: renewal.id,
+      organizationId: renewal.organizationId,
+      cycleNumber: renewal.cycleNumber,
+      organizationName: organization.organizationName || "Unknown Organization",
+      referenceIdentifier: organization.referenceId || organization.urn || "—",
+      district: organization.district || "—",
+      barangay: organization.barangay || "—",
+      majorClassification: organization.majorClassification || "—",
+      currentAccreditationExpiry: accreditation?.endDate ?? null,
+      documentCount: { submitted: submittedDocumentCount, required: requiredCount },
+      submittedDate: renewal.submittedAt ?? renewal.createdAt,
+      renewalStatus: renewal.status,
+      linkedDocumentSubmissionId,
+      currentAccreditationId: renewal.currentAccreditationId ?? accreditation?.id ?? null,
+      adminRemarks: renewal.adminRemarks ?? null,
+      revisionDueAt: renewal.revisionDueAt ?? null,
+      revisionLockedAt: renewal.revisionLockedAt ?? null,
+    }));
+  }, [adminRenewalQueueQuery.data, renewalRequiredDocuments]);
   const newsReleases = useMemo(
     () =>
       [...state.newsReleases].sort((left, right) => {
@@ -1551,10 +1759,11 @@ function AdminPortalContent({ section }: { section: string }) {
   );
   const selectedBudgetRequest = useMemo(
     () =>
+      adminBudgetRequestDetailQuery.data?.budgetRequests?.find((item) => item.id === selectedBudgetRequestId) ??
       selectedBudgetRequestSnapshot ??
       state.budgetRequests.find((item) => item.id === selectedBudgetRequestId) ??
       null,
-    [selectedBudgetRequestId, selectedBudgetRequestSnapshot, state.budgetRequests],
+    [adminBudgetRequestDetailQuery.data, selectedBudgetRequestId, selectedBudgetRequestSnapshot, state.budgetRequests],
   );
   const selectedBudgetRequestFiles = useMemo(
     () =>
@@ -1570,15 +1779,18 @@ function AdminPortalContent({ section }: { section: string }) {
     [selectedBudgetRequestFiles, selectedBudgetFileId],
   );
   const selectedBudgetOrganization = useMemo(
-    () => state.organizationProfiles.find((org) => org.id === selectedBudgetRequest?.organizationId) ?? null,
-    [selectedBudgetRequest?.organizationId, state.organizationProfiles],
+    () => state.organizationProfiles.find((org) => org.id === selectedBudgetRequest?.organizationId)
+      ?? adminBudgetReviewRows.find((row) => row.request.id === selectedBudgetRequest?.id)?.organization
+      ?? null,
+    [selectedBudgetRequest?.organizationId, selectedBudgetRequest?.id, state.organizationProfiles, adminBudgetReviewRows],
   );
   const selectedLiquidationReport = useMemo(
     () =>
+      adminLiquidationDetailQuery.data?.liquidationReports?.find((item) => item.id === selectedLiquidationReportId) ??
       state.liquidationReports.find((item) => item.id === selectedLiquidationReportId) ??
       selectedLiquidationReportSnapshot ??
       null,
-    [selectedLiquidationReportId, selectedLiquidationReportSnapshot, state.liquidationReports],
+    [adminLiquidationDetailQuery.data, selectedLiquidationReportId, selectedLiquidationReportSnapshot, state.liquidationReports],
   );
   useEffect(() => {
     if (selectedLiquidationReport) {
@@ -1599,12 +1811,16 @@ function AdminPortalContent({ section }: { section: string }) {
     [selectedLiquidationReportFiles, selectedLiquidationFileId],
   );
   const selectedLiquidationBudgetRequest = useMemo(
-    () => state.budgetRequests.find((item) => item.id === selectedLiquidationReport?.budgetRequestId) ?? null,
-    [selectedLiquidationReport?.budgetRequestId, state.budgetRequests],
+    () => state.budgetRequests.find((item) => item.id === selectedLiquidationReport?.budgetRequestId)
+      ?? adminLiquidationReviewRows.find((row) => row.report.id === selectedLiquidationReport?.id)?.budgetRequest
+      ?? null,
+    [selectedLiquidationReport?.budgetRequestId, selectedLiquidationReport?.id, state.budgetRequests, adminLiquidationReviewRows],
   );
   const selectedLiquidationOrganization = useMemo(
-    () => state.organizationProfiles.find((org) => org.id === selectedLiquidationReport?.organizationId) ?? null,
-    [selectedLiquidationReport?.organizationId, state.organizationProfiles],
+    () => state.organizationProfiles.find((org) => org.id === selectedLiquidationReport?.organizationId)
+      ?? adminLiquidationReviewRows.find((row) => row.report.id === selectedLiquidationReport?.id)?.organization
+      ?? null,
+    [selectedLiquidationReport?.organizationId, selectedLiquidationReport?.id, state.organizationProfiles, adminLiquidationReviewRows],
   );
   const budgetRecentActivities = useMemo<RecentActivityEntry[]>(() => {
     if (!selectedBudgetRequest) return [];
@@ -1741,26 +1957,36 @@ function AdminPortalContent({ section }: { section: string }) {
   const getManilaDateIso = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
   const visibleLiquidationReports = useMemo(
     () =>
-      state.liquidationReports
+      section === "liquidation-monitoring"
+        ? adminLiquidationReviewRows.map((row) => row.report)
+        : state.liquidationReports
         .filter((report) => {
           const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
           return Boolean(linkedBudget && budgetReleaseStatuses.has(linkedBudget.status));
         })
         .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()),
-    [budgetReleaseStatuses, state.budgetRequests, state.liquidationReports],
+    [adminLiquidationReviewRows, section, budgetReleaseStatuses, state.budgetRequests, state.liquidationReports],
   );
   const liquidationReportStatusOptions = useMemo(
     () => Array.from(new Set(visibleLiquidationReports.map((report) => report.status))),
     [visibleLiquidationReports],
   );
-  const getLatestLiquidationReportForBudgetRequest = (budgetRequestId: string) =>
-    [...state.liquidationReports]
-      .filter((item) => item.budgetRequestId === budgetRequestId)
-      .sort((left, right) => {
-        const leftTime = new Date(left.updatedAt || left.createdAt).getTime();
-        const rightTime = new Date(right.updatedAt || right.createdAt).getTime();
-        return rightTime - leftTime;
-      })[0] ?? null;
+  const organizationProfileById = useMemo(
+    () => new Map(state.organizationProfiles.map((organization) => [organization.id, organization] as const)),
+    [state.organizationProfiles],
+  );
+  const latestLiquidationByRequestId = useMemo(() => {
+    const map = new Map<string, LiquidationReport>();
+    state.liquidationReports.forEach((report) => {
+      const existing = map.get(report.budgetRequestId);
+      if (!existing || new Date(report.updatedAt || report.createdAt).getTime() > new Date(existing.updatedAt || existing.createdAt).getTime()) map.set(report.budgetRequestId, report);
+    });
+    return map;
+  }, [state.liquidationReports]);
+  const getLatestLiquidationReportForBudgetRequest = useCallback(
+    (id: string) => latestLiquidationByRequestId.get(id) ?? null,
+    [latestLiquidationByRequestId],
+  );
   const [annualAllocations, setAnnualAllocations] = useState<AnnualBudgetAllocation[]>([]);
   const selectedFiscalYear = budgetMonitoringFilters.fiscalPeriod.fiscalYear;
   const dashboardQuery = useQuery({
@@ -1852,11 +2078,12 @@ function AdminPortalContent({ section }: { section: string }) {
     [2024, 2025, 2026].forEach((year) => years.add(year));
     years.add(new Date().getFullYear());
     annualAllocations.forEach((a) => years.add(a.fiscalYear));
+    monitoringQuery.data?.fiscalYears.forEach(year => years.add(year));
     adminBudgetRequests.forEach((req) => {
       years.add(getBudgetRequestFiscalYear(req));
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [annualAllocations, adminBudgetRequests, getBudgetRequestFiscalYear]);
+  }, [annualAllocations, adminBudgetRequests, getBudgetRequestFiscalYear, monitoringQuery.data?.fiscalYears]);
 
   const selectedFYAllocation = useMemo(() => {
     return (
@@ -1874,8 +2101,9 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [adminBudgetRequests, selectedFiscalYear, getBudgetRequestFiscalYear]);
 
   const fyLiquidationReports = useMemo(() => {
+    const requestsById = new Map(state.budgetRequests.map(request => [request.id, request]));
     return state.liquidationReports.filter((report) => {
-      const related = state.budgetRequests.find((r) => r.id === report.budgetRequestId);
+      const related = requestsById.get(report.budgetRequestId);
       return related ? getBudgetRequestFiscalYear(related) === selectedFiscalYear : false;
     });
   }, [state.budgetRequests, state.liquidationReports, selectedFiscalYear, getBudgetRequestFiscalYear]);
@@ -1888,6 +2116,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const budgetMonitoringEntries = useMemo<BudgetMonitoringEntry[]>(() => {
     const now = new Date();
 
+    if (section !== "budget-monitoring") return [];
     return periodBudgetRequests
       .filter((request) => budgetReleaseStatuses.has(request.status))
       .map((request) => {
@@ -1940,7 +2169,7 @@ function AdminPortalContent({ section }: { section: string }) {
           budgetRequestId: request.id,
           liquidationReportId: liquidation?.id ?? null,
           title: request.activityTitle,
-          organizationName: state.organizationProfiles.find((org) => org.id === request.organizationId)?.organizationName ?? "Unknown organization",
+          organizationName: organizationProfileById.get(request.organizationId)?.organizationName ?? "Unknown organization",
           approvedAmount,
           releasedAmount,
           remainingAmount,
@@ -1969,8 +2198,9 @@ function AdminPortalContent({ section }: { section: string }) {
         }
         return right.approvedAmount - left.approvedAmount;
       });
-  }, [budgetReleaseStatuses, periodBudgetRequests, state.organizationProfiles, getLatestLiquidationReportForBudgetRequest]);
+  }, [section, budgetReleaseStatuses, periodBudgetRequests, organizationProfileById, getLatestLiquidationReportForBudgetRequest]);
   const filteredAdminBudgetRequests = useMemo(() => {
+    if (section === "budget-utilization") return adminBudgetReviewRows.map((row) => row.request);
     const query = budgetRequestsSearch.trim().toLowerCase();
     return semesterScopedBudgetRequests.filter((request) => {
       const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
@@ -2010,8 +2240,11 @@ function AdminPortalContent({ section }: { section: string }) {
     budgetRequestsClassificationFilter,
     adminBudgetRequests,
     state.organizationProfiles,
+    adminBudgetReviewRows,
+    section,
   ]);
   const filteredVisibleLiquidationReports = useMemo(() => {
+    if (section === "liquidation-monitoring") return adminLiquidationReviewRows.map((row) => row.report);
     const query = liquidationReportsSearch.trim().toLowerCase();
     return visibleLiquidationReports.filter((report) => {
       const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
@@ -2046,6 +2279,8 @@ function AdminPortalContent({ section }: { section: string }) {
     state.budgetRequests,
     state.organizationProfiles,
     visibleLiquidationReports,
+    adminLiquidationReviewRows,
+    section,
   ]);
   const liquidationReportsExportRows = useMemo(
     () => filteredVisibleLiquidationReports.map((report) => {
@@ -2138,37 +2373,7 @@ function AdminPortalContent({ section }: { section: string }) {
       toast({ title: "Export Failed", description: "Unable to export liquidation reports. Please try again.", variant: "destructive" });
     }
   };
-  const filteredRenewals = useMemo(() => {
-    const query = renewalSearch.trim().toLowerCase();
-    return adminRenewalsQueue.filter((entry) => {
-      const matchesSearch =
-        !query ||
-        [entry.organizationName, entry.referenceIdentifier, entry.barangay, entry.district, entry.majorClassification]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      const matchesStatus =
-        renewalStatusFilter === "all"
-          ? true
-          : renewalStatusFilter === "approved"
-            ? entry.renewalStatus === "approved"
-            : renewalStatusFilter === "pending_review"
-              ? entry.renewalStatus !== "approved"
-              : true;
-      const matchesDistrict = renewalDistrictFilter === "all" || entry.district === renewalDistrictFilter;
-      const matchesBarangay = renewalBarangayFilter === "all" || entry.barangay === renewalBarangayFilter;
-      const matchesClassification =
-        renewalClassificationFilter === "all" || entry.majorClassification === renewalClassificationFilter;
-      return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
-    });
-  }, [
-    adminRenewalsQueue,
-    renewalSearch,
-    renewalStatusFilter,
-    renewalDistrictFilter,
-    renewalBarangayFilter,
-    renewalClassificationFilter,
-  ]);
+  const filteredRenewals = adminRenewalsQueue;
   const filteredNewsReleases = useMemo(() => {
     const query = newsSearch.trim().toLowerCase();
     return newsReleases.filter((news) => {
@@ -2227,18 +2432,6 @@ function AdminPortalContent({ section }: { section: string }) {
     setInquiryStatusDraft(normalizedStatus);
     setInquiryAdminRemarksDraft(inquiry.adminRemarks);
   };
-  const organizationProfileById = useMemo(
-    () => new Map(state.organizationProfiles.map((organization) => [organization.id, organization] as const)),
-    [state.organizationProfiles],
-  );
-  const latestLiquidationByRequestId = useMemo(() => {
-    const map = new Map<string, LiquidationReport>();
-    state.liquidationReports.forEach((report) => {
-      const existing = map.get(report.budgetRequestId);
-      if (!existing || new Date(report.updatedAt || report.createdAt).getTime() > new Date(existing.updatedAt || existing.createdAt).getTime()) map.set(report.budgetRequestId, report);
-    });
-    return map;
-  }, [state.liquidationReports]);
   const dashboardBudgetTotals = useMemo(() => {
     const approved = fyBudgetRequests.filter(r => APPROVED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0);
     const released = fyBudgetRequests.filter(r => RELEASED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
@@ -2522,7 +2715,8 @@ function AdminPortalContent({ section }: { section: string }) {
   const budgetRequestExportRows = useMemo<BudgetRequestExportRow[]>(
     () =>
       filteredAdminBudgetRequests.map((request) => {
-        const organization = state.organizationProfiles.find((org) => org.id === request.organizationId);
+        const organization = adminBudgetReviewRows.find((row) => row.request.id === request.id)?.organization
+          ?? state.organizationProfiles.find((org) => org.id === request.organizationId);
         return {
           organizationName: organization?.organizationName ?? "Unknown organization",
           activity: request.activityTitle,
@@ -2531,7 +2725,7 @@ function AdminPortalContent({ section }: { section: string }) {
           releasedDate: request.releaseDate || "",
         };
       }),
-    [filteredAdminBudgetRequests, state.organizationProfiles],
+    [filteredAdminBudgetRequests, adminBudgetReviewRows, state.organizationProfiles],
   );
   const budgetMonitoringExportRows = useMemo<BudgetMonitoringExportRow[]>(
     () =>
@@ -2962,15 +3156,21 @@ function AdminPortalContent({ section }: { section: string }) {
     return { availableCategories, availableClassifications, availableDistricts, availableBarangays };
   }, [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId]);
   const organizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
+    if (section !== "budget-monitoring") return [];
+    const requestsByOrganization = new Map<string, BudgetRequest[]>();
+    fyBudgetRequests.forEach(request => {
+      const rows = requestsByOrganization.get(request.organizationId) ?? [];
+      rows.push(request);
+      requestsByOrganization.set(request.organizationId, rows);
+    });
+    const liquidatedIds = new Set(fyLiquidationReports.filter(report => report.status === "completed_liquidated").map(report => report.budgetRequestId));
     return state.organizationProfiles
       .map((org) => {
-        const orgRequests = fyBudgetRequests.filter((r) => r.organizationId === org.id);
+        const orgRequests = requestsByOrganization.get(org.id) ?? [];
         const totalRequested = orgRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0);
         const totalReleased = orgRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
         const totalLiquidated = orgRequests.reduce((sum, r) => {
-          const isLiquidated = fyLiquidationReports.some(
-            (lr) => lr.budgetRequestId === r.id && lr.status === "completed_liquidated",
-          );
+          const isLiquidated = liquidatedIds.has(r.id);
           return sum + (isLiquidated ? r.releasedAmount || 0 : 0);
         }, 0);
         return {
@@ -2985,7 +3185,7 @@ function AdminPortalContent({ section }: { section: string }) {
         };
       })
       .filter((row) => row.totalRequested > 0);
-  }, [state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
+  }, [section, state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
 
   const organizationBudgetDetail = useMemo<OrganizationBudgetDetail | null>(() => {
     if (!selectedOrganizationBudgetDetailId) return null;
@@ -3019,11 +3219,9 @@ function AdminPortalContent({ section }: { section: string }) {
 
   useEffect(() => {
     let isActive = true;
-    const activeFiles = selectedRegistrationId
+    const activeFiles = section === "registrations" && selectedRegistrationId
       ? selectedRegistrationFiles
-      : selectedRenewalId
-        ? localRenewalFiles
-        : [];
+      : [];
     const filesWithUploads = activeFiles.filter((file) => file.fileUrl && file.fileUrl.trim());
 
     if (!filesWithUploads.length) {
@@ -3075,7 +3273,7 @@ function AdminPortalContent({ section }: { section: string }) {
     return () => {
       isActive = false;
     };
-  }, [selectedRegistrationId, selectedRegistrationFiles, selectedRenewalId, localRenewalFiles]);
+  }, [section, selectedRegistrationId, selectedRegistrationFiles]);
 
   useEffect(() => {
     const firstReviewableFile = templateDocuments
@@ -3107,54 +3305,10 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [selectedRegistrationId]);
 
   useEffect(() => {
-    let isActive = true;
-    if (!selectedRenewalId) {
-      setLocalRenewalFiles([]);
-      return;
-    }
-    setRenewalPacketLoading(true);
-    void (async () => {
-      try {
-        const packet = await fetchRenewalPacketInSupabase(selectedRenewalId);
-        if (!isActive) return;
-        if (packet) {
-          if (packet.requiredDocuments && packet.requiredDocuments.length > 0) {
-            setRenewalRequiredDocuments(packet.requiredDocuments);
-          }
-          if (packet.files && packet.files.length > 0) {
-            setLocalRenewalFiles(packet.files);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load renewal packet:", err);
-      } finally {
-        if (isActive) setRenewalPacketLoading(false);
-      }
-    })();
-    return () => {
-      isActive = false;
-    };
-  }, [selectedRenewalId]);
-
-  useEffect(() => {
-    const templates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
-    const firstReviewableFile = templates
-      .map((documentType) =>
-        effectiveRenewalFiles.find(
-          (file) =>
-            file.documentTypeId === documentType.id ||
-            (documentType.databaseId && file.documentTypeId === documentType.databaseId),
-        ),
-      )
-      .find((file): file is NonNullable<typeof file> => Boolean(file)) ?? null;
-
-    setActiveRenewalReviewFileId((current) => {
-      if (current && effectiveRenewalFiles.some((file) => file.id === current)) {
-        return current;
-      }
-      return firstReviewableFile?.id ?? effectiveRenewalFiles[0]?.id ?? null;
-    });
-  }, [effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments]);
+    setActiveRenewalReviewFileId((current) =>
+      preserveOrSelectFirstRenewalReviewFile(current, orderedRenewalPreviewFiles),
+    );
+  }, [orderedRenewalPreviewFiles]);
 
   useEffect(() => {
     setSelectedRenewalReviewFileIds([]);
@@ -3570,33 +3724,172 @@ function AdminPortalContent({ section }: { section: string }) {
   ]);
 
 
+  const activeAdminChangeResources = useMemo<AdminPortalChangeResource[]>(() => {
+    if (section === "registrations") return ["registration"];
+    if (section === "renewals") return ["renewals"];
+    if (section === "budget-utilization") return ["budgets"];
+    if (section === "liquidation-monitoring") return ["liquidations"];
+    if (section === "ypop-validation" && ypopAdminView === "periods") return ["ypop_city_led", "ypop_org_led"];
+    if (section === "ypop-validation" && ypopAdminView === "entry-review") {
+      return [entryReviewTab === "org_led" ? "ypop_org_led" : "ypop_city_led"];
+    }
+    if (section === "ypop-validation" && ypopAdminView === "period-detail") return ["ypop_city_led", "ypop_org_led"];
+    return [];
+  }, [section, ypopAdminView, entryReviewTab]);
+
+  const adminVersionSelectionRef = useRef({
+    selectedRegistrationId, selectedRenewalId, selectedBudgetRequestId, selectedLiquidationReportId,
+    selectedYpopId, selectedYpopPeriodId, ypopAdminView, entryReviewTab, activeEntryReviewGroupId,
+  });
+  adminVersionSelectionRef.current = {
+    selectedRegistrationId, selectedRenewalId, selectedBudgetRequestId, selectedLiquidationReportId,
+    selectedYpopId, selectedYpopPeriodId, ypopAdminView, entryReviewTab, activeEntryReviewGroupId,
+  };
+
+  const refreshAdminResourceForVersion = async (resource: AdminPortalChangeResource) => {
+    const selection = adminVersionSelectionRef.current;
+    if (resource === "registration") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "registrations"] }),
+        ...(selection.selectedRegistrationId ? [queryClient.invalidateQueries({ queryKey: ["admin", "registration", selection.selectedRegistrationId] })] : []),
+      ]);
+    } else if (resource === "renewals") {
+      const refreshes: Promise<unknown>[] = [queryClient.invalidateQueries({ queryKey: ["admin", "renewal-queue"] })];
+      if (selection.selectedRenewalId) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "renewal-context", selection.selectedRenewalId] }));
+      }
+      await Promise.all(refreshes);
+    } else if (resource === "budgets") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] }),
+        ...(selection.selectedBudgetRequestId ? [queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selection.selectedBudgetRequestId] })] : []),
+      ]);
+    } else if (resource === "liquidations") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] }),
+        ...(selection.selectedLiquidationReportId ? [queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selection.selectedLiquidationReportId] })] : []),
+      ]);
+    } else {
+      const refreshes: Promise<unknown>[] = [];
+      if (selection.ypopAdminView === "entry-review" && selection.selectedYpopId && !selection.selectedYpopId.startsWith("virtual-")) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "entry-review", selection.selectedYpopId] }));
+        if (selection.activeEntryReviewGroupId) {
+          refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "review-files", selection.entryReviewTab, selection.activeEntryReviewGroupId] }));
+        }
+      }
+      if (selection.ypopAdminView === "period-detail" && selection.selectedYpopPeriodId) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "period-submissions", selection.selectedYpopPeriodId] }));
+      }
+      if (selection.ypopAdminView === "periods") refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "periods"] }));
+      await Promise.all(refreshes);
+    }
+  };
+
+  const refreshAdminVersionBaseline = async () => {
+    const epoch = ++adminVersionMutationEpochRef.current;
+    try {
+      // Ignore an older in-flight poll, then establish the post-mutation value.
+      // This prevents that same update from being replayed by the next check.
+      await adminVersionRequestRef.current?.catch(() => undefined);
+      const versions = await requestAdminVersionSnapshot();
+      if (epoch === adminVersionMutationEpochRef.current) adminPortalChangeVersionsRef.current = versions;
+    } catch (error) {
+      if (import.meta.env.DEV) console.debug("Could not align the Admin status-version baseline after a local mutation.", error);
+    }
+  };
+
+  useEffect(() => {
+    const resources = activeAdminChangeResources;
+    if (!resources.length || !readAdminSession()?.sessionToken || !supabase) return;
+    let disposed = false;
+    let requestInFlight = false;
+    let timer: number | null = null;
+    const schedule = () => {
+      if (disposed || !readAdminSession()?.sessionToken || document.visibilityState !== "visible") return;
+      timer = window.setTimeout(() => { void checkVersions(); }, 8_000);
+    };
+    const checkVersions = async () => {
+      if (disposed || document.visibilityState !== "visible" || requestInFlight) return;
+      requestInFlight = true;
+      const mutationEpoch = adminVersionMutationEpochRef.current;
+      try {
+        const versions = await requestAdminVersionSnapshot();
+        if (disposed || mutationEpoch !== adminVersionMutationEpochRef.current) return;
+        const previous = adminPortalChangeVersionsRef.current;
+        adminPortalChangeVersionsRef.current = versions;
+        if (!previous) return;
+        const changedResources = getChangedAdminPortalResources(previous, versions, resources);
+        for (const resource of changedResources.filter((item) => !item.startsWith("ypop_"))) {
+          await refreshAdminResourceForVersion(resource);
+        }
+        const ypopResourceChanged = changedResources.find((item) => item.startsWith("ypop_"));
+        if (ypopResourceChanged) await refreshAdminResourceForVersion(ypopResourceChanged);
+      } catch (error) {
+        if (import.meta.env.DEV) console.debug("Admin status-version check failed.", error);
+      } finally {
+        requestInFlight = false;
+        schedule();
+      }
+    };
+    const handleVisibility = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = null;
+      if (document.visibilityState === "visible") void checkVersions();
+    };
+    void checkVersions();
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      disposed = true;
+      if (timer !== null) window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [activeAdminChangeResources, requestAdminVersionSnapshot]);
+
   const refreshAdminState = async () => {
-    if (["overview", "registrations", "inquiries", "activity-logs", "notifications"].includes(section)) {
+    if (section === "budget-monitoring") {
+      await monitoringQuery.refetch();
+      return null;
+    }
+    if (section === "budget-utilization") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] }),
+        ...(selectedBudgetRequestId ? [queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selectedBudgetRequestId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "liquidation-monitoring") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] }),
+        ...(selectedLiquidationReportId ? [queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selectedLiquidationReportId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "registrations") {
+      await refreshScopedAdminQueries();
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "renewals") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-queue"] });
+      if (selectedRenewalId) {
+        await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-context", selectedRenewalId] });
+      }
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (["overview", "inquiries", "activity-logs", "notifications"].includes(section)) {
       await refreshScopedAdminQueries();
       return null;
     }
     if (section === "ypop-validation") {
-      const ypopState = await loadAdminYpopState();
-      if (ypopState) mergeRemoteStateRef.current(ypopState);
-      return ypopState;
+      await refreshAdminYpop();
+      return null;
     }
-    const remoteSnapshot = await loadAdminPortalSupabaseState();
-    if (remoteSnapshot) {
-      mergeRemoteStateRef.current(remoteSnapshot);
-    }
-    if (section === "renewals") {
-      try {
-        const [renewals, accreditations] = await Promise.all([
-          fetchAllOrganizationRenewalsInSupabase(),
-          fetchAllOrganizationAccreditationsInSupabase(),
-        ]);
-        setAdminRenewals(renewals);
-        setAdminAccreditations(accreditations);
-      } catch (err) {
-        console.error("Failed to load renewals or accreditations in refreshAdminState:", err);
-      }
-    }
-    return remoteSnapshot;
+    const pageState = await loadAdminPortalSectionState(section);
+    if (pageState) mergeRemoteStateRef.current(pageState);
+    return pageState;
   };
 
   // Reconcile renewal packets that already have every required file approved.
@@ -3606,7 +3899,7 @@ function AdminPortalContent({ section }: { section: string }) {
     if (renewalReviewSubmitting) return;
     if (!selectedRenewal || !["submitted", "under_review", "resubmitted"].includes(selectedRenewal.status)) return;
 
-    const requiredTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+    const requiredTemplates = renewalRequiredDocuments;
     const allRequiredFilesApproved = requiredTemplates.length > 0 && requiredTemplates.every((documentType) => {
       const file = effectiveRenewalFiles.find(
         (entry) =>
@@ -3636,23 +3929,53 @@ function AdminPortalContent({ section }: { section: string }) {
         });
       }
     })();
-  }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, templateDocuments, renewalReviewSubmitting]);
+  }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, renewalReviewSubmitting]);
 
-  const refreshAdminSnapshot = async () => {
-    if (["overview", "registrations", "inquiries", "activity-logs", "notifications"].includes(section)) {
+  const refreshAdminPageData = async () => {
+    if (section === "budget-monitoring") {
+      await monitoringQuery.refetch();
+      return null;
+    }
+    if (section === "budget-utilization") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] }),
+        ...(selectedBudgetRequestId ? [queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selectedBudgetRequestId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "liquidation-monitoring") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] }),
+        ...(selectedLiquidationReportId ? [queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selectedLiquidationReportId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "registrations") {
+      await refreshScopedAdminQueries();
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "renewals") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-queue"] });
+      if (selectedRenewalId) {
+        await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-context", selectedRenewalId] });
+      }
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (["overview", "inquiries", "activity-logs", "notifications"].includes(section)) {
       await refreshScopedAdminQueries();
       return null;
     }
     if (section === "ypop-validation") {
-      const ypopState = await loadAdminYpopState();
-      if (ypopState) mergeRemoteStateRef.current(ypopState);
-      return ypopState;
+      await refreshAdminYpop();
+      return null;
     }
-    const remoteSnapshot = await loadAdminPortalSupabaseState();
-    if (remoteSnapshot) {
-      mergeRemoteStateRef.current(remoteSnapshot);
-    }
-    return remoteSnapshot;
+    const pageState = await loadAdminPortalSectionState(section);
+    if (pageState) mergeRemoteStateRef.current(pageState);
+    return pageState;
   };
 
   const [isRefreshingYpop, setIsRefreshingYpop] = useState(false);
@@ -3660,11 +3983,17 @@ function AdminPortalContent({ section }: { section: string }) {
   const refreshAdminYpop = async () => {
     setIsRefreshingYpop(true);
     try {
-      const remoteSnapshot = await loadAdminYpopState();
-      if (remoteSnapshot) {
-        mergeRemoteStateRef.current(remoteSnapshot);
+      const refreshes: Promise<unknown>[] = [];
+      if (ypopAdminView === "entry-review" && selectedYpopId && !selectedYpopId.startsWith("virtual-")) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "entry-review", selectedYpopId] }));
       }
-      return remoteSnapshot;
+      if (ypopAdminView === "period-detail" && selectedYpopPeriodId) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "period-submissions", selectedYpopPeriodId] }));
+      }
+      if (ypopAdminView === "periods") refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "periods"] }));
+      await Promise.all(refreshes);
+      await refreshAdminVersionBaseline();
+      return null;
     } finally {
       setIsRefreshingYpop(false);
     }
@@ -3768,7 +4097,7 @@ function AdminPortalContent({ section }: { section: string }) {
     let isActive = true;
 
     void (async () => {
-      await refreshAdminState();
+      if (section !== "budget-monitoring") await refreshAdminState();
       if (!isActive) return;
     })();
 
@@ -4446,23 +4775,8 @@ function AdminPortalContent({ section }: { section: string }) {
 
   const handleRenewalSelectionChange = (nextRenewalId: string | null) => {
     setSelectedRenewalId(nextRenewalId);
-    if (nextRenewalId) {
-      void (async () => {
-        try {
-          const packet = await fetchRenewalPacketInSupabase(nextRenewalId);
-          if (packet?.files) {
-            setLocalRenewalFiles(packet.files);
-          }
-          if (packet?.requiredDocuments) {
-            setRenewalRequiredDocuments(packet.requiredDocuments);
-          }
-        } catch (err) {
-          console.error("Failed to load renewal packet:", err);
-        }
-      })();
-    } else {
+    if (!nextRenewalId) {
       if (selectedRenewalId) renewalVerificationAttemptsRef.current.delete(selectedRenewalId);
-      setLocalRenewalFiles([]);
       setActiveRenewalReviewFileId(null);
       setSelectedRenewalReviewFileIds([]);
     }
@@ -4549,7 +4863,7 @@ function AdminPortalContent({ section }: { section: string }) {
         );
       }
 
-      const freshSnapshot = await refreshAdminSnapshot();
+      const freshPageData = await refreshAdminPageData();
       setAdminListRefreshKey((current) => current + 1);
 
       for (const file of successfulFiles) {
@@ -4598,7 +4912,7 @@ function AdminPortalContent({ section }: { section: string }) {
         relatedId: selectedRegistrationSubmission.id,
       });
 
-      const freshlyUpdatedOrg = freshSnapshot?.organizationProfiles.find(
+      const freshlyUpdatedOrg = freshPageData?.organizationProfiles.find(
         (o) => o.id === selectedRegistrationProfile.id,
       );
       const isNowVerified = freshlyUpdatedOrg?.profileStatus === "verified";
@@ -4662,7 +4976,7 @@ function AdminPortalContent({ section }: { section: string }) {
         }
       }
     } catch (error) {
-      await refreshAdminSnapshot();
+      await refreshAdminPageData();
       toast({
         title: "Unable to submit review decisions",
         description: error instanceof Error ? error.message : "The selected review decisions could not be saved.",
@@ -4757,53 +5071,44 @@ function AdminPortalContent({ section }: { section: string }) {
         `${decision === "approve" ? "Approved" : decision === "needs_revision" ? "Requested revisions for" : "Rejected"} ${file.fileName} from the renewal detail review.`,
         selectedRenewalProfile.id,
       )));
-      setLocalRenewalFiles((current) => {
-        const merged = new Map(effectiveRenewalFiles.map((file) => [file.id, file]));
-        for (const file of current) merged.set(file.id, file);
-        for (const file of savedReviewFiles) merged.set(file.id, file);
-        return Array.from(merged.values());
-      });
-      try {
-        const packet = await fetchRenewalPacketInSupabase(selectedRenewal.id);
-        if (packet?.files) {
-          const requiredRenewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
-          const allRequiredFilesApproved =
-            requiredRenewalTemplates.length > 0 &&
-            requiredRenewalTemplates.every((documentType) => {
-              const file = packet.files.find(
-                (entry) =>
-                  entry.documentTypeId === documentType.id ||
-                  (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
-              );
-              return file?.adminStatus === "approved_green";
-            });
+      const reviewPacketById = new Map(effectiveRenewalFiles.map((file) => [file.id, file]));
+      for (const file of savedReviewFiles) reviewPacketById.set(file.id, file);
+      const updatedReviewPacketFiles = Array.from(reviewPacketById.values());
+      queryClient.setQueryData<Awaited<ReturnType<typeof fetchAdminRenewalReviewContext>>>(
+        ["admin", "renewal-context", selectedRenewal.id],
+        (current) => current ? { ...current, documentSubmissionFiles: updatedReviewPacketFiles } : current,
+      );
+      const requiredRenewalTemplates = renewalRequiredDocuments;
+      const allRequiredFilesApproved =
+        requiredRenewalTemplates.length > 0 &&
+        requiredRenewalTemplates.every((documentType) => {
+          const file = updatedReviewPacketFiles.find(
+            (entry) =>
+              entry.documentTypeId === documentType.id ||
+              (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+          );
+          return file?.adminStatus === "approved_green";
+        });
 
-          if (decision === "approve" && selectedRenewal.status !== "approved" && allRequiredFilesApproved) {
-            renewalVerificationAttemptsRef.current.add(selectedRenewal.id);
-            try {
-              const approval = await adminApproveRenewalInSupabase({ renewalId: selectedRenewal.id });
-              renewalVerifiedUrn = approval.certificateUrn;
-              // Use the authoritative approval response so displaying the URN
-              // does not wait on a second full portal reload.
-              setAdminRenewals((current) => current.map((renewal) =>
-                renewal.id === approval.renewalId
-                  ? { ...renewal, status: "approved", certificateUrn: approval.certificateUrn }
-                  : renewal,
-              ));
-            } catch (error) {
-              renewalVerificationError =
-                error instanceof Error ? error.message : "The renewal could not be verified automatically.";
-            }
-          }
-          setLocalRenewalFiles(packet.files);
+      if (decision === "approve" && selectedRenewal.status !== "approved" && allRequiredFilesApproved) {
+        renewalVerificationAttemptsRef.current.add(selectedRenewal.id);
+        try {
+          const approval = await adminApproveRenewalInSupabase({ renewalId: selectedRenewal.id });
+          renewalVerifiedUrn = approval.certificateUrn;
+          // Use the authoritative approval response so displaying the URN
+          // does not wait on a second full portal reload.
+          setAdminRenewals((current) => current.map((renewal) =>
+            renewal.id === approval.renewalId
+              ? { ...renewal, status: "approved", certificateUrn: approval.certificateUrn }
+              : renewal,
+          ));
+        } catch (error) {
+          renewalVerificationError =
+            error instanceof Error ? error.message : "The renewal could not be verified automatically.";
         }
-      } catch (error) {
-        // The decisions already committed; a read failure must not report them as failed.
-        console.warn("Could not refresh the reviewed renewal packet:", error);
       }
 
-      // Match registration's lighter snapshot refresh, after the audit writes
-      // so recent activity includes this review. Renewal lists load in parallel.
+      // Refresh the bounded current renewal page and only the open packet after the audit writes.
       const refreshResults = await Promise.allSettled([
         auditWrites.then(async (results) => {
           for (const auditResult of results) {
@@ -4811,12 +5116,8 @@ function AdminPortalContent({ section }: { section: string }) {
               console.warn("Could not record renewal review activity:", auditResult.reason);
             }
           }
-          await refreshAdminSnapshot();
+          await refreshAdminPageData();
         }),
-        fetchAllOrganizationRenewalsInSupabase().then(setAdminRenewals),
-        ...(renewalVerifiedUrn
-          ? [fetchAllOrganizationAccreditationsInSupabase().then(setAdminAccreditations)]
-          : []),
       ]);
       for (const refreshResult of refreshResults) {
         if (refreshResult.status === "rejected") {
@@ -5339,7 +5640,7 @@ function AdminPortalContent({ section }: { section: string }) {
           status,
           adminRemarks: pendingAdminConfirmation.action === "approve" ? undefined : adminRemarks,
         });
-        await refreshAdminSnapshot();
+        await refreshAdminPageData();
 
         if (pendingAdminConfirmation.action === "approve") {
           await appendAuditLog(
@@ -6305,9 +6606,6 @@ function AdminPortalContent({ section }: { section: string }) {
             : "both";
 
       const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
-      if (normalizedCategory && !isSystemTemplateCategory(normalizedCategory)) {
-        addCustomTemplateCategory(normalizedCategory);
-      }
 
       const newTemplate = await createTemplateRecordInSupabase({
         name: templateNameDraft.trim(),
@@ -6334,6 +6632,7 @@ function AdminPortalContent({ section }: { section: string }) {
       }
       await appendAuditLog("Created template", "template", newTemplate.databaseId, `Created template "${newTemplate.name}" and uploaded a new file.`);
       await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
       resetTemplateForm();
       toast({ title: "Template created", description: `${newTemplate.name} was added successfully.` });
     } catch (error) {
@@ -6618,6 +6917,11 @@ function AdminPortalContent({ section }: { section: string }) {
     });
   };
 
+  const handleAddCustomTemplateCategory = async (rawCategoryKey: string) => {
+    const persistedCategory = await createAdminTemplateCategoryInSupabase(rawCategoryKey);
+    addCustomTemplateCategory(persistedCategory);
+  };
+
   const handleUpdateTemplate = async () => {
     const template = state.templates.find((entry) => entry.id === editingTemplateId);
     if (!template) return;
@@ -6650,9 +6954,6 @@ function AdminPortalContent({ section }: { section: string }) {
             : "both";
 
       const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
-      if (normalizedCategory && !isSystemTemplateCategory(normalizedCategory)) {
-        addCustomTemplateCategory(normalizedCategory);
-      }
 
       const updatedTemplate = await updateTemplateRecordInSupabase({
         databaseId: template.databaseId,
@@ -6684,6 +6985,7 @@ function AdminPortalContent({ section }: { section: string }) {
       }
       await appendAuditLog("Updated template", "template", template.databaseId, `Updated template "${template.name}" to "${updatedTemplate.name}".`);
       await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
       resetTemplateForm();
       toast({ title: "Template updated", description: `${updatedTemplate.name} was updated successfully.` });
     } catch (error) {
@@ -6718,6 +7020,7 @@ function AdminPortalContent({ section }: { section: string }) {
       }
       await appendAuditLog("Archived file", "template", template.databaseId, `Archived file "${template.name}".`);
       await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
       if (editingTemplateId === template.id || editingTemplateId === template.databaseId || templateModalMode === "delete") {
         resetTemplateForm();
       }
@@ -6746,6 +7049,7 @@ function AdminPortalContent({ section }: { section: string }) {
       }
       await appendAuditLog("Restored file", "template", template.databaseId, `Restored file "${template.name}".`);
       await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
       toast({ title: "File restored", description: `${template.name} is active again.` });
     } catch (error) {
       toast({
@@ -6777,6 +7081,7 @@ function AdminPortalContent({ section }: { section: string }) {
       }
       await appendAuditLog("Deleted file", "template", template.databaseId, `Permanently deleted file "${template.name}".`);
       await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
       removeTemplate(template.id);
       removeTemplate(template.databaseId);
       toast({ title: "File deleted", description: `${template.name} was permanently removed.` });
@@ -6849,8 +7154,10 @@ function AdminPortalContent({ section }: { section: string }) {
   };
 
   const openBudgetRequestDetails = (requestId: string) => {
-    const req = state.budgetRequests.find((item) => item.id === requestId) ?? null;
-    if (!req || req.status === "draft") return;
+    const req = adminBudgetReviewRows.find((row) => row.request.id === requestId)?.request
+      ?? state.budgetRequests.find((item) => item.id === requestId)
+      ?? null;
+    if (req?.status === "draft") return;
     setSelectedBudgetRequestSnapshot(req);
     const requestFiles = [...state.budgetRequestFiles]
       .filter((file) => file.budgetRequestId === requestId)
@@ -8288,7 +8595,7 @@ function AdminPortalContent({ section }: { section: string }) {
           ).length,
         })) : []);
         const visibleRegistrationProfiles = registrationRows.map((row) => row.profile);
-        const documentCountsByOrgId: Record<string, { submitted: number; required: number }> = {};
+        const documentCountsByOrgId: Record<string, { submitted: number; required: number | null }> = {};
         for (const org of section === "registrations" ? visibleRegistrationProfiles : state.organizationProfiles) {
           const serverRow = registrationRows.find((row) => row.profile.id === org.id);
           const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
@@ -8302,7 +8609,9 @@ function AdminPortalContent({ section }: { section: string }) {
             : 0;
           documentCountsByOrgId[org.id] = {
             submitted: serverRow?.submittedDocumentCount ?? submittedCount,
-            required: templateDocuments.length,
+            required: supabase
+              ? registrationRequirementTypesQuery.data?.length ?? null
+              : templateDocuments.length,
           };
         }
 
@@ -8360,6 +8669,7 @@ function AdminPortalContent({ section }: { section: string }) {
               selectedOrgIds={selectedRegistrationIds}
               onSelectedOrgIdsChange={setSelectedRegistrationIds}
               isSuperAdmin={isSuperAdmin}
+              documentRequirementsMessage={registrationRequirementTypesQuery.isError ? "Unavailable" : "Checking"}
               serverPagination={supabase ? {
                 totalCount: adminListResult?.totalCount ?? 0,
                 onPageChange: setAdminListPage,
@@ -8371,10 +8681,29 @@ function AdminPortalContent({ section }: { section: string }) {
         );
       }
       case "renewals": {
+        if (supabase && selectedRenewalId &&
+            (adminRenewalRequiredTypesQuery.isPending || adminRenewalReviewContextQuery.isPending)) {
+          return <p className="p-4 text-sm text-slate-500" role="status">Loading renewal documents…</p>;
+        }
+        if (supabase && selectedRenewalId &&
+            (adminRenewalRequiredTypesQuery.isError || adminRenewalReviewContextQuery.isError)) {
+          const error = adminRenewalRequiredTypesQuery.error ?? adminRenewalReviewContextQuery.error;
+          return (
+            <div className="space-y-3 p-4">
+              <p className="text-sm text-red-600" role="alert">
+                {error instanceof Error ? error.message : "Unable to load renewal documents."}
+              </p>
+              <Button variant="outline" onClick={() => {
+                void adminRenewalRequiredTypesQuery.refetch();
+                void adminRenewalReviewContextQuery.refetch();
+              }}>Retry loading documents</Button>
+            </div>
+          );
+        }
         const selectedRenewalRecord = selectedRenewal;
         const selectedOrg = selectedRenewalProfile;
         const selectedSubmission = selectedRenewalSubmission;
-        const renewalTemplates = renewalRequiredDocuments.length ? renewalRequiredDocuments : templateDocuments;
+        const renewalTemplates = renewalRequiredDocuments;
         const validRenewalTypeIds = new Set(renewalTemplates.flatMap((item) => [item.id, item.databaseId]));
         const selectedFiles = effectiveRenewalFiles.filter(
           (file) => validRenewalTypeIds.has(file.documentTypeId) && file.adminStatus !== "draft",
@@ -8429,7 +8758,6 @@ function AdminPortalContent({ section }: { section: string }) {
             uploadedAt: entry.file.uploadedAt,
           }),
         );
-        const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
         const decisionRequiresRemark = registrationDecisionRequiresRemark(renewalBulkDecision);
         const isRenewalDecisionConfirmDisabled =
           selectedBulkFiles.length === 0 ||
@@ -8845,28 +9173,10 @@ function AdminPortalContent({ section }: { section: string }) {
                   </div>
 
                   <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
-                    {activeReviewEntry && activeDocumentPreviewUrl ? (
-                      activeReviewEntry.file.fileType.startsWith("image/") ? (
-                        <img
-                          src={activeDocumentPreviewUrl}
-                          alt={activeReviewEntry.documentType.name}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <iframe
-                          src={withHiddenPdfToolbar(activeDocumentPreviewUrl)}
-                          title={activeReviewEntry.documentType.name}
-                          className="h-full min-h-[500px] w-full border-0"
-                        />
-                      )
-                    ) : (
-                      <div
-                        className="flex h-full min-h-[500px] w-full items-center justify-center"
-                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
-                      >
-                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
-                      </div>
-                    )}
+                    <AdminRenewalDocumentPreview
+                      file={activeReviewEntry?.file ?? null}
+                      title={activeReviewEntry?.documentType.name ?? "Renewal document preview"}
+                    />
                   </div>
                 </div>
 
@@ -9294,8 +9604,8 @@ function AdminPortalContent({ section }: { section: string }) {
           );
         }
 
-        const verifiedRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus === "approved").length;
-        const pendingReviewRenewalsCount = adminRenewalsQueue.filter((r) => r.renewalStatus !== "approved").length;
+        const verifiedRenewalsCount = adminRenewalQueueQuery.data?.summary.approved ?? 0;
+        const pendingReviewRenewalsCount = adminRenewalQueueQuery.data?.summary.pending_review ?? 0;
 
         return (
           <div className="flex flex-col gap-4">
@@ -9332,7 +9642,14 @@ function AdminPortalContent({ section }: { section: string }) {
               classificationFilter={renewalClassificationFilter}
               onClassificationFilterChange={setRenewalClassificationFilter}
               onReview={(renewalId) => handleRenewalSelectionChange(renewalId)}
+              serverPage={{
+                page: renewalReviewPage,
+                totalCount: adminRenewalQueueQuery.data?.totalCount ?? 0,
+                onPageChange: setRenewalReviewPage,
+              }}
             />
+            {adminRenewalQueueQuery.isFetching ? <p className="px-1 text-sm text-slate-500" role="status">Loading renewal page…</p> : null}
+            {adminRenewalQueueQuery.error instanceof Error ? <p className="px-1 text-sm text-red-600" role="alert">{adminRenewalQueueQuery.error.message}</p> : null}
           </div>
         );
       }
@@ -9509,7 +9826,7 @@ function AdminPortalContent({ section }: { section: string }) {
               try {
                 await updateBudgetRequestInSupabase(selectedBudgetRequest.id, parentPatch);
                 updateBudgetRequest(selectedBudgetRequest.id, parentPatch);
-                await refreshAdminSnapshot();
+                await refreshAdminPageData();
 
                 if (targetParentStatus === "awaiting_release") {
                   const formattedApproved = `₱${approvedAmountNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -9580,7 +9897,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 }
               } catch (err) {
                 console.error("Failed to update parent budget request in Supabase:", err);
-                await refreshAdminSnapshot();
+                await refreshAdminPageData();
                 toast({
                   title: "Update failed",
                   description: "Unable to update the budget request. The document review may have been saved, but the budget lifecycle update failed. Please refresh and try again.",
@@ -9589,7 +9906,7 @@ function AdminPortalContent({ section }: { section: string }) {
               }
             } else {
               // Parent status remains unchanged (e.g. only 1 of multiple documents was approved)
-              await refreshAdminSnapshot();
+              await refreshAdminPageData();
               if (budgetBulkDecision === "approve") {
                 void appendAuditLog(
                   "Approved budget request document",
@@ -10387,7 +10704,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                   };
                                   await updateBudgetRequestInSupabase(selectedBudgetRequest.id, budgetPatch);
                                   updateBudgetRequest(selectedBudgetRequest.id, budgetPatch);
-                                  await refreshAdminSnapshot();
+                                  await refreshAdminPageData();
                                   void appendAuditLog(
                                     "Budget cash released",
                                     "budget_request",
@@ -10513,23 +10830,14 @@ function AdminPortalContent({ section }: { section: string }) {
           );
         }
 
-        const pendingReviewBudgetRequestCount = semesterScopedBudgetRequests.filter(
-          (r) => r.status === "submitted" || r.status === "under_review",
-        ).length;
-        const pendingReviewBudgetRequestTodayCount = semesterScopedBudgetRequests.filter((r) => {
-          if (r.status !== "submitted" && r.status !== "under_review") return false;
-          const createdDate = new Date(r.createdAt);
-          const today = new Date();
-          return (
-            !Number.isNaN(createdDate.getTime()) &&
-            createdDate.getFullYear() === today.getFullYear() &&
-            createdDate.getMonth() === today.getMonth() &&
-            createdDate.getDate() === today.getDate()
-          );
-        }).length;
-        const releasedBudgetTotal = semesterScopedBudgetRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+        const pendingReviewBudgetRequestCount = adminBudgetReviewQuery.data?.summary.pendingReview ?? 0;
+        const pendingReviewBudgetRequestTodayCount = adminBudgetReviewQuery.data?.summary.pendingReviewToday ?? 0;
+        const releasedBudgetTotal = adminBudgetReviewQuery.data?.summary.releasedTotal ?? 0;
         const formatBudgetStatCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
-        const budgetOrganizationsById = Object.fromEntries(state.organizationProfiles.map((org) => [org.id, org]));
+        const budgetOrganizationsById = Object.fromEntries([
+          ...state.organizationProfiles,
+          ...adminBudgetReviewRows.map((row) => row.organization),
+        ].map((org) => [org.id, org]));
 
         return (
           <div className="space-y-4">
@@ -10603,7 +10911,6 @@ function AdminPortalContent({ section }: { section: string }) {
 
             <BudgetRequestsTable
               requests={filteredAdminBudgetRequests}
-              allRequests={adminBudgetRequests}
               organizationsById={budgetOrganizationsById}
               searchValue={budgetRequestsSearch}
               onSearchChange={setBudgetRequestsSearch}
@@ -10616,6 +10923,8 @@ function AdminPortalContent({ section }: { section: string }) {
               classificationFilter={budgetRequestsClassificationFilter}
               onClassificationFilterChange={setBudgetRequestsClassificationFilter}
               onReview={(requestId) => openBudgetRequestDetails(requestId)}
+              serverPage={{ page: budgetReviewPage, totalCount: adminBudgetReviewQuery.data?.totalCount ?? 0, onPageChange: setBudgetReviewPage }}
+              allRequests={filteredAdminBudgetRequests}
               selectedRequestIds={selectedBudgetRequestIds}
               onSelectedRequestIdsChange={setSelectedBudgetRequestIds}
               onDeleteSelected={handleInitiateBudgetRequestsDelete}
@@ -10936,7 +11245,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 try {
                   await updateLiquidationReportInSupabase(selectedLiquidationReport.id, parentPatch);
                   updateLiquidationReport(selectedLiquidationReport.id, parentPatch);
-                  await refreshAdminSnapshot();
+                  await refreshAdminPageData();
 
                   if (targetParentStatus === "approved_for_ftf_green") {
                     void appendAuditLog(
@@ -11004,7 +11313,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   }
                 } catch (err) {
                   console.error("Failed to update parent liquidation report in Supabase:", err);
-                  await refreshAdminSnapshot();
+                  await refreshAdminPageData();
                   toast({
                     title: "Update failed",
                     description: "Unable to update liquidation report. The document review may have been saved, but parent lifecycle update failed. Please refresh and try again.",
@@ -11012,7 +11321,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   });
                 }
               } else {
-                await refreshAdminSnapshot();
+                await refreshAdminPageData();
                 if (liquidationBulkDecision === "approve") {
                   void appendAuditLog(
                     "Approved liquidation document",
@@ -11064,7 +11373,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
               await updateLiquidationReportInSupabase(selectedLiquidationReport.id, liqPatch);
               updateLiquidationReport(selectedLiquidationReport.id, liqPatch);
-              await refreshAdminSnapshot();
+              await refreshAdminPageData();
 
               void appendAuditLog(
                 "Completed liquidation report",
@@ -11088,7 +11397,7 @@ function AdminPortalContent({ section }: { section: string }) {
               });
             } catch (err) {
               console.error("Failed to update liquidation lifecycle decision:", err);
-              await refreshAdminSnapshot();
+              await refreshAdminPageData();
               toast({
                 title: "Update failed",
                 description: "Could not update liquidation report status. Please try again.",
@@ -11779,14 +12088,17 @@ function AdminPortalContent({ section }: { section: string }) {
           );
         }
         {
-          const liquidationOrganizationsById = Object.fromEntries(state.organizationProfiles.map((org) => [org.id, org]));
-          const liquidationBudgetRequestsById = Object.fromEntries(state.budgetRequests.map((request) => [request.id, request]));
-          const pendingReviewLiquidationCount = visibleLiquidationReports.filter(
-            (r) => r.status === "submitted" || r.status === "under_review",
-          ).length;
-          const overdueLiquidationCount = visibleLiquidationReports.filter(
-            (r) => r.status === "overdue" || isLiquidationOverdue(r.deadlineAt, r.status),
-          ).length;
+          const liquidationOrganizationsById = Object.fromEntries([
+            ...state.organizationProfiles,
+            ...adminLiquidationReviewRows.map((row) => row.organization),
+          ].map((org) => [org.id, org]));
+          const liquidationPageBudgets = adminLiquidationReviewRows.map((row) => row.budgetRequest as BudgetRequest);
+          const liquidationBudgetRequestsById = Object.fromEntries([
+            ...state.budgetRequests,
+            ...liquidationPageBudgets,
+          ].map((request) => [request.id, request]));
+          const pendingReviewLiquidationCount = adminLiquidationReviewQuery.data?.summary.pendingReview ?? 0;
+          const overdueLiquidationCount = adminLiquidationReviewQuery.data?.summary.overdue ?? 0;
 
           return (
             <div className="space-y-4">
@@ -11827,7 +12139,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 allReports={visibleLiquidationReports}
                 organizationsById={liquidationOrganizationsById}
                 budgetRequestsById={liquidationBudgetRequestsById}
-                allBudgetRequests={state.budgetRequests}
+                allBudgetRequests={liquidationPageBudgets}
                 searchValue={liquidationReportsSearch}
                 onSearchChange={setLiquidationReportsSearch}
                 statusFilter={liquidationReportsStatusFilter}
@@ -11839,10 +12151,12 @@ function AdminPortalContent({ section }: { section: string }) {
                 classificationFilter={liquidationReportsClassificationFilter}
                 onClassificationFilterChange={setLiquidationReportsClassificationFilter}
                 onReview={(reportId) => {
-                  const report = state.liquidationReports.find((item) => item.id === reportId);
+                  const report = adminLiquidationReviewRows.find((row) => row.report.id === reportId)?.report
+                    ?? state.liquidationReports.find((item) => item.id === reportId);
                   if (report) openLiquidationDetails(report);
                 }}
                 onOpenLinkedRequest={(requestId) => openBudgetRequestDetails(requestId)}
+                serverPage={{ page: liquidationReviewPage, totalCount: adminLiquidationReviewQuery.data?.totalCount ?? 0, onPageChange: setLiquidationReviewPage }}
               />
 
               <AdminExportDialog
@@ -11955,6 +12269,24 @@ function AdminPortalContent({ section }: { section: string }) {
         );
       case "budget-monitoring":
       case "public-transparency-posts": {
+        if (section === "budget-monitoring" && supabase && (monitoringQuery.isPending || monitoringQuery.isError)) {
+          return <div className="space-y-4">
+            <AdminPageHeader title="Budget Monitoring" description="Track budgets from request through liquidation." />
+            <BudgetMonitoringPageControls
+              filters={budgetMonitoringFilters}
+              availableFiscalYears={availableFiscalYears}
+              filterOptions={budgetMonitoringFilterOptions}
+              onChangeFilters={setBudgetMonitoringFilters}
+              onResetFilters={() => setBudgetMonitoringFilters(current => ({ ...createDefaultBudgetMonitoringFilters(current.fiscalPeriod.fiscalYear), fiscalPeriod: current.fiscalPeriod }))}
+            />
+            <div role={monitoringQuery.isError ? "alert" : "status"} className="rounded-lg border border-border bg-admin-surface p-6 text-sm">
+              {monitoringQuery.isError ? <>
+                <p>Budget Monitoring could not be loaded. {monitoringQuery.error.message}</p>
+                <Button className="mt-3" onClick={() => void monitoringQuery.refetch()}>Retry</Button>
+              </> : <p>Loading the selected reporting period...</p>}
+            </div>
+          </div>;
+        }
         return (
           <div className="space-y-4">
             {isConfiguringPublicSnapshot ? (
@@ -12376,7 +12708,7 @@ function AdminPortalContent({ section }: { section: string }) {
               onCancel={resetTemplateForm}
               onSave={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
               categoryOptions={templateCategoryOptions}
-              onAddCategory={addCustomTemplateCategory}
+              onAddCategory={handleAddCustomTemplateCategory}
               onDeleteCategory={handleInitiateDeleteCategory}
             />
             <Dialog
@@ -12573,18 +12905,25 @@ function AdminPortalContent({ section }: { section: string }) {
               cancelLabel="Cancel"
               confirmLabel="Delete Category"
               confirmIcon={Trash2}
-              onConfirm={() => {
-                if (pendingCategoryDelete?.category) {
-                  removeCustomTemplateCategory(pendingCategoryDelete.category);
-                  if (templateCategoryDraft === pendingCategoryDelete.category) {
-                    setTemplateCategoryDraft("");
-                  }
+              onConfirm={async () => {
+                const category = pendingCategoryDelete?.category;
+                if (!category) return;
+                try {
+                  await deleteAdminTemplateCategoryInSupabase(category);
+                  removeCustomTemplateCategory(category);
+                  if (templateCategoryDraft === category) setTemplateCategoryDraft("");
                   toast({
                     title: "Category deleted",
-                    description: `Category "${formatCanonicalCategoryLabel(pendingCategoryDelete.category)}" was removed.`,
+                    description: `Category "${formatCanonicalCategoryLabel(category)}" was removed.`,
+                  });
+                  setPendingCategoryDelete(null);
+                } catch (error) {
+                  toast({
+                    title: "Category could not be deleted",
+                    description: error instanceof Error ? error.message : "The category could not be deleted.",
+                    variant: "destructive",
                   });
                 }
-                setPendingCategoryDelete(null);
               }}
             />
             <TemplateFilePreviewDialog
@@ -13034,19 +13373,21 @@ function AdminPortalContent({ section }: { section: string }) {
       case "ypop-validation": {
         // ── VIEW 4: entry-review ────────────────────────────────────────────
         if (ypopAdminView === "entry-review" && selectedYpopId) {
-          const entry = state.ypopEntries.find((e) => e.id === selectedYpopId);
+          const reviewState = adminYpopEntryReviewQuery.data;
+          const entry = (reviewState?.ypopEntries ?? state.ypopEntries).find((e) => e.id === selectedYpopId);
           if (!entry) {
+            if (adminYpopEntryReviewQuery.isFetching) return <p role="status" className="py-12 text-center text-sm text-slate-500">Loading YPOP review details…</p>;
             setSelectedYpopId(null);
             setYpopAdminView("period-detail");
             return null;
           }
-          const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
-          const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === entry.semester);
+          const entryOrg = (reviewState?.organizationProfiles ?? state.organizationProfiles).find((o) => o.id === entry.organizationId);
+          const semesterActivities = (reviewState?.ypopCityActivities ?? state.ypopCityActivities).filter((a) => a.semesterKey === entry.semester);
           const semesterActivityIds = new Set(semesterActivities.map((a) => a.id));
-          const orgEventParticipations = state.ypopEventParticipations.filter(
+          const orgEventParticipations = (reviewState?.ypopEventParticipations ?? state.ypopEventParticipations).filter(
             (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId) && p.status !== "draft",
           );
-          const orgActivities = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id && a.status !== "draft");
+          const orgActivities = (reviewState?.ypopOrgActivities ?? state.ypopOrgActivities).filter((a) => a.ypopEntryId === entry.id && a.status !== "draft");
           const approvedCount =
             orgActivities.filter((a) => a.status === "approved").length +
             orgEventParticipations.filter((p) => p.status === "verified").length;
@@ -13056,7 +13397,7 @@ function AdminPortalContent({ section }: { section: string }) {
           const unreviewedCount =
             orgActivities.filter((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review").length +
             orgEventParticipations.filter((p) => p.status === "pending_evaluation" || p.status === "pending_verification").length;
-          const period = state.ypopPeriods.find((p) => p.semesterKey === entry.semester);
+          const period = (reviewState?.ypopPeriods ?? state.ypopPeriods).find((p) => p.semesterKey === entry.semester);
           const approvedPpaCount = getApprovedYpopOrgActivityCount(
             orgActivities,
             entry.id,
@@ -13091,7 +13432,9 @@ function AdminPortalContent({ section }: { section: string }) {
             orgEventParticipations.filter((p) => p.status !== "draft").map((p) => p.id),
           );
           const eventFilesByParticipationId = new Map<string, YPOPEventFile[]>();
-          state.ypopEventFiles.forEach((file) => {
+          const reviewEventFiles = new Map<string, YPOPEventFile>();
+          [...state.ypopEventFiles, ...(reviewState?.ypopEventFiles ?? [])].forEach((file) => reviewEventFiles.set(file.id, file));
+          reviewEventFiles.forEach((file) => {
             if (!reviewableParticipationIds.has(file.participationId)) return;
             const existing = eventFilesByParticipationId.get(file.participationId) ?? [];
             existing.push(file);
@@ -14413,97 +14756,27 @@ function AdminPortalContent({ section }: { section: string }) {
             setYpopAdminView("periods");
             return null;
           }
-          const periodActivities = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey);
-          const totalCityLedPts = periodActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0);
-          const periodActivityIds = new Set(periodActivities.map((activity) => activity.id));
-          const periodParticipations = state.ypopEventParticipations.filter(
-            (participation) => periodActivityIds.has(participation.activityId) && participation.status !== "draft",
-          );
-          const participationCountByOrgId = new Map<string, number>();
-          periodParticipations.forEach((participation) => {
-            participationCountByOrgId.set(participation.organizationId, (participationCountByOrgId.get(participation.organizationId) ?? 0) + 1);
-          });
-          const periodEntries = [...state.ypopEntries]
-            .filter((e) => e.semester === period.semesterKey)
-            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-          const supplementalEntries = [...participationCountByOrgId.keys()]
-            .filter((organizationId) => !periodEntries.some((entry) => entry.organizationId === organizationId))
-            .map((organizationId) => ({
-              id: `virtual-${period.semesterKey}-${organizationId}`,
-              organizationId,
-              semester: period.semesterKey,
-              semesterLabel: period.semesterLabel,
-              pointsEarned: 0,
-              pointsRequired: 70,
-              totalPoints: 100,
-              status: "draft" as YPOPStatus,
-              adminRemarks: "",
-              submissionNote: "",
-              validationDeadline: period.validationDeadline,
-              submittedAt: "",
-              validatedAt: "",
-              revisionHistory: [],
-              orgLedProjectCount: 0,
-              cityLedAttendance: [],
-              createdAt: period.createdAt,
-              updatedAt: period.updatedAt,
-              _isVirtual: true,
-            }));
-          const combinedPeriodEntries = [...periodEntries, ...supplementalEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-          const semesterActivities = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey);
-          const semesterActivityIds = new Set(semesterActivities.map((a) => a.id));
-
-          const entriesById = new Map(combinedPeriodEntries.map((entry) => [entry.id, entry]));
-          const submissionRows: YpopSubmissionRow[] = combinedPeriodEntries.map((entry) => {
-            const entryOrg = state.organizationProfiles.find((o) => o.id === entry.organizationId);
-            const orgParticipations = state.ypopEventParticipations.filter(
-              (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId) && p.status !== "draft"
-            );
-            const orgActs = state.ypopOrgActivities.filter((a) => a.ypopEntryId === entry.id && a.status !== "draft");
-            const approvedPpaCount = getApprovedYpopOrgActivityCount(orgActs, entry.id, entry.orgLedProjectCount ?? 0);
-            const verifiedAttendance = buildVerifiedYpopAttendance(semesterActivities, orgParticipations, entry.cityLedAttendance);
-            const liveScore = computeYpopScore(verifiedAttendance, semesterActivities, approvedPpaCount, period.orgLedTiers);
-            const rowStatus = deriveYpopQualificationStatus({
-              score: liveScore.totalScore ?? entry.pointsEarned ?? 0,
-              pointsRequired: entry.pointsRequired ?? YPOP_SCORE_THRESHOLD,
-              period,
-              entry,
-              participations: orgParticipations,
-              orgActivities: orgActs,
-            });
-
-            return {
-              id: entry.id,
-              organizationId: entry.organizationId,
-              organizationName: entryOrg?.organizationName ?? "Unknown organization",
-              referenceId: entryOrg?.referenceId ?? "",
-              majorClassification: entryOrg?.majorClassification ?? "",
-              status: rowStatus,
-            };
-          });
-
-          const pendingEvaluationCount = submissionRows.filter((r) => r.status === "pending_evaluation").length;
-          const qualifiedCount = submissionRows.filter((r) => r.status === "qualified").length;
-          const notQualifiedCount = submissionRows.filter((r) => r.status === "not_qualified").length;
-
-          const submissionSearchQuery = ypopSubmissionSearch.trim().toLowerCase();
-          const filteredSubmissionRows = submissionRows.filter((row) => {
-            const matchesSearch =
-              !submissionSearchQuery ||
-              row.organizationName.toLowerCase().includes(submissionSearchQuery) ||
-              row.referenceId.toLowerCase().includes(submissionSearchQuery);
-            const matchesClassification =
-              ypopSubmissionClassificationFilter === "all" || row.majorClassification === ypopSubmissionClassificationFilter;
-            const matchesStatus =
-              ypopSubmissionFilter === "all" ||
-              row.status === ypopSubmissionFilter;
-            return matchesSearch && matchesClassification && matchesStatus;
-          });
+          const periodSubmissionPage = adminYpopSubmissionsQuery.data;
+          const serverSubmissionRows = periodSubmissionPage?.rows ?? [];
+          const submissionRows: YpopSubmissionRow[] = serverSubmissionRows.map((row) => ({
+            id: row.id, organizationId: row.organizationId, organizationName: row.organizationName,
+            referenceId: row.referenceId, majorClassification: row.majorClassification, status: row.status,
+          }));
+          const pendingEvaluationCount = periodSubmissionPage?.summary.pending_evaluation ?? 0;
+          const qualifiedCount = periodSubmissionPage?.summary.qualified ?? 0;
+          const notQualifiedCount = periodSubmissionPage?.summary.not_qualified ?? 0;
 
           const handleValidateSubmission = async (row: YpopSubmissionRow) => {
-            const entry = entriesById.get(row.id);
-            if (!entry) return;
+            let entry = state.ypopEntries.find((candidate) => candidate.id === row.id);
+            if (!entry) {
+              entry = {
+                id: row.id, organizationId: row.organizationId, submittedBy: "", semester: period.semesterKey,
+                semesterLabel: period.semesterLabel, pointsEarned: 0, pointsRequired: 70, totalPoints: 100,
+                status: "draft", adminRemarks: "", submissionNote: "", validationDeadline: period.validationDeadline,
+                submittedAt: "", validatedAt: "", revisionHistory: [], orgLedProjectCount: 0,
+                cityLedAttendance: [], createdAt: period.createdAt, updatedAt: period.updatedAt,
+              } as YPOPEntry;
+            }
             const isVirtualEntry = "_isVirtual" in entry || !entry.id || entry.id.startsWith("virtual-") || entry.id.startsWith("ypop-");
             let reviewEntry = entry;
             if (isVirtualEntry) {
@@ -14561,29 +14834,58 @@ function AdminPortalContent({ section }: { section: string }) {
                 <StatsCard title="NOT QUALIFIED" value={notQualifiedCount} icon={XCircle} description="Organizations not qualified for YPOP." />
               </div>
 
-              <YpopSubmissionsTable
-                key={period.id}
-                rows={filteredSubmissionRows}
-                searchValue={ypopSubmissionSearch}
-                onSearchChange={setYpopSubmissionSearch}
-                classificationFilter={ypopSubmissionClassificationFilter}
-                onClassificationFilterChange={setYpopSubmissionClassificationFilter}
-                statusFilter={ypopSubmissionFilter}
-                onStatusFilterChange={setYpopSubmissionFilter}
-                onValidate={handleValidateSubmission}
-                selectedOrganizationIds={selectedYpopOrganizationIds}
-                onSelectedOrganizationIdsChange={(ids) => {
-                  setSelectedYpopOrganizationIds(ids);
-                  ypopDeletionOperationRef.current = null;
-                }}
-                isDeleting={isDeletingYpopSubmissions}
-                onDeleteSelected={() => {
-                  const rows = submissionRows.filter((row) => selectedYpopOrganizationIds.has(row.organizationId));
-                  if (!rows.length) { setSelectedYpopOrganizationIds(new Set()); return; }
-                  ypopDeletionOperationRef.current ??= crypto.randomUUID();
-                  setYpopDeletionTarget({ periodId: period.id, semesterLabel: period.semesterLabel, rows });
-                }}
-              />
+              {adminYpopSubmissionsQuery.isError ? (
+                <div role="alert" className="flex flex-col items-center gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-10 text-center">
+                  <AlertCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
+                  <div>
+                    <p className="font-segoe text-sm font-semibold text-red-800">YPOP submissions could not be loaded</p>
+                    <p className="mt-1 max-w-2xl break-words font-segoe text-xs text-red-700">
+                      {adminYpopSubmissionsQuery.error instanceof Error
+                        ? adminYpopSubmissionsQuery.error.message
+                        : "The submission queue is temporarily unavailable."}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void adminYpopSubmissionsQuery.refetch()}
+                    disabled={adminYpopSubmissionsQuery.isFetching}
+                  >
+                    <RefreshCw className={cn("mr-2 h-3.5 w-3.5", adminYpopSubmissionsQuery.isFetching && "animate-spin")} />
+                    Retry
+                  </Button>
+                </div>
+              ) : adminYpopSubmissionsQuery.isFetching && !periodSubmissionPage ? (
+                <p role="status" className="rounded-md border border-slate-200 bg-admin-surface py-12 text-center font-segoe text-sm text-slate-500">
+                  Loading YPOP submissions…
+                </p>
+              ) : (
+                <YpopSubmissionsTable
+                  key={period.id}
+                  rows={submissionRows}
+                  searchValue={ypopSubmissionSearch}
+                  onSearchChange={setYpopSubmissionSearch}
+                  classificationFilter={ypopSubmissionClassificationFilter}
+                  onClassificationFilterChange={setYpopSubmissionClassificationFilter}
+                  statusFilter={ypopSubmissionFilter}
+                  onStatusFilterChange={setYpopSubmissionFilter}
+                  onValidate={handleValidateSubmission}
+                  selectedOrganizationIds={selectedYpopOrganizationIds}
+                  onSelectedOrganizationIdsChange={(ids) => {
+                    setSelectedYpopOrganizationIds(ids);
+                    ypopDeletionOperationRef.current = null;
+                  }}
+                  isDeleting={isDeletingYpopSubmissions}
+                  serverPage={{ page: ypopSubmissionPage, totalCount: periodSubmissionPage?.totalCount ?? 0, onPageChange: setYpopSubmissionPage }}
+                  onDeleteSelected={() => {
+                    const rows = submissionRows.filter((row) => selectedYpopOrganizationIds.has(row.organizationId));
+                    if (!rows.length) { setSelectedYpopOrganizationIds(new Set()); return; }
+                    ypopDeletionOperationRef.current ??= crypto.randomUUID();
+                    setYpopDeletionTarget({ periodId: period.id, semesterLabel: period.semesterLabel, rows });
+                  }}
+                />
+              )}
             </div>
           );
         }
@@ -14593,7 +14895,7 @@ function AdminPortalContent({ section }: { section: string }) {
           const isEditMode = Boolean(editingPeriodId);
           const editPeriod = isEditMode ? (state.ypopPeriods.find((p) => p.id === editingPeriodId) as YPOPPeriod | undefined) : undefined;
           const editActivities = isEditMode && editPeriod
-            ? state.ypopCityActivities.filter((a) => a.semesterKey === editPeriod.semesterKey)
+            ? adminYpopPeriodCityActivitiesQuery.data ?? state.ypopCityActivities.filter((a) => a.semesterKey === editPeriod.semesterKey)
             : [];
 
           const generatedSemesterLabel = isEditMode
@@ -15332,7 +15634,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex items-center gap-2.5">
                     <button
                       type="button"
-                      disabled={submittingPeriodStatus !== null}
+                      disabled={submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
                       onClick={() => void submitPeriod("draft")}
                       className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                     >
@@ -15341,7 +15643,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     </button>
                     <button
                       type="button"
-                      disabled={!canSubmit || submittingPeriodStatus !== null}
+                      disabled={!canSubmit || submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
                       onClick={() => void submitPeriod()}
                       className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                     >
@@ -15356,12 +15658,8 @@ function AdminPortalContent({ section }: { section: string }) {
         }
 
         // ── VIEW 1: YPOP Semesters list ───────────────────────────────────────
-        const sortedPeriods = [...state.ypopPeriods].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        const periodRows = sortedPeriods
-          .map((period) => ({
-            period,
-            submissionCount: state.ypopEntries.filter((e) => e.semester === period.semesterKey).length,
-          }))
+        const periodRows = [...(adminYpopPeriodsQuery.data ?? [])]
+          .sort((a, b) => b.period.createdAt.localeCompare(a.period.createdAt))
           .filter(({ period }) => {
             const q = ypopPeriodSearch.trim().toLowerCase();
             if (q && !period.semesterLabel.toLowerCase().includes(q) && !period.semesterKey.toLowerCase().includes(q)) {
@@ -15416,7 +15714,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 setYpopAdminView("create-period");
               }}
               onDelete={(period) => {
-                const activityCount = state.ypopCityActivities.filter((a) => a.semesterKey === period.semesterKey).length;
+                const activityCount = adminYpopPeriodsQuery.data?.find((item) => item.period.id === period.id)?.activityCount ?? 0;
                 setPendingDeleteConfirmation({ kind: "ypop_period", id: period.id, title: period.semesterLabel, activityCount });
               }}
               onViewSubmissions={(period) => {

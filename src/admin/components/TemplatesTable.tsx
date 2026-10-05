@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useState, type ReactNode } from "react";
+import { forwardRef, useMemo, useState, type ReactNode } from "react";
 import { format as formatDate } from "date-fns";
 import { Archive, ChevronDown, Eye, File, FileSpreadsheet, MoreHorizontal, Pencil, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CategoryChip } from "@/admin/components/InquiriesTable";
 import { deriveTemplateCategory, formatTemplateCategoryDropdownLabel, formatTemplateCategoryLabel, orderTemplateCategories, type TemplateRecord } from "@/lib/lydo-connect-data";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { getTemplateFileFormat, formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 
 export type TemplateStatusFilter = "all" | "active" | "archived";
@@ -97,7 +96,6 @@ export const TemplatesTable = ({
   onRestore,
   onDelete,
 }: TemplatesTableProps) => {
-  const [resolvedSizeByTemplateId, setResolvedSizeByTemplateId] = useState<Record<string, number>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
 const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
@@ -129,36 +127,6 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
       })),
     [groups, expandedCategories],
   );
-
-  useEffect(() => {
-    let isActive = true;
-    const visibleTemplates = visibleGroups.flatMap((group) => group.visibleItems);
-    visibleTemplates.forEach((template) => {
-      if (template.templateFileSize !== null) return;
-      if (resolvedSizeByTemplateId[template.id] !== undefined) return;
-      const rawUrl = template.templateFileUrl || template.templateUrl;
-      if (!rawUrl || rawUrl.startsWith("#")) return;
-
-      void resolveSupabaseFileUrl(rawUrl).then((resolvedUrl) => {
-        if (!resolvedUrl || !isActive) return;
-        fetch(resolvedUrl, { method: "HEAD" })
-          .then((res) => {
-            if (!isActive) return;
-            const contentLength = res.headers.get("content-length");
-            if (contentLength) {
-              setResolvedSizeByTemplateId((prev) => ({ ...prev, [template.id]: parseInt(contentLength, 10) }));
-            }
-          })
-          .catch(() => {
-            // Silently swallow CORS or HEAD failures
-          });
-      });
-    });
-    return () => {
-      isActive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleGroups]);
 
   const toggleExpanded = (category: string) => {
     setExpandedCategories((prev) => {
@@ -278,7 +246,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                 const fileFormat = getTemplateFileFormat(template.templateFileUrl || template.templateUrl, template.templateFileName || template.name);
                 const swatch = fileFormatSwatch(fileFormat);
                 const Icon = swatch.icon;
-                const sizeBytes = template.templateFileSize ?? resolvedSizeByTemplateId[template.id];
+                const sizeBytes = template.templateFileSize;
                 const updatedDate = template.templateUploadedAt
                   ? formatDate(new Date(template.templateUploadedAt), "d MMM yyyy")
                   : "—";

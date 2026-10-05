@@ -1,3 +1,4 @@
+import { sanitizeZipCode } from "@/lib/organization-profile-domain";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Camera, CheckCircle2, ChevronRight, ExternalLink, ImagePlus, Loader2, Pencil, Trash2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -919,7 +920,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   </EditorField>
                   <EditorField label="City / Municipality"><Input value={draft.addressCity || "Pasig City"} onChange={(event) => setField("addressCity", event.target.value)} /></EditorField>
                   <EditorField label="Province"><Input value={draft.addressProvince || "Metro Manila"} onChange={(event) => setField("addressProvince", event.target.value)} /></EditorField>
-                  <EditorField label="ZIP Code"><Input value={draft.addressZipCode || ""} onChange={(event) => setField("addressZipCode", event.target.value)} placeholder="e.g. 1603" /></EditorField>
+                  <EditorField label="ZIP Code" required><Input value={draft.addressZipCode || ""} onChange={(event) => setField("addressZipCode", sanitizeZipCode(event.target.value))} placeholder="e.g. 1603" maxLength={4} inputMode="numeric" pattern="[0-9]{4}" required /></EditorField>
                   <EditorField label="Facebook Page"><Input type="url" value={draft.facebookPageUrl || ""} onChange={(event) => setField("facebookPageUrl", event.target.value)} placeholder="https://facebook.com/..." /></EditorField>
                 </div>
               ) : null}

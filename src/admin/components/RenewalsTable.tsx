@@ -53,6 +53,7 @@ export type RenewalsTableProps = {
   classificationFilter: string;
   onClassificationFilterChange: (value: string) => void;
   onReview: (renewalId: string) => void;
+  serverPage?: { page: number; totalCount: number; onPageChange: (page: number) => void };
 };
 
 const STATUS_TABS: { value: RenewalStatusFilter; label: string }[] = [
@@ -61,7 +62,7 @@ const STATUS_TABS: { value: RenewalStatusFilter; label: string }[] = [
   { value: "approved", label: "Verified" },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export const RenewalStatusPill = ({
   status,
@@ -111,8 +112,17 @@ export const RenewalsTable = ({
   classificationFilter,
   onClassificationFilterChange,
   onReview,
+  serverPage,
 }: RenewalsTableProps) => {
   const [page, setPage] = useState(0);
+  const pageIndex = serverPage?.page ?? page;
+  const totalCount = serverPage?.totalCount ?? renewals.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const clampedPage = Math.min(pageIndex, totalPages - 1);
+  const goFirstPage = () => {
+    setPage(0);
+    serverPage?.onPageChange(0);
+  };
 
   const barangayOptions = useMemo(
     () => getBarangayOptionsForDistrict(districtFilter),
@@ -121,21 +131,21 @@ export const RenewalsTable = ({
 
   const handleDistrictFilterChange = (nextDistrict: "all" | PasigDistrict) => {
     onDistrictFilterChange(nextDistrict);
-    setPage(0);
+    goFirstPage();
     if (!isBarangayInDistrict(barangayFilter, nextDistrict)) {
       onBarangayFilterChange("all");
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(renewals.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, totalPages - 1);
   const pageItems = useMemo(
-    () => renewals.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
-    [renewals, clampedPage],
+    () => serverPage ? renewals : renewals.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
+    [serverPage, renewals, clampedPage],
   );
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const normalized = Math.max(0, Math.min(next, totalPages - 1));
+    setPage(normalized);
+    serverPage?.onPageChange(normalized);
   };
 
   return (
@@ -151,7 +161,7 @@ export const RenewalsTable = ({
                 type="button"
                 onClick={() => {
                   onStatusFilterChange(tab.value);
-                  setPage(0);
+                  goFirstPage();
                 }}
                 className={cn(
                   "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
@@ -175,7 +185,7 @@ export const RenewalsTable = ({
             value={searchValue}
             onChange={(event) => {
               onSearchChange(event.target.value);
-              setPage(0);
+              goFirstPage();
             }}
             placeholder="Search by renewal reference or organization..."
             className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
@@ -237,7 +247,7 @@ export const RenewalsTable = ({
             <DropdownMenuItem
               onClick={() => {
                 onBarangayFilterChange("all");
-                setPage(0);
+                goFirstPage();
               }}
               className={cn(
                 "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -251,7 +261,7 @@ export const RenewalsTable = ({
                 key={barangay.id}
                 onClick={() => {
                   onBarangayFilterChange(barangay.name);
-                  setPage(0);
+                  goFirstPage();
                 }}
                 className={cn(
                   "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -281,7 +291,7 @@ export const RenewalsTable = ({
             <DropdownMenuItem
               onClick={() => {
                 onClassificationFilterChange("all");
-                setPage(0);
+                goFirstPage();
               }}
               className={cn(
                 "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -295,7 +305,7 @@ export const RenewalsTable = ({
                 key={classification}
                 onClick={() => {
                   onClassificationFilterChange(classification);
-                  setPage(0);
+                  goFirstPage();
                 }}
                 className={cn(
                   "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
@@ -410,7 +420,7 @@ export const RenewalsTable = ({
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-          <span className="text-text-default">{renewals.length}</span> renewals
+          <span className="text-text-default">{totalCount}</span> renewals
         </p>
         <div className="flex items-center gap-2">
           <button

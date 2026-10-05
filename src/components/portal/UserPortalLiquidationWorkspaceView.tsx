@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   Receipt,
   CheckCircle2,
@@ -42,8 +43,17 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
-import { computeLiquidationWorkflowMetrics } from "@/lib/workflow-metrics";
+import {
+  loadOrganizationDashboardSummary,
+  loadOrganizationLiquidationReportById,
+  loadOrganizationLiquidationReportFiles,
+  loadOrganizationLiquidationReportFilesForPage,
+  loadOrganizationLiquidationReportPage,
+  resolveSupabaseFileUrl,
+  subscribeToOrganizationStatusChangesInSupabase,
+} from "@/lib/lydo-connect-supabase";
+import { computeLiquidationWorkflowMetrics, computeLiquidationWorkflowMetricsFromStatusCounts } from "@/lib/workflow-metrics";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 import {
   formatRevisionDeadline,
   getRevisionTimeRemaining,
@@ -55,8 +65,11 @@ import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewM
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
 import { formatAdvocacyLabel } from "@/lib/lydo-connect-data";
+import { queryClient } from "@/lib/query-client";
 
 export interface UserPortalLiquidationWorkspaceViewProps {
+  organizationId?: string;
+  organizationDashboardSummary?: any;
   liquidationWorkflowEligibility?: any;
   budgetWorkflowEligibility?: any;
   liquidationReports: Array<any>;
@@ -111,7 +124,9 @@ const useIsDesktop = () => {
   return isDesktop;
 };
 
-export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationWorkspaceViewProps> = ({
+const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationWorkspaceViewProps> = ({
+  organizationId = "",
+  organizationDashboardSummary,
   liquidationWorkflowEligibility,
   budgetWorkflowEligibility,
   liquidationReports,
@@ -139,6 +154,8 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "review" | "completed" | "revision">("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "deadline">("newest");
+  const [historyPage, setHistoryPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   
   // Direct Download State with Spinner Feedback
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
@@ -146,11 +163,94 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   // Resolved Preview URL state for selected report
   const [resolvedModalPreviewUrl, setResolvedModalPreviewUrl] = useState<string>("");
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 250);
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [debouncedSearch, filterTab, sortOrder]);
+
+  const liquidationStatusesByTab = {
+    all: [],
+    review: ["submitted", "hard_copy_submitted", "approved_for_ftf_green", "under_review"],
+    completed: ["completed_liquidated"],
+    revision: ["needs_revision", "overdue", "rejected_red"],
+  } as const;
+  const liquidationPageQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-page-view", historyPage, 25, debouncedSearch, liquidationStatusesByTab[filterTab], sortOrder],
+    queryFn: () => loadOrganizationLiquidationReportPage(organizationId, {
+      page: historyPage,
+      pageSize: 25,
+      search: debouncedSearch,
+      statuses: [...liquidationStatusesByTab[filterTab]],
+      sortBy: sortOrder === "deadline" ? "deadline_at" : "created_at",
+      sortDirection: sortOrder === "oldest" || sortOrder === "deadline" ? "asc" : "desc",
+    }),
+    enabled: Boolean(organizationId),
+    placeholderData: (previous) => previous,
+  });
+  const dashboardSummaryQuery = useQuery({
+    queryKey: ["user", organizationId, "dashboard-summary-liquidation-view"],
+    queryFn: () => loadOrganizationDashboardSummary(organizationId),
+    enabled: Boolean(organizationId),
+    staleTime: 30_000,
+  });
+  const pageLiquidationReports = liquidationPageQuery.data?.rows ?? liquidationReports;
+  const pageLiquidationTotalCount = liquidationPageQuery.data?.totalCount ?? liquidationReports.length;
+  const pageLiquidationReportIds = useMemo(() => pageLiquidationReports.map((report) => report.id).filter(Boolean), [pageLiquidationReports]);
+  const liquidationPageFilesQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-page-files-view", pageLiquidationReportIds],
+    queryFn: () => loadOrganizationLiquidationReportFilesForPage(organizationId, pageLiquidationReportIds),
+    enabled: Boolean(organizationId && pageLiquidationReportIds.length),
+    staleTime: 0,
+  });
+  const liquidationPageFilesByReportId = useMemo(() => {
+    const filesByReportId = new Map<string, any[]>();
+    for (const file of liquidationPageFilesQuery.data ?? []) {
+      const files = filesByReportId.get(file.liquidationReportId) ?? [];
+      files.push(file);
+      filesByReportId.set(file.liquidationReportId, files);
+    }
+    return filesByReportId;
+  }, [liquidationPageFilesQuery.data]);
+  const visibleLiquidationFilesByReportId = useMemo(
+    () => new Map([...liquidationFilesByReportId, ...liquidationPageFilesByReportId]),
+    [liquidationFilesByReportId, liquidationPageFilesByReportId],
+  );
+  const activeDashboardSummary = organizationDashboardSummary ?? dashboardSummaryQuery.data;
+
   const liquidationRoutePath = userRouteMap["liquidation-reporting"] || "/liquidation-reporting";
   const selectedReportId = searchParams.get("reportId");
-  const selectedReport = selectedReportId
-    ? liquidationReports.find((r) => r.id === selectedReportId) ?? null
+  const pageSelectedReport = selectedReportId
+    ? pageLiquidationReports.find((r) => r.id === selectedReportId) ?? liquidationReports.find((r) => r.id === selectedReportId) ?? null
     : null;
+  const selectedLiquidationDetailQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-detail-view", selectedReportId ?? "none"],
+    queryFn: () => loadOrganizationLiquidationReportById(organizationId, selectedReportId!),
+    enabled: Boolean(organizationId && selectedReportId && !pageSelectedReport),
+    staleTime: 30_000,
+  });
+  const selectedReport = pageSelectedReport ?? selectedLiquidationDetailQuery.data ?? null;
+
+  const selectedReportFilesQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-files-view", selectedReport?.id ?? "none"],
+    queryFn: () => loadOrganizationLiquidationReportFiles(organizationId, selectedReport!.id),
+    enabled: Boolean(organizationId && selectedReport?.id),
+    staleTime: 0,
+  });
+  useEffect(() => {
+    if (!organizationId) return;
+    return subscribeToOrganizationStatusChangesInSupabase({
+      organizationId, feature: "liquidations", detailId: selectedReportId,
+      onChange: () => undefined,
+      onStatus: (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization liquidation status channel subscribed.");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization liquidation status channel:", status, error ?? "");
+      },
+    });
+  }, [organizationId, selectedReportId]);
 
   const stagedDraftFile = selectedReport ? liquidationFileDraftByReportId[selectedReport.id] ?? null : null;
   const [stagedPreviewUrl, setStagedPreviewUrl] = useState<string | null>(null);
@@ -167,9 +267,14 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
     };
   }, [stagedDraftFile]);
 
-  const selectedFiles = selectedReport ? (liquidationFilesByReportId.get(selectedReport.id) ?? []) : [];
+  const selectedFiles = selectedReport
+    ? (selectedReportFilesQuery.data?.length
+      ? selectedReportFilesQuery.data
+      : visibleLiquidationFilesByReportId.get(selectedReport.id) ?? selectedReportFilesQuery.data ?? [])
+    : [];
   const primaryModalFile = selectedFiles[0] ?? null;
   const primaryFileUrl = primaryModalFile?.fileUrl || "";
+  const getRelatedBudget = (report: any) => budgetRequests.find((request) => request.id === report.budgetRequestId) ?? report.relatedBudget ?? null;
 
   // Automatically resolve URL when report is opened
   useEffect(() => {
@@ -257,56 +362,22 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
   };
 
   // Metrics (Derived 100% from shared workflow-metrics utility)
-  const liquidationMetrics = computeLiquidationWorkflowMetrics(liquidationReports);
+  const liquidationMetrics = activeDashboardSummary
+    ? computeLiquidationWorkflowMetricsFromStatusCounts(activeDashboardSummary.liquidations.statusCounts, activeDashboardSummary.liquidations.totalCount)
+    : computeLiquidationWorkflowMetrics(pageLiquidationReports);
   const totalReports = liquidationMetrics.totalReports;
   const underReviewCount = liquidationMetrics.underReviewCount;
   const needsRevisionCount = liquidationMetrics.needsRevisionCount;
   const completedCount = liquidationMetrics.completedCount;
   const completionPercent = liquidationMetrics.completionPercent;
 
-  const totalReleasedBudget = liquidationReports.reduce((sum, rep) => {
-    const relatedBudget = budgetRequests.find((req) => req.id === rep.budgetRequestId);
+  const totalReleasedBudget = pageLiquidationReports.reduce((sum, rep) => {
+    const relatedBudget = getRelatedBudget(rep);
     return sum + (relatedBudget?.releasedAmount || relatedBudget?.approvedAmount || 0);
   }, 0);
 
   // Filtering
-  const filteredReports = liquidationReports
-    .filter((report) => {
-      const relatedBudget = budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
-      const query = searchQuery.trim().toLowerCase();
-      if (!query) return true;
-      return [
-        relatedBudget?.activityTitle,
-        relatedBudget?.purposeCategory,
-        relatedBudget?.venue,
-        report.id,
-      ].some((value) => value?.toLowerCase().includes(query));
-    })
-    .filter((report) => {
-      if (filterTab === "review")
-        return (
-          report.status === "submitted" ||
-          report.status === "hard_copy_submitted" ||
-          report.status === "approved_for_ftf_green"
-        );
-      if (filterTab === "completed") return report.status === "completed_liquidated";
-      if (filterTab === "revision")
-        return (
-          report.status === "needs_revision" ||
-          report.status === "overdue" ||
-          report.status === "rejected_red"
-        );
-      return true;
-    })
-    .sort((left, right) => {
-      if (sortOrder === "oldest") {
-        return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
-      }
-      if (sortOrder === "deadline") {
-        return new Date(left.deadlineAt || left.createdAt).getTime() - new Date(right.deadlineAt || right.createdAt).getTime();
-      }
-      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-    });
+  const filteredReports = pageLiquidationReports;
 
   const getRemainingDaysLabel = (deadlineAt?: string) => {
     if (!deadlineAt) return "No deadline set";
@@ -495,7 +566,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl overflow-x-auto [scrollbar-width:none] touch-pan-x">
             <button
               type="button"
-              onClick={() => setFilterTab("all")}
+              onClick={() => { setHistoryPage(1); setFilterTab("all"); }}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "all"
@@ -507,7 +578,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             </button>
             <button
               type="button"
-              onClick={() => setFilterTab("completed")}
+              onClick={() => { setHistoryPage(1); setFilterTab("completed"); }}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "completed"
@@ -521,7 +592,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             </button>
             <button
               type="button"
-              onClick={() => setFilterTab("review")}
+              onClick={() => { setHistoryPage(1); setFilterTab("review"); }}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "review"
@@ -535,7 +606,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             </button>
             <button
               type="button"
-              onClick={() => setFilterTab("revision")}
+              onClick={() => { setHistoryPage(1); setFilterTab("revision"); }}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap",
                 filterTab === "revision"
@@ -578,6 +649,15 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           </div>
         </div>
 
+        <OrganizationHistoryPagination
+          page={historyPage}
+          totalPages={liquidationPageQuery.data?.totalPages ?? 1}
+          totalCount={pageLiquidationTotalCount}
+          pageSize={25}
+          loading={liquidationPageQuery.isFetching}
+          onPageChange={setHistoryPage}
+        />
+
         {/* 4. Compact Mobile Report Cards (< lg) */}
         <div className="mobile-cards space-y-3 block lg:hidden">
           {filteredReports.length === 0 ? (
@@ -590,7 +670,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
             </div>
           ) : (
             filteredReports.map((report) => {
-              const relatedBudget = budgetRequests.find((req) => req.id === report.budgetRequestId) ?? null;
+              const relatedBudget = getRelatedBudget(report);
               const recordCode = buildPublicRecordCode("LR", report, liquidationReports);
               const remainingDaysText = getRemainingDaysLabel(report.deadlineAt);
 
@@ -689,8 +769,8 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
                   </tr>
                 ) : (
                   filteredReports.map((report) => {
-                    const relatedBudget = budgetRequests.find((req) => req.id === report.budgetRequestId) ?? null;
-                    const files = liquidationFilesByReportId.get(report.id) ?? [];
+                    const relatedBudget = getRelatedBudget(report);
+                    const files = visibleLiquidationFilesByReportId.get(report.id) ?? [];
                     const primaryFile = files[0] ?? null;
                     const recordCode = buildPublicRecordCode("LR", report, liquidationReports);
                     const remainingDaysText = getRemainingDaysLabel(report.deadlineAt);
@@ -811,8 +891,8 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           >
             <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl">
               {selectedReport && (() => {
-                const selectedBudget = budgetRequests.find((req) => req.id === selectedReport.budgetRequestId) ?? null;
-                const files = liquidationFilesByReportId.get(selectedReport.id) ?? [];
+                const selectedBudget = getRelatedBudget(selectedReport);
+                const files = selectedFiles;
                 const primaryFile = files[0] ?? null;
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
@@ -1249,8 +1329,7 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
               className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
             >
               {selectedReport && (() => {
-                const selectedBudget = budgetRequests.find((req) => req.id === selectedReport.budgetRequestId) ?? null;
-                const selectedFiles = liquidationFilesByReportId.get(selectedReport.id) ?? [];
+                const selectedBudget = getRelatedBudget(selectedReport);
                 const primaryFile = selectedFiles[0] ?? null;
                 const recordCode = buildPublicRecordCode("LR", selectedReport, liquidationReports);
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
@@ -1721,15 +1800,29 @@ export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationW
           className="hidden"
           aria-hidden="true"
           onChange={async (event) => {
-            const targetReport = liquidationReports.find((item) => item.id === liquidationUploadTargetId) ?? null;
-            if (targetReport) {
-              await handleLiquidationFileUpload(targetReport, event.target.files);
+            const input = event.currentTarget;
+            const files = input.files;
+            try {
+              const targetReport = pageLiquidationReports.find((item) => item.id === liquidationUploadTargetId)
+                ?? liquidationReports.find((item) => item.id === liquidationUploadTargetId)
+                ?? null;
+              if (targetReport) {
+                await handleLiquidationFileUpload(targetReport, files);
+              }
+            } finally {
+              input.value = "";
+              setLiquidationUploadTargetId(null);
             }
-            event.currentTarget.value = "";
-            setLiquidationUploadTargetId(null);
           }}
         />
       </div>
     </FeatureGate>
   );
 };
+
+// Share the app cache while keeping this view safe to render in isolation.
+export const UserPortalLiquidationWorkspaceView: React.FC<UserPortalLiquidationWorkspaceViewProps> = (props) => (
+  <QueryClientProvider client={queryClient}>
+    <UserPortalLiquidationWorkspaceViewContent {...props} />
+  </QueryClientProvider>
+);

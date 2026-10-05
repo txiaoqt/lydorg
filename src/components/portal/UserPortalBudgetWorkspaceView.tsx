@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   DollarSign,
   CheckCircle2,
@@ -54,7 +55,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import {
+  loadOrganizationBudgetRequestById,
+  loadOrganizationBudgetRequestPage,
+  loadOrganizationBudgetRequestFiles,
+  loadOrganizationBudgetRequestFilesForPage,
+  loadOrganizationDashboardSummary,
+  resolveSupabaseFileUrl,
+  subscribeToOrganizationStatusChangesInSupabase,
+} from "@/lib/lydo-connect-supabase";
 import {
   formatRevisionDeadline,
   getRevisionTimeRemaining,
@@ -63,12 +72,14 @@ import {
   isAwaitingResubmission,
 } from "@/lib/revision-deadline";
 
-import { computeBudgetWorkflowMetrics } from "@/lib/workflow-metrics";
+import { computeBudgetWorkflowMetrics, computeBudgetWorkflowMetricsFromStatusCounts } from "@/lib/workflow-metrics";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 import { WebsiteWorkflowNotice } from "./WebsiteWorkflowNotice";
 import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { formatFileSize } from "./UserPortalTemplatesWorkspaceView";
+import { queryClient } from "@/lib/query-client";
 
 const useIsDesktop = () => {
   const [isDesktop, setIsDesktop] = useState<boolean>(() => {
@@ -93,9 +104,11 @@ const useIsDesktop = () => {
 };
 
 export interface UserPortalBudgetWorkspaceViewProps {
+  organizationId?: string;
+  organizationDashboardSummary?: any;
   budgetWorkflowEligibility?: any;
   budgetRequests: Array<any>;
-  budgetFilesByRequestId: Map<string, any[]>;
+  budgetFilesByRequestId: Map<string, any>;
   budgetNotesByRequestId: Record<string, string>;
   submittingBudgetId: string | null;
   budgetFileInputRef?: React.RefObject<HTMLInputElement> | null;
@@ -106,7 +119,7 @@ export interface UserPortalBudgetWorkspaceViewProps {
   setShowBudgetForm: (show: boolean) => void;
   editingBudgetRequest: any | null;
   startEditingBudgetRequest: (request: any | null) => void;
-  handleDeleteBudgetRequest: (request: any) => Promise<void>;
+  handleDeleteBudgetRequest: (request: any) => Promise<void> | void;
   openPreview?: (fileUrl: string, fileName: string) => void;
   openFile: (url: string, name: string) => void;
   navigate: (path: string) => void;
@@ -138,7 +151,9 @@ export interface UserPortalBudgetWorkspaceViewProps {
   onResubmitBudgetRequest?: (budgetRequestId: string) => Promise<void>;
 }
 
-export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceViewProps> = ({
+const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceViewProps> = ({
+  organizationId = "",
+  organizationDashboardSummary,
   budgetWorkflowEligibility,
   budgetRequests,
   budgetFilesByRequestId,
@@ -186,12 +201,74 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "approved" | "review" | "revision">("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "amount">("newest");
+  const [historyPage, setHistoryPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeFormStep, setActiveFormStep] = useState<number>(1);
 
   // Automatic Preview Resolution State for Selected Drawer Request
   const [resolvedDrawerPreviewUrl, setResolvedDrawerPreviewUrl] = useState<string>("");
   const [isResolvingPreview, setIsResolvingPreview] = useState<boolean>(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 250);
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [debouncedSearch, filterTab, sortOrder]);
+
+  const budgetStatusesByTab = {
+    all: [],
+    approved: ["approved", "awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "approved_released", "budget_approved_green"],
+    review: ["submitted", "pending_review", "under_review", "submitted_for_review", "under_admin_review", "processing"],
+    revision: ["needs_revision", "needs_correction", "rejected", "rejected_red"],
+  } as const;
+  const budgetPageQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-page-view", historyPage, 25, debouncedSearch, budgetStatusesByTab[filterTab], sortOrder],
+    queryFn: () => loadOrganizationBudgetRequestPage(organizationId, {
+      page: historyPage,
+      pageSize: 25,
+      search: debouncedSearch,
+      statuses: [...budgetStatusesByTab[filterTab]],
+      sortBy: sortOrder === "amount" ? "requested_amount" : "created_at",
+      sortDirection: sortOrder === "oldest" ? "asc" : "desc",
+    }),
+    enabled: Boolean(organizationId) && !showBudgetForm,
+    placeholderData: (previous) => previous,
+  });
+
+  const dashboardSummaryQuery = useQuery({
+    queryKey: ["user", organizationId, "dashboard-summary-view"],
+    queryFn: () => loadOrganizationDashboardSummary(organizationId),
+    enabled: Boolean(organizationId) && !showBudgetForm,
+    staleTime: 30_000,
+  });
+
+  const pageBudgetRequests = budgetPageQuery.data?.rows ?? budgetRequests;
+  const pageBudgetTotalCount = budgetPageQuery.data?.totalCount ?? budgetRequests.length;
+  const pageBudgetRequestIds = useMemo(() => pageBudgetRequests.map((request) => request.id).filter(Boolean), [pageBudgetRequests]);
+  const budgetPageFilesQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-page-files-view", pageBudgetRequestIds],
+    queryFn: () => loadOrganizationBudgetRequestFilesForPage(organizationId, pageBudgetRequestIds),
+    enabled: Boolean(organizationId && pageBudgetRequestIds.length) && !showBudgetForm,
+    staleTime: 0,
+  });
+  const budgetPageFilesByRequestId = useMemo(() => {
+    const filesByRequestId = new Map<string, any>();
+    for (const file of budgetPageFilesQuery.data ?? []) {
+      const current = filesByRequestId.get(file.budgetRequestId) ?? [];
+      current.push(file);
+      filesByRequestId.set(file.budgetRequestId, current);
+    }
+    return filesByRequestId;
+  }, [budgetPageFilesQuery.data]);
+  const visibleBudgetFilesByRequestId = useMemo(
+    () => new Map([...budgetFilesByRequestId, ...budgetPageFilesByRequestId]),
+    [budgetFilesByRequestId, budgetPageFilesByRequestId],
+  );
+  const activeDashboardSummary = organizationDashboardSummary ?? dashboardSummaryQuery.data;
 
   const internalFileInputRef = React.useRef<HTMLInputElement | null>(null);
   const replaceFileInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -207,6 +284,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     try {
       setIsReplacingBudgetFile(true);
       await onReplaceBudgetFile(selectedRequest.id, file);
+      await Promise.all([selectedBudgetFilesQuery.refetch(), budgetPageFilesQuery.refetch()]);
     } catch (err) {
       console.error("Failed to replace budget proposal file:", err);
     } finally {
@@ -260,7 +338,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     }
   };
 
-  const existingBudgetFileRaw = editingBudgetRequest ? budgetFilesByRequestId.get(editingBudgetRequest.id) : null;
+  const existingBudgetFileRaw = editingBudgetRequest ? visibleBudgetFilesByRequestId.get(editingBudgetRequest.id) : null;
   const existingBudgetFile = Array.isArray(existingBudgetFileRaw) ? existingBudgetFileRaw[0] : (existingBudgetFileRaw ?? null);
 
   const [isSubmittingProposal, setIsSubmittingProposal] = useState<boolean>(false);
@@ -298,12 +376,36 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
 
   const budgetRoutePath = userRouteMap["budget-request"] || userRouteMap["financial-grant"] || "/financial-grant";
   const selectedRequestId = searchParams.get("budgetRequestId") || searchParams.get("requestId");
-  const selectedRequest = selectedRequestId
-    ? budgetRequests.find((r) => r.id === selectedRequestId) ?? null
+  const pageSelectedRequest = selectedRequestId
+    ? pageBudgetRequests.find((r) => r.id === selectedRequestId) ?? budgetRequests.find((r) => r.id === selectedRequestId) ?? null
     : null;
+  const selectedBudgetDetailQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-detail-view", selectedRequestId ?? "none"],
+    queryFn: () => loadOrganizationBudgetRequestById(organizationId, selectedRequestId!),
+    enabled: Boolean(organizationId && selectedRequestId && !pageSelectedRequest),
+    staleTime: 30_000,
+  });
+  const selectedRequest = pageSelectedRequest ?? selectedBudgetDetailQuery.data ?? null;
+  const activeBudgetDetailId = selectedRequest?.id ?? "";
 
-  // Extract primitive file URL string for stable useEffect dependencies (prevents continuous reloads)
-  const rawDrawerFile = selectedRequest ? budgetFilesByRequestId.get(selectedRequest.id) : null;
+  const selectedBudgetFilesQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-files-view", activeBudgetDetailId || "none"],
+    queryFn: () => loadOrganizationBudgetRequestFiles(organizationId, activeBudgetDetailId),
+    enabled: Boolean(organizationId && activeBudgetDetailId),
+    staleTime: 0,
+  });
+  useEffect(() => {
+    if (!organizationId) return;
+    return subscribeToOrganizationStatusChangesInSupabase({
+      organizationId, feature: "budgets", detailId: activeBudgetDetailId || null,
+      onChange: () => undefined,
+      onStatus: (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization budget status channel subscribed.");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization budget status channel:", status, error ?? "");
+      },
+    });
+  }, [organizationId, activeBudgetDetailId]);
+  const rawDrawerFile = selectedRequest ? selectedBudgetFilesQuery.data ?? visibleBudgetFilesByRequestId.get(selectedRequest.id) : null;
   const primaryDrawerFile = Array.isArray(rawDrawerFile) ? rawDrawerFile[0] : rawDrawerFile;
   const primaryFileUrl = primaryDrawerFile?.fileUrl || "";
 
@@ -441,7 +543,9 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   };
 
   // Metrics (Derived 100% from shared workflow-metrics utility)
-  const budgetMetrics = computeBudgetWorkflowMetrics(budgetRequests);
+  const budgetMetrics = activeDashboardSummary
+    ? computeBudgetWorkflowMetricsFromStatusCounts(activeDashboardSummary.budgets.statusCounts, activeDashboardSummary.budgets.totalCount)
+    : computeBudgetWorkflowMetrics(pageBudgetRequests);
   const totalRequests = budgetMetrics.totalRequests;
   const underReviewCount = budgetMetrics.underReviewCount;
   const needsRevisionCount = budgetMetrics.needsRevisionCount;
@@ -449,7 +553,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   const releasedCount = budgetMetrics.releasedCount;
   const completionPercent = budgetMetrics.completionPercent;
 
-  const totalReleasedAmount = budgetRequests.reduce((acc, r) => {
+  const totalReleasedAmount = activeDashboardSummary?.budgets?.releasedAmount ?? pageBudgetRequests.reduce((acc, r) => {
     if (isBudgetReleased(r.status)) {
       return acc + (Number(r.releasedAmount) || Number(r.approvedAmount) || Number(r.requestedAmount) || 0);
     }
@@ -457,29 +561,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
   }, 0);
 
   // Filter & Sort
-  const filteredRequests = budgetRequests
-    .filter((req) => {
-      const query = searchQuery.trim().toLowerCase();
-      if (!query) return true;
-      return [req.activityTitle, req.purposeCategory, req.venue, req.id].some((v) =>
-        v?.toLowerCase().includes(query)
-      );
-    })
-    .filter((req) => {
-      if (filterTab === "approved") return isBudgetApproved(req.status);
-      if (filterTab === "review") return isBudgetPending(req.status);
-      if (filterTab === "revision") return isBudgetRevision(req.status);
-      return true;
-    })
-    .sort((left, right) => {
-      if (sortOrder === "oldest") {
-        return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
-      }
-      if (sortOrder === "amount") {
-        return (Number(right.requestedAmount) || 0) - (Number(left.requestedAmount) || 0);
-      }
-      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-    });
+  const filteredRequests = pageBudgetRequests;
 
   const isBudgetEligible = Boolean(budgetWorkflowEligibility ? budgetWorkflowEligibility.eligible : true);
 
@@ -1219,7 +1301,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl overflow-x-auto [scrollbar-width:none] touch-pan-x overscroll-x-contain">
               <button
                 type="button"
-                onClick={() => setFilterTab("all")}
+                onClick={() => { setHistoryPage(1); setFilterTab("all"); }}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "all"
@@ -1231,7 +1313,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </button>
               <button
                 type="button"
-                onClick={() => setFilterTab("approved")}
+                onClick={() => { setHistoryPage(1); setFilterTab("approved"); }}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "approved"
@@ -1245,7 +1327,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </button>
               <button
                 type="button"
-                onClick={() => setFilterTab("review")}
+                onClick={() => { setHistoryPage(1); setFilterTab("review"); }}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "review"
@@ -1259,7 +1341,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </button>
               <button
                 type="button"
-                onClick={() => setFilterTab("revision")}
+                onClick={() => { setHistoryPage(1); setFilterTab("revision"); }}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                   filterTab === "revision"
@@ -1302,6 +1384,15 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
               </DropdownMenu>
             </div>
           </div>
+
+          <OrganizationHistoryPagination
+            page={historyPage}
+            totalPages={budgetPageQuery.data?.totalPages ?? 1}
+            totalCount={pageBudgetTotalCount}
+            pageSize={25}
+            loading={budgetPageQuery.isFetching}
+            onPageChange={setHistoryPage}
+          />
 
           {/* 4. Mobile Cards List (block lg:hidden) - High-Scanability Card Architecture */}
           <div className="mobile-cards space-y-3 block lg:hidden">
@@ -1417,7 +1508,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
                       </tr>
                     ) : (
                       filteredRequests.map((req) => {
-                        const rawFile = budgetFilesByRequestId.get(req.id);
+                        const rawFile = visibleBudgetFilesByRequestId.get(req.id);
                         const primaryFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
                         const recordCode = buildPublicRecordCode("BR", req, budgetRequests);
                         const isApproved = isBudgetApproved(req.status);
@@ -1566,7 +1657,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
         <Sheet open={Boolean(selectedRequest)} onOpenChange={(open) => { if (!open) closeBudgetDetail(); }}>
           <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col bg-card border-l border-border/80 shadow-2xl">
             {selectedRequest && (() => {
-              const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
+              const rawDrawerFile = selectedBudgetFilesQuery.data ?? visibleBudgetFilesByRequestId.get(selectedRequest.id);
               const filesList = Array.isArray(rawDrawerFile) ? rawDrawerFile : rawDrawerFile ? [rawDrawerFile] : [];
               const primaryFile = filesList[0];
               const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
@@ -1881,7 +1972,7 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
             className="w-[95vw] sm:w-[92vw] max-w-3xl h-[92dvh] sm:h-[90vh] max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
           >
             {selectedRequest && (() => {
-              const rawDrawerFile = budgetFilesByRequestId?.get(selectedRequest.id);
+              const rawDrawerFile = selectedBudgetFilesQuery.data ?? visibleBudgetFilesByRequestId.get(selectedRequest.id);
               const filesList = Array.isArray(rawDrawerFile) ? rawDrawerFile : rawDrawerFile ? [rawDrawerFile] : [];
               const primaryFile = filesList[0];
               const recordCode = buildPublicRecordCode("BR", selectedRequest, budgetRequests);
@@ -2218,3 +2309,11 @@ export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceVi
     </FeatureGate>
   );
 };
+
+// Keep this feature view independently renderable in embedded/test contexts
+// while sharing the app's canonical query cache when mounted inside the portal.
+export const UserPortalBudgetWorkspaceView: React.FC<UserPortalBudgetWorkspaceViewProps> = (props) => (
+  <QueryClientProvider client={queryClient}>
+    <UserPortalBudgetWorkspaceViewContent {...props} />
+  </QueryClientProvider>
+);

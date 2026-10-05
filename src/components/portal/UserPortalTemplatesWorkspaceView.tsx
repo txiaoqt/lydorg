@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   FileText,
   Download,
@@ -136,48 +136,6 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
   // Loading States for ZIP & Single Downloads
   const [downloadingZipKey, setDownloadingZipKey] = useState<string | null>(null);
   const [downloadingSingleId, setDownloadingSingleId] = useState<string | null>(null);
-
-  // Dynamic Metadata Resolver Map (Resolves Content-Length & Last-Modified from Storage)
-  const [resolvedMetadataMap, setResolvedMetadataMap] = useState<
-    Record<string, { fileSize?: number; updatedAt?: string }>
-  >({});
-
-  // Asynchronously resolve authentic storage metadata for templates missing exact bytes
-  useEffect(() => {
-    let isMounted = true;
-
-    publicTemplates.forEach((tpl) => {
-      if (tpl.fileSize || !tpl.fileUrl) return;
-
-      void resolveSupabaseFileUrl(tpl.fileUrl).then((resolvedUrl) => {
-        if (!resolvedUrl || !isMounted) return;
-
-        fetch(resolvedUrl, { method: "HEAD" })
-          .then((res) => {
-            if (!isMounted) return;
-            const contentLength = res.headers.get("content-length");
-            const lastModified = res.headers.get("last-modified");
-
-            if (contentLength || lastModified) {
-              setResolvedMetadataMap((prev) => ({
-                ...prev,
-                [tpl.id]: {
-                  fileSize: contentLength ? parseInt(contentLength, 10) : prev[tpl.id]?.fileSize,
-                  updatedAt: lastModified ? new Date(lastModified).toISOString() : prev[tpl.id]?.updatedAt,
-                },
-              }));
-            }
-          })
-          .catch(() => {
-            // Silently swallow CORS or HEAD failures
-          });
-      });
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [publicTemplates]);
 
   // Extract authentic unique categories dynamically from database templates
   const availableCategories = useMemo(() => {
@@ -560,9 +518,8 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
               {!isCollapsed && (
                 <div className="space-y-3">
                   {group.items.map((tpl) => {
-                    const resolvedMeta = resolvedMetadataMap[tpl.id];
-                    const rawSizeBytes = tpl.fileSize ?? resolvedMeta?.fileSize ?? null;
-                    const rawTimestamp = tpl.updatedAt ?? resolvedMeta?.updatedAt ?? null;
+                    const rawSizeBytes = tpl.fileSize ?? null;
+                    const rawTimestamp = tpl.updatedAt ?? null;
                     const fileSizeLabel = formatFileSize(rawSizeBytes);
                     const formattedTime = formatTemplateTimestamp(rawTimestamp);
                     const fileFormat = getTemplateFileFormat(tpl.fileUrl, tpl.title);
@@ -853,9 +810,8 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {group.items.map((tpl) => {
-                        const resolvedMeta = resolvedMetadataMap[tpl.id];
-                        const rawSizeBytes = tpl.fileSize ?? resolvedMeta?.fileSize ?? null;
-                        const rawTimestamp = tpl.updatedAt ?? resolvedMeta?.updatedAt ?? null;
+                        const rawSizeBytes = tpl.fileSize ?? null;
+                        const rawTimestamp = tpl.updatedAt ?? null;
 
                         const fileSizeLabel = formatFileSize(rawSizeBytes);
                         const formattedTime = formatTemplateTimestamp(rawTimestamp);

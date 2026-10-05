@@ -10,12 +10,14 @@ import {
   type YPOPOrgActivityFile,
   type YPOPPeriod,
 } from "@/lib/lydo-connect-data";
+import { invalidateOrganizationYpopQueries, loadOrganizationYpopSemesterData, subscribeToOrganizationStatusChangesInSupabase } from "@/lib/lydo-connect-supabase";
 import { FeatureGate } from "./FeatureGate";
 import { YpopSemesterList } from "./ypop/YpopSemesterList";
 import { YpopSemesterWorkspace } from "./ypop/YpopSemesterWorkspace";
 
 export interface UserPortalYPOPWorkspaceViewProps {
   initialSemesterKey?: string | null;
+  loadRemoteData?: boolean;
   ypopWorkflowEligibility?: {
     canEditParticipation?: boolean;
     profileComplete?: boolean;
@@ -53,6 +55,7 @@ export interface UserPortalYPOPWorkspaceViewProps {
 
 export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewProps> = ({
   initialSemesterKey,
+  loadRemoteData = false,
   ypopWorkflowEligibility,
   currentProfile,
   ypopPeriods: propsPeriods,
@@ -89,6 +92,11 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
 
   const organizationId = currentProfile?.id ?? "";
   const userId = user?.id ?? currentProfile?.userId ?? "";
+  const [workspaceData, setWorkspaceData] = React.useState<Awaited<ReturnType<typeof loadOrganizationYpopSemesterData>> | null>(null);
+  const [workspaceLoading, setWorkspaceLoading] = React.useState(false);
+  const [workspaceError, setWorkspaceError] = React.useState("");
+  const [workspaceRefreshVersion, setWorkspaceRefreshVersion] = React.useState(0);
+  const participationMutationVersionRef = React.useRef(0);
 
   // Check for deep-linked activityId in URL
   const deepLinkedActivityId = React.useMemo(() => {
@@ -181,11 +189,75 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
     ? periods.find((p) => p.semesterKey === selectedSemesterKey) ?? null
     : null;
 
-  const selectedEntry = selectedPeriod
-    ? entries.find(
+  React.useEffect(() => {
+    if (!loadRemoteData || !organizationId || !selectedSemesterKey) {
+      setWorkspaceData(null);
+      setWorkspaceLoading(false);
+      setWorkspaceError("");
+      return;
+    }
+    let active = true;
+    const mutationVersion = participationMutationVersionRef.current;
+    setWorkspaceLoading(true);
+    setWorkspaceError("");
+    void loadOrganizationYpopSemesterData(organizationId, selectedSemesterKey)
+      .then((data) => {
+        if (!active || mutationVersion !== participationMutationVersionRef.current) return;
+        setWorkspaceData((current) => {
+          if (!current || current.period?.semesterKey !== selectedSemesterKey) return data;
+          // A request started during upload may contain the intermediate draft.
+          // Keep a newer saved mutation response until the server catches up.
+          const currentById = new Map(current.participations.map((participation) => [participation.id, participation]));
+          return {
+            ...data,
+            participations: data.participations.map((incoming) => {
+              const saved = currentById.get(incoming.id);
+              return saved && Date.parse(saved.updatedAt) > Date.parse(incoming.updatedAt) ? saved : incoming;
+            }),
+          };
+        });
+      })
+      .catch((error) => {
+        if (!active || (error && typeof error === "object" && "name" in error && error.name === "CancelledError")) return;
+        setWorkspaceError(error instanceof Error ? error.message : "Unable to load this semester.");
+      })
+      .finally(() => { if (active) setWorkspaceLoading(false); });
+    return () => { active = false; };
+  }, [loadRemoteData, organizationId, selectedSemesterKey, workspaceRefreshVersion]);
+
+  const selectedActivityIds = React.useMemo(() => workspaceData?.cityActivities.map((activity) => activity.id) ?? [], [workspaceData?.cityActivities]);
+  React.useEffect(() => {
+    if (!loadRemoteData || !organizationId || !selectedSemesterKey) return;
+    const onStatus = (status: string, error?: Error | null) => {
+      if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization YPOP status channel subscribed.");
+      else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization YPOP status channel:", status, error ?? "");
+    };
+    const refresh = () => setWorkspaceRefreshVersion((version) => version + 1);
+    const cleanups = [
+      subscribeToOrganizationStatusChangesInSupabase({
+        organizationId, feature: "ypop_city_led", semesterKey: selectedSemesterKey,
+        activityIds: selectedActivityIds, detailId: null, onChange: refresh, onStatus,
+      }),
+      subscribeToOrganizationStatusChangesInSupabase({
+        organizationId, feature: "ypop_org_led", semesterKey: selectedSemesterKey,
+        entryId: workspaceData?.entry?.id, onChange: refresh, onStatus,
+      }),
+    ];
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [loadRemoteData, organizationId, selectedSemesterKey, selectedActivityIds, workspaceData?.entry?.id]);
+
+  const refreshWorkspaceData = async () => {
+    await invalidateOrganizationYpopQueries(organizationId, selectedSemesterKey ?? undefined, workspaceData?.entry?.id);
+    setWorkspaceRefreshVersion((value) => value + 1);
+  };
+
+  const selectedEntry = loadRemoteData
+    ? workspaceData?.entry ?? null
+    : selectedPeriod
+      ? entries.find(
         (e) => e.organizationId === organizationId && e.semester === selectedPeriod.semesterKey
       ) ?? null
-    : null;
+      : null;
 
   return (
     <FeatureGate
@@ -217,17 +289,25 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
     >
       <div className="bg-background text-foreground transition-colors duration-200 font-sans max-w-[1440px] mx-auto pt-2 sm:pt-0 pb-4">
         {selectedPeriod ? (
+          loadRemoteData && workspaceLoading && (!workspaceData || workspaceData.period?.semesterKey !== selectedSemesterKey) ? (
+            <div className="rounded-2xl border border-border/60 bg-card p-8 text-center text-sm text-muted-foreground">Loading semester data…</div>
+          ) : loadRemoteData && workspaceError ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">Unable to load this semester: {workspaceError}</div>
+          ) : loadRemoteData && !workspaceData ? null : (
           <YpopSemesterWorkspace
-            period={selectedPeriod}
+            period={loadRemoteData ? workspaceData?.period ?? selectedPeriod : selectedPeriod}
             allPeriods={periods}
             entry={selectedEntry}
-            allEntries={entries}
-            cityActivities={cityActivities}
+            allEntries={loadRemoteData ? (selectedEntry ? [selectedEntry] : []) : entries}
+            cityActivities={loadRemoteData ? workspaceData?.cityActivities ?? [] : cityActivities}
             initialActivityId={deepLinkedActivityId}
-            participations={participations}
-            eventFiles={eventFiles}
-            orgActivities={orgActivities}
-            orgActivityFiles={orgActivityFiles}
+            participations={loadRemoteData ? workspaceData?.participations ?? [] : participations}
+            eventFiles={loadRemoteData ? [] : eventFiles}
+            orgActivities={loadRemoteData ? [] : orgActivities}
+            orgActivityFiles={loadRemoteData ? [] : orgActivityFiles}
+            orgActivitySummary={loadRemoteData ? workspaceData?.orgActivitySummary : undefined}
+            serverPaginatedOrgActivities={loadRemoteData}
+            loadFilesOnOpen={loadRemoteData}
             profile={currentProfile}
             organizationId={organizationId}
             userId={userId}
@@ -243,17 +323,31 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
               } else {
                 createYPOPEntry(saved);
               }
+              if (loadRemoteData) refreshWorkspaceData();
             }}
             onParticipationCreated={(created) => {
               createYPOPEventParticipation(created);
+              if (loadRemoteData) refreshWorkspaceData();
             }}
             onParticipationUpdated={(updated) => {
+              participationMutationVersionRef.current += 1;
+              setWorkspaceData((current) => {
+                if (!current) return current;
+                const exists = current.participations.some((participation) => participation.id === updated.id);
+                return {
+                  ...current,
+                  participations: exists
+                    ? current.participations.map((participation) => participation.id === updated.id ? updated : participation)
+                    : [updated, ...current.participations],
+                };
+              });
               const exists = participations.some((p) => p.id === updated.id);
               if (exists) {
                 updateYPOPEventParticipation(updated.id, updated);
               } else {
                 createYPOPEventParticipation(updated);
               }
+              if (loadRemoteData) refreshWorkspaceData();
             }}
             onEventFileCreated={(file) => {
               createYPOPEventFile(file);
@@ -268,9 +362,11 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
               } else {
                 createYPOPOrgActivity(saved);
               }
+              if (loadRemoteData) refreshWorkspaceData();
             }}
             onOrgActivityDeleted={(activityId) => {
               deleteYPOPOrgActivity(activityId);
+              if (loadRemoteData) refreshWorkspaceData();
             }}
             onOrgFileCreated={(file) => {
               createYPOPOrgActivityFile(file);
@@ -279,6 +375,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
               deleteYPOPOrgActivityFile(fileId);
             }}
           />
+          )
         ) : (
           <YpopSemesterList
             periods={periods}
@@ -289,6 +386,7 @@ export const UserPortalYPOPWorkspaceView: React.FC<UserPortalYPOPWorkspaceViewPr
             organizationId={organizationId}
             onSelectSemester={handleSelectSemester}
             formatShortPortalDate={formatShortPortalDate}
+            loadEntriesRemotely={loadRemoteData}
           />
         )}
       </div>

@@ -9,7 +9,6 @@ import {
   formatCanonicalCategoryLabel,
   type TemplateRecord,
 } from "@/lib/lydo-connect-data";
-import { readState } from "@/lib/lydo-connect-store";
 import { TemplateFormDialog } from "./TemplateFormDialog";
 
 describe("Forms & Templates — Description Validation & Custom Category Lifecycle", () => {
@@ -292,36 +291,6 @@ describe("Forms & Templates — Description Validation & Custom Category Lifecyc
   });
 
   // ==========================================
-  // Persistence tests
-  // ==========================================
-  describe("Custom Category Persistence (TEST 21 - TEST 22)", () => {
-    it("TEST 21: Create custom category: survives state refresh/reload", () => {
-      const storageKey = "lydo-connect-state-v1:admin:admin-test-id";
-      const initialState = {
-        customTemplateCategories: ["youth_development"],
-        templates: [],
-      };
-      window.localStorage.setItem(storageKey, JSON.stringify(initialState));
-
-      const restored = readState({ type: "admin", id: "admin-test-id", token: "tok" });
-      expect(restored.customTemplateCategories).toContain("youth_development");
-    });
-
-    it("TEST 22: Delete empty custom category: remains deleted after refresh", () => {
-      const storageKey = "lydo-connect-state-v1:admin:admin-test-id";
-      const stateAfterDelete = {
-        customTemplateCategories: ["kept_category"],
-        templates: [],
-      };
-      window.localStorage.setItem(storageKey, JSON.stringify(stateAfterDelete));
-
-      const restored = readState({ type: "admin", id: "admin-test-id", token: "tok" });
-      expect(restored.customTemplateCategories).not.toContain("youth_development");
-      expect(restored.customTemplateCategories).toContain("kept_category");
-    });
-  });
-
-  // ==========================================
   // Existing category compatibility
   // ==========================================
   describe("Existing Category Compatibility (TEST 23 - TEST 24)", () => {
@@ -451,6 +420,39 @@ describe("Forms & Templates — Description Validation & Custom Category Lifecyc
       fireEvent.click(addBtn);
       expect(onAddCategory).toHaveBeenCalledWith("youth_leadership");
       expect(onCategoryChange).toHaveBeenCalledWith("youth_leadership");
+    });
+
+    it("does not select a standalone category when its server save fails", async () => {
+      const onAddCategory = vi.fn().mockRejectedValue(new Error("Category registry unavailable."));
+      const onCategoryChange = vi.fn();
+      render(
+        <TemplateFormDialog
+          mode="create"
+          name="Test Form"
+          onNameChange={vi.fn()}
+          description="Sample description"
+          onDescriptionChange={vi.fn()}
+          category=""
+          onCategoryChange={onCategoryChange}
+          categoryOptions={["yorp", "ypop", "move", "data_form"]}
+          file={null}
+          onFileChange={vi.fn()}
+          saving={false}
+          onCancel={vi.fn()}
+          onSave={vi.fn()}
+          onAddCategory={onAddCategory}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /\+ New category/i }));
+      fireEvent.change(screen.getByPlaceholderText(/e\.g\. Youth Development/i), {
+        target: { value: "Youth Leadership" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /^Add$/i }));
+
+      expect(await screen.findByText("Category registry unavailable.")).toBeInTheDocument();
+      expect(onAddCategory).toHaveBeenCalledWith("youth_leadership");
+      expect(onCategoryChange).not.toHaveBeenCalled();
     });
   });
 });

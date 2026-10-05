@@ -1,3 +1,4 @@
+import { sanitizeZipCode } from "@/lib/organization-profile-domain";
 import React, { useState } from "react";
 import {
   Building2,
@@ -842,14 +843,17 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
                 <div className="space-y-1 sm:col-span-1">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    ZIP Code
+                    ZIP Code <span className="text-red-500">*</span>
                   </label>
                   <Input
                     placeholder="e.g. 1603"
                     value={profileDraft.addressZipCode || ""}
-                    onChange={(e) => onFieldChange("addressZipCode", e.target.value)}
+                    onChange={(e) => onFieldChange("addressZipCode", sanitizeZipCode(e.target.value))}
                     className="h-9 text-xs rounded-xl bg-background border-border"
-                    maxLength={10}
+                    maxLength={4}
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    required
                   />
                 </div>
               </div>

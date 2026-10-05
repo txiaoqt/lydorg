@@ -54,7 +54,7 @@ import {
 import {
   fetchRenewalPacketInSupabase,
   fetchRenewalRequiredDocumentTypesInSupabase,
-  subscribeToRenewalPacketChangesInSupabase,
+  subscribeToRenewalSubmissionFileChangesInSupabase,
   userStartOrGetRenewalDraftInSupabase,
   uploadRenewalDocumentFileInSupabase,
   replaceRenewalDocumentFileInSupabase,
@@ -68,6 +68,7 @@ export interface UserPortalRenewalWorkspaceViewProps {
   currentProfile: OrganizationProfile | null;
   userRenewalState: UserFacingRenewalState | null;
   activeRenewal: OrganizationRenewalRecord | null;
+  renewalSyncVersion?: number;
   readOnly?: boolean;
   approvedRenewals?: OrganizationRenewalRecord[];
   onActiveRenewalChange?: (renewal: OrganizationRenewalRecord) => void;
@@ -134,6 +135,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
   currentProfile,
   userRenewalState,
   activeRenewal: initialActiveRenewal,
+  renewalSyncVersion = 0,
   readOnly = false,
   approvedRenewals = [],
   onActiveRenewalChange,
@@ -142,6 +144,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
   navigate,
   userRouteMap,
   openPreview,
+  openFile,
   onRenewalUpdated,
 }) => {
   const [activeRenewal, setActiveRenewal] = useState<OrganizationRenewalRecord | null>(initialActiveRenewal);
@@ -228,17 +231,52 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
     };
   }, [activeRenewal?.id]);
 
-  // Admin review decisions are written in another session. Subscribe to packet
-  // changes and refresh while this workspace is open so cell statuses/remarks
-  // update without requiring the user to reload the page.
   useEffect(() => {
+    const submissionId = submission?.id;
     const renewalId = activeRenewal?.id;
-    if (!renewalId) return;
-
+    if (!submissionId || !renewalId) return;
     let cancelled = false;
     let refreshInProgress = false;
-    const refreshPacket = async () => {
-      if (cancelled || refreshInProgress || bulkUploadingRef.current || document.visibilityState === "hidden") return;
+    let timer: number | null = null;
+    const refreshPacketMetadata = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        timer = null;
+        if (cancelled || refreshInProgress || bulkUploadingRef.current) return;
+        refreshInProgress = true;
+        try {
+          const packet = await fetchRenewalPacketInSupabase(renewalId);
+          if (!cancelled && !bulkUploadingRef.current) {
+            setSubmission(packet.submission);
+            setFiles(packet.files);
+          }
+        } catch (error) {
+          if (!cancelled && import.meta.env.DEV) console.warn("Could not refresh renewal file review status:", error);
+        } finally {
+          refreshInProgress = false;
+        }
+      }, 60);
+    };
+    const unsubscribe = subscribeToRenewalSubmissionFileChangesInSupabase(submissionId, refreshPacketMetadata, (status, error) => {
+      if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization renewal file-status channel subscribed.");
+      else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization renewal file-status channel:", status, error ?? "");
+    });
+    return () => {
+      cancelled = true;
+      if (timer !== null) window.clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [activeRenewal?.id, submission?.id]);
+
+  // The parent owns the single organization-scoped renewal channel. A changed
+  // version refreshes only this open packet's database metadata.
+  useEffect(() => {
+    const renewalId = activeRenewal?.id;
+    if (!renewalId || renewalSyncVersion === 0) return;
+    let cancelled = false;
+    let refreshInProgress = false;
+    const timeout = window.setTimeout(async () => {
+      if (cancelled || refreshInProgress || bulkUploadingRef.current) return;
       refreshInProgress = true;
       try {
         const packet = await fetchRenewalPacketInSupabase(renewalId);
@@ -247,30 +285,16 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
           setFiles(packet.files);
         }
       } catch (error) {
-        // Keep the currently displayed packet if a background refresh fails.
-        console.warn("Could not refresh renewal review updates:", error);
-      } finally {
-        refreshInProgress = false;
+        if (import.meta.env.DEV) console.warn("Could not refresh renewal review updates:", error);
       }
-    };
-
-    const unsubscribe = subscribeToRenewalPacketChangesInSupabase(
-      renewalId,
-      submission?.id,
-      () => void refreshPacket(),
-    );
-    const refreshInterval = window.setInterval(() => void refreshPacket(), 15000);
-    window.addEventListener("focus", refreshPacket);
-    document.addEventListener("visibilitychange", refreshPacket);
+      finally { refreshInProgress = false; }
+    }, 75);
 
     return () => {
       cancelled = true;
-      unsubscribe();
-      window.clearInterval(refreshInterval);
-      window.removeEventListener("focus", refreshPacket);
-      document.removeEventListener("visibilitychange", refreshPacket);
+      window.clearTimeout(timeout);
     };
-  }, [activeRenewal?.id, submission?.id]);
+  }, [activeRenewal?.id, renewalSyncVersion]);
 
   const orgName = currentProfile?.organizationName || "Organization";
   const cycleNumber = activeRenewal?.cycleNumber ?? userRenewalState?.cycleNumber ?? 2;

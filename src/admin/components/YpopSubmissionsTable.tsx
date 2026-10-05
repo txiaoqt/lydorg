@@ -34,6 +34,7 @@ type YpopSubmissionsTableProps = {
   onSelectedOrganizationIdsChange?: (ids: Set<string>) => void;
   onDeleteSelected?: () => void;
   isDeleting?: boolean;
+  serverPage?: { page: number; totalCount: number; onPageChange: (page: number) => void };
 };
 
 const STATUS_TABS: { value: YpopSubmissionStatusFilter; label: string }[] = [
@@ -43,7 +44,7 @@ const STATUS_TABS: { value: YpopSubmissionStatusFilter; label: string }[] = [
   { value: "not_qualified", label: "Not Qualified" },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export const StatusLabel = ({ status }: { status: YpopQualificationStatus | YPOPStatus }) => {
   if (status === "qualified") {
@@ -108,12 +109,14 @@ export const YpopSubmissionsTable = ({
   onSelectedOrganizationIdsChange,
   onDeleteSelected,
   isDeleting = false,
+  serverPage,
 }: YpopSubmissionsTableProps) => {
   const [page, setPage] = useState(0);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, totalPages - 1);
-  const pageItems = useMemo(() => rows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE), [rows, clampedPage]);
+  const pageIndex = serverPage?.page ?? page;
+  const totalPages = Math.max(1, Math.ceil((serverPage?.totalCount ?? rows.length) / PAGE_SIZE));
+  const clampedPage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = useMemo(() => serverPage ? rows : rows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE), [rows, clampedPage, serverPage]);
   const selectionEnabled = Boolean(onSelectedOrganizationIdsChange && onDeleteSelected);
   const selectedOnPage = pageItems.filter((row) => selectedOrganizationIds.has(row.organizationId)).length;
   const allPageSelected = pageItems.length > 0 && selectedOnPage === pageItems.length;
@@ -133,7 +136,9 @@ export const YpopSubmissionsTable = ({
   }, [selectionEnabled, isDeleting, selectedOrganizationIds, onSelectedOrganizationIdsChange]);
 
   const changePage = (next: number) => {
-    setPage(Math.max(0, Math.min(next, totalPages - 1)));
+    const nextPage = Math.max(0, Math.min(next, totalPages - 1));
+    if (serverPage) serverPage.onPageChange(nextPage);
+    else setPage(nextPage);
   };
 
   return (
@@ -289,7 +294,7 @@ export const YpopSubmissionsTable = ({
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
         <p className="font-segoe text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
-          <span className="text-text-default">{rows.length}</span> records
+          <span className="text-text-default">{serverPage?.totalCount ?? rows.length}</span> records
         </p>
         <div className="flex items-center gap-2">
           <button

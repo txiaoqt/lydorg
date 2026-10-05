@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import {
   Bell, Download, ExternalLink, FileText, HelpCircle, MapPin, Medal, Megaphone,
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { createInquiryInSupabase, resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import { createInquiryInSupabase, loadOrganizationActivityPage, loadOrganizationInquiryPage, loadOrganizationNotificationPage, resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
 import { organizationEmailPattern } from "@/lib/organization-profile-domain";
 import { getInquiryReferenceCode } from "@/lib/lydo-connect-data";
@@ -17,6 +18,7 @@ import type { usePwaPortalData } from "./hooks/usePwaPortalData";
 import { usePwaNavigation } from "./hooks/usePwaNavigation";
 import { PwaBackButton } from "./PwaBackButton";
 import { getPwaRelatedRecordRoute, PWA_ROUTES, pwaNewsDetailRoute } from "./pwaRoutes";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 
@@ -76,19 +78,42 @@ export function PwaTransparency({ data }: { data: PortalData }) {
 
 export function PwaNotifications({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const userId = data.user?.id ?? "";
+  const pageQuery = useQuery({
+    queryKey: ["user", userId, "notification-page-pwa", page, 25],
+    queryFn: () => loadOrganizationNotificationPage(userId, { page, pageSize: 25 }),
+    enabled: Boolean(userId),
+    placeholderData: (previous) => previous,
+  });
+  const notifications = pageQuery.data?.rows ?? data.notifications;
+  const totalCount = pageQuery.data?.totalCount ?? data.notifications.length;
   const open = async (item: (typeof data.notifications)[number]) => {
     if (!item.isRead) await data.markRead(item.id);
+    await queryClient.invalidateQueries({ queryKey: ["user", userId, "notification-page"] });
     const target = getPwaRelatedRecordRoute(item.relatedType, item.relatedId);
     if (target) go(target);
   };
-  return <div className="pwa-stack"><div className="pwa-inline-heading"><span>{data.unreadCount} unread</span>{data.unreadCount ? <button type="button" onClick={() => void data.markAllRead()}>Mark all read</button> : null}</div><section className="pwa-notification-list">{data.notifications.map((item) => <button key={item.id} type="button" className={`pwa-card ${item.isRead ? "" : "is-unread"}`} onClick={() => void open(item)}><span className="pwa-record-icon"><Bell /></span><span><strong>{item.title}</strong><p>{item.message}</p><small>{dateLabel(item.createdAt)}</small></span></button>)}{!data.notifications.length ? <section className="pwa-card pwa-empty-copy">You&apos;re all caught up.</section> : null}</section></div>;
+  return <div className="pwa-stack"><div className="pwa-inline-heading"><span>{data.unreadCount} unread · {totalCount} notifications</span>{data.unreadCount ? <button type="button" onClick={async () => { await data.markAllRead(); await queryClient.invalidateQueries({ queryKey: ["user", userId, "notification-page"] }); }}>Mark all read</button> : null}</div><section className="pwa-notification-list">{notifications.map((item) => <button key={item.id} type="button" className={`pwa-card ${item.isRead ? "" : "is-unread"}`} onClick={() => void open(item)}><span className="pwa-record-icon"><Bell /></span><span><strong>{item.title}</strong><p>{item.message}</p><small>{dateLabel(item.createdAt)}</small></span></button>)}{!notifications.length ? <section className="pwa-card pwa-empty-copy">You&apos;re all caught up.</section> : null}</section><OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} /></div>;
 }
 
 export function PwaActivity({ data }: { data: PortalData }) {
-  return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.home} label="Dashboard" /><section className="pwa-card"><h2 className="pwa-section-title">Organization Activity</h2><div className="pwa-activity-list">{data.activities.map((item) => <article key={item.id}><span className="pwa-activity-marker" /><div><strong>{item.description}</strong><time>{dateLabel(item.createdAt)}</time></div></article>)}{!data.activities.length ? <p className="pwa-empty-copy">No activity recorded yet.</p> : null}</div></section></div>;
+  const organizationId = data.profile?.id ?? "";
+  const [page, setPage] = useState(1);
+  const pageQuery = useQuery({ queryKey: ["user", organizationId, "activity-page-pwa", page, 25], queryFn: () => loadOrganizationActivityPage(organizationId, { page, pageSize: 25 }), enabled: Boolean(organizationId), placeholderData: (previous) => previous });
+  const activities = pageQuery.data?.rows ?? data.activities;
+  const totalCount = pageQuery.data?.totalCount ?? data.activities.length;
+  return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.home} label="Dashboard" /><section className="pwa-card"><h2 className="pwa-section-title">Organization Activity</h2><div className="pwa-activity-list">{activities.map((item) => <article key={item.id}><span className="pwa-activity-marker" /><div><strong>{item.description}</strong><time>{dateLabel(item.createdAt)}</time></div></article>)}{!activities.length ? <p className="pwa-empty-copy">No activity recorded yet.</p> : null}</div></section><OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} /></div>;
 }
 
 export function PwaInquiries({ data }: { data: PortalData }) {
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const organizationId = data.profile?.id ?? "";
+  const pageQuery = useQuery({ queryKey: ["user", organizationId, "inquiry-page-pwa", page, 25], queryFn: () => loadOrganizationInquiryPage(organizationId, { page, pageSize: 25 }), enabled: Boolean(organizationId), placeholderData: (previous) => previous });
+  const inquiries = pageQuery.data?.rows ?? data.inquiries;
+  const totalCount = pageQuery.data?.totalCount ?? data.inquiries.length;
   const profileEmail = data.profile?.organizationEmail || data.user?.email || "";
   const [form, setForm] = useState({ email: profileEmail, subject: "", description: "" });
   const [saving, setSaving] = useState(false);
@@ -113,6 +138,7 @@ export function PwaInquiries({ data }: { data: PortalData }) {
         description: form.description,
       });
       data.store.createInquiry(saved);
+      await queryClient.invalidateQueries({ queryKey: ["user", organizationId, "inquiry-page"] });
       setForm({ email: profileEmail, subject: "", description: "" });
       toast({ title: "Inquiry sent", description: "Your inquiry is now pending review." });
     } catch (error) {
@@ -121,5 +147,5 @@ export function PwaInquiries({ data }: { data: PortalData }) {
       setSaving(false);
     }
   };
-  return <div className="pwa-stack"><PageIntro icon={HelpCircle} title="Inquiries" copy="Send a question to the PCYDO and track earlier submissions." /><section className="pwa-card pwa-form-card"><label>Email<Input type="email" inputMode="email" autoComplete="email" placeholder="Email address" value={profileEmail} readOnly tabIndex={-1} className="cursor-not-allowed bg-muted/40 text-muted-foreground" /></label><label>Subject<Input value={form.subject} onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))} /></label><label>Description<Textarea rows={4} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></label><Button disabled={saving || !profileEmail.trim() || !form.subject.trim() || !form.description.trim()} onClick={() => void submit()}>{saving ? "Sending..." : "Send Inquiry"}</Button></section><section className="pwa-record-list pwa-stack">{data.inquiries.map((item) => <article className="pwa-card" key={item.id}><div className="pwa-record-heading"><div><p className="font-mono text-xs font-semibold text-primary">{getInquiryReferenceCode(item, data.inquiries)}</p><h3>{item.subject}</h3><p>{dateLabel(item.createdAt)}</p></div><StatusBadge status={item.status} /></div><p>{item.description}</p>{item.adminRemarks ? <small className="pwa-admin-note">Admin: {item.adminRemarks}</small> : null}</article>)}</section></div>;
+  return <div className="pwa-stack"><PageIntro icon={HelpCircle} title="Inquiries" copy="Send a question to the PCYDO and track earlier submissions." /><section className="pwa-card pwa-form-card"><label>Email<Input type="email" inputMode="email" autoComplete="email" placeholder="Email address" value={profileEmail} readOnly tabIndex={-1} className="cursor-not-allowed bg-muted/40 text-muted-foreground" /></label><label>Subject<Input value={form.subject} onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))} /></label><label>Description<Textarea rows={4} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></label><Button disabled={saving || !profileEmail.trim() || !form.subject.trim() || !form.description.trim()} onClick={() => void submit()}>{saving ? "Sending..." : "Send Inquiry"}</Button></section><section className="pwa-record-list pwa-stack">{inquiries.map((item) => <article className="pwa-card" key={item.id}><div className="pwa-record-heading"><div><p className="font-mono text-xs font-semibold text-primary">{getInquiryReferenceCode(item, inquiries)}</p><h3>{item.subject}</h3><p>{dateLabel(item.createdAt)}</p></div><StatusBadge status={item.status} /></div><p>{item.description}</p>{item.adminRemarks ? <small className="pwa-admin-note">Admin: {item.adminRemarks}</small> : null}</article>)}</section><OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} /></div>;
 }

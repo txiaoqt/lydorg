@@ -9,6 +9,10 @@ import {
   ADMIN_LAST_ACTIVITY_STORAGE_KEY,
   recordAdminActivity,
   isSessionExpiredDueToInactivity,
+  readAdminLastActivity,
+  updateAdminSessionExpiry,
+  expireAdminSession,
+  ADMIN_SESSION_EXPIRED_EVENT,
 } from "@/lib/admin-auth";
 import { ADMIN_SETTINGS_CHANGE_EVENT } from "@/lib/admin-system-settings";
 import { toast } from "@/hooks/use-toast";
@@ -152,6 +156,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const applySessionVersionRef = useRef(0);
+  const profileRoleHydrationRef = useRef(new Map<string, Promise<{
+    profile: { display_name?: string | null; full_name?: string | null; email?: string | null; contact_number?: string | null } | null;
+    roleCodes: string[];
+    cacheable: boolean;
+  }>>());
 
   useEffect(() => {
     let mounted = true;
@@ -195,12 +204,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (!session?.user) {
+        profileRoleHydrationRef.current.clear();
         const storedAdmin = LOCAL_ADMIN_ALLOWED ? readAdminSession() : null;
         if (storedAdmin && !isRecovery) {
           if (supabaseClient) {
             const { data, error } = await supabaseClient.rpc("validate_admin_session_token", {
               _session_token: storedAdmin.sessionToken,
             });
+            if (!mounted || applyVersion !== applySessionVersionRef.current
+              || readAdminSession()?.sessionToken !== storedAdmin.sessionToken) return;
             const validatedAdmin = Array.isArray(data) ? data[0] : null;
             const canTrustLocalAdminSession = Boolean(error && isRecoverableSupabaseAuthError(error.message));
             if ((!validatedAdmin && !canTrustLocalAdminSession) || (error && !canTrustLocalAdminSession)) {
@@ -213,6 +225,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
 
             const permissionContext = await getAdminPermissionContextInSupabase(storedAdmin.sessionToken);
+            if (!mounted || applyVersion !== applySessionVersionRef.current
+              || readAdminSession()?.sessionToken !== storedAdmin.sessionToken) return;
+            if (validatedAdmin?.expires_at) storedAdmin.expiresAt = String(validatedAdmin.expires_at);
             if (permissionContext) {
               storedAdmin.roleCode = permissionContext.roleCode;
               storedAdmin.permissionCodes = permissionContext.permissionCodes;
@@ -221,7 +236,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
           setIsAuthenticated(true);
           setRole("admin");
-          setUser(toAuthUser(storedAdmin));
+          setUser(previous => {
+            const next = toAuthUser(storedAdmin);
+            return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+          });
           setIsInitialized(true);
           return;
         }
@@ -241,33 +259,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         authUser.email?.split("@")[0] ??
         "User";
 
-      const [profileResp, rolesResp] = await Promise.all([
-        supabaseClient!
-          .from("user_profiles")
-          .select("display_name,full_name,email,contact_number")
-          .eq("user_id", authUser.id)
-          .maybeSingle(),
-        supabaseClient!.from("user_roles").select("roles(code)").eq("user_id", authUser.id),
-      ]);
+      // A profile edit can update display/contact details without changing the
+      // auth identity. Re-read those fields on USER_UPDATED, while keeping the
+      // initial-session/SIGNED_IN race deduplicated.
+      if (eventName === "USER_UPDATED") {
+        profileRoleHydrationRef.current.delete(authUser.id);
+      }
+
+      let hydration = profileRoleHydrationRef.current.get(authUser.id);
+      if (!hydration) {
+        hydration = Promise.all([
+          supabaseClient!
+            .from("user_profiles")
+            .select("display_name,full_name,email,contact_number")
+            .eq("user_id", authUser.id)
+            .maybeSingle(),
+          supabaseClient!.from("user_roles").select("roles(code)").eq("user_id", authUser.id),
+        ]).then(([profileResp, rolesResp]) => {
+          const roleCodes = rolesResp.data
+            ?.map((entry) => {
+              const related = (entry as { roles?: { code?: string } | Array<{ code?: string }> }).roles;
+              if (Array.isArray(related)) return related[0]?.code;
+              return related?.code;
+            })
+            .filter((code): code is string => Boolean(code)) ?? [];
+          return {
+            profile: profileResp.data,
+            roleCodes,
+            cacheable: !profileResp.error && !rolesResp.error,
+          };
+        });
+        profileRoleHydrationRef.current.set(authUser.id, hydration);
+      }
+      const { profile, roleCodes, cacheable } = await hydration;
+      if (!cacheable && profileRoleHydrationRef.current.get(authUser.id) === hydration) {
+        profileRoleHydrationRef.current.delete(authUser.id);
+      }
 
       // Ignore stale async results if a newer auth event was already applied
       // (e.g., signUp emits SIGNED_IN then we immediately force SIGNED_OUT).
       if (!mounted || applyVersion !== applySessionVersionRef.current) return;
 
-      const roleCodes =
-        rolesResp.data
-          ?.map((entry) => {
-            const related = (entry as { roles?: { code?: string } | Array<{ code?: string }> }).roles;
-            if (Array.isArray(related)) return related[0]?.code;
-            return related?.code;
-          })
-          .filter((code): code is string => Boolean(code)) ?? [];
-
       const isInviteSession =
         isInviteJwt(session.access_token) ||
         (typeof window !== "undefined" && window.location.pathname === "/admin/create-password");
 
-      const hasNoOrgOrRoleData = !profileResp.data && roleCodes.length === 0;
+      const hasNoOrgOrRoleData = !profile && roleCodes.length === 0;
 
       // Scoped guard: A transient shadow admin invitation session during password setup
       // must NOT be classified as an ordinary organization youth user.
@@ -288,10 +325,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       );
       const resolvedUser: AuthUser = {
         id: authUser.id,
-        email: (profileResp.data?.email as string | undefined) ?? authUser.email ?? "",
+        email: profile?.email ?? authUser.email ?? "",
         displayName:
-          (profileResp.data?.display_name as string | undefined)?.trim() ||
-          (profileResp.data?.full_name as string | undefined)?.trim() ||
+          profile?.display_name?.trim() ||
+          profile?.full_name?.trim() ||
           defaultDisplayName,
         givenName:
           (authUser.user_metadata?.given_name as string | undefined)?.trim() ||
@@ -304,7 +341,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isEmailVerified: isEmailConfirmed,
         profileHints: {
           contactNumber:
-            (profileResp.data?.contact_number as string | undefined) ??
+            profile?.contact_number ??
             (authUser.user_metadata?.contact_number as string | undefined) ??
             "",
           district: (authUser.user_metadata?.district as string | undefined) ?? "",
@@ -324,7 +361,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (storedAdmin) {
       setIsAuthenticated(true);
       setRole("admin");
-      setUser(toAuthUser(storedAdmin));
+      setUser(previous => {
+            const next = toAuthUser(storedAdmin);
+            return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+          });
       setIsInitialized(true);
     }
 
@@ -377,6 +417,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         });
       } else if (e.key === ADMIN_SESSION_STORAGE_KEY) {
+        ++applySessionVersionRef.current;
         if (!e.newValue) {
           setIsAuthenticated(false);
           setRole("guest");
@@ -386,7 +427,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (storedAdmin) {
             setIsAuthenticated(true);
             setRole("admin");
-            setUser(toAuthUser(storedAdmin));
+            setUser(previous => {
+            const next = toAuthUser(storedAdmin);
+            return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+          });
           } else {
             setIsAuthenticated(false);
             setRole("guest");
@@ -398,11 +442,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     window.addEventListener("storage", handleStorage);
 
     const handleAdminSessionChange = () => {
+      ++applySessionVersionRef.current;
       const storedAdmin = readAdminSession();
       if (storedAdmin) {
         setIsAuthenticated(true);
         setRole("admin");
-        setUser(toAuthUser(storedAdmin));
+        setUser(previous => {
+            const next = toAuthUser(storedAdmin);
+            return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+          });
       } else {
         setIsAuthenticated(false);
         setRole("guest");
@@ -428,10 +476,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (role !== "admin" || !isAuthenticated) return;
 
-    // Immediately register active interaction baseline
-    recordAdminActivity({ force: true });
-
     let isExpiring = false;
+    let disposed = false;
+    let renewalInFlight = false;
+    let lastRenewalAttempt = 0;
+    let renewedActivity = 0;
+    let lastInteractionCheck = 0;
+
+    const renewActiveSession = async () => {
+      const activity = readAdminLastActivity();
+      if (disposed || isExpiring || renewalInFlight || isSessionExpiredDueToInactivity()
+        || activity <= renewedActivity || Date.now() - lastRenewalAttempt < 60_000) return;
+      const session = readAdminSession();
+      if (!supabase || !session) return;
+      lastRenewalAttempt = Date.now();
+      renewalInFlight = true;
+      try {
+        const { data, error } = await supabase.rpc("admin_refresh_session", { _session_token: session.sessionToken });
+        if (disposed || error) return;
+        const expiresAt = typeof data === "string" ? data : null;
+        if (expiresAt) {
+          updateAdminSessionExpiry(session.sessionToken, expiresAt);
+          renewedActivity = activity;
+        }
+      } catch {
+        // A transient failure does not revoke a still-valid server session.
+      } finally {
+        renewalInFlight = false;
+      }
+    };
+
+    const handleServerExpiry = () => {
+      if (isExpiring) return;
+      isExpiring = true;
+      setIsAuthenticated(false);
+      setRole("guest");
+      setUser(null);
+      toast({ title: "Session Expired", description: "Please sign in again to continue.", variant: "destructive" });
+    };
+    window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleServerExpiry);
 
     const handleInactivityExpiry = async () => {
       if (isExpiring) return;
@@ -439,13 +522,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const storedAdmin = readAdminSession();
       if (supabase && storedAdmin?.sessionToken) {
-        try {
-          await supabase.rpc("revoke_admin_session_token", {
+        // Do not keep the expired UI mounted while waiting for the network.
+        void Promise.resolve(supabase.rpc("revoke_admin_session_token", {
             _session_token: storedAdmin.sessionToken,
-          });
-        } catch {
-          // Best effort backend session revocation
-        }
+          })).catch(() => { /* Best effort backend revocation. */ });
       }
 
       writeAdminSession(null);
@@ -462,7 +542,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // User interactions that constitute meaningful activity
     const onUserActivity = () => {
+      if (Date.now() - lastInteractionCheck < 1_000) return;
+      lastInteractionCheck = Date.now();
+      if (isSessionExpiredDueToInactivity() || !readAdminSession()) {
+        void handleInactivityExpiry();
+        return;
+      }
       recordAdminActivity();
+      void renewActiveSession();
     };
 
     const interactionEvents = [
@@ -480,10 +567,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check inactivity on visibility change (e.g. background tab restored) and focus
     const onVisibilityOrFocusChange = () => {
+      if (document.visibilityState !== "visible") return;
       if (isSessionExpiredDueToInactivity()) {
         void handleInactivityExpiry();
       } else {
-        recordAdminActivity();
+        void renewActiveSession();
       }
     };
 
@@ -494,6 +582,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const inactivityInterval = window.setInterval(() => {
       if (isSessionExpiredDueToInactivity()) {
         void handleInactivityExpiry();
+      } else if (!readAdminSession()) {
+        expireAdminSession();
+      } else {
+        void renewActiveSession();
       }
     }, 10_000);
 
@@ -506,6 +598,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     window.addEventListener(ADMIN_SETTINGS_CHANGE_EVENT, onSettingsChange);
 
     return () => {
+      disposed = true;
+      window.removeEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleServerExpiry);
       interactionEvents.forEach((evt) => {
         window.removeEventListener(evt, onUserActivity, { capture: true } as EventListenerOptions);
       });

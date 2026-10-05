@@ -17,14 +17,12 @@ const canInlinePreviewFormat = (format: string) =>
 
 export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: TemplateFilePreviewDialogProps) => {
   const [resolvedUrl, setResolvedUrl] = useState("");
-  const [resolvedSize, setResolvedSize] = useState<number | null>(null);
 
   const rawUrl = template ? template.templateFileUrl || template.templateUrl : "";
 
   useEffect(() => {
     if (!open || !rawUrl) {
       setResolvedUrl("");
-      setResolvedSize(null);
       return;
     }
     let isActive = true;
@@ -32,17 +30,6 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
       .then((url) => {
         if (!isActive) return;
         setResolvedUrl(url || "");
-        if (url && template?.templateFileSize == null) {
-          fetch(url, { method: "HEAD" })
-            .then((res) => {
-              if (!isActive) return;
-              const contentLength = res.headers.get("content-length");
-              if (contentLength) setResolvedSize(parseInt(contentLength, 10));
-            })
-            .catch(() => {
-              // Silently swallow CORS or HEAD failures
-            });
-        }
       })
       .catch(() => {
         if (isActive) setResolvedUrl("");
@@ -50,7 +37,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
     return () => {
       isActive = false;
     };
-  }, [open, rawUrl, template?.templateFileSize]);
+  }, [open, rawUrl]);
 
   if (!template) return null;
 
@@ -74,7 +61,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
                 {template.name}
               </DialogTitle>
               <p className="font-cascadia text-[13px] font-normal leading-none text-slate-500">
-                {fileFormat} · {formatFileSize(template.templateFileSize ?? resolvedSize)} · Updated {updatedDate}
+                {fileFormat} · {formatFileSize(template.templateFileSize)} · Updated {updatedDate}
               </p>
             </div>
           </div>

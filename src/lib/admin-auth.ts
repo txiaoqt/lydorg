@@ -83,18 +83,6 @@ export const recordAdminActivity = (options?: { force?: boolean; timestamp?: num
   try {
     window.localStorage.setItem(ADMIN_LAST_ACTIVITY_STORAGE_KEY, now.toString());
 
-    // Extend active session expiresAt in storage so passive checks reflect active inactivity window
-    const rawSession = window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
-    if (rawSession) {
-      const parsed = JSON.parse(rawSession) as Partial<SeededAdminUser>;
-      if (parsed.sessionToken) {
-        const timeoutMs = getAdminInactivityTimeoutMs();
-        parsed.expiresAt = new Date(now + timeoutMs).toISOString();
-        parsed.lastActivityAt = now;
-        window.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(parsed));
-      }
-    }
-
     window.dispatchEvent(new CustomEvent(ADMIN_ACTIVITY_EVENT, { detail: { timestamp: now } }));
   } catch {
     // Ignore quota errors
@@ -148,15 +136,13 @@ export const readAdminSession = (): SeededAdminUser | null => {
 
     // Authoritative check: verify against sliding inactivity timeout
     if (isSessionExpiredDueToInactivity()) {
-      clearAdminSessionStorage();
-      window.dispatchEvent(new Event(ADMIN_SESSION_CHANGE_EVENT));
+      queueMicrotask(() => expireAdminSession(parsed.sessionToken));
       return null;
     }
 
     const expiresAtTime = new Date(parsed.expiresAt).getTime();
-    if (!Number.isNaN(expiresAtTime) && expiresAtTime <= Date.now()) {
-      clearAdminSessionStorage();
-      window.dispatchEvent(new Event(ADMIN_SESSION_CHANGE_EVENT));
+    if (Number.isNaN(expiresAtTime) || expiresAtTime <= Date.now()) {
+      queueMicrotask(() => expireAdminSession(parsed.sessionToken));
       return null;
     }
 
@@ -170,10 +156,34 @@ export const readAdminSession = (): SeededAdminUser | null => {
       roleCode: parsed.roleCode,
       permissionCodes: parsed.permissionCodes,
       lastActivityAt: parsed.lastActivityAt ?? readAdminLastActivity(),
+      isEmailVerified: parsed.isEmailVerified,
     };
   } catch {
     return null;
   }
+};
+
+/** Expire only the token that failed, never a newer sign-in in another tab. */
+export const expireAdminSession = (expectedToken?: string) => {
+  if (typeof window === "undefined") return;
+  const raw = window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
+  if (!raw) return;
+  try {
+    if (expectedToken && JSON.parse(raw).sessionToken !== expectedToken) return;
+  } catch { /* Invalid stored session is also cleared. */ }
+  clearAdminSessionStorage();
+  window.dispatchEvent(new Event(ADMIN_SESSION_EXPIRED_EVENT));
+  window.dispatchEvent(new Event(ADMIN_SESSION_CHANGE_EVENT));
+};
+
+/** Store the database expiry without recording artificial user activity. */
+export const updateAdminSessionExpiry = (token: string, expiresAt: string) => {
+  if (typeof window === "undefined" || !Number.isFinite(Date.parse(expiresAt))) return;
+  const raw = window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
+  if (!raw) return;
+  const stored = JSON.parse(raw) as SeededAdminUser;
+  if (stored.sessionToken !== token) return;
+  window.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify({ ...stored, expiresAt }));
 };
 
 export const writeAdminSession = (user: SeededAdminUser | null) => {

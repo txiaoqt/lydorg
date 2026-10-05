@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   Check,
@@ -25,9 +26,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { NotificationRecord } from "@/lib/lydo-connect-data";
+import { loadOrganizationNotificationPage } from "@/lib/lydo-connect-supabase";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
+import { queryClient as sharedQueryClient } from "@/lib/query-client";
 
 export interface UserPortalNotificationsWorkspaceViewProps {
   notifications: NotificationRecord[];
+  userId?: string;
+  unreadNotificationCount?: number;
   onMarkRead?: (id: string) => Promise<void> | void;
   onMarkAllRead?: () => Promise<void> | void;
   navigate: (path: string) => void;
@@ -169,8 +175,10 @@ const formatNotificationTime = (dateStr: string): string => {
   });
 };
 
-export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificationsWorkspaceViewProps> = ({
+const UserPortalNotificationsWorkspaceViewContent: React.FC<UserPortalNotificationsWorkspaceViewProps> = ({
   notifications,
+  userId = "",
+  unreadNotificationCount,
   onMarkRead,
   onMarkAllRead,
   navigate,
@@ -179,35 +187,46 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const [page, setPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 250);
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery]);
+  useEffect(() => setPage(1), [filter, debouncedSearch]);
+
+  const pageQuery = useQuery({
+    queryKey: ["user", userId, "notification-page-view", page, 25, debouncedSearch, filter],
+    queryFn: () => loadOrganizationNotificationPage(userId, { page, pageSize: 25, search: debouncedSearch, readState: filter }),
+    enabled: Boolean(userId),
+    placeholderData: (previous) => previous,
+  });
+  const pageNotifications = pageQuery.data?.rows ?? notifications;
+  const pageTotalCount = pageQuery.data?.totalCount ?? notifications.length;
 
   const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.isRead).length,
-    [notifications]
+    () => unreadNotificationCount ?? notifications.filter((n) => !n.isRead).length,
+    [notifications, unreadNotificationCount]
   );
 
   const filteredNotifications = useMemo(() => {
-    return notifications
+    return pageNotifications
       .filter((n) => {
         if (filter === "unread") return !n.isRead;
         if (filter === "read") return n.isRead;
         return true;
       })
-      .filter((n) => {
-        if (!searchQuery.trim()) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-          n.title.toLowerCase().includes(q) ||
-          n.message.toLowerCase().includes(q)
-        );
-      })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [notifications, filter, searchQuery]);
+  }, [pageNotifications]);
 
   const handleMarkAll = async () => {
     if (!onMarkAllRead || unreadCount === 0 || isMarkingAll) return;
     try {
       setIsMarkingAll(true);
       await onMarkAllRead();
+      await queryClient.invalidateQueries({ queryKey: ["user", userId, "notification-page"] });
     } finally {
       setIsMarkingAll(false);
     }
@@ -216,6 +235,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
   const handleNotificationClick = async (notification: NotificationRecord) => {
     if (!notification.isRead && onMarkRead) {
       await onMarkRead(notification.id);
+      await queryClient.invalidateQueries({ queryKey: ["user", userId, "notification-page"] });
     }
     const target = getTargetRoute(
       notification.relatedType,
@@ -290,7 +310,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
                 : "text-muted-foreground hover:text-foreground hover:bg-background/60"
             )}
           >
-            All ({notifications.length})
+            All
           </button>
           <button
             type="button"
@@ -324,7 +344,7 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
                 : "text-muted-foreground hover:text-foreground hover:bg-background/60"
             )}
           >
-            Read ({notifications.length - unreadCount})
+            Read
           </button>
         </div>
 
@@ -502,9 +522,16 @@ export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificati
           })
         )}
       </div>
+
+      <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={pageTotalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />
     </div>
   );
 };
 
-export default UserPortalNotificationsWorkspaceView;
+export const UserPortalNotificationsWorkspaceView: React.FC<UserPortalNotificationsWorkspaceViewProps> = (props) => (
+  <QueryClientProvider client={sharedQueryClient}>
+    <UserPortalNotificationsWorkspaceViewContent {...props} />
+  </QueryClientProvider>
+);
 
+export default UserPortalNotificationsWorkspaceView;

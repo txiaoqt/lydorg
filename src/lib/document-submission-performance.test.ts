@@ -67,26 +67,25 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
         }),
       });
 
-      const submissionSelectMock = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({
-              data: [
-                {
-                  id: submissionId,
-                  organization_id: orgId,
-                  status: "under_admin_review",
-                  user_confirmed: true,
-                  submitted_at: "2026-09-24T00:00:00.000Z",
-                  created_at: "2026-09-24T00:00:00.000Z",
-                  updated_at: "2026-09-24T00:00:00.000Z",
-                },
-              ],
-              error: null,
-            }),
-          }),
-        }),
+      const submissionQuery: any = {};
+      submissionQuery.eq = vi.fn().mockReturnValue(submissionQuery);
+      submissionQuery.is = vi.fn().mockReturnValue(submissionQuery);
+      submissionQuery.order = vi.fn().mockReturnValue(submissionQuery);
+      submissionQuery.limit = vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: submissionId,
+            organization_id: orgId,
+            status: "under_admin_review",
+            user_confirmed: true,
+            submitted_at: "2026-09-24T00:00:00.000Z",
+            created_at: "2026-09-24T00:00:00.000Z",
+            updated_at: "2026-09-24T00:00:00.000Z",
+          },
+        ],
+        error: null,
       });
+      const submissionSelectMock = vi.fn().mockReturnValue(submissionQuery);
 
       const filesSelectMock = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({
@@ -262,16 +261,15 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
         }),
       });
 
-      const selectSubmissionMock = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({
-              data: [{ id: submissionId, organization_id: orgId, status: "draft", submitted_at: null }],
-              error: null,
-            }),
-          }),
-        }),
+      const latestSubmissionQuery: any = {};
+      latestSubmissionQuery.eq = vi.fn().mockReturnValue(latestSubmissionQuery);
+      latestSubmissionQuery.is = vi.fn().mockReturnValue(latestSubmissionQuery);
+      latestSubmissionQuery.order = vi.fn().mockReturnValue(latestSubmissionQuery);
+      latestSubmissionQuery.limit = vi.fn().mockResolvedValue({
+        data: [{ id: submissionId, organization_id: orgId, status: "draft", submitted_at: null }],
+        error: null,
       });
+      const selectSubmissionMock = vi.fn().mockReturnValue(latestSubmissionQuery);
 
       const selectTemplateRowsMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -414,16 +412,15 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
         }),
       });
 
-      const selectSubmissionMock = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({
-              data: [{ id: submissionId, organization_id: orgId, status: "draft", submitted_at: null }],
-              error: null,
-            }),
-          }),
-        }),
+      const latestSubmissionQuery: any = {};
+      latestSubmissionQuery.eq = vi.fn().mockReturnValue(latestSubmissionQuery);
+      latestSubmissionQuery.is = vi.fn().mockReturnValue(latestSubmissionQuery);
+      latestSubmissionQuery.order = vi.fn().mockReturnValue(latestSubmissionQuery);
+      latestSubmissionQuery.limit = vi.fn().mockResolvedValue({
+        data: [{ id: submissionId, organization_id: orgId, status: "draft", submitted_at: null }],
+        error: null,
       });
+      const selectSubmissionMock = vi.fn().mockReturnValue(latestSubmissionQuery);
 
       const selectTemplateRowsMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({

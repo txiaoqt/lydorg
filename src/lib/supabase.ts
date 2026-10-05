@@ -1,4 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
+import { expireAdminSession } from "@/lib/admin-auth";
+
+// Custom administrator tokens are independent of Supabase Auth's JWT. Handle
+// their authoritative rejection once for both imperative and cached RPCs.
+const fetchWithAdminSessionRecovery: typeof fetch = async (input, init) => {
+  const response = await fetch(input, init);
+  if (!response.ok && String(input).includes("/rest/v1/rpc/") && typeof init?.body === "string") {
+    try {
+      const args = JSON.parse(init.body);
+      if (typeof args._session_token === "string") {
+        const failure = await response.clone().json();
+        if (failure.message === "Admin session is invalid or expired.") {
+          expireAdminSession(args._session_token);
+        }
+      }
+    } catch { /* Preserve the original response, including network/server errors. */ }
+  }
+  return response;
+};
 
 const normalizeEnvValue = (value: string | undefined) => {
   const trimmed = String(value ?? "").trim();
@@ -28,6 +47,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
+      global: { fetch: fetchWithAdminSessionRecovery },
       auth: {
         persistSession: true,
         autoRefreshToken: true,

@@ -113,6 +113,33 @@ export const computeBudgetWorkflowMetrics = (
   };
 };
 
+export const computeBudgetWorkflowMetricsFromStatusCounts = (
+  statusCounts: Record<string, number>,
+  totalRequests: number,
+): BudgetStatusHelper => {
+  const countWhere = (predicate: (status: string) => boolean) =>
+    Object.entries(statusCounts).reduce((sum, [status, count]) => sum + (predicate(status) ? count : 0), 0);
+  const approvedCount = countWhere(isBudgetApprovedStatus);
+  const releasedCount = countWhere(isBudgetReleasedStatus);
+  const underReviewCount = countWhere(isBudgetPendingStatus);
+  const needsRevisionCount = countWhere(isBudgetRevisionStatus);
+  const completionPercent = totalRequests > 0 ? Math.round((releasedCount / totalRequests) * 100) : 0;
+  let overviewLabel = totalRequests ? `${releasedCount}/${totalRequests} Released` : "No Requests";
+  if (totalRequests && completionPercent === 100) overviewLabel = "All Released";
+  else if (underReviewCount > 0) overviewLabel = `${underReviewCount} In Review`;
+  else if (needsRevisionCount > 0) overviewLabel = `${needsRevisionCount} Needs Action`;
+  return {
+    totalRequests,
+    approvedCount,
+    releasedCount,
+    underReviewCount,
+    needsRevisionCount,
+    completionPercent,
+    overviewLabel,
+    helperText: totalRequests ? `${releasedCount} of ${totalRequests} released (${completionPercent}%)` : "No requests submitted",
+  };
+};
+
 export const computeLiquidationWorkflowMetrics = (
   liquidationReports: Array<LiquidationReport | { status?: string }>
 ): LiquidationStatusHelper => {
@@ -170,5 +197,32 @@ export const computeLiquidationWorkflowMetrics = (
     completionPercent,
     overviewLabel,
     helperText,
+  };
+};
+
+export const computeLiquidationWorkflowMetricsFromStatusCounts = (
+  statusCounts: Record<string, number>,
+  totalReports: number,
+): LiquidationStatusHelper => {
+  const count = (...statuses: string[]) => statuses.reduce((sum, status) => sum + (statusCounts[status] ?? 0), 0);
+  const completedCount = count("completed_liquidated", "approved");
+  const underReviewCount = count("submitted", "hard_copy_submitted", "approved_for_ftf_green");
+  const needsRevisionCount = count("needs_revision", "overdue", "rejected_red");
+  const pendingUploadCount = count("pending_activity_completion", "not_started", "draft");
+  const completionPercent = totalReports > 0 ? Math.round((completedCount / totalReports) * 100) : 0;
+  let overviewLabel = totalReports ? `${completedCount}/${totalReports} Liquidated` : "No Reports";
+  if (totalReports && completionPercent === 100) overviewLabel = "Fully Liquidated";
+  else if (underReviewCount > 0) overviewLabel = `${underReviewCount} Under Review`;
+  else if (needsRevisionCount > 0) overviewLabel = `${needsRevisionCount} Needs Action`;
+  else if (pendingUploadCount > 0) overviewLabel = `${pendingUploadCount} Pending Upload`;
+  return {
+    totalReports,
+    completedCount,
+    underReviewCount,
+    needsRevisionCount,
+    pendingUploadCount,
+    completionPercent,
+    overviewLabel,
+    helperText: totalReports ? `${completedCount} of ${totalReports} completed (${completionPercent}%)` : "No liquidation reports",
   };
 };

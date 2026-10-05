@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   FileText,
   Plus,
@@ -27,6 +27,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
+import { loadOrganizationYpopOrgActivityPage } from "@/lib/lydo-connect-supabase";
 import { StatusBadge } from "@/components/portal/StatusBadge";
 import {
   DEFAULT_ORG_LED_TIERS,
@@ -47,6 +49,9 @@ export interface YpopOrgLedTabProps {
   entry: YPOPEntry | null;
   orgActivities: YPOPOrgActivity[];
   orgActivityFiles: YPOPOrgActivityFile[];
+  serverPaginated?: boolean;
+  totalCount?: number;
+  approvedCountOverride?: number;
   organizationId: string;
   userId: string;
   formatShortPortalDate: (dateStr: string) => string;
@@ -62,6 +67,9 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
   entry,
   orgActivities,
   orgActivityFiles,
+  serverPaginated = false,
+  totalCount: initialTotalCount,
+  approvedCountOverride,
   organizationId,
   userId,
   formatShortPortalDate,
@@ -75,17 +83,43 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState<YPOPOrgActivity | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [serverRows, setServerRows] = useState<YPOPOrgActivity[]>([]);
+  const [serverTotalCount, setServerTotalCount] = useState(initialTotalCount ?? 0);
+  const [serverLoading, setServerLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
+  useEffect(() => {
+    if (!serverPaginated || !entry?.id || !organizationId) return;
+    let active = true;
+    setServerLoading(true);
+    setServerError("");
+    void loadOrganizationYpopOrgActivityPage(organizationId, entry.id, { page, pageSize: 20, search: searchQuery })
+      .then((result) => {
+        if (!active) return;
+        setServerRows(result.rows);
+        setServerTotalCount(result.totalCount);
+        if (!result.rows.length && page > 1 && result.totalPages < page) setPage(Math.max(1, result.totalPages));
+      })
+      .catch((error) => {
+        if (active) setServerError(error instanceof Error ? error.message : "Unable to load PPA history.");
+      })
+      .finally(() => { if (active) setServerLoading(false); });
+    return () => { active = false; };
+  }, [serverPaginated, entry?.id, organizationId, page, searchQuery, refreshVersion]);
 
   // Use configured period orgLedTiers if available, or fallback (Internal calculation preserved per Requirement #2 & #9)
   const tiers = period.orgLedTiers?.length ? period.orgLedTiers : DEFAULT_ORG_LED_TIERS;
   const sortedTiers = [...tiers].sort((a, b) => a.minProjects - b.minProjects);
 
   // Scoped to this semester's entry
-  const entryActivities = entry
+  const localEntryActivities = entry
     ? orgActivities.filter((act) => act.ypopEntryId === entry.id)
     : [];
+  const entryActivities = serverPaginated ? serverRows : localEntryActivities;
 
-  const approvedCount = entry
+  const approvedCount = typeof approvedCountOverride === "number" ? approvedCountOverride : entry
     ? getApprovedYpopOrgActivityCount(entryActivities, entry.id, entry.orgLedProjectCount ?? 0)
     : 0;
 
@@ -95,7 +129,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
 
   // Search filter
   const filteredActivities = useMemo(() => {
-    if (!searchQuery.trim()) return entryActivities;
+    if (serverPaginated || !searchQuery.trim()) return entryActivities;
     const q = searchQuery.toLowerCase();
     return entryActivities.filter((act) => {
       return (
@@ -104,7 +138,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         act.narrativeReport?.toLowerCase().includes(q)
       );
     });
-  }, [entryActivities, searchQuery]);
+  }, [entryActivities, searchQuery, serverPaginated]);
 
   const handleOpenNew = async () => {
     if (!entry && onEnsureEntry) {
@@ -136,6 +170,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
     try {
       await deleteYpopOrgActivityFromSupabase(act.id);
       onActivityDeleted(act.id);
+      if (serverPaginated) setRefreshVersion((value) => value + 1);
       if (editingActivity?.id === act.id) {
         setEditingActivity(null);
         setModalOpen(false);
@@ -168,7 +203,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                 Organization-Led PPAs
               </h3>
               <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/50">
-                {approvedCount} of {entryActivities.length} Approved
+                {approvedCount} of {serverPaginated ? serverTotalCount : entryActivities.length} Approved
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -182,7 +217,10 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
               <Input
                 placeholder="Search PPAs..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
                 className="pl-8 text-xs h-8.5 w-full sm:w-48 bg-background border-border/80 rounded-lg"
               />
             </div>
@@ -216,16 +254,16 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                   <td colSpan={6} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-3">
                     <FileText className="h-8 w-8 text-muted-foreground mx-auto stroke-1" />
                     <p className="text-sm font-bold text-foreground">
-                      {entryActivities.length === 0
+                      {(serverPaginated ? serverTotalCount : localEntryActivities.length) === 0
                         ? "No Organization PPAs Logged"
                         : "No matching PPAs found"}
                     </p>
                     <p className="text-xs max-w-sm mx-auto">
-                      {entryActivities.length === 0
+                      {(serverPaginated ? serverTotalCount : localEntryActivities.length) === 0
                         ? `Your organization has not recorded any project, program, or activity for ${period.semesterLabel} yet.`
                         : "Try adjusting your search query."}
                     </p>
-                    {entryActivities.length === 0 && (
+                    {(serverPaginated ? serverTotalCount : localEntryActivities.length) === 0 && (
                       <Button
                         type="button"
                         onClick={handleOpenNew}
@@ -238,7 +276,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                 </tr>
               ) : (
                 filteredActivities.map((act) => {
-                  const files = orgActivityFiles.filter((f) => f.orgActivityId === act.id);
+                  const files = serverPaginated ? [] : orgActivityFiles.filter((f) => f.orgActivityId === act.id);
                   const isApproved = act.status === "approved";
                   const isNeedsRevision = act.status === "needs_revision";
                   const isRejected = act.status === "rejected";
@@ -294,7 +332,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                       <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start order-2">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <FileText className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
-                          <span>{files.length} attachment{files.length === 1 ? "" : "s"}</span>
+                          <span>{serverPaginated ? "View on open" : `${files.length} attachment${files.length === 1 ? "" : "s"}`}</span>
                         </div>
                       </td>
 
@@ -405,11 +443,26 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         {/* Bottom Record Count Footer */}
         <div className="p-3.5 px-5 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground bg-muted/10">
           <span>
-            Showing <strong className="font-bold text-foreground">{filteredActivities.length}</strong> of{" "}
-            <strong className="font-bold text-foreground">{entryActivities.length}</strong> records
+            {serverPaginated
+              ? `Showing ${serverRows.length ? (page - 1) * 20 + 1 : 0}–${Math.min(page * 20, serverTotalCount)} of ${serverTotalCount} records`
+              : <>Showing <strong className="font-bold text-foreground">{filteredActivities.length}</strong> of <strong className="font-bold text-foreground">{entryActivities.length}</strong> records</>}
           </span>
         </div>
       </Card>
+
+      {serverPaginated ? (
+        <>
+          {serverError ? <p role="alert" className="text-xs text-destructive">{serverError}</p> : null}
+          <OrganizationHistoryPagination
+            page={page}
+            totalPages={Math.max(1, Math.ceil(serverTotalCount / 20))}
+            totalCount={serverTotalCount}
+            pageSize={20}
+            loading={serverLoading}
+            onPageChange={setPage}
+          />
+        </>
+      ) : null}
 
       {/* PPA Modal */}
       <YpopPpaModal
@@ -418,14 +471,17 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         entry={entry}
         activity={editingActivity}
         orgActivityFiles={orgActivityFiles}
+        loadFilesOnOpen={serverPaginated}
         organizationId={organizationId}
         userId={userId}
         onActivitySaved={(saved) => {
           setEditingActivity(saved);
           onActivitySaved(saved);
+          if (serverPaginated) setRefreshVersion((value) => value + 1);
         }}
         onActivityDeleted={(deletedId) => {
           onActivityDeleted(deletedId);
+          if (serverPaginated) setRefreshVersion((value) => value + 1);
           if (editingActivity?.id === deletedId) {
             setEditingActivity(null);
           }

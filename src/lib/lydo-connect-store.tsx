@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import {
   ADMIN_SESSION_CHANGE_EVENT,
   readAdminSession,
@@ -37,7 +38,7 @@ import {
   normalizeTemplateCategoryKey,
   seedState,
 } from "./lydo-connect-data";
-import { loadAdminPortalSupabaseState, loadLydoConnectSupabaseState } from "./lydo-connect-supabase";
+import { loadOrganizationBootstrapState } from "./lydo-connect-supabase";
 import { supabase, supabaseAuthStorageKey } from "./supabase";
 import { pruneDeletedYpopSubmissions } from "./ypop-submission-deletion";
 
@@ -307,6 +308,51 @@ type LydoConnectContextValue = {
 };
 
 const LydoConnectContext = createContext<LydoConnectContextValue | undefined>(undefined);
+
+/** Keep only account bootstrap data and locally useful drafts in durable browser storage. */
+const createUserPersistedDraftState = (state: LydoConnectState): Partial<LydoConnectState> => {
+  const documentSubmissions = state.documentSubmissions.filter((item) => item.status === "draft");
+  const budgetRequests = state.budgetRequests.filter((item) => item.status === "draft");
+  const liquidationReports = state.liquidationReports.filter((item) => item.status === "draft" || item.status === "not_started");
+  const ypopEntries = state.ypopEntries.filter((item) => item.status === "draft");
+  const ypopEventParticipations = state.ypopEventParticipations.filter((item) => item.status === "draft");
+  const ypopOrgActivities = state.ypopOrgActivities.filter((item) => item.status === "draft");
+  const docSubmissionIds = new Set(documentSubmissions.map((item) => item.id));
+  const budgetRequestIds = new Set(budgetRequests.map((item) => item.id));
+  const liquidationReportIds = new Set(liquidationReports.map((item) => item.id));
+  const ypopEntryIds = new Set(ypopEntries.map((item) => item.id));
+  const ypopParticipationIds = new Set(ypopEventParticipations.map((item) => item.id));
+  const ypopOrgActivityIds = new Set(ypopOrgActivities.map((item) => item.id));
+
+  return {
+    organizationProfiles: state.organizationProfiles.slice(0, 1),
+    documentSubmissions,
+    documentSubmissionFiles: state.documentSubmissionFiles.filter((item) => docSubmissionIds.has(item.submissionId)),
+    budgetRequests,
+    budgetRequestFiles: state.budgetRequestFiles.filter((item) => budgetRequestIds.has(item.budgetRequestId)),
+    liquidationReports,
+    liquidationReportFiles: state.liquidationReportFiles.filter((item) => liquidationReportIds.has(item.liquidationReportId)),
+    newsReleases: [],
+    transparencyPosts: [],
+    complianceRemarks: [],
+    notifications: [],
+    unreadNotificationCount: 0,
+    activityLogs: [],
+    inquiries: [],
+    templates: [],
+    ypopEntries,
+    ypopFiles: state.ypopFiles.filter((item) => ypopEntryIds.has(item.ypopEntryId)),
+    ypopEventParticipations,
+    ypopEventFiles: state.ypopEventFiles.filter((item) => ypopParticipationIds.has(item.participationId)),
+    ypopOrgActivities,
+    ypopOrgActivityFiles: state.ypopOrgActivityFiles.filter((item) => ypopOrgActivityIds.has(item.orgActivityId)),
+    ypopCityActivities: [],
+    ypopPeriods: [],
+    ypopDeletionReceipts: [],
+    customTemplateCategories: state.customTemplateCategories,
+    newsCategories: state.newsCategories,
+  };
+};
 
 export const readState = (identity?: AccountIdentity): LydoConnectState => {
   const targetIdentity = identity ?? resolveInitialIdentity();
@@ -732,23 +778,6 @@ const normalizeOrganizationProfile = (profile: OrganizationProfile): Organizatio
   advocacies: profile.advocacies ?? [],
 });
 
-const SYNC_INTERVAL_MS = 30000;
-const EVENT_COOLDOWN_MS = 10000;
-const STORAGE_SYNC_COOLDOWN_MS = 15000;
-
-const hasActiveSession = async (): Promise<boolean> => {
-  if (readAdminSession()) return true;
-  if (!supabase) return false;
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    return Boolean(session?.user);
-  } catch {
-    return false;
-  }
-};
-
 export const LydoConnectProvider = ({ children }: { children: React.ReactNode }) => {
   const initialIdentity = resolveInitialIdentity();
   const [state, setState] = useState<LydoConnectState>(() => readState(initialIdentity));
@@ -779,10 +808,8 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     return false;
   });
   const activeIdentityRef = useRef<AccountIdentity>(initialIdentity);
-  const hasPendingSyncRef = useRef(false);
   const syncSequenceRef = useRef({ dispatched: 0, resolved: 0 });
-  const isSyncingRef = useRef(false);
-  const lastSyncTimeRef = useRef(0);
+  const bootstrapPromiseRef = useRef<Promise<Partial<LydoSeedState> | null> | null>(null);
   const lastStoredStateRef = useRef<string>("");
 
   const resetAccountState = useCallback((nextIdentity?: AccountIdentity) => {
@@ -798,7 +825,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
     activeIdentityRef.current = resolvedNext;
     syncedIdentityKeyRef.current = "";
     lastStoredStateRef.current = "";
-    syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
+    bootstrapPromiseRef.current = null;
     const nextState = readState(resolvedNext);
     setState(nextState);
     const hasCachedProfile =
@@ -823,7 +850,11 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         return;
       }
       const targetKey = getStorageKeyForIdentity(currentIdentity);
-      const toPersist = currentIdentity.type === "anonymous" ? clearAccountScopedState(state) : state;
+      const toPersist = currentIdentity.type === "anonymous"
+        ? clearAccountScopedState(state)
+        : currentIdentity.type === "user"
+          ? createUserPersistedDraftState(state)
+          : state;
       const serialized = JSON.stringify(toPersist);
       if (serialized === lastStoredStateRef.current) {
         return;
@@ -837,319 +868,101 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!supabase) return;
-
     let active = true;
 
-    const syncState = async () => {
-      if (isSyncingRef.current) {
-        hasPendingSyncRef.current = true;
-        return;
-      }
-      isSyncingRef.current = true;
-      lastSyncTimeRef.current = Date.now();
-      const seq = ++syncSequenceRef.current.dispatched;
-      const requestIdentity: AccountIdentity = { ...activeIdentityRef.current };
-
-      try {
-        const isAdmin = requestIdentity.type === "admin";
-        let snapshot: Partial<LydoSeedState> | null = null;
-        if (isAdmin) {
-          const adminPath = typeof window !== "undefined" ? window.location.pathname.replace(/\/$/, "") : "";
-          const pageUsesScopedAdminQueries = ["/admin", "/admin/registrations", "/admin/inquiries", "/admin/activity-logs", "/admin/notifications"].includes(adminPath);
-          // These routes load aggregate or paginated data from their own scoped
-          // queries. Avoid downloading the all-feature snapshot for them.
-          snapshot = pageUsesScopedAdminQueries ? null : await loadAdminPortalSupabaseState();
-        }
-        if (!snapshot && requestIdentity.type !== "admin") {
-          snapshot = await loadLydoConnectSupabaseState(
-            requestIdentity.type === "user" ? requestIdentity.id : undefined,
-          );
-        }
-        if (!active || !snapshot) return;
-
-        // Discard stale response if identity changed while sync was in flight
-        if (!isSameIdentity(requestIdentity, activeIdentityRef.current)) {
-          return;
-        }
-
-        if (seq < syncSequenceRef.current.resolved) {
-          // Discard stale out-of-order response for the same account
-          return;
-        }
-        syncSequenceRef.current.resolved = seq;
-
-        // Discard snapshot if user mode and loaded organization belongs to another user
-        if (requestIdentity.type === "user" && snapshot.organizationProfiles && snapshot.organizationProfiles.length > 0) {
-          const primaryProfile = snapshot.organizationProfiles[0];
-          if (primaryProfile.userId && primaryProfile.userId !== requestIdentity.id) {
-            return;
-          }
-        }
-
-        setState((current) => {
-          if (!isSameIdentity(requestIdentity, activeIdentityRef.current)) {
-            return current;
-          }
-
-          if (requestIdentity.type === "anonymous") {
-            return clearAccountScopedState({
-              ...current,
-              templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
-              newsReleases: snapshot.newsReleases ?? current.newsReleases,
-              transparencyPosts: snapshot.transparencyPosts ?? current.transparencyPosts,
-              ypopPeriods: snapshot.ypopPeriods ?? current.ypopPeriods,
-              ypopCityActivities: snapshot.ypopCityActivities ?? current.ypopCityActivities,
-            });
-          }
-
-          const nextYpopPeriods = snapshot.ypopPeriods ?? current.ypopPeriods;
-          const validSemesterKeys = new Set(nextYpopPeriods.map((p) => p.semesterKey));
-          const prunedCityActivities = (snapshot.ypopCityActivities ?? current.ypopCityActivities).filter(
-            (activity) => validSemesterKeys.has(activity.semesterKey),
-          );
-          const prunedEntries = reconcileYpopEntries(
-            current.ypopEntries,
-            snapshot.ypopEntries,
-            validSemesterKeys,
-          );
-          const validEntryIds = new Set(prunedEntries.map((e) => e.id));
-          const validCityActivityIds = new Set(prunedCityActivities.map((a) => a.id));
-
-          const nextEventParticipations = reconcileYpopEventParticipations(
-            current.ypopEventParticipations,
-            snapshot.ypopEventParticipations,
-            snapshot.organizationProfiles,
-            isAdmin,
-            validCityActivityIds,
-          );
-
-          const nextOrgActivities = reconcileYpopOrgActivities(
-            current.ypopOrgActivities,
-            snapshot.ypopOrgActivities,
-            snapshot.organizationProfiles,
-            isAdmin,
-            validEntryIds,
-          );
-
-          return pruneDeletedYpopSubmissions({
-            ...current,
-            ...snapshot,
-            templates: snapshot.templates ? normalizeTemplates(snapshot.templates) : current.templates,
-            notifications: snapshot.notifications
-              ? snapshot.notifications.map((remoteNotification) => {
-                  const localNotification = current.notifications.find((item) => item.id === remoteNotification.id);
-                  return localNotification?.isRead
-                    ? { ...remoteNotification, isRead: true }
-                    : remoteNotification;
-                })
-              : current.notifications,
-            ypopPeriods: nextYpopPeriods,
-            ypopCityActivities: prunedCityActivities,
-            ypopEntries: prunedEntries,
-            ypopFiles: (snapshot.ypopFiles ? mergeById(current.ypopFiles, snapshot.ypopFiles) : current.ypopFiles).filter(
-              (f) => validEntryIds.has(f.ypopEntryId),
-            ),
-            ypopEventParticipations: nextEventParticipations,
-            ypopEventFiles: reconcileYpopEventFiles(
-              current.ypopEventFiles,
-              snapshot.ypopEventFiles,
-              nextEventParticipations,
-              isAdmin,
-            ),
-            ypopOrgActivities: nextOrgActivities,
-            ypopOrgActivityFiles: reconcileYpopOrgActivityFiles(
-              current.ypopOrgActivityFiles,
-              snapshot.ypopOrgActivityFiles,
-              nextOrgActivities,
-              isAdmin,
-            ),
-          }, [...(current.ypopDeletionReceipts ?? []), ...(snapshot.ypopDeletionReceipts ?? [])]);
-        });
-      } catch (error) {
-        console.error("Failed to sync Y-TRACE state from Supabase:", error);
-      } finally {
-        isSyncingRef.current = false;
-        if (isSameIdentity(requestIdentity, activeIdentityRef.current)) {
+    const syncBootstrap = async (force = false) => {
+      const requestIdentity = { ...activeIdentityRef.current };
+      if (requestIdentity.type !== "user") {
+        if (requestIdentity.type === "admin") {
           syncedIdentityKeyRef.current = getAccountIdentityKey(requestIdentity);
           setIsInitialSyncDone(true);
         }
-        if (hasPendingSyncRef.current && active) {
-          hasPendingSyncRef.current = false;
-          void syncState();
+        return;
+      }
+      const identityKey = getAccountIdentityKey(requestIdentity);
+      if (!force && syncedIdentityKeyRef.current === identityKey) return;
+
+      const pending = bootstrapPromiseRef.current ?? (bootstrapPromiseRef.current = loadOrganizationBootstrapState(requestIdentity.id));
+      try {
+        const snapshot = await pending;
+        if (!active || !snapshot || !isSameIdentity(requestIdentity, activeIdentityRef.current)) return;
+        const profile = snapshot.organizationProfiles?.find((item) => item.userId === requestIdentity.id);
+        if (profile) {
+          setState((current) => ({
+            ...current,
+            organizationProfiles: [profile, ...current.organizationProfiles.filter((item) => item.userId !== requestIdentity.id)],
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load organization profile bootstrap:", error);
+      } finally {
+        if (bootstrapPromiseRef.current === pending) bootstrapPromiseRef.current = null;
+        if (active && isSameIdentity(requestIdentity, activeIdentityRef.current)) {
+          syncedIdentityKeyRef.current = identityKey;
+          setIsInitialSyncDone(true);
         }
       }
     };
 
-    void syncState();
-    const syncInterval = window.setInterval(async () => {
-      if (activeIdentityRef.current.type === "admin") return;
-      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
-        return;
-      }
-      const hasSession = await hasActiveSession();
-      if (!hasSession) {
-        return;
-      }
-      void syncState();
-    }, SYNC_INTERVAL_MS);
+    const setIdentity = (nextIdentity: AccountIdentity) => {
+      if (isSameIdentity(nextIdentity, activeIdentityRef.current)) return false;
+      activeIdentityRef.current = nextIdentity;
+      syncedIdentityKeyRef.current = "";
+      bootstrapPromiseRef.current = null;
+      const cached = readState(nextIdentity);
+      setState(cached);
+      lastStoredStateRef.current = "";
+      const hasCachedProfile = nextIdentity.type === "user"
+        ? cached.organizationProfiles.some((profile) => profile.userId === nextIdentity.id)
+        : nextIdentity.type === "anonymous";
+      setIsInitialSyncDone(hasCachedProfile || nextIdentity.type === "admin");
+      return true;
+    };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    void syncBootstrap(true);
+
+    const identityFromSession = (session: Session | null): AccountIdentity => {
+      const admin = readAdminSession();
+      if (admin?.id) return { type: "admin", id: admin.id, token: admin.sessionToken };
+      return session?.user?.id ? { type: "user", id: session.user.id } : { type: "anonymous" };
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         resetAccountState({ type: "anonymous" });
-        void syncState();
         return;
       }
-
-      if (event === "SIGNED_IN") {
-        const admin = readAdminSession();
-        const nextIdentity: AccountIdentity = admin?.id
-          ? { type: "admin", id: admin.id }
-          : session?.user?.id
-          ? { type: "user", id: session.user.id }
-          : { type: "anonymous" };
-
-        if (!isSameIdentity(nextIdentity, activeIdentityRef.current)) {
-          syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
-          activeIdentityRef.current = nextIdentity;
-          const cached = readState(nextIdentity);
-          setState(cached);
-          lastStoredStateRef.current = JSON.stringify(cached);
-          const hasCachedProfile =
-            nextIdentity.type === "anonymous"
-              ? true
-              : nextIdentity.type === "user"
-              ? cached.organizationProfiles.some((p) => p.userId === nextIdentity.id)
-              : cached.organizationProfiles.length > 0;
-          syncedIdentityKeyRef.current = hasCachedProfile ? getAccountIdentityKey(nextIdentity) : "";
-          setIsInitialSyncDone(hasCachedProfile);
-        }
-        void syncState();
-        return;
-      }
-
-      if (event === "TOKEN_REFRESHED") {
-        const refreshedUserId = session?.user?.id;
-        if (refreshedUserId && activeIdentityRef.current.type === "user" && activeIdentityRef.current.id === refreshedUserId) {
-          return;
-        }
-        if (refreshedUserId) {
-          activeIdentityRef.current = { type: "user", id: refreshedUserId };
-        }
-        return;
-      }
-
-      if (event === "USER_UPDATED") {
-        void syncState();
-        return;
-      }
-
-      void syncState();
+      const changed = setIdentity(identityFromSession(session));
+      if (changed || event === "INITIAL_SESSION") void syncBootstrap();
+      else if (event === "USER_UPDATED") void syncBootstrap(true);
+      // Refreshing an access token does not change the user profile or organization data.
     });
 
     const handleAdminSessionChange = () => {
       const admin = readAdminSession();
-      const currentUserId = readSynchronousAuthUserId();
-      const nextIdentity: AccountIdentity = admin?.id
-        ? { type: "admin", id: admin.id }
-        : currentUserId
-        ? { type: "user", id: currentUserId }
-        : { type: "anonymous" };
-
-      if (!isSameIdentity(nextIdentity, activeIdentityRef.current)) {
-        if (activeIdentityRef.current.type === "admin") {
-          try {
-            window.localStorage.removeItem(getStorageKeyForIdentity(activeIdentityRef.current));
-          } catch {
-            // ignore storage removal error
-          }
-        }
-        syncSequenceRef.current.resolved = ++syncSequenceRef.current.dispatched;
-        activeIdentityRef.current = nextIdentity;
-        const nextState = readState(nextIdentity);
-        setState(nextState);
-        lastStoredStateRef.current = JSON.stringify(nextState);
-        const hasCachedProfile =
-          nextIdentity.type === "anonymous"
-            ? true
-            : nextIdentity.type === "user"
-            ? nextState.organizationProfiles.some((p) => p.userId === nextIdentity.id)
-            : nextState.organizationProfiles.length > 0;
-        syncedIdentityKeyRef.current = hasCachedProfile ? getAccountIdentityKey(nextIdentity) : "";
-        setIsInitialSyncDone(hasCachedProfile);
-      }
-      void syncState();
+      const userId = readSynchronousAuthUserId();
+      const changed = setIdentity(admin?.id
+        ? { type: "admin", id: admin.id, token: admin.sessionToken }
+        : userId ? { type: "user", id: userId } : { type: "anonymous" });
+      if (changed) void syncBootstrap();
     };
-
-    const handleAuthReset = () => {
-      resetAccountState({ type: "anonymous" });
-    };
-
-    const handleWindowFocus = async () => {
-      if (activeIdentityRef.current.type === "admin") return;
-      const now = Date.now();
-      if (now - lastSyncTimeRef.current < EVENT_COOLDOWN_MS) {
-        return;
-      }
-      const hasSession = await hasActiveSession();
-      if (!hasSession) {
-        return;
-      }
-      void syncState();
-    };
-
-    const handleVisibilityChange = async () => {
-      if (activeIdentityRef.current.type === "admin") return;
-      if (typeof document !== "undefined" && document.visibilityState === "visible") {
-        const now = Date.now();
-        if (now - lastSyncTimeRef.current < EVENT_COOLDOWN_MS) {
-          return;
-        }
-        const hasSession = await hasActiveSession();
-        if (!hasSession) {
-          return;
-        }
-        void syncState();
-      }
-    };
-
-    const handleStorageChange = async (e: StorageEvent) => {
-      if (activeIdentityRef.current.type === "admin") return;
-      const currentKey = getStorageKeyForIdentity(activeIdentityRef.current);
-      if (e.key === currentKey && e.newValue) {
-        if (typeof document !== "undefined" && document.visibilityState !== "visible") {
-          return;
-        }
-        const now = Date.now();
-        if (now - lastSyncTimeRef.current < STORAGE_SYNC_COOLDOWN_MS) {
-          return;
-        }
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (parsed && Array.isArray(parsed.ypopPeriods)) {
-            const hasSession = await hasActiveSession();
-            if (!hasSession) return;
-            void syncState();
-          }
-        } catch {
-          // ignore parsing error
-        }
-      }
+    const handleAuthReset = () => resetAccountState({ type: "anonymous" });
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key !== supabaseAuthStorageKey && event.key !== "lydo_admin_session_v1") return;
+      void supabase.auth.getSession().then(({ data }) => {
+        const changed = setIdentity(identityFromSession(data.session));
+        if (changed) void syncBootstrap();
+      });
     };
 
     window.addEventListener(ADMIN_SESSION_CHANGE_EVENT, handleAdminSessionChange);
     window.addEventListener("lydo-auth-reset", handleAuthReset);
-    window.addEventListener("focus", handleWindowFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("storage", handleStorageChange);
-
     return () => {
       active = false;
-      window.clearInterval(syncInterval);
       authListener.subscription.unsubscribe();
       window.removeEventListener(ADMIN_SESSION_CHANGE_EVENT, handleAdminSessionChange);
       window.removeEventListener("lydo-auth-reset", handleAuthReset);
-      window.removeEventListener("focus", handleWindowFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [resetAccountState]);
@@ -1563,6 +1376,9 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
         setState((current) => ({
           ...current,
           notifications: [notification, ...current.notifications],
+          unreadNotificationCount: current.unreadNotificationCount === undefined
+            ? undefined
+            : current.unreadNotificationCount + (notification.isRead ? 0 : 1),
         })),
       createActivityLog: (activity) =>
         setState((current) => ({
@@ -1570,16 +1386,23 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
           activityLogs: [activity, ...current.activityLogs],
         })),
       markNotificationRead: (id) =>
-        setState((current) => ({
-          ...current,
-          notifications: current.notifications.map((notification) =>
-            notification.id === id ? { ...notification, isRead: true } : notification,
-          ),
-        })),
+        setState((current) => {
+          const wasUnread = current.notifications.some((notification) => notification.id === id && !notification.isRead);
+          return {
+            ...current,
+            notifications: current.notifications.map((notification) =>
+              notification.id === id ? { ...notification, isRead: true } : notification,
+            ),
+            unreadNotificationCount: current.unreadNotificationCount === undefined
+              ? undefined
+              : Math.max(0, current.unreadNotificationCount - (wasUnread ? 1 : 0)),
+          };
+        }),
       markAllNotificationsRead: () =>
         setState((current) => ({
           ...current,
           notifications: current.notifications.map((n) => ({ ...n, isRead: true })),
+          unreadNotificationCount: current.unreadNotificationCount === undefined ? undefined : 0,
         })),
       setDocumentSubmissionStatus: (id, status, remarks) =>
         setState((current) => ({

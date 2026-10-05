@@ -11,6 +11,14 @@ export const sanitizeContactNumber = (val: string): string => {
   return val.replace(/\D/g, "").slice(0, 11);
 };
 
+export const sanitizeZipCode = (value: string): string => value.replace(/\D/g, "").slice(0, 4);
+
+export const validateZipCode = (value?: string | null): string | null => {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return "ZIP code is required.";
+  return /^[0-9]{4}$/.test(trimmed) ? null : "ZIP code must contain exactly 4 digits.";
+};
+
 export const validateOrganizationName = (name: string): string | null => {
   const trimmed = name.trim();
   if (!trimmed) return "Organization name is required.";

@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, renderHook, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, renderHook, act, within } from "@testing-library/react";
 import { YpopPpaModal } from "./YpopPpaModal";
 import { YpopOrgLedTab } from "./YpopOrgLedTab";
 import * as lydoSupabase from "@/lib/lydo-connect-supabase";
@@ -170,7 +170,7 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
     );
 
     expect(screen.getByText("Youth Leadership Summit")).toBeInTheDocument();
-    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(within(container).getByText("Draft")).toBeInTheDocument();
     expect(screen.queryByText("Pending Review")).not.toBeInTheDocument();
   });
 

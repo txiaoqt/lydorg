@@ -1,3 +1,4 @@
+import { sanitizeZipCode, validateZipCode } from "@/lib/organization-profile-domain";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -459,6 +460,7 @@ const GoogleOnboarding = () => {
     if (field === "organizationEmail") return; // Immutable Google account email
     setProfileDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
     setFormError(null);
+
   };
 
   const handleBarangayChange = (barangay: string) => {
@@ -494,6 +496,12 @@ const GoogleOnboarding = () => {
     }
 
     setFormError(null);
+
+    const zipError = validateZipCode(profileDraft.addressZipCode);
+    if (zipError) {
+      setFormError(zipError);
+      return;
+    }
 
     // 1. Validate Organization Name
     const nameErr = validateOrganizationName(profileDraft.organizationName);
@@ -1365,15 +1373,18 @@ const GoogleOnboarding = () => {
 
                   <div className="space-y-1 sm:col-span-1">
                     <Label htmlFor="address-zip" className="text-xs font-semibold text-muted-foreground">
-                      ZIP Code
+                      ZIP Code <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="address-zip"
                       placeholder="e.g. 1603"
                       value={profileDraft.addressZipCode || ""}
-                      onChange={(e) => handleFieldChange("addressZipCode", e.target.value)}
+                      onChange={(e) => handleFieldChange("addressZipCode", sanitizeZipCode(e.target.value))}
                       className="h-9 text-xs"
-                      maxLength={10}
+                      maxLength={4}
+                      inputMode="numeric"
+                      pattern="[0-9]{4}"
+                      required
                     />
                   </div>
                 </div>

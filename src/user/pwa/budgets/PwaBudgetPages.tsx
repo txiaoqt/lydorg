@@ -1,4 +1,5 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Check, ChevronRight, Circle, Eye, FileText, Loader2, Pencil, Plus, WalletCards,
 } from "lucide-react";
@@ -8,6 +9,9 @@ import { toast } from "@/hooks/use-toast";
 import { formatAdvocacyLabel, getBudgetRequestStatusLabel, type BudgetRequest } from "@/lib/lydo-connect-data";
 import {
   createBudgetRequestInSupabase,
+  loadOrganizationBudgetRequestById,
+  loadOrganizationBudgetRequestFiles,
+  loadOrganizationBudgetRequestPage,
   resolveSupabaseFileUrl,
   updateBudgetRequestInSupabase,
   uploadBudgetRequestFileToSupabase,
@@ -16,6 +20,7 @@ import { PwaBackButton } from "../PwaBackButton";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRoutes";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Filter = "all" | "draft" | "review" | "revision" | "approved";
@@ -56,18 +61,26 @@ export function PwaEligibilityNotice({ data }: { data: PortalData }) {
 export function PwaBudgetList({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
   const [filter, setFilter] = useState<Filter>("all");
-  const visible = useMemo(() => data.budgetRequests.filter((request) => {
-    if (filter === "all") return true;
-    if (filter === "draft") return request.status === "draft";
-    if (filter === "review") return reviewStatuses.has(request.status);
-    if (filter === "revision") return request.status === "needs_revision" || request.status === "rejected_red";
-    return approvedStatuses.has(request.status);
-  }), [data.budgetRequests, filter]);
+  const [page, setPage] = useState(1);
+  const organizationId = data.profile?.id ?? "";
+  const statuses = filter === "draft" ? ["draft"]
+    : filter === "review" ? [...reviewStatuses]
+      : filter === "revision" ? ["needs_revision", "rejected_red"]
+        : filter === "approved" ? [...approvedStatuses] : [];
+  const pageQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-page-pwa", page, 25, statuses],
+    queryFn: () => loadOrganizationBudgetRequestPage(organizationId, { page, pageSize: 25, statuses }),
+    enabled: Boolean(organizationId),
+    placeholderData: (previous) => previous,
+  });
+  const visible = pageQuery.data?.rows ?? data.budgetRequests;
+  const totalCount = pageQuery.data?.totalCount ?? data.budgetRequests.length;
+  useEffect(() => setPage(1), [filter]);
 
   return (
     <div className="pwa-stack pwa-budget-list-page">
       <PwaEligibilityNotice data={data} />
-      {data.budgetRequests.length ? (
+      {totalCount ? (
         <div className="pwa-filter-chips" aria-label="Budget request filters">
           {filterOptions.map((item) => <button key={item.id} type="button" className={filter === item.id ? "is-active" : ""} onClick={() => setFilter(item.id)}>{item.label}</button>)}
         </div>
@@ -85,8 +98,9 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
             <span className="pwa-view-row">View Details <ChevronRight aria-hidden="true" /></span>
           </button>
         ))}
-        {!visible.length ? <div className="pwa-card pwa-empty-copy">{data.budgetRequests.length ? "No budget requests match this filter." : "No budget requests have been created yet."}</div> : null}
+        {!visible.length ? <div className="pwa-card pwa-empty-copy">{totalCount ? "No budget requests match this filter." : "No budget requests have been created yet."}</div> : null}
       </section>
+      <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />
       {data.budgetWorkflowEligibility.eligible ? (
         <button type="button" className="pwa-primary-button" onClick={() => go(PWA_ROUTES.budgetNew)}><Plus /> New Budget Request</button>
       ) : null}
@@ -97,8 +111,19 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
 export function PwaBudgetDetail({ data }: { data: PortalData }) {
   const { requestId = "" } = useParams();
   const { go } = usePwaNavigation();
-  const request = data.budgetRequests.find((item) => item.id === requestId);
-  const file = data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === requestId);
+  const organizationId = data.profile?.id ?? "";
+  const detailQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-detail-pwa", requestId],
+    queryFn: () => loadOrganizationBudgetRequestById(organizationId, requestId),
+    enabled: Boolean(organizationId && requestId),
+  });
+  const filesQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-files-pwa", requestId],
+    queryFn: () => loadOrganizationBudgetRequestFiles(organizationId, requestId),
+    enabled: Boolean(organizationId && requestId),
+  });
+  const request = detailQuery.data ?? data.budgetRequests.find((item) => item.id === requestId);
+  const file = filesQuery.data?.[0] ?? data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === requestId);
   if (!request) return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card pwa-empty-copy">Budget request not found.</section></div>;
 
   const openFile = async () => {

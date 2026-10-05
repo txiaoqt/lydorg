@@ -57,7 +57,8 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/lydo-connect-supabase")>();
   return {
     ...actual,
-    loadAdminPortalSupabaseState: vi.fn().mockResolvedValue({
+    loadAdminPortalSectionState: vi.fn().mockResolvedValue({ organizationProfiles: [] }),
+    loadAdminYpopState: vi.fn().mockResolvedValue({
       ypopPeriods: [testPeriod],
       ypopEntries: [],
       ypopCityActivities: [],

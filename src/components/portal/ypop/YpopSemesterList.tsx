@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
   CalendarDays,
@@ -34,6 +34,7 @@ import {
   type YPOPPeriod,
   type YpopQualificationStatus,
 } from "@/lib/lydo-connect-data";
+import { loadOrganizationYpopEntriesForSemesters } from "@/lib/lydo-connect-supabase";
 
 export interface YpopSemesterListProps {
   periods: YPOPPeriod[];
@@ -44,6 +45,7 @@ export interface YpopSemesterListProps {
   organizationId: string;
   onSelectSemester: (semesterKey: string) => void;
   formatShortPortalDate: (dateStr: string) => string;
+  loadEntriesRemotely?: boolean;
 }
 
 const formatDeadline = (dateStr: string) => {
@@ -77,11 +79,13 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
   orgActivities,
   organizationId,
   onSelectSemester,
+  loadEntriesRemotely = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [remoteEntries, setRemoteEntries] = useState<YPOPEntry[] | null>(null);
 
   const sortedPeriods = useMemo(() => {
     return [...periods].sort((a, b) =>
@@ -122,6 +126,23 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
     const start = (currentPageSafe - 1) * itemsPerPage;
     return filteredPeriods.slice(start, start + itemsPerPage);
   }, [filteredPeriods, currentPageSafe, itemsPerPage]);
+
+  useEffect(() => {
+    if (!loadEntriesRemotely || !organizationId) return;
+    let active = true;
+    setRemoteEntries(null);
+    const semesterKeys = paginatedPeriods.map((period) => period.semesterKey);
+    void loadOrganizationYpopEntriesForSemesters(organizationId, semesterKeys)
+      .then((page) => { if (active) setRemoteEntries(page.rows); })
+      .catch((error) => {
+        if (active) {
+          setRemoteEntries([]);
+          console.error("Unable to load YPOP entries for the visible semester page:", error);
+        }
+      });
+    return () => { active = false; };
+  }, [loadEntriesRemotely, organizationId, paginatedPeriods]);
+  const visibleEntries = remoteEntries ?? entries;
 
   const startRecord = filteredPeriods.length === 0 ? 0 : (currentPageSafe - 1) * itemsPerPage + 1;
   const endRecord = Math.min(currentPageSafe * itemsPerPage, filteredPeriods.length);
@@ -256,57 +277,56 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                 </tr>
               ) : (
                 paginatedPeriods.map((period) => {
-                  const semesterActivities = cityActivities.filter(
-                    (act) => act.semesterKey === period.semesterKey
-                  );
-                  const semesterParticipations = participations.filter(
-                    (p) =>
-                      p.organizationId === organizationId &&
-                      semesterActivities.some((act) => act.id === p.activityId)
-                  );
                   const entry =
-                    entries.find(
+                    visibleEntries.find(
                       (e) =>
                         e.organizationId === organizationId &&
                         e.semester === period.semesterKey
                     ) ?? null;
-
-                  const semesterOrgActivities = entry
-                    ? orgActivities.filter((act) => act.ypopEntryId === entry.id)
-                    : [];
-                  const approvedPpaCount = entry
-                    ? getApprovedYpopOrgActivityCount(
-                        semesterOrgActivities,
-                        entry.id,
-                        entry.orgLedProjectCount ?? 0
-                      )
-                    : 0;
-
-                  const verifiedAttendance = buildVerifiedYpopAttendance(
-                    semesterActivities,
-                    semesterParticipations,
-                    entry?.cityLedAttendance
-                  );
-
-                  const liveScore = computeYpopScore(
-                    verifiedAttendance,
-                    semesterActivities,
-                    approvedPpaCount,
-                    period.orgLedTiers
-                  );
-
                   const threshold = entry?.pointsRequired ?? YPOP_SCORE_THRESHOLD;
                   const isPeriodOpen = period.status === "open";
-                  const qualificationStatus: YpopQualificationStatus = deriveYpopQualificationStatus({
-                    score: liveScore.totalScore,
-                    pointsRequired: threshold,
-                    period,
-                    entry,
-                    participations: semesterParticipations,
-                    orgActivities: semesterOrgActivities,
-                  });
+                  const storedScore = Math.max(0, Number(entry?.pointsEarned ?? 0));
+                  // Keep the in-memory/demo path live while the production path
+                  // uses the persisted summary and avoids fetching period history.
+                  const semesterActivities = loadEntriesRemotely
+                    ? []
+                    : cityActivities.filter((activity) => activity.semesterKey === period.semesterKey);
+                  const semesterParticipations = loadEntriesRemotely
+                    ? []
+                    : participations.filter((participation) =>
+                        participation.organizationId === organizationId &&
+                        semesterActivities.some((activity) => activity.id === participation.activityId),
+                      );
+                  const semesterOrgActivities = !loadEntriesRemotely && entry
+                    ? orgActivities.filter((activity) => activity.ypopEntryId === entry.id)
+                    : [];
+                  const approvedPpaCount = loadEntriesRemotely
+                    ? entry?.orgLedProjectCount ?? 0
+                    : entry
+                      ? getApprovedYpopOrgActivityCount(semesterOrgActivities, entry.id, entry.orgLedProjectCount ?? 0)
+                      : 0;
+                  const verifiedAttendance = loadEntriesRemotely
+                    ? entry?.cityLedAttendance ?? []
+                    : buildVerifiedYpopAttendance(semesterActivities, semesterParticipations, entry?.cityLedAttendance);
+                  const liveScore = loadEntriesRemotely
+                    ? storedScore
+                    : computeYpopScore(verifiedAttendance, semesterActivities, approvedPpaCount, period.orgLedTiers).totalScore;
+                  const qualificationStatus: YpopQualificationStatus = loadEntriesRemotely
+                    ? storedScore >= threshold || entry?.status === "qualified"
+                      ? "qualified"
+                      : entry?.status === "not_qualified" || !isPeriodOpen
+                        ? "not_qualified"
+                        : "pending_evaluation"
+                    : deriveYpopQualificationStatus({
+                        score: liveScore,
+                        pointsRequired: threshold,
+                        period,
+                        entry,
+                        participations: semesterParticipations,
+                        orgActivities: semesterOrgActivities,
+                      });
                   const isQualified = qualificationStatus === "qualified";
-                  const verifiedCityCount = verifiedAttendance.filter((a) => a.attended).length;
+                  const verifiedCityCount = verifiedAttendance.filter((activity) => activity.attended).length;
                   const actionLabel = getActionLabel(
                     entry ? { ...entry, status: isQualified ? "qualified" : qualificationStatus === "not_qualified" ? "not_qualified" : entry.status } : null,
                     period
@@ -371,14 +391,14 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                                   : "text-foreground"
                               )}
                             >
-                              {liveScore.totalScore}%
+                              {liveScore}%
                             </span>
                             <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium whitespace-nowrap">
                               Required Percentage: {threshold}%
                             </span>
                           </div>
                           <Progress
-                            value={Math.min(100, liveScore.totalScore)}
+                            value={Math.min(100, liveScore)}
                             className="h-1.5 bg-slate-200 dark:bg-slate-700"
                           />
                         </div>
@@ -390,7 +410,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                           <div className="flex items-center gap-1.5 sm:gap-2">
                             <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">City-Led:</span>
                             <span className="font-bold text-foreground tabular-nums text-[11px] sm:text-xs">
-                              {verifiedCityCount} / {semesterActivities.length}
+                              {verifiedCityCount} / {(loadEntriesRemotely ? entry?.cityLedAttendance ?? [] : semesterActivities).length}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 sm:gap-2">

@@ -18,11 +18,14 @@ const mapReceipt = (row: ReceiptRow): YpopSubmissionDeletionReceipt => ({
   orgActivityIds: row.org_activity_ids ?? [], deletedAt: row.deleted_at,
 });
 
-export const fetchYpopDeletionReceipts = async (organizationId: string) => {
+export const fetchYpopDeletionReceipts = async (organizationId: string, semester: string) => {
   if (!supabase) return undefined;
-  const { data, error } = await supabase.from("ypop_submission_deletion_receipts")
+  const query = supabase.from("ypop_submission_deletion_receipts")
     .select("operation_id,organization_id,semester,entry_ids,participation_ids,org_activity_ids,deleted_at")
-    .eq("organization_id", organizationId);
+    .eq("organization_id", organizationId)
+    .eq("semester", semester)
+    .order("deleted_at", { ascending: false });
+  const { data, error } = await query;
   // Preserve previous receipts if this read fails. Never infer deletion from an
   // empty/error response: locally saved new drafts must survive a refresh.
   if (error) return undefined;

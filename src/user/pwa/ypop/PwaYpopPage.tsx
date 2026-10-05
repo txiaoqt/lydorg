@@ -1,19 +1,16 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronRight, FileText, Medal, Trophy } from "lucide-react";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 import { StatusBadge } from "@/components/portal/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
-  buildVerifiedYpopAttendance,
-  computeYpopScore,
-  getApprovedYpopOrgActivityCount,
   YPOP_BASE_TOTAL_POINTS,
   YPOP_SCORE_THRESHOLD,
   type YPOPEntry,
   type YPOPPeriod,
 } from "@/lib/lydo-connect-data";
-import { createYpopEntryInSupabase } from "@/lib/lydo-connect-supabase";
-import { getYpopEventJoinEligibility } from "@/lib/ypop-event-eligibility";
+import { createYpopEntryInSupabase, invalidateOrganizationYpopQueries, loadOrganizationYpopEntriesForSemesters, subscribeToOrganizationStatusChangesInSupabase } from "@/lib/lydo-connect-supabase";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import { pwaYpopEntryRoute, pwaYpopPeriodRoute } from "../pwaRoutes";
@@ -39,21 +36,51 @@ const actionLabel = (entry: YPOPEntry | null) => {
 export function PwaYpopPage({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
   const [openingPeriodId, setOpeningPeriodId] = useState("");
+  const [periodPage, setPeriodPage] = useState(1);
+  const [entriesForPage, setEntriesForPage] = useState<YPOPEntry[]>([]);
+  const [entriesLoading, setEntriesLoading] = useState(false);
+  const [realtimeRefreshVersion, setRealtimeRefreshVersion] = useState(0);
   const { state } = data.store;
   const organizationId = data.profile?.id ?? "";
-  const periods = [...state.ypopPeriods].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-  const semesterKeys = new Set(periods.map((period) => period.semesterKey));
-  const entries = state.ypopEntries
-    .filter(
-      (entry) =>
-        entry.organizationId === organizationId &&
-        semesterKeys.has(entry.semester),
-    )
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-  const periodRows = periods.map((period) => ({
+  const periods = useMemo(() => [...state.ypopPeriods].sort((left, right) => right.createdAt.localeCompare(left.createdAt)), [state.ypopPeriods]);
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(periods.length / pageSize));
+  const safePage = Math.min(periodPage, totalPages);
+  const visiblePeriods = useMemo(() => periods.slice((safePage - 1) * pageSize, safePage * pageSize), [periods, safePage]);
+  const periodRows = visiblePeriods.map((period) => ({
     period,
-    entry: entries.find((entry) => entry.semester === period.semesterKey) ?? null,
+    entry: entriesForPage.find((entry) => entry.semester === period.semesterKey) ?? null,
   }));
+
+  useEffect(() => {
+    if (!organizationId || !visiblePeriods.length) {
+      setEntriesForPage([]);
+      return;
+    }
+    let active = true;
+    setEntriesLoading(true);
+    void loadOrganizationYpopEntriesForSemesters(organizationId, visiblePeriods.map((period) => period.semesterKey))
+      .then((page) => { if (active) setEntriesForPage(page.rows); })
+      .catch((error) => {
+        if (active) {
+          setEntriesForPage([]);
+          console.error("Unable to load YPOP entries for the visible period page:", error);
+        }
+      })
+      .finally(() => { if (active) setEntriesLoading(false); });
+    return () => { active = false; };
+  }, [organizationId, visiblePeriods, realtimeRefreshVersion]);
+
+  useEffect(() => {
+    if (!organizationId) return;
+    return subscribeToOrganizationStatusChangesInSupabase({
+      organizationId, feature: "ypop_city_led", onChange: () => setRealtimeRefreshVersion((version) => version + 1),
+      onStatus: (status, error) => {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") console.debug("Organization YPOP summary channel subscribed.");
+        else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization YPOP summary channel:", status, error ?? "");
+      },
+    });
+  }, [organizationId]);
 
   const openPeriod = async (period: YPOPPeriod, entry: YPOPEntry | null) => {
     if (entry) {
@@ -85,7 +112,7 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
         cityLedAttendance: [],
       });
       data.store.createYPOPEntry(saved);
-      await data.refreshYpop();
+      await invalidateOrganizationYpopQueries(organizationId, period.semesterKey);
       go(pwaYpopEntryRoute(saved.id));
     } catch (error) {
       toast({ title: "Unable to open submission", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
@@ -105,22 +132,10 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
       ) : null}
       <section className="pwa-stack" aria-label="YPOP semester submissions">
         {periodRows.map(({ period, entry }) => {
-          const activities = state.ypopCityActivities.filter((activity) => activity.semesterKey === period.semesterKey);
-          const participations = state.ypopEventParticipations.filter((participation) =>
-            participation.organizationId === organizationId && activities.some((activity) => activity.id === participation.activityId),
-          );
-          const orgActivities = entry ? state.ypopOrgActivities.filter((activity) => activity.ypopEntryId === entry.id) : [];
-          const approvedPpas = entry ? getApprovedYpopOrgActivityCount(orgActivities, entry.id, entry.orgLedProjectCount ?? 0) : 0;
-          const verifiedAttendance = buildVerifiedYpopAttendance(activities, participations, entry?.cityLedAttendance);
-          const score = computeYpopScore(verifiedAttendance, activities, approvedPpas, period.orgLedTiers);
-          const proofCount =
-            (entry ? state.ypopFiles.filter((file) => file.ypopEntryId === entry.id).length : 0) +
-            state.ypopEventFiles.filter((file) => participations.some((participation) => participation.id === file.participationId)).length +
-            state.ypopOrgActivityFiles.filter((file) => orgActivities.some((activity) => activity.id === file.orgActivityId)).length;
-          const availableCount = activities.filter((activity) => {
-            const participation = participations.find((item) => item.activityId === activity.id);
-            return getYpopEventJoinEligibility({ activity, period, entry, participation, profile: data.profile }).allowed;
-          }).length;
+          const storedScore = Math.max(0, Number(entry?.pointsEarned ?? 0));
+          const verifiedCityCount = entry?.cityLedAttendance?.filter((activity) => activity.attended).length ?? 0;
+          const cityActivityCount = entry?.cityLedAttendance?.length ?? 0;
+          const approvedPpas = entry?.orgLedProjectCount ?? 0;
           const status = entry?.status ?? period.status;
           const finalized = entry?.status === "qualified" || entry?.status === "not_qualified";
           return (
@@ -130,14 +145,14 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
                 <StatusBadge status={status} />
               </div>
               <div className="pwa-ypop-semester-score">
-                <span><small>Current score</small><strong>{score.totalScore}%</strong></span>
+                <span><small>Current score</small><strong>{storedScore}%</strong></span>
                 <span><small>Threshold</small><strong>{entry?.pointsRequired ?? YPOP_SCORE_THRESHOLD}%</strong></span>
               </div>
-              <div className="pwa-progress"><span style={{ width: `${Math.min(100, score.totalScore)}%` }} /></div>
+              <div className="pwa-progress"><span style={{ width: `${Math.min(100, storedScore)}%` }} /></div>
               <dl className="pwa-ypop-semester-counts">
-                <div><dt>Available events</dt><dd>{availableCount}</dd></div>
-                <div><dt>Joined events</dt><dd>{participations.length}</dd></div>
-                <div><dt>Proof files</dt><dd>{proofCount}</dd></div>
+                <div><dt>City-led activities</dt><dd>{verifiedCityCount} / {cityActivityCount} verified</dd></div>
+                <div><dt>Approved PPAs</dt><dd>{approvedPpas}</dd></div>
+                <div><dt>Validation status</dt><dd>{entry ? actionLabel(entry) : "Not started"}</dd></div>
               </dl>
               {finalized ? (
                 <div className={`pwa-ypop-result ${entry?.status === "qualified" ? "is-qualified" : "is-not-qualified"}`}>
@@ -159,6 +174,7 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
         })}
         {!periodRows.length ? <section className="pwa-card pwa-empty-copy">No YPOP validation periods are available yet.</section> : null}
       </section>
+      {periods.length ? <OrganizationHistoryPagination page={safePage} totalPages={totalPages} totalCount={periods.length} pageSize={pageSize} loading={entriesLoading} onPageChange={setPeriodPage} /> : null}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Check, ChevronRight, Circle, Eye, FileText, Loader2, ReceiptText, Trash2, UploadCloud,
 } from "lucide-react";
@@ -9,6 +10,9 @@ import type { LiquidationStatus } from "@/lib/lydo-connect-data";
 import {
   createLiquidationReportFileInSupabase,
   deleteLiquidationReportFileInSupabase,
+  loadOrganizationLiquidationReportById,
+  loadOrganizationLiquidationReportFiles,
+  loadOrganizationLiquidationReportPage,
   resolveSupabaseFileUrl,
   updateLiquidationReportInSupabase,
 } from "@/lib/lydo-connect-supabase";
@@ -16,6 +20,7 @@ import { PwaBackButton } from "../PwaBackButton";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaBudgetDetailRoute, pwaLiquidationDetailRoute, pwaLiquidationManageRoute } from "../pwaRoutes";
+import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 
@@ -28,14 +33,24 @@ const replacementStatuses = new Set<LiquidationStatus>(["needs_revision", "rejec
 export function PwaLiquidationList({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
   const releasedBudget = data.liquidationWorkflowEligibility.releasedBudget;
+  const [page, setPage] = useState(1);
+  const organizationId = data.profile?.id ?? "";
+  const pageQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-page-pwa", page, 25],
+    queryFn: () => loadOrganizationLiquidationReportPage(organizationId, { page, pageSize: 25 }),
+    enabled: Boolean(organizationId),
+    placeholderData: (previous) => previous,
+  });
+  const reports = pageQuery.data?.rows ?? data.liquidationReports;
+  const totalCount = pageQuery.data?.totalCount ?? data.liquidationReports.length;
+  useEffect(() => setPage(1), [organizationId]);
   const managementTarget =
-    data.liquidationReports.find((item) => submittableStatuses.has(item.status)) ??
-    data.liquidationReports[0];
+    reports.find((item) => submittableStatuses.has(item.status)) ?? reports[0];
   return (
     <div className="pwa-stack pwa-liquidation-list-page">
       <section className="pwa-compact-card-list">
-        {data.liquidationReports.map((report) => {
-          const budget = data.budgetRequests.find((item) => item.id === report.budgetRequestId);
+        {reports.map((report) => {
+          const budget = data.budgetRequests.find((item) => item.id === report.budgetRequestId) ?? (report as any).relatedBudget;
           const overdue = (
             Boolean(report.deadlineAt) &&
             new Date(report.deadlineAt).getTime() < Date.now() &&
@@ -54,7 +69,7 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
             </button>
           );
         })}
-        {!data.liquidationReports.length ? (
+        {!totalCount ? (
           <section className="pwa-card pwa-contextual-empty">
             <span className="pwa-settings-hero-icon"><ReceiptText aria-hidden="true" /></span>
             <div>
@@ -86,6 +101,7 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
           </section>
         ) : null}
       </section>
+      <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />
       {managementTarget ? (
         <button type="button" className="pwa-primary-button" onClick={() => go(pwaLiquidationManageRoute(managementTarget.id))}><UploadCloud /> Upload or Manage Liquidation</button>
       ) : null}
@@ -96,9 +112,20 @@ export function PwaLiquidationList({ data }: { data: PortalData }) {
 export function PwaLiquidationDetail({ data }: { data: PortalData }) {
   const { reportId = "" } = useParams();
   const { go } = usePwaNavigation();
-  const report = data.liquidationReports.find((item) => item.id === reportId);
-  const budget = report ? data.budgetRequests.find((item) => item.id === report.budgetRequestId) : null;
-  const files = data.store.state.liquidationReportFiles.filter((item) => item.liquidationReportId === reportId);
+  const organizationId = data.profile?.id ?? "";
+  const detailQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-detail-pwa", reportId],
+    queryFn: () => loadOrganizationLiquidationReportById(organizationId, reportId),
+    enabled: Boolean(organizationId && reportId),
+  });
+  const filesQuery = useQuery({
+    queryKey: ["user", organizationId, "liquidation-files-pwa", reportId],
+    queryFn: () => loadOrganizationLiquidationReportFiles(organizationId, reportId),
+    enabled: Boolean(organizationId && reportId),
+  });
+  const report = detailQuery.data ?? data.liquidationReports.find((item) => item.id === reportId);
+  const budget = report ? data.budgetRequests.find((item) => item.id === report.budgetRequestId) ?? (report as any).relatedBudget : null;
+  const files = filesQuery.data ?? data.store.state.liquidationReportFiles.filter((item) => item.liquidationReportId === reportId);
   if (!report) return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.liquidations} label="Liquidation" /><section className="pwa-card pwa-empty-copy">Liquidation report not found.</section></div>;
   const overdue = Boolean(report.deadlineAt) && new Date(report.deadlineAt).getTime() < Date.now() && report.status !== "completed_liquidated";
 

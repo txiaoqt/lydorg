@@ -41,11 +41,13 @@ export interface YpopCityLedTabProps {
   initialActivityId?: string | null;
   participations: YPOPEventParticipation[];
   eventFiles: YPOPEventFile[];
+  loadFilesOnOpen?: boolean;
   organizationId: string;
   isPeriodOpen: boolean;
   canEditParticipation: boolean;
   onParticipationCreated: (participation: YPOPEventParticipation) => void;
   onParticipationUpdated: (participation: YPOPEventParticipation) => void;
+  onSubmissionStateChange?: (activityId: string, submitting: boolean) => void;
   onFileCreated: (file: YPOPEventFile) => void;
   onFileDeleted: (fileId: string) => void;
 }
@@ -56,11 +58,13 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
   initialActivityId,
   participations,
   eventFiles,
+  loadFilesOnOpen = false,
   organizationId,
   isPeriodOpen,
   canEditParticipation,
   onParticipationCreated,
   onParticipationUpdated,
+  onSubmissionStateChange,
   onFileCreated,
   onFileDeleted,
 }) => {
@@ -68,6 +72,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [activeActivity, setActiveActivity] = useState<YPOPCityActivity | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null);
 
   // Auto-open proof drawer when deep-linked with initialActivityId
   React.useEffect(() => {
@@ -240,9 +245,12 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                 filteredActivities.map((act) => {
                   const category = resolveYpopCityLedCategory(act.category, act.points);
                   const participation = participations.find((p) => p.activityId === act.id);
-                  const filesCount = participation
+                  const filesCount = participation && !loadFilesOnOpen
                     ? eventFiles.filter((f) => f.participationId === participation.id).length
                     : 0;
+                  const hasSavedProof = loadFilesOnOpen
+                    ? Boolean(participation?.proofSubmittedAt || participation?.verifiedAt || participation?.status === "needs_revision")
+                    : filesCount > 0;
                   const isNeedsRevision = participation?.status === "needs_revision";
 
                   return (
@@ -259,11 +267,6 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                           >
                             {act.name}
                           </p>
-                          {act.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1 max-w-xs sm:max-w-md">
-                              {act.description}
-                            </p>
-                          )}
                           {participation?.status === "needs_revision" && participation.adminRemarks && (
                             <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium pt-0.5">
                               <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
@@ -308,7 +311,9 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
 
                       {/* Column 5: Proof Status */}
                       <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start order-3">
-                        {participation ? (
+                        {submittingActivityId === act.id ? (
+                          <StatusBadge status="pending_verification" label="Submitting…" />
+                        ) : participation ? (
                           <StatusBadge
                             status={participation.status}
                             label={
@@ -333,21 +338,21 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap order-6">
                         <Button
                           type="button"
-                          variant={isNeedsRevision || (participation && filesCount > 0) ? "outline" : "default"}
+                          variant={isNeedsRevision || (participation && hasSavedProof) ? "outline" : "default"}
                           size="sm"
                           onClick={() => handleOpenDrawer(act)}
                           className={cn(
                             "w-full md:w-auto h-8 px-3 rounded-lg text-xs gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center",
                             isNeedsRevision
                               ? "border border-amber-500/40 dark:border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/60 dark:hover:border-amber-500/50 hover:text-amber-900 dark:hover:text-amber-100 font-semibold shadow-2xs focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2"
-                              : participation && filesCount > 0
+                            : participation && hasSavedProof
                                 ? "border border-border/80 bg-background hover:bg-muted text-foreground font-medium"
                                 : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs font-medium"
                           )}
                         >
                           {isNeedsRevision ? (
                             <Edit3 className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" />
-                          ) : participation && filesCount > 0 ? (
+                          ) : participation && hasSavedProof ? (
                             <FileText className="h-3.5 w-3.5 shrink-0" />
                           ) : (
                             <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -355,7 +360,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                           <span>
                             {isNeedsRevision
                               ? "Resolve Revision"
-                              : participation && filesCount > 0
+                              : participation && hasSavedProof
                                 ? "View Proof & Details"
                                 : "Submit Proof of Attendance"}
                           </span>
@@ -385,8 +390,16 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
         activity={activeActivity}
         participation={activeParticipation}
         eventFiles={eventFiles}
+        loadFilesOnOpen={loadFilesOnOpen}
         organizationId={organizationId}
         onParticipationUpdated={onParticipationUpdated}
+        onSubmissionStateChange={(activityId, submitting) => {
+          setSubmittingActivityId((current) => {
+            if (submitting) return activityId;
+            return current === activityId ? null : current;
+          });
+          onSubmissionStateChange?.(activityId, submitting);
+        }}
         onFileCreated={onFileCreated}
         onFileDeleted={onFileDeleted}
       />

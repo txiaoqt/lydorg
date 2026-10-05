@@ -35,8 +35,8 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
       : data.missingDocuments
         ? { text: `${data.missingDocuments} still missing`, tone: "attention" }
         : { text: data.requiredTemplates.length ? "Requirements complete" : "No requirements", tone: "success" };
-  const budgetStatus = data.revisionBudgetRequests.length
-    ? { text: `${data.revisionBudgetRequests.length} need revision`, tone: "attention" }
+  const budgetStatus = data.revisionBudgetRequestCount
+    ? { text: `${data.revisionBudgetRequestCount} need revision`, tone: "attention" }
     : data.underReviewBudgetRequests
       ? { text: `${data.underReviewBudgetRequests} under review`, tone: "progress" }
       : data.releasedBudgetRequests
@@ -44,15 +44,15 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
         : data.latestBudget?.status === "draft"
           ? { text: "Draft to finish", tone: "attention" }
           : { text: data.latestBudget ? statusLabelMap[data.latestBudget.status] : "No requests yet", tone: "neutral" };
-  const liquidationStatus = data.overdueLiquidations.length
-    ? { text: `${data.overdueLiquidations.length} overdue`, tone: "danger" }
-    : data.revisionLiquidations.length
-      ? { text: `${data.revisionLiquidations.length} need revision`, tone: "attention" }
+  const liquidationStatus = data.overdueLiquidationCount
+    ? { text: `${data.overdueLiquidationCount} overdue`, tone: "danger" }
+    : data.revisionLiquidationCount
+      ? { text: `${data.revisionLiquidationCount} need revision`, tone: "attention" }
       : data.underReviewLiquidations
         ? { text: `${data.underReviewLiquidations} under review`, tone: "progress" }
         : data.completedLiquidations
           ? { text: `${data.completedLiquidations} completed`, tone: "success" }
-          : { text: data.liquidationReports.length ? "In progress" : "No reports yet", tone: "neutral" };
+          : { text: data.liquidationCount ? "In progress" : "No reports yet", tone: "neutral" };
   const urnRegistration = isUrnRegistration(data.profile);
   const renewalDueDate = data.renewalCountdown
     ? new Date(data.renewalCountdown.expiresAt).toLocaleDateString("en-PH", {
@@ -86,8 +86,8 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
     },
     {
       label: "Budget",
-      value: String(data.budgetRequests.length),
-      descriptor: data.budgetRequests.length === 1 ? "Request" : "Requests",
+      value: String(data.budgetRequestCount),
+      descriptor: data.budgetRequestCount === 1 ? "Request" : "Requests",
       status: budgetStatus.text,
       tone: budgetStatus.tone,
       icon: WalletCards,
@@ -95,7 +95,7 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
     },
     {
       label: "Liquidation",
-      value: `${data.completedLiquidations} of ${data.liquidationReports.length}`,
+      value: `${data.completedLiquidations} of ${data.liquidationCount}`,
       descriptor: "Completed",
       status: liquidationStatus.text,
       tone: liquidationStatus.tone,

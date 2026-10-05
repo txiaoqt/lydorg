@@ -311,7 +311,7 @@ export const PortalShell = ({
         {/* Main content */}
         <main className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-background">
           <div className="portal-shell-scroller flex-1 overflow-y-auto">
-            <header className="sticky top-0 z-30 border-b border-border bg-admin-surface/95 backdrop-blur-xs">
+            <header className="sticky top-0 z-30 border-b border-border bg-admin-surface">
               <div className="flex h-20 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   {/* Mobile: opens drawer */}

@@ -54,7 +54,7 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
     expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders the Export button in the page header and opens the Export dialog with semester context", async () => {
+  it("keeps Export disabled when the current filtered result has no rows", () => {
     render(
       <MemoryRouter>
         <LydoConnectProvider>
@@ -66,16 +66,12 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
     // Verify Export button is rendered in the header action area
     const exportButton = screen.getByRole("button", { name: /^export$/i });
     expect(exportButton).toBeInTheDocument();
-    expect(exportButton).not.toBeDisabled();
+    // Empty exports are intentionally unavailable because there is no filtered data to include.
+    expect(exportButton).toBeDisabled();
 
-    // Click Export button
     fireEvent.click(exportButton);
 
-    // Verify Export dialog opens with YORP Registry title
-    expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Export YORP Registry" })).toBeInTheDocument();
-    expect(screen.getByText(/Choose the information you want included in your export/i)).toBeInTheDocument();
-    expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("allows opening semester dropdown and renders semester options", async () => {

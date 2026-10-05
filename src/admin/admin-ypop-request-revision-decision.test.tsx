@@ -6,6 +6,7 @@ import AdminPortal from "./AdminPortal";
 import { LydoConnectProvider } from "@/lib/lydo-connect-store";
 import * as lydoSupabase from "@/lib/lydo-connect-supabase";
 import { supabase } from "@/lib/supabase";
+import { queryClient } from "@/lib/query-client";
 import type { YPOPEntry, YPOPPeriod, YPOPEventParticipation, OrganizationProfile, YPOPCityActivity, YPOPEventFile } from "@/types";
 
 // Mock supabase
@@ -85,7 +86,7 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/lydo-connect-supabase")>();
   return {
     ...actual,
-    loadAdminYpopState: vi.fn().mockImplementation(() =>
+    loadAdminPortalSectionState: vi.fn().mockImplementation(() =>
       Promise.resolve({
         ypopPeriods: [
           {
@@ -200,10 +201,7 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
         ],
       })
     ),
-    loadAdminPortalSnapshotState: vi.fn().mockImplementation(() =>
-      Promise.resolve(null)
-    ),
-    loadAdminPortalSupabaseState: vi.fn().mockImplementation(() =>
+    loadAdminYpopState: vi.fn().mockImplementation(() =>
       Promise.resolve({
         ypopPeriods: [
           {
@@ -336,6 +334,7 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
 });
 
 beforeEach(() => {
+  queryClient.clear();
   window.ResizeObserver = class {
     observe() {}
     unobserve() {}
@@ -550,6 +549,35 @@ describe("YPOP Admin Review Decision — Single-Item Request Revision & Authorit
       ypopOrgActivities: [],
       ypopOrgActivityFiles: [],
     };
+    vi.spyOn(lydoSupabase, "fetchAdminYpopValidationPeriods").mockResolvedValue([
+      { period: mockPeriod, submissionCount: 1, activityCount: 2 },
+    ]);
+    vi.spyOn(lydoSupabase, "fetchAdminYpopPeriodSubmissionPage").mockResolvedValue({
+      rows: [{
+        id: mockEntry.id,
+        organizationId: mockOrg.id,
+        organizationName: mockOrg.organizationName,
+        referenceId: mockOrg.referenceId ?? "PYC-2026",
+        majorClassification: mockOrg.majorClassification,
+        status: "pending_evaluation",
+        entry: mockEntry,
+      }],
+      totalCount: 1,
+      page: 0,
+      pageSize: 20,
+      summary: { pending_evaluation: 1, qualified: 0, not_qualified: 0 },
+    });
+    vi.spyOn(lydoSupabase, "fetchAdminYpopEntryReviewDetail").mockResolvedValue({
+      ypopEntries: [mockEntry],
+      organizationProfiles: [mockOrg],
+      ypopPeriods: [mockPeriod],
+      ypopCityActivities: [mockCityActivity1, mockCityActivity2],
+      ypopEventParticipations: [mockParticipation1, mockParticipation2],
+      ypopOrgActivities: [],
+    });
+    vi.spyOn(lydoSupabase, "fetchAdminYpopReviewFiles").mockImplementation(async (lane: "city_led" | "org_led") =>
+      lane === "city_led" ? [mockFile1, mockFile2] : [],
+    );
     const stateStr = JSON.stringify(payload);
     window.localStorage.setItem("lydo-connect-state-v1:admin:admin-1", stateStr);
     window.localStorage.setItem("lydo-connect-state-v1:admin:admin-1:valid-admin-session-token-12345", stateStr);
@@ -790,4 +818,3 @@ describe("YPOP Admin Review Decision — Single-Item Request Revision & Authorit
     expect(screen.queryByText("Review Rules")).not.toBeInTheDocument();
   });
 });
-

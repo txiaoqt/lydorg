@@ -31,7 +31,8 @@ export const isDeletableRegistrationStatus = (
 
 type RegistrationsTableProps = {
   registrations: OrganizationProfile[];
-  documentCountsByOrgId: Record<string, { submitted: number; required: number }>;
+  documentCountsByOrgId: Record<string, { submitted: number; required: number | null }>;
+  documentRequirementsMessage?: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
   statusFilter: RegistrationStatusFilter;
@@ -102,7 +103,14 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
   );
 };
 
-const DocumentsPill = ({ submitted, required }: { submitted: number; required: number }) => {
+const DocumentsPill = ({ submitted, required, unknownMessage }: { submitted: number; required: number | null; unknownMessage: string }) => {
+  if (required === null) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-slate-600">
+        {submitted}/— {unknownMessage}
+      </span>
+    );
+  }
   const complete = required > 0 && submitted >= required;
   return (
     <span
@@ -136,6 +144,7 @@ export const RegistrationsTable = ({
   selectedOrgIds,
   onSelectedOrgIdsChange,
   isSuperAdmin,
+  documentRequirementsMessage = "Requirements loading",
   serverPagination,
 }: RegistrationsTableProps) => {
   const [page, setPage] = useState(0);
@@ -438,7 +447,7 @@ export const RegistrationsTable = ({
             </div>
           ) : (
             pageItems.map((org) => {
-              const counts = documentCountsByOrgId[org.id] ?? { submitted: 0, required: 0 };
+              const counts = documentCountsByOrgId[org.id] ?? { submitted: 0, required: null };
               const submittedDate = new Date(org.createdAt);
               const isValidDate = !Number.isNaN(submittedDate.getTime());
               const isSelected = selectedIds.has(org.id);
@@ -484,7 +493,7 @@ export const RegistrationsTable = ({
                   </div>
 
                   <div className="flex w-[13%] items-center">
-                    <DocumentsPill submitted={counts.submitted} required={counts.required} />
+                    <DocumentsPill submitted={counts.submitted} required={counts.required} unknownMessage={documentRequirementsMessage} />
                   </div>
 
                   <div className="flex w-[10%] items-center">
