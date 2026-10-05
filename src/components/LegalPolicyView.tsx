@@ -152,7 +152,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
       {/* Floating Back to top Button for Mobile (fixed viewport position) */}
       <div
         className={cn(
-          "fixed bottom-5 right-4 z-40 lg:hidden transition-all duration-300 pointer-events-none pb-[env(safe-area-inset-bottom,0px)]",
+          "fixed bottom-5 right-4 z-40 lg:hidden transition-all duration-300 pointer-events-none pb-[env(safe-area-inset-bottom,0px)] pwa-legal-back-to-top",
           showFloatingTop
             ? "opacity-100 translate-y-0 pointer-events-auto"
             : "opacity-0 translate-y-3 pointer-events-none"

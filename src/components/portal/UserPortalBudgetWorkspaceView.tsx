@@ -1,3 +1,4 @@
+import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
 import React, { useState, useEffect, useMemo } from "react";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
@@ -1698,6 +1699,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
 
                   {/* SCROLLABLE BODY */}
                   <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                    <PortalWorkflowStatusHelper workflow="budget" status={selectedRequest.status} />
                     {/* Admin Revision Feedback (Needs Revision Callout) */}
                     {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (() => {
                       const isExpired = selectedRequest.status === "needs_revision" && (isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest));
@@ -2030,6 +2032,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
 
                   {/* SCROLLABLE BODY */}
                   <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+                    <PortalWorkflowStatusHelper workflow="budget" status={selectedRequest.status} />
                     {/* Admin Revision Feedback (Needs Revision Callout) */}
                     {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (() => {
                       const isExpired = selectedRequest.status === "needs_revision" && (isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest));

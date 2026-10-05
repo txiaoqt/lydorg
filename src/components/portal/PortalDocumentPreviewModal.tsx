@@ -499,6 +499,7 @@ export interface PortalDocumentPreviewModalProps {
   headerActions?: React.ReactNode;
   footerStatusText?: string;
   footerActions?: React.ReactNode;
+  className?: string;
 }
 
 export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProps> = ({
@@ -519,6 +520,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
   headerActions,
   footerStatusText,
   footerActions,
+  className,
 }) => {
   const [downloading, setDownloading] = useState(false);
 
@@ -574,7 +576,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton={true}
-        className="w-[95vw] sm:w-[92vw] max-w-[1400px] h-[92dvh] sm:h-[90vh] max-h-[840px] sm:max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200"
+        className={`w-[95vw] sm:w-[92vw] max-w-[1400px] h-[92dvh] sm:h-[90vh] max-h-[840px] sm:max-h-[920px] p-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl flex flex-col transition-all duration-200 ${className ?? ""}`}
       >
         <DialogDescription className="sr-only">
           Preview document inline for {previewTitle || "Document"}

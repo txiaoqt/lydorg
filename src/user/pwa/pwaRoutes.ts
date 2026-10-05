@@ -2,6 +2,8 @@ export const PWA_ROUTES = {
   home: "/app",
   documents: "/app/documents",
   documentsManage: "/app/documents/manage",
+  renewal: "/app/organization-renewal",
+  renewals: "/app/renewals",
   budgets: "/app/budgets",
   budgetNew: "/app/budgets/new",
   liquidations: "/app/liquidations",
@@ -79,6 +81,8 @@ const legacyRouteMap: Array<[string, string]> = [
   ["/dashboard", PWA_ROUTES.home],
   ["/organization-profile", PWA_ROUTES.profile],
   ["/document-submission", PWA_ROUTES.documents],
+  ["/organization-renewal", PWA_ROUTES.renewal],
+  ["/renewals", PWA_ROUTES.renewals],
   ["/budget-request", PWA_ROUTES.budgets],
   ["/liquidation-reporting", PWA_ROUTES.liquidations],
   ["/news-releases", PWA_ROUTES.news],
@@ -121,16 +125,18 @@ export function getPwaPageTitle(pathname: string) {
   if (pathname === PWA_ROUTES.budgetNew) return "New Budget Request";
   if (pathname.startsWith(PWA_ROUTES.budgets)) return "Budget Requests";
   if (pathname.includes("/manage") && pathname.startsWith(PWA_ROUTES.liquidations)) return "Manage Liquidation";
-  if (pathname.startsWith(PWA_ROUTES.liquidations)) return "Liquidation";
+  if (pathname.startsWith(PWA_ROUTES.liquidations)) return "Liquidation Reports";
+  if (pathname === PWA_ROUTES.renewal) return "Registration Renewal";
+  if (pathname === PWA_ROUTES.renewals) return "Approved Renewals";
   if (pathname.startsWith(PWA_ROUTES.notifications)) return "Notifications";
-  if (pathname.startsWith(PWA_ROUTES.activity)) return "Activity";
+  if (pathname.startsWith(PWA_ROUTES.activity)) return "Activity History";
   if (pathname === PWA_ROUTES.profileEdit) return "Edit Profile";
   if (pathname === PWA_ROUTES.profilePublic) return "Public Profile";
   if (pathname === PWA_ROUTES.organizations) return "Organizations";
   if (pathname.startsWith(`${PWA_ROUTES.organizations}/`)) return "Organization Profile";
   if (pathname.startsWith(PWA_ROUTES.profile)) return "Organization Profile";
   if (pathname.includes("/ppa/") && pathname.startsWith(PWA_ROUTES.ypop)) return "Log PPA";
-  if (pathname.startsWith(PWA_ROUTES.ypop)) return "YPOP Incentive";
+  if (pathname.startsWith(PWA_ROUTES.ypop)) return "YPOP Validation";
   if (pathname.startsWith(PWA_ROUTES.templates)) return "Templates";
   if (pathname.startsWith(PWA_ROUTES.news)) return "News Releases";
   if (pathname.startsWith(PWA_ROUTES.transparency)) return "Public Transparency";

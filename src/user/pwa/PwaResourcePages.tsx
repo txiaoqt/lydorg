@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import {
@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { createInquiryInSupabase, loadOrganizationActivityPage, loadOrganizationInquiryPage, loadOrganizationNotificationPage, resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import { createInquiryInSupabase, loadOrganizationActivityPage, loadOrganizationInquiryPage, loadOrganizationNotificationPage } from "@/lib/lydo-connect-supabase";
+import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import { LYDO_FACEBOOK_PAGE_URL } from "@/lib/official-links";
 import { organizationEmailPattern } from "@/lib/organization-profile-domain";
 import { getInquiryReferenceCode } from "@/lib/lydo-connect-data";
@@ -19,6 +20,8 @@ import { usePwaNavigation } from "./hooks/usePwaNavigation";
 import { PwaBackButton } from "./PwaBackButton";
 import { getPwaRelatedRecordRoute, PWA_ROUTES, pwaNewsDetailRoute } from "./pwaRoutes";
 import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
+import { formatActivityActionLabel } from "@/components/activity/RecentActivityPreview";
+import { formatEventTimestamp, formatGroupDateHeader, getActivityMarker, normalizeActivityTitle } from "@/components/portal/OrganizationActivityHistoryModal";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 
@@ -51,11 +54,7 @@ export function PwaProfile({ data }: { data: PortalData }) {
 }
 
 export function PwaTemplates({ data }: { data: PortalData }) {
-  const open = async (url: string) => {
-    const resolved = await resolveSupabaseFileUrl(url);
-    window.open(resolved, "_blank", "noopener,noreferrer");
-  };
-  return <div className="pwa-stack"><PageIntro icon={FileText} title="Official Templates" copy="View or download active templates published for your organization." /><section className="pwa-record-list pwa-stack">{data.templates.map((item) => <article className="pwa-card" key={item.id}><div className="pwa-record-heading"><div><h3>{item.name}</h3><p>{item.description || "Official reference file"}</p></div><StatusBadge status={item.templateFileUrl ? "active" : "draft"} /></div><Button variant="outline" disabled={!item.templateFileUrl} onClick={() => void open(item.templateFileUrl)}><Download className="mr-2 h-4 w-4" />View or Download</Button></article>)}</section></div>;
+  return <div className="pwa-stack"><PageIntro icon={FileText} title="Official Templates" copy="View or download active templates published for your organization." /><section className="pwa-record-list pwa-stack">{data.templates.map((item) => <article className="pwa-card" key={item.id}><div className="pwa-record-heading"><div><h3>{item.name}</h3><p>{item.description || "Official reference file"}</p></div><StatusBadge status={item.templateFileUrl ? "active" : "draft"} /></div><Button variant="outline" disabled={!item.templateFileUrl} onClick={() => requestPwaDocumentPreview(item.templateFileUrl, item.templateFileName || item.name)}><Download className="mr-2 h-4 w-4" />View or Download</Button></article>)}</section></div>;
 }
 
 export function PwaNews({ data }: { data: PortalData }) {
@@ -104,7 +103,37 @@ export function PwaActivity({ data }: { data: PortalData }) {
   const pageQuery = useQuery({ queryKey: ["user", organizationId, "activity-page-pwa", page, 25], queryFn: () => loadOrganizationActivityPage(organizationId, { page, pageSize: 25 }), enabled: Boolean(organizationId), placeholderData: (previous) => previous });
   const activities = pageQuery.data?.rows ?? data.activities;
   const totalCount = pageQuery.data?.totalCount ?? data.activities.length;
-  return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.home} label="Dashboard" /><section className="pwa-card"><h2 className="pwa-section-title">Organization Activity</h2><div className="pwa-activity-list">{activities.map((item) => <article key={item.id}><span className="pwa-activity-marker" /><div><strong>{item.description}</strong><time>{dateLabel(item.createdAt)}</time></div></article>)}{!activities.length ? <p className="pwa-empty-copy">No activity recorded yet.</p> : null}</div></section><OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} /></div>;
+  const groups = useMemo(() => {
+    const result = new Map<string, typeof activities>();
+    const timestamp = (value: string) => new Date(value).getTime() || 0;
+    [...activities].sort((left, right) => timestamp(right.createdAt) - timestamp(left.createdAt)).forEach((item) => {
+      const label = formatGroupDateHeader(item.createdAt);
+      result.set(label, [...(result.get(label) ?? []), item]);
+    });
+    return [...result.entries()];
+  }, [activities]);
+  return (
+    <div className="pwa-stack">
+      <PwaBackButton fallback={PWA_ROUTES.home} label="Dashboard" />
+      <section className="pwa-card pwa-history">
+        <div className="pwa-history-heading"><h2 className="pwa-section-title">Organization Activity History</h2><span>{totalCount} {totalCount === 1 ? "event" : "events"}</span></div>
+        <p className="pwa-empty-copy">Complete timeline of document uploads, approvals, budget requests, liquidation updates, and inquiries for your organization.</p>
+        <p className="pwa-history-summary">{totalCount} recorded event{totalCount === 1 ? "" : "s"} · Official Y-TRACE Record</p>
+        {pageQuery.isError ? <div role="alert"><p>Unable to load activity history.</p><Button variant="outline" onClick={() => void pageQuery.refetch()}>Try again</Button></div> : pageQuery.isLoading ? <p role="status">Loading activity history...</p> : (
+          <div className="pwa-activity-list">{groups.map(([label, items]) => <section className="pwa-history-group" key={label}>
+            <h3>{label}</h3>
+            <div className="pwa-history-events">{items.map((item) => {
+              const message = formatActivityActionLabel(item.action || item.description, item.metadata as Record<string, unknown>);
+              const marker = getActivityMarker(message);
+              const validDate = item.createdAt && !Number.isNaN(new Date(item.createdAt).getTime());
+              return <article key={item.id}><span aria-hidden="true" className={`pwa-history-marker ${marker.dotClassName}`} /><div><strong>{normalizeActivityTitle(message)}</strong><time dateTime={validDate ? new Date(item.createdAt).toISOString() : undefined}>{formatEventTimestamp(item.createdAt)}</time></div></article>;
+            })}</div>
+          </section>)}{!activities.length ? <div className="pwa-empty-copy"><strong>No activity recorded yet</strong><p>Organization activities and admin review actions will appear here.</p></div> : null}</div>
+        )}
+      </section>
+      <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />
+    </div>
+  );
 }
 
 export function PwaInquiries({ data }: { data: PortalData }) {

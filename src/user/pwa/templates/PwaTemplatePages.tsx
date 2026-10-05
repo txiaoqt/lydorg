@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Eye, File, FileArchive, FileSpreadsheet, FileText, Search } from "lucide-react";
 import JSZip from "jszip";
 import { useParams } from "react-router-dom";
@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import type { TemplateRecord } from "@/lib/lydo-connect-data";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PwaBackButton } from "../PwaBackButton";
-import { usePwaNavigation } from "../hooks/usePwaNavigation";
-import { PWA_ROUTES, pwaTemplateDetailRoute } from "../pwaRoutes";
+import { PWA_ROUTES } from "../pwaRoutes";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type TemplateScope = TemplateRecord["templateScope"];
@@ -40,7 +40,6 @@ const getFileExtension = (template: TemplateRecord) => {
 
 const getFileTypeLabel = (template: TemplateRecord) => getFileExtension(template).toUpperCase() || "FILE";
 const canPreview = (template: TemplateRecord) => ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg"].includes(getFileExtension(template));
-const isImage = (template: TemplateRecord) => ["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(getFileExtension(template));
 const hasFile = (template: TemplateRecord) => Boolean(template.templateFileUrl.trim() && !template.templateFileUrl.startsWith("#"));
 
 const formatUpdatedDate = (value: string) => {
@@ -135,7 +134,6 @@ function TemplateRow({ template, onPreview, onDownload, downloading }: {
 }
 
 export function PwaTemplateLibrary({ data }: { data: PortalData }) {
-  const { go } = usePwaNavigation();
   const [search, setSearch] = useState("");
   const [scope, setScope] = useState<"all" | TemplateScope>("all");
   const [downloadingId, setDownloadingId] = useState("");
@@ -229,7 +227,7 @@ export function PwaTemplateLibrary({ data }: { data: PortalData }) {
                   key={template.id}
                   template={template}
                   downloading={downloadingId === template.id}
-                  onPreview={() => go(pwaTemplateDetailRoute(template.id))}
+                  onPreview={() => requestPwaDocumentPreview(template.templateFileUrl, template.templateFileName || template.name)}
                   onDownload={() => void handleDownload(template)}
                 />
               ))}</div>
@@ -250,62 +248,8 @@ export function PwaTemplateLibrary({ data }: { data: PortalData }) {
 export function PwaTemplatePreview({ data }: { data: PortalData }) {
   const { templateId } = useParams();
   const template = data.templates.find((item) => item.id === templateId);
-  const selectedTemplateId = template?.id ?? "";
   const templateFileUrl = template?.templateFileUrl.trim() ?? "";
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
-  const previewUrlRef = useRef("");
-  const activePreviewRef = useRef({ templateId: "", fileUrl: "", resolvedUrl: "" });
-
-  useEffect(() => {
-    let cancelled = false;
-    setError("");
-    if (!selectedTemplateId || !templateFileUrl || templateFileUrl.startsWith("#")) {
-      previewUrlRef.current = "";
-      activePreviewRef.current = { templateId: selectedTemplateId, fileUrl: templateFileUrl, resolvedUrl: "" };
-      setPreviewUrl((current) => current ? "" : current);
-      setLoading(false);
-      return () => { cancelled = true; };
-    }
-
-    const alreadyDisplayingThisFile =
-      activePreviewRef.current.templateId === selectedTemplateId
-      && activePreviewRef.current.fileUrl === templateFileUrl
-      && Boolean(activePreviewRef.current.resolvedUrl);
-    if (alreadyDisplayingThisFile) {
-      setLoading(false);
-      return () => { cancelled = true; };
-    }
-
-    // Keep an existing iframe mounted while a genuinely changed file URL is
-    // resolved. This avoids losing the reader's position unless the active
-    // file itself actually resolves to a different URL.
-    if (!previewUrlRef.current) setLoading(true);
-
-    void resolveSupabaseFileUrl(templateFileUrl)
-      .then((url) => {
-        if (cancelled) return;
-        if (!url) throw new Error("This template file is currently unavailable.");
-        activePreviewRef.current = {
-          templateId: selectedTemplateId,
-          fileUrl: templateFileUrl,
-          resolvedUrl: url,
-        };
-        if (previewUrlRef.current !== url) {
-          previewUrlRef.current = url;
-          setPreviewUrl(url);
-        }
-      })
-      .catch((reason: unknown) => {
-        if (!cancelled) setError(reason instanceof Error ? reason.message : "Templates could not be loaded.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [selectedTemplateId, templateFileUrl]);
 
   if (!template) {
     return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.templates} label="Templates" /><section className="pwa-card pwa-template-empty"><FileText /><h2>Template not found.</h2><p>This template may no longer be available.</p></section></div>;
@@ -322,7 +266,6 @@ export function PwaTemplatePreview({ data }: { data: PortalData }) {
     }
   };
   const available = hasFile(template);
-  const previewSupported = available && canPreview(template);
   return (
     <div className="pwa-stack pwa-template-preview-page">
       <PwaBackButton fallback={PWA_ROUTES.templates} label="Templates" />
@@ -330,17 +273,7 @@ export function PwaTemplatePreview({ data }: { data: PortalData }) {
         <FileTypeIcon template={template} />
         <div><h2>{template.name}</h2><p>{template.description || template.templateDescription}</p><div><span>{getFileTypeLabel(template)}</span><span>·</span><span>{formatUpdatedDate(template.templateUploadedAt)}</span></div><small>{available ? resolvedDownloadName(template) : "This template file is currently unavailable."}</small></div>
       </section>
-      <section className="pwa-card pwa-template-viewer">
-        {loading ? <div className="pwa-template-preview-state"><span className="pwa-template-spinner" /><p>Loading preview...</p></div> : null}
-        {!loading && error ? <div className="pwa-template-preview-state"><FileText /><h3>Templates could not be loaded.</h3><p>{error}</p><Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button></div> : null}
-        {!loading && !error && !available ? <div className="pwa-template-preview-state"><FileText /><h3>This template file is currently unavailable.</h3></div> : null}
-        {!loading && !error && available && !previewSupported ? <div className="pwa-template-preview-state"><FileText /><h3>Preview unavailable for this file type.</h3><p>Download the original file to open it in a compatible application.</p></div> : null}
-        {!loading && !error && previewSupported && previewUrl ? (
-          isImage(template)
-            ? <img src={previewUrl} alt={`Preview of ${template.name}`} />
-            : <iframe src={previewUrl} title={`Preview of ${template.name}`} />
-        ) : null}
-      </section>
+      <section className="pwa-card pwa-template-preview-state"><FileText aria-hidden="true" /><h3>{available ? "Template preview" : "This template file is currently unavailable."}</h3>{available ? <><p>Open this file in the secure document preview.</p><Button variant="outline" onClick={() => requestPwaDocumentPreview(templateFileUrl, template.templateFileName || template.name)}>View Template</Button></> : null}</section>
       <Button className="pwa-template-download-primary" disabled={!available || downloading} onClick={() => void handleDownload()}><Download aria-hidden="true" />{downloading ? "Downloading..." : "Download Template"}</Button>
     </div>
   );

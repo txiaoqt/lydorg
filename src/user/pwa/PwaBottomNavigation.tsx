@@ -5,7 +5,7 @@ import { PWA_ROUTES } from "./pwaRoutes";
 import BrandLogo from "@/components/BrandLogo";
 
 const items = [
-  { label: "Home", path: PWA_ROUTES.home, icon: Home },
+  { label: "Dashboard", path: PWA_ROUTES.home, icon: Home },
   { label: "Documents", path: PWA_ROUTES.documents, icon: FileText },
   { label: "Budget", path: PWA_ROUTES.budgets, icon: WalletCards },
   { label: "Liquidation", path: PWA_ROUTES.liquidations, icon: ReceiptText },
@@ -16,6 +16,7 @@ const secondaryPaths = new Set([
   PWA_ROUTES.profile, PWA_ROUTES.news, PWA_ROUTES.transparency, PWA_ROUTES.compliance,
   PWA_ROUTES.notifications, PWA_ROUTES.ypop, PWA_ROUTES.templates, PWA_ROUTES.inquiries,
   PWA_ROUTES.activity,
+  PWA_ROUTES.renewal, PWA_ROUTES.renewals,
   PWA_ROUTES.settings, PWA_ROUTES.about, PWA_ROUTES.faqs, PWA_ROUTES.contact,
   PWA_ROUTES.privacy, PWA_ROUTES.terms,
 ]);

@@ -48,7 +48,6 @@ import {
   deleteYpopEventFileFromSupabase,
   deleteYpopOrgActivityFileFromSupabase,
   deleteYpopOrgActivityFromSupabase,
-  resolveSupabaseFileUrl,
   updateYpopEntryInSupabase,
   updateYpopEventParticipationInSupabase,
   updateYpopOrgActivityInSupabase,
@@ -76,6 +75,7 @@ import {
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PwaBackButton } from "../PwaBackButton";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
+import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import {
   PWA_ROUTES,
   pwaYpopEntryRoute,
@@ -110,10 +110,8 @@ const eventProofLabel = (participation: YPOPEventParticipation, fileCount: numbe
   return "Proof Required";
 };
 
-async function openStoredFile(fileUrl: string) {
-  const url = await resolveSupabaseFileUrl(fileUrl);
-  if (!url) throw new Error("The file is currently unavailable.");
-  window.open(url, "_blank", "noopener,noreferrer");
+async function openStoredFile(fileUrl: string, title = "YPOP supporting document.pdf") {
+  requestPwaDocumentPreview(fileUrl, title);
 }
 
 export function PwaYpopWorkspace({ data }: { data: PortalData }) {
@@ -523,7 +521,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
                 {participation.adminRemarks ? <p className="pwa-ypop-feedback">Admin: {participation.adminRemarks}</p> : null}
                 <div className="pwa-ypop-row-actions"><Button variant="outline" size="sm" onClick={() => void toggleParticipationDetails(participation.id)}>{expanded ? "Hide Details" : "View Proof & Details"}</Button></div>
                 {expanded && files.length ? <ul className="pwa-ypop-file-list">{files.map((file) => (
-                  <li key={file.id}><button type="button" onClick={() => void openStoredFile(file.fileUrl)}><FileText />{file.fileName}</button>{canEditProof ? <button type="button" aria-label={`Remove ${file.fileName}`} disabled={busyKey === `event-delete-${file.id}`} onClick={() => void removeEventProof(file.id, file.fileUrl)}><Trash2 /></button> : null}</li>
+                  <li key={file.id}><button type="button" onClick={() => void openStoredFile(file.fileUrl, file.fileName)}><FileText />{file.fileName}</button>{canEditProof ? <button type="button" aria-label={`Remove ${file.fileName}`} disabled={busyKey === `event-delete-${file.id}`} onClick={() => void removeEventProof(file.id, file.fileUrl)}><Trash2 /></button> : null}</li>
                 ))}</ul> : null}
                 {expanded ? <div className="pwa-ypop-row-actions">
                   {canEditProof ? <Button variant="outline" disabled={!canSubmitProof || busyKey.startsWith("event-upload")} onClick={() => { setUploadParticipationId(participation.id); eventFileInput.current?.click(); }}><Upload />{files.length ? "Add Proof" : "Upload Proof"}</Button> : null}
@@ -1076,7 +1074,7 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
             <button
               type="button"
               className="pwa-ppa-current-narrative"
-              onClick={() => void openStoredFile(existingNarrativePdf.fileUrl)}
+              onClick={() => void openStoredFile(existingNarrativePdf.fileUrl, existingNarrativePdf.fileName)}
             >
               <FileText aria-hidden="true" />
               <span><strong>{existingNarrativePdf.fileName}</strong><small>Current narrative report PDF</small></span>
@@ -1090,7 +1088,7 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
             <span>{existingProofFiles.length + selectedFiles.length} file{existingProofFiles.length + selectedFiles.length === 1 ? "" : "s"}</span>
           </div>
           <label className="pwa-file-control pwa-ppa-file-control"><input type="file" multiple disabled={!editable} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,application/pdf,image/*" onChange={(event) => setSelectedFiles(Array.from(event.target.files ?? []))} /><span><Upload aria-hidden="true" />{selectedFiles.length ? `${selectedFiles.length} new file${selectedFiles.length === 1 ? "" : "s"} selected` : "Attach PPA proof files"}</span></label>
-          {existingProofFiles.length ? <ul className="pwa-ppa-attachment-list">{existingProofFiles.map((file) => <li key={file.id} className="pwa-ppa-attachment-card"><button type="button" onClick={() => void openStoredFile(file.fileUrl)}><FileText aria-hidden="true" /><span><strong>{file.fileName}</strong><small>Supporting proof</small></span><ChevronRight aria-hidden="true" /></button>{editable ? <button type="button" aria-label={`Remove ${file.fileName}`} onClick={() => void removeExistingFile(file.id, file.fileUrl)}><Trash2 aria-hidden="true" /></button> : null}</li>)}</ul> : null}
+          {existingProofFiles.length ? <ul className="pwa-ppa-attachment-list">{existingProofFiles.map((file) => <li key={file.id} className="pwa-ppa-attachment-card"><button type="button" onClick={() => void openStoredFile(file.fileUrl, file.fileName)}><FileText aria-hidden="true" /><span><strong>{file.fileName}</strong><small>Supporting proof</small></span><ChevronRight aria-hidden="true" /></button>{editable ? <button type="button" aria-label={`Remove ${file.fileName}`} onClick={() => void removeExistingFile(file.id, file.fileUrl)}><Trash2 aria-hidden="true" /></button> : null}</li>)}</ul> : null}
           {!existingProofFiles.length && !selectedFiles.length && !editable ? <p className="pwa-ypop-inline-empty">No supporting proof files attached.</p> : null}
         </div>
       </section>

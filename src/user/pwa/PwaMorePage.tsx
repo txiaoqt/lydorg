@@ -23,13 +23,15 @@ const groups = [
     label: "Account",
     links: [
       { label: "Organization Profile", detail: "Identity, classification and contacts", path: PWA_ROUTES.profile, icon: UserRound },
+      { label: "Registration Renewal", detail: "Renewal eligibility, documents and review status", path: PWA_ROUTES.renewal, icon: ShieldCheck },
+      { label: "Approved Renewals", detail: "Previously approved renewal cycles", path: PWA_ROUTES.renewals, icon: FileText },
       { label: "Settings", detail: "App preferences, storage and accessibility", path: PWA_ROUTES.settings, icon: Settings },
     ],
   },
   {
     label: "Programs",
     links: [
-      { label: "YPOP Incentive", detail: "Semesters, scores and proof records", path: PWA_ROUTES.ypop, icon: Medal },
+      { label: "YPOP Validation", detail: "City-Led Activities and Organization PPAs", path: PWA_ROUTES.ypop, icon: Medal },
     ],
   },
   {

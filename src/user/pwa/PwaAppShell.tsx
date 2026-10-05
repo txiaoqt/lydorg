@@ -7,6 +7,7 @@ import { usePwaActiveAccentTheme, usePwaPreferences } from "./hooks/usePwaPrefer
 import { usePwaRuntimeStatus } from "./hooks/usePwaRuntimeStatus";
 import { getPwaParentRoute, PWA_ROUTES } from "./pwaRoutes";
 import { getPwaThemeStyle } from "./pwaAccentThemes";
+import { PwaDocumentPreviewHost } from "./PwaDocumentPreview";
 
 export function PwaAppShell({
   title,
@@ -42,7 +43,6 @@ export function PwaAppShell({
     pathname.startsWith(`${PWA_ROUTES.budgets}/`) ||
     pathname.startsWith(`${PWA_ROUTES.liquidations}/`) ||
     pathname.startsWith(`${PWA_ROUTES.profile}/`) ||
-    pathname.startsWith(`${PWA_ROUTES.ypop}/`) ||
     pathname.startsWith(`${PWA_ROUTES.templates}/`) ||
     pathname.startsWith(`${PWA_ROUTES.news}/`);
   const headerMode = identityHeaderRoutes.has(pathname) ? "identity" : "nested";
@@ -107,6 +107,7 @@ export function PwaAppShell({
         <main className={`pwa-main-content pwa-content--${contentWidth}`} aria-label={title}>{children}</main>
       </div>
       <PwaBottomNavigation />
+      <PwaDocumentPreviewHost />
     </div>
   );
 }

@@ -399,20 +399,23 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Major Classification <span className="text-red-500">*</span></label>
+                <label htmlFor="profile-major-classification" className="text-xs font-semibold text-foreground">Major Classification <span className="text-red-500">*</span></label>
                 <select
-                  value={profileDraft.majorClassification || "Youth Organization"}
+                  id="profile-major-classification"
+                  value={profileDraft.majorClassification || ""}
                   onChange={(e) => onFieldChange("majorClassification", e.target.value)}
                   className="h-9 w-full rounded-xl bg-background border border-border px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                 >
+                  <option value="">Select Major Classification</option>
                   <option value="Youth Organization">Youth Organization</option>
                   <option value="Youth-Serving Organization">Youth-Serving Organization</option>
                 </select>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Sub Classification <span className="text-red-500">*</span></label>
+                <label htmlFor="profile-sub-classification" className="text-xs font-semibold text-foreground">Sub Classification <span className="text-red-500">*</span></label>
                 <select
+                  id="profile-sub-classification"
                   value={profileDraft.subClassification || ""}
                   onChange={(e) => onFieldChange("subClassification", e.target.value)}
                   className="h-9 w-full rounded-xl bg-background border border-border px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"

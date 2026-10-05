@@ -1,3 +1,4 @@
+import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -5,6 +6,7 @@ import {
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { formatAdvocacyLabel, getBudgetRequestStatusLabel, type BudgetRequest } from "@/lib/lydo-connect-data";
 import {
@@ -12,20 +14,21 @@ import {
   loadOrganizationBudgetRequestById,
   loadOrganizationBudgetRequestFiles,
   loadOrganizationBudgetRequestPage,
-  resolveSupabaseFileUrl,
   updateBudgetRequestInSupabase,
   uploadBudgetRequestFileToSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { PwaBackButton } from "../PwaBackButton";
+import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRoutes";
 import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
+import { isRevisionExpired, isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Filter = "all" | "draft" | "review" | "revision" | "approved";
 
-const lockedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
+const canEditBudget = (request: BudgetRequest) => request.status === "draft" || (request.status === "needs_revision" && !isRevisionExpired(request.revisionDueAt) && !isSubmissionRevisionLocked(request));
 const reviewStatuses = new Set(["submitted", "under_review"]);
 const approvedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
 const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
@@ -47,12 +50,12 @@ export function PwaEligibilityNotice({ data }: { data: PortalData }) {
     <section className={`pwa-eligibility-notice ${data.budgetEligibility.reason === "ypop_not_qualified" ? "is-rejected" : ""}`}>
       <WalletCards aria-hidden="true" />
       <div>
-        <h2>Complete YPOP validation first</h2>
-        <p>Your organization must qualify in an active YPOP period before it can create an activity budget request.</p>
+        <h2>Budget request unavailable</h2>
+        <p>Complete the requirements below before submitting a budget request.</p>
         <ul className="pwa-requirement-list">
           {requirements.map((item) => <li key={item.label} className={item.met ? "is-complete" : ""}>{item.met ? <Check /> : <Circle />}<span>{item.label}</span></li>)}
         </ul>
-        <button type="button" onClick={() => go(PWA_ROUTES.ypop)}>Open YPOP Incentive<ChevronRight /></button>
+        <button type="button" onClick={() => go(!data.budgetWorkflowEligibility.profileComplete ? PWA_ROUTES.profile : !data.budgetWorkflowEligibility.documentsSatisfied ? PWA_ROUTES.documents : PWA_ROUTES.ypop)}>Review Requirements<ChevronRight /></button>
       </div>
     </section>
   );
@@ -124,17 +127,19 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
   });
   const request = detailQuery.data ?? data.budgetRequests.find((item) => item.id === requestId);
   const file = filesQuery.data?.[0] ?? data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === requestId);
+  if (detailQuery.isLoading || filesQuery.isLoading) return <p role="status" className="pwa-card">Loading budget request…</p>;
+  if (detailQuery.isError || filesQuery.isError) return <section className="pwa-card"><p role="alert">Budget request could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
   if (!request) return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card pwa-empty-copy">Budget request not found.</section></div>;
 
-  const openFile = async () => {
+  const openFile = () => {
     if (!file) return;
-    const url = await resolveSupabaseFileUrl(file.fileUrl);
-    window.open(url, "_blank", "noopener,noreferrer");
+    requestPwaDocumentPreview(file.fileUrl, file.fileName || "Budget request attachment.pdf");
   };
 
   return (
     <div className="pwa-stack">
       <PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" />
+      <PortalWorkflowStatusHelper workflow="budget" status={request.status} />
       <section className="pwa-card pwa-transaction-detail">
         <div className="pwa-detail-title"><div><small>Budget request</small><h2>{request.activityTitle}</h2></div><StatusBadge status={request.status} label={getBudgetRequestStatusLabel(String(request.status))} /></div>
         <strong className="pwa-detail-amount">{money.format(request.requestedAmount)}</strong>
@@ -151,7 +156,7 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
       </section>
       <div className="pwa-button-stack">
         {file ? <button type="button" className="pwa-secondary-button" onClick={() => void openFile()}><Eye /> View Attached PDF</button> : null}
-        {!lockedStatuses.has(request.status) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaBudgetEditRoute(request.id))}><Pencil /> Edit Request</button> : null}
+        {canEditBudget(request) ? <button type="button" className="pwa-primary-button" onClick={() => go(pwaBudgetEditRoute(request.id))}><Pencil /> {request.status === "draft" ? "Edit Draft" : "Revise Request"}</button> : null}
       </div>
       {request.revisionHistory?.length ? (
         <section className="pwa-card pwa-timeline"><h3>Activity</h3>{[...request.revisionHistory].reverse().map((item, index) => <article key={`${item.changedAt}-${index}`}><span /><div><strong>{item.action.replaceAll("_", " ")}</strong><p>{item.adminRemarks || "Status updated."}</p><time>{dateLabel(item.changedAt)}</time></div></article>)}</section>
@@ -181,24 +186,37 @@ const draftFrom = (request?: BudgetRequest, defaultCategory?: string): BudgetDra
 export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | "edit" }) {
   const { requestId = "" } = useParams();
   const { go } = usePwaNavigation();
-  const existing = mode === "edit" ? data.budgetRequests.find((item) => item.id === requestId) : undefined;
-  const existingFile = existing ? data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === existing.id) : undefined;
+  const organizationId = data.profile?.id ?? "";
+  const detailQuery = useQuery({ queryKey: ["user", organizationId, "budget-detail-pwa", requestId], queryFn: () => loadOrganizationBudgetRequestById(organizationId, requestId), enabled: Boolean(mode === "edit" && organizationId && requestId) });
+  const filesQuery = useQuery({ queryKey: ["user", organizationId, "budget-files-pwa", requestId], queryFn: () => loadOrganizationBudgetRequestFiles(organizationId, requestId), enabled: Boolean(mode === "edit" && organizationId && requestId) });
+  const existing = mode === "edit" ? detailQuery.data ?? data.budgetRequests.find((item) => item.id === requestId) : undefined;
+  const existingFile = filesQuery.data?.[0] ?? (existing ? data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === existing.id) : undefined);
   const orgAdvocacies = data.profile?.advocacies || [];
   const defaultCategory = orgAdvocacies[0] || "";
   const [draft, setDraft] = useState(() => draftFrom(existing, defaultCategory));
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
+  useEffect(() => { setDraft(draftFrom(existing, defaultCategory)); }, [existing, defaultCategory]);
+
+  if (mode === "edit" && (detailQuery.isLoading || filesQuery.isLoading)) return <p role="status" className="pwa-card">Loading budget request…</p>;
+  if (mode === "edit" && (detailQuery.isError || filesQuery.isError)) return <section className="pwa-card"><p role="alert">Budget request could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
 
   if (mode === "new" && !data.budgetWorkflowEligibility.eligible) {
     return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><PwaEligibilityNotice data={data} /></div>;
   }
-  if (mode === "edit" && (!existing || lockedStatuses.has(existing.status))) {
-    return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card pwa-empty-copy">{existing ? "This approved request can no longer be edited." : "Budget request not found."}</section></div>;
+  if (mode === "edit" && (!existing || !canEditBudget(existing))) {
+    return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card pwa-empty-copy">{existing ? "This request is locked. Requests under review cannot be edited; expired revisions require an admin to unlock them." : "Budget request not found."}</section></div>;
   }
 
   const update = (field: keyof BudgetDraft, value: string) => setDraft((current) => ({ ...current, [field]: value }));
-  const save = async (status: "draft" | "submitted", event: FormEvent) => {
-    event.preventDefault();
+  const save = async (status: "draft" | "submitted", event?: FormEvent, confirmed = false) => {
+    event?.preventDefault();
+    if (saving || (existing && !canEditBudget(existing))) return;
+    if (status === "submitted" && existing?.status === "needs_revision" && !file && isAwaitingResubmission({ status: existing.status, revisionRequestedAt: existing.revisionRequestedAt, files: filesQuery.data ?? (existingFile ? [existingFile] : []) })) {
+      toast({ title: "Corrected file required", description: "Upload your revised budget PDF before resubmitting.", variant: "destructive" });
+      return;
+    }
     if (orgAdvocacies.length === 0) {
       toast({
         title: "No Centers of Youth Participation",
@@ -236,6 +254,8 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       return;
     }
 
+    if (status === "submitted" && !confirmed) { setConfirmSubmit(true); return; }
+    setConfirmSubmit(false);
     setSaving(true);
     try {
       const payload = {
@@ -248,7 +268,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         releasedAmount: existing?.releasedAmount ?? 0,
         releaseDate: existing?.releaseDate ?? "",
         purposeCategory: draft.purposeCategory.trim(),
-        status,
+        status: existing?.status === "needs_revision" && status === "draft" ? "needs_revision" as const : status,
         remarks: "",
         adminRemarks: existing?.adminRemarks ?? "",
         goSignalAt: existing?.goSignalAt ?? "",
@@ -260,8 +280,9 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       };
       let saved: BudgetRequest;
       if (existing) {
-        saved = await updateBudgetRequestInSupabase(existing.id, payload);
         if (file) await uploadBudgetRequestFileToSupabase(existing.id, file);
+        saved = await updateBudgetRequestInSupabase(existing.id, payload);
+        await Promise.all([detailQuery.refetch(), filesQuery.refetch()]);
       } else {
         saved = await createBudgetRequestInSupabase({ budgetRequest: payload, file });
       }
@@ -296,7 +317,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
               onChange={(event) => update("purposeCategory", event.target.value)}
               required
             >
-              {existing && !orgAdvocacies.includes(existing.purposeCategory) && (
+              {existing && !orgAdvocacies.some((category) => category === existing.purposeCategory) && (
                 <option value={existing.purposeCategory}>
                   {formatAdvocacyLabel(existing.purposeCategory)}
                 </option>
@@ -316,6 +337,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       </section>
       <section className="pwa-card">
         <h2>Detailed budget PDF</h2>
+        {existing?.revisionDueAt ? <p className="pwa-form-helper">Revision deadline: {dateLabel(existing.revisionDueAt)}</p> : null}
         {existingFile ? <p className="pwa-form-helper"><FileText /> Current: {existingFile.fileName}</p> : null}
         <label className="pwa-file-control"><input type="file" accept=".pdf,application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><span>{file?.name || (existingFile ? "Replace attached PDF" : "Choose PDF file")}</span></label>
       </section>
@@ -323,6 +345,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         <button type="button" className="pwa-secondary-button" disabled={saving} onClick={(event) => void save("draft", event)}>{saving ? <Loader2 className="pwa-spin" /> : null} Save Draft</button>
         <button type="submit" className="pwa-primary-button" disabled={saving || orgAdvocacies.length === 0}>{saving ? <Loader2 className="pwa-spin" /> : null} Submit Request</button>
       </div>
+      <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}><DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md"><DialogHeader><DialogTitle>Submit this budget request?</DialogTitle><DialogDescription>PCYDO will review your activity details and detailed budget PDF. Editing is locked while the request is under review.</DialogDescription></DialogHeader><p className="text-sm font-semibold break-words">{draft.activityTitle} · {money.format(Number(draft.requestedAmount))}</p><DialogFooter><button type="button" className="pwa-secondary-button" onClick={() => setConfirmSubmit(false)}>Cancel</button><button type="button" className="pwa-primary-button" disabled={saving} onClick={() => void save("submitted", undefined, true)}>Submit Request</button></DialogFooter></DialogContent></Dialog>
     </form>
   );
 }

@@ -1,5 +1,5 @@
 import {
-  AlertTriangle, CalendarDays, ChevronRight, FileText, ReceiptText, Sparkles, UserRound, WalletCards,
+  CalendarDays, ChevronRight, FileText, ReceiptText, Sparkles, UserRound, WalletCards,
 } from "lucide-react";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
@@ -7,15 +7,10 @@ import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import { PWA_ROUTES } from "../pwaRoutes";
 import { isUrnRegistration, urnReviewLabels } from "@/lib/urn-registration";
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
+import { formatActivityActionLabel } from "@/components/activity/RecentActivityPreview";
+import { formatEventTimestamp, getActivityMarker } from "@/components/portal/OrganizationActivityHistoryModal";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
-
-const actionIcons = {
-  profile: UserRound,
-  documents: FileText,
-  budget: WalletCards,
-  liquidation: ReceiptText,
-} as const;
 
 export default function PwaDashboard({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
@@ -80,24 +75,24 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
       icon: FileText,
       path: PWA_ROUTES.documents,
     } : {
-      label: "Documents", value: `${data.approvedDocuments} of ${data.requiredTemplates.length}`,
-      descriptor: "Approved", status: documentStatus.text, tone: documentStatus.tone,
+      label: "Registration Requirements", value: `${data.documentPercent}%`,
+      descriptor: `${data.approvedDocuments} of ${data.requiredTemplates.length} approved`, status: documentStatus.text, tone: documentStatus.tone,
       progress: data.documentPercent, icon: FileText, path: PWA_ROUTES.documents,
     },
     {
       label: "Budget",
-      value: String(data.budgetRequestCount),
-      descriptor: data.budgetRequestCount === 1 ? "Request" : "Requests",
-      status: budgetStatus.text,
+      value: `${data.budgetPercent}%`,
+      descriptor: data.budgetMetrics.helperText,
+      status: data.budgetMetrics.overviewLabel,
       tone: budgetStatus.tone,
       icon: WalletCards,
       path: PWA_ROUTES.budgets,
     },
     {
       label: "Liquidation",
-      value: `${data.completedLiquidations} of ${data.liquidationCount}`,
-      descriptor: "Completed",
-      status: liquidationStatus.text,
+      value: `${data.liquidationPercent}%`,
+      descriptor: data.liquidationMetrics.helperText,
+      status: data.liquidationMetrics.overviewLabel,
       tone: liquidationStatus.tone,
       icon: ReceiptText,
       path: PWA_ROUTES.liquidations,
@@ -107,7 +102,7 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
   return (
     <div className="pwa-dashboard pwa-stack">
       <section className={`pwa-briefing pwa-briefing--${data.briefing.tone}`}>
-        <div className="pwa-eyebrow"><Sparkles aria-hidden="true" /> Today&apos;s Briefing</div>
+        <div className="pwa-eyebrow"><Sparkles aria-hidden="true" /> Current Focus · Action Required</div>
         <div className="pwa-briefing-copy">
           <h2>{data.briefing.title}</h2>
           <p>{data.briefing.description}</p>
@@ -119,6 +114,7 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
         ) : null}
       </section>
 
+      <div className="pwa-section-heading"><h2 className="pwa-section-title">Overview</h2><button onClick={() => go(PWA_ROUTES.activity)}>Activity History</button></div>
       <section className="pwa-overview-grid" aria-label="Workflow overview">
         {overview.map(({ label, value, descriptor, status, tone, progress, icon: Icon, path }) => (
           <button key={label} type="button" className="pwa-overview-card" onClick={() => go(path)}>
@@ -137,26 +133,20 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
       </section>
 
       {data.renewalCountdown ? (
-        <PwaRenewalStrip expiresAt={data.renewalCountdown.expiresAt} dueDate={renewalDueDate} onOpen={() => go(PWA_ROUTES.profile)} />
+        <PwaRenewalStrip expiresAt={data.renewalCountdown.expiresAt} dueDate={renewalDueDate} onOpen={() => go(PWA_ROUTES.renewal)} />
       ) : null}
 
-      {data.actions.length ? (
-        <section className="pwa-card pwa-dashboard-recommendations">
-          <h2 className="pwa-section-title">Recommended Next Steps</h2>
-          <div className="pwa-action-grid">
-            {data.actions.map((action) => {
-              const Icon = actionIcons[action.kind as keyof typeof actionIcons] ?? AlertTriangle;
-              return (
-                <button key={`${action.path}-${action.title}`} type="button" onClick={() => go(action.path)}>
-                  <span className="pwa-action-icon"><Icon aria-hidden="true" /></span>
-                  <span><strong>{action.title}</strong><small>{action.detail}</small></span>
-                  <ChevronRight aria-hidden="true" />
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
+      <section className="pwa-card pwa-dashboard-recommendations">
+        <h2 className="pwa-section-title">Support &amp; Resources</h2>
+        <p className="pwa-empty-copy">Official PCYDO communication, templates and updates.</p>
+        <div className="pwa-action-grid">
+          {[
+            { title: "Support & Inquiries", detail: "Direct inquiries to PCYDO administrative staff.", path: PWA_ROUTES.inquiries, icon: UserRound },
+            { title: "Official Templates", detail: "Download official registration forms and compliance documents.", path: PWA_ROUTES.templates, icon: FileText },
+            { title: "News & Official Releases", detail: "PCYDO announcements and official updates.", path: PWA_ROUTES.news, icon: ReceiptText },
+          ].map(({ title, detail, path, icon: Icon }) => <button type="button" key={path} onClick={() => go(path)}><span className="pwa-action-icon"><Icon aria-hidden="true" /></span><span><strong>{title}</strong><small>{detail}</small></span><ChevronRight aria-hidden="true" /></button>)}
+        </div>
+      </section>
 
       <section className="pwa-card pwa-dashboard-activity">
         <div className="pwa-section-heading">
@@ -166,8 +156,8 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
         <div className="pwa-activity-list">
           {data.activities.slice(0, 3).map((activity) => (
             <article key={activity.id}>
-              <span className="pwa-activity-marker" aria-hidden="true" />
-              <div><strong>{activity.description}</strong><time>{formatDate(activity.createdAt)}</time></div>
+              <span className={`pwa-history-marker ${getActivityMarker(formatActivityActionLabel(activity.action || activity.description, activity.metadata as Record<string, unknown>)).dotClassName}`} aria-hidden="true" />
+              <div><strong>{formatActivityActionLabel(activity.action || activity.description, activity.metadata as Record<string, unknown>)}</strong><time>{formatEventTimestamp(activity.createdAt)}</time></div>
             </article>
           ))}
           {!data.activities.length ? <p className="pwa-empty-copy">Recent organization updates will appear here.</p> : null}
@@ -187,7 +177,7 @@ function PwaRenewalStrip({ expiresAt, dueDate, onOpen }: { expiresAt: string; du
         <strong>
           {clock.isDue
             ? "Renewal is due"
-            : `${clock.days}d ${String(clock.hours).padStart(2, "0")}h ${String(clock.minutes).padStart(2, "0")}m ${String(clock.seconds).padStart(2, "0")}s`}
+            : `Renewal in ${clock.days} days`}
         </strong>
         <span>Valid until {dueDate}</span>
       </span>

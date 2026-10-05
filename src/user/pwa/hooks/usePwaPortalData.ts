@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import {
@@ -14,6 +15,8 @@ import {
   markAllNotificationsReadInSupabase,
   markNotificationReadInSupabase,
   subscribeToOrganizationStatusChangesInSupabase,
+  fetchOrganizationRenewalsInSupabase,
+  fetchOrganizationProfileInSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { resolveBudgetEligibility } from "@/lib/budget-eligibility";
 import { getProfileCompletionPercent } from "./pwaPortalMetrics";
@@ -26,10 +29,10 @@ import {
   resolveLiquidationWorkflowEligibility,
   resolveYpopWorkflowEligibility,
 } from "@/lib/user-workflow-eligibility";
-import { getOrganizationRenewalCountdown } from "@/lib/organization-renewal";
+import { getOrganizationRenewalCountdown, resolveUserRenewalState } from "@/lib/organization-renewal";
+import { computeBudgetWorkflowMetrics, computeBudgetWorkflowMetricsFromStatusCounts, computeLiquidationWorkflowMetrics, computeLiquidationWorkflowMetricsFromStatusCounts } from "@/lib/workflow-metrics";
 
 const approvedBudgetStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
-const unlockedLiquidationStatuses = new Set(["budget_released"]);
 const approvedDocumentStatuses = new Set(["approved", "approved_green"]);
 const underReviewDocumentStatuses = new Set(["uploaded", "ready_for_review", "submitted", "under_admin_review"]);
 const revisionDocumentStatuses = new Set(["needs_revision", "rejected_red"]);
@@ -68,18 +71,29 @@ export function usePwaPortalData() {
     : pathname === "/app" ? "dashboard"
     : "";
 
+  const sharedSection = activeSection === "templates" || activeSection === "news-releases";
+  const sectionQuery = useQuery({
+    queryKey: ["pwa", user?.id, organizationId, activeSection],
+    enabled: Boolean(activeSection && user?.id && (organizationId || sharedSection)),
+    queryFn: async () => {
+      const snapshot = await loadOrganizationPortalSectionState(activeSection, user!.id, organizationId);
+      if (snapshot) mergeRemoteStateRef.current(snapshot);
+      return snapshot;
+    },
+    staleTime: 30_000,
+  });
+  const renewalsQuery = useQuery({
+    queryKey: ["user", organizationId, "pwa-renewals"],
+    enabled: Boolean(organizationId && (activeSection === "dashboard" || pathname.startsWith(PWA_ROUTES.renewal) || pathname === PWA_ROUTES.renewals)),
+    queryFn: () => fetchOrganizationRenewalsInSupabase(organizationId),
+  });
+  const renewals = renewalsQuery.data ?? [];
+  const refreshRenewals = renewalsQuery.refetch;
+  const renewalState = resolveUserRenewalState({ profile, renewals, hasError: renewalsQuery.isError });
   useEffect(() => {
-    if (!activeSection || !user?.id || !organizationId) return;
-    let cancelled = false;
-    void loadOrganizationPortalSectionState(activeSection, user.id, organizationId)
-      .then((remoteSnapshot) => {
-        if (!cancelled && remoteSnapshot) mergeRemoteStateRef.current(remoteSnapshot);
-      })
-      .catch((error) => {
-        if (!cancelled) console.error(`Failed to load ${activeSection} PWA data:`, error);
-      });
-    return () => { cancelled = true; };
-  }, [activeSection, organizationId, user?.id]);
+    if (!organizationId || !(activeSection === "dashboard" || pathname.startsWith(PWA_ROUTES.renewal) || pathname === PWA_ROUTES.renewals)) return;
+    return subscribeToOrganizationStatusChangesInSupabase({ organizationId, feature: "renewals", onChange: () => { void refreshRenewals(); } });
+  }, [organizationId, activeSection, pathname, refreshRenewals]);
 
   const registrationSubmissionId = state.documentSubmissions.find((item) =>
     item.organizationId === organizationId && item.submissionScope !== "renewal" && !item.renewalId,
@@ -128,7 +142,7 @@ export function usePwaPortalData() {
     const requiredTemplates = [...state.templates]
       .filter(isRegistrationRequirementTemplate)
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-    const submission = state.documentSubmissions.find((item) => item.organizationId === organizationId) ?? null;
+    const submission = state.documentSubmissions.find((item) => item.organizationId === organizationId && item.submissionScope !== "renewal" && !item.renewalId) ?? null;
     const documentFiles = submission
       ? state.documentSubmissionFiles.filter((item) => item.submissionId === submission.id)
       : [];
@@ -155,7 +169,10 @@ export function usePwaPortalData() {
     const budgetRequestCount = dashboardSummary?.budgets.totalCount ?? budgetRequests.length;
     const latestBudget = budgetRequests[0] ?? null;
     const releasedBudget = dashboardSummary?.budgets.releasedAmount ?? budgetRequests.reduce((sum, item) => sum + Number(item.releasedAmount || 0), 0);
-    const budgetPercent = latestBudget && approvedBudgetStatuses.has(latestBudget.status) ? 100 : 0;
+    const budgetMetrics = dashboardSummary
+      ? computeBudgetWorkflowMetricsFromStatusCounts(dashboardSummary.budgets.statusCounts, dashboardSummary.budgets.totalCount)
+      : computeBudgetWorkflowMetrics(budgetRequests);
+    const budgetPercent = budgetMetrics.completionPercent;
     const draftBudgetRequests = budgetRequests.filter((item) => item.status === "draft");
     const releasedBudgetRequests = dashboardSummary?.budgets.releasedCount ?? budgetRequests.filter((item) => item.status === "budget_released").length;
     const underReviewBudgetRequests = dashboardSummary?.budgets.underReviewCount ?? budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length;
@@ -165,13 +182,12 @@ export function usePwaPortalData() {
 
     const liquidationReports = [...state.liquidationReports]
       .filter((item) => item.organizationId === organizationId)
-      .filter((item) => {
-        const budget = budgetRequests.find((request) => request.id === item.budgetRequestId);
-        return budget ? unlockedLiquidationStatuses.has(budget.status) : false;
-      })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const latestLiquidation = liquidationReports[0] ?? null;
-    const liquidationPercent = latestLiquidation?.status === "completed_liquidated" ? 100 : 0;
+    const liquidationMetrics = dashboardSummary
+      ? computeLiquidationWorkflowMetricsFromStatusCounts(dashboardSummary.liquidations.statusCounts, dashboardSummary.liquidations.totalCount)
+      : computeLiquidationWorkflowMetrics(liquidationReports);
+    const liquidationPercent = liquidationMetrics.completionPercent;
     const completedLiquidations = dashboardSummary?.liquidations.completedCount ?? liquidationReports.filter((item) => item.status === "completed_liquidated").length;
     const underReviewLiquidations = dashboardSummary?.liquidations.underReviewCount ?? liquidationReports.filter((item) => underReviewLiquidationStatuses.has(item.status)).length;
     const revisionLiquidations = liquidationReports.filter((item) => item.status === "needs_revision" || item.status === "rejected_red");
@@ -256,40 +272,35 @@ export function usePwaPortalData() {
       tone: "success",
       action: null,
     };
-    if (urnRegistration) {
-      const urnStatus = profile!.urnReviewStatus;
-      briefing = {
-        title: urnStatus === "verified" ? "Registration verified through URN." : urnStatus === "needs_correction" ? "Your URN needs correction." : urnStatus === "rejected" ? "URN verification was unsuccessful." : "Your URN is under review.",
-        description: urnStatus === "verified" ? "Your existing PCYDO registration record was confirmed." : urnStatus === "needs_correction" ? (profile!.urnAdminRemarks || "Review the admin feedback and update the submitted number.") : urnStatus === "rejected" ? (profile!.urnAdminRemarks || "Contact PCYDO if you need help with this decision.") : "PCYDO is checking your registration record. You do not need to upload the six new-organization requirements.",
-        tone: urnStatus === "verified" ? "success" : urnStatus === "rejected" ? "danger" : urnStatus === "needs_correction" ? "warning" : "info",
-        action: { label: urnStatus === "needs_correction" || urnStatus === "rejected" ? "Update URN" : "View URN Status", path: urnStatus === "needs_correction" || urnStatus === "rejected" ? PWA_ROUTES.profileEdit : PWA_ROUTES.documents },
-      };
-    } else if (!profileComplete) {
-      briefing = { title: "Your organization profile is incomplete.", description: "Complete the required organization details before accessing Registration Requirements.", tone: "warning", action: { label: "Complete Profile", path: PWA_ROUTES.profileEdit } };
-    } else if (missingDocuments) {
-      briefing = { title: `${missingDocuments} required document${missingDocuments === 1 ? " is" : "s are"} still missing.`, description: "Upload the remaining required files for admin review.", tone: "warning", action: { label: "Continue Documents", path: PWA_ROUTES.documentsManage } };
-    } else if (revisionDocuments.length) {
-      briefing = { title: `${revisionDocuments.length === 1 ? "One document needs" : `${revisionDocuments.length} documents need`} revision.`, description: "Review the latest admin remarks and upload the corrected file.", tone: "warning", action: { label: "Review Required Changes", path: PWA_ROUTES.documents } };
-    } else if (profile?.profileStatus === "pending_review") {
-      briefing = { title: "Your registration is awaiting verification.", description: "PCYDO is reviewing your organization profile. You can monitor the current status while you wait.", tone: "info", action: { label: "View Verification Status", path: PWA_ROUTES.profile } };
-    } else if (!budgetEligibility.eligible) {
-      briefing = { title: "Complete YPOP validation first.", description: "Your organization must qualify in the active YPOP period before creating an activity budget request.", tone: "info", action: { label: "Open YPOP Incentive", path: PWA_ROUTES.ypop } };
-    } else if (!budgetRequestCount) {
-      briefing = { title: "Your organization can create a budget request.", description: "YPOP qualification is complete and no activity budget request has been created yet.", tone: "success", action: { label: "Create Budget Request", path: PWA_ROUTES.budgetNew } };
+    if (!profileComplete) {
+      briefing = { title: "Complete your organization profile", description: "Fill in your organization details to unlock document submission and program workflows.", tone: "warning", action: { label: "Open Profile", path: PWA_ROUTES.profileEdit } };
+    } else if (urnRegistration && profile?.urnReviewStatus !== "verified") {
+      briefing = { title: profile?.urnReviewStatus === "needs_correction" ? "URN needs correction" : "Registration review pending", description: profile?.urnAdminRemarks || "PCYDO is checking your registration record. Monitor the review status here.", tone: "info", action: { label: "View Registration Status", path: PWA_ROUTES.documents } };
+    } else if (!urnRegistration && revisionDocuments.length) {
+      briefing = { title: "Resolve flagged document files", description: "Review the admin remarks and upload corrected registration requirements.", tone: "warning", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
+    } else if (!urnRegistration && missingDocuments) {
+      briefing = { title: "Submit your required documents", description: "Upload your registration requirements and submit them for admin review.", tone: "warning", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
+    } else if (submission?.status === "under_admin_review" || profile?.profileStatus === "pending_review") {
+      briefing = { title: "Wait for document review", description: "PCYDO is reviewing your registration. Monitor the status while you wait.", tone: "info", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
+    } else if (revisionLiquidationCount || overdueLiquidationCount) {
+      briefing = { title: "Revise your liquidation report", description: "Review the admin remarks and submit a corrected liquidation report.", tone: overdueLiquidationCount ? "danger" : "warning", action: { label: "Open Liquidation", path: PWA_ROUTES.liquidations } };
     } else if (revisionBudgetRequestCount) {
-      briefing = { title: "A budget request needs revision.", description: "Review the latest admin feedback and update the request.", tone: "warning", action: { label: "Review Budget", path: PWA_ROUTES.budgets } };
-    } else if (latestBudget?.status === "draft") {
-      briefing = { title: "You have an unfinished budget request.", description: "Continue the draft and submit it when the required details and file are ready.", tone: "info", action: { label: "View Budget", path: PWA_ROUTES.budgets } };
-    } else if (latestBudget && approvedBudgetStatuses.has(latestBudget.status) && !(dashboardSummary?.liquidations.totalCount ?? liquidationReports.length)) {
-      briefing = { title: "Your approved budget is moving through the release workflow.", description: "Open the request to review its current release and post-activity status.", tone: "info", action: { label: "View Budget", path: PWA_ROUTES.budgets } };
-    } else if (overdueLiquidationCount) {
-      briefing = { title: "A liquidation report is overdue.", description: "Submit the required report as soon as possible to restore compliance.", tone: "danger", action: { label: "Submit Liquidation", path: PWA_ROUTES.liquidations } };
-    } else if (revisionLiquidationCount) {
-      briefing = { title: "A liquidation report needs revision.", description: "Review the admin remarks and upload the corrected report.", tone: "warning", action: { label: "Submit Liquidation", path: PWA_ROUTES.liquidations } };
-    } else if (daysUntilDeadline !== null && daysUntilDeadline <= 7) {
-      briefing = { title: "A liquidation deadline is approaching.", description: `${daysUntilDeadline} day${daysUntilDeadline === 1 ? "" : "s"} remaining before the next deadline.`, tone: "warning", action: { label: "View Liquidation", path: PWA_ROUTES.liquidations } };
+      briefing = { title: "Revise your budget request", description: "Review the latest admin feedback and update the request.", tone: "warning", action: { label: "Open Budget", path: PWA_ROUTES.budgets } };
     } else if (draftLiquidationCount) {
-      briefing = { title: "You have an unfinished liquidation report.", description: "Continue the draft and submit it when the required file is ready.", tone: "info", action: { label: "Continue Liquidation", path: PWA_ROUTES.liquidations } };
+      briefing = { title: "Submit your liquidation file", description: "Your budget has been released. Upload the required liquidation file for review.", tone: "warning", action: { label: "Open Liquidation", path: PWA_ROUTES.liquidations } };
+    } else if (dashboardSummary?.budgets.awaitingReleaseCount) {
+      briefing = { title: "Awaiting Fund Release", description: "Your budget request has been approved. The admin will notify you when funds are released.", tone: "info", action: { label: "Open Budget", path: PWA_ROUTES.budgets } };
+    } else if (underReviewBudgetRequests || draftBudgetRequestCount) {
+      briefing = { title: "Track your budget request", description: "View your request details and current review status.", tone: "info", action: { label: "Open Budget", path: PWA_ROUTES.budgets } };
+    } else if (underReviewLiquidations) {
+      briefing = { title: "Wait for liquidation review", description: "PCYDO is reviewing your submitted liquidation report.", tone: "info", action: { label: "View Liquidation", path: PWA_ROUTES.liquidations } };
+    } else if (profile?.profileStatus === "verified") {
+      const reason = budgetEligibility.reason;
+      briefing = budgetWorkflowEligibility.eligible
+        ? { title: "Create your next budget request", description: "Your organization is verified and eligible to submit a budget request.", tone: "success", action: { label: "Open Budget", path: PWA_ROUTES.budgets } }
+        : { title: reason === "ypop_under_review" ? "Budget request eligibility pending" : reason === "ypop_needs_revision" ? "YPOP revision required for budget eligibility" : "Budget request unavailable",
+          description: reason === "ypop_under_review" ? "Your YPOP qualification is under evaluation. Wait for the admin review." : reason === "ypop_needs_revision" ? "The admin requested corrections to your YPOP submission. Review the remarks and resubmit to qualify for budget requests." : reason === "ypop_not_qualified" ? "Your organization did not qualify in the current YPOP period." : "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request.",
+          tone: reason === "ypop_needs_revision" ? "warning" : "info", action: { label: reason === "ypop_needs_revision" ? "Review YPOP Submission" : reason === "ypop_not_submitted" ? "Open YPOP Incentive" : "View YPOP Status", path: PWA_ROUTES.ypop } };
     }
 
     const actions: Array<{ title: string; detail: string; path: string; kind: string }> = [];
@@ -309,6 +320,7 @@ export function usePwaPortalData() {
 
     const isSuspended =
       profile?.profileStatus === "suspended_inactive" ||
+      submission?.status === "rejected_red" ||
       documentFiles.some(
         (file) => file.adminStatus === "rejected_red" && (!submission || !submission.renewalId),
       );
@@ -318,6 +330,7 @@ export function usePwaPortalData() {
       templates, requiredTemplates, submission, documentFiles, approvedDocuments, underReviewDocuments,
       revisionDocuments, draftDocuments, missingDocuments, documentPercent, budgetRequests, latestBudget,
       releasedBudget, budgetPercent, budgetRequestCount, releasedBudgetRequests, underReviewBudgetRequests, revisionBudgetRequests, revisionBudgetRequestCount,
+      budgetMetrics, liquidationMetrics,
       liquidationCount: dashboardSummary?.liquidations.totalCount ?? liquidationReports.length,
       liquidationReports, latestLiquidation, liquidationPercent, completedLiquidations, underReviewLiquidations,
       revisionLiquidations, revisionLiquidationCount, overdueLiquidations, overdueLiquidationCount, draftLiquidationCount, daysUntilDeadline,
@@ -330,7 +343,7 @@ export function usePwaPortalData() {
       transparency: [...state.transparencyPosts].filter((item) => item.visibilityStatus === "published").sort((a, b) => b.postDate.localeCompare(a.postDate)),
       compliance: state.complianceRemarks.filter((item) => item.organizationId === organizationId),
     };
-  }, [organizationId, profile, state, user?.id]);
+  }, [organizationId, profile, state, user]);
 
   const markRead = async (id: string) => {
     await markNotificationReadInSupabase(id);
@@ -341,7 +354,7 @@ export function usePwaPortalData() {
     store.markAllNotificationsRead();
   };
   const refresh = async () => {
-    if (!activeSection || !user?.id || !organizationId) return;
+    if (!activeSection || !user?.id || (!organizationId && !sharedSection)) return;
     const remoteSnapshot = await loadOrganizationPortalSectionState(activeSection, user.id, organizationId);
     if (remoteSnapshot) mergeRemoteStateRef.current(remoteSnapshot);
   };
@@ -373,6 +386,23 @@ export function usePwaPortalData() {
 
   return {
     ...data,
+    briefing: !renewalsQuery.isLoading && !renewalsQuery.isError && ["renewal_needs_revision", "renewal_draft", "expiring_soon_renewal_available", "expired_within_renewal_window", "expired_beyond_renewal_window", "renewal_submitted", "renewal_under_review", "renewal_resubmitted", "renewal_rejected"].includes(renewalState.key)
+      ? { title: renewalState.key === "renewal_draft" ? "Continue your renewal application" : renewalState.key === "renewal_needs_revision" ? "Renewal action required" : ["renewal_submitted", "renewal_under_review", "renewal_resubmitted"].includes(renewalState.key) ? "Wait for renewal review" : "Registration renewal", description: renewalState.adminRemarks || renewalState.renewalBlockedReason || "Review your registration term and renewal requirements.", tone: "warning" as const, action: { label: "Open Renewal", path: PWA_ROUTES.renewal } }
+      : data.briefing,
+    renewals,
+    renewalState,
+    renewalsLoading: renewalsQuery.isLoading,
+    renewalsError: renewalsQuery.isError,
+    refreshRenewals: async () => {
+      await renewalsQuery.refetch();
+      if (user?.id) {
+        const updatedProfile = await fetchOrganizationProfileInSupabase(user.id);
+        if (updatedProfile) mergeRemoteStateRef.current({ organizationProfiles: [updatedProfile] });
+      }
+    },
+    sectionLoading: sectionQuery.isLoading,
+    sectionError: sectionQuery.isError,
+    retrySection: sectionQuery.refetch,
     profile,
     user,
     organizationName: profile?.organizationName || user?.displayName || "Organization",

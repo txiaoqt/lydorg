@@ -14,8 +14,8 @@ import {
 import { PwaProfileEdit, PwaProfilePage, PwaProfilePublicPreview } from "./profile/PwaProfilePages";
 import { PwaOrganizationDirectory, PwaOrganizationDirectoryProfile } from "./profile/PwaOrganizationDirectory";
 import { PwaTemplateLibrary, PwaTemplatePreview } from "./templates/PwaTemplatePages";
-import { PwaYpopPage } from "./ypop/PwaYpopPage";
-import { PwaYpopPpaEditor, PwaYpopPpaList, PwaYpopWorkspace } from "./ypop/PwaYpopWorkspace";
+import { PwaYpopAlignedPage } from "./ypop/PwaYpopAlignedPage";
+import { PwaRenewalPage } from "./renewals/PwaRenewalPage";
 import {
   PwaDocumentDetail, PwaDocumentList, PwaDocumentManager,
 } from "./documents/PwaDocumentPages";
@@ -105,7 +105,7 @@ export default function PwaUserPortal() {
       unreadCount={data.unreadCount}
       dashboard={pathname === PWA_ROUTES.home}
     >
-      <Routes>
+      {data.sectionLoading ? <p role="status" className="pwa-card pwa-empty-copy">Loading {title.toLowerCase()}…</p> : data.sectionError ? <section className="pwa-card"><h2>Information unavailable</h2><p role="alert">We could not load this page. Please try again.</p><button className="pwa-secondary-button" onClick={() => void data.retrySection()}>Try again</button></section> : <Routes>
         <Route index element={<PwaDashboard data={data} />} />
         <Route path="documents" element={<PwaDocumentAccessGuard data={data}><PwaDocumentList data={data} /></PwaDocumentAccessGuard>} />
         <Route path="documents/manage" element={<PwaDocumentAccessGuard data={data}><PwaDocumentManager data={data} /></PwaDocumentAccessGuard>} />
@@ -124,12 +124,14 @@ export default function PwaUserPortal() {
         <Route path="profile/public" element={<PwaProfilePublicPreview data={data} />} />
         <Route path="organizations" element={<PwaOrganizationDirectory />} />
         <Route path="organizations/:organizationId" element={<PwaOrganizationDirectoryProfile />} />
-        <Route path="ypop" element={<PwaYpopPage data={data} />} />
-        <Route path="ypop/period/:periodId" element={<PwaYpopWorkspace data={data} />} />
-        <Route path="ypop/:entryId/ppa/new" element={<PwaYpopPpaEditor data={data} />} />
-        <Route path="ypop/:entryId/ppa" element={<PwaYpopPpaList data={data} />} />
-        <Route path="ypop/:entryId/ppa/:activityId" element={<PwaYpopPpaEditor data={data} />} />
-        <Route path="ypop/:entryId" element={<PwaYpopWorkspace data={data} />} />
+        <Route path="ypop" element={<PwaYpopAlignedPage data={data} />} />
+        <Route path="ypop/period/:periodId" element={<PwaYpopAlignedPage data={data} />} />
+        <Route path="ypop/:entryId/ppa/new" element={<PwaYpopAlignedPage data={data} />} />
+        <Route path="ypop/:entryId/ppa" element={<PwaYpopAlignedPage data={data} />} />
+        <Route path="ypop/:entryId/ppa/:activityId" element={<PwaYpopAlignedPage data={data} />} />
+        <Route path="ypop/:entryId" element={<PwaYpopAlignedPage data={data} />} />
+        <Route path="organization-renewal" element={<PwaRenewalPage data={data} />} />
+        <Route path="renewals" element={<PwaRenewalPage data={data} history />} />
         <Route path="templates" element={<PwaTemplateLibrary data={data} />} />
         <Route path="templates/:templateId" element={<PwaTemplatePreview data={data} />} />
         <Route path="news" element={<PwaNews data={data} />} />
@@ -150,7 +152,7 @@ export default function PwaUserPortal() {
         <Route path="terms" element={<PwaLegalPage type="terms" />} />
         <Route path="more" element={<PwaMorePage onSignOut={data.signOut} />} />
         <Route path="*" element={<Navigate to={PWA_ROUTES.home} replace />} />
-      </Routes>
+      </Routes>}
     </PwaAppShell>
   );
 }

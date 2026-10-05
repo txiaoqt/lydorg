@@ -3,6 +3,7 @@ import { FileText, ExternalLink, Download, Loader2, FileUp } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
+import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 
 export interface DrawerAttachedFile {
   id: string;
@@ -99,7 +100,10 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
                 size="sm"
                 onClick={() => {
                   const targetUrl = safePreviewUrl || file?.fileUrl || "";
-                  if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+                  if (targetUrl) {
+                    if (document.body.classList.contains("ytrace-pwa-active")) requestPwaDocumentPreview(targetUrl, file?.fileName || "Uploaded document.pdf");
+                    else window.open(targetUrl, "_blank", "noopener,noreferrer");
+                  }
                 }}
                 className="h-10 px-2.5 sm:px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 active:bg-muted/80 text-foreground/80 hover:text-foreground text-xs font-medium flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98] truncate focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
@@ -170,7 +174,10 @@ export const PortalDrawerDocumentSection: React.FC<PortalDrawerDocumentSectionPr
                   size="sm"
                   onClick={() => {
                     const targetUrl = safePreviewUrl || file?.fileUrl || "";
-                    if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+                    if (targetUrl) {
+                      if (document.body.classList.contains("ytrace-pwa-active")) requestPwaDocumentPreview(targetUrl, file?.fileName || "Uploaded document.pdf");
+                      else window.open(targetUrl, "_blank", "noopener,noreferrer");
+                    }
                   }}
                   className="h-8 px-2.5 sm:px-3 text-xs font-semibold rounded-lg border-border/80 gap-1.5 cursor-pointer hover:bg-accent text-foreground transition-all"
                 >

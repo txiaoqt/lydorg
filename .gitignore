@@ -39,3 +39,6 @@ test-results/
 /scripts/__pycache__/
 /supabase/.temp/
 
+# Local UI review screenshots
+/.impeccable/review/
+

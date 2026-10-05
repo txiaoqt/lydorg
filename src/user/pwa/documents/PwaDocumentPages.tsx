@@ -18,7 +18,9 @@ import {
 } from "@/lib/lydo-connect-supabase";
 import type { SubmissionFile } from "@/lib/lydo-connect-data";
 import { resolveRegistrationDocumentAccess } from "@/lib/document-file-access";
+import { isMatchingFileForTemplate } from "@/lib/user-workflow-eligibility";
 import { PwaBackButton } from "../PwaBackButton";
+import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaDocumentDetailRoute } from "../pwaRoutes";
@@ -126,9 +128,12 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
       </div>
     );
   }
-  const byType = new Map(data.documentFiles.map((file) => [file.documentTypeId, file]));
+  const byType = new Map(data.requiredTemplates.flatMap((template) => {
+    const file = data.documentFiles.find((item) => isMatchingFileForTemplate(item, template));
+    return file ? [[template.id, file] as const] : [];
+  }));
   const total = data.requiredTemplates.length;
-  const submissionLocked = Boolean(data.submission && !["draft", "needs_revision", "rejected_red"].includes(data.submission.status));
+  const submissionLocked = Boolean(data.submission && !["draft", "needs_revision"].includes(data.submission.status));
   const allApproved = total > 0 && data.approvedDocuments === total;
   const canManageDocuments = !submissionLocked && data.requiredTemplates.some((template) => {
     const file = byType.get(template.id);
@@ -211,19 +216,12 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
   const [replacementAnnouncement, setReplacementAnnouncement] = useState("");
   const [replacing, setReplacing] = useState(false);
   const template = data.requiredTemplates.find((item) => item.id === documentId);
-  const file = data.documentFiles.find((item) => item.documentTypeId === documentId);
+  const file = template ? data.documentFiles.find((item) => isMatchingFileForTemplate(item, template)) : undefined;
   if (!template) {
     return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.documents} /><section className="pwa-card pwa-empty-copy">Document requirement not found.</section></div>;
   }
 
-  const openReference = async (reference: string) => {
-    try {
-      const resolved = await resolveSupabaseFileUrl(reference);
-      window.open(resolved, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      toast({ title: "Unable to open file", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
-    }
-  };
+  const openReference = (reference: string, title: string) => requestPwaDocumentPreview(reference, title);
 
   const requiresCorrection = Boolean(file && correctionStatuses.has(file.adminStatus));
   const isUnlocked = requiresCorrection && isRevisionAdminUnlocked(file);
@@ -419,8 +417,8 @@ export function PwaDocumentDetail({ data }: { data: PortalData }) {
             <UploadCloud /> {isExpired ? "Revision Locked" : "Re-upload File"}
           </button>
         ) : null}
-        {fileAccess.canViewAttachedFile && file ? <button type="button" className="pwa-secondary-button" onClick={() => void openReference(file.fileUrl)}><Eye /> View Attached File</button> : null}
-        {template.templateFileUrl ? <button type="button" className="pwa-secondary-button" onClick={() => void openReference(template.templateFileUrl)}><Download /> View Template</button> : null}
+        {fileAccess.canViewAttachedFile && file ? <button type="button" className="pwa-secondary-button" onClick={() => openReference(file.fileUrl, file.fileName)}><Eye /> View Attached File</button> : null}
+        {template.templateFileUrl ? <button type="button" className="pwa-secondary-button" onClick={() => openReference(template.templateFileUrl, template.templateFileName || template.name)}><Download /> View Template</button> : null}
         {!file || initialUploadStatuses.has(file.adminStatus) ? <button type="button" className="pwa-primary-button" onClick={() => go(PWA_ROUTES.documentsManage)}><UploadCloud /> Upload in Document Manager</button> : null}
       </div>
       <p className="sr-only" aria-live="polite" aria-atomic="true">{replacementAnnouncement}</p>
@@ -560,9 +558,14 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
   const [downloadingZip, setDownloadingZip] = useState(false);
-  const fileByType = useMemo(() => new Map(data.documentFiles.map((file) => [file.documentTypeId, file])), [data.documentFiles]);
+  const [confirmation, setConfirmation] = useState<"draft" | "review" | null>(null);
+  const confirmationInFlight = useRef(false);
+  const fileByType = useMemo(() => new Map(data.requiredTemplates.flatMap((template) => {
+    const file = data.documentFiles.find((item) => isMatchingFileForTemplate(item, template));
+    return file ? [[template.id, file] as const] : [];
+  })), [data.documentFiles, data.requiredTemplates]);
   const assignedTypes = new Set(pending.map((item) => item.documentTypeId).filter(Boolean));
-  const submissionLocked = Boolean(data.submission && !["draft", "needs_revision", "rejected_red"].includes(data.submission.status));
+  const submissionLocked = Boolean(data.submission && !["draft", "needs_revision"].includes(data.submission.status));
 
   const appendFiles = (files: File[]) => {
     setPending((current) => [
@@ -582,7 +585,8 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
     appendFiles(Array.from(event.dataTransfer.files));
   };
 
-  const submit = async (mode: "draft" | "review") => {
+  const submit = async (mode: "draft" | "review", confirmed = false) => {
+    if (saving) return;
     if (!pending.length) {
       toast({ title: "Select files first", description: "Choose the documents you want to upload.", variant: "destructive" });
       return;
@@ -606,13 +610,16 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
         toast({ title: "Use the document details page", description: "Reviewed documents must be corrected one at a time.", variant: "destructive" });
         return;
       }
-      const issue = await validateOrganizationDocumentFile(item.documentTypeId, item.file);
+      const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId);
+      const issue = await validateOrganizationDocumentFile(template?.databaseId || item.documentTypeId, item.file);
       if (issue) {
         toast({ title: "Unsupported file", description: issue, variant: "destructive" });
         return;
       }
     }
 
+    if (!confirmed) { setConfirmation(mode); return; }
+    setConfirmation(null);
     setSaving(true);
     try {
       const result = await submitOrganizationDocumentsBatchToSupabase({
@@ -620,7 +627,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
         documents: pending.map((item) => {
           const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
           return {
-            documentTypeId: template.id,
+            documentTypeId: template.databaseId || template.id,
             documentTypeName: template.name,
             file: item.file,
             validationStatus: "correct",
@@ -740,7 +747,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
               <div className="pwa-manage-copy"><strong>{template.name}</strong><small>{file?.fileName || "No file uploaded"}</small>{file ? <StatusBadge status={file.adminStatus} /> : null}{file?.adminRemarks ? <p>{file.adminRemarks}</p> : null}</div>
               <div className="pwa-manage-actions">
                 {template.templateFileUrl ? <button type="button" aria-label={`Download ${template.name} template`} onClick={() => void downloadReference(template.templateFileUrl, template.templateFileName || `${template.name}.pdf`)}><Download /></button> : null}
-                {file?.fileUrl ? <button type="button" aria-label={`View ${template.name}`} onClick={() => void resolveSupabaseFileUrl(file.fileUrl).then((url) => window.open(url, "_blank", "noopener,noreferrer"))}><Eye /></button> : null}
+                {file?.fileUrl ? <button type="button" aria-label={`View ${template.name}`} onClick={() => requestPwaDocumentPreview(file.fileUrl, file.fileName)}><Eye /></button> : null}
                 {file && !submissionLocked && !approvedStatuses.has(file.adminStatus) && !correctionStatuses.has(file.adminStatus) ? <button type="button" aria-label={`Remove ${template.name}`} onClick={() => void removeExisting(file)}><Trash2 /></button> : null}
               </div>
             </article>
@@ -752,6 +759,13 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
         <button type="button" className="pwa-secondary-button" disabled={saving || !pending.length} onClick={() => void submit("draft")}>{saving ? <Loader2 className="pwa-spin" /> : null} Save as Draft</button>
         <button type="button" className="pwa-primary-button" disabled={saving || !pending.length} onClick={() => void submit("review")}>{saving ? <Loader2 className="pwa-spin" /> : null} Submit Selected Files</button>
       </div>
+      <Dialog open={confirmation !== null} onOpenChange={(open) => { if (!open) setConfirmation(null); }}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
+          <DialogHeader><DialogTitle>{confirmation === "draft" ? "Save selected files as drafts?" : "Submit selected files for review?"}</DialogTitle><DialogDescription>{confirmation === "draft" ? "These files will be saved without sending them for admin review." : "PCYDO will review the selected registration documents. Check each assignment before submitting."}</DialogDescription></DialogHeader>
+          <ul className="space-y-3 text-sm max-h-[40dvh] overflow-auto">{pending.map((item) => <li key={item.id}><strong className="block">{data.requiredTemplates.find((template) => template.id === item.documentTypeId)?.name}</strong><span className="break-all text-muted-foreground">{item.file.name}</span></li>)}</ul>
+          <DialogFooter><button className="pwa-secondary-button" onClick={() => setConfirmation(null)}>Cancel</button><button className="pwa-primary-button" disabled={saving} onClick={() => { if (confirmation && !confirmationInFlight.current) { confirmationInFlight.current = true; void submit(confirmation, true).finally(() => { confirmationInFlight.current = false; }); } }}>{confirmation === "draft" ? "Save Drafts" : "Submit for Review"}</button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
