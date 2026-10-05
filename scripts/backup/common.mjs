@@ -126,7 +126,18 @@ export async function regularFiles(root, prefix = '') {
 const toolDiagnostics = new WeakMap();
 
 // Only a short classification survives the child process; raw stderr is never attached to errors.
-export function privateToolErrorCode(error) { return toolDiagnostics.get(error) ?? ''; }
+export function privateToolErrorCode(error) {
+  const diag = toolDiagnostics.get(error);
+  if (typeof diag === 'string') return diag;
+  return diag?.code ?? '';
+}
+
+export function privateToolDiagnostic(error) {
+  const diag = toolDiagnostics.get(error);
+  if (!diag) return null;
+  if (typeof diag === 'string') return { code: diag };
+  return { ...diag };
+}
 
 export function runQuiet(command, args, env = process.env, capture = false, classifyStderr = null) {
   return new Promise((resolve, reject) => {
@@ -147,8 +158,21 @@ export function runQuiet(command, args, env = process.env, capture = false, clas
       const error = new Error(`${path.basename(command)} failed (exit ${code}); tool output withheld to protect credentials`);
       if (captureStderr) {
         try {
-          const code = classifyStderr(diagnostic);
-          if (typeof code === 'string' && /^[a-z_]{1,48}$/.test(code)) toolDiagnostics.set(error, code);
+          const result = classifyStderr(diagnostic);
+          if (typeof result === 'string' && /^[a-z_]{1,48}$/.test(result)) {
+            toolDiagnostics.set(error, { code: result });
+          } else if (result && typeof result === 'object' && typeof result.code === 'string' && /^[a-z_]{1,48}$/.test(result.code)) {
+            const sanitized = { code: result.code };
+            if (typeof result.serviceCode === 'string' && /^[A-Za-z][A-Za-z0-9]{0,63}$/.test(result.serviceCode)) {
+              sanitized.serviceCode = result.serviceCode;
+            }
+            if (typeof result.httpStatus === 'number' && Number.isInteger(result.httpStatus) && result.httpStatus >= 100 && result.httpStatus <= 599) {
+              sanitized.httpStatus = result.httpStatus;
+            } else if (typeof result.httpStatus === 'string' && /^[1-5][0-9]{2}$/.test(result.httpStatus)) {
+              sanitized.httpStatus = Number(result.httpStatus);
+            }
+            toolDiagnostics.set(error, sanitized);
+          }
         } catch { /* Preserve the redacted tool failure if classification itself fails. */ }
       }
       reject(error);

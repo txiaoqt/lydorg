@@ -1,5 +1,7 @@
 import { writeFile } from 'node:fs/promises';
-import { sha256File, runQuiet, privateToolErrorCode } from './common.mjs';
+import { sha256File, runQuiet, privateToolErrorCode, privateToolDiagnostic } from './common.mjs';
+
+export const SERVICE_CODE_PATTERN = /^[A-Za-z][A-Za-z0-9]{0,63}$/;
 
 export const SAFE_R2_ERROR_CODES = Object.freeze([
   'access_denied',
@@ -13,71 +15,135 @@ export const SAFE_R2_ERROR_CODES = Object.freeze([
   'credentials_error',
   'redirect_or_region_error',
   'malformed_response',
+  'aws_service_error',
 ]);
+
+export function extractAwsServiceCode(stderr) {
+  if (typeof stderr !== 'string') return null;
+  const match = stderr.match(/An error occurred \(([^)]+)\)/i) ||
+                stderr.match(/<Code>([^<]+)<\/Code>/i);
+  if (!match) return null;
+  const candidate = match[1].trim();
+  if (SERVICE_CODE_PATTERN.test(candidate)) {
+    return candidate;
+  }
+  return null;
+}
+
+export function extractHttpStatus(stderr) {
+  if (typeof stderr !== 'string') return null;
+  const opStatusMatch = stderr.match(/operation\s*\((?:HTTP\s*)?([1-5]\d{2})\)/i);
+  if (opStatusMatch) return Number(opStatusMatch[1]);
+
+  const errParenMatch = stderr.match(/An error occurred \(([1-5]\d{2})\)/i);
+  if (errParenMatch) return Number(errParenMatch[1]);
+
+  const httpMatch = stderr.match(/\b(?:HTTP|status code|status)\s*[:=]?\s*([1-5]\d{2})\b/i);
+  if (httpMatch) return Number(httpMatch[1]);
+
+  const phraseMatch = stderr.match(/\b([1-5]\d{2})\s+(?:Bad Request|Unauthorized|Forbidden|Not Found|Method Not Allowed|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout)\b/i);
+  if (phraseMatch) return Number(phraseMatch[1]);
+
+  return null;
+}
 
 export function classifyR2Diagnostic(diagnostic) {
   const output = String(diagnostic ?? '').toLowerCase();
+  const serviceCode = extractAwsServiceCode(diagnostic);
+  const httpStatus = extractHttpStatus(diagnostic);
 
-  // 1. Invalid argument / command options / parameter validation
-  if (/paramvalidationerror|parameter validation failed|unknown argument|unknown option|invalid choice|argument --|the following arguments are required|unrecognized argument|invalid argument|missing required argument|usage:\s*aws/.test(output)) {
-    return 'invalid_argument';
+  let code = 'unknown_r2_error';
+
+  // If an AWS service error code was returned in "An error occurred (<Code>)"
+  // check if it maps to a specific known category:
+  if (serviceCode === 'AccessDenied') {
+    code = 'access_denied';
+  } else if (serviceCode === 'InvalidAccessKeyId') {
+    code = 'invalid_access_key';
+  } else if (serviceCode === 'SignatureDoesNotMatch') {
+    code = 'signature_mismatch';
+  } else if (serviceCode === 'NoSuchBucket') {
+    code = 'bucket_not_found';
+  } else if (['AuthorizationHeaderMalformed', 'PermanentRedirect', 'IllegalLocationConstraintException'].includes(serviceCode)) {
+    code = 'redirect_or_region_error';
+  } else if (['InvalidToken', 'ExpiredToken'].includes(serviceCode)) {
+    code = 'credentials_error';
+  } else if (['ResponseParsingError', 'MalformedXML'].includes(serviceCode)) {
+    code = 'malformed_response';
+  } else if (serviceCode) {
+    // Unrecognized AWS service code (e.g. InvalidRequest, InvalidArgument, SlowDown, MethodNotAllowed)
+    code = 'aws_service_error';
+  } else {
+    // Client-side CLI or network/TLS errors where no service code exists
+    if (/paramvalidationerror|parameter validation failed|unknown argument|unknown option|invalid choice|argument --|the following arguments are required|unrecognized argument|usage:\s*aws/.test(output)) {
+      code = 'invalid_argument';
+    } else if (/endpointresolutionerror|could not resolve endpoint|invalid endpoint|invalid url|failed to parse endpoint|invalid scheme/.test(output)) {
+      code = 'invalid_endpoint';
+    } else if (/certificate_verify_failed|certificate verify failed|sslvalidationfailed|\bsslerror\b|ssl error|self signed certificate|unable to get local issuer certificate|ssl handshake|tls handshake|certificateverificationerror|tlsv1_alert/.test(output)) {
+      code = 'ssl_error';
+    } else if (/invalidaccesskeyid|invalid access key|access key id.{0,30}invalid|access key id you provided does not exist/.test(output)) {
+      code = 'invalid_access_key';
+    } else if (/signaturedoesnotmatch|signature mismatch|signature does not match|request signature.{0,30}does not match/.test(output)) {
+      code = 'signature_mismatch';
+    } else if (/unable to locate credentials|nocredentialserror|partialcredentialserror|credentialretrievalerror|credentials could not be loaded|invalid credentials|security token.{0,30}(?:invalid|expired)|invalidtoken|expiredtoken|tokenrefresherror|missing credentials/.test(output)) {
+      code = 'credentials_error';
+    } else if (/authorizationheadermalformed|permanentredirect|illegallocationconstraintexception|locationconstraint|region.{0,30}(?:wrong|invalid|mismatch|expecting)|specify a region|regionresolutionerror|send all future requests to this (?:address|endpoint)|\b301\b|\b307\b/.test(output)) {
+      code = 'redirect_or_region_error';
+    } else if (/nosuchbucket|no such bucket|bucket.{0,30}not found|bucket does not exist/.test(output)) {
+      code = 'bucket_not_found';
+    } else if (/accessdenied|access denied|\bforbidden\b|\b403\b|\bunauthorized\b|\b401\b|not authorized/.test(output)) {
+      code = 'access_denied';
+    } else if (/endpointconnectionerror|could not connect|connect timeout|connection (?:timed out|refused|reset)|name or service not known|temporary failure in name resolution|network is unreachable|host is unreachable|no route to host|failed to establish a new connection|newconnectionerror|max retries exceeded with url/.test(output)) {
+      code = 'endpoint_unreachable';
+    } else if (/responseparsingerror|responseparsererror|unable to parse response|xmlsyntaxerror|malformedxml|invalid xml|bad gateway|\b502\b|service unavailable|\b503\b|gateway timeout|\b504\b|internalerror|internal server error|\b500\b|\b520\b|\b521\b|\b522\b|\b524\b|invalid r2 list response/.test(output)) {
+      code = 'malformed_response';
+    }
   }
 
-  // 2. Invalid endpoint / URL format or endpoint resolution error
-  if (/endpointresolutionerror|could not resolve endpoint|invalid endpoint|invalid url|failed to parse endpoint|invalid scheme/.test(output)) {
-    return 'invalid_endpoint';
-  }
+  const result = { code };
+  if (serviceCode) result.serviceCode = serviceCode;
+  if (httpStatus) result.httpStatus = httpStatus;
 
-  // 3. SSL / TLS certificate / handshake failures
-  if (/certificate_verify_failed|certificate verify failed|sslvalidationfailed|\bsslerror\b|ssl error|self signed certificate|unable to get local issuer certificate|ssl handshake|tls handshake|certificateverificationerror|tlsv1_alert/.test(output)) {
-    return 'ssl_error';
-  }
+  Object.defineProperty(result, 'toString', {
+    value: () => code,
+    enumerable: false,
+  });
 
-  // 4. Invalid access key ID specifically
-  if (/invalidaccesskeyid|invalid access key|access key id.{0,30}invalid|access key id you provided does not exist/.test(output)) {
-    return 'invalid_access_key';
-  }
+  return result;
+}
 
-  // 5. Signature mismatch
-  if (/signaturedoesnotmatch|signature mismatch|signature does not match|request signature.{0,30}does not match/.test(output)) {
-    return 'signature_mismatch';
+export function formatR2Diagnostic(diagnostic, phase = 'R2 check failed') {
+  const code = (typeof diagnostic === 'string' ? diagnostic : diagnostic?.code) || 'unknown_r2_error';
+  const lines = [`${phase}: ${code}`];
+  if (code === 'aws_service_error' && diagnostic?.serviceCode) {
+    lines.push(`service_code: ${diagnostic.serviceCode}`);
+    if (diagnostic.httpStatus) {
+      lines.push(`http_status: ${diagnostic.httpStatus}`);
+    }
   }
+  return lines.join('\n');
+}
 
-  // 6. Credentials missing, unloaded, or invalid token
-  if (/unable to locate credentials|nocredentialserror|partialcredentialserror|credentialretrievalerror|credentials could not be loaded|invalid credentials|security token.{0,30}(?:invalid|expired)|invalidtoken|expiredtoken|tokenrefresherror|missing credentials/.test(output)) {
-    return 'credentials_error';
+export function getR2Diagnostic(error, getDiagnostic = privateToolDiagnostic, getErrorCode = privateToolErrorCode) {
+  const toolDiag = typeof getDiagnostic === 'function' ? getDiagnostic(error) : null;
+  const rawCode = typeof getErrorCode === 'function' ? getErrorCode(error) : '';
+  const fallbackCode = typeof rawCode === 'object' && rawCode ? rawCode.code : rawCode;
+  const code = toolDiag?.code || (fallbackCode && SAFE_R2_ERROR_CODES.includes(fallbackCode) ? fallbackCode : classifyR2Error(error, getErrorCode));
+  const result = { code };
+  if (toolDiag?.serviceCode) result.serviceCode = toolDiag.serviceCode;
+  if (toolDiag?.httpStatus) result.httpStatus = toolDiag.httpStatus;
+  if (!result.serviceCode && typeof error?.serviceCode === 'string' && SERVICE_CODE_PATTERN.test(error.serviceCode)) {
+    result.serviceCode = error.serviceCode;
   }
-
-  // 7. Region, location constraint, redirection or malformed authorization header
-  if (/authorizationheadermalformed|permanentredirect|illegallocationconstraintexception|locationconstraint|region.{0,30}(?:wrong|invalid|mismatch|expecting)|specify a region|regionresolutionerror|send all future requests to this (?:address|endpoint)|\b301\b|\b307\b/.test(output)) {
-    return 'redirect_or_region_error';
+  if (!result.httpStatus && typeof error?.httpStatus === 'number' && Number.isInteger(error.httpStatus)) {
+    result.httpStatus = error.httpStatus;
   }
-
-  // 8. Bucket does not exist
-  if (/nosuchbucket|no such bucket|bucket.{0,30}not found|bucket does not exist/.test(output)) {
-    return 'bucket_not_found';
-  }
-
-  // 9. Access denied / authorization failure
-  if (/accessdenied|access denied|\bforbidden\b|\b403\b|\bunauthorized\b|\b401\b|not authorized/.test(output)) {
-    return 'access_denied';
-  }
-
-  // 10. Network unreachable, timeout, connection failure, DNS resolution failure
-  if (/endpointconnectionerror|could not connect|connect timeout|connection (?:timed out|refused|reset)|name or service not known|temporary failure in name resolution|network is unreachable|host is unreachable|no route to host|failed to establish a new connection|newconnectionerror|max retries exceeded with url/.test(output)) {
-    return 'endpoint_unreachable';
-  }
-
-  // 11. Malformed response, XML parser error, server/gateway errors from edge
-  if (/responseparsingerror|responseparsererror|unable to parse response|xmlsyntaxerror|malformedxml|invalid xml|bad gateway|\b502\b|service unavailable|\b503\b|gateway timeout|\b504\b|internalerror|internal server error|\b500\b|\b520\b|\b521\b|\b522\b|\b524\b|invalid r2 list response/.test(output)) {
-    return 'malformed_response';
-  }
-
-  return 'unknown_r2_error';
+  return result;
 }
 
 export function classifyR2Error(error, getErrorCode = privateToolErrorCode) {
-  const code = getErrorCode(error);
+  const rawCode = typeof getErrorCode === 'function' ? getErrorCode(error) : '';
+  const code = typeof rawCode === 'object' && rawCode ? rawCode.code : rawCode;
   if (SAFE_R2_ERROR_CODES.includes(code)) return code;
   if (error && SAFE_R2_ERROR_CODES.includes(error.code)) return error.code;
   if (typeof error?.message === 'string') {
@@ -95,7 +161,14 @@ function destinationPrefix(backupId, createdAtUtc) {
   return `manual/${date}/${backupId}/`;
 }
 
-export async function assertDestinationListable({ env, prefix, execute = runQuiet, getErrorCode = privateToolErrorCode, phase = 'R2 preflight failed' }) {
+export async function assertDestinationListable({
+  env,
+  prefix,
+  execute = runQuiet,
+  getErrorCode = privateToolErrorCode,
+  getDiagnostic = privateToolDiagnostic,
+  phase = 'R2 preflight failed',
+}) {
   const awsEnv = { ...process.env, AWS_ACCESS_KEY_ID: env.R2_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: env.R2_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION: 'auto',
     AWS_EC2_METADATA_DISABLED: 'true', AWS_PAGER: '', AWS_RETRY_MODE: 'standard', AWS_MAX_ATTEMPTS: '3',
@@ -117,8 +190,13 @@ export async function assertDestinationListable({ env, prefix, execute = runQuie
         (result.Contents !== undefined && !Array.isArray(result.Contents))) throw new Error('invalid R2 list response');
     return result;
   } catch (error) {
-    const classification = classifyR2Error(error, getErrorCode);
-    throw new Error(`${phase}: ${classification}`);
+    const diag = getR2Diagnostic(error, getDiagnostic, getErrorCode);
+    const message = formatR2Diagnostic(diag, phase);
+    const err = new Error(message);
+    err.code = diag.code;
+    if (diag.serviceCode) err.serviceCode = diag.serviceCode;
+    if (diag.httpStatus) err.httpStatus = diag.httpStatus;
+    throw err;
   }
 }
 

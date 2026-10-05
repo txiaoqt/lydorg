@@ -6,12 +6,12 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
-import { safeRelativePath, localPath, sha256File, validateSecrets, redact, runQuiet, validateR2Config } from './common.mjs';
+import { safeRelativePath, localPath, sha256File, validateSecrets, redact, runQuiet, validateR2Config, privateToolDiagnostic } from './common.mjs';
 import { backupStorage, enumerateObjects, discoverBuckets, storageApi, StorageApiError } from './backup-storage.mjs';
 import { generateManifest, rejectCredentials } from './generate-manifest.mjs';
 import { BASE_DATABASE_ARTIFACTS, inspectDatabase, backupDatabase } from './backup-database.mjs';
 import { backupIdentity } from './run-backup.mjs';
-import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES } from './upload-r2.mjs';
+import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES, formatR2Diagnostic, getR2Diagnostic, extractAwsServiceCode, extractHttpStatus } from './upload-r2.mjs';
 import { checkR2 } from './check-r2.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -416,7 +416,7 @@ test('R2 error diagnostics classify known failures without exposing stderr', asy
     ['An error occurred (MalformedXML) when calling the ListObjectsV2 operation', 'malformed_response'],
     ['HTTP 401 Unauthorized', 'access_denied'],
   ];
-  for (const [stderr, expected] of cases) assert.equal(classifyR2Diagnostic(stderr), expected);
+  for (const [stderr, expected] of cases) assert.equal(classifyR2Diagnostic(stderr).code, expected);
 
   for (const code of SAFE_R2_ERROR_CODES) {
     assert.equal(classifyR2Error(new Error('irrelevant message'), () => code), code);
@@ -554,6 +554,122 @@ test('checkR2 classifies all failure modes safely without leaking secrets or std
   await assert.rejects(checkR2(mockEnv, { execute: executeMalformed }), error => {
     assert.equal(error.message, 'R2 check failed: malformed_response');
     assert.doesNotMatch(error.message, new RegExp(secret));
+    return true;
+  });
+});
+
+test('AWS service error codes and HTTP statuses are safely extracted and formatted', async () => {
+  const secret = 'super-secret-aws-key-9876543210';
+  const credentialUrl = 'https://account-id.r2.cloudflarestorage.com/bucket?X-Amz-Signature=secret-sig';
+  const authHeader = 'AWS4-HMAC-SHA256 Credential=secret/20261005/auto/s3/aws4_request';
+
+  // 1. InvalidRequest with HTTP 400
+  const invalidRequestStderr = `An error occurred (InvalidRequest) when calling the ListObjectsV2 operation (400): ${secret} ${credentialUrl} ${authHeader}`;
+  const diag1 = classifyR2Diagnostic(invalidRequestStderr);
+  assert.equal(diag1.code, 'aws_service_error');
+  assert.equal(diag1.serviceCode, 'InvalidRequest');
+  assert.equal(diag1.httpStatus, 400);
+  const formatted1 = formatR2Diagnostic(diag1, 'R2 check failed');
+  assert.equal(formatted1, 'R2 check failed: aws_service_error\nservice_code: InvalidRequest\nhttp_status: 400');
+  assert.doesNotMatch(formatted1, new RegExp(secret));
+  assert.doesNotMatch(formatted1, new RegExp('cloudflarestorage'));
+  assert.doesNotMatch(formatted1, new RegExp('Credential='));
+
+  // 2. InvalidArgument with HTTP 400
+  const invalidArgStderr = `An error occurred (InvalidArgument) when calling the ListObjectsV2 operation (400): Invalid argument ${secret}`;
+  const diag2 = classifyR2Diagnostic(invalidArgStderr);
+  assert.equal(diag2.code, 'aws_service_error');
+  assert.equal(diag2.serviceCode, 'InvalidArgument');
+  assert.equal(diag2.httpStatus, 400);
+  const formatted2 = formatR2Diagnostic(diag2, 'R2 check failed');
+  assert.equal(formatted2, 'R2 check failed: aws_service_error\nservice_code: InvalidArgument\nhttp_status: 400');
+  assert.doesNotMatch(formatted2, new RegExp(secret));
+
+  // 3. SlowDown with HTTP 503
+  const slowDownStderr = `An error occurred (SlowDown) when calling the ListObjectsV2 operation (503): Please reduce rate ${secret}`;
+  const diag3 = classifyR2Diagnostic(slowDownStderr);
+  assert.equal(diag3.code, 'aws_service_error');
+  assert.equal(diag3.serviceCode, 'SlowDown');
+  assert.equal(diag3.httpStatus, 503);
+  const formatted3 = formatR2Diagnostic(diag3, 'R2 check failed');
+  assert.equal(formatted3, 'R2 check failed: aws_service_error\nservice_code: SlowDown\nhttp_status: 503');
+  assert.doesNotMatch(formatted3, new RegExp(secret));
+
+  // 4. MethodNotAllowed with HTTP 405
+  const methodNotAllowedStderr = `An error occurred (MethodNotAllowed) when calling the ListObjectsV2 operation (405): Method Not Allowed ${secret}`;
+  const diag4 = classifyR2Diagnostic(methodNotAllowedStderr);
+  assert.equal(diag4.code, 'aws_service_error');
+  assert.equal(diag4.serviceCode, 'MethodNotAllowed');
+  assert.equal(diag4.httpStatus, 405);
+  const formatted4 = formatR2Diagnostic(diag4, 'R2 check failed');
+  assert.equal(formatted4, 'R2 check failed: aws_service_error\nservice_code: MethodNotAllowed\nhttp_status: 405');
+  assert.doesNotMatch(formatted4, new RegExp(secret));
+
+  // 5. Unknown service code with valid token format (no HTTP status)
+  const customServiceStderr = `An error occurred (CustomR2ServiceError) when calling the ListObjectsV2 operation: internal state ${secret}`;
+  const diag5 = classifyR2Diagnostic(customServiceStderr);
+  assert.equal(diag5.code, 'aws_service_error');
+  assert.equal(diag5.serviceCode, 'CustomR2ServiceError');
+  assert.equal(diag5.httpStatus, undefined);
+  const formatted5 = formatR2Diagnostic(diag5, 'R2 check failed');
+  assert.equal(formatted5, 'R2 check failed: aws_service_error\nservice_code: CustomR2ServiceError');
+  assert.doesNotMatch(formatted5, new RegExp(secret));
+
+  // 6. Malformed/injection-like service codes rejected
+  const maliciousCases = [
+    `An error occurred (InvalidRequest\nsecret: ${secret}) when calling the ListObjectsV2 operation`,
+    `An error occurred (bad; drop table) when calling the ListObjectsV2 operation`,
+    `An error occurred (https://attacker.invalid) when calling the ListObjectsV2 operation`,
+    `An error occurred (${'A'.repeat(65)}) when calling the ListObjectsV2 operation`,
+    `An error occurred () when calling the ListObjectsV2 operation`,
+    `An error occurred (123StartsWithDigit) when calling the ListObjectsV2 operation`,
+  ];
+  for (const maliciousStderr of maliciousCases) {
+    const diag = classifyR2Diagnostic(maliciousStderr);
+    assert.equal(diag.code, 'unknown_r2_error');
+    assert.equal(diag.serviceCode, undefined);
+    const formatted = formatR2Diagnostic(diag, 'R2 check failed');
+    assert.equal(formatted, 'R2 check failed: unknown_r2_error');
+    assert.doesNotMatch(formatted, new RegExp(secret));
+  }
+});
+
+test('checkR2 outputs multi-line service_code and http_status for aws_service_error', async () => {
+  const mockEnv = {
+    R2_ACCESS_KEY_ID: 'mock-r2-id',
+    R2_SECRET_ACCESS_KEY: 'mock-secret',
+    R2_ENDPOINT: 'https://example.r2.cloudflarestorage.com',
+    R2_BUCKET_NAME: 'mock-backup-bucket',
+  };
+  const execute = async () => {
+    const err = new Error('tool output withheld to protect credentials');
+    throw err;
+  };
+  const getDiagnostic = () => ({
+    code: 'aws_service_error',
+    serviceCode: 'InvalidRequest',
+    httpStatus: 400,
+  });
+
+  await assert.rejects(checkR2(mockEnv, { execute, getDiagnostic }), error => {
+    assert.equal(error.code, 'aws_service_error');
+    assert.equal(error.serviceCode, 'InvalidRequest');
+    assert.equal(error.httpStatus, 400);
+    assert.equal(error.message, 'R2 check failed: aws_service_error\nservice_code: InvalidRequest\nhttp_status: 400');
+    return true;
+  });
+});
+
+test('runQuiet captures structured service_code and http_status without leaking raw stderr', async () => {
+  const secret = 'super-secret-aws-key-9876543210';
+  const childScript = `process.stderr.write("An error occurred (InvalidRequest) when calling the ListObjectsV2 operation (400): secret=${secret}\\n"); process.exit(1);`;
+  await assert.rejects(runQuiet(process.execPath, ['-e', childScript], process.env, false, classifyR2Diagnostic), error => {
+    const diag = privateToolDiagnostic(error);
+    assert.equal(diag.code, 'aws_service_error');
+    assert.equal(diag.serviceCode, 'InvalidRequest');
+    assert.equal(diag.httpStatus, 400);
+    assert.doesNotMatch(error.message, new RegExp(secret));
+    assert.match(error.message, /tool output withheld/);
     return true;
   });
 });
