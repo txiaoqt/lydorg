@@ -5,6 +5,11 @@ import { YorpRegistryPage } from "@/admin/pages/YorpRegistry";
 import { LydoConnectProvider } from "@/lib/lydo-connect-store";
 import { writeAdminSession } from "@/lib/admin-auth";
 
+// Header and semester tests do not exercise the authenticated detail drawer.
+vi.mock("@/admin/components/YorpRegistryDetailDrawer", () => ({
+  YorpRegistryDetailDrawer: () => null,
+}));
+
 // Mock resize observer and scrollIntoView for jsdom
 window.ResizeObserver =
   window.ResizeObserver ||

@@ -126,12 +126,6 @@ export function BackupRecoveryPage() {
         <p className="border-t border-admin-border px-5 py-3 text-xs text-public-text-secondary">Recent 25 runs from GitHub Actions. Times use your browser’s local timezone; duration includes queue time.</p>
       </section>
     </>}
-    <section aria-labelledby="backup-recovery-title" className="rounded-xl border border-admin-border bg-admin-surface p-5">
-      <h2 id="backup-recovery-title" className="text-base font-semibold text-text-default">Recovery</h2>
-      <p className="mt-2 text-sm font-semibold text-text-default">Automated restoration is not enabled yet.</p>
-      <p className="mt-2 max-w-prose text-sm text-public-text-secondary">Recovery remains a controlled administrative procedure until restore testing has been completed.</p>
-      <Button variant="outline" className="mt-4" disabled>Restore Backup</Button>
-    </section>
     {confirmationDialog}
   </div>;
 }

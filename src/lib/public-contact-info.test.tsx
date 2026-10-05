@@ -120,7 +120,7 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     });
   });
 
-  it("dynamically updates email when system settings are modified", () => {
+  it("keeps the public email fixed when admin email settings change", () => {
     const TestComponent = () => {
       const { email } = usePublicContactInfo();
       return (
@@ -137,19 +137,23 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     expect(screen.getByTestId("email-link")).toHaveTextContent("lydo@pasigcity.gov.ph");
     expect(screen.getByTestId("email-link")).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
 
-    // Simulate Admin changing reply-to email setting
+    // Admin settings remain editable without changing the public contact email.
     act(() => {
       writeCachedSystemSettings({
+        "general.support_email": "custom-support@pasigcity.gov.ph",
         "email.reply_to_email": "custom-reply@pasigcity.gov.ph",
       });
     });
 
-    expect(screen.getByTestId("email-link")).toHaveTextContent("custom-reply@pasigcity.gov.ph");
-    expect(screen.getByTestId("email-link")).toHaveAttribute("href", "mailto:custom-reply@pasigcity.gov.ph");
+    expect(getEffectiveSystemSetting("general.support_email")).toBe("custom-support@pasigcity.gov.ph");
+    expect(getEffectiveSystemSetting("email.reply_to_email")).toBe("custom-reply@pasigcity.gov.ph");
+    expect(screen.getByTestId("email-link")).toHaveTextContent("lydo@pasigcity.gov.ph");
+    expect(screen.getByTestId("email-link")).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
 
     // Restore
     act(() => {
       writeCachedSystemSettings({
+        "general.support_email": "lydo@pasigcity.gov.ph",
         "email.reply_to_email": "lydo@pasigcity.gov.ph",
       });
     });

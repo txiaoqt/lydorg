@@ -1103,14 +1103,15 @@ export const fetchPublicSystemSettings = async (): Promise<Partial<AdminSystemSe
 };
 
 /**
- * Reactive hook for public-facing contact information
+ * Reactive hook for public-facing contact information.
+ * The public email stays fixed independently of admin email settings.
  */
 export const usePublicContactInfo = () => {
   const [info, setInfo] = useState(() => {
     const s = getEffectiveSystemSettings();
     return {
       contactNumber: String(s["general.contact_number"] || "(02) 8643-1111"),
-      email: String(s["general.support_email"] || "lydo@pasigcity.gov.ph"),
+      email: "lydo@pasigcity.gov.ph",
       address: String(s["general.office_address"] || "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City"),
       officeName: String(s["general.office_name"] || "Pasig City Youth Development Office"),
       systemName: String(s["general.system_name"] || "Y-TRACE"),
@@ -1125,7 +1126,7 @@ export const usePublicContactInfo = () => {
       const s = getEffectiveSystemSettings();
       setInfo({
         contactNumber: String(s["general.contact_number"] || "(02) 8643-1111"),
-        email: String(s["general.support_email"] || "lydo@pasigcity.gov.ph"),
+        email: "lydo@pasigcity.gov.ph",
         address: String(s["general.office_address"] || "3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City"),
         officeName: String(s["general.office_name"] || "Pasig City Youth Development Office"),
         systemName: String(s["general.system_name"] || "Y-TRACE"),
@@ -1401,4 +1402,3 @@ export const formatSystemCurrency = (amount: number): string => {
     maximumFractionDigits: 2,
   })}`;
 };
-

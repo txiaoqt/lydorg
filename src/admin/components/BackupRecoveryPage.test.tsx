@@ -97,10 +97,11 @@ describe("Backup & Recovery page", () => {
     await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ description: "A backup is already in progress." })));
     expect(requestBackup).toHaveBeenCalledTimes(1);
   });
-  it("Restore remains disabled and raw exceptions/secrets are never rendered", async () => {
+  it("hides recovery controls and never renders raw exceptions or secrets", async () => {
     vi.mocked(fetchBackupRuns).mockRejectedValue(new Error("fake-github-token fake-r2-key fake-service-key postgres://fake:password@invalid")); mount();
     expect(await screen.findByRole("alert")).toHaveTextContent("Backup service is unavailable");
-    expect(screen.getByRole("button", { name: "Restore Backup" })).toBeDisabled();
+    expect(screen.queryByRole("heading", { name: "Recovery" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore Backup" })).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/fake-github-token|fake-r2-key|fake-service-key|postgres:\/\//);
   });
   it("polls active runs every 12 seconds and removes the interval on unmount", async () => {

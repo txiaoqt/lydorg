@@ -136,8 +136,11 @@ export function YorpRegistryPage() {
     return orgs
       .filter(isYorpRegistered)
       .map((org) => {
-        const registrationDate = new Date(org.verifiedAt || org.createdAt);
-        const expiryDate = addYears(registrationDate, 3);
+        // Accreditation terms survive seeding and later document verification.
+        const registrationDate = new Date(org.accreditationStartDate || org.verifiedAt || org.createdAt);
+        const expiryDate = org.accreditationExpiresAt
+          ? new Date(org.accreditationExpiresAt)
+          : addYears(registrationDate, 3);
         return { org, registrationDate, expiryDate, yorpStatus: getYorpStatus(expiryDate, now) };
       });
   }, [orgs]);
