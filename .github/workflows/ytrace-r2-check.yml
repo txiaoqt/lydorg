@@ -1,0 +1,45 @@
+name: Y-TRACE R2 diagnostic check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ytrace-r2-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  check-r2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout selected revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate backup code with local mocks
+        run: node --test scripts/backup/backup.test.mjs
+      - name: Check runner AWS CLI tooling
+        run: |
+          set -euo pipefail
+          command -v aws >/dev/null
+      - name: Check R2 configuration and list-objects-v2 access
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          node scripts/backup/check-r2.mjs

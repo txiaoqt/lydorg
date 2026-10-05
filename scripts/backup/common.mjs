@@ -4,23 +4,56 @@ import { lstat, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
-export const REQUIRED_SECRETS = [
+export const REQUIRED_R2_SECRETS = [
   'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_ENDPOINT', 'R2_BUCKET_NAME',
+];
+
+export const REQUIRED_SECRETS = [
+  ...REQUIRED_R2_SECRETS,
   'SUPABASE_DB_URL', 'SUPABASE_URL', 'SUPABASE_SECRET_KEY',
 ];
 
-export function validateSecrets(env) {
-  for (const name of REQUIRED_SECRETS) {
-    if (!env[name]?.trim()) throw new Error(`Missing required secret: ${name}`);
-  }
-  for (const name of ['SUPABASE_URL', 'R2_ENDPOINT']) {
-    let url;
-    try { url = new URL(env[name]); } catch { throw new Error(`Invalid ${name}`); }
-    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') {
-      throw new Error(`${name} must be an HTTPS origin without credentials, path, or query`);
+export function validateR2Config(env) {
+  for (const name of ['R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY']) {
+    if (!env[name]?.trim()) {
+      const error = new Error(`Missing required secret: ${name}`);
+      error.code = 'credentials_error';
+      throw error;
     }
   }
-  if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(env.R2_BUCKET_NAME)) throw new Error('Invalid R2_BUCKET_NAME');
+  if (!env.R2_ENDPOINT?.trim()) {
+    const error = new Error('Missing required secret: R2_ENDPOINT');
+    error.code = 'invalid_endpoint';
+    throw error;
+  }
+  let url;
+  try { url = new URL(env.R2_ENDPOINT); } catch {
+    const error = new Error('Invalid R2_ENDPOINT');
+    error.code = 'invalid_endpoint';
+    throw error;
+  }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') {
+    const error = new Error('R2_ENDPOINT must be an HTTPS origin without credentials, path, or query');
+    error.code = 'invalid_endpoint';
+    throw error;
+  }
+  if (!env.R2_BUCKET_NAME?.trim() || !/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(env.R2_BUCKET_NAME)) {
+    const error = new Error('Invalid R2_BUCKET_NAME');
+    error.code = 'invalid_argument';
+    throw error;
+  }
+}
+
+export function validateSecrets(env) {
+  validateR2Config(env);
+  for (const name of ['SUPABASE_DB_URL', 'SUPABASE_URL', 'SUPABASE_SECRET_KEY']) {
+    if (!env[name]?.trim()) throw new Error(`Missing required secret: ${name}`);
+  }
+  let url;
+  try { url = new URL(env.SUPABASE_URL); } catch { throw new Error('Invalid SUPABASE_URL'); }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') {
+    throw new Error('SUPABASE_URL must be an HTTPS origin without credentials, path, or query');
+  }
   const database = databaseEnvironment(env.SUPABASE_DB_URL);
   const projectHost = new URL(env.SUPABASE_URL).hostname;
   if (projectHost.endsWith('.supabase.co')) {

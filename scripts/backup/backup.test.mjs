@@ -3,14 +3,16 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm, copyFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
-import { safeRelativePath, localPath, sha256File, validateSecrets, redact, runQuiet } from './common.mjs';
+import { safeRelativePath, localPath, sha256File, validateSecrets, redact, runQuiet, validateR2Config } from './common.mjs';
 import { backupStorage, enumerateObjects, discoverBuckets, storageApi, StorageApiError } from './backup-storage.mjs';
 import { generateManifest, rejectCredentials } from './generate-manifest.mjs';
 import { BASE_DATABASE_ARTIFACTS, inspectDatabase, backupDatabase } from './backup-database.mjs';
 import { backupIdentity } from './run-backup.mjs';
-import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error } from './upload-r2.mjs';
+import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES } from './upload-r2.mjs';
+import { checkR2 } from './check-r2.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const entry = (name, bytes = 'abc') => ({ name, id: `id-${name}`, updated_at: '2026-10-05T00:00:00Z',
@@ -381,14 +383,52 @@ test('R2 verifies destination absence, HEAD metadata/size and downloaded archive
 
 test('R2 error diagnostics classify known failures without exposing stderr', async t => {
   const cases = [
+    // existing categories
     ['An error occurred (AccessDenied) while requesting this bucket', 'access_denied'],
     ['InvalidAccessKeyId: supplied key is invalid', 'invalid_access_key'],
     ['SignatureDoesNotMatch: request signature mismatch', 'signature_mismatch'],
     ['NoSuchBucket: requested bucket does not exist', 'bucket_not_found'],
     ['Could not connect to the endpoint URL', 'endpoint_unreachable'],
     ['unexpected output with secret marker', 'unknown_r2_error'],
+    // expanded categories
+    ['aws: error: argument --bucket: expected one argument', 'invalid_argument'],
+    ['Unknown options: --invalid-flag', 'invalid_argument'],
+    ['Parameter validation failed: Missing required parameter in input: "Bucket"', 'invalid_argument'],
+    ['usage: aws s3api list-objects-v2', 'invalid_argument'],
+    ['Could not resolve endpoint URL: "https://bad.host"', 'invalid_endpoint'],
+    ['Invalid endpoint: https://bad.host', 'invalid_endpoint'],
+    ['botocore.exceptions.EndpointResolutionError: could not resolve', 'invalid_endpoint'],
+    ['SSL validation failed for https://... [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed', 'ssl_error'],
+    ['SSLError: self signed certificate in certificate chain', 'ssl_error'],
+    ['unable to get local issuer certificate', 'ssl_error'],
+    ['tls handshake failed', 'ssl_error'],
+    ['Unable to locate credentials. You can configure credentials by running "aws configure"', 'credentials_error'],
+    ['botocore.exceptions.NoCredentialsError: Unable to locate credentials', 'credentials_error'],
+    ['The security token included in the request is invalid', 'credentials_error'],
+    ['An error occurred (InvalidToken) when calling the ListObjectsV2 operation', 'credentials_error'],
+    ['An error occurred (AuthorizationHeaderMalformed) when calling the ListObjectsV2 operation: The authorization header is malformed; the region \'auto\' is wrong; expecting \'us-east-1\'', 'redirect_or_region_error'],
+    ['PermanentRedirect: The bucket is in this region: us-east-1. Please send all future requests to this endpoint.', 'redirect_or_region_error'],
+    ['IllegalLocationConstraintException: The unspecified location constraint is incompatible', 'redirect_or_region_error'],
+    ['ResponseParsingError: Unable to parse response (syntax error), invalid XML received', 'malformed_response'],
+    ['502 Bad Gateway: Origin Error', 'malformed_response'],
+    ['503 Service Unavailable', 'malformed_response'],
+    ['An error occurred (500 Internal Server Error)', 'malformed_response'],
+    ['An error occurred (MalformedXML) when calling the ListObjectsV2 operation', 'malformed_response'],
+    ['HTTP 401 Unauthorized', 'access_denied'],
   ];
   for (const [stderr, expected] of cases) assert.equal(classifyR2Diagnostic(stderr), expected);
+
+  for (const code of SAFE_R2_ERROR_CODES) {
+    assert.equal(classifyR2Error(new Error('irrelevant message'), () => code), code);
+    const codeError = new Error('irrelevant');
+    codeError.code = code;
+    assert.equal(classifyR2Error(codeError, () => ''), code);
+    assert.equal(classifyR2Error(new Error(`R2 check failed: ${code}`)), code);
+    assert.equal(classifyR2Error(new Error(`R2 preflight failed: ${code}`)), code);
+  }
+  assert.equal(classifyR2Error(new SyntaxError('Unexpected token in JSON')), 'malformed_response');
+  assert.equal(classifyR2Error(new Error('invalid R2 list response')), 'malformed_response');
+  assert.equal(classifyR2Error(new Error('arbitrary failure with secret-token-xyz')), 'unknown_r2_error');
 
   const root = await fixture(t), archive = localPath(root, 'archive.tar.gz');
   await writeFile(archive, 'mock archive');
@@ -398,6 +438,124 @@ test('R2 error diagnostics classify known failures without exposing stderr', asy
     getErrorCode: () => 'access_denied' }),
   error => error.message === 'R2 destination check failed: access_denied' && !error.message.includes(secret));
   assert.equal(classifyR2Error(new Error('contains AccessDenied secret'), () => 'unknown_r2_error'), 'unknown_r2_error');
+});
+
+test('validateR2Config validates keys, endpoint and bucket naming', () => {
+  const r2Secrets = {
+    R2_ACCESS_KEY_ID: 'mock-key-id',
+    R2_SECRET_ACCESS_KEY: 'mock-secret-key',
+    R2_ENDPOINT: 'https://mock-account.r2.cloudflarestorage.com',
+    R2_BUCKET_NAME: 'mock-bucket-name',
+  };
+  assert.doesNotThrow(() => validateR2Config(r2Secrets));
+
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_ACCESS_KEY_ID: '' }),
+    error => error.code === 'credentials_error' && error.message.includes('R2_ACCESS_KEY_ID'));
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_SECRET_ACCESS_KEY: '  ' }),
+    error => error.code === 'credentials_error' && error.message.includes('R2_SECRET_ACCESS_KEY'));
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_ENDPOINT: '' }),
+    error => error.code === 'invalid_endpoint');
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_ENDPOINT: 'not-a-url' }),
+    error => error.code === 'invalid_endpoint');
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_ENDPOINT: 'http://insecure.example.com' }),
+    error => error.code === 'invalid_endpoint');
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_ENDPOINT: 'https://user:pass@example.com' }),
+    error => error.code === 'invalid_endpoint');
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_ENDPOINT: 'https://example.com/extra/path' }),
+    error => error.code === 'invalid_endpoint');
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_BUCKET_NAME: '' }),
+    error => error.code === 'invalid_argument');
+  assert.throws(() => validateR2Config({ ...r2Secrets, R2_BUCKET_NAME: '-invalid-' }),
+    error => error.code === 'invalid_argument');
+});
+
+test('checkR2 performs only read-only list-objects-v2 max-keys 1 without touching Supabase or mutating objects', async () => {
+  const calls = [];
+  const mockEnv = {
+    R2_ACCESS_KEY_ID: 'mock-r2-id',
+    R2_SECRET_ACCESS_KEY: 'mock-r2-secret-key',
+    R2_ENDPOINT: 'https://example.r2.cloudflarestorage.com',
+    R2_BUCKET_NAME: 'mock-backup-bucket',
+  };
+
+  const execute = async (command, args, env, capture) => {
+    calls.push({ command, args, env, capture });
+    return JSON.stringify({ KeyCount: 0, Contents: [] });
+  };
+
+  const result = await checkR2(mockEnv, { execute });
+  assert.equal(result.ok, true);
+  assert.equal(result.bucketListVerified, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].command, 'aws');
+  assert.ok(calls[0].args.includes('list-objects-v2'));
+  assert.ok(calls[0].args.includes('--max-keys'));
+  assert.ok(calls[0].args.includes('1'));
+  assert.ok(calls[0].args.includes('--bucket'));
+  assert.ok(calls[0].args.includes('mock-backup-bucket'));
+  assert.equal(calls[0].args.includes('--prefix'), false);
+  assert.equal(calls[0].args.some(a => ['cp', 'sync', 'rm', 'put-object', 'delete-object'].includes(a)), false);
+  assert.equal(calls[0].capture, true);
+});
+
+test('checkR2 classifies all failure modes safely without leaking secrets or stderr', async () => {
+  const secret = 'ultra-sensitive-r2-secret-token-never-leak';
+  const mockEnv = {
+    R2_ACCESS_KEY_ID: 'mock-r2-id',
+    R2_SECRET_ACCESS_KEY: secret,
+    R2_ENDPOINT: 'https://example.r2.cloudflarestorage.com',
+    R2_BUCKET_NAME: 'mock-backup-bucket',
+  };
+
+  // 1. Config failures
+  await assert.rejects(checkR2({ ...mockEnv, R2_ACCESS_KEY_ID: '' }), error => {
+    assert.equal(error.message, 'R2 check failed: credentials_error');
+    assert.doesNotMatch(error.message, new RegExp(secret));
+    return true;
+  });
+  await assert.rejects(checkR2({ ...mockEnv, R2_ENDPOINT: 'ftp://bad' }), error => {
+    assert.equal(error.message, 'R2 check failed: invalid_endpoint');
+    return true;
+  });
+  await assert.rejects(checkR2({ ...mockEnv, R2_BUCKET_NAME: 'INVALID--' }), error => {
+    assert.equal(error.message, 'R2 check failed: invalid_argument');
+    return true;
+  });
+
+  // 2. AWS execution failure classifications
+  for (const expectedCode of SAFE_R2_ERROR_CODES) {
+    const execute = async () => {
+      const err = new Error(`Raw AWS CLI error containing ${secret} and internal trace`);
+      throw err;
+    };
+    const getErrorCode = () => expectedCode;
+
+    await assert.rejects(checkR2(mockEnv, { execute, getErrorCode }), error => {
+      assert.equal(error.message, `R2 check failed: ${expectedCode}`);
+      assert.doesNotMatch(error.message, new RegExp(secret));
+      assert.doesNotMatch(error.message, /Raw AWS CLI error/);
+      return true;
+    });
+  }
+
+  // 3. Fallback for unclassified error
+  const executeUnknown = async () => {
+    throw new Error(`Completely unexpected error containing ${secret}`);
+  };
+  await assert.rejects(checkR2(mockEnv, { execute: executeUnknown, getErrorCode: () => 'unknown_r2_error' }), error => {
+    assert.equal(error.message, 'R2 check failed: unknown_r2_error');
+    assert.doesNotMatch(error.message, new RegExp(secret));
+    assert.doesNotMatch(error.message, /Completely unexpected/);
+    return true;
+  });
+
+  // 4. Malformed JSON response from stdout
+  const executeMalformed = async () => '<html>502 Bad Gateway</html>';
+  await assert.rejects(checkR2(mockEnv, { execute: executeMalformed }), error => {
+    assert.equal(error.message, 'R2 check failed: malformed_response');
+    assert.doesNotMatch(error.message, new RegExp(secret));
+    return true;
+  });
 });
 
 test('R2 preflight lists the configured destination before packaging and safely fails closed', async () => {
@@ -426,6 +584,22 @@ test('runQuiet captures only a safe R2 classification and withholds raw AWS stde
     assert.match(error.message, /tool output withheld/);
     return true;
   });
+
+  const sslSecret = 'mock-cert-private-key-never-logged';
+  await assert.rejects(runQuiet(process.execPath, ['-e', `process.stderr.write("SSL: CERTIFICATE_VERIFY_FAILED ${sslSecret}"); process.exit(1)`], process.env, false, classifyR2Diagnostic), error => {
+    assert.equal(classifyR2Error(error), 'ssl_error');
+    assert.doesNotMatch(error.message, new RegExp(sslSecret));
+    assert.match(error.message, /tool output withheld/);
+    return true;
+  });
+
+  const credsSecret = 'mock-token-secret-never-logged';
+  await assert.rejects(runQuiet(process.execPath, ['-e', `process.stderr.write("Unable to locate credentials ${credsSecret}"); process.exit(1)`], process.env, false, classifyR2Diagnostic), error => {
+    assert.equal(classifyR2Error(error), 'credentials_error');
+    assert.doesNotMatch(error.message, new RegExp(credsSecret));
+    assert.match(error.message, /tool output withheld/);
+    return true;
+  });
 });
 
 test('R2 existing prefix, upload failure, wrong size and corrupt read-back are failures', async t => {
@@ -444,4 +618,22 @@ test('R2 existing prefix, upload failure, wrong size and corrupt read-back are f
     };
     await assert.rejects(uploadR2({ archive, ...identity, env: secrets, execute }));
   }
+});
+
+test('check-r2.mjs CLI execution outputs safe diagnostic format and exits with code 1 on missing config', async () => {
+  const checkR2Path = path.resolve('scripts/backup/check-r2.mjs');
+  const child = await new Promise(resolve => {
+    const cp = spawn(process.execPath, [checkR2Path], {
+      env: { ...process.env, R2_ACCESS_KEY_ID: '', R2_SECRET_ACCESS_KEY: '', R2_ENDPOINT: '', R2_BUCKET_NAME: '' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    cp.stdout.on('data', chunk => { stdout += chunk; });
+    cp.stderr.on('data', chunk => { stderr += chunk; });
+    cp.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(child.code, 1);
+  assert.equal(child.stdout, '');
+  assert.equal(child.stderr.trim(), 'R2 check failed: credentials_error');
 });
