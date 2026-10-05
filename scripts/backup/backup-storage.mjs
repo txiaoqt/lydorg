@@ -4,6 +4,7 @@ import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { createClient } from '@supabase/supabase-js';
 import { localPath, safeRelativePath } from './common.mjs';
 
 export class StorageApiError extends Error {
@@ -13,42 +14,75 @@ export class StorageApiError extends Error {
   }
 }
 
-// New sb_* Supabase API keys are not JWTs: send them only in apikey.
-// Older service_role JWTs retain the legacy Bearer header for migration compatibility.
-export function storageAuthHeaders(key) {
-  const isNewApiKey = key.startsWith('sb_secret_') || key.startsWith('sb_publishable_');
-  return {
-    apikey: key,
-    ...(isNewApiKey ? {} : { Authorization: `Bearer ${key}` }),
-    'Accept-Encoding': 'identity',
-  };
+function safeSdkError(error) {
+  const status = Number(error?.status ?? error?.statusCode);
+  if (status === 401 || status === 403) return new StorageApiError(`Storage authorization failed (HTTP ${status})`);
+  return new StorageApiError('Storage request failed');
 }
 
-export function storageApi(url, key, fetchImpl = fetch) {
-  const origin = new URL(url).origin;
-  async function request(route, body) {
-    let response;
-    try {
-      response = await fetchImpl(`${origin}/storage/v1/${route}`, {
-        method: body ? 'POST' : 'GET', redirect: 'error', signal: AbortSignal.timeout(120_000),
-        headers: { ...storageAuthHeaders(key), ...(body ? { 'Content-Type': 'application/json' } : {}) },
-        ...(body ? { body: JSON.stringify(body) } : {}),
-      });
-    } catch { throw new StorageApiError('Storage API network/timeout failure'); }
-    if (response.status === 401 || response.status === 403) throw new StorageApiError(`Storage authorization failed (HTTP ${response.status})`);
-    if (!response.ok) throw new StorageApiError(`Storage request failed (HTTP ${response.status})`);
+function unwrapSdkResult(result) {
+  if (!result || typeof result !== 'object') throw new StorageApiError('Storage returned an invalid SDK response');
+  if (result.error) throw safeSdkError(result.error);
+  return result.data;
+}
+
+/**
+ * Build a server-side Storage adapter with the official Supabase client.
+ * The API key is handed directly to createClient; this module does not construct
+ * Storage URLs or authentication headers itself. The fetch wrapper only records
+ * response metadata for the SDK's streaming download call so existing integrity
+ * checks can still compare bytes, size, and transfer encoding.
+ */
+export function storageApi(url, key, { createClientImpl = createClient, fetchImpl = fetch } = {}) {
+  let captureDownloadResponse = false;
+  let downloadResponseHeaders = null;
+  const sdkFetch = async (...args) => {
+    const response = await fetchImpl(...args);
+    if (captureDownloadResponse) downloadResponseHeaders = response.headers;
     return response;
+  };
+
+  let client;
+  try {
+    client = createClientImpl(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+      global: {
+        headers: { 'Accept-Encoding': 'identity' },
+        fetch: sdkFetch,
+      },
+    });
+  } catch {
+    throw new StorageApiError('Could not initialize Supabase Storage client');
   }
-  async function json(route, body) {
-    try { return await (await request(route, body)).json(); }
-    catch (error) { if (error instanceof SyntaxError) throw new StorageApiError('Storage returned invalid JSON'); throw error; }
-  }
+
   return {
-    buckets: (limit, offset) => json(`bucket?limit=${limit}&offset=${offset}&sortColumn=id&sortOrder=asc`),
-    list: (bucket, prefix, limit, offset) => json(`object/list/${encodeURIComponent(bucket)}`, {
-      prefix, limit, offset, sortBy: { column: 'name', order: 'asc' },
-    }),
-    download: (bucket, objectPath) => request(`object/authenticated/${encodeURIComponent(bucket)}/${objectPath.split('/').map(encodeURIComponent).join('/')}`),
+    buckets: async (limit, offset) => unwrapSdkResult(await client.storage.listBuckets({
+      limit, offset, sortColumn: 'id', sortOrder: 'asc',
+    })),
+    list: async (bucket, prefix, limit, offset) => unwrapSdkResult(await client.storage.from(bucket).list(prefix, {
+      limit, offset, sortBy: { column: 'name', order: 'asc' },
+    })),
+    download: async (bucket, objectPath) => {
+      downloadResponseHeaders = null;
+      captureDownloadResponse = true;
+      let result;
+      try {
+        result = await client.storage.from(bucket).download(objectPath, {}, {
+          redirect: 'error', signal: AbortSignal.timeout(120_000),
+        }).asStream();
+      } catch (error) {
+        throw safeSdkError(error);
+      } finally {
+        captureDownloadResponse = false;
+      }
+      const body = unwrapSdkResult(result);
+      if (!body) throw new StorageApiError('Storage returned an empty download stream');
+      return { body, headers: downloadResponseHeaders };
+    },
   };
 }
 
@@ -134,7 +168,8 @@ export async function backupStorage({ root, api, pageSize = 100 }) {
       await mkdir(path.dirname(filename), { recursive: true });
       const response = await api.download(object.bucket, object.path);
       if (!response.body) throw new Error('Missing download body');
-      if (response.headers.get('content-encoding') && response.headers.get('content-encoding') !== 'identity') {
+      const contentEncoding = response.headers?.get('content-encoding') ?? null;
+      if (contentEncoding && contentEncoding !== 'identity') {
         throw new Error('Unexpected transfer encoding; refusing potentially decoded object bytes');
       }
       let size = 0;
@@ -142,12 +177,19 @@ export async function backupStorage({ root, api, pageSize = 100 }) {
       const meter = new Transform({ transform(chunk, encoding, callback) {
         size += chunk.length; hash.update(chunk); callback(null, chunk);
       } });
-      await pipeline(Readable.fromWeb(response.body), meter, createWriteStream(filename, { flags: 'wx', mode: 0o600 }));
-      const contentLength = response.headers.get('content-length');
+      const stream = response.body instanceof Readable ? response.body : Readable.fromWeb(response.body);
+      await pipeline(stream, meter, createWriteStream(filename, { flags: 'wx', mode: 0o600 }));
+      const contentLength = response.headers?.get('content-length') ?? null;
       if ((object.expectedSize !== null && (!Number.isSafeInteger(Number(object.expectedSize)) || Number(object.expectedSize) !== size)) ||
-          (contentLength !== null && !response.headers.get('content-encoding') && Number(contentLength) !== size)) throw new Error('Download size mismatch');
-      objects.push({ ...object, relativePath, size, contentType: response.headers.get('content-type') || object.contentType, sha256: hash.digest('hex') });
-    } catch { throw new Error(`Storage download failed: ${object.bucket}/${object.path}`); }
+          (contentLength !== null && !contentEncoding && Number(contentLength) !== size)) throw new Error('Download size mismatch');
+      if (contentEncoding && contentEncoding !== 'identity') throw new Error('Unexpected transfer encoding');
+      objects.push({ ...object, relativePath, size, contentType: response.headers?.get('content-type') || object.contentType, sha256: hash.digest('hex') });
+    } catch (error) {
+      if (error instanceof StorageApiError && error.category.startsWith('Storage authorization failed')) {
+        throw new Error(`Storage authorization failed: ${object.bucket}/${object.path}`);
+      }
+      throw new Error(`Storage download failed: ${object.bucket}/${object.path}`);
+    }
   }
   const after = await inventory(api, pageSize);
   if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error('Storage changed during backup; retry in a quieter window');

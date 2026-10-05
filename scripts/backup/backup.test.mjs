@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm, copyFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
 import { safeRelativePath, localPath, sha256File, validateSecrets, redact, runQuiet } from './common.mjs';
-import { backupStorage, enumerateObjects, discoverBuckets, storageApi, storageAuthHeaders, StorageApiError } from './backup-storage.mjs';
+import { backupStorage, enumerateObjects, discoverBuckets, storageApi, StorageApiError } from './backup-storage.mjs';
 import { generateManifest, rejectCredentials } from './generate-manifest.mjs';
 import { BASE_DATABASE_ARTIFACTS, inspectDatabase, backupDatabase } from './backup-database.mjs';
 import { backupIdentity } from './run-backup.mjs';
@@ -28,6 +29,31 @@ function mockApi() {
     list: async (bucket, prefix, limit, offset) => pages[bucket][prefix].slice(offset, offset + limit),
     download: async (bucket, objectPath) => new Response(objectPath === 'zero.bin' ? new Uint8Array() : Buffer.from('abc')),
   };
+}
+
+function mockSupabaseStorage({ listBuckets, list, download } = {}) {
+  const calls = [];
+  const client = {
+    storage: {
+      listBuckets: async options => {
+        calls.push({ method: 'listBuckets', options });
+        return listBuckets ? listBuckets(options) : { data: [], error: null };
+      },
+      from: bucket => ({
+        list: async (prefix, options) => {
+          calls.push({ method: 'list', bucket, prefix, options });
+          return list ? list(bucket, prefix, options) : { data: [], error: null };
+        },
+        download: (objectPath, options, fetchOptions) => {
+          calls.push({ method: 'download', bucket, objectPath, options, fetchOptions });
+          return { asStream: async () => download
+            ? download(bucket, objectPath)
+            : { data: null, error: new Error('Unexpected mock download') } };
+        },
+      }),
+    },
+  };
+  return { client, calls };
 }
 
 test('path handling rejects traversal, ambiguous names and platform escapes', () => {
@@ -86,48 +112,121 @@ test('a changed second inventory fails instead of marking the backup complete', 
   await assert.rejects(backupStorage({ root, api, pageSize: 2 }), /changed during backup/);
 });
 
-test('authenticated download URL encodes original segments and never uses a public URL', async () => {
-  let request;
-  const api = storageApi('https://example.invalid', 'mock-secret-only', async (url, options) => {
-    request = { url, options }; return new Response('binary');
+test('sb_secret key is passed only to the server-side Supabase client and listBuckets uses that client', async () => {
+  const secret = 'sb_secret_mock-never-log-this';
+  const sdk = mockSupabaseStorage({ listBuckets: async options => ({ data: [{ id: 'private-files', name: 'private-files', public: false }], error: null }) });
+  let clientArgs;
+  const api = storageApi('https://example.invalid', secret, {
+    createClientImpl: (...args) => { clientArgs = args; return sdk.client; },
+    fetchImpl: async () => { throw new Error('The adapter must use mocked SDK methods, not raw Storage requests'); },
   });
-  await api.download('a', 'nested/file #1.pdf');
-  assert.equal(request.url, 'https://example.invalid/storage/v1/object/authenticated/a/nested/file%20%231.pdf');
-  assert.equal(request.options.headers.apikey, 'mock-secret-only');
-  assert.equal(request.options.headers['Accept-Encoding'], 'identity');
-  assert.equal(request.options.redirect, 'error');
-  await assert.rejects(storageApi('https://example.invalid', 'mock', async () => new Response('secret detail', { status: 403 })).buckets(100, 0), /HTTP 403/);
+  assert.deepEqual(await api.buckets(25, 0), [{ id: 'private-files', name: 'private-files', public: false }]);
+  assert.equal(clientArgs[0], 'https://example.invalid');
+  assert.equal(clientArgs[1], secret);
+  assert.deepEqual(clientArgs[2].auth, { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false });
+  assert.equal(clientArgs[2].global.headers['Accept-Encoding'], 'identity');
+  assert.equal(typeof clientArgs[2].global.fetch, 'function');
+  assert.deepEqual(sdk.calls, [{ method: 'listBuckets', options: { limit: 25, offset: 0, sortColumn: 'id', sortOrder: 'asc' } }]);
+  assert.equal(JSON.stringify(sdk.calls).includes(secret), false);
 });
 
-test('Storage sb_secret API keys use apikey only; legacy service_role JWTs retain Bearer compatibility', async () => {
-  const apiKey = 'sb_secret_mock-only-value';
-  const newHeaders = storageAuthHeaders(apiKey);
-  assert.equal(newHeaders.apikey, apiKey);
-  assert.equal(newHeaders.Authorization, undefined);
-  const legacy = 'eyJmock.header.signature';
-  assert.equal(storageAuthHeaders(legacy).apikey, legacy);
-  assert.equal(storageAuthHeaders(legacy).Authorization, `Bearer ${legacy}`);
-  let actualHeaders;
-  await storageApi('https://example.invalid', legacy, async (_url, options) => {
-    actualHeaders = options.headers; return Response.json([]);
-  }).buckets(100, 0);
-  assert.equal(actualHeaders.apikey, legacy);
-  assert.equal(actualHeaders.Authorization, `Bearer ${legacy}`);
+test('the installed official Supabase client can list buckets through a mocked fetch only', async () => {
+  const requests = [];
+  const api = storageApi('https://mock-project.supabase.invalid', 'sb_secret_mock-sdk-integration', {
+    fetchImpl: async (input, init) => {
+      requests.push({ url: new URL(input), method: init.method });
+      return Response.json([{ id: 'documents', name: 'documents', public: false }]);
+    },
+  });
+  assert.deepEqual(await api.buckets(100, 0), [{ id: 'documents', name: 'documents', public: false }]);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url.pathname, '/storage/v1/bucket');
+  assert.equal(requests[0].url.searchParams.get('limit'), '100');
 });
 
-test('Storage distinguishes authorization failures and rejects a suspicious empty bucket inventory', async t => {
-  const root = await fixture(t), secret = 'sb_secret_mock-never-in-error';
-  const denied = storageApi('https://example.invalid', secret, async (_url, options) => {
-    assert.equal(options.headers.apikey, secret);
-    assert.equal(options.headers.Authorization, undefined);
-    return new Response('private gateway detail', { status: 403 });
+test('Supabase SDK bucket and recursive object listing exhausts every pagination page', async () => {
+  const bucketPages = [
+    [{ id: 'a', name: 'a', public: false }, { id: 'b', name: 'b', public: false }],
+    [{ id: 'c', name: 'c', public: false }],
+  ];
+  const listPages = {
+    'a|': [[folder('nested'), entry('root.bin')], [entry('second-root.bin')], []],
+    'a|nested': [[entry('one.bin'), entry('two.bin')], [entry('three.bin')], []],
+  };
+  const sdk = mockSupabaseStorage({
+    listBuckets: async ({ offset }) => ({ data: bucketPages[offset === 0 ? 0 : 1], error: null }),
+    list: async (bucket, prefix, { offset }) => ({ data: listPages[`${bucket}|${prefix}`]?.[offset / 2] ?? [], error: null }),
   });
+  const api = storageApi('https://example.invalid', 'sb_secret_mock-only', { createClientImpl: () => sdk.client });
+  assert.deepEqual((await discoverBuckets(api, 2)).map(item => item.id), ['a', 'b', 'c']);
+  assert.deepEqual((await enumerateObjects(api, 'a', 2)).map(item => item.path), [
+    'nested/one.bin', 'nested/three.bin', 'nested/two.bin', 'root.bin', 'second-root.bin',
+  ]);
+  assert.ok(sdk.calls.some(call => call.method === 'listBuckets' && call.options.offset === 2));
+  assert.ok(sdk.calls.some(call => call.method === 'list' && call.prefix === '' && call.options.offset === 2));
+  assert.ok(sdk.calls.some(call => call.method === 'list' && call.prefix === 'nested' && call.options.offset === 2));
+});
+
+test('SDK authenticated download uses streaming API and keeps checksum and inventory validation', async t => {
+  const root = await fixture(t), secret = 'sb_secret_mock-stream-only';
+  let downloadCalls = 0;
+  const sdk = mockSupabaseStorage({
+    listBuckets: async () => ({ data: [{ id: 'private-files', name: 'private-files', public: false }], error: null }),
+    list: async (_bucket, prefix) => ({ data: prefix ? [entry('file #1.pdf', 'binary bytes')] : [folder('nested')], error: null }),
+    download: async (bucket, objectPath) => {
+      downloadCalls++;
+      assert.equal(bucket, 'private-files');
+      assert.equal(objectPath, 'nested/file #1.pdf');
+      return { data: Readable.toWeb(Readable.from([Buffer.from('binary bytes')])), error: null };
+    },
+  });
+  let clientArgs;
+  const api = storageApi('https://example.invalid', secret, { createClientImpl: (...args) => { clientArgs = args; return sdk.client; } });
+  const result = await backupStorage({ root, api, pageSize: 100 });
+  assert.equal(downloadCalls, 1);
+  assert.equal(sdk.calls.filter(call => call.method === 'download')[0].objectPath, 'nested/file #1.pdf');
+  assert.equal(clientArgs[1], secret);
+  assert.equal(result.objects[0].sha256, digest('binary bytes'));
+  assert.equal(result.objects[0].size, Buffer.byteLength('binary bytes'));
+  assert.equal(result.objects[0].contentType, 'application/octet-stream');
+  assert.equal(result.secondInventoryMatched, true);
+  assert.equal((await readFile(localPath(root, 'storage/private-files/nested/file #1.pdf'))).toString(), 'binary bytes');
+});
+
+test('SDK authorization errors are sanitized and zero buckets still fail closed', async t => {
+  const root = await fixture(t), secret = 'sb_secret_never-in-error-or-log';
+  const deniedSdk = mockSupabaseStorage({ listBuckets: async () => ({ data: null, error: Object.assign(new Error(`private detail ${secret}`), { status: 403 }) }) });
+  const denied = storageApi('https://example.invalid', secret, { createClientImpl: () => deniedSdk.client });
   await assert.rejects(denied.buckets(100, 0), error => error.message === 'Storage authorization failed (HTTP 403)' && !error.message.includes(secret));
-  await assert.rejects(backupStorage({ root, api: { buckets: async () => [] } }),
-    error => error instanceof StorageApiError && error.message === 'Storage API returned zero buckets; refusing an empty inventory');
+  await assert.rejects(discoverBuckets(denied), error => error.message === 'Storage authorization failed (HTTP 403)');
+
+  const emptySdk = mockSupabaseStorage({ listBuckets: async () => ({ data: [], error: null }) });
+  const empty = storageApi('https://example.invalid', secret, { createClientImpl: () => emptySdk.client });
+  await assert.rejects(backupStorage({ root, api: empty }), error => error instanceof StorageApiError &&
+    error.message === 'Storage API returned zero buckets; refusing an empty inventory' && !error.message.includes(secret));
   await assert.rejects(readFile(localPath(root, 'storage-inventory.json')));
-  await assert.rejects(discoverBuckets({ buckets: async () => { throw new Error(secret); } }),
-    error => error.message === 'Storage enumeration failed: bucket discovery' && !error.message.includes(secret));
+
+  const sdkError = mockSupabaseStorage({ listBuckets: async () => ({ data: null, error: new Error(secret) }) });
+  const sanitized = storageApi('https://example.invalid', secret, { createClientImpl: () => sdkError.client });
+  const originalConsole = Object.fromEntries(['log', 'info', 'warn', 'error'].map(method => [method, console[method]]));
+  const emittedLogs = [];
+  try {
+    for (const method of Object.keys(originalConsole)) console[method] = (...args) => emittedLogs.push(args.join(' '));
+    await assert.rejects(discoverBuckets(sanitized), error => error.message === 'Storage enumeration failed: bucket discovery' && !error.message.includes(secret));
+  } finally {
+    for (const [method, original] of Object.entries(originalConsole)) console[method] = original;
+  }
+  assert.deepEqual(emittedLogs, []);
+
+  const downloadDenied = mockSupabaseStorage({
+    listBuckets: async () => ({ data: [{ id: 'private-bucket', name: 'private-bucket', public: false }], error: null }),
+    list: async () => ({ data: [entry('private.pdf')], error: null }),
+    download: async () => ({ data: null, error: Object.assign(new Error(`private detail ${secret}`), { status: 401 }) }),
+  });
+  const deniedDownloadApi = storageApi('https://example.invalid', secret, { createClientImpl: () => downloadDenied.client });
+  await assert.rejects(backupStorage({ root, api: deniedDownloadApi }), error =>
+    error.message === 'Storage authorization failed: private-bucket/private.pdf' && !error.message.includes(secret));
+
   await assert.rejects(discoverBuckets({ buckets: async () => { throw new StorageApiError('Storage authorization failed (HTTP 401)'); } }),
     error => error.message === 'Storage authorization failed (HTTP 401)');
   await assert.rejects(enumerateObjects({ list: async () => { throw new StorageApiError('Storage authorization failed (HTTP 401)'); } }, 'private-bucket'),
