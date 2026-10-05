@@ -594,10 +594,11 @@ export const generateReportPdfDocument = async <Row,>(options: ReportExportOptio
     }),
   );
 
-  // Map totalsRow to match pdfColumns if any columns were excluded
+  // PDF-specific totals already follow the visible columns. Only filter totals
+  // supplied in the full export-column order.
   let mappedTotalsRow: ReportCellValue[] | undefined = undefined;
   if (totalsRow) {
-    if (pdfColumns.length === config.columns.length) {
+    if (totalsRow.length === pdfColumns.length) {
       mappedTotalsRow = totalsRow;
     } else {
       mappedTotalsRow = config.columns
