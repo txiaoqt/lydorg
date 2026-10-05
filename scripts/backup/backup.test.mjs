@@ -368,6 +368,8 @@ test('R2 verifies destination absence, HEAD metadata/size and downloaded archive
   const calls = [];
   const execute = async (command, args, env) => {
     calls.push(args); assert.equal(command, 'aws'); assert.equal(env.AWS_DEFAULT_REGION, 'auto');
+    assert.equal(env.AWS_REQUEST_CHECKSUM_CALCULATION, 'when_required');
+    assert.equal(env.AWS_RESPONSE_CHECKSUM_VALIDATION, 'when_required');
     if (args.includes('list-objects-v2')) return JSON.stringify({ KeyCount: 0 });
     if (args.includes('head-object')) return JSON.stringify(args.some(a => a.endsWith('.sha256'))
       ? { ContentLength: (await sha256File(`${archive}.sha256`)).size }
@@ -488,6 +490,8 @@ test('checkR2 performs only read-only list-objects-v2 max-keys 1 without touchin
   assert.equal(result.bucketListVerified, true);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].command, 'aws');
+  assert.equal(calls[0].env.AWS_REQUEST_CHECKSUM_CALCULATION, 'when_required');
+  assert.equal(calls[0].env.AWS_RESPONSE_CHECKSUM_VALIDATION, 'when_required');
   assert.ok(calls[0].args.includes('list-objects-v2'));
   assert.ok(calls[0].args.includes('--max-keys'));
   assert.ok(calls[0].args.includes('1'));
