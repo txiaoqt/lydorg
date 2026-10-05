@@ -34,6 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           command -v aws >/dev/null
+          aws --version
       - name: Check R2 configuration and list-objects-v2 access
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}

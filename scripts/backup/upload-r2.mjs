@@ -66,7 +66,7 @@ export function classifyR2Diagnostic(diagnostic) {
     code = 'bucket_not_found';
   } else if (['AuthorizationHeaderMalformed', 'PermanentRedirect', 'IllegalLocationConstraintException'].includes(serviceCode)) {
     code = 'redirect_or_region_error';
-  } else if (['InvalidToken', 'ExpiredToken'].includes(serviceCode)) {
+  } else if (['InvalidToken', 'ExpiredToken', 'ProfileNotFound'].includes(serviceCode)) {
     code = 'credentials_error';
   } else if (['ResponseParsingError', 'MalformedXML'].includes(serviceCode)) {
     code = 'malformed_response';
@@ -85,7 +85,7 @@ export function classifyR2Diagnostic(diagnostic) {
       code = 'invalid_access_key';
     } else if (/signaturedoesnotmatch|signature mismatch|signature does not match|request signature.{0,30}does not match/.test(output)) {
       code = 'signature_mismatch';
-    } else if (/unable to locate credentials|nocredentialserror|partialcredentialserror|credentialretrievalerror|credentials could not be loaded|invalid credentials|security token.{0,30}(?:invalid|expired)|invalidtoken|expiredtoken|tokenrefresherror|missing credentials/.test(output)) {
+    } else if (/profilenotfound|the config profile.{0,100}could not be found|config profile could not be found|unable to locate credentials|nocredentialserror|partialcredentialserror|credentialretrievalerror|credentials could not be loaded|invalid credentials|security token.{0,30}(?:invalid|expired)|invalidtoken|expiredtoken|tokenrefresherror|missing credentials/.test(output)) {
       code = 'credentials_error';
     } else if (/authorizationheadermalformed|permanentredirect|illegallocationconstraintexception|locationconstraint|region.{0,30}(?:wrong|invalid|mismatch|expecting)|specify a region|regionresolutionerror|send all future requests to this (?:address|endpoint)|\b301\b|\b307\b/.test(output)) {
       code = 'redirect_or_region_error';
@@ -101,7 +101,7 @@ export function classifyR2Diagnostic(diagnostic) {
   }
 
   const result = { code };
-  if (serviceCode) result.serviceCode = serviceCode;
+  if (code === 'aws_service_error' && serviceCode) result.serviceCode = serviceCode;
   if (httpStatus) result.httpStatus = httpStatus;
 
   Object.defineProperty(result, 'toString', {
@@ -161,6 +161,33 @@ function destinationPrefix(backupId, createdAtUtc) {
   return `manual/${date}/${backupId}/`;
 }
 
+export function buildR2AwsEnv(env, baseEnv = process.env) {
+  const awsEnv = { ...baseEnv };
+
+  // Explicitly remove profile, session, and ambient IAM role / web-identity variables
+  delete awsEnv.AWS_PROFILE;
+  delete awsEnv.AWS_DEFAULT_PROFILE;
+  delete awsEnv.AWS_SESSION_TOKEN;
+  delete awsEnv.AWS_WEB_IDENTITY_TOKEN_FILE;
+  delete awsEnv.AWS_ROLE_ARN;
+  delete awsEnv.AWS_ROLE_SESSION_NAME;
+
+  // Set explicit, environment-credential-only configuration
+  awsEnv.AWS_ACCESS_KEY_ID = env.R2_ACCESS_KEY_ID;
+  awsEnv.AWS_SECRET_ACCESS_KEY = env.R2_SECRET_ACCESS_KEY;
+  awsEnv.AWS_DEFAULT_REGION = 'auto';
+  awsEnv.AWS_EC2_METADATA_DISABLED = 'true';
+  awsEnv.AWS_PAGER = '';
+  awsEnv.AWS_RETRY_MODE = 'standard';
+  awsEnv.AWS_MAX_ATTEMPTS = '3';
+  awsEnv.AWS_CONFIG_FILE = '/dev/null';
+  awsEnv.AWS_SHARED_CREDENTIALS_FILE = '/dev/null';
+  awsEnv.AWS_REQUEST_CHECKSUM_CALCULATION = 'when_required';
+  awsEnv.AWS_RESPONSE_CHECKSUM_VALIDATION = 'when_required';
+
+  return awsEnv;
+}
+
 export async function assertDestinationListable({
   env,
   prefix,
@@ -169,11 +196,7 @@ export async function assertDestinationListable({
   getDiagnostic = privateToolDiagnostic,
   phase = 'R2 preflight failed',
 }) {
-  const awsEnv = { ...process.env, AWS_ACCESS_KEY_ID: env.R2_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY: env.R2_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION: 'auto',
-    AWS_EC2_METADATA_DISABLED: 'true', AWS_PAGER: '', AWS_RETRY_MODE: 'standard', AWS_MAX_ATTEMPTS: '3',
-    AWS_REQUEST_CHECKSUM_CALCULATION: 'when_required', AWS_RESPONSE_CHECKSUM_VALIDATION: 'when_required',
-    AWS_SESSION_TOKEN: '', AWS_PROFILE: '', AWS_CONFIG_FILE: '/dev/null', AWS_SHARED_CREDENTIALS_FILE: '/dev/null' };
+  const awsEnv = buildR2AwsEnv(env);
   const args = [
     '--endpoint-url', env.R2_ENDPOINT,
     '--region', 'auto',
@@ -215,11 +238,7 @@ export async function uploadR2({ archive, backupId, createdAtUtc, env, execute =
   const prefix = destinationPrefix(backupId, createdAtUtc);
   const archiveName = `ytrace-backup-${backupId}.tar.gz`;
   const key = `${prefix}${archiveName}`;
-  const awsEnv = { ...process.env, AWS_ACCESS_KEY_ID: env.R2_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY: env.R2_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION: 'auto',
-    AWS_EC2_METADATA_DISABLED: 'true', AWS_PAGER: '', AWS_RETRY_MODE: 'standard', AWS_MAX_ATTEMPTS: '3',
-    AWS_REQUEST_CHECKSUM_CALCULATION: 'when_required', AWS_RESPONSE_CHECKSUM_VALIDATION: 'when_required',
-    AWS_SESSION_TOKEN: '', AWS_PROFILE: '', AWS_CONFIG_FILE: '/dev/null', AWS_SHARED_CREDENTIALS_FILE: '/dev/null' };
+  const awsEnv = buildR2AwsEnv(env);
   const aws = (args, capture = false) => execute('aws', ['--endpoint-url', env.R2_ENDPOINT, '--region', 'auto', ...args], awsEnv, capture, classifyR2Diagnostic);
   const existing = await assertDestinationListable({ env, prefix, execute, getErrorCode, phase: 'R2 destination check failed' });
   if (existing.KeyCount !== 0 || existing.IsTruncated === true || existing.Contents?.length) throw new Error('Backup prefix already exists; refusing to overwrite');

@@ -11,7 +11,7 @@ import { backupStorage, enumerateObjects, discoverBuckets, storageApi, StorageAp
 import { generateManifest, rejectCredentials } from './generate-manifest.mjs';
 import { BASE_DATABASE_ARTIFACTS, inspectDatabase, backupDatabase } from './backup-database.mjs';
 import { backupIdentity } from './run-backup.mjs';
-import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES, formatR2Diagnostic, getR2Diagnostic, extractAwsServiceCode, extractHttpStatus } from './upload-r2.mjs';
+import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES, formatR2Diagnostic, getR2Diagnostic, extractAwsServiceCode, extractHttpStatus, buildR2AwsEnv } from './upload-r2.mjs';
 import { checkR2 } from './check-r2.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -756,4 +756,114 @@ test('check-r2.mjs CLI execution outputs safe diagnostic format and exits with c
   assert.equal(child.code, 1);
   assert.equal(child.stdout, '');
   assert.equal(child.stderr.trim(), 'R2 check failed: credentials_error');
+});
+
+test('buildR2AwsEnv isolates environment and deletes ambient profile, session, and role variables', () => {
+  const ambient = {
+    PATH: '/usr/bin:/bin',
+    NODE_ENV: 'production',
+    AWS_PROFILE: 'some-ambient-profile',
+    AWS_DEFAULT_PROFILE: 'ambient-default-profile',
+    AWS_SESSION_TOKEN: 'ambient-session-token',
+    AWS_WEB_IDENTITY_TOKEN_FILE: '/var/run/secrets/token',
+    AWS_ROLE_ARN: 'arn:aws:iam::123456789012:role/ambient',
+    AWS_ROLE_SESSION_NAME: 'ambient-role-session',
+  };
+  const r2Secrets = {
+    R2_ACCESS_KEY_ID: 'my-r2-key-id',
+    R2_SECRET_ACCESS_KEY: 'my-r2-secret-key',
+  };
+
+  const result = buildR2AwsEnv(r2Secrets, ambient);
+
+  // Proves AWS_PROFILE is absent
+  assert.equal('AWS_PROFILE' in result, false);
+  // Proves AWS_DEFAULT_PROFILE is absent
+  assert.equal('AWS_DEFAULT_PROFILE' in result, false);
+  // Proves AWS_SESSION_TOKEN is absent
+  assert.equal('AWS_SESSION_TOKEN' in result, false);
+  // Proves AWS_ROLE_ARN / web identity vars are absent
+  assert.equal('AWS_WEB_IDENTITY_TOKEN_FILE' in result, false);
+  assert.equal('AWS_ROLE_ARN' in result, false);
+  assert.equal('AWS_ROLE_SESSION_NAME' in result, false);
+
+  // Proves AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are still passed correctly
+  assert.equal(result.AWS_ACCESS_KEY_ID, 'my-r2-key-id');
+  assert.equal(result.AWS_SECRET_ACCESS_KEY, 'my-r2-secret-key');
+
+  // Verify other isolation settings
+  assert.equal(result.AWS_DEFAULT_REGION, 'auto');
+  assert.equal(result.AWS_EC2_METADATA_DISABLED, 'true');
+  assert.equal(result.AWS_PAGER, '');
+  assert.equal(result.AWS_RETRY_MODE, 'standard');
+  assert.equal(result.AWS_MAX_ATTEMPTS, '3');
+  assert.equal(result.AWS_CONFIG_FILE, '/dev/null');
+  assert.equal(result.AWS_SHARED_CREDENTIALS_FILE, '/dev/null');
+  assert.equal(result.AWS_REQUEST_CHECKSUM_CALCULATION, 'when_required');
+  assert.equal(result.AWS_RESPONSE_CHECKSUM_VALIDATION, 'when_required');
+
+  // Ambient non-AWS variables are preserved
+  assert.equal(result.PATH, '/usr/bin:/bin');
+  assert.equal(result.NODE_ENV, 'production');
+});
+
+test('checkR2 spawns aws process with isolated environment stripped of ambient profile, session, and role vars', async () => {
+  const originalEnv = { ...process.env };
+  process.env.AWS_PROFILE = 'ambient-profile-to-strip';
+  process.env.AWS_DEFAULT_PROFILE = 'ambient-default-to-strip';
+  process.env.AWS_SESSION_TOKEN = 'ambient-session-to-strip';
+  process.env.AWS_WEB_IDENTITY_TOKEN_FILE = '/path/to/token';
+  process.env.AWS_ROLE_ARN = 'arn:aws:iam::123:role/foo';
+  process.env.AWS_ROLE_SESSION_NAME = 'ambient-sess';
+
+  try {
+    const calls = [];
+    const mockEnv = {
+      R2_ACCESS_KEY_ID: 'clean-r2-id',
+      R2_SECRET_ACCESS_KEY: 'clean-r2-secret',
+      R2_ENDPOINT: 'https://clean.r2.cloudflarestorage.com',
+      R2_BUCKET_NAME: 'clean-bucket',
+    };
+    const execute = async (command, args, env, capture) => {
+      calls.push({ command, args, env, capture });
+      return JSON.stringify({ KeyCount: 0 });
+    };
+
+    const res = await checkR2(mockEnv, { execute });
+    assert.equal(res.ok, true);
+    assert.equal(calls.length, 1);
+    const spawnedEnv = calls[0].env;
+
+    assert.equal('AWS_PROFILE' in spawnedEnv, false);
+    assert.equal('AWS_DEFAULT_PROFILE' in spawnedEnv, false);
+    assert.equal('AWS_SESSION_TOKEN' in spawnedEnv, false);
+    assert.equal('AWS_WEB_IDENTITY_TOKEN_FILE' in spawnedEnv, false);
+    assert.equal('AWS_ROLE_ARN' in spawnedEnv, false);
+    assert.equal('AWS_ROLE_SESSION_NAME' in spawnedEnv, false);
+    assert.equal(spawnedEnv.AWS_ACCESS_KEY_ID, 'clean-r2-id');
+    assert.equal(spawnedEnv.AWS_SECRET_ACCESS_KEY, 'clean-r2-secret');
+  } finally {
+    process.env = originalEnv;
+  }
+});
+
+test('ProfileNotFound and missing config profile errors are safely classified as credentials_error without leaking profile names', () => {
+  const secretProfile = 'confidential-customer-profile-xyz';
+  const profileCases = [
+    `The config profile (${secretProfile}) could not be found`,
+    `botocore.exceptions.ProfileNotFound: The config profile (${secretProfile}) could not be found`,
+    'config profile could not be found',
+    `An error occurred (ProfileNotFound) when calling the ListObjectsV2 operation: Profile ${secretProfile}`,
+  ];
+
+  for (const stderr of profileCases) {
+    const diag = classifyR2Diagnostic(stderr);
+    assert.equal(diag.code, 'credentials_error');
+    // Ensure serviceCode is not exposed on credentials_error
+    assert.equal(diag.serviceCode, undefined);
+    const formatted = formatR2Diagnostic(diag, 'R2 check failed');
+    assert.equal(formatted, 'R2 check failed: credentials_error');
+    assert.doesNotMatch(formatted, new RegExp(secretProfile));
+    assert.doesNotMatch(formatted, /service_code/);
+  }
 });
