@@ -449,7 +449,7 @@ export function PasigBudgetMap({
               <div className="pasig-budget-map__details-heading"><span className="pasig-budget-map__pin"><MapPin size={17} /></span><div><h3>{selectedEntry.name}</h3><p>{selectedEntry.district}</p></div></div>
               <p className="pasig-budget-map__selected-value">{loadingData ? "—" : formatPesoAmount(selectedEntry.approvedAmount)} <span>approved budget</span></p>
               <dl>
-                <div><dt>Approved</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.approvedBalance)}</dd></div>
+                <div><dt>Approved (not yet released)</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.approvedBalance)}</dd></div>
                 <div><dt>Released (not yet liquidated)</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.releasedBalance)}</dd></div>
                 <div><dt>Liquidated</dt><dd>{loadingData ? "—" : formatPesoAmount(selectedEntry.liquidatedAmount)}</dd></div>
                 <div><dt>Organizations</dt><dd>{loadingData ? "—" : selectedEntry.organizationCount}</dd></div>
