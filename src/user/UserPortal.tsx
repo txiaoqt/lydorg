@@ -5062,16 +5062,20 @@ export default function UserPortal({ section }: { section: string }) {
         <DialogContent className="rounded-2xl border border-border/80 bg-card shadow-2xl p-5 sm:p-6 space-y-4 max-w-md lg:max-w-lg">
           <DialogHeader className="space-y-1 text-left">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary/10 text-primary shrink-0">
-                <CheckCircle2 className="h-5 w-5" />
+              <div className={cn("p-2.5 rounded-2xl shrink-0", batchUploadResult?.failureCount ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+                {batchUploadResult?.failureCount ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
               </div>
               <div>
                 <DialogTitle className="text-lg font-black text-foreground">
-                  {batchUploadResult?.submitMode === "draft" ? "Draft Saved" : "Submitted for Review"}
+                  {batchUploadResult?.successCount === 0
+                    ? "Batch Upload Failed"
+                    : batchUploadResult?.failureCount
+                      ? "Batch Upload Partially Completed"
+                      : batchUploadResult?.submitMode === "draft" ? "Draft Saved" : "Submitted for Review"}
                 </DialogTitle>
                 <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5">
                   {batchUploadResult
-                    ? `${batchUploadResult.successCount} document${batchUploadResult.successCount === 1 ? "" : "s"} ${batchUploadResult.submitMode === "draft" ? "saved as drafts" : "submitted for admin review"}.`
+                    ? `${batchUploadResult.successCount} document${batchUploadResult.successCount === 1 ? "" : "s"} ${batchUploadResult.submitMode === "draft" ? "saved as drafts" : "submitted for admin review"}.${batchUploadResult.failureCount ? ` ${batchUploadResult.failureCount} failed. Review the errors below and retry those files.` : ""}`
                     : "Review the result of your batch upload."}
                 </DialogDescription>
               </div>

@@ -242,7 +242,7 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
   });
 
   describe("3. Bulk Submission with Controlled Concurrency and Partial Failure Resilience", () => {
-    it("processes a batch of valid files concurrently without overwriting and executes review finalization", async () => {
+    it.each(["draft", "under_admin_review"])("stages and finalizes a batch when the parent submission is %s", async (submissionStatus) => {
       (supabase!.auth.getSession as any).mockResolvedValue({
         data: { session: { user: { id: userId } } },
       });
@@ -266,7 +266,7 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
       latestSubmissionQuery.is = vi.fn().mockReturnValue(latestSubmissionQuery);
       latestSubmissionQuery.order = vi.fn().mockReturnValue(latestSubmissionQuery);
       latestSubmissionQuery.limit = vi.fn().mockResolvedValue({
-        data: [{ id: submissionId, organization_id: orgId, status: "draft", submitted_at: null }],
+        data: [{ id: submissionId, organization_id: orgId, status: submissionStatus, submitted_at: null }],
         error: null,
       });
       const selectSubmissionMock = vi.fn().mockReturnValue(latestSubmissionQuery);
@@ -302,7 +302,7 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
               file_type: "application/pdf",
               file_size: 1024,
               validation_status: "correct",
-              admin_status: "under_admin_review",
+              admin_status: payload.admin_status,
               admin_remarks: null,
               revision_history: [],
               uploaded_at: "2026-09-24T00:00:00.000Z",
@@ -324,7 +324,7 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { id: submissionId, status: "draft", submitted_at: null },
+              data: { id: submissionId, status: submissionStatus, submitted_at: null },
               error: null,
             }),
           }),
@@ -364,6 +364,7 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
           return {
             select: (cols: string) => {
               if (cols === "id,file_name,file_type") return reviewSelectFilesMock();
+              if (cols === "admin_status") return { eq: vi.fn().mockResolvedValue({ data: [{ admin_status: submissionStatus }], error: null }) };
               return existingFilesSelect();
             },
             upsert: upsertFileMock,
@@ -386,6 +387,9 @@ describe("Document Submission Performance & Targeted Synchronization Suite", () 
       expect(batchResult.failureCount).toBe(0);
       expect(batchResult.results).toHaveLength(3);
       expect(mockStorageUpload).toHaveBeenCalledTimes(3);
+      expect(upsertFileMock.mock.calls.every(([payload]) => payload.admin_status === "draft")).toBe(true);
+      expect(reviewUpdateFilesMock).toHaveBeenCalledTimes(1);
+      expect(reviewUpdateFilesMock).toHaveBeenCalledWith(expect.objectContaining({ admin_status: "under_admin_review" }));
     });
 
     it("preserves successful files when one file in the batch fails validation or upload", async () => {
