@@ -2559,6 +2559,9 @@ export type AdminPortalListFilters = {
   classification?: string;
   dateRange?: string;
   sort?: "newest" | "oldest";
+  startDate?: string | null;
+  endDateExclusive?: string | null;
+  quarter?: number | null;
 };
 
 export type AdminReviewResource = "budgets" | "liquidations";
@@ -2573,6 +2576,9 @@ export type AdminReviewResourceFilters = {
   classification?: string;
   semester?: string;
   sort?: "newest" | "oldest";
+  startDate?: string | null;
+  endDateExclusive?: string | null;
+  quarter?: number | null;
 };
 export type AdminReviewResourcePage<T> = {
   rows: T[];
@@ -2643,6 +2649,9 @@ export const fetchAdminReviewResourcePage = async (
     _classification: filters.classification ?? "all",
     _semester: filters.semester ?? "all",
     _sort: filters.sort ?? "newest",
+    _start_date: filters.startDate ?? null,
+    _end_date_exclusive: filters.endDateExclusive ?? null,
+    ...(filters.quarter != null ? { _quarter: filters.quarter } : {}),
   });
   if (error) throw new Error(error.message || "Unable to load the Admin review queue.");
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("The Admin review queue response was invalid.");
@@ -3338,6 +3347,9 @@ export const fetchAdminPortalListPage = async (
     _classification: filters.classification ?? "all",
     _date_range: filters.dateRange ?? "all",
     _sort: filters.sort ?? "newest",
+    _start_date: filters.startDate ?? null,
+    _end_date_exclusive: filters.endDateExclusive ?? null,
+    ...(filters.quarter != null ? { _quarter: filters.quarter } : {}),
   });
   if (error) throw new Error(error.message || "Unable to load the admin list.");
   if (!data || typeof data !== "object" || Array.isArray(data) || !Array.isArray((data as { rows?: unknown }).rows)) {
@@ -3411,6 +3423,9 @@ export const fetchAllAdminActivityLogs = async (filters: {
   search?: string;
   category?: string;
   dateRange?: string;
+  startDate?: string | null;
+  endDateExclusive?: string | null;
+  quarter?: number | null;
 }): Promise<ActivityLog[]> => {
   const pageSize = 50;
   const firstPage = await fetchAdminPortalListPage({
@@ -3420,6 +3435,9 @@ export const fetchAllAdminActivityLogs = async (filters: {
     search: filters.search,
     status: filters.category,
     dateRange: filters.dateRange,
+    startDate: filters.startDate,
+    endDateExclusive: filters.endDateExclusive,
+    quarter: filters.quarter,
   });
   const firstRows = firstPage.rows.filter((row): row is ActivityLog => "action" in row);
   const totalPages = Math.ceil(firstPage.totalCount / pageSize);
@@ -3432,10 +3450,32 @@ export const fetchAllAdminActivityLogs = async (filters: {
       search: filters.search,
       status: filters.category,
       dateRange: filters.dateRange,
+      startDate: filters.startDate,
+      endDateExclusive: filters.endDateExclusive,
+    quarter: filters.quarter,
     });
     rows.push(...nextPage.rows.filter((row): row is ActivityLog => "action" in row));
   }
   return rows;
+};
+
+/** Only called by Generate Export. These temporary metadata rows never enter the portal store. */
+export const fetchAllAdminReviewResourceRows = async (
+  filters: Omit<AdminReviewResourceFilters, "page" | "pageSize">,
+): Promise<Array<AdminBudgetReviewRow | AdminLiquidationReviewRow>> => {
+  const sessionToken = readAdminSession()?.sessionToken;
+  const pageSize = 50; // Same ceiling enforced by the RPC.
+  const first = await fetchAdminReviewResourcePage({ ...filters, page: 0, pageSize });
+  const rows = [...first.rows];
+  const pages = Math.ceil(first.totalCount / pageSize);
+  for (let page = 1; page < pages; page += 1) {
+    if (readAdminSession()?.sessionToken !== sessionToken) throw new Error("Administrator session changed.");
+    const next = await fetchAdminReviewResourcePage({ ...filters, page, pageSize });
+    if (!next.rows.length) break; // Queue may shrink while export is running.
+    rows.push(...next.rows);
+  }
+  if (readAdminSession()?.sessionToken !== sessionToken) throw new Error("Administrator session changed.");
+  return [...new Map(rows.map(row => ["request" in row ? row.request.id : row.report.id, row])).values()];
 };
 
 const adminPortalSectionStateKeys = new Set([
@@ -3452,7 +3492,7 @@ const adminPortalSectionStateKeys = new Set([
 /** Complete totals for one reporting period, loaded in bounded metadata pages.
  * Kept in the page query cache, never merged into the portal-wide store. */
 export const loadAdminBudgetMonitoringPeriod = async (
-  period: { mode: "fiscal_year" | "custom"; fiscalYear: number; startDate?: string; endDate?: string },
+  period: { mode: "fiscal_year" | "custom" | "all" | "quarter_all_years"; fiscalYear: number; startDate?: string; endDate?: string; quarter?: number },
   signal: AbortSignal,
 ): Promise<Partial<LydoSeedState> & { fiscalYears: number[] }> => {
   const session = readAdminSession();
@@ -3467,7 +3507,8 @@ export const loadAdminBudgetMonitoringPeriod = async (
     if (readAdminSession()?.sessionToken !== session.sessionToken) throw new Error("Administrator session changed.");
     const { data, error } = await supabase.rpc("admin_get_budget_monitoring_page", {
       _session_token: session.sessionToken,
-      _fiscal_year: period.fiscalYear,
+      _fiscal_year: period.mode === "all" || period.mode === "quarter_all_years" ? null : period.fiscalYear,
+      ...(period.mode === "quarter_all_years" ? { _quarter: period.quarter } : {}),
       _start_date: period.mode === "custom" ? period.startDate : null,
       _end_date: period.mode === "custom" ? period.endDate : null,
       _after_created_at: cursor?.created_at ?? null,

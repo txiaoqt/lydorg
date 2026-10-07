@@ -109,6 +109,7 @@ export type ReportColumn<Row> = {
 export type ReportExportConfig<Row> = {
   title: string;
   filenamePrefix: string;
+  filenameDateSuffix?: boolean;
   columns: ReportColumn<Row>[];
   orientation?: PdfOrientation;
   paperSize?: PdfPaperSize;
@@ -157,7 +158,8 @@ const formatFilenameDate = (date = new Date()) =>
     day: "2-digit",
   }).format(date);
 
-export const getExportFilename = (filenamePrefix: string, format: ExportFormat) => {
+export const getExportFilename = (filenamePrefix: string, format: ExportFormat, includeDate = true) => {
+  if (!includeDate) return `${filenamePrefix}.${format}`;
   const separator = filenamePrefix.includes("_") ? "_" : "-";
   return `${filenamePrefix}${separator}${formatFilenameDate()}.${format}`;
 };
@@ -531,7 +533,7 @@ export const renderPdfPageDecoration = (
 };
 
 export const exportReportAsCsv = async <Row,>(options: ReportExportOptions<Row>) => {
-  const filename = getExportFilename(options.config.filenamePrefix, "csv");
+  const filename = getExportFilename(options.config.filenamePrefix, "csv", options.config.filenameDateSuffix);
   const csvContent = buildCsvContent(options);
   downloadBlob(new Blob([csvContent], { type: "text/csv;charset=utf-8;" }), filename);
 };
@@ -675,7 +677,7 @@ export const generateReportPdfDocument = async <Row,>(options: ReportExportOptio
 
 export const exportReportAsPdf = async <Row,>(options: ReportExportOptions<Row>) => {
   const doc = await generateReportPdfDocument(options);
-  doc.save(getExportFilename(options.config.filenamePrefix, "pdf"));
+  doc.save(getExportFilename(options.config.filenamePrefix, "pdf", options.config.filenameDateSuffix));
 };
 
 const calculateColumnWidth = (values: string[], minWidth: number, maxWidth: number) => {
@@ -947,7 +949,7 @@ export const exportReportAsXlsx = async <Row,>(options: ReportExportOptions<Row>
     new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     }),
-    getExportFilename(config.filenamePrefix, "xlsx"),
+    getExportFilename(config.filenamePrefix, "xlsx", config.filenameDateSuffix),
   );
 };
 

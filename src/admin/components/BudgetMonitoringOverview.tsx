@@ -28,6 +28,9 @@ export type PurposeCategoryItem = {
 
 type BudgetMonitoringOverviewProps = {
   selectedFiscalYear: number;
+  reportingPeriodLabel?: string;
+  allYears?: boolean;
+  allocationComparisonAvailable?: boolean;
   annualAllocation: AnnualBudgetAllocation | null;
   onOpenConfigureModal: () => void;
   approvedBudget: number;
@@ -59,6 +62,9 @@ export function formatPercentageDisplay(valueOrPct: number, total?: number): str
 
 export const BudgetMonitoringOverview = ({
   selectedFiscalYear,
+  reportingPeriodLabel,
+  allYears = false,
+  allocationComparisonAvailable = true,
   annualAllocation,
   onOpenConfigureModal,
   approvedBudget,
@@ -85,11 +91,13 @@ export const BudgetMonitoringOverview = ({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  const periodLabel = reportingPeriodLabel ?? `FY ${selectedFiscalYear}`;
+  const allocationLabel = allYears ? "All Years" : `FY ${selectedFiscalYear}`;
   const isConfigured = annualAllocation !== null;
   const totalFYBudget = isConfigured ? annualAllocation.totalAmount : null;
 
   const { isDeficit, deficitAmount, remainingHeadroom } = deriveBudgetMonitoringMetrics({
-    allocation: totalFYBudget,
+    allocation: allocationComparisonAvailable ? totalFYBudget : null,
     approved: approvedBudget,
     released: releasedBudget,
   });
@@ -224,10 +232,15 @@ export const BudgetMonitoringOverview = ({
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              {isConfigured ? "Edit FY Allocation" : "Configure FY Budget"}
+              {allYears ? "Configure Individual FY Budget" : isConfigured ? "Edit FY Allocation" : "Configure FY Budget"}
             </button>
           </div>
         </div>
+
+        {reportingPeriodLabel && <p className="px-6 pt-3 text-xs text-text-secondary">
+          Execution totals: {periodLabel}. Allocations remain annual.
+          {!allocationComparisonAvailable && " Remaining headroom is unavailable for partial periods or incomplete annual allocation coverage."}
+        </p>}
 
         {/* 2. Unconfigured State Alert Banner */}
         {!isConfigured && (
@@ -238,11 +251,11 @@ export const BudgetMonitoringOverview = ({
               </div>
               <div className="space-y-0.5">
                 <h3 className="font-segoe text-xs font-bold text-amber-900">
-                  FY {selectedFiscalYear} Budget Allocation Not Configured
+                  {allocationLabel} Budget Allocation Not Configured
                 </h3>
                 <p className="font-segoe text-xs text-amber-800">
                   Budget Monitoring cannot calculate remaining headroom until the annual PCYDO allocation is configured.
-                  Execution metrics below reflect active workflow requests for FY {selectedFiscalYear}.
+                  Execution metrics below reflect active workflow requests for {periodLabel}.
                 </p>
               </div>
             </div>
@@ -272,7 +285,7 @@ export const BudgetMonitoringOverview = ({
                   Approved budget requests (
                   <span className="font-cascadia font-semibold">{formatPesoAmount(approvedBudget)}</span>) exceed
                   the configured statutory baseline ceiling (
-                  <span className="font-cascadia font-semibold">{formatPesoAmount(totalFYBudget)}</span>) for FY {selectedFiscalYear}.
+                  <span className="font-cascadia font-semibold">{formatPesoAmount(totalFYBudget)}</span>) for {periodLabel}.
                 </p>
               </div>
             </div>
@@ -295,7 +308,7 @@ export const BudgetMonitoringOverview = ({
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    {BUDGET_MONITORING_LABELS.allocation}
+                    {allYears ? "Combined FY Budget Allocation" : BUDGET_MONITORING_LABELS.allocation}
                   </p>
                   <span
                     className={cn(
@@ -328,7 +341,7 @@ export const BudgetMonitoringOverview = ({
                       : BUDGET_MONITORING_COLORS.remainingHeadroom.value
                   )}
                 >
-                  {!isConfigured
+                  {(!isConfigured || !allocationComparisonAvailable)
                     ? "Unavailable"
                     : isDeficit
                     ? `-${formatPesoAmount(deficitAmount)}`
@@ -412,7 +425,7 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <p className="font-segoe text-xs font-bold text-text-default">
-                  Budget Execution Pipeline &middot; FY {selectedFiscalYear}
+                  Budget Execution Pipeline &middot; {periodLabel}
                 </p>
                 <span className="font-segoe text-[11px] text-slate-500">
                   Current allocation position across released funds, pending disbursement, and remaining headroom
@@ -428,7 +441,7 @@ export const BudgetMonitoringOverview = ({
                   <span className="font-cascadia font-bold text-slate-700">{percentAvailable}%</span> of FY Budget Allocation remains uncommitted
                 </p>
               ) : (
-                <span className="font-segoe text-xs text-amber-800">Configure the FY Budget Allocation to calculate headroom</span>
+                <span className="font-segoe text-xs text-amber-800">{isConfigured ? "Headroom requires a full fiscal period with complete allocation coverage" : "Configure the FY Budget Allocation to calculate headroom"}</span>
               )}
             </div>
 
@@ -437,7 +450,7 @@ export const BudgetMonitoringOverview = ({
                 releasedAndLiquidated={releasedBudget}
                 pendingDisbursement={pendingDisbursement}
                 remainingHeadroom={remainingHeadroom}
-                totalAllocation={totalFYBudget}
+                totalAllocation={allocationComparisonAvailable ? totalFYBudget : null}
                 formatAmount={formatPesoAmount}
               />
             </div>
@@ -519,7 +532,7 @@ export const BudgetMonitoringOverview = ({
                       Total Approved
                     </p>
                     <p className="font-segoe text-[10px] text-slate-400">
-                      FY {selectedFiscalYear}
+                      {periodLabel}
                     </p>
                   </div>
                 </div>
@@ -642,10 +655,10 @@ export const BudgetMonitoringOverview = ({
                 <FileSpreadsheet className="h-6 w-6" />
               </div>
               <h4 className="mt-3 font-segoe text-sm font-semibold text-text-default">
-                No Approved Budget Requests for FY {selectedFiscalYear}
+                No Approved Budget Requests for {periodLabel}
               </h4>
               <p className="mt-1 max-w-sm font-segoe text-xs text-slate-500">
-                As budget requests belonging to this fiscal year are reviewed and approved, their canonical purpose allocations will automatically appear here.
+                As budget requests in this reporting period are reviewed and approved, their canonical purpose allocations will automatically appear here.
               </p>
             </div>
           )}

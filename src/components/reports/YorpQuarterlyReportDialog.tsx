@@ -28,6 +28,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import type { YorpQuarterlyReport } from "@/lib/lydo-connect-data";
+import { getCurrentAdminReportPeriod } from "@/lib/admin-report-period";
 import { fetchYorpQuarterlyReportInSupabase } from "@/lib/lydo-connect-supabase";
 import {
   exportYorpQuarterlySummary,
@@ -43,7 +44,7 @@ type YorpQuarterlyReportDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-const AVAILABLE_YEARS = [2024, 2025, 2026, 2027, 2028];
+const AVAILABLE_YEARS = [2026, 2025, 2024];
 const QUARTERS = [
   { value: 1, label: "Q1 (Jan 1 – Mar 31)" },
   { value: 2, label: "Q2 (Apr 1 – Jun 30)" },
@@ -56,8 +57,8 @@ export function YorpQuarterlyReportDialog({
   onOpenChange,
 }: YorpQuarterlyReportDialogProps) {
   const [reportType, setReportType] = useState<ReportType>("summary");
-  const [year, setYear] = useState<number>(2026);
-  const [quarter, setQuarter] = useState<number>(3);
+  const [year, setYear] = useState<number>(() => getCurrentAdminReportPeriod().year);
+  const [quarter, setQuarter] = useState<number>(() => getCurrentAdminReportPeriod().quarter);
   const [format, setFormat] = useState<ReportFormat>("pdf");
 
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -246,7 +247,7 @@ export function YorpQuarterlyReportDialog({
                     <SelectValue placeholder="Select Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    {AVAILABLE_YEARS.map((y) => (
+                    {[...new Set([year, ...AVAILABLE_YEARS])].sort((a, b) => b - a).map((y) => (
                       <SelectItem key={y} value={String(y)}>
                         {y}
                       </SelectItem>

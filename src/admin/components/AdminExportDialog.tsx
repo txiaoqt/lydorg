@@ -1,3 +1,5 @@
+import { AdminReportingPeriodSelector, type AdminPeriodFilter } from "./AdminReportingPeriodSelector";
+import { getAdminReportPeriodError, type AdminReportPeriod } from "@/lib/admin-report-period";
 import { useEffect, useState } from "react";
 import {
   Check,
@@ -41,7 +43,7 @@ export interface AdminExportOption {
   description?: string;
   icon?: LucideIcon;
   disabled?: boolean;
-  onExport?: (pageConfig?: PdfPageConfig) => Promise<void> | void;
+  onExport?: (pageConfig?: PdfPageConfig, period?: AdminReportPeriod) => Promise<void> | void;
 }
 
 export interface AdminExportDialogProps {
@@ -51,7 +53,8 @@ export interface AdminExportDialogProps {
   reportTitle?: string;
   description?: string;
   options?: AdminExportOption[];
-  onExport?: (format: ExportFormat, pageConfig?: PdfPageConfig) => Promise<void> | void;
+  onExport?: (format: ExportFormat, pageConfig?: PdfPageConfig, period?: AdminReportPeriod) => Promise<void> | void;
+  periodFilter?: AdminPeriodFilter;
   initialPaperSize?: PdfPaperSize;
   initialOrientation?: PdfOrientation;
 }
@@ -94,6 +97,7 @@ export function AdminExportDialog({
   reportTitle,
   description,
   options = DEFAULT_OPTIONS,
+  periodFilter,
   onExport,
   initialPaperSize = "a4",
   initialOrientation = "portrait",
@@ -125,6 +129,7 @@ export function AdminExportDialog({
     description ?? "Select your preferred document format and page configuration.";
 
   const handleGenerate = async () => {
+    if (periodFilter?.enabled && getAdminReportPeriodError(periodFilter.value)) return;
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
@@ -132,9 +137,11 @@ export function AdminExportDialog({
       const currentOption = options.find((opt) => opt.format === selectedFormat);
 
       if (currentOption?.onExport) {
-        await currentOption.onExport(pageConfig);
+        if (periodFilter?.enabled) await currentOption.onExport(pageConfig, periodFilter.value);
+        else await currentOption.onExport(pageConfig);
       } else if (onExport) {
-        await onExport(selectedFormat as ExportFormat, pageConfig);
+        if (periodFilter?.enabled) await onExport(selectedFormat as ExportFormat, pageConfig, periodFilter.value);
+        else await onExport(selectedFormat as ExportFormat, pageConfig);
       }
       onOpenChange(false);
     } finally {
@@ -176,6 +183,8 @@ export function AdminExportDialog({
             </button>
           </DialogClose>
         </div>
+
+        {periodFilter?.enabled && periodFilter.showSelector !== false && <AdminReportingPeriodSelector {...periodFilter} disabled={isSubmitting} />}
 
         {/* Format Selection Cards */}
         <div className="flex flex-col gap-2.5">
@@ -331,7 +340,7 @@ export function AdminExportDialog({
           </DialogClose>
           <button
             type="button"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(periodFilter?.enabled && getAdminReportPeriodError(periodFilter.value))}
             onClick={() => void handleGenerate()}
             className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-segoe text-xs font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-60"
           >

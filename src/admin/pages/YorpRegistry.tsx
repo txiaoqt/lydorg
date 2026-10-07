@@ -1,15 +1,10 @@
+import { AdminReportingPeriodSelector } from "@/admin/components/AdminReportingPeriodSelector";
+import { getCurrentAdminReportPeriod, matchesAdminReportPeriod, getAdminReportPeriodError, adminReportMetadata, withAdminReportPeriod, type AdminReportPeriod } from "@/lib/admin-report-period";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, addYears } from "date-fns";
-import { AlertTriangle, Award, BarChart3, ChevronDown, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
+import { AlertTriangle, Award, BarChart3, Clock, Download, Heart, Loader2, Trash2, User } from "lucide-react";
 import "./yorp-registry.css";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -49,11 +44,6 @@ import {
   yorpRegistryExportConfig,
 } from "@/lib/report-export-configs";
 import { exportReport, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
-import {
-  ALL_SEMESTERS_KEY,
-  buildYorpSemesterOptions,
-  isOrganizationInSemester,
-} from "@/lib/yorp-semester";
 import { toast } from "@/hooks/use-toast";
 
 const yorpStatusFilterLabel: Record<YorpStatusFilter, string> = {
@@ -81,13 +71,6 @@ export function YorpRegistryPage() {
   } = useLydoConnect();
   const orgs = state.organizationProfiles;
 
-  const [selectedSemester, setSelectedSemester] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      const param = new URLSearchParams(window.location.search).get("semester");
-      if (param) return param;
-    }
-    return ALL_SEMESTERS_KEY;
-  });
 
   const [search, setSearch] = useState("");
   const [yorpStatusFilter, setYorpStatusFilter] = useState<YorpStatusFilter>("all");
@@ -95,6 +78,7 @@ export function YorpRegistryPage() {
   const [barangayFilter, setBarangayFilter] = useState("all");
   const [classificationFilter, setClassificationFilter] = useState("all");
   const [selectedEntry, setSelectedEntry] = useState<YorpRegistryEntry | null>(null);
+  const [exportPeriod, setExportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedOrgIds, setSelectedOrgIds] = useState<Set<string>>(new Set());
@@ -104,32 +88,6 @@ export function YorpRegistryPage() {
   const [deleteError, setDeleteError] = useState("");
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const deleteConfirmationInputRef = useRef<HTMLInputElement>(null);
-
-  // Sync selectedSemester with URL search params when it changes
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      if (selectedSemester && selectedSemester !== ALL_SEMESTERS_KEY) {
-        url.searchParams.set("semester", selectedSemester);
-      } else {
-        url.searchParams.delete("semester");
-      }
-      window.history.replaceState({}, "", url.toString());
-    }
-  }, [selectedSemester]);
-
-  const semesterOptions = useMemo(
-    () => buildYorpSemesterOptions(state.ypopPeriods, orgs),
-    [state.ypopPeriods, orgs],
-  );
-
-  const selectedSemesterLabel = useMemo(() => {
-    if (selectedSemester === ALL_SEMESTERS_KEY) return "All Semesters";
-    const found = semesterOptions.find(
-      (opt) => opt.key === selectedSemester || opt.label === selectedSemester,
-    );
-    return found ? found.label : selectedSemester;
-  }, [selectedSemester, semesterOptions]);
 
   const registryEntries = useMemo<YorpRegistryEntry[]>(() => {
     const now = new Date();
@@ -145,12 +103,8 @@ export function YorpRegistryPage() {
       });
   }, [orgs]);
 
-  const semesterScopedEntries = useMemo(() => {
-    if (selectedSemester === ALL_SEMESTERS_KEY) return registryEntries;
-    return registryEntries.filter(({ org }) =>
-      isOrganizationInSemester(org, selectedSemester, semesterOptions, state.ypopEntries),
-    );
-  }, [registryEntries, selectedSemester, semesterOptions, state.ypopEntries]);
+  const periodScopedEntries = useMemo(() => getAdminReportPeriodError(exportPeriod) ? [] : registryEntries.filter(({ org }) =>
+    matchesAdminReportPeriod(org.accreditationStartDate || org.verifiedAt || org.createdAt, exportPeriod)), [registryEntries, exportPeriod]);
 
   const selectedBulkOrgs = useMemo(
     () =>
@@ -162,19 +116,19 @@ export function YorpRegistryPage() {
 
   const stats = useMemo(
     () => ({
-      activeAccredited: semesterScopedEntries.length,
-      expiringSoon: semesterScopedEntries.filter((entry) => entry.yorpStatus === "expiring_soon").length,
-      youthOrgs: semesterScopedEntries.filter((entry) => entry.org.majorClassification === "Youth Organization").length,
-      youthServingOrgs: semesterScopedEntries.filter(
+      activeAccredited: periodScopedEntries.length,
+      expiringSoon: periodScopedEntries.filter((entry) => entry.yorpStatus === "expiring_soon").length,
+      youthOrgs: periodScopedEntries.filter((entry) => entry.org.majorClassification === "Youth Organization").length,
+      youthServingOrgs: periodScopedEntries.filter(
         (entry) => entry.org.majorClassification === "Youth-Serving Organization",
       ).length,
     }),
-    [semesterScopedEntries],
+    [periodScopedEntries],
   );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return semesterScopedEntries.filter(({ org, yorpStatus }) => {
+    return periodScopedEntries.filter(({ org, yorpStatus }) => {
       if (q && ![org.organizationName, org.urn].some((field) => field.toLowerCase().includes(q))) return false;
       if (yorpStatusFilter !== "all" && yorpStatus !== yorpStatusFilter) return false;
       if (districtFilter !== "all" && org.district !== districtFilter) return false;
@@ -182,27 +136,23 @@ export function YorpRegistryPage() {
       if (classificationFilter !== "all" && org.majorClassification !== classificationFilter) return false;
       return true;
     });
-  }, [semesterScopedEntries, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
+  }, [periodScopedEntries, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
 
   const exportRows = useMemo(
-    () => filtered.map((entry, index) => mapOrganizationProfileToYorpExportRow(entry, index)),
-    [filtered],
+    () => getAdminReportPeriodError(exportPeriod) ? [] : filtered.filter(({ org }) => matchesAdminReportPeriod(org.accreditationStartDate || org.verifiedAt || org.createdAt, exportPeriod))
+      .map((entry, index) => mapOrganizationProfileToYorpExportRow(entry, index)),
+    [filtered, exportPeriod],
   );
 
   const exportFilterSummary = useMemo(() => {
     const summary: string[] = [];
-    if (selectedSemester !== ALL_SEMESTERS_KEY) {
-      summary.push(`Semester: ${selectedSemesterLabel}`);
-    } else {
-      summary.push("Semester: All Semesters");
-    }
     if (search.trim()) summary.push(`Search: ${search.trim()}`);
     if (yorpStatusFilter !== "all") summary.push(`Status: ${yorpStatusFilterLabel[yorpStatusFilter]}`);
     if (districtFilter !== "all") summary.push(`District: ${districtFilter}`);
     if (barangayFilter !== "all") summary.push(`Barangay: ${barangayFilter}`);
     if (classificationFilter !== "all") summary.push(`Classification: ${classificationFilter}`);
     return summary;
-  }, [selectedSemester, selectedSemesterLabel, search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
+  }, [search, yorpStatusFilter, districtFilter, barangayFilter, classificationFilter]);
 
   const openDeleteDialog = (organization: OrganizationProfile) => {
     const requireNameConfirmation = Boolean(getEffectiveSystemSetting("security.reauth_delete_organization"));
@@ -321,10 +271,7 @@ export function YorpRegistryPage() {
     }
 
     const exportConfig = buildYorpRegistryExportConfig(selectedColumnKeys);
-    const exportTitle =
-      selectedSemester !== ALL_SEMESTERS_KEY
-        ? `YORP Registry - ${selectedSemesterLabel}`
-        : "YORP Registry";
+    const exportTitle = "YORP Registry";
 
     try {
       await exportReport(
@@ -332,15 +279,13 @@ export function YorpRegistryPage() {
         {
           config: {
             ...exportConfig,
-            title: exportTitle,
-            filenamePrefix: `yorp-registry-${selectedSemester.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+            ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "yorp-registry" }, exportPeriod),
           },
           rows: exportRows,
           metadataLines: [
-            `Semester: ${selectedSemesterLabel}`,
             `Total Records: ${exportRows.length}`,
           ],
-          filterSummaryLines: exportFilterSummary,
+          filterSummaryLines: [...exportFilterSummary, ...adminReportMetadata(exportPeriod)],
         },
         pageConfig,
       );
@@ -363,43 +308,16 @@ export function YorpRegistryPage() {
     <div className="yorp-registry-page admin-yorp-registry-page space-y-4 sm:space-y-6">
       <AdminPageHeader
         title="YORP Registry"
+        wrapActions
         description="View accredited youth organizations."
         action={
-          <div className="flex flex-wrap items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Select semester"
-                  className="flex h-11 min-w-[160px] max-w-[220px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <span className="truncate font-medium">{selectedSemesterLabel}</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-[220px] max-h-[300px] overflow-y-auto data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0 shadow-lg"
-              >
-                {semesterOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.key}
-                    onClick={() => setSelectedSemester(option.key)}
-                    className={cn(
-                      "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default cursor-pointer",
-                      selectedSemester === option.key && "bg-bg-info-tertiary text-public-text-brand font-semibold",
-                    )}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex flex-wrap items-end gap-2">
+            <AdminReportingPeriodSelector compact value={exportPeriod} onChange={setExportPeriod} years={[2026, 2025, 2024]} />
 
             <Button
               variant="outline"
                   onClick={() => setExportDialogOpen(true)}
-                  disabled={filtered.length === 0}
+                  disabled={exportRows.length === 0}
               className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
             >
               <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
@@ -416,6 +334,7 @@ export function YorpRegistryPage() {
           </div>
         }
       />
+      <p className="text-xs text-text-secondary">Filtered by accreditation start date, falling back to verification or creation date.</p>
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <StatsCard
@@ -628,9 +547,9 @@ export function YorpRegistryPage() {
       <YorpRegistryExportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
-        recordCount={filtered.length}
-        filterSummaryLines={exportFilterSummary}
-        selectedSemesterLabel={selectedSemesterLabel}
+        recordCount={exportRows.length}
+        periodFilter={{ enabled: true, showSelector: false, value: exportPeriod, onChange: setExportPeriod, years: [2026, 2025, 2024] }}
+        filterSummaryLines={[...exportFilterSummary, ...adminReportMetadata(exportPeriod)]}
         onExport={handleExport}
         initialPaperSize="a4"
         initialOrientation="landscape"

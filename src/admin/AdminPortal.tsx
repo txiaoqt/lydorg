@@ -1,3 +1,5 @@
+import { getCurrentAdminReportPeriod, getAdminReportRange, getAdminReportPeriodError, getAdminReportPeriodLabel, adminReportMetadata, withAdminReportPeriod, fromBudgetMonitoringPeriod, type AdminReportPeriod } from "@/lib/admin-report-period";
+import { AdminReportingPeriodSelector } from "@/admin/components/AdminReportingPeriodSelector";
 import { type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import "./admin-inquiries.css";
 import "./admin-ypop-validation-review.css";
@@ -233,6 +235,7 @@ import {
   fetchAdminRecentNotifications,
   markAdminNotificationsReadInSupabase,
   fetchAllAdminActivityLogs,
+  fetchAllAdminReviewResourceRows,
   fetchAdminReviewResourcePage,
   fetchAdminBudgetRequestDetail,
   fetchAdminLiquidationReportDetail,
@@ -842,6 +845,11 @@ function AdminPortalContent({ section }: { section: string }) {
   const [activityLogFilter, setActivityLogFilter] = useState<string>("all");
   const [activitySearch, setActivitySearch] = useState("");
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [activityReportPeriod, setActivityReportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
+  const [budgetReportPeriod, setBudgetReportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
+  const [liquidationReportPeriod, setLiquidationReportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
+  const reportYears = [2026, 2025, 2024];
+  const reportRange = (period: AdminReportPeriod) => getAdminReportPeriodError(period) ? { startDate: null, endDateExclusive: null } : getAdminReportRange(period);
   const [activityDateFilter, setActivityDateFilter] = useState<ActivityDateFilter>("all");
   const [activityExporting, setActivityExporting] = useState<ExportFormat | null>(null);
   const [activityExportDialogOpen, setActivityExportDialogOpen] = useState(false);
@@ -997,7 +1005,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const [liquidationPreviewLoading, setLiquidationPreviewLoading] = useState(false);
   const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "map" | "public">("overview");
   const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(() =>
-    createDefaultBudgetMonitoringFilters(Number(getEffectiveSystemSetting("budget.default_fiscal_year") || new Date().getFullYear())),
+    createDefaultBudgetMonitoringFilters(),
   );
   const monitoringPermissionKey = [...(user?.permissionCodes ?? [])].sort().join(",");
   const monitoringQueryKey = useMemo(() => ["admin", "budget-monitoring-period", user?.id, currentAdminRoleCode,
@@ -1029,13 +1037,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
   const [budgetReviewPage, setBudgetReviewPage] = useState(0);
   const [debouncedBudgetReviewSearch, setDebouncedBudgetReviewSearch] = useState("");
-  const [budgetRequestsSemesterFilter, setBudgetRequestsSemesterFilter] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      const param = new URLSearchParams(window.location.search).get("semester");
-      if (param) return param;
-    }
-    return ALL_SEMESTERS_KEY;
-  });
+  const budgetRequestsSemesterFilter = ALL_SEMESTERS_KEY;
   const [budgetRequestsStatusFilter, setBudgetRequestsStatusFilter] = useState<BudgetRequestsStatusFilter>("all");
   const [budgetRequestsDistrictFilter, setBudgetRequestsDistrictFilter] = useState<"all" | PasigDistrict>("all");
   const [budgetRequestsBarangayFilter, setBudgetRequestsBarangayFilter] = useState("all");
@@ -1164,6 +1166,7 @@ function AdminPortalContent({ section }: { section: string }) {
     activitySearch,
     activityLogFilter,
     activityDateFilter,
+    activityReportPeriod,
   ]);
   const adminListQuery = useQuery({
     queryKey: [
@@ -1178,6 +1181,7 @@ function AdminPortalContent({ section }: { section: string }) {
       inquiryStatusFilter,
       activityLogFilter,
       activityDateFilter,
+      activityReportPeriod,
     ],
     queryFn: () => fetchAdminPortalListPage({
       resource: adminListResource!,
@@ -1193,8 +1197,9 @@ function AdminPortalContent({ section }: { section: string }) {
       barangay: adminListResource === "registrations" ? registrationBarangayFilter : "all",
       classification: adminListResource === "registrations" ? registrationClassificationFilter : "all",
       dateRange: adminListResource === "activity_logs" ? activityDateFilter : "all",
+      ...(adminListResource === "activity_logs" ? reportRange(activityReportPeriod) : {}),
     }),
-    enabled: Boolean(supabase && adminListResource) && adminListSearch === debouncedAdminListSearch,
+    enabled: (adminListResource !== "activity_logs" || !getAdminReportPeriodError(activityReportPeriod)) && Boolean(supabase && adminListResource) && adminListSearch === debouncedAdminListSearch,
   });
   const adminListResult = adminListQuery.data ?? null;
   const adminListLoading = adminListQuery.isFetching;
@@ -1212,28 +1217,29 @@ function AdminPortalContent({ section }: { section: string }) {
     return () => window.clearTimeout(timeout);
   }, [renewalSearch]);
   useEffect(() => setRenewalReviewPage(0), [renewalSearch, renewalStatusFilter, renewalDistrictFilter, renewalBarangayFilter, renewalClassificationFilter]);
-  useEffect(() => setBudgetReviewPage(0), [budgetRequestsSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter]);
-  useEffect(() => setLiquidationReviewPage(0), [liquidationReportsSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter]);
+  useEffect(() => setBudgetReviewPage(0), [budgetRequestsSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter, budgetReportPeriod]);
+  useEffect(() => setLiquidationReviewPage(0), [liquidationReportsSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter, liquidationReportPeriod]);
   const adminBudgetReviewQuery = useQuery({
-    queryKey: ["admin", "review", "budgets", budgetReviewPage, debouncedBudgetReviewSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter],
+    queryKey: ["admin", "review", "budgets", budgetReviewPage, debouncedBudgetReviewSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter, budgetReportPeriod],
     queryFn: () => fetchAdminReviewResourcePage({
       resource: "budgets", page: budgetReviewPage, pageSize: 20, search: debouncedBudgetReviewSearch,
       status: budgetRequestsStatusFilter, semester: budgetRequestsSemesterFilter,
       district: budgetRequestsDistrictFilter, barangay: budgetRequestsBarangayFilter,
       classification: budgetRequestsClassificationFilter,
+      ...reportRange(budgetReportPeriod),
     }),
-    enabled: Boolean(supabase && section === "budget-utilization") && debouncedBudgetReviewSearch === budgetRequestsSearch.trim(),
-    placeholderData: (previous) => previous,
+    enabled: !getAdminReportPeriodError(budgetReportPeriod) && Boolean(supabase && section === "budget-utilization") && debouncedBudgetReviewSearch === budgetRequestsSearch.trim(),
   });
   const adminBudgetReviewRows = (adminBudgetReviewQuery.data?.rows ?? []).filter((row): row is AdminBudgetReviewRow => "request" in row);
   const adminLiquidationReviewQuery = useQuery({
-    queryKey: ["admin", "review", "liquidations", liquidationReviewPage, debouncedLiquidationReviewSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter],
+    queryKey: ["admin", "review", "liquidations", liquidationReviewPage, debouncedLiquidationReviewSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter, liquidationReportPeriod],
     queryFn: () => fetchAdminReviewResourcePage({
       resource: "liquidations", page: liquidationReviewPage, pageSize: 20, search: debouncedLiquidationReviewSearch,
       status: liquidationReportsStatusFilter, district: liquidationReportsDistrictFilter,
       barangay: liquidationReportsBarangayFilter, classification: liquidationReportsClassificationFilter,
+      ...reportRange(liquidationReportPeriod),
     }),
-    enabled: Boolean(supabase && section === "liquidation-monitoring") && debouncedLiquidationReviewSearch === liquidationReportsSearch.trim(),
+    enabled: !getAdminReportPeriodError(liquidationReportPeriod) && Boolean(supabase && section === "liquidation-monitoring") && debouncedLiquidationReviewSearch === liquidationReportsSearch.trim(),
     placeholderData: (previous) => previous,
   });
   const adminLiquidationReviewRows = (adminLiquidationReviewQuery.data?.rows ?? []).filter((row): row is AdminLiquidationReviewRow => "report" in row && row.report.status !== "draft");
@@ -2151,6 +2157,23 @@ function AdminPortalContent({ section }: { section: string }) {
     );
   }, [annualAllocations, selectedFiscalYear]);
 
+  const monitoringAllYears = budgetMonitoringFilters.fiscalPeriod.mode === "all" || budgetMonitoringFilters.fiscalPeriod.mode === "quarter_all_years";
+  const combinedAllocations = useMemo(() => {
+    const byYear = new Map<number, AnnualBudgetAllocation>();
+    annualAllocations.forEach(allocation => {
+      const existing = byYear.get(allocation.fiscalYear);
+      if (!existing || allocation.isActive) byYear.set(allocation.fiscalYear, allocation);
+    });
+    return [...byYear.values()];
+  }, [annualAllocations]);
+  const combinedFYAllocation = useMemo<AnnualBudgetAllocation | null>(() => combinedAllocations.length ? {
+    ...combinedAllocations[0],
+    totalAmount: combinedAllocations.reduce((sum, allocation) => sum + allocation.totalAmount, 0),
+    statutoryBaselineNotes: `Combined configured annual allocations: ${combinedAllocations.map(a => a.fiscalYear).sort().join(", ")}.`,
+  } : null, [combinedAllocations]);
+  const monitoringAllocationCoverageComplete = adminBudgetRequests.every(request =>
+    combinedAllocations.some(allocation => allocation.fiscalYear === getBudgetRequestFiscalYear(request)));
+
   const annualAllocation = selectedFYAllocation ? selectedFYAllocation.totalAmount : null;
   const annualAllocationFiscalYear = selectedFiscalYear;
 
@@ -2340,35 +2363,6 @@ function AdminPortalContent({ section }: { section: string }) {
     adminLiquidationReviewRows,
     section,
   ]);
-  const liquidationReportsExportRows = useMemo(
-    () => filteredVisibleLiquidationReports.map((report) => {
-      const organization = state.organizationProfiles.find((org) => org.id === report.organizationId);
-      const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId);
-      const isOverdue = report.status === "overdue" || isLiquidationOverdue(report.deadlineAt, report.status);
-      return {
-        liquidationReference: buildPublicRecordCode("LR", report, visibleLiquidationReports),
-        organization: organization?.organizationName ?? "Unknown organization",
-        activity: linkedBudget?.activityTitle ?? "Approved budget",
-        budgetRequestReference: linkedBudget
-          ? buildPublicRecordCode("BR", linkedBudget, state.budgetRequests)
-          : "",
-        district: organization?.district ?? "",
-        barangay: organization?.addressBarangay || organization?.barangay || "",
-        classification: organization?.majorClassification ?? "",
-        status: isOverdue
-          ? "Overdue"
-          : LIQUIDATION_STATUS_LABEL_CONFIG[report.status]?.label ?? report.status.replaceAll("_", " "),
-        requestedAmount: Number(linkedBudget?.requestedAmount ?? 0),
-        approvedAmount: Number(linkedBudget?.approvedAmount || linkedBudget?.requestedAmount || 0),
-        releasedAmount: Number(linkedBudget?.releasedAmount ?? 0),
-        deadline: formatShortDate(report.deadlineAt),
-        hardCopySubmittedAt: formatShortDate(report.hardCopySubmittedAt),
-        completedAt: formatShortDate(report.completedAt),
-        adminRemarks: report.remarks ?? "",
-      };
-    }),
-    [filteredVisibleLiquidationReports, state.organizationProfiles, state.budgetRequests, visibleLiquidationReports],
-  );
   const liquidationReportsExportFilters = useMemo(() => {
     const readableStatus = liquidationReportsStatusFilter === "all"
       ? "All Status"
@@ -2388,17 +2382,44 @@ function AdminPortalContent({ section }: { section: string }) {
     liquidationReportsClassificationFilter,
   ]);
   const handleLiquidationReportsExport = async (exportFormat: ExportFormat, pageConfig?: PdfPageConfig) => {
-    if (!liquidationReportsExportRows.length) {
-      toast({ title: "No liquidation reports found", description: "Try changing the selected filters." });
-      return;
-    }
     try {
+      const matching = await fetchAllAdminReviewResourceRows({ resource: "liquidations", search: liquidationReportsSearch,
+        status: liquidationReportsStatusFilter, district: liquidationReportsDistrictFilter,
+        barangay: liquidationReportsBarangayFilter, classification: liquidationReportsClassificationFilter,
+        ...getAdminReportRange(liquidationReportPeriod) });
+      const liquidationReportsExportRows = matching.filter((row): row is AdminLiquidationReviewRow => "report" in row)
+        .map(({ report, organization, budgetRequest: linkedBudget }) => {
+          const isOverdue = report.status === "overdue" || isLiquidationOverdue(report.deadlineAt, report.status);
+          return {
+            liquidationReference: report.publicRecordCode || buildPublicRecordCode("LR", report, [report]),
+            organization: organization?.organizationName ?? "Unknown organization",
+            activity: linkedBudget?.activityTitle ?? "Approved budget",
+            budgetRequestReference: linkedBudget
+              ? linkedBudget.publicRecordCode || buildPublicRecordCode("BR", linkedBudget as BudgetRequest, [linkedBudget as BudgetRequest])
+              : "",
+            district: organization?.district ?? "",
+            barangay: organization?.addressBarangay || organization?.barangay || "",
+            classification: organization?.majorClassification ?? "",
+            status: isOverdue
+              ? "Overdue"
+              : LIQUIDATION_STATUS_LABEL_CONFIG[report.status]?.label ?? report.status.replaceAll("_", " "),
+            requestedAmount: Number(linkedBudget?.requestedAmount ?? 0),
+            approvedAmount: Number(linkedBudget?.approvedAmount || linkedBudget?.requestedAmount || 0),
+            releasedAmount: Number(linkedBudget?.releasedAmount ?? 0),
+            deadline: formatShortDate(report.deadlineAt),
+            hardCopySubmittedAt: formatShortDate(report.hardCopySubmittedAt),
+            completedAt: formatShortDate(report.completedAt),
+            adminRemarks: report.remarks ?? "",
+          };
+        });
+      if (!liquidationReportsExportRows.length) {
+        toast({ title: "No liquidation reports found", description: "Try changing the selected filters." }); return;
+      }
       await exportReport(
         exportFormat,
         {
           config: {
-            title: "Liquidation Reports",
-            filenamePrefix: "liquidation-reports",
+            ...withAdminReportPeriod({ title: "Liquidation Reports", filenamePrefix: "liquidation-reports" }, liquidationReportPeriod),
             orientation: "landscape",
             xlsxSheetName: "Liquidation Reports",
             columns: [
@@ -2421,7 +2442,7 @@ function AdminPortalContent({ section }: { section: string }) {
           },
           rows: liquidationReportsExportRows,
           metadataLines: [`Total Liquidation Reports: ${liquidationReportsExportRows.length}`],
-          filterSummaryLines: liquidationReportsExportFilters,
+          filterSummaryLines: [...liquidationReportsExportFilters, ...adminReportMetadata(liquidationReportPeriod)],
         },
         pageConfig,
       );
@@ -2770,21 +2791,6 @@ function AdminPortalContent({ section }: { section: string }) {
 
     return grouped;
   }, [organizationProfileById, fyBudgetRequests]);
-  const budgetRequestExportRows = useMemo<BudgetRequestExportRow[]>(
-    () =>
-      filteredAdminBudgetRequests.map((request) => {
-        const organization = adminBudgetReviewRows.find((row) => row.request.id === request.id)?.organization
-          ?? state.organizationProfiles.find((org) => org.id === request.organizationId);
-        return {
-          organizationName: organization?.organizationName ?? "Unknown organization",
-          activity: request.activityTitle,
-          approvedAmount: Number(request.approvedAmount || request.requestedAmount || 0),
-          releasedAmount: Number(request.releasedAmount || 0),
-          releasedDate: request.releaseDate || "",
-        };
-      }),
-    [filteredAdminBudgetRequests, adminBudgetReviewRows, state.organizationProfiles],
-  );
   const budgetMonitoringExportRows = useMemo<BudgetMonitoringExportRow[]>(
     () =>
       filteredBudgetMonitoringEntries.map((entry) => {
@@ -2854,9 +2860,7 @@ function AdminPortalContent({ section }: { section: string }) {
     return summary;
   }, [budgetMonitoringRiskFilter, budgetMonitoringSearch]);
   const allocationExportFilters = useMemo(() => {
-    const period = budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year"
-      ? `FY ${budgetMonitoringFilters.fiscalPeriod.fiscalYear}`
-      : `${budgetMonitoringFilters.fiscalPeriod.startDate} to ${budgetMonitoringFilters.fiscalPeriod.endDate}`;
+    const period = getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod));
     return [period, ...[
       budgetMonitoringFilters.purposeCategory !== "all" ? `Purpose: ${budgetMonitoringFilters.purposeCategory}` : null,
       budgetMonitoringFilters.budgetStatus !== "all" ? `Status: ${budgetMonitoringFilters.budgetStatus}` : null,
@@ -2870,6 +2874,14 @@ function AdminPortalContent({ section }: { section: string }) {
   const handleReportExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
     try {
       if (activeReportExport === "budget-requests") {
+        const matching = await fetchAllAdminReviewResourceRows({ resource: "budgets", search: budgetRequestsSearch,
+          status: budgetRequestsStatusFilter, semester: budgetRequestsSemesterFilter,
+          district: budgetRequestsDistrictFilter, barangay: budgetRequestsBarangayFilter,
+          classification: budgetRequestsClassificationFilter, ...getAdminReportRange(budgetReportPeriod) });
+        const budgetRequestExportRows: BudgetRequestExportRow[] = matching.filter((row): row is AdminBudgetReviewRow => "request" in row)
+          .map(({ request, organization }) => ({ organizationName: organization.organizationName, activity: request.activityTitle,
+            approvedAmount: Number(request.approvedAmount ?? request.requestedAmount ?? 0),
+            releasedAmount: Number(request.releasedAmount ?? 0), releasedDate: request.releaseDate || "" }));
         if (!budgetRequestExportRows.length) {
           toast({ title: "No Data", description: "No budget requests match the current filters." });
           return;
@@ -2886,8 +2898,7 @@ function AdminPortalContent({ section }: { section: string }) {
           {
             config: {
               ...budgetRequestExportConfig,
-              title: exportTitle,
-              filenamePrefix: `budget-requests-${budgetRequestsSemesterFilter.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+              ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "budget-requests" }, budgetReportPeriod),
             },
             rows: budgetRequestExportRows,
             metadataLines: [
@@ -2896,7 +2907,7 @@ function AdminPortalContent({ section }: { section: string }) {
               `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
               `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
             ],
-            filterSummaryLines: budgetRequestExportFilters,
+            filterSummaryLines: [...budgetRequestExportFilters, ...adminReportMetadata(budgetReportPeriod)],
             totalsRow:
               format === "pdf"
                 ? buildBudgetRequestPdfTotalsRow(budgetRequestExportRows)
@@ -2923,16 +2934,16 @@ function AdminPortalContent({ section }: { section: string }) {
         await exportReport(
           format,
           {
-            config: budgetMonitoringExportConfig,
+            config: withAdminReportPeriod(budgetMonitoringExportConfig, fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod)),
             rows: budgetMonitoringExportRows,
             metadataLines: [
-              `Fiscal Year: FY ${selectedFiscalYear}`,
+              `Reporting Period: ${getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}`,
               `Total Monitored Records: ${budgetMonitoringExportRows.length}`,
               `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
               `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
               `Total Remaining Amount: ${formatCurrencyPdf(totalRemaining)}`,
             ],
-            filterSummaryLines: budgetMonitoringExportFilters,
+            filterSummaryLines: [...budgetMonitoringExportFilters, ...adminReportMetadata(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))],
             totalsRow:
               format === "pdf"
                 ? buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows)
@@ -2956,7 +2967,7 @@ function AdminPortalContent({ section }: { section: string }) {
         await exportReport(
           format,
           {
-            config: allocationByBarangayExportConfig,
+            config: withAdminReportPeriod(allocationByBarangayExportConfig, fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod)),
             rows: allocationByBarangayExportRows,
             metadataLines: [
               `Total Barangays: ${budgetAllocationSummary.barangayCount}`,
@@ -2964,7 +2975,7 @@ function AdminPortalContent({ section }: { section: string }) {
               `Total Approved Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalApproved)}`,
               `Total Released Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalReleased)}`,
             ],
-            filterSummaryLines: allocationExportFilters,
+            filterSummaryLines: [...allocationExportFilters, ...adminReportMetadata(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))],
             totalsRow:
               format === "pdf"
                 ? buildAllocationPdfTotalsRow(allocationByBarangayExportRows)
@@ -10879,7 +10890,9 @@ function AdminPortalContent({ section }: { section: string }) {
 
         const pendingReviewBudgetRequestCount = adminBudgetReviewQuery.data?.summary.pendingReview ?? 0;
         const pendingReviewBudgetRequestTodayCount = adminBudgetReviewQuery.data?.summary.pendingReviewToday ?? 0;
+        const approvedBudgetTotal = adminBudgetReviewQuery.data?.summary.approvedTotal ?? 0;
         const releasedBudgetTotal = adminBudgetReviewQuery.data?.summary.releasedTotal ?? 0;
+        const budgetSummaryLoading = adminBudgetReviewQuery.isPending;
         const formatBudgetStatCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
         const budgetOrganizationsById = Object.fromEntries([
           ...state.organizationProfiles,
@@ -10890,38 +10903,11 @@ function AdminPortalContent({ section }: { section: string }) {
           <div className="space-y-4">
             <AdminPageHeader
               title="Budget Requests"
+              wrapActions
               description="Review funding requests for YPOP-approved projects."
               action={
-                <div className="flex flex-wrap items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Select semester"
-                        className="flex h-9 min-w-[160px] max-w-[220px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-1.5 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        <span className="truncate font-medium">{selectedBudgetSemesterLabel}</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-[220px] max-h-[300px] overflow-y-auto data-[side=bottom]:rounded-b-md data-[side=bottom]:rounded-t-none data-[side=top]:rounded-t-md data-[side=top]:rounded-b-none border-slate-300 p-0 shadow-lg"
-                    >
-                      {budgetSemesterOptions.map((option) => (
-                        <DropdownMenuItem
-                          key={option.key}
-                          onClick={() => setBudgetRequestsSemesterFilter(option.key)}
-                          className={cn(
-                            "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default cursor-pointer",
-                            budgetRequestsSemesterFilter === option.key && "bg-bg-info-tertiary text-public-text-brand font-semibold",
-                          )}
-                        >
-                          {option.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div className="flex flex-wrap items-end gap-2">
+                  <AdminReportingPeriodSelector compact value={budgetReportPeriod} years={reportYears} onChange={period => { setBudgetReviewPage(0); setBudgetReportPeriod(period); }} />
 
                   <Button
                     variant="outline"
@@ -10930,7 +10916,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       setActiveReportExport("budget-requests");
                     }}
                     disabled={filteredAdminBudgetRequests.length === 0}
-                    className="flex h-9 items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                    className="flex h-10 items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                   >
                     <Download className="h-4 w-4 text-slate-500" />
                     <span>Export</span>
@@ -10938,21 +10924,28 @@ function AdminPortalContent({ section }: { section: string }) {
                 </div>
               }
             />
+            <p className="text-xs text-text-secondary">Filtered by activity date, falling back to request creation date.</p>
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <StatsCard
                 title="PENDING REVIEW"
-                value={pendingReviewBudgetRequestCount}
+                value={budgetSummaryLoading ? "—" : pendingReviewBudgetRequestCount}
                 icon={Clock}
                 trend="up"
-                trendLabel={`${pendingReviewBudgetRequestTodayCount} received today`}
+                trendLabel={budgetSummaryLoading ? undefined : `${pendingReviewBudgetRequestTodayCount} received today`}
                 description="Requests awaiting administrative review."
               />
               <StatsCard
-                title="RELEASED BUDGET"
-                value={formatBudgetStatCurrency(releasedBudgetTotal)}
+                title="APPROVED BUDGET"
+                value={budgetSummaryLoading ? "—" : formatBudgetStatCurrency(approvedBudgetTotal)}
                 icon={Wallet}
-                description="Total amount released from approved requests."
+                description="Approved amount in the selected reporting period."
+              />
+              <StatsCard
+                title="RELEASED BUDGET"
+                value={budgetSummaryLoading ? "—" : formatBudgetStatCurrency(releasedBudgetTotal)}
+                icon={Wallet}
+                description="Released amount in the selected reporting period."
               />
             </div>
 
@@ -12151,20 +12144,25 @@ function AdminPortalContent({ section }: { section: string }) {
             <div className="space-y-4">
               <AdminPageHeader
                 title="Liquidation Reports"
+                wrapActions
                 description="Review financial accountability documents for released funds."
                 action={
+                <div className="flex flex-wrap items-end gap-2">
+                  <AdminReportingPeriodSelector compact value={liquidationReportPeriod} years={reportYears} onChange={period => { setLiquidationReviewPage(0); setLiquidationReportPeriod(period); }} />
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={!liquidationReportsExportRows.length}
+                    disabled={!adminLiquidationReviewQuery.data?.totalCount}
                     onClick={() => setLiquidationExportDialogOpen(true)}
                     className="h-10 gap-2 border-slate-300 bg-admin-surface px-4 text-text-default hover:bg-slate-50"
                   >
                     <Download className="h-4 w-4" />
                     Export
                   </Button>
+                </div>
                 }
               />
+              <p className="text-xs text-text-secondary">Filtered by report creation date. Deadlines may fall in a different year or quarter.</p>
 
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <StatsCard
@@ -12210,7 +12208,8 @@ function AdminPortalContent({ section }: { section: string }) {
                 open={liquidationExportDialogOpen}
                 onOpenChange={setLiquidationExportDialogOpen}
                 title="Export Liquidation Reports"
-                description={`Export ${liquidationReportsExportRows.length} liquidation ${liquidationReportsExportRows.length === 1 ? "report" : "reports"} matching the current filters.`}
+                description="Export all liquidation reports matching the current filters and reporting period."
+                periodFilter={{ enabled: true, showSelector: false, value: liquidationReportPeriod, onChange: period => { setLiquidationReviewPage(0); setLiquidationReportPeriod(period); }, years: reportYears }}
                 initialPaperSize="a4"
                 initialOrientation="landscape"
                 onExport={handleLiquidationReportsExport}
@@ -12414,7 +12413,10 @@ function AdminPortalContent({ section }: { section: string }) {
                   <>
                     <BudgetMonitoringOverview
                       selectedFiscalYear={selectedFiscalYear}
-                      annualAllocation={budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" ? selectedFYAllocation : null}
+                      annualAllocation={monitoringAllYears ? combinedFYAllocation : selectedFYAllocation}
+                      reportingPeriodLabel={getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}
+                      allYears={monitoringAllYears}
+                      allocationComparisonAvailable={budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" || (budgetMonitoringFilters.fiscalPeriod.mode === "all" && monitoringAllocationCoverageComplete)}
                       onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
                       approvedBudget={budgetMonitoringApprovedTotal}
                       releasedBudget={budgetMonitoringReleasedTotal}
@@ -12439,7 +12441,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     formatPesoAmount={formatPesoAmount}
                     selectedDistrict={budgetMonitoringFilters.district}
                     selectedBarangay={budgetMonitoringFilters.barangay}
-                    fiscalPeriodLabel={budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" ? `FY ${budgetMonitoringFilters.fiscalPeriod.fiscalYear}` : "Custom date range"}
+                    fiscalPeriodLabel={getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}
                     onViewOrganization={setSelectedOrganizationBudgetDetailId}
                   />
                 ) : budgetMonitoringTab === "barangay-allocation" ? (
@@ -13325,6 +13327,7 @@ function AdminPortalContent({ section }: { section: string }) {
               search: activitySearch,
               category: activityLogFilter,
               dateRange: activityDateFilter,
+              ...getAdminReportRange(activityReportPeriod),
             });
             if (!exportLogs.length) {
               toast({
@@ -13344,15 +13347,17 @@ function AdminPortalContent({ section }: { section: string }) {
             await exportReport(
               format,
               {
-                config: activityLogExportConfig,
+                config: withAdminReportPeriod(activityLogExportConfig, activityReportPeriod),
                 rows,
                 metadataLines: [
                   "Generated by: Administrator",
+                  ...(activityReportPeriod.mode === "all" && activityDateFilter !== "all"
+                    ? [`Reporting Period: Last ${activityDateFilter.replace("d", "")} days`] : adminReportMetadata(activityReportPeriod)),
                   `Records: ${rows.length}`,
                 ],
                 filterSummaryLines: [
                   `Category: ${activityLogFilter === "all" ? "All" : getFriendlyAuditCategory(activityLogFilter)}`,
-                  `Time Range: ${activityDateFilter === "all"
+                  `Time Range: ${activityReportPeriod.mode !== "all" ? getAdminReportPeriodLabel(activityReportPeriod) : activityDateFilter === "all"
                     ? "All time"
                     : `Last ${activityDateFilter.replace("d", "")} days`
                   }`,
@@ -13379,8 +13384,11 @@ function AdminPortalContent({ section }: { section: string }) {
           <div className="flex flex-col gap-4">
             <AdminPageHeader
               title="Activity Logs"
+              wrapActions
               description="Review the system-wide history of admin actions."
               action={
+                <div className="flex flex-wrap items-end gap-2">
+                  <AdminReportingPeriodSelector compact value={activityReportPeriod} years={reportYears} onChange={period => { setActivityDateFilter("all"); setAdminListPage(0); setActivityReportPeriod(period); }} />
                 <button
                   type="button"
                   disabled={!adminListResult?.totalCount || activityExporting !== null}
@@ -13390,8 +13398,10 @@ function AdminPortalContent({ section }: { section: string }) {
                   <Download className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                   Export
                 </button>
+                </div>
               }
             />
+            <p className="text-xs text-text-secondary">Filtered by the date the action was recorded.</p>
             <ActivityLogsTable
               logs={adminListResult?.rows.filter((row): row is ActivityLog => "action" in row) ?? []}
               searchValue={activitySearch}
@@ -13399,7 +13409,7 @@ function AdminPortalContent({ section }: { section: string }) {
               categoryFilter={activityLogFilter}
               onCategoryFilterChange={setActivityLogFilter}
               dateFilter={activityDateFilter}
-              onDateFilterChange={setActivityDateFilter}
+              onDateFilterChange={value => { setActivityReportPeriod({ mode: "all" }); setActivityDateFilter(value); }}
               adminAccountsById={adminAccountsById}
               serverPagination={{
                 totalCount: adminListResult?.totalCount ?? 0,
@@ -13413,6 +13423,7 @@ function AdminPortalContent({ section }: { section: string }) {
               onOpenChange={setActivityExportDialogOpen}
               reportTitle="Activity Logs"
               description="Export activity records matching the current category and time filters."
+              periodFilter={{ enabled: true, showSelector: false, value: activityReportPeriod, onChange: period => { setActivityDateFilter("all"); setActivityReportPeriod(period); }, years: reportYears }}
               onExport={handleActivityExport}
             />
           </div>
@@ -15806,7 +15817,10 @@ function AdminPortalContent({ section }: { section: string }) {
     isDeletingYpopSubmissions,
     activityLogFilter,
     activityDateFilter,
+    activityReportPeriod,
     activityExportDialogOpen,
+    budgetReportPeriod,
+    liquidationReportPeriod,
     activityExporting,
     activitySearch,
     adminAccountsById,
@@ -16411,6 +16425,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 ? `Export budget request records for ${selectedBudgetSemesterLabel} matching the current filters.`
                 : "Export budget request records matching the current filters."
         }
+        periodFilter={activeReportExport === "budget-requests" ? { enabled: true, showSelector: false, value: budgetReportPeriod, onChange: period => { setBudgetReviewPage(0); setBudgetReportPeriod(period); }, years: reportYears } : undefined}
         onExport={handleReportExport}
       />
       <DownloadDocumentsDialog

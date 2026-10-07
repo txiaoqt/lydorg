@@ -6,8 +6,11 @@ import type {
 } from "./lydo-connect-data";
 import type { PurposeCategoryItem } from "@/admin/components/BudgetMonitoringOverview";
 import type { OrganizationFundingRow } from "@/admin/components/OrganizationFundingTable";
+import { getCurrentAdminReportPeriod, toBudgetMonitoringPeriod } from "./admin-report-period";
 
 export type BudgetMonitoringFiscalPeriod =
+  | { mode: "all"; fiscalYear: number }
+  | { mode: "quarter_all_years"; fiscalYear: number; quarter: 1 | 2 | 3 | 4 }
   | { mode: "fiscal_year"; fiscalYear: number }
   | { mode: "custom"; fiscalYear: number; startDate: string; endDate: string };
 
@@ -41,8 +44,8 @@ export interface BudgetMonitoringFilters {
   sortBy: SortByOption;
 }
 
-export const createDefaultBudgetMonitoringFilters = (fiscalYear: number): BudgetMonitoringFilters => ({
-  fiscalPeriod: { mode: "fiscal_year", fiscalYear },
+export const createDefaultBudgetMonitoringFilters = (fiscalYear = getCurrentAdminReportPeriod().year): BudgetMonitoringFilters => ({
+  fiscalPeriod: toBudgetMonitoringPeriod({ ...getCurrentAdminReportPeriod(), year: fiscalYear }, fiscalYear),
   purposeCategory: "all",
   budgetStatus: "all",
   majorClassification: "all",
@@ -53,7 +56,7 @@ export const createDefaultBudgetMonitoringFilters = (fiscalYear: number): Budget
   sortBy: "approved_desc",
 });
 
-export const DEFAULT_BUDGET_MONITORING_FILTERS = createDefaultBudgetMonitoringFilters(new Date().getFullYear());
+export const DEFAULT_BUDGET_MONITORING_FILTERS = createDefaultBudgetMonitoringFilters();
 
 export const SORT_BY_LABELS: Record<SortByOption, string> = {
   approved_desc: "Approved Amount — Highest to Lowest",
@@ -135,6 +138,11 @@ export function getBudgetRequestFiscalYear(r: BudgetRequest): number {
 }
 
 export function matchesFiscalPeriod(r: BudgetRequest, period: BudgetMonitoringFiscalPeriod): boolean {
+  if (period.mode === "all") return true;
+  if (period.mode === "quarter_all_years") {
+    const date = getBudgetRequestMonitoringDate(r);
+    return Boolean(date && Math.ceil(Number(date.slice(5, 7)) / 3) === period.quarter);
+  }
   if (period.mode === "fiscal_year") {
     return getBudgetRequestFiscalYear(r) === period.fiscalYear;
   }

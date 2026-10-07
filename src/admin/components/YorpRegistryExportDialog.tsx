@@ -1,3 +1,5 @@
+import { AdminReportingPeriodSelector, type AdminPeriodFilter } from "./AdminReportingPeriodSelector";
+import { getAdminReportPeriodError, type AdminReportPeriod } from "@/lib/admin-report-period";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
@@ -53,7 +55,9 @@ export interface YorpRegistryExportDialogProps {
     format: ExportFormat,
     selectedColumnKeys: string[],
     pageConfig?: PdfPageConfig,
+    period?: AdminReportPeriod,
   ) => Promise<void> | void;
+  periodFilter?: AdminPeriodFilter;
   initialPaperSize?: PdfPaperSize;
   initialOrientation?: PdfOrientation;
 }
@@ -126,6 +130,7 @@ export function YorpRegistryExportDialog({
   recordCount,
   filterSummaryLines = [],
   selectedSemesterLabel,
+  periodFilter,
   onExport,
   initialPaperSize = "a4",
   initialOrientation = "landscape",
@@ -226,7 +231,7 @@ export function YorpRegistryExportDialog({
   };
 
   const handleGenerate = async () => {
-    if (isSubmitting || selectedCount === 0) return;
+    if (isSubmitting || selectedCount === 0 || (periodFilter?.enabled && getAdminReportPeriodError(periodFilter.value))) return;
     setIsSubmitting(true);
     try {
       // Paint the busy state before PDF/Excel/CSV generation starts.
@@ -240,7 +245,8 @@ export function YorpRegistryExportDialog({
         finalKeys = YORP_REGISTRY_COLUMN_ORDER.filter((k) => nextSet.has(k));
       }
       const pageConfig: PdfPageConfig = { paperSize, orientation };
-      await onExport(selectedFormat, finalKeys, pageConfig);
+      if (periodFilter?.enabled) await onExport(selectedFormat, finalKeys, pageConfig, periodFilter.value);
+      else await onExport(selectedFormat, finalKeys, pageConfig);
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);
@@ -284,6 +290,7 @@ export function YorpRegistryExportDialog({
 
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {periodFilter?.enabled && periodFilter.showSelector !== false && <AdminReportingPeriodSelector {...periodFilter} disabled={isSubmitting} />}
           {/* Semester & Scope Info Banner */}
           {selectedSemesterLabel && (
             <div className="flex items-center justify-between rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 px-3.5 py-2.5">
@@ -636,7 +643,7 @@ export function YorpRegistryExportDialog({
             </DialogClose>
             <button
               type="button"
-              disabled={isSubmitting || selectedCount === 0}
+              disabled={isSubmitting || selectedCount === 0 || Boolean(periodFilter?.enabled && getAdminReportPeriodError(periodFilter.value))}
               onClick={() => void handleGenerate()}
               aria-busy={isSubmitting}
               className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-segoe text-xs sm:text-sm font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"

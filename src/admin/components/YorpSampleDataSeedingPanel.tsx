@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getCurrentAdminReportPeriod } from "@/lib/admin-report-period";
 import {
   adminAuthorizeYorpSampleDatasetSeedInSupabase,
   adminCleanupYorpSampleDatasetInSupabase,
@@ -65,7 +66,7 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
 
   // Preview filtering states
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(() => String(getCurrentAdminReportPeriod().year));
   const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
 
   const isDevOrTestEnv = import.meta.env.DEV || import.meta.env.MODE !== "production";
@@ -495,6 +496,7 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
                 className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="all">All Years (84)</option>
+                {selectedYear !== "all" && !["2024", "2025", "2026"].includes(selectedYear) && <option value={selectedYear}>CY {selectedYear} (0)</option>}
                 <option value="2024">CY 2024 (31)</option>
                 <option value="2025">CY 2025 (47)</option>
                 <option value="2026">CY 2026 (6)</option>
