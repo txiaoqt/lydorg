@@ -17,7 +17,9 @@ import {
   replaceOrganizationDocumentFileInSupabase,
   resolveSupabaseFileUrl,
   submitOrganizationDocumentsBatchToSupabase,
+  type BatchOrganizationDocumentUploadResult,
 } from "@/lib/lydo-connect-supabase";
+import { connectionNeedsSlowMode, type UploadProgress } from "@/lib/registration-upload-transport";
 import type { SubmissionFile } from "@/lib/lydo-connect-data";
 import { resolveRegistrationDocumentAccess } from "@/lib/document-file-access";
 import { isMatchingFileForTemplate } from "@/lib/user-workflow-eligibility";
@@ -43,7 +45,7 @@ import {
 } from "./documentFileValidation";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
-type PendingFile = { id: string; file: File; documentTypeId: string };
+type PendingFile = { id: string; file: File; documentTypeId: string; retryResult?: BatchOrganizationDocumentUploadResult };
 
 const approvedStatuses = new Set(["approved", "approved_green"]);
 const initialUploadStatuses = new Set(["draft"]);
@@ -604,9 +606,14 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
+  const [slowMode, setSlowMode] = useState(connectionNeedsSlowMode);
+  const [slowNotice, setSlowNotice] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
+  const [uploadSummary, setUploadSummary] = useState<{ mode: "draft" | "review"; succeeded: number; failed: number } | null>(null);
   const [downloadingZip, setDownloadingZip] = useState(false);
   const [confirmation, setConfirmation] = useState<"draft" | "review" | null>(null);
   const confirmationInFlight = useRef(false);
+  const uploadInFlight = useRef(false);
   const fileByType = useMemo(() => new Map(data.requiredTemplates.flatMap((template) => {
     const file = data.documentFiles.find((item) => isMatchingFileForTemplate(item, template));
     return file ? [[template.id, file] as const] : [];
@@ -622,6 +629,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
   });
 
   const appendFiles = (files: File[]) => {
+    if (saving) return;
     setPending((current) => [
       ...current,
       ...files.map((file) => {
@@ -639,23 +647,31 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
     appendFiles(Array.from(event.dataTransfer.files));
   };
 
-  const submit = async (mode: "draft" | "review", confirmed = false) => {
+  const submit = async (mode: "draft" | "review", confirmed = false, retryFailed = false) => {
+    if (uploadInFlight.current) return;
+    uploadInFlight.current = true;
+    try { await performSubmit(mode, confirmed, retryFailed); }
+    finally { uploadInFlight.current = false; }
+  };
+
+  const performSubmit = async (mode: "draft" | "review", confirmed: boolean, retryFailed: boolean) => {
     if (saving) return;
-    if (!pending.length) {
+    const selected = retryFailed ? pending.filter((item) => item.retryResult) : pending;
+    if (!selected.length) {
       toast({ title: "Select files first", description: "Choose the documents you want to upload.", variant: "destructive" });
       return;
     }
-    if (submissionLocked) {
+    if (submissionLocked && !retryFailed) {
       toast({ title: "Submission locked", description: "Approved document submissions can no longer be changed.", variant: "destructive" });
       return;
     }
-    const selectedTypes = pending.map((item) => item.documentTypeId);
+    const selectedTypes = selected.map((item) => item.documentTypeId);
     if (selectedTypes.some((item) => !item) || new Set(selectedTypes).size !== selectedTypes.length) {
       toast({ title: "Assign every file", description: "Each file needs one unique document type.", variant: "destructive" });
       return;
     }
-    for (const item of pending) {
-      const existing = fileByType.get(item.documentTypeId);
+    for (const item of selected) {
+      const existing = item.retryResult?.file ? undefined : fileByType.get(item.documentTypeId);
       if (existing && approvedStatuses.has(existing.adminStatus)) {
         toast({ title: "Approved document locked", description: "Approved documents cannot be replaced.", variant: "destructive" });
         return;
@@ -685,59 +701,33 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
     if (!confirmed) { setConfirmation(mode); return; }
     setConfirmation(null);
     setSaving(true);
+    setSlowNotice(slowMode || connectionNeedsSlowMode());
     try {
-      const successfulPendingIds = new Set<string>();
-      const failures: string[] = [];
-      const newUploads = pending.filter((item) => {
-        const existing = fileByType.get(item.documentTypeId);
-        return !existing || !correctionStatuses.has(existing.adminStatus);
+      const result = await submitOrganizationDocumentsBatchToSupabase({
+        submitMode: mode,
+        slowMode,
+        onSlowMode: () => setSlowNotice(true),
+        onProgress: (index, progress) => setUploadProgress((current) => ({ ...current, [selected[index].id]: progress })),
+        documents: selected.map((item) => {
+          const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
+          return { documentTypeId: template.databaseId || template.id, documentTypeName: template.name,
+            file: item.file, validationStatus: "correct", retryResult: item.retryResult };
+        }),
       });
-      if (newUploads.length) {
-        try {
-          const result = await submitOrganizationDocumentsBatchToSupabase({
-            submitMode: mode,
-            documents: newUploads.map((item) => {
-              const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
-              return {
-                documentTypeId: template.databaseId || template.id,
-                documentTypeName: template.name,
-                file: item.file,
-                validationStatus: "correct",
-                adminRemarks: mode === "draft" ? "Saved as draft." : "Awaiting admin review.",
-              };
-            }),
-          });
-          result.results.forEach((entry, index) => {
-            if (entry.success) successfulPendingIds.add(newUploads[index].id);
-            else failures.push(entry.error || "The document could not be uploaded.");
-          });
-        } catch (error) {
-          const message = error instanceof Error ? error.message : "The document could not be uploaded.";
-          newUploads.forEach(() => failures.push(message));
-        }
-      }
-      for (const item of pending.filter((entry) => !newUploads.includes(entry))) {
-        const existing = fileByType.get(item.documentTypeId)!;
-        const template = data.requiredTemplates.find((entry) => entry.id === item.documentTypeId)!;
-        try {
-          await replaceOrganizationDocumentFileInSupabase({
-            fileId: existing.id,
-            documentTypeId: template.databaseId || template.id,
-            expectedUpdatedAt: existing.updatedAt,
-            file: item.file,
-          });
-          successfulPendingIds.add(item.id);
-        } catch (error) {
-          failures.push(error instanceof Error ? error.message : "The corrected document could not be submitted.");
-        }
-      }
-      await data.refreshDocuments();
-      setPending((current) => current.filter((item) => !successfulPendingIds.has(item.id)));
-      if (failures.length) {
-        toast({ title: `${successfulPendingIds.size} uploaded, ${failures.length} failed`, description: failures[0], variant: "destructive" });
+      const resultById = new Map(selected.map((item, index) => [item.id, result.results[index]]));
+      setPending((current) => current.flatMap((item) => {
+        const outcome = resultById.get(item.id);
+        return outcome?.success ? [] : [{ ...item, retryResult: outcome ?? item.retryResult }];
+      }));
+      setUploadSummary((current) => ({ mode, succeeded: (retryFailed ? current?.succeeded ?? 0 : 0) + result.successCount, failed: result.failureCount }));
+      if (result.failureCount) {
+        toast({ title: `${result.successCount} uploaded, ${result.failureCount} failed`, description: result.results.find((entry) => !entry.success)?.error, variant: "destructive" });
       } else {
-        toast({ title: mode === "draft" ? "Drafts saved" : "Documents submitted", description: `${successfulPendingIds.size} document${successfulPendingIds.size === 1 ? "" : "s"} uploaded successfully.` });
+        toast({ title: mode === "draft" ? "Drafts saved" : "Documents submitted", description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} uploaded successfully.` });
       }
+      try { await data.refreshDocuments(); }
+      catch (error) { console.warn("Documents processed; PWA registration refresh failed", error); }
+
     } catch (error) {
       toast({ title: "Upload failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     } finally {
@@ -785,7 +775,13 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
       <section className="pwa-card pwa-workspace-intro">
         <h2>Bulk document workspace</h2>
         <p>Select several files, then assign each one to a unique required document type.</p>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={slowMode} disabled={saving} onChange={(event) => setSlowMode(event.target.checked)} />Optimize for slow/mobile connection</label>
+        {(slowMode || slowNotice) && <p role="status">Slow connection mode: documents will upload one at a time for better reliability.</p>}
       </section>
+      {uploadSummary && <section className="pwa-card" aria-live="polite">
+        <p>{uploadSummary.succeeded} {uploadSummary.mode === "draft" ? "saved as drafts" : "submitted"}{uploadSummary.failed ? `, ${uploadSummary.failed} failed` : ""}.</p>
+        {uploadSummary.failed > 0 && <button type="button" className="pwa-secondary-button" disabled={saving || !pending.some((item) => item.retryResult)} onClick={() => void submit(uploadSummary.mode, true, true)}>Retry Failed</button>}
+      </section>}
       <div
         className="pwa-upload-dropzone"
         onDragOver={(event) => event.preventDefault()}
@@ -803,7 +799,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
         <UploadCloud aria-hidden="true" />
         <strong>Select or drop files</strong>
         <small>PDF files only.</small>
-        <input ref={inputRef} type="file" multiple accept=".pdf,application/pdf" disabled={submissionLocked} onChange={(event) => {
+        <input ref={inputRef} type="file" multiple accept=".pdf,application/pdf" disabled={submissionLocked || saving} onChange={(event) => {
           appendFiles(Array.from(event.target.files ?? []));
           event.currentTarget.value = "";
         }} />
@@ -818,7 +814,8 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
                 Document type
                 <select
                   value={item.documentTypeId}
-                  onChange={(event) => setPending((current) => current.map((entry) => entry.id === item.id ? { ...entry, documentTypeId: event.target.value } : entry))}
+                  disabled={saving || Boolean(item.retryResult?.file)}
+                  onChange={(event) => setPending((current) => current.map((entry) => entry.id === item.id ? { ...entry, documentTypeId: event.target.value, retryResult: undefined } : entry))}
                 >
                   <option value="">Select a document type</option>
                   {data.requiredTemplates.map((template) => {
@@ -828,7 +825,12 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
                   })}
                 </select>
               </label>
-              <button type="button" className="pwa-text-button is-danger" onClick={() => setPending((current) => current.filter((entry) => entry.id !== item.id))}><Trash2 /> Remove</button>
+              {uploadProgress[item.id] && <div className="text-sm" aria-live="polite">
+                <span className="capitalize">{uploadProgress[item.id].phase === "uploading" && uploadProgress[item.id].percent != null ? `${uploadProgress[item.id].percent}%` : uploadProgress[item.id].phase}</span>
+                {uploadProgress[item.id].phase === "uploading" && uploadProgress[item.id].percent != null && <progress className="w-full accent-primary" value={uploadProgress[item.id].percent} max={100} aria-label={`${item.file.name} upload progress`} />}
+              </div>}
+              {item.retryResult?.error && <p role="alert">{item.retryResult.error}</p>}
+              <button type="button" className="pwa-text-button is-danger" disabled={saving} onClick={() => setPending((current) => current.filter((entry) => entry.id !== item.id))}><Trash2 /> Remove</button>
             </article>
           ))}
         </section>

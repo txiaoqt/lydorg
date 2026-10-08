@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { connectionNeedsSlowMode, type UploadProgress } from "@/lib/registration-upload-transport";
 import JSZip from "jszip";
 import {
   AlertCircle,
@@ -240,6 +241,9 @@ import {
   submitOrganizationDocumentToSupabase,
   submitDocumentSubmissionForReviewInSupabase,
   submitOrganizationDocumentsBatchToSupabase,
+  registrationRetryDocuments,
+  type BatchOrganizationDocumentUploadInput,
+  type BatchOrganizationDocumentUploadResult,
   updateLiquidationReportInSupabase,
   createYpopEntryInSupabase,
   createYpopOrgActivityInSupabase,
@@ -406,12 +410,8 @@ type BatchUploadResultSummary = {
   submitMode: "draft" | "review";
   successCount: number;
   failureCount: number;
-  results: Array<{
-    documentTypeName: string;
-    fileName: string;
-    success: boolean;
-    error?: string;
-  }>;
+  documents: BatchOrganizationDocumentUploadInput[];
+  results: BatchOrganizationDocumentUploadResult[];
 };
 
 const WebsiteWorkflowNotice = ({
@@ -777,6 +777,11 @@ export default function UserPortal({ section }: { section: string }) {
   const [batchUploadSubmitMode, setBatchUploadSubmitMode] = useState<"draft" | "review">("review");
   const [batchDroppedFiles, setBatchDroppedFiles] = useState<BatchDroppedDocumentFile[]>([]);
   const [batchUploadResult, setBatchUploadResult] = useState<BatchUploadResultSummary | null>(null);
+  const [batchSlowMode, setBatchSlowMode] = useState(connectionNeedsSlowMode);
+  const [batchSlowNotice, setBatchSlowNotice] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<Record<number, UploadProgress>>({});
+  const [batchActiveDocuments, setBatchActiveDocuments] = useState<BatchOrganizationDocumentUploadInput[]>([]);
+  const batchUploadInFlight = useRef(false);
   const currentProfile = state.organizationProfiles.find((item) => item.userId === user?.id) ?? null;
   const userRegistrationSubmission = currentProfile?.id
     ? state.documentSubmissions.find(
@@ -2230,60 +2235,68 @@ export default function UserPortal({ section }: { section: string }) {
     setBatchUploadConfirmOpen(true);
   };
 
-  const confirmBatchUpload = async () => {
-    if (!batchSelectedItems.length) return;
-
-    setBatchUploadSubmitting(true);
-    try {
-      const result = await submitOrganizationDocumentsBatchToSupabase({
-        submitMode: batchUploadSubmitMode,
-        documents: batchSelectedItems.map((entry) => ({
+  const confirmBatchUpload = async (retryFailed = false) => {
+    if (batchUploadSubmitting || batchUploadInFlight.current) return;
+    const previous = retryFailed ? batchUploadResult : null;
+    const documents: BatchOrganizationDocumentUploadInput[] = previous
+      ? registrationRetryDocuments(previous.documents, previous.results)
+      : batchSelectedItems.map((entry) => ({
           documentTypeId: entry.documentType.databaseId || entry.documentType.id,
           documentTypeName: entry.documentType.name,
           file: entry.file,
           validationStatus: "correct",
-        })),
+        }));
+    if (!documents.length) return;
+    batchUploadInFlight.current = true;
+    const mode = previous?.submitMode ?? batchUploadSubmitMode;
+    setBatchActiveDocuments(documents);
+    setBatchProgress({});
+    setBatchSlowNotice(batchSlowMode || connectionNeedsSlowMode());
+    setBatchUploadSubmitting(true);
+    setBatchUploadResult(null);
+    setBatchUploadConfirmOpen(true);
+    try {
+      const result = await submitOrganizationDocumentsBatchToSupabase({
+        submitMode: mode,
+        documents,
+        slowMode: batchSlowMode,
+        onSlowMode: () => setBatchSlowNotice(true),
+        onProgress: (index, progress) => setBatchProgress((current) => ({ ...current, [index]: progress })),
       });
-
-      const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, profile.id);
-      if (remoteSnapshot) {
-        mergeRemoteState(remoteSnapshot);
-      }
-
-      if (result.successCount > 0 && batchUploadSubmitMode === "review") {
-        notifyAdmin({
-          title: "Batch document submission",
-          message: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were submitted by ${profile.organizationName || "an organization"}.`,
-          relatedType: "document_submission",
-          relatedId: submission?.id ?? result.results.find((entry) => entry.submissionId)?.submissionId ?? "",
-          organizationId: profile.id,
-        });
-      }
-
-      setBatchUploadResult({
-        submitMode: batchUploadSubmitMode,
-        successCount: result.successCount,
-        failureCount: result.failureCount,
-        results: result.results.map((entry) => ({
-          documentTypeName: entry.documentTypeName,
-          fileName: entry.fileName,
-          success: entry.success,
-          error: entry.error,
-        })),
-      });
-
+      let retryIndex = 0;
+      const results = previous
+        ? previous.results.map((entry) => entry.success ? entry : result.results[retryIndex++])
+        : result.results;
+      const summary = {
+        submitMode: mode,
+        documents: previous?.documents ?? documents,
+        results,
+        successCount: results.filter((entry) => entry.success).length,
+        failureCount: results.filter((entry) => !entry.success).length,
+      };
+      setBatchUploadResult(summary);
       setBatchUploadConfirmOpen(false);
       setBatchUploadOpen(false);
-      if (result.successCount > 0) {
-        resetBatchUploadState();
+      if (!summary.failureCount) resetBatchUploadState();
+
+      // A refresh failure must not turn saved documents into upload failures.
+      try {
+        const remoteSnapshot = await loadOrganizationDocumentSubmissionState(undefined, profile.id);
+        if (remoteSnapshot) mergeRemoteState(remoteSnapshot);
+      } catch (error) {
+        console.warn("Documents saved; targeted registration refresh failed", error);
+        toast({ title: "Documents processed", description: "The latest status could not be refreshed. Your upload results are preserved." });
+      }
+      if (result.successCount > 0 && mode === "review") {
+        notifyAdmin({ title: "Batch document submission",
+          message: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were submitted by ${profile.organizationName || "an organization"}.`,
+          relatedType: "document_submission", relatedId: submission?.id ?? result.results.find((entry) => entry.submissionId)?.submissionId ?? "", organizationId: profile.id });
       }
     } catch (error) {
-      toast({
-        title: "Batch upload failed",
-        description: error instanceof Error ? error.message : "The selected documents could not be processed.",
-        variant: "destructive",
-      });
+      if (previous) { setBatchUploadResult(previous); setBatchUploadConfirmOpen(false); }
+      toast({ title: "Batch upload failed", description: error instanceof Error ? error.message : "The selected documents could not be processed.", variant: "destructive" });
     } finally {
+      batchUploadInFlight.current = false;
       setBatchUploadSubmitting(false);
     }
   };
@@ -4729,6 +4742,7 @@ export default function UserPortal({ section }: { section: string }) {
       <Dialog
         open={batchUploadOpen}
         onOpenChange={(open) => {
+          if (batchUploadSubmitting) return;
           setBatchUploadOpen(open);
           if (!open) {
             resetBatchUploadState();
@@ -5005,11 +5019,11 @@ export default function UserPortal({ section }: { section: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={batchUploadConfirmOpen} onOpenChange={setBatchUploadConfirmOpen}>
-        <DialogContent>
+      <Dialog open={batchUploadConfirmOpen} onOpenChange={(open) => { if (!batchUploadSubmitting) setBatchUploadConfirmOpen(open); }}>
+        <DialogContent onEscapeKeyDown={(event) => { if (batchUploadSubmitting) event.preventDefault(); }} onInteractOutside={(event) => { if (batchUploadSubmitting) event.preventDefault(); }}>
           <DialogHeader>
             <DialogTitle>
-              {batchUploadSubmitMode === "draft" ? "Save selected documents as draft?" : `Submit ${batchSelectedItems.length} documents for admin review?`}
+              {batchUploadSubmitting ? `Processing ${batchActiveDocuments.length} document${batchActiveDocuments.length === 1 ? "" : "s"}` : batchUploadSubmitMode === "draft" ? "Save selected documents as draft?" : `Submit ${batchSelectedItems.length} documents for admin review?`}
             </DialogTitle>
             <DialogDescription>
               {batchUploadSubmitMode === "draft"
@@ -5017,18 +5031,27 @@ export default function UserPortal({ section }: { section: string }) {
                 : "Documents submitted for review cannot be changed while locked unless the admin requests a revision."}
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
-            <ul className="space-y-2">
-              {batchSelectedItems.map((entry) => (
-                <li key={`${entry.documentType.id}-${entry.file.name}`} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
-                  <span>{entry.documentType.name}</span>
-                </li>
-              ))}
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input type="checkbox" checked={batchSlowMode} disabled={batchUploadSubmitting} onChange={(event) => setBatchSlowMode(event.target.checked)} />
+            Optimize for slow/mobile connection
+          </label>
+          {(batchSlowMode || batchSlowNotice) && <p className="text-xs text-muted-foreground" role="status">Slow connection mode: documents will upload one at a time for better reliability.</p>}
+          <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground" aria-live="polite" aria-busy={batchUploadSubmitting}>
+            <ul className="max-h-[40dvh] overflow-y-auto space-y-3">
+              {(batchUploadSubmitting ? batchActiveDocuments : batchSelectedItems.map((entry) => ({ documentTypeName: entry.documentType.name, file: entry.file }))).map((entry, index) => {
+                const progress = batchUploadSubmitting ? batchProgress[index] : undefined;
+                return <li key={`${index}-${entry.documentTypeName}`} className="space-y-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <span>{entry.documentTypeName}</span>
+                    <span className="shrink-0 capitalize text-xs">{progress?.phase === "uploading" && progress.percent != null ? `${progress.percent}%` : progress?.phase ?? "Waiting"}</span>
+                  </div>
+                  {progress?.phase === "uploading" && progress.percent != null && <progress className="h-1.5 w-full accent-primary" value={progress.percent} max={100} aria-label={`${entry.documentTypeName} upload progress`} />}
+                </li>;
+              })}
             </ul>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setBatchUploadConfirmOpen(false)}>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" disabled={batchUploadSubmitting} onClick={() => setBatchUploadConfirmOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -5054,7 +5077,7 @@ export default function UserPortal({ section }: { section: string }) {
       <Dialog
         open={Boolean(batchUploadResult)}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !batchUploadSubmitting) {
             setBatchUploadResult(null);
           }
         }}
@@ -5123,6 +5146,7 @@ export default function UserPortal({ section }: { section: string }) {
           ) : null}
 
           <DialogFooter className="pt-2">
+            {Boolean(batchUploadResult?.failureCount) && <Button type="button" variant="outline" disabled={batchUploadSubmitting} onClick={() => void confirmBatchUpload(true)}>Retry Failed</Button>}
             <Button
               type="button"
               className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs h-9 shadow-2xs cursor-pointer"

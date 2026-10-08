@@ -283,7 +283,7 @@ const loadLogoDataUrl = async (logoUrl?: string) => {
   }
 };
 
-const ensurePdfFonts = async (doc: jsPDF) => {
+export const ensurePdfFonts = async (doc: jsPDF) => {
   const fontState = doc as jsPDF & { __yTraceFontsLoaded?: boolean; __yTraceSegoeFontLoaded?: boolean };
   if (fontState.__yTraceFontsLoaded) return;
 

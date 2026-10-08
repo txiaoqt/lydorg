@@ -14,24 +14,14 @@ export const checkSignupUrn = async (
 ): Promise<Exclude<UrnAvailability, "idle" | "checking">> => {
   const normalized = normalizeUrn(urn);
   if (!normalized) return "available";
-  if (!supabase) return "available";
+  if (!supabase) return "error";
 
   try {
     const { data, error } = await supabase.rpc("is_urn_registered", {
       _urn: normalized,
     });
 
-    if (error) {
-      // Fallback query if RPC is not yet installed in Supabase
-      const { data: profiles, error: selectError } = await supabase
-        .from("organization_profiles")
-        .select("id, organization_identifier_number")
-        .or(`organization_identifier_number.ilike.${normalized},urn.ilike.${normalized}`)
-        .limit(1);
-
-      if (selectError) return "error";
-      return profiles && profiles.length > 0 ? "registered" : "available";
-    }
+    if (error) return "error";
 
     return data === true ? "registered" : "available";
   } catch {

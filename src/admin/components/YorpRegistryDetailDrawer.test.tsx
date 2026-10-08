@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render as baseRender, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { YorpRegistryDetailDrawer } from "./YorpRegistryDetailDrawer";
 import type { YorpRegistryEntry } from "./YorpRegistryTable";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const render = (ui: React.ReactElement) => baseRender(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>);
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: "admin-1", roleCode: "super_admin", permissionCodes: [] } }) }));
+vi.mock("@/lib/supabase", () => ({ supabase: null }));
 const mockNavigate = vi.fn();
 
 // Mock dependencies

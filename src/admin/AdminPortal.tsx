@@ -1,3 +1,4 @@
+import { OrganizationIdentityReviewPanel } from "@/admin/components/OrganizationIdentityReviewPanel";
 import { getCurrentAdminReportPeriod, getAdminReportRange, getAdminReportPeriodError, getAdminReportPeriodLabel, adminReportMetadata, withAdminReportPeriod, fromBudgetMonitoringPeriod, type AdminReportPeriod } from "@/lib/admin-report-period";
 import { AdminReportingPeriodSelector } from "@/admin/components/AdminReportingPeriodSelector";
 import { type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -7807,12 +7808,15 @@ function AdminPortalContent({ section }: { section: string }) {
         if (selectedOrg) {
           if (selectedOrg.registrationType === "existing_urn") {
             return (
+              <div className="space-y-4">
+              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
               <UrnReviewPanel
                 profile={selectedOrg}
                 onBack={() => handleRegistrationSelectionChange(null)}
                 onReviewed={(updated) => updateOrganizationProfile(updated.id, updated)}
                 onDelete={() => void openRegistrationDeleteDialog(selectedOrg)}
               />
+              </div>
             );
           }
           const isRegistrationDocumentsComplete = templateDocuments.length > 0 && submittedDocumentCount >= templateDocuments.length;
@@ -8043,6 +8047,8 @@ function AdminPortalContent({ section }: { section: string }) {
                   ) : null}
                 </div>
               </div>
+
+              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
 
               <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
                 <div

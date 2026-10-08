@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getOrganizationRetentionEligibility } from "../_shared/organization-retention.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -538,6 +539,18 @@ const verifyRegistrationEligibility = async (
  * Step 5: Verification
  * Step 6: Audit Logging
  */
+const assertOrganizationRetentionEligibility = async (
+  client: ReturnType<typeof createClient>, sessionToken: string, organizationId: string,
+) => {
+  const eligibility = await getOrganizationRetentionEligibility(client, sessionToken, organizationId);
+  if (eligibility === "unavailable") {
+    throw new SafeDeletionError("Retention eligibility could not be verified. No account cleanup was started.", 503, "retention_check");
+  }
+  if (eligibility === "retained") {
+    throw new SafeDeletionError("Official organization history is retained. Request an authorized archival/retention review before permanent deletion.", 409, "retention_check");
+  }
+};
+
 const executeSingleDeletionCore = async (
   client: ReturnType<typeof createClient>,
   adminSessionToken: string,
@@ -547,6 +560,7 @@ const executeSingleDeletionCore = async (
   operation: "single" | "bulk" | "registration" = "single",
   rpcName: "delete_organization_account_canonical" | "delete_unverified_registration_account_canonical" = "delete_organization_account_canonical",
 ) => {
+  await assertOrganizationRetentionEligibility(client, adminSessionToken, target.id);
   // Step 1: Collect storage manifest BEFORE database deletion removes references
   const manifest = await buildDeletionManifest(client, target, supabaseUrl);
 
@@ -781,6 +795,7 @@ Deno.serve(async (request) => {
               blockingReason: "Administrator accounts cannot be deleted from the YORP Registry.",
             });
           } else {
+            await assertOrganizationRetentionEligibility(client, adminSessionToken, id);
             targets.push({
               id,
               name: validation.target.organization_name,
@@ -953,6 +968,7 @@ Deno.serve(async (request) => {
       if (validation.isProtected) {
         throw new SafeDeletionError("Administrator accounts cannot be deleted from the YORP Registry.", 403, "protection_check");
       }
+      await assertOrganizationRetentionEligibility(client, adminSessionToken, organizationId);
       const manifest = await buildDeletionManifest(client, validation.target, supabaseUrl);
       return json({
         organization: { id: validation.target.id, name: validation.target.organization_name, urn: validation.target.urn },
@@ -971,6 +987,7 @@ Deno.serve(async (request) => {
         throw new SafeDeletionError("Administrator accounts cannot be deleted.", 403, "protection_check");
       }
       await verifyRegistrationEligibility(client, validation.target, isSuperAdmin);
+      await assertOrganizationRetentionEligibility(client, adminSessionToken, organizationId);
       const manifest = await buildDeletionManifest(client, validation.target, supabaseUrl);
       return json({
         organization: { id: validation.target.id, name: validation.target.organization_name, urn: validation.target.urn },

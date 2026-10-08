@@ -1,3 +1,5 @@
+import { useOrganizationIdentityCheck } from "@/hooks/use-organization-identity-check";
+import { OrganizationIdentityNotice } from "@/components/portal/OrganizationIdentityNotice";
 import { sanitizeZipCode, validateZipCode } from "@/lib/organization-profile-domain";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -229,6 +231,9 @@ const GoogleOnboarding = () => {
   const [urnAvailability, setUrnAvailability] = useState<"idle" | "checking" | "available" | "registered" | "error">("idle");
 
   const [profileDraft, setProfileDraft] = useState<OrganizationProfile | null>(null);
+  const identityOutcome = useOrganizationIdentityCheck(profileDraft?.organizationName || "",
+    profileDraft?.addressBarangay || profileDraft?.barangay || "",
+    profileDraft?.isExistingOrganization ? profileDraft.organizationIdentifierNumber || "" : "");
   const profileDraftUserIdRef = useRef<string | null>(null);
   const isLoadedRef = useRef(false);
 
@@ -504,6 +509,10 @@ const GoogleOnboarding = () => {
     }
 
     // 1. Validate Organization Name
+    if (identityOutcome === "EXACT_URN_CONFLICT") {
+      setFormError("This URN cannot be claimed through a new registration. Contact PCYDO for account recovery.");
+      return;
+    }
     const nameErr = validateOrganizationName(profileDraft.organizationName);
     if (nameErr) {
       setFormError(nameErr);
@@ -879,6 +888,7 @@ const GoogleOnboarding = () => {
                 />
               </div>
 
+              <OrganizationIdentityNotice outcome={identityOutcome} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Organization Email — Immutable from Google Account */}
                 <div className="space-y-1.5">

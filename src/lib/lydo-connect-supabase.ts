@@ -63,6 +63,7 @@ import { getAdminAppUrl } from "./auth-redirect";
 import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
 import { calculateRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked } from "./revision-deadline";
 import { supabase, supabaseUrl } from "./supabase";
+import { connectionNeedsSlowMode, isTransientUploadError, registrationUploadError, runAdaptiveUploadQueue, uploadRegistrationObject, type UploadOptions, type UploadProgress } from "./registration-upload-transport";
 import { getPasigDistrictForBarangay } from "./pasig-districts";
 import { isCanonicalPurposeCategory } from "./budget-category-colors";
 import { isRegistrationRequirementTemplate, isRenewalRequirementTemplate } from "./user-workflow-eligibility";
@@ -3720,6 +3721,10 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
       ? session.user.email.trim().toLowerCase()
       : profile.organizationEmail.trim() || session.user.email?.trim() || "";
 
+  // Keep server-reviewed identifiers while an owner edits ordinary profile details.
+  const lockedIdentity = Boolean(existingProfile && (existingProfile.profile_status === "verified" ||
+    existingProfile.verified_at || existingProfile.urn_review_status === "verified"));
+
   const payload = {
     user_id: session.user.id,
     organization_name: profile.organizationName.trim(),
@@ -3730,11 +3735,11 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     district: headquartersDistrict,
     barangay: headquartersBarangay,
     is_existing_organization: Boolean(profile.isExistingOrganization),
-    organization_identifier_number: profile.isExistingOrganization || profile.profileStatus === "verified"
+    organization_identifier_number: lockedIdentity ? existingProfile!.organization_identifier_number || "" : profile.isExistingOrganization || profile.profileStatus === "verified"
       ? (profile.organizationIdentifierNumber?.trim() || profile.urn?.trim() || "")
       : "",
-    registration_type: profile.registrationType,
-    urn: profile.isExistingOrganization || profile.profileStatus === "verified"
+    registration_type: lockedIdentity ? existingProfile!.registration_type : profile.registrationType,
+    urn: lockedIdentity ? existingProfile!.urn || null : profile.isExistingOrganization || profile.profileStatus === "verified"
       ? (profile.urn?.trim() || (profile.isExistingOrganization ? profile.organizationIdentifierNumber?.trim() : null) || null)
       : null,
     major_classification: profile.majorClassification || null,
@@ -3763,14 +3768,16 @@ export const upsertOrganizationProfileInSupabase = async (profile: OrganizationP
     directory_visibility: Boolean(profile.directoryVisibility),
     directory_show_representative: Boolean(profile.directoryShowRepresentative),
     directory_show_adviser: Boolean(profile.directoryShowAdviser),
-    profile_status: profile.profileStatus,
-    verified_at: profile.verifiedAt.trim() || null,
-    internal_notes: profile.internalNotes.trim() || null,
+    profile_status: existingProfile?.profile_status === "verified" ? existingProfile.profile_status : profile.profileStatus,
   };
 
-  const { data, error } = await supabase
-    .from("organization_profiles")
-    .upsert(payload, { onConflict: "user_id" })
+  // Explicit UPDATE avoids INSERT triggers running against an already verified
+  // profile during INSERT ... ON CONFLICT. The server still checks both operations.
+  const table = supabase.from("organization_profiles");
+  const write = existingProfile
+    ? table.update(payload).eq("id", existingProfile.id).eq("user_id", session.user.id)
+    : table.insert(payload);
+  const { data, error } = await write
     .select(ORGANIZATION_PROFILE_COLUMNS)
     .single();
 
@@ -3885,6 +3892,7 @@ const deriveDocumentSubmissionStatus = (
 };
 
 export type BatchOrganizationDocumentUploadInput = {
+  retryResult?: BatchOrganizationDocumentUploadResult;
   documentTypeId?: string;
   documentTypeName: string;
   file: File;
@@ -3962,6 +3970,8 @@ export interface OrganizationDocumentUploadContext {
   documentTypeRow?: RequiredDocumentTypeRow;
   submission?: DocumentSubmissionRow;
   revisionSubmitMode?: "draft" | "review";
+  deferParentStatus?: boolean;
+  uploadOptions?: UploadOptions;
 }
 
 export const submitOrganizationDocumentToSupabase = async (params: {
@@ -4050,6 +4060,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
         documentTypeId: documentTypeRow.id,
         expectedUpdatedAt: existingTargetFile.updated_at,
         file: params.file,
+        uploadOptions: params.context?.uploadOptions,
       });
       const correctedFile = mapDocumentFile({
         ...correctedRow,
@@ -4061,22 +4072,14 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   }
 
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${organizationProfile.id}/${documentTypeRow.id}/${Date.now()}-${safeFileName}`;
+  const objectPath = `${organizationProfile.id}/${documentTypeRow.id}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
   const submitMode = params.submitMode ?? "review";
 
-  const { error: uploadError } = await supabase.storage
-    .from(ORGANIZATION_DOCUMENTS_BUCKET)
-    .upload(objectPath, params.file, {
-      upsert: true,
-      contentType: params.file.type || "application/octet-stream",
-    });
-
-  if (uploadError) throw new Error(uploadError.message);
-
-  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
+  const storageUri = await uploadRegistrationObject({ client: supabase, configuration: () => supabaseUrl, userId: session.user.id,
+    bucket: ORGANIZATION_DOCUMENTS_BUCKET, objectPath, file: params.file, options: params.context?.uploadOptions });
   const submittedAt = new Date().toISOString();
 
-  const { data, error } = await supabase!
+  let { data, error } = await supabase!
     .from("document_submission_files")
     .upsert(
       {
@@ -4099,16 +4102,41 @@ export const submitOrganizationDocumentToSupabase = async (params: {
       },
     )
     .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
-    .single();
+    .single().then((result) => result, (error) => ({ data: null, error }));
 
-  if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded document.");
+  if (error || !data) {
+    const originalError = error ?? new Error("Failed to save the uploaded document.");
+    data = null;
+    let canCleanUp = !isTransientUploadError(originalError);
+    // Reconcile an ambiguous lost save response before deleting any object.
+    if (!canCleanUp) {
+      try {
+        const check = await supabase.from("document_submission_files")
+          .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+          .eq("submission_id", submission.id).eq("document_type_id", documentTypeRow.id).maybeSingle();
+        if (!check.error) {
+          if (check.data?.file_url === storageUri) { data = check.data; error = null; }
+          else canCleanUp = true;
+        }
+      } catch (checkError) { console.warn("Unable to reconcile registration metadata save", checkError); }
+    }
+    if (!data) {
+      if (canCleanUp) await cleanupNewRegistrationObject(storageUri);
+      else console.warn("Retaining new registration object because metadata save could not be verified", originalError);
+      throw registrationUploadError(originalError);
+    }
+  }
 
   const existingFiles = ((existingRows as Array<{ id: string; file_url: string }> | null) ?? []).filter(
     (entry) => entry.file_url && entry.file_url !== storageUri,
   );
   if (existingFiles.length) {
-    await removeStorageObjects(existingFiles.map((entry) => entry.file_url));
+    await removeStorageObjects(existingFiles.map((entry) => entry.file_url)).catch((error) => console.warn("Unable to remove replaced draft objects", error));
   }
+
+  const mappedFile = mapDocumentFile(data as DocumentSubmissionFileRow);
+  if (!mappedFile) throw new Error("The uploaded document could not be mapped to the portal.");
+  if (params.context?.deferParentStatus) return { submissionId: submission.id, file: mappedFile };
 
   const firstSubmittedAt = submission.submitted_at ?? (submitMode === "review" ? submittedAt : null);
 
@@ -4132,9 +4160,6 @@ export const submitOrganizationDocumentToSupabase = async (params: {
     .eq("id", submission.id);
   if (submissionUpdateError) throw new Error(submissionUpdateError.message);
 
-  const mappedFile = mapDocumentFile(data as DocumentSubmissionFileRow);
-  if (!mappedFile) throw new Error("The uploaded document could not be mapped to the portal.");
-
   return {
     submissionId: submission.id,
     file: mappedFile,
@@ -4146,6 +4171,7 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
   documentTypeId: string;
   expectedUpdatedAt: string;
   file: File;
+  uploadOptions?: UploadOptions;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   await assertPdfUpload(params.file, "Replacement document", ORGANIZATION_DOCUMENT_MAX_BYTES);
@@ -4184,16 +4210,9 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
 
   const documentTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${organizationProfile.id}/${documentTypeId}/revisions/${Date.now()}-${safeFileName}`;
-  const storageUri = buildStorageUri(ORGANIZATION_DOCUMENTS_BUCKET, objectPath);
-
-  const { error: uploadError } = await supabase.storage
-    .from(ORGANIZATION_DOCUMENTS_BUCKET)
-    .upload(objectPath, params.file, {
-      upsert: false,
-      contentType: params.file.type || "application/octet-stream",
-    });
-  if (uploadError) throw new Error(uploadError.message);
+  const objectPath = `${organizationProfile.id}/${documentTypeId}/revisions/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+  const storageUri = await uploadRegistrationObject({ client: supabase, configuration: () => supabaseUrl, userId: session.user.id,
+    bucket: ORGANIZATION_DOCUMENTS_BUCKET, objectPath, file: params.file, options: params.uploadOptions });
 
   try {
     const { data, error } = await supabase.rpc("replace_organization_document_file", {
@@ -4205,7 +4224,7 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
       _file_type: params.file.type || "application/octet-stream",
       _file_size: params.file.size,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw registrationUploadError(error);
 
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error("The corrected document was not saved.");
@@ -4220,7 +4239,16 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
 
     return row;
   } catch (error) {
-    await removeStorageObjects([storageUri]).catch(() => undefined);
+    // A transport failure may follow a committed replacement. Check the exact
+    // new URI before cleanup; never delete a replacement already in use.
+    if (isTransientUploadError(error)) {
+      try {
+        const check = await supabase.from("document_submission_files").select("*").eq("id", params.fileId).single();
+        if (!check.error && check.data?.file_url === storageUri) return check.data;
+        if (!check.error) await cleanupNewRegistrationObject(storageUri);
+        else console.warn("Unable to verify replacement save; retaining new object", check.error);
+      } catch (checkError) { console.warn("Unable to verify replacement save; retaining new object", checkError); }
+    } else await cleanupNewRegistrationObject(storageUri);
     throw error;
   }
 };
@@ -4298,11 +4326,17 @@ export const submitDocumentSubmissionForReviewInSupabase = async (
   });
 };
 
-const BATCH_UPLOAD_CONCURRENCY_LIMIT = 3;
+export function registrationRetryDocuments(documents: BatchOrganizationDocumentUploadInput[], results: BatchOrganizationDocumentUploadResult[]) {
+  return documents.flatMap((document, index) => results[index] && !results[index].success
+    ? [{ ...document, retryResult: results[index] }] : []);
+}
 
 export const submitOrganizationDocumentsBatchToSupabase = async (params: {
   documents: BatchOrganizationDocumentUploadInput[];
   submitMode?: "draft" | "review";
+  slowMode?: boolean;
+  onProgress?: (index: number, progress: UploadProgress) => void;
+  onSlowMode?: () => void;
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
   const submitMode = params.submitMode ?? "review";
@@ -4388,13 +4422,11 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
 
   const results: BatchOrganizationDocumentUploadResult[] = new Array(preparedItems.length);
 
-  let nextIndex = 0;
-  const workerCount = Math.min(BATCH_UPLOAD_CONCURRENCY_LIMIT, preparedItems.length);
-
-  const workers = Array.from({ length: Math.max(1, workerCount) }, async () => {
-    while (nextIndex < preparedItems.length) {
-      const index = nextIndex++;
-      const item = preparedItems[index];
+  let slowMode = Boolean(params.slowMode || connectionNeedsSlowMode());
+  if (slowMode) params.onSlowMode?.();
+  preparedItems.forEach((_, index) => params.onProgress?.(index, { phase: "waiting" }));
+  await runAdaptiveUploadQueue(preparedItems, async (item, index, reduceConcurrency) => {
+      const report = (progress: UploadProgress) => params.onProgress?.(index, progress);
 
       if (item.immediateError || !item.document.file) {
         results[index] = {
@@ -4404,11 +4436,27 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
           success: false,
           error: item.immediateError ?? "No file was selected.",
         };
-        continue;
+        report({ phase: "failed" });
+        return;
       }
 
       try {
-        const uploadResult = await submitOrganizationDocumentToSupabase({
+        let uploadResult: { submissionId: string; file: SubmissionFile };
+        const saved = item.document.retryResult;
+        if (saved?.file && saved.submissionId) {
+          // Finalization retries reuse persisted files, after verifying their
+          // ownership and current state in this registration submission.
+          if (saved.submissionId !== submission.id) throw new Error("The registration submission changed. Refresh your documents before retrying.");
+          if (saved.file.documentTypeId !== (item.documentTypeRow?.id ?? item.document.documentTypeId)) throw new Error("The document type changed. Refresh your documents before retrying.");
+          const check = await supabase.from("document_submission_files").select("id,file_url,admin_status")
+            .eq("submission_id", submission.id).eq("document_type_id", saved.file.documentTypeId).single();
+          if (check.error) throw check.error;
+          if (!check.data || check.data.id !== saved.file.id || check.data.file_url !== saved.file.fileUrl || !["draft", "under_admin_review", "approved_green"].includes(check.data.admin_status)) {
+            throw new Error("The saved document changed. Refresh your documents before retrying.");
+          }
+          uploadResult = { submissionId: submission.id, file: { ...saved.file, adminStatus: check.data.admin_status } };
+          report({ phase: "uploaded", percent: 100 });
+        } else uploadResult = await submitOrganizationDocumentToSupabase({
           documentTypeId: item.document.documentTypeId,
           documentTypeName: item.document.documentTypeName,
           file: item.document.file,
@@ -4421,6 +4469,8 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
             documentTypeRow: item.documentTypeRow,
             submission,
             revisionSubmitMode: submitMode,
+            deferParentStatus: true,
+            uploadOptions: { slowMode, onProgress: report, onTransientFailure: () => { slowMode = true; reduceConcurrency(); params.onSlowMode?.(); } },
           },
         });
 
@@ -4438,22 +4488,26 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
           documentTypeName: item.document.documentTypeName,
           fileName: item.document.file.name,
           success: false,
-          error: error instanceof Error ? error.message : "The document could not be uploaded.",
+          ...(item.document.retryResult?.file ? { file: item.document.retryResult.file, submissionId: item.document.retryResult.submissionId } : {}),
+          error: error instanceof Error || (error && typeof error === "object" && "message" in error) ? String(error.message) : "The document could not be uploaded.",
         };
+        report({ phase: "failed" });
       }
-    }
-  });
+  }, slowMode);
 
-  await Promise.all(workers);
-
+  let finalizedDrafts = false;
   if (submitMode === "review") {
+    const needsFinalization = (result: BatchOrganizationDocumentUploadResult, index: number) => result.success &&
+      result.file?.adminStatus === "draft";
     const successfulUploadedFileIds = results
-      .filter((result) => result.success && result.file?.adminStatus === "draft")
+      .filter(needsFinalization)
       .map((result) => result.file!.id);
-    const submissionIds = [...new Set(results.filter((result) => result.success && result.file?.adminStatus === "draft" && result.submissionId).map((result) => result.submissionId!))];
+    const submissionIds = [...new Set(results.filter(needsFinalization).map((result) => result.submissionId!))];
+    finalizedDrafts = submissionIds.length > 0;
     
     await Promise.all(
       submissionIds.map(async (submissionId) => {
+        results.forEach((result, index) => { if (needsFinalization(result, index) && result.submissionId === submissionId) params.onProgress?.(index, { phase: "submitting", percent: 100 }); });
         try {
           await submitDocumentSubmissionForReviewInSupabase(
             submissionId,
@@ -4461,9 +4515,9 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
             organizationProfile,
           );
         } catch (error) {
-          const message = error instanceof Error ? error.message : "The selected documents could not be submitted for review.";
-          results.forEach((result) => {
-            if (result.submissionId === submissionId && result.success && result.file?.adminStatus === "draft") {
+          const message = error instanceof Error || (error && typeof error === "object" && "message" in error) ? String(error.message) : "The selected documents could not be submitted for review.";
+          results.forEach((result, index) => {
+            if (result.submissionId === submissionId && needsFinalization(result, index)) {
               result.success = false;
               result.error = message;
             }
@@ -4472,6 +4526,31 @@ export const submitOrganizationDocumentsBatchToSupabase = async (params: {
       }),
     );
   }
+  if (!finalizedDrafts && results.some((result) => result.success)) {
+    // A finalization retry can find files already under review after a lost
+    // response or failed parent update. Synchronize the parent without passing
+    // those locked file IDs through the draft-finalization operation again.
+    try {
+      results.forEach((result, index) => { if (result.success) params.onProgress?.(index, { phase: "submitting", percent: 100 }); });
+      const { data: currentFiles, error } = await supabase.from("document_submission_files").select("admin_status").eq("submission_id", submission.id);
+      if (error) throw error;
+      const updatedAt = new Date().toISOString();
+      const update = await supabase.from("document_submissions").update({
+        status: deriveDocumentSubmissionStatus((currentFiles ?? []).map((file) => file.admin_status), submitMode),
+        ...(submitMode === "review" ? { user_confirmed: true, submitted_at: submission.submitted_at ?? updatedAt } : {}),
+        updated_at: updatedAt,
+      }).eq("id", submission.id);
+      if (update.error) throw update.error;
+    } catch (error) {
+      results.forEach((result) => {
+        if (result.success) {
+          result.success = false;
+          result.error = `File saved; registration status could not be updated: ${error instanceof Error ? error.message : String((error as { message?: string })?.message ?? error)}`;
+        }
+      });
+    }
+  }
+  results.forEach((result, index) => params.onProgress?.(index, { phase: result.success ? "success" : "failed", percent: result.success ? 100 : undefined }));
 
   return {
     submitMode,
@@ -4678,6 +4757,15 @@ const removeStorageObjects = async (values: string[]) => {
     if (!paths.length) continue;
     await supabase!.storage.from(bucket).remove(paths);
   }
+};
+
+const cleanupNewRegistrationObject = async (storageUri: string) => {
+  const parsed = parseStorageUri(storageUri);
+  if (!parsed) return;
+  try {
+    const { error } = await supabase!.storage.from(parsed.bucket).remove([parsed.path]);
+    if (error) throw error;
+  } catch (error) { console.warn("Unable to clean up newly uploaded registration object", error); }
 };
 
 export const ORGANIZATION_PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);

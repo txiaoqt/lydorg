@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { buildRegistryYpopDetail } from "@/lib/yorp-registry-detail";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
@@ -25,10 +26,7 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
-  computeYpopScore,
   formatSubClassificationLabel,
-  resolveYpopCityLedCategory,
-  normalizeYpopCityLedPoints,
   DEFAULT_ORG_LED_TIERS,
   YPOP_CITY_LED_CATEGORY_LABELS,
   YPOP_CITY_LED_CATEGORY_POINTS,
@@ -278,6 +276,9 @@ const EmptyTab = ({ label, description = "Coming soon." }: { label: string; desc
 
 export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDetailDrawerProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isExporting, setIsExporting] = useState(false);
+  const exportInFlight = useRef(false);
   const { state } = useLydoConnect();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
@@ -336,6 +337,12 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
   }, [isYpopBreakdownOpen]);
 
   const org = entry?.org;
+  const permissionScope = [...(user?.permissionCodes ?? [])].sort().join(",");
+  const exportScope = `${org?.id}|${user?.id}|${user?.roleCode}|${permissionScope}`;
+  const currentExportScope = useRef(exportScope);
+  currentExportScope.current = exportScope;
+  useEffect(() => () => { currentExportScope.current = "unmounted"; }, []);
+
   const openPeriod = useMemo(
     () => [...(state.ypopPeriods ?? [])]
       .filter((period) => period.status === "open")
@@ -349,7 +356,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
     [org, openPeriod, state.ypopEntries],
   );
   const ypopDetailQuery = useQuery({
-    queryKey: ["admin", "yorp-registry-ypop-detail", user?.id, org?.id, openPeriod?.semesterKey],
+    queryKey: ["admin", "yorp-registry-ypop-detail", user?.id, org?.id, openPeriod?.semesterKey, user?.roleCode, permissionScope],
     queryFn: () => fetchAdminYorpRegistryYpopDetail(org!.id, openPeriod!.semesterKey),
     enabled: Boolean(supabase && org && activeTab === "ypop" && openPeriod),
     refetchOnMount: "always",
@@ -467,93 +474,46 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
     }
   };
 
-  const ypopData = useMemo(() => {
-    if (!org) return null;
+  const handleExportReport = async () => {
+    if (!entry || !org || exportInFlight.current) return;
+    exportInFlight.current = true;
+    setIsExporting(true);
+    const requestedScope = exportScope;
+    try {
+      const [files, detail] = await Promise.all([
+        supabase ? queryClient.fetchQuery({
+          queryKey: ["admin", "yorp-registration-documents", user?.id, user?.roleCode, permissionScope, org.id],
+          queryFn: ({ signal }) => fetchAdminYorpRegistrationDocuments(org.id, signal),
+          staleTime: 30_000,
+        }) : Promise.resolve(submittedFiles),
+        supabase && openPeriod ? queryClient.fetchQuery({
+          queryKey: ["admin", "yorp-registry-ypop-detail", user?.id, org.id, openPeriod.semesterKey, user?.roleCode, permissionScope],
+          queryFn: () => fetchAdminYorpRegistryYpopDetail(org.id, openPeriod.semesterKey),
+          staleTime: 30_000,
+        }) : Promise.resolve(undefined),
+      ]);
+      if (currentExportScope.current !== requestedScope) return;
+      const { buildOrganizationReport, generateOrganizationReportPdf } = await import("@/lib/yorp-organization-report");
+      const report = buildOrganizationReport(entry, openPeriod, openPeriodEntry,
+        buildRegistryYpopDetail(org, openPeriod, openPeriodEntry, detail, state), files, state.templates);
+      const pdf = await generateOrganizationReportPdf(report);
+      if (currentExportScope.current === requestedScope) pdf.save(report.filename);
+    } catch (error) {
+      if (currentExportScope.current === requestedScope) toast({
+        title: "Unable to export organization report",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      exportInFlight.current = false;
+      setIsExporting(false);
+    }
+  };
 
-    if (!openPeriod) return null;
-
-    const detailState = ypopDetailQuery.data;
-    const ypopEntry = openPeriodEntry;
-
-    const semesterActivities = (detailState?.ypopCityActivities ?? state.ypopCityActivities).filter(
-      (activity) => activity.semesterKey === openPeriod.semesterKey,
-    );
-    const semesterActivityIds = new Set(semesterActivities.map((activity) => activity.id));
-
-    const orgParticipations = (detailState?.ypopEventParticipations ?? state.ypopEventParticipations)
-      .filter((item) => item.organizationId === org.id && semesterActivityIds.has(item.activityId))
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-    const verifiedAttendance = semesterActivities.map((activity) => ({
-      activityId: activity.id,
-      attended: orgParticipations.some((item) => item.activityId === activity.id && item.status === "verified"),
-    }));
-
-    const orgActivities = ypopEntry
-      ? (detailState?.ypopOrgActivities ?? state.ypopOrgActivities)
-          .filter((activity) => activity.ypopEntryId === ypopEntry.id && activity.status === "approved")
-          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      : [];
-
-    const score = computeYpopScore(verifiedAttendance, semesterActivities, orgActivities.length);
-
-    const isQualified =
-      ypopEntry?.status === "qualified"
-        ? true
-        : ypopEntry?.status === "not_qualified"
-          ? false
-          : score.totalScore >= (ypopEntry?.pointsRequired ?? YPOP_SCORE_THRESHOLD);
-
-    const joinedActivities = orgParticipations.map((participation) => {
-      const activity = semesterActivities.find((item) => item.id === participation.activityId);
-      const category = resolveYpopCityLedCategory(activity?.category, activity?.points);
-      const points = normalizeYpopCityLedPoints(activity?.points ?? 0, activity?.category);
-      return { participation, category, points };
-    });
-
-    const categoryBreakdown = (["mandatory", "invitational", "partnership"] as YPOPCityActivityCategory[])
-      .map((category) => {
-        const activitiesInCategory = semesterActivities.filter(
-          (activity) => resolveYpopCityLedCategory(activity.category, activity.points) === category,
-        );
-        if (!activitiesInCategory.length) return null;
-        const pointsPerActivity = YPOP_CITY_LED_CATEGORY_POINTS[category];
-        const attendedCount = activitiesInCategory.filter((activity) =>
-          verifiedAttendance.some((item) => item.activityId === activity.id && item.attended),
-        ).length;
-        return {
-          category,
-          count: activitiesInCategory.length,
-          pointsPerActivity,
-          attendedCount,
-          earnedPts: attendedCount * pointsPerActivity,
-          maxPts: activitiesInCategory.length * pointsPerActivity,
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
-
-    return {
-      percent: score.totalScore,
-      cityLedPercent: score.cityLedPercent,
-      cityLedEarned: score.cityLedEarned,
-      cityLedMax: score.cityLedMax,
-      orgLedBonus: score.orgLedBonus,
-      totalScore: score.totalScore,
-      approvedOrgActivityCount: orgActivities.length,
-      isQualified,
-      joinedActivities,
-      orgActivities,
-      categoryBreakdown,
-    };
-  }, [
-    org,
-    openPeriod,
-    openPeriodEntry,
-    ypopDetailQuery.data,
-    state.ypopEventParticipations,
-    state.ypopOrgActivities,
-    state.ypopCityActivities,
-  ]);
+  const ypopData = useMemo(() => buildRegistryYpopDetail(
+    org, openPeriod, openPeriodEntry, ypopDetailQuery.data, state,
+  ), [org, openPeriod, openPeriodEntry, ypopDetailQuery.data,
+    state.ypopEventParticipations, state.ypopOrgActivities, state.ypopCityActivities]);
 
   return (
     <>
@@ -568,7 +528,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
           {entry && org ? (
             <div className="flex h-full flex-col">
               {/* Header */}
-              <div className="flex items-start justify-between gap-3 border-b border-slate-300 bg-bg-panel-subtle px-8 py-6">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-300 bg-bg-panel-subtle px-8 py-6">
                 <div className="flex flex-col gap-2">
                   <ReferenceCodeChip code={org.urn || "—"} className="w-fit" />
                   <h2 className="font-segoe text-lg font-semibold leading-none text-text-default">
@@ -585,15 +545,22 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                     </span>
                   </div>
                 </div>
-                <SheetClose asChild>
-                  <button
-                    type="button"
-                    aria-label="Close"
-                    className="h-5 w-5 shrink-0 border-0 bg-transparent p-0 text-border-default transition-colors hover:text-public-text-secondary"
-                  >
-                    <X className="h-5 w-5" strokeWidth={2} />
+                <div className="flex shrink-0 items-center gap-3">
+                  <button type="button" onClick={handleExportReport} disabled={isExporting}
+                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-xs font-semibold text-text-default hover:bg-bg-panel-subtle disabled:opacity-60">
+                    {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                    {isExporting ? "Exporting…" : "Export Report"}
                   </button>
-                </SheetClose>
+                  <SheetClose asChild>
+                    <button
+                      type="button"
+                      aria-label="Close"
+                      className="h-5 w-5 shrink-0 border-0 bg-transparent p-0 text-border-default transition-colors hover:text-public-text-secondary"
+                    >
+                      <X className="h-5 w-5" strokeWidth={2} />
+                    </button>
+                  </SheetClose>
+                </div>
               </div>
 
               {/* Body */}
@@ -626,7 +593,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         <DataField label="Organization" value={org.organizationName} />
                         <div className="grid grid-cols-2 gap-3">
                           <DataField label="Unique Registration Number" value={org.urn || "—"} />
-                          <DataField label="Founding Date" value={format(entry.registrationDate, "d MMM yyyy")} />
+                          <DataField label="Verified Date" value={org.verifiedAt && !Number.isNaN(new Date(org.verifiedAt).getTime()) ? format(new Date(org.verifiedAt), "d MMM yyyy") : "—"} />
                         </div>
                       </div>
                     </SectionCard>

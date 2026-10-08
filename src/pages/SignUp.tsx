@@ -1,3 +1,5 @@
+import { useOrganizationIdentityCheck } from "@/hooks/use-organization-identity-check";
+import { OrganizationIdentityNotice } from "@/components/portal/OrganizationIdentityNotice";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AlertCircle, Check, CheckCircle2, Eye, EyeOff, HelpCircle, Loader2 } from "lucide-react";
@@ -174,7 +176,10 @@ const SignUp = () => {
   const urnError = isExistingOrganization ? validateUrn(organizationIdentifierNumber) : null;
   const isIdentifierValid = !urnError && urnAvailability !== "registered";
 
+  const identityOutcome = useOrganizationIdentityCheck(name, "", normalizedIdentifierNumber);
+
   const canSubmit = Boolean(
+    identityOutcome !== "EXACT_URN_CONFLICT" &&
     useSupabaseAuth &&
     name.trim() &&
     name.trim().length <= 100 &&
@@ -302,6 +307,10 @@ const SignUp = () => {
       e.stopPropagation();
     }
     setInlineError("");
+    if (identityOutcome === "EXACT_URN_CONFLICT") {
+      setInlineError("This URN cannot be claimed through a new registration. Contact PCYDO for account recovery.");
+      return;
+    }
     setTouched((previous) => new Set([...previous, "name", "identifier"]));
     if (!name.trim()) {
       setInlineError("Enter your organization name to continue.");
@@ -605,6 +614,7 @@ const SignUp = () => {
                   className="h-11 rounded-xl bg-slate-50/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-sm px-3.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
                   required
                 />
+                <OrganizationIdentityNotice outcome={identityOutcome} />
                 {touched.has("name") && !name.trim() ? (
                   <p className="text-xs text-destructive">Organization name is required.</p>
                 ) : name.trim().length > 100 ? (
@@ -763,7 +773,7 @@ const SignUp = () => {
                       e.stopPropagation();
                       void continueToAccount(e);
                     }}
-                    disabled={isGoogleLoading || isCreating}
+                    disabled={isGoogleLoading || isCreating || identityOutcome === "EXACT_URN_CONFLICT"}
                   >
                     Continue to Account Details
                   </Button>
