@@ -1,3 +1,4 @@
+import { BUDGET_DELETION_PAUSED_MESSAGE } from "@/lib/admin-budget-deletion-pause";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Eye, Search, Trash2 } from "lucide-react";
@@ -204,8 +205,6 @@ export const BudgetRequestsTable = ({
   onReview,
   selectedRequestIds,
   onSelectedRequestIdsChange,
-  onDeleteSelected,
-  isDeleting = false,
   serverPage,
 }: BudgetRequestsTableProps) => {
   const [page, setPage] = useState(0);
@@ -483,15 +482,19 @@ export const BudgetRequestsTable = ({
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-2">
+            <p id="budget-deletion-pause-message" role="status" className="font-segoe text-xs text-slate-600">
+              {BUDGET_DELETION_PAUSED_MESSAGE}
+            </p>
             <button
               type="button"
-              onClick={onDeleteSelected}
-              disabled={isDeleting}
+              disabled
+              aria-describedby="budget-deletion-pause-message"
+              title={BUDGET_DELETION_PAUSED_MESSAGE}
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50/80 px-3 font-segoe text-xs font-semibold text-red-700 transition-all hover:bg-red-100 hover:border-red-400 active:scale-[0.98] disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5 shrink-0 text-red-600" strokeWidth={1.6} />
-              Delete selected
+              Deletion unavailable
             </button>
           </div>
         </div>

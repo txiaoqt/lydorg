@@ -1,12 +1,14 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import UserPortal from "@/user/UserPortal";
+import PublicPageLoader from "@/components/PublicPageLoader";
+import { RouteChunkBoundary } from "@/components/RouteChunkBoundary";
 import { useInstalledUserPwa } from "@/user/pwa/hooks/useInstalledUserPwa";
 import PwaInitialLoadingScreen from "@/user/pwa/PwaInitialLoadingScreen";
 import { PwaErrorBoundary } from "@/user/pwa/PwaErrorBoundary";
 import { getPwaEquivalentRoute } from "@/user/pwa/pwaRoutes";
 
 const PwaUserPortal = lazy(() => import("@/user/pwa/PwaUserPortal"));
+const UserPortal = lazy(() => import("@/user/UserPortal"));
 
 export type UserPortalSection =
   | "dashboard"
@@ -31,7 +33,11 @@ export default function UserPortalEntry({ section, browserElement }: { section: 
 
   if (!usePwaUi) {
     if (section === "more" || section === "inquiries") return <Navigate to="/dashboard" replace />;
-    return browserElement ?? <UserPortal section={section} />;
+    return browserElement ?? (
+      <RouteChunkBoundary><Suspense fallback={<PublicPageLoader />}>
+        <UserPortal section={section} />
+      </Suspense></RouteChunkBoundary>
+    );
   }
 
   return <Navigate to={getPwaEquivalentRoute(pathname)} replace state={{ pwaFrom: pathname }} />;
@@ -45,9 +51,9 @@ export function PwaRouteEntry() {
 
   return (
     <PwaErrorBoundary onDashboard={() => navigate("/app", { replace: true })}>
-      <Suspense fallback={<PwaInitialLoadingScreen />}>
+      <RouteChunkBoundary><Suspense fallback={<PwaInitialLoadingScreen />}>
         <PwaUserPortal />
-      </Suspense>
+      </Suspense></RouteChunkBoundary>
     </PwaErrorBoundary>
   );
 }

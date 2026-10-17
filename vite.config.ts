@@ -14,7 +14,18 @@ const packageMetadata = JSON.parse(
 const formatBuildTimestamp = (date: Date) =>
   date.toISOString().replace(/\D/g, '').slice(0, 14);
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // Reserve this env-file mode for the native operator tools. Vite would load
+  // .env.foundation.local in foundation mode; stop before its env loading step.
+  const foundationKeys = [
+    'YTRACE_PRODUCTION_DB_PASSWORD',
+    'YTRACE_PRODUCTION_DB_CA_FILE',
+    'YTRACE_PRODUCTION_DB_CA_SHA256',
+  ];
+  if (/^foundation(?:\.|$)/i.test(mode.trim()) || foundationKeys.some((key) => key in process.env)) {
+    throw new Error('Private foundation environment is not allowed in frontend builds or servers.');
+  }
+
   const configuredVersion = process.env.VITE_APP_VERSION?.trim();
   const configuredRelease = configuredVersion?.split('+')[0];
   const releaseVersion = (
@@ -27,6 +38,7 @@ export default defineConfig(() => {
   const appVersion = `${releaseVersion}+${buildTimestamp}${commitSha ? `.${commitSha}` : ''}`;
 
   return {
+    envPrefix: 'VITE_',
     plugins: [react()],
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),

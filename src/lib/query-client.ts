@@ -66,3 +66,12 @@ export const createQueryClient = () => new QueryClient({
 
 /** Shared cache for the app shell. */
 export const queryClient = createQueryClient();
+
+/** Account transitions must not reuse unpartitioned Admin results or pending
+ * private queries. Public caches and local form/draft state are untouched. */
+export const clearPrivateQueryCaches = (client: QueryClient = queryClient) => {
+  const filters = { predicate: (query: { queryKey: readonly unknown[] }) =>
+    query.queryKey[0] === "admin" || query.queryKey[0] === "user" };
+  void client.cancelQueries(filters);
+  client.removeQueries(filters);
+};

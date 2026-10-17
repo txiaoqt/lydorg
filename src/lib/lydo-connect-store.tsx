@@ -41,6 +41,7 @@ import {
 import { loadOrganizationBootstrapState } from "./lydo-connect-supabase";
 import { supabase, supabaseAuthStorageKey } from "./supabase";
 import { pruneDeletedYpopSubmissions } from "./ypop-submission-deletion";
+import { clearPrivateQueryCaches } from "./query-client";
 
 export type AccountIdentity =
   | { type: "admin"; id: string; token: string }
@@ -819,6 +820,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
   const lastStoredStateRef = useRef<string>("");
 
   const resetAccountState = useCallback((nextIdentity?: AccountIdentity) => {
+    clearPrivateQueryCaches();
     const currentIdentity = activeIdentityRef.current;
     if (typeof window !== "undefined" && (currentIdentity.type === "user" || currentIdentity.type === "admin")) {
       try {
@@ -912,6 +914,7 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
 
     const setIdentity = (nextIdentity: AccountIdentity) => {
       if (isSameIdentity(nextIdentity, activeIdentityRef.current)) return false;
+      clearPrivateQueryCaches();
       activeIdentityRef.current = nextIdentity;
       syncedIdentityKeyRef.current = "";
       bootstrapPromiseRef.current = null;

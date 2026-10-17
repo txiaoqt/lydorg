@@ -95,7 +95,7 @@ export function PwaAppShell({
         {!runtime.online ? (
           <section className="pwa-runtime-banner is-offline" role="status">
             <strong>You&apos;re offline.</strong>
-            <span>Previously loaded information may still be available. Some actions will continue when your connection returns.</span>
+            <span>Live records and uploads require an internet connection. Reconnect to continue.</span>
           </section>
         ) : null}
         {runtime.updateState === "available" ? (

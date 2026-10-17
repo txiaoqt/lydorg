@@ -25,6 +25,9 @@ dist-ssr
 .env
 worker/.env
 
+# Private native PostgreSQL operator credentials; never stage or upload.
+/.env.foundation.local
+
 playwright-report/
 test-results/
 *.tsbuildinfo

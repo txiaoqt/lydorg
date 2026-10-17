@@ -20,7 +20,13 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: true,
+    // Never reuse a developer's already-running app, which may have loaded
+    // deployment credentials from the repository root .env.
+    reuseExistingServer: false,
+    env: {
+      VITE_SUPABASE_URL: 'https://vitest.invalid',
+      VITE_SUPABASE_ANON_KEY: 'vitest-placeholder-not-a-key',
+    },
     timeout: 120 * 1000,
   },
   projects: [

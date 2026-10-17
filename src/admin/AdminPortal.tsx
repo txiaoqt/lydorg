@@ -125,7 +125,7 @@ import {
   RELEASED_BUDGET_STATUSES,
 } from "@/lib/budget-monitoring-filters";
 import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
-import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase, fetchRegistrationRequiredDocumentTypesInSupabase, fetchRenewalRequiredDocumentTypesInSupabase } from "@/lib/lydo-connect-supabase";
+import { adminGetAnnualBudgetAllocationsFromSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase, fetchRegistrationRequiredDocumentTypesInSupabase, fetchRenewalRequiredDocumentTypesInSupabase } from "@/lib/lydo-connect-supabase";
 import {
   LiquidationReportsTable,
   LiquidationStatusLabel,
@@ -1057,8 +1057,6 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [budgetRequestsSemesterFilter, section]);
 
   const [selectedBudgetRequestIds, setSelectedBudgetRequestIds] = useState<Set<string>>(new Set());
-  const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
-  const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
   const [liquidationReportsSearch, setLiquidationReportsSearch] = useState("");
   const [liquidationReviewPage, setLiquidationReviewPage] = useState(0);
   const [debouncedLiquidationReviewSearch, setDebouncedLiquidationReviewSearch] = useState("");
@@ -4110,63 +4108,6 @@ function AdminPortalContent({ section }: { section: string }) {
       setIsDeletingYpopSubmissions(false);
     }
   };
-
-  const selectedBudgetRequests = useMemo(() => {
-    return state.budgetRequests.filter((r) => selectedBudgetRequestIds.has(r.id));
-  }, [state.budgetRequests, selectedBudgetRequestIds]);
-
-  const hasReleasedOrCompletedSelected = useMemo(() => {
-    return selectedBudgetRequests.some((r) => r.status === "budget_released" || String(r.status) === "completed");
-  }, [selectedBudgetRequests]);
-
-  const hasPreReleaseAdvancedStageSelected = useMemo(() => {
-    return selectedBudgetRequests.some((r) => r.status === "approved_for_ftf_green" || r.status === "hard_copy_submitted");
-  }, [selectedBudgetRequests]);
-
-  const associatedLiquidationCount = useMemo(() => {
-    const selectedIds = selectedBudgetRequestIds;
-    if (selectedIds.size === 0) return 0;
-    return (state.liquidationReports || []).filter((lr) => selectedIds.has(lr.budgetRequestId)).length;
-  }, [state.liquidationReports, selectedBudgetRequestIds]);
-
-  const handleInitiateBudgetRequestsDelete = useCallback(() => {
-    if (selectedBudgetRequestIds.size === 0) return;
-    setIsDeleteBudgetRequestsModalOpen(true);
-  }, [selectedBudgetRequestIds.size]);
-
-  const handleConfirmBudgetRequestsDelete = useCallback(async () => {
-    const idsToDelete = Array.from(selectedBudgetRequestIds);
-    if (!idsToDelete.length) return;
-
-    try {
-      setIsDeletingBudgetRequests(true);
-      const result = await deleteAdminBudgetRequestsInSupabase(idsToDelete);
-      await refreshAdminState();
-      setSelectedBudgetRequestIds(new Set());
-      if (result.storageWarning) {
-        toast({
-          title: "Budget Requests Deleted",
-          description: `${result.deletedCount} budget request(s) deleted. ${result.storageWarning}`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Budget Requests Deleted",
-          description: `Successfully deleted ${result.deletedCount} budget request(s).`,
-        });
-      }
-    } catch (err: any) {
-      console.error("Failed to delete budget requests:", err);
-      toast({
-        title: "Deletion Failed",
-        description: err?.message || "Failed to delete the selected budget requests.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeletingBudgetRequests(false);
-      setIsDeleteBudgetRequestsModalOpen(false);
-    }
-  }, [selectedBudgetRequestIds, refreshAdminState]);
 
   useEffect(() => {
     let isActive = true;
@@ -10973,104 +10914,8 @@ function AdminPortalContent({ section }: { section: string }) {
               allRequests={filteredAdminBudgetRequests}
               selectedRequestIds={selectedBudgetRequestIds}
               onSelectedRequestIdsChange={setSelectedBudgetRequestIds}
-              onDeleteSelected={handleInitiateBudgetRequestsDelete}
-              isDeleting={isDeletingBudgetRequests}
             />
 
-            {/* Permanent deletion confirmation modal */}
-            <DangerConfirmDialog
-              open={isDeleteBudgetRequestsModalOpen}
-              onOpenChange={setIsDeleteBudgetRequestsModalOpen}
-              icon={Trash2}
-              variant="danger"
-              warningTone={hasReleasedOrCompletedSelected ? "danger" : "caution"}
-              title={selectedBudgetRequests.length === 1 ? "Delete Budget Request?" : `Delete ${selectedBudgetRequests.length} Budget Requests?`}
-              description={
-                <span>
-                  You are about to permanently delete{" "}
-                  <strong>
-                    {selectedBudgetRequests.length} {selectedBudgetRequests.length === 1 ? "budget request" : "budget requests"}
-                  </strong>.
-                </span>
-              }
-              content={
-                <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/70 p-4">
-                  <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    Selected Requests:
-                  </p>
-                  <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto font-segoe text-xs text-slate-700 pr-1">
-                    {selectedBudgetRequests.map((req) => {
-                      const amount = Math.round(Number(req.releasedAmount || req.approvedAmount || req.requestedAmount || 0));
-                      const statusLabel =
-                        String(req.status) === "completed"
-                          ? "Budget Released"
-                          : req.status === "budget_released"
-                            ? "Budget Released"
-                            : req.status === "approved_for_ftf_green" || req.status === "hard_copy_submitted"
-                              ? "Awaiting Release"
-                                : req.status === "needs_revision"
-                                  ? "Needs Revision"
-                                  : req.status === "rejected_red"
-                                    ? "Rejected"
-                                    : req.status === "under_review"
-                                      ? "Under Review"
-                                      : "Submitted";
-
-                      return (
-                        <li key={req.id} className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 last:border-b-0 last:pb-0">
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-slate-900 truncate">{req.activityTitle}</span>
-                            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
-                              <span>{budgetOrganizationsById[req.organizationId]?.organizationName ?? "Organization"}</span>
-                              <span>•</span>
-                              <span className="font-medium text-slate-700">{statusLabel}</span>
-                            </div>
-                          </div>
-                          <span className="shrink-0 font-mono font-semibold text-slate-800">
-                            ₱{amount.toLocaleString()}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  <div className="mt-2 border-t border-slate-200 pt-2.5 font-segoe text-xs text-slate-600 space-y-1">
-                    <p className="font-semibold text-slate-700">Permanent Impact:</p>
-                    <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
-                      <li>{selectedBudgetRequests.length} Budget Request record(s) will be permanently removed.</li>
-                      <li>Associated submission documents will be deleted from secure storage.</li>
-                      {associatedLiquidationCount > 0 ? (
-                        <li>{associatedLiquidationCount} associated Liquidation Report(s) and documents will be permanently removed.</li>
-                      ) : null}
-                      <li>Related operational notifications will be safely removed.</li>
-                      <li>An immutable administrative audit log of this deletion will be preserved.</li>
-                    </ul>
-                  </div>
-                </div>
-              }
-              warning={
-                hasReleasedOrCompletedSelected ? (
-                  <span>
-                    <strong>Financial lifecycle warning:</strong> One or more selected requests have already reached a released or completed stage. Deleting them will remove their associated liquidation workflow and financial records from the active system. Continue only if this deletion is intentional.
-                  </span>
-                ) : hasPreReleaseAdvancedStageSelected ? (
-                  <span>
-                    <strong>Notice:</strong> One or more selected requests have already passed initial administrative review (Onsite Required / Hardcopy Submitted) and are approaching the financial disbursement stage.
-                  </span>
-                ) : (
-                  "This action is permanent and cannot be undone."
-                )
-              }
-              confirmLabel={
-                isDeletingBudgetRequests
-                  ? "Deleting..."
-                  : selectedBudgetRequests.length === 1
-                    ? "Delete Budget Request"
-                    : `Delete ${selectedBudgetRequests.length} Budget Requests`
-              }
-              confirmDisabled={isDeletingBudgetRequests}
-              onConfirm={handleConfirmBudgetRequestsDelete}
-            />
           </div>
         );
       }

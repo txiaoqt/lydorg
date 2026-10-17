@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "fixedVersion": "1.0.0-admin-integration-rc+20261015173334.vercel24",
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "publicNames": [
+    "VITE_ADMIN_APP_URL",
+    "VITE_DEPLOY_SURFACE",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_URL"
+  ],
+  "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+  "preservedFiles": [
+    {
+      "path": "package-lock.json",
+      "sha256": "0ef6b3d79ec9ba0d6120a30237d37fccbeff3a70fc541223a24000b686b306bb"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "af7a41680f23aa7c979c37c6b7aaea87ccccc75ee4cd78f50a896c8804a9f7ff"
+    },
+    {
+      "path": "api/sync-run-once.py",
+      "sha256": "f0184bfdfe8212d141c3d88d4eaa32312cefc1467a86cd3b7315f9dc4c7e311d"
+    },
+    {
+      "path": "worker/__init__.py",
+      "sha256": "77161e8de0386cc8325696b33d9a592cccd9310c3c32de50a287794c93c6bc51"
+    },
+    {
+      "path": "worker/gform_sync_worker.py",
+      "sha256": "4a2e46231dc36709be585ab37920e031217948c2c8ecd0ca30f0f94806330295"
+    },
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb"
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "sha256": "0e25a810735f13daccc1d5733c44894dc81b2a1f21a390fd1f99e40728d60e8c"
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "sha256": "1575e18e2e9e90288d8b37e3ecd1c44a7911b20c569fa3581d47ae9870b527ca"
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "sha256": "1c4a0e885e83172550fa4a1ef0a47278eaeb19c7aa23b12ea9a51a62a7422b63"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883"
+    }
+  ],
+  "routingAndHeadersSha256": "9c709c6bfb433627e1567a298e2e81b61c296c4dc9045645e8fd68acc3f42255",
+  "integrationProvenance": {
+    "originalDeployedSourceRevision": "sha256:0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+    "originalDeployedSourceArchiveSha256": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465",
+    "originalFixedVersion": "1.0.0-admin-storage-rc+20261012035933.vercel24",
+    "localSnapshotSha256": "4457a75972a980d4b98f3cb9e669036d44adcb102f9d12d7d563665b6a16677d",
+    "deploymentAuthorized": false
+  }
+}

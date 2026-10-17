@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "fixedVersion": "1.0.0-org-integration-rc+20261015173334.vercel24",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "projectName": "yorbms_user",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "teamSlug": "toffs-projects-81b2ce10",
+  "publicNames": [
+    "VITE_DEPLOY_SURFACE",
+    "VITE_ENABLE_STANDALONE_USER_PWA_UI",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_URL"
+  ],
+  "publicConfigurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+  "preservedFiles": [
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb"
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "sha256": "0e25a810735f13daccc1d5733c44894dc81b2a1f21a390fd1f99e40728d60e8c"
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "sha256": "1575e18e2e9e90288d8b37e3ecd1c44a7911b20c569fa3581d47ae9870b527ca"
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "sha256": "1c4a0e885e83172550fa4a1ef0a47278eaeb19c7aa23b12ea9a51a62a7422b63"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883"
+    },
+    {
+      "path": "src/user/pwa/PwaDocumentPreview.tsx",
+      "sha256": "121107cbc49e707ddf2a70c9db6139b4b04d07f91608f4518344ae2f897aef28"
+    },
+    {
+      "path": "src/user/pwa/PwaOrganizationAvatar.tsx",
+      "sha256": "7604c43f92b89483ac444e0fb4108c56ddffd54f48c9508f495ae521c35ea544"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "0ef6b3d79ec9ba0d6120a30237d37fccbeff3a70fc541223a24000b686b306bb"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "af7a41680f23aa7c979c37c6b7aaea87ccccc75ee4cd78f50a896c8804a9f7ff"
+    },
+    {
+      "path": "tsconfig.app.json",
+      "sha256": "941c225db66d2fadab9400931143e3ca19e791fefc37ed7a7137bf8bd9fd14a2"
+    },
+    {
+      "path": "api/sync-run-once.py",
+      "sha256": "f0184bfdfe8212d141c3d88d4eaa32312cefc1467a86cd3b7315f9dc4c7e311d"
+    },
+    {
+      "path": "worker/__init__.py",
+      "sha256": "77161e8de0386cc8325696b33d9a592cccd9310c3c32de50a287794c93c6bc51"
+    },
+    {
+      "path": "worker/gform_sync_worker.py",
+      "sha256": "4a2e46231dc36709be585ab37920e031217948c2c8ecd0ca30f0f94806330295"
+    },
+    {
+      "path": "scripts/patch-radix-select.cjs",
+      "sha256": "d90262517ab6f3b823a536330bd4b8106ca0694b56838ba87335560cdcfb8525"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "54c3c61610b5fb8f907afa2b20293785ff61fe735734bc57e73120a8524abf5c"
+    }
+  ],
+  "routingAndHeadersSha256": "9c709c6bfb433627e1567a298e2e81b61c296c4dc9045645e8fd68acc3f42255",
+  "integrationProvenance": {
+    "originalDeployedSourceRevision": "sha256:0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+    "originalDeployedSourceArchiveSha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",
+    "originalFixedVersion": "1.0.0-org-storage-rc+20261012114439.vercel24",
+    "localSnapshotSha256": "4457a75972a980d4b98f3cb9e669036d44adcb102f9d12d7d563665b6a16677d",
+    "deploymentAuthorized": false
+  }
+}

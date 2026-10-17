@@ -18,7 +18,7 @@ import { ADMIN_SETTINGS_CHANGE_EVENT } from "@/lib/admin-system-settings";
 import { toast } from "@/hooks/use-toast";
 import { getAdminPermissionContextInSupabase } from "@/lib/lydo-connect-supabase";
 import { getAuthCallbackUrl } from "@/lib/auth-redirect";
-import { IS_USER_SURFACE } from "@/lib/deployment-surface";
+import { IS_LOCAL_ADMIN_DEMO_ALLOWED, IS_USER_SURFACE } from "@/lib/deployment-surface";
 import { supabase, supabaseAuthStorageKey } from "@/lib/supabase";
 import { normalizeUrn } from "@/lib/urn-registration";
 import { clearSupabaseAuthStorage, isInvalidRefreshTokenError } from "@/lib/auth-session-recovery";
@@ -618,22 +618,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const identifier = (params.email ?? params.username ?? "").trim();
       const password = params.password;
-      const canUseLocalDemoCredentials = identifier.toLowerCase() === DEMO_ADMIN_USERNAME.toLowerCase() && DEMO_ADMIN_PASSWORDS.has(password.trim());
+      const canUseLocalDemoCredentials =
+        IS_LOCAL_ADMIN_DEMO_ALLOWED &&
+        identifier.toLowerCase() === DEMO_ADMIN_USERNAME.toLowerCase() &&
+        DEMO_ADMIN_PASSWORDS.has(password.trim());
       const signInWithLocalDemoAccount = async () => {
-        if (!canUseLocalDemoCredentials) return null;
+        if (!IS_LOCAL_ADMIN_DEMO_ALLOWED || !canUseLocalDemoCredentials) return null;
+
+        const failLocalDemoSignIn = (expectedToken?: string) => {
+          if (expectedToken) expireAdminSession(expectedToken);
+          setIsAuthenticated(false);
+          setRole("guest");
+          setUser(null);
+          setIsInitialized(true);
+          return { error: "Admin demo sign-in could not establish a server-side session." };
+        };
+
+        if (!supabase) return failLocalDemoSignIn();
 
         const adminUser = createDemoAdminSession(identifier);
         writeAdminSession(adminUser);
-        if (supabase) {
-          try {
-            await supabase.rpc("ensure_admin_demo_session", {
-              _session_token: adminUser.sessionToken,
-              _username: identifier,
-            });
-          } catch (e) {
-            console.debug("ensure_admin_demo_session notice:", e);
-          }
+
+        try {
+          const { data, error } = await supabase.rpc("ensure_admin_demo_session", {
+            _session_token: adminUser.sessionToken,
+            _username: identifier,
+          });
+          const sessionResult =
+            data && typeof data === "object" && !Array.isArray(data)
+              ? (data as Record<string, unknown>)
+              : null;
+          const expiresAt = sessionResult?.expires_at;
+          const expiresAtTime =
+            typeof expiresAt === "string" && /T.*(?:Z|[+-]\d{2}:\d{2})$/i.test(expiresAt)
+              ? Date.parse(expiresAt)
+              : Number.NaN;
+          const hasExpectedSessionResult =
+            !error &&
+            sessionResult?.success === true &&
+            typeof sessionResult.admin_id === "string" &&
+            /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(sessionResult.admin_id) &&
+            Number.isFinite(expiresAtTime) &&
+            expiresAtTime > Date.now();
+
+          if (!hasExpectedSessionResult) return failLocalDemoSignIn(adminUser.sessionToken);
+        } catch {
+          return failLocalDemoSignIn(adminUser.sessionToken);
         }
+
         setIsAuthenticated(true);
         setRole("admin");
         setUser(toAuthUser(adminUser));

@@ -1,0 +1,5 @@
+# Existing Python API imports, explicitly declared for Vercel packaging.
+requests==2.34.2
+python-dotenv==1.2.4
+# Requests TLS hardening requires urllib3 2.7 or later.
+urllib3>=2.7.0,<3

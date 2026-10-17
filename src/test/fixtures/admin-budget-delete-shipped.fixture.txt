@@ -1,0 +1,74 @@
+// YTRACE_SYNTHETIC_SHIPPED_BUDGET_DELETE_FIXTURE_ONLY
+// Exact historical function body; every session, RPC result and Storage dependency is synthetic/mocked.
+// No imports, credentials, account identifiers, actual paths or production data.
+export const deleteAdminBudgetRequestsInSupabase = async (
+  requestIds: string[]
+): Promise<AdminBudgetRequestsDeleteResult> => {
+  if (!requestIds || !requestIds.length) {
+    return { deletedCount: 0 };
+  }
+
+  const adminSession = getAuthenticatedAdminSession();
+  if (!adminSession?.sessionToken) {
+    throw new Error("Admin session is invalid or expired. Please sign in again.");
+  }
+
+  const { data, error } = await supabase!.rpc("admin_bulk_delete_budget_requests", {
+    _session_token: adminSession.sessionToken,
+    _request_ids: requestIds,
+  });
+
+  if (error) {
+    throw new Error(error.message || "Failed to delete budget requests.");
+  }
+
+  const deletedCount = Number(data?.deleted_count ?? 0);
+  const budgetFilePaths = Array.isArray(data?.budget_file_paths) ? (data.budget_file_paths as string[]) : [];
+  const liquidationFilePaths = Array.isArray(data?.liquidation_file_paths) ? (data.liquidation_file_paths as string[]) : [];
+  const deletedRequestIds = Array.isArray(data?.deleted_request_ids) ? (data.deleted_request_ids as string[]) : [];
+
+  let storageWarning: string | undefined;
+  const failedCleanups: string[] = [];
+
+  const cleanPathsOrUris = async (bucket: string, entries: string[]) => {
+    if (!entries.length) return;
+    const paths: string[] = [];
+    for (const entry of entries) {
+      if (!entry) continue;
+      const parsed = parseStorageUri(entry);
+      if (parsed) {
+        paths.push(parsed.path);
+      } else if (entry.startsWith("http://") || entry.startsWith("https://")) {
+        const extracted = extractPublicStoragePath(entry, bucket);
+        if (extracted) paths.push(extracted);
+      } else {
+        paths.push(entry);
+      }
+    }
+    if (paths.length > 0) {
+      try {
+        const { error: storageError } = await supabase!.storage.from(bucket).remove(paths);
+        if (storageError) {
+          console.warn(`Storage removal error for bucket ${bucket}:`, storageError);
+          failedCleanups.push(bucket);
+        }
+      } catch (storageErr) {
+        console.warn(`Storage removal exception for bucket ${bucket}:`, storageErr);
+        failedCleanups.push(bucket);
+      }
+    }
+  };
+
+  await cleanPathsOrUris(BUDGET_REQUEST_FILES_BUCKET, budgetFilePaths);
+  await cleanPathsOrUris(LIQUIDATION_REPORT_FILES_BUCKET, liquidationFilePaths);
+
+  if (failedCleanups.length > 0) {
+    storageWarning = "Some stored files could not be removed and may require cleanup.";
+  }
+
+  return {
+    deletedCount,
+    storageWarning,
+    deletedRequestIds,
+  };
+};

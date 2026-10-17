@@ -13,7 +13,7 @@ import AuthCallback from "./pages/AuthCallback";
 import GoogleOnboarding from "./pages/GoogleOnboarding";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
-import AdminPortal from "./admin/AdminPortal";
+const AdminPortal = lazy(() => import("./admin/AdminPortal"));
 import { AdminThemeProvider } from "./admin/context/AdminThemeContext";
 const LegalPolicy = lazy(() => import("./pages/LegalPolicy"));
 const Faqs = lazy(() => import("./pages/Faqs"));
@@ -32,6 +32,7 @@ import { useInstalledUserPwa } from "./user/pwa/hooks/useInstalledUserPwa";
 import PwaInitialLoadingScreen from "./user/pwa/PwaInitialLoadingScreen";
 import PublicPageLoader from "./components/PublicPageLoader";
 import AdminPageLoader from "./components/AdminPageLoader";
+import { RouteChunkBoundary } from "./components/RouteChunkBoundary";
 import { PwaEntryGate, PwaPublicResourceGate } from "./user/pwa/public/PwaPublicEntry";
 import { PWA_ENTRY_ROUTE } from "./user/pwa/pwaAuthFlow";
 import { LydoConnectProvider } from "./lib/lydo-connect-store";
@@ -141,7 +142,9 @@ export const RequireAdmin = ({ children }: { children: JSX.Element }) => {
 
   return (
     <AdminThemeProvider>
-      <AdminDesktopGate>{children}</AdminDesktopGate>
+      <AdminDesktopGate>
+        <RouteChunkBoundary><Suspense fallback={<AdminPageLoader />}>{children}</Suspense></RouteChunkBoundary>
+      </AdminDesktopGate>
     </AdminThemeProvider>
   );
 };

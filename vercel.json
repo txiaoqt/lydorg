@@ -44,5 +44,7 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "npm run build:vercel",
+  "installCommand": "npm ci --include=dev --no-audit --no-fund"
 }

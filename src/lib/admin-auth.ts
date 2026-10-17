@@ -1,3 +1,5 @@
+import { IS_LOCAL_ADMIN_DEMO_ALLOWED } from "./deployment-surface";
+
 export const ADMIN_SESSION_STORAGE_KEY = "lydo_admin_session_v1";
 export const ADMIN_SESSION_CHANGE_EVENT = "lydo-admin-session-change";
 export const ADMIN_LAST_ACTIVITY_STORAGE_KEY = "lydo_admin_last_activity_v1";
@@ -134,6 +136,10 @@ export const readAdminSession = (): SeededAdminUser | null => {
       return null;
     }
 
+    if (parsed.id === "admin-demo" && !IS_LOCAL_ADMIN_DEMO_ALLOWED) {
+      return null;
+    }
+
     // Authoritative check: verify against sliding inactivity timeout
     if (isSessionExpiredDueToInactivity()) {
       queueMicrotask(() => expireAdminSession(parsed.sessionToken));
@@ -179,9 +185,8 @@ export const expireAdminSession = (expectedToken?: string) => {
 /** Store the database expiry without recording artificial user activity. */
 export const updateAdminSessionExpiry = (token: string, expiresAt: string) => {
   if (typeof window === "undefined" || !Number.isFinite(Date.parse(expiresAt))) return;
-  const raw = window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
-  if (!raw) return;
-  const stored = JSON.parse(raw) as SeededAdminUser;
+  const stored = readAdminSession();
+  if (!stored) return;
   if (stored.sessionToken !== token) return;
   window.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify({ ...stored, expiresAt }));
 };

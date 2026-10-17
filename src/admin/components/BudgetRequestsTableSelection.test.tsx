@@ -167,11 +167,13 @@ describe("BudgetRequestsTable Selection & Bulk Actions UX Suite", () => {
     expect(screen.getByText("2 requests selected")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Clear selection/i })).toBeInTheDocument();
 
-    const deleteBtn = screen.getByRole("button", { name: /Delete selected/i });
+    const deleteBtn = screen.getByRole("button", { name: /Deletion unavailable/i });
     expect(deleteBtn).toBeInTheDocument();
 
     fireEvent.click(deleteBtn);
-    expect(onDeleteSelected).toHaveBeenCalledTimes(1);
+    expect(deleteBtn).toBeDisabled();
+    expect(onDeleteSelected).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent("Permanent budget deletion is temporarily unavailable. Existing records and files are preserved.");
   });
 
   it("TEST N3 — Clear selection button empties the selected IDs set", () => {

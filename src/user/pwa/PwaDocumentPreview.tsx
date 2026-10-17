@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
+import { supabase } from "@/lib/supabase";
 import { PWA_DOCUMENT_PREVIEW_EVENT, type PwaDocumentPreviewRequest } from "@/lib/pwa-document-preview";
 
 type PreviewRequest = PwaDocumentPreviewRequest;
 
 export function PwaDocumentPreviewHost() {
   const [request, setRequest] = useState<PreviewRequest | null>(null);
+  const activeUserId = useRef<string | null>(null);
   const [resolvedUrl, setResolvedUrl] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,6 +17,20 @@ export function PwaDocumentPreviewHost() {
     const handleRequest = (event: Event) => setRequest((event as CustomEvent<PreviewRequest>).detail);
     window.addEventListener(PWA_DOCUMENT_PREVIEW_EVENT, handleRequest);
     return () => window.removeEventListener(PWA_DOCUMENT_PREVIEW_EVENT, handleRequest);
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const nextUserId = session?.user?.id ?? null;
+      if (event === "SIGNED_OUT" || (event === "SIGNED_IN" && activeUserId.current && activeUserId.current !== nextUserId)) {
+        setRequest(null);
+      }
+      if (event === "INITIAL_SESSION" || event === "SIGNED_OUT" || nextUserId) {
+        activeUserId.current = nextUserId;
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {

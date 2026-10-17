@@ -20,8 +20,10 @@ vi.mock("./supabase", () => {
 });
 
 // Mock admin auth session
-vi.mock("./admin-auth", () => {
+vi.mock("./admin-auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./admin-auth")>();
   return {
+    ...actual,
     readAdminSession: vi.fn().mockReturnValue({
       id: "admin-uuid-1",
       sessionToken: "valid-admin-session-token",
