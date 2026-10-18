@@ -2900,6 +2900,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 { label: "Total Approved Amount", value: formatCurrencyPdf(totalApproved) },
                 { label: "Total Released Amount", value: formatCurrencyPdf(totalReleased) },
               ],
+              summaryMetricsAlign: "center",
             }),
             metadataLines: [
               `Semester: ${selectedBudgetSemesterLabel}`,
@@ -2957,6 +2958,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 { label: "Total Released Amount", value: formatCurrencyPdf(totalReleased) },
                 { label: "Total Remaining Amount", value: formatCurrencyPdf(totalRemaining) },
               ],
+              summaryMetricsAlign: "center",
             }),
             metadataLines: [
               `Reporting Period: ${getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}`,
@@ -3014,6 +3016,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 { label: "Total Approved Amount", value: formatCurrencyPdf(totalApproved) },
                 { label: "Total Released Amount", value: formatCurrencyPdf(totalReleased) },
               ],
+              summaryMetricsAlign: "center",
             }),
             metadataLines: [
               `Total Barangays: ${allocationByBarangayExportRows.length}`,

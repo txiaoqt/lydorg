@@ -141,7 +141,8 @@ export function buildYpopParticipationReportOptions(sources: YpopParticipationSo
   return {
     config: withAdminReportPeriod(ypopParticipationExportConfig, filters.period), rows,
     pdfHeading: buildAdminReportHeading({ program: "ypop", title: "Participation Report", period: filters.period, generatedBy,
-      filters: filterLines, sortedBy: "Activity Date (Newest first), then Organization Name (A-Z)", contextLines: [scope], summaryMetrics: metrics }),
+      filters: filterLines, sortedBy: "Activity Date (Newest first), then Organization Name (A-Z)", contextLines: [scope],
+      summaryMetrics: metrics, summaryMetricsAlign: "center" }),
     filterSummaryLines: [...filterLines, ...adminReportMetadata(filters.period)],
     metadataLines: [scope, "Total Points = city-led participation percentage + org-led bonus. Approved records = qualified organizations.", ...metrics.map(metric => `${metric.label}: ${metric.value}`)],
   };

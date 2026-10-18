@@ -143,6 +143,7 @@ export type PdfReportHeading = ReportGenerationContext & {
   sortedBy?: string;
   contextLines?: string[];
   summaryMetrics?: Array<{ label: string; value: string }>;
+  summaryMetricsAlign?: "left" | "center";
 };
 
 const DEFAULT_HEADER_TITLE = "PASIG CITY YOUTH DEVELOPMENT OFFICE";
@@ -390,7 +391,7 @@ export type PdfHeaderLayout = {
   startY: number;
   continuationTop: number;
   headingLines?: Array<{ text: string[]; y: number; fontSize: number; bold: boolean; muted: boolean; lineHeight: number }>;
-  summaryMetrics?: Array<{ label: string[]; value: string[]; x: number; labelY: number; valueY: number }>;
+  summaryMetrics?: Array<{ label: string[]; value: string[]; x: number; align: "left" | "center"; labelY: number; valueY: number }>;
 };
 
 export const buildPdfHeaderLayout = async <Row,>(
@@ -445,7 +446,9 @@ export const buildPdfHeaderLayout = async <Row,>(
     doc.setFontSize(15);
     const values = pdfHeading.summaryMetrics.map(metric => doc.splitTextToSize(metric.value, columnWidth - 12) as string[]);
     pdfHeading.summaryMetrics.forEach((_metric, index) => summaryMetrics.push({
-      label: labels[index], value: values[index], x: marginLeft + index * columnWidth, labelY, valueY,
+      label: labels[index], value: values[index],
+      x: marginLeft + index * columnWidth + (pdfHeading.summaryMetricsAlign === "center" ? columnWidth / 2 : 0),
+      align: pdfHeading.summaryMetricsAlign ?? "left", labelY, valueY,
     }));
     currentY = valueY + Math.max(...values.map(lines => lines.length)) * 19.5 + 8;
   }
@@ -569,10 +572,10 @@ export const renderPdfPageDecoration = (
         doc.setFont(regularFont, "normal");
         doc.setFontSize(8);
         doc.setTextColor(...PDF_COLORS.text);
-        doc.text(metric.label, metric.x, metric.labelY, { lineHeightFactor: 1.25 });
+        doc.text(metric.label, metric.x, metric.labelY, { align: metric.align, lineHeightFactor: 1.25 });
         doc.setFont(boldFont, "bold");
         doc.setFontSize(15);
-        doc.text(metric.value, metric.x, metric.valueY, { lineHeightFactor: 1.3 });
+        doc.text(metric.value, metric.x, metric.valueY, { align: metric.align, lineHeightFactor: 1.3 });
       }
       doc.setDrawColor(...PDF_COLORS.divider);
       doc.setLineWidth(0.7);

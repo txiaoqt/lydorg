@@ -20,6 +20,7 @@ export function buildAdminReportHeading(input: {
   contextLines?: string[];
   reportingLines?: string[];
   summaryMetrics?: PdfReportHeading["summaryMetrics"];
+  summaryMetricsAlign?: PdfReportHeading["summaryMetricsAlign"];
 }): PdfReportHeading {
   return {
     programTitle: ADMIN_REPORT_PROGRAMS[input.program],
@@ -32,6 +33,7 @@ export function buildAdminReportHeading(input: {
     sortedBy: input.sortedBy,
     contextLines: input.contextLines,
     summaryMetrics: input.summaryMetrics,
+    summaryMetricsAlign: input.summaryMetricsAlign,
   };
 }
 

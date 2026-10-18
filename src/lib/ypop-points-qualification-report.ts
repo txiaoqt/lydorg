@@ -70,6 +70,7 @@ export function buildYpopPointsQualificationReportOptions(sources: YpopParticipa
       sortedBy: "Total Points (Highest first), then Organization Name (A-Z)",
       contextLines: [scope, ...(pending ? [`Pending Evaluation: ${pending}; excluded from the evaluated total.`] : [])],
       summaryMetrics: metrics,
+      summaryMetricsAlign: "center",
     }),
     filterSummaryLines: [category, ...filtersLine, ...adminReportMetadata(filters.period)],
     metadataLines: [scope, "Total Points = city-led participation percentage + org-led bonus.",
